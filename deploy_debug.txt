@@ -1,0 +1,900 @@
+[2026-03-23T22:46:44.414Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[2026-03-23T22:46:44.414Z] > authorizing via signed-in user (felizdeemprender@gmail.com)
+[2026-03-23T22:46:44.414Z] [iam] checking project btechacademy-8b329 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[2026-03-23T22:46:44.415Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:44.415Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:44.416Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions [none]
+[2026-03-23T22:46:44.416Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions  x-goog-user-project=btechacademy-8b329
+[2026-03-23T22:46:44.416Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[2026-03-23T22:46:45.259Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions 200
+[2026-03-23T22:46:45.259Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[2026-03-23T22:46:45.259Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:45.260Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:45.260Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329 [none]
+[2026-03-23T22:46:45.610Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329 200
+[2026-03-23T22:46:45.610Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329 {"projectId":"btechacademy-8b329","projectNumber":"493585665928","displayName":"BTECHAcademy","name":"projects/btechacademy-8b329","resources":{"hostingSite":"btechacademy-8b329"},"state":"ACTIVE","etag":"1_c5550ba8-c84f-4c2a-b13a-9562cda8a2b4"}
+[2026-03-23T22:46:47.443Z] defaultcredentials: writing to file C:\Users\Admin\AppData\Roaming\firebase\felizdeemprender_gmail_com_application_default_credentials.json
+[2026-03-23T22:46:47.443Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:47.444Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:47.444Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites pageToken=&pageSize=10
+[2026-03-23T22:46:48.851Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites 200
+[2026-03-23T22:46:48.852Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites {"sites":[{"name":"projects/btechacademy-8b329/sites/btechacademy-8b329","defaultUrl":"https://btechacademy-8b329.web.app","type":"DEFAULT_SITE"}]}
+[2026-03-23T22:46:48.852Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:48.852Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:48.852Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites 
+[2026-03-23T22:46:49.421Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites 200
+[2026-03-23T22:46:49.422Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites {"sites":[{"name":"projects/btechacademy-8b329/sites/btechacademy-8b329","defaultUrl":"https://btechacademy-8b329.web.app","type":"DEFAULT_SITE"}]}
+[2026-03-23T22:46:49.422Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:49.422Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:49.422Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329/webApps/-/config [none]
+[2026-03-23T22:46:50.079Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329/webApps/-/config 200
+[2026-03-23T22:46:50.079Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329/webApps/-/config {"projectId":"btechacademy-8b329","appId":"1:493585665928:web:8cf8b7523790d81099343d","storageBucket":"btechacademy-8b329.firebasestorage.app","apiKey":"AIzaSyD7srVAfI5ZtES_-5Syblh1z9_lHIj_gVk","authDomain":"btechacademy-8b329.firebaseapp.com","messagingSenderId":"493585665928","measurementId":"G-FE870RV1MM","projectNumber":"493585665928","version":"2"}
+No Firebase app associated with site btechacademy-8b329, injecting project default config.
+  You can link a Web app to a Hosting site here https://console.firebase.google.com/project/btechacademy-8b329/settings/general/web
+
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[2026-03-23T22:46:53.894Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:53.894Z] Checked if tokens are valid: true, expires at: 1774306931160
+[2026-03-23T22:46:53.894Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 [none]
+[2026-03-23T22:46:54.333Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 200
+[2026-03-23T22:46:54.333Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 {"name":"projects/btechacademy-8b329/sites/btechacademy-8b329","defaultUrl":"https://btechacademy-8b329.web.app","type":"DEFAULT_SITE"}
+   Ôû▓ Next.js 15.5.9
+
+   - Environments: .env
+   - Experiments (use with caution):
+     ┬À serverActions
+
+
+   Creating an optimized production build ...
+
+
+
+
+Source path: C:\FelizdeEmprender\studio\src\app\globals.css
+
+Setting up new context...
+
+Finding changed files: 7.076ms
+
+Reading changed files: 193.492ms
+
+Sorting candidates: 6.421ms
+
+Generate rules: 135.197ms
+
+Build stylesheet: 2.888ms
+
+Potential classes:  13996
+
+Active contexts:  1
+
+JIT TOTAL: 430.171ms
+
+
+
+ Ô£ô Compiled successfully in 5.2s
+
+   Skipping validation of types
+   Skipping linting
+
+   Collecting page data ...
+
+   Generating static pages (0/48) ...
+
+   Generating static pages (12/48) 
+
+   Generating static pages (24/48) 
+
+   Generating static pages (36/48) 
+
+ Ô£ô Generating static pages (48/48)
+
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+
+
+Route (app)                                      Size  First Load JS
+Ôöî Ôùï /                                         6.89 kB         129 kB
+Ôö£ Ôùï /_not-found                                  1 kB         102 kB
+Ôö£ Ôùï /abonos                                    5.7 kB         284 kB
+Ôö£ Ôùï /about                                    4.89 kB         124 kB
+Ôö£ Ôùï /admin/billing                             5.8 kB         284 kB
+Ôö£ Ôùï /admin/moderation                         7.91 kB         290 kB
+Ôö£ Ôùï /admin/subscriptions                      11.8 kB         307 kB
+Ôö£ Ôùï /admin/tags                               8.09 kB         290 kB
+Ôö£ Ôùï /admin/terms                              4.21 kB         286 kB
+Ôö£ Ôùï /admin/theme                              4.82 kB         283 kB
+Ôö£ Ôùï /admin/tutors                             11.5 kB         153 kB
+Ôö£ Ôùï /admin/users                              10.2 kB         311 kB
+Ôö£ Ôùï /ai-assistant                               611 B         279 kB
+Ôö£ Ôùï /alumnos                                  3.37 kB         281 kB
+Ôö£ ãÆ /alumnos/[id]                             17.1 kB         308 kB
+Ôö£ ãÆ /api/admin/billing                          166 B         102 kB
+Ôö£ ãÆ /api/admin/subscription-plans               166 B         102 kB
+Ôö£ ãÆ /api/admin/tutors/[tutorId]/subscription    166 B         102 kB
+Ôö£ ãÆ /api/admin/tutors/subscriptions             166 B         102 kB
+Ôö£ ãÆ /api/ai/generate-image                      166 B         102 kB
+Ôö£ ãÆ /api/courses/create                         166 B         102 kB
+Ôö£ ãÆ /api/courses/invite                         166 B         102 kB
+Ôö£ ãÆ /api/courses/marketplace                    166 B         102 kB
+Ôö£ ãÆ /api/courses/tutor/[tutorId]                166 B         102 kB
+Ôö£ ãÆ /api/track                                  166 B         102 kB
+Ôö£ ãÆ /api/tutors/[username]/status               166 B         102 kB
+Ôö£ ãÆ /api/tutors/featured                        166 B         102 kB
+Ôö£ Ôùï /auth                                     9.71 kB         245 kB
+Ôö£ Ôùï /case-studies                             5.15 kB         124 kB
+Ôö£ Ôùï /courses                                  4.11 kB         127 kB
+Ôö£ ãÆ /courses/[id]                             10.3 kB         301 kB
+Ôö£ Ôùï /courses/create                           15.8 kB         316 kB
+Ôö£ ãÆ /courses/edit/[id]                        12.9 kB         307 kB
+Ôö£ Ôùï /courses/manage                           16.3 kB         327 kB
+Ôö£ ãÆ /courses/style/[id]                       8.64 kB         295 kB
+Ôö£ Ôùï /dashboard                                12.4 kB         300 kB
+Ôö£ Ôùï /mentoria/desafios                        9.42 kB         316 kB
+Ôö£ Ôùï /mentoria/marketing                       9.98 kB         307 kB
+Ôö£ Ôùï /mentoria/marketing/build                 9.03 kB         306 kB
+Ôö£ Ôùï /mentoria/marketing/execution             14.8 kB         309 kB
+Ôö£ Ôùï /mentoria/marketing/pages                 7.49 kB         299 kB
+Ôö£ Ôùï /mentoria/marketing/pages/build             17 kB         314 kB
+Ôö£ Ôùï /mentoria/marketing/templates             17.4 kB         314 kB
+Ôö£ Ôùï /mentoria/marketing/track                  109 kB         393 kB
+Ôö£ Ôùï /my-courses                               3.87 kB         287 kB
+Ôö£ Ôùï /seguimientos                             8.71 kB         316 kB
+Ôö£ ãÆ /seguimientos/[id]                        14.6 kB         318 kB
+Ôö£ Ôùï /services                                 5.62 kB         124 kB
+Ôö£ Ôùï /settings                                 11.8 kB         304 kB
+Ôö£ Ôùï /tasks                                    5.57 kB         287 kB
+Ôö£ Ôùï /tutor-access-denied                      2.12 kB         116 kB
+Ôö£ ãÆ /tutor/[username]                         4.51 kB         127 kB
+Ôö£ ãÆ /tutor/[username]/courses                 6.08 kB         125 kB
+Ôö£ Ôùï /upgrade-required                         2.05 kB         116 kB
+Ôö£ ãÆ /v/[id]                                     191 B         251 kB
+Ôöö Ôùï /v/resolve                                1.19 kB         253 kB
++ First Load JS shared by all                  101 kB
+  Ôö£ chunks/1255-de0c1abd22c7cccd.js           45.2 kB
+  Ôö£ chunks/4bd1b696-182b6b13bdad92e3.js       54.2 kB
+  Ôöö other shared chunks (total)               2.06 kB
+
+
+ãÆ Middleware                                  33.2 kB
+
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+
+
+Building a Cloud Function to run this application. This is needed due to:
+ ÔÇó middleware
+ ÔÇó non-static component /api/admin/billing/route
+ ÔÇó non-static component /api/admin/subscription-plans/route
+ ÔÇó non-static component /api/admin/tutors/[tutorId]/subscription/route
+ ÔÇó non-static component /api/admin/tutors/subscriptions/route
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /api/ai/generate-image/route
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /api/courses/create/route
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /api/courses/marketplace/route
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /api/courses/tutor/[tutorId]/route
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /api/track/route
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /api/tutors/[username]/status/route
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /api/tutors/featured/route
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /api/courses/invite/route
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /alumnos/[id]/page
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /courses/[id]/page
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /courses/edit/[id]/page
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /courses/style/[id]/page
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /seguimientos/[id]/page
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /v/[id]/page
+[2026-03-23T22:47:12.665Z]  ÔÇó non-static component /tutor/[username]/courses/page
+[2026-03-23T22:47:12.666Z]  ÔÇó non-static component /tutor/[username]/page
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /admin/tags
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /courses/manage
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /admin/moderation
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /alumnos/[id]
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /courses/[id]
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /seguimientos/[id]
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /tasks
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /courses/create
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /courses/edit/[id]
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /mentoria/marketing/build
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /mentoria/marketing/templates
+[2026-03-23T22:47:12.666Z]  ÔÇó route with server action /mentoria/marketing/pages/build
+
+[2026-03-23T22:47:13.311Z] skipping /auth due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /admin/users due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /_not-found due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /mentoria/marketing/execution due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /mentoria/marketing/build due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /admin/subscriptions due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /courses due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /admin/tutors due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /admin/theme due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /mentoria/marketing due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /courses/manage due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /admin/terms due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /my-courses due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /abonos due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping / due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /mentoria/desafios due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /ai-assistant due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /admin/billing due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.311Z] skipping /mentoria/marketing/pages due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /upgrade-required due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /tasks due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /seguimientos due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /settings due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /v/resolve due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /tutor-access-denied due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /about due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /dashboard due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /mentoria/marketing/track due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /services due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /case-studies due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /alumnos due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /admin/moderation due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /mentoria/marketing/templates due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /mentoria/marketing/pages/build due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /admin/tags due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /courses/create due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T22:47:13.312Z] skipping /404 due to it matching an unsupported rewrite/redirect/header or middlware
+Warning: Global esbuild version (0.27.2) does not match the required version (^0.19.2).
+[2026-03-23T22:47:15.739Z] Checked if tokens are valid: false, expires at: 1774306931160
+[2026-03-23T22:47:15.739Z] Checked if tokens are valid: false, expires at: 1774306931160
+[2026-03-23T22:47:15.739Z] > refreshing access token with scopes: []
+[2026-03-23T22:47:15.740Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[2026-03-23T22:47:15.740Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[2026-03-23T22:47:15.848Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[2026-03-23T22:47:15.849Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[2026-03-23T22:47:15.918Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 [none]
+[2026-03-23T22:47:17.104Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 200
+[2026-03-23T22:47:17.104Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 {"name":"projects/btechacademy-8b329/sites/btechacademy-8b329","defaultUrl":"https://btechacademy-8b329.web.app","type":"DEFAULT_SITE"}
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'firebase-frameworks@0.11.8',
+npm warn EBADENGINE   required: { node: '^16.0.0 || ^18.0.0 || ^20.0.0 || ^22.0.0' },
+npm warn EBADENGINE   current: { node: 'v24.11.1', npm: '11.6.2' }
+npm warn EBADENGINE }
+
+up to date in 998ms
+
+90 packages are looking for funding
+  run `npm fund` for details
+[2026-03-23T22:47:19.032Z] [web frameworks] effective firebase.json:  {
+  "hosting": [
+    {
+      "source": ".",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "frameworksBackend": {
+        "region": "us-central1"
+      },
+      "site": "btechacademy-8b329",
+      "rewrites": [
+        {
+          "source": "**",
+          "function": {
+            "functionId": "ssrbtechacademy8b329",
+            "region": "us-central1",
+            "pinTag": true
+          }
+        }
+      ],
+      "redirects": [],
+      "headers": [
+        {
+          "source": "/_not-found",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/_not-found/layout,_N_T_/_not-found/page,_N_T_/_not-found"
+            }
+          ]
+        },
+        {
+          "source": "/abonos",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/abonos/layout,_N_T_/abonos/page,_N_T_/abonos"
+            }
+          ]
+        },
+        {
+          "source": "/admin/tutors",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/tutors/layout,_N_T_/admin/tutors/page,_N_T_/admin/tutors"
+            }
+          ]
+        },
+        {
+          "source": "/admin/terms",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/terms/layout,_N_T_/admin/terms/page,_N_T_/admin/terms"
+            }
+          ]
+        },
+        {
+          "source": "/favicon.ico",
+          "headers": [
+            {
+              "key": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "key": "content-type",
+              "value": "image/x-icon"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/favicon.ico/layout,_N_T_/favicon.ico/route,_N_T_/favicon.ico"
+            }
+          ]
+        },
+        {
+          "source": "/admin/theme",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/theme/layout,_N_T_/admin/theme/page,_N_T_/admin/theme"
+            }
+          ]
+        },
+        {
+          "source": "/admin/billing",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/billing/layout,_N_T_/admin/billing/page,_N_T_/admin/billing"
+            }
+          ]
+        },
+        {
+          "source": "/admin/tags",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/tags/layout,_N_T_/admin/tags/page,_N_T_/admin/tags"
+            }
+          ]
+        },
+        {
+          "source": "/ai-assistant",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/ai-assistant/layout,_N_T_/ai-assistant/page,_N_T_/ai-assistant"
+            }
+          ]
+        },
+        {
+          "source": "/admin/subscriptions",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/subscriptions/layout,_N_T_/admin/subscriptions/page,_N_T_/admin/subscriptions"
+            }
+          ]
+        },
+        {
+          "source": "/alumnos",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/alumnos/layout,_N_T_/alumnos/page,_N_T_/alumnos"
+            }
+          ]
+        },
+        {
+          "source": "/admin/moderation",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/moderation/layout,_N_T_/admin/moderation/page,_N_T_/admin/moderation"
+            }
+          ]
+        },
+        {
+          "source": "/admin/users",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/admin/layout,_N_T_/admin/users/layout,_N_T_/admin/users/page,_N_T_/admin/users"
+            }
+          ]
+        },
+        {
+          "source": "/auth",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/auth/layout,_N_T_/auth/page,_N_T_/auth"
+            }
+          ]
+        },
+        {
+          "source": "/courses",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/courses/layout,_N_T_/courses/page,_N_T_/courses"
+            }
+          ]
+        },
+        {
+          "source": "/dashboard",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/dashboard/layout,_N_T_/dashboard/page,_N_T_/dashboard"
+            }
+          ]
+        },
+        {
+          "source": "/mentoria/marketing/build",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/mentoria/layout,_N_T_/mentoria/marketing/layout,_N_T_/mentoria/marketing/build/layout,_N_T_/mentoria/marketing/build/page,_N_T_/mentoria/marketing/build"
+            }
+          ]
+        },
+        {
+          "source": "/courses/create",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/courses/layout,_N_T_/courses/create/layout,_N_T_/courses/create/page,_N_T_/courses/create"
+            }
+          ]
+        },
+        {
+          "source": "/courses/manage",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/courses/layout,_N_T_/courses/manage/layout,_N_T_/courses/manage/page,_N_T_/courses/manage"
+            }
+          ]
+        },
+        {
+          "source": "/mentoria/desafios",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/mentoria/layout,_N_T_/mentoria/desafios/layout,_N_T_/mentoria/desafios/page,_N_T_/mentoria/desafios"
+            }
+          ]
+        },
+        {
+          "source": "/mentoria/marketing/pages",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/mentoria/layout,_N_T_/mentoria/marketing/layout,_N_T_/mentoria/marketing/pages/layout,_N_T_/mentoria/marketing/pages/page,_N_T_/mentoria/marketing/pages"
+            }
+          ]
+        },
+        {
+          "source": "/mentoria/marketing/execution",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/mentoria/layout,_N_T_/mentoria/marketing/layout,_N_T_/mentoria/marketing/execution/layout,_N_T_/mentoria/marketing/execution/page,_N_T_/mentoria/marketing/execution"
+            }
+          ]
+        },
+        {
+          "source": "/mentoria/marketing",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/mentoria/layout,_N_T_/mentoria/marketing/layout,_N_T_/mentoria/marketing/page,_N_T_/mentoria/marketing"
+            }
+          ]
+        },
+        {
+          "source": "/mentoria/marketing/track",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/mentoria/layout,_N_T_/mentoria/marketing/layout,_N_T_/mentoria/marketing/track/layout,_N_T_/mentoria/marketing/track/page,_N_T_/mentoria/marketing/track"
+            }
+          ]
+        },
+        {
+          "source": "/mentoria/marketing/templates",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/mentoria/layout,_N_T_/mentoria/marketing/layout,_N_T_/mentoria/marketing/templates/layout,_N_T_/mentoria/marketing/templates/page,_N_T_/mentoria/marketing/templates"
+            }
+          ]
+        },
+        {
+          "source": "/mentoria/marketing/pages/build",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/mentoria/layout,_N_T_/mentoria/marketing/layout,_N_T_/mentoria/marketing/pages/layout,_N_T_/mentoria/marketing/pages/build/layout,_N_T_/mentoria/marketing/pages/build/page,_N_T_/mentoria/marketing/pages/build"
+            }
+          ]
+        },
+        {
+          "source": "/seguimientos",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/seguimientos/layout,_N_T_/seguimientos/page,_N_T_/seguimientos"
+            }
+          ]
+        },
+        {
+          "source": "/my-courses",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/my-courses/layout,_N_T_/my-courses/page,_N_T_/my-courses"
+            }
+          ]
+        },
+        {
+          "source": "/settings",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/settings/layout,_N_T_/settings/page,_N_T_/settings"
+            }
+          ]
+        },
+        {
+          "source": "/tasks",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/tasks/layout,_N_T_/tasks/page,_N_T_/tasks"
+            }
+          ]
+        },
+        {
+          "source": "/tutor-access-denied",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/tutor-access-denied/layout,_N_T_/tutor-access-denied/page,_N_T_/tutor-access-denied"
+            }
+          ]
+        },
+        {
+          "source": "/upgrade-required",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/upgrade-required/layout,_N_T_/upgrade-required/page,_N_T_/upgrade-required"
+            }
+          ]
+        },
+        {
+          "source": "/v/resolve",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/v/layout,_N_T_/v/resolve/layout,_N_T_/v/resolve/page,_N_T_/v/resolve"
+            }
+          ]
+        },
+        {
+          "source": "**/*.[jt]s",
+          "headers": [
+            {
+              "key": "Set-Cookie",
+              "value": "__FIREBASE_DEFAULTS__=eyJjb25maWciOnsicHJvamVjdElkIjoiYnRlY2hhY2FkZW15LThiMzI5IiwiYXBwSWQiOiIxOjQ5MzU4NTY2NTkyODp3ZWI6OGNmOGI3NTIzNzkwZDgxMDk5MzQzZCIsInN0b3JhZ2VCdWNrZXQiOiJidGVjaGFjYWRlbXktOGIzMjkuZmlyZWJhc2VzdG9yYWdlLmFwcCIsImFwaUtleSI6IkFJemFTeUQ3c3JWQWZJNVp0RVNfLTVTeWJsaDF6OV9sSElqX2dWayIsImF1dGhEb21haW4iOiJidGVjaGFjYWRlbXktOGIzMjkuZmlyZWJhc2VhcHAuY29tIiwibWVzc2FnaW5nU2VuZGVySWQiOiI0OTM1ODU2NjU5MjgiLCJtZWFzdXJlbWVudElkIjoiRy1GRTg3MFJWMU1NIiwicHJvamVjdE51bWJlciI6IjQ5MzU4NTY2NTkyOCIsInZlcnNpb24iOiIyIn0sIl9hdXRoVG9rZW5TeW5jVVJMIjoiL19fc2Vzc2lvbiJ9; SameSite=Strict; Expires=2028-02-16T09:27:19.032Z; Path=/;"
+            }
+          ]
+        }
+      ],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "public": ".firebase\\btechacademy-8b329\\hosting",
+      "webFramework": "next_ssr"
+    }
+  ],
+  "functions": [
+    {
+      "source": ".firebase\\btechacademy-8b329\\functions",
+      "codebase": "firebase-frameworks-btechacademy-8b329"
+    }
+  ]
+}
+[2026-03-23T22:47:19.033Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[2026-03-23T22:47:19.033Z] > authorizing via signed-in user (felizdeemprender@gmail.com)
+[2026-03-23T22:47:19.033Z] [iam] checking project btechacademy-8b329 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[2026-03-23T22:47:19.033Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T22:47:19.033Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T22:47:19.034Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions [none]
+[2026-03-23T22:47:19.034Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions  x-goog-user-project=btechacademy-8b329
+[2026-03-23T22:47:19.034Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[2026-03-23T22:47:19.866Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions 200
+[2026-03-23T22:47:19.866Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[2026-03-23T22:47:19.867Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T22:47:19.867Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T22:47:19.868Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/btechacademy-8b329/locations/-/functions [none]
+[2026-03-23T22:47:20.299Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/btechacademy-8b329/locations/-/functions 403
+[2026-03-23T22:47:20.299Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/btechacademy-8b329/locations/-/functions {"error":{"code":403,"message":"Cloud Functions API has not been used in project btechacademy-8b329 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=btechacademy-8b329 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"service":"cloudfunctions.googleapis.com","containerInfo":"btechacademy-8b329","serviceTitle":"Cloud Functions API","consumer":"projects/btechacademy-8b329","activationUrl":"https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=btechacademy-8b329"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Cloud Functions API has not been used in project btechacademy-8b329 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=btechacademy-8b329 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=btechacademy-8b329"}]}]}}
+[2026-03-23T22:47:20.300Z] [functions] failed to list functions for btechacademy-8b329
+[2026-03-23T22:47:20.300Z] [functions] Request to https://cloudfunctions.googleapis.com/v1/projects/btechacademy-8b329/locations/-/functions had HTTP Error: 403, Cloud Functions API has not been used in project btechacademy-8b329 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=btechacademy-8b329 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+[2026-03-23T22:47:20.372Z] FirebaseError: Request to https://cloudfunctions.googleapis.com/v1/projects/btechacademy-8b329/locations/-/functions had HTTP Error: 403, Cloud Functions API has not been used in project btechacademy-8b329 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudfunctions.googleapis.com/overview?project=btechacademy-8b329 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+    at responseToError (C:\Users\Admin\AppData\Roaming\npm\node_modules\firebase-tools\lib\responseToError.js:53:12)
+    at RetryOperation._fn (C:\Users\Admin\AppData\Roaming\npm\node_modules\firebase-tools\lib\apiv2.js:333:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+Error: Failed to list functions for btechacademy-8b329

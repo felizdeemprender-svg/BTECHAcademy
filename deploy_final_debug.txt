@@ -1,0 +1,555 @@
+[2026-03-23T23:00:02.805Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[2026-03-23T23:00:02.806Z] > authorizing via signed-in user (felizdeemprender@gmail.com)
+[2026-03-23T23:00:02.806Z] [iam] checking project btechacademy-8b329 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[2026-03-23T23:00:02.806Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:02.806Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:02.807Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions [none]
+[2026-03-23T23:00:02.807Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions  x-goog-user-project=btechacademy-8b329
+[2026-03-23T23:00:02.807Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[2026-03-23T23:00:03.652Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions 200
+[2026-03-23T23:00:03.652Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/btechacademy-8b329:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[2026-03-23T23:00:03.652Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:03.652Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:03.653Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329 [none]
+[2026-03-23T23:00:03.992Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329 200
+[2026-03-23T23:00:03.992Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329 {"projectId":"btechacademy-8b329","projectNumber":"493585665928","displayName":"BTECHAcademy","name":"projects/btechacademy-8b329","resources":{"hostingSite":"btechacademy-8b329"},"state":"ACTIVE","etag":"1_c5550ba8-c84f-4c2a-b13a-9562cda8a2b4"}
+[2026-03-23T23:00:05.728Z] defaultcredentials: writing to file C:\Users\Admin\AppData\Roaming\firebase\felizdeemprender_gmail_com_application_default_credentials.json
+[2026-03-23T23:00:05.729Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:05.729Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:05.729Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites pageToken=&pageSize=10
+[2026-03-23T23:00:07.018Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites 200
+[2026-03-23T23:00:07.018Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites {"sites":[{"name":"projects/btechacademy-8b329/sites/btechacademy-8b329","defaultUrl":"https://btechacademy-8b329.web.app","type":"DEFAULT_SITE"}]}
+[2026-03-23T23:00:07.019Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:07.019Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:07.019Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites 
+[2026-03-23T23:00:07.558Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites 200
+[2026-03-23T23:00:07.558Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites {"sites":[{"name":"projects/btechacademy-8b329/sites/btechacademy-8b329","defaultUrl":"https://btechacademy-8b329.web.app","type":"DEFAULT_SITE"}]}
+[2026-03-23T23:00:07.558Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:07.558Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:07.558Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329/webApps/-/config [none]
+[2026-03-23T23:00:08.177Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329/webApps/-/config 200
+[2026-03-23T23:00:08.177Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/btechacademy-8b329/webApps/-/config {"projectId":"btechacademy-8b329","appId":"1:493585665928:web:8cf8b7523790d81099343d","storageBucket":"btechacademy-8b329.firebasestorage.app","apiKey":"AIzaSyD7srVAfI5ZtES_-5Syblh1z9_lHIj_gVk","authDomain":"btechacademy-8b329.firebaseapp.com","messagingSenderId":"493585665928","measurementId":"G-FE870RV1MM","projectNumber":"493585665928","version":"2"}
+No Firebase app associated with site btechacademy-8b329, injecting project default config.
+  You can link a Web app to a Hosting site here https://console.firebase.google.com/project/btechacademy-8b329/settings/general/web
+
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[2026-03-23T23:00:11.677Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:11.677Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:11.678Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 [none]
+[2026-03-23T23:00:12.159Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 200
+[2026-03-23T23:00:12.159Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 {"name":"projects/btechacademy-8b329/sites/btechacademy-8b329","defaultUrl":"https://btechacademy-8b329.web.app","type":"DEFAULT_SITE"}
+   Ôû▓ Next.js 15.5.9
+
+   - Environments: .env
+   - Experiments (use with caution):
+     ┬À serverActions
+
+
+   Creating an optimized production build ...
+
+
+
+
+Source path: C:\FelizdeEmprender\studio\src\app\globals.css
+
+Setting up new context...
+
+Finding changed files: 7.364ms
+
+Reading changed files: 195.186ms
+
+Sorting candidates: 6.087ms
+
+Generate rules: 137.105ms
+
+Build stylesheet: 3.36ms
+
+Potential classes:  13996
+
+Active contexts:  1
+
+JIT TOTAL: 440.231ms
+
+
+
+ Ô£ô Compiled successfully in 4.7s
+
+   Skipping validation of types
+   Skipping linting
+
+   Collecting page data ...
+
+   Generating static pages (0/48) ...
+
+   Generating static pages (12/48) 
+
+   Generating static pages (24/48) 
+
+   Generating static pages (36/48) 
+
+ Ô£ô Generating static pages (48/48)
+
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+
+
+Route (app)                                      Size  First Load JS
+Ôöî Ôùï /                                         6.89 kB         129 kB
+Ôö£ Ôùï /_not-found                                  1 kB         102 kB
+Ôö£ Ôùï /abonos                                    5.7 kB         284 kB
+Ôö£ Ôùï /about                                    4.89 kB         124 kB
+Ôö£ Ôùï /admin/billing                             5.8 kB         284 kB
+Ôö£ Ôùï /admin/moderation                         7.91 kB         290 kB
+Ôö£ Ôùï /admin/subscriptions                      11.8 kB         307 kB
+Ôö£ Ôùï /admin/tags                               8.09 kB         290 kB
+Ôö£ Ôùï /admin/terms                              4.21 kB         286 kB
+Ôö£ Ôùï /admin/theme                              4.82 kB         283 kB
+Ôö£ Ôùï /admin/tutors                             11.5 kB         153 kB
+Ôö£ Ôùï /admin/users                              10.2 kB         311 kB
+Ôö£ Ôùï /ai-assistant                               611 B         279 kB
+Ôö£ Ôùï /alumnos                                  3.37 kB         281 kB
+Ôö£ ãÆ /alumnos/[id]                             17.1 kB         308 kB
+Ôö£ ãÆ /api/admin/billing                          166 B         102 kB
+Ôö£ ãÆ /api/admin/subscription-plans               166 B         102 kB
+Ôö£ ãÆ /api/admin/tutors/[tutorId]/subscription    166 B         102 kB
+Ôö£ ãÆ /api/admin/tutors/subscriptions             166 B         102 kB
+Ôö£ ãÆ /api/ai/generate-image                      166 B         102 kB
+Ôö£ ãÆ /api/courses/create                         166 B         102 kB
+Ôö£ ãÆ /api/courses/invite                         166 B         102 kB
+Ôö£ ãÆ /api/courses/marketplace                    166 B         102 kB
+Ôö£ ãÆ /api/courses/tutor/[tutorId]                166 B         102 kB
+Ôö£ ãÆ /api/track                                  166 B         102 kB
+Ôö£ ãÆ /api/tutors/[username]/status               166 B         102 kB
+Ôö£ ãÆ /api/tutors/featured                        166 B         102 kB
+Ôö£ Ôùï /auth                                     9.71 kB         245 kB
+Ôö£ Ôùï /case-studies                             5.15 kB         124 kB
+Ôö£ Ôùï /courses                                  4.11 kB         127 kB
+Ôö£ ãÆ /courses/[id]                             10.3 kB         301 kB
+Ôö£ Ôùï /courses/create                           15.8 kB         316 kB
+Ôö£ ãÆ /courses/edit/[id]                        12.9 kB         307 kB
+Ôö£ Ôùï /courses/manage                           16.3 kB         327 kB
+Ôö£ ãÆ /courses/style/[id]                       8.64 kB         295 kB
+Ôö£ Ôùï /dashboard                                12.4 kB         300 kB
+Ôö£ Ôùï /mentoria/desafios                        9.42 kB         316 kB
+Ôö£ Ôùï /mentoria/marketing                       9.98 kB         307 kB
+Ôö£ Ôùï /mentoria/marketing/build                 9.03 kB         306 kB
+Ôö£ Ôùï /mentoria/marketing/execution             14.8 kB         309 kB
+Ôö£ Ôùï /mentoria/marketing/pages                 7.49 kB         299 kB
+Ôö£ Ôùï /mentoria/marketing/pages/build             17 kB         314 kB
+Ôö£ Ôùï /mentoria/marketing/templates             17.4 kB         314 kB
+Ôö£ Ôùï /mentoria/marketing/track                  109 kB         393 kB
+Ôö£ Ôùï /my-courses                               3.87 kB         287 kB
+Ôö£ Ôùï /seguimientos                             8.71 kB         316 kB
+Ôö£ ãÆ /seguimientos/[id]                        14.6 kB         318 kB
+Ôö£ Ôùï /services                                 5.62 kB         124 kB
+Ôö£ Ôùï /settings                                 11.8 kB         304 kB
+Ôö£ Ôùï /tasks                                    5.57 kB         287 kB
+Ôö£ Ôùï /tutor-access-denied                      2.12 kB         116 kB
+Ôö£ ãÆ /tutor/[username]                         4.51 kB         127 kB
+Ôö£ ãÆ /tutor/[username]/courses                 6.08 kB         125 kB
+Ôö£ Ôùï /upgrade-required                         2.05 kB         116 kB
+Ôö£ ãÆ /v/[id]                                     191 B         251 kB
+Ôöö Ôùï /v/resolve                                1.19 kB         253 kB
++ First Load JS shared by all                  101 kB
+  Ôö£ chunks/1255-de0c1abd22c7cccd.js           45.2 kB
+  Ôö£ chunks/4bd1b696-182b6b13bdad92e3.js       54.2 kB
+  Ôöö other shared chunks (total)               2.06 kB
+
+
+ãÆ Middleware                                  33.2 kB
+
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+
+
+Building a Cloud Function to run this application. This is needed due to:
+ ÔÇó middleware
+ ÔÇó non-static component /api/admin/subscription-plans/route
+ ÔÇó non-static component /api/admin/billing/route
+ ÔÇó non-static component /api/admin/tutors/[tutorId]/subscription/route
+ ÔÇó non-static component /api/ai/generate-image/route
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /api/courses/create/route
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /api/admin/tutors/subscriptions/route
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /api/courses/invite/route
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /api/courses/marketplace/route
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /api/courses/tutor/[tutorId]/route
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /api/track/route
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /api/tutors/featured/route
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /api/tutors/[username]/status/route
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /alumnos/[id]/page
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /courses/edit/[id]/page
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /courses/style/[id]/page
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /courses/[id]/page
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /seguimientos/[id]/page
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /v/[id]/page
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /tutor/[username]/courses/page
+[2026-03-23T23:00:29.811Z]  ÔÇó non-static component /tutor/[username]/page
+[2026-03-23T23:00:29.811Z]  ÔÇó route with server action /admin/moderation
+[2026-03-23T23:00:29.811Z]  ÔÇó route with server action /admin/tags
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /courses/manage
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /alumnos/[id]
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /courses/edit/[id]
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /courses/create
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /courses/[id]
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /tasks
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /seguimientos/[id]
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /mentoria/marketing/build
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /mentoria/marketing/pages/build
+[2026-03-23T23:00:29.812Z]  ÔÇó route with server action /mentoria/marketing/templates
+
+[2026-03-23T23:00:30.479Z] skipping /auth due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /_not-found due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /courses due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /dashboard due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /admin/billing due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /mentoria/marketing/execution due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /courses/manage due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /admin/users due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /mentoria/marketing/pages due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /mentoria/desafios due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /my-courses due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /mentoria/marketing due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /admin/theme due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.479Z] skipping /admin/subscriptions due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping / due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /tasks due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /settings due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /tutor-access-denied due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /upgrade-required due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /ai-assistant due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /abonos due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /seguimientos due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /v/resolve due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /case-studies due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /mentoria/marketing/track due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /about due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /admin/tutors due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /admin/terms due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /alumnos due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /services due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /admin/tags due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /mentoria/marketing/build due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /admin/moderation due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /mentoria/marketing/pages/build due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /courses/create due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /mentoria/marketing/templates due to it matching an unsupported rewrite/redirect/header or middlware
+[2026-03-23T23:00:30.480Z] skipping /404 due to it matching an unsupported rewrite/redirect/header or middlware
+Warning: Global esbuild version (0.27.2) does not match the required version (^0.19.2).
+[2026-03-23T23:00:32.990Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:32.990Z] Checked if tokens are valid: true, expires at: 1774309634849
+[2026-03-23T23:00:32.990Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 [none]
+[2026-03-23T23:00:34.178Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 200
+[2026-03-23T23:00:34.178Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/btechacademy-8b329/sites/btechacademy-8b329 {"name":"projects/btechacademy-8b329/sites/btechacademy-8b329","defaultUrl":"https://btechacademy-8b329.web.app","type":"DEFAULT_SITE"}
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'nextn@0.1.0',
+npm warn EBADENGINE   required: { node: '20' },
+npm warn EBADENGINE   current: { node: 'v24.11.1', npm: '11.6.2' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'firebase-frameworks@0.11.8',
+npm warn EBADENGINE   required: { node: '^16.0.0 || ^18.0.0 || ^20.0.0 || ^22.0.0' },
+npm warn EBADENGINE   current: { node: 'v24.11.1', npm: '11.6.2' }
+npm warn EBADENGINE }
+npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\protos'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\package.json'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\README.md'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\.guides'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\package.json'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\protos'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\README.md'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\.guides'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\.guides'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\.guides'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\protos'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\glob\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\protos'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\firebase-functions\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\runtime.js'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\dist'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\lib'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\package.json'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\README.markdown'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\release-notes.md'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, lstat 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\types'
+npm warn tar TAR_ENTRY_ERROR ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\node_modules\handlebars\runtime.d.ts'
+npm error code ENOENT
+npm error syscall open
+npm error path C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\package.json
+npm error errno -4058
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'C:\FelizdeEmprender\studio\.firebase\btechacademy-8b329\functions\package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: C:\Users\Admin\AppData\Local\npm-cache\_logs\2026-03-23T23_00_35_498Z-debug-0.log
+[2026-03-23T23:00:53.806Z] Error: Command failed: npm i --omit dev --no-audit
+    at genericNodeError (node:internal/errors:985:15)
+    at wrappedFn (node:internal/errors:539:14)
+    at checkExecSyncError (node:child_process:925:11)
+    at execSync (node:child_process:997:15)
+    at prepareFrameworks (C:\Users\Admin\AppData\Roaming\npm\node_modules\firebase-tools\lib\frameworks\index.js:373:42)
+    at async deploy (C:\Users\Admin\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\index.js:80:9)
+
+Error: An unexpected error has occurred.

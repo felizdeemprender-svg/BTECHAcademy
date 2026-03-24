@@ -1,0 +1,181 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         'admin' in getUserData().get('roles', []))
+      );
+    }
+
+    function isMentor() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/roles_mentor/$(request.auth.uid)) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         'mentor' in getUserData().get('roles', []))
+      );
+    }
+
+    function isMarketing() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        'marketing' in getUserData().get('roles', [])
+      );
+    }
+
+    match /salesPages/{pageId} {
+      allow read: if true;
+      allow update: if (isAdmin() || isMarketing() || isMentor()) || 
+                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats']));
+      allow create, delete: if isAdmin() || isMarketing() || isMentor();
+    }
+
+    match /campaigns/{campaignId} {
+      allow read: if true;
+      allow write: if isAdmin() || isMarketing() || isMentor();
+    }
+
+    match /templateCollections/{collectionId} {
+      allow read, write: if isAdmin() || isMarketing() || isMentor();
+    }
+
+    match /followups/{followUpId} {
+      allow list: if isSignedIn();
+      allow get: if isSignedIn() && (
+        resource.data.mentorId == request.auth.uid || 
+        resource.data.studentId == request.auth.uid || 
+        resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower() ||
+        isAdmin()
+      );
+      allow create: if isMentor() || isAdmin();
+      allow update, delete: if isAdmin() || (isSignedIn() && (resource.data.mentorId == request.auth.uid || resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower() || resource.data.studentId == request.auth.uid));
+
+      match /sessions/{sessionId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin() || isMentor();
+      }
+
+      match /tasks/{taskId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin() || isMentor() || (isSignedIn() && (get(/databases/$(database)/documents/followups/$(followUpId)).data.studentId == request.auth.uid || get(/databases/$(database)/documents/followups/$(followUpId)).data.get('studentEmail', '').lower() == request.auth.token.email.lower()));
+      }
+    }
+
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /tags/{tagId} {
+      allow read: if true;
+      allow write: if isAdmin() || isMentor() || isMarketing();
+    }
+
+    match /courses/{courseId} {
+      allow read, list: if true;
+      allow create: if isMentor() || isAdmin();
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.mentorId == request.auth.uid);
+
+      match /modules/{moduleId} {
+        allow read, list: if true;
+        allow write: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/courses/$(courseId)).data.mentorId == request.auth.uid);
+      }
+    }
+
+    match /enrollments/{enrollmentId} {
+      allow list: if isSignedIn();
+      allow get: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        resource.data.studentId == request.auth.uid || 
+        resource.data.get('inviteEmail', '').lower() == request.auth.token.email.lower() ||
+        isAdmin() || 
+        (exists(/databases/$(database)/documents/courses/$(resource.data.courseId)) && 
+         get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.mentorId == request.auth.uid)
+      );
+      allow delete: if isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/courses/$(resource.data.courseId)) && get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.mentorId == request.auth.uid);
+    }
+
+    match /users/{userId} {
+      allow get: if true;
+      allow list: if true; // Cambiado a true para permitir Marketplace y Perfil Público sin login
+      allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin() || isMentor()); 
+      allow update: if isSignedIn() && (
+        request.auth.uid == userId || 
+        isAdmin() || 
+        (exists(resource.data) && resource.data.get('email', '').lower() == request.auth.token.email.lower())
+      );
+      allow delete: if isAdmin() || (
+        isSignedIn() && (
+          request.auth.uid == userId || 
+          resource.data.get('email', '').lower() == request.auth.token.email.lower()
+        )
+      );
+
+      match /private/config {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /studentNotes/{noteId} {
+        allow read, list: if isSignedIn() && (request.auth.uid == userId || isAdmin() || isMentor());
+        allow create: if isSignedIn() && (isMentor() || isAdmin());
+        allow update, delete: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      }
+
+      match /individualTasks/{taskId} {
+        allow read, list: if isSignedIn();
+        allow create: if isSignedIn() && (isMentor() || isAdmin());
+        allow update: if isSignedIn();
+        allow delete: if isAdmin() || (isSignedIn() && (
+          resource.data.mentorId == request.auth.uid || 
+          resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower() ||
+          resource.data.studentId == request.auth.uid
+        ));
+      }
+    }
+
+    match /{path=**}/individualTasks/{taskId} {
+      allow list: if isSignedIn();
+      allow get: if isSignedIn();
+      allow delete: if isAdmin() || (isSignedIn() && (
+        resource.data.mentorId == request.auth.uid || 
+        resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower() ||
+        resource.data.studentId == request.auth.uid
+      ));
+    }
+
+    match /quiz_attempts/{attemptId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+    }
+
+    match /moderation-logs/{logId} {
+      allow read: if isSignedIn() && (isAdmin() || isMentor());
+      allow create: if isSignedIn() && (isAdmin() || isMentor());
+    }
+
+    match /subscriptionPlans/{planId} {
+      allow read: if true;
+      allow write: if isAdmin() || true; // temporalmente true para que backend pueda crearla
+    }
+
+    match /mentor-subscriptions/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /roles_admin/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
+    match /roles_mentor/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
+  }
+}

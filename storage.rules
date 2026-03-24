@@ -1,0 +1,10 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // Permite lectura y escritura a cualquier usuario autenticado en la instancia default
+      // Es obligatorio haber activado Storage en la consola de Firebase (botón "Comenzar")
+      allow read, write: if request.auth != null;
+    }
+  }
+}

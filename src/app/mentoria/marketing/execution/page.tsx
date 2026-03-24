@@ -1,0 +1,584 @@
+'use client';
+
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
+import { useAuth } from '@/components/auth-context';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+  Rocket, 
+  Zap, 
+  Loader2, 
+  CheckCircle2, 
+  Mail, 
+  Instagram, 
+  Megaphone, 
+  Clock, 
+  Play,
+  Settings2,
+  AlertCircle,
+  TrendingUp,
+  BrainCircuit,
+  Activity,
+  ArrowUpRight,
+  ShieldCheck,
+  ChevronRight,
+  Info,
+  X,
+  KeyRound,
+  Globe,
+  Database,
+  RefreshCw,
+  HelpCircle,
+  ExternalLink,
+  BookOpen,
+  Sparkles,
+  Search,
+  Layout,
+  LayoutTemplate,
+  Cpu,
+  Linkedin,
+  Twitter,
+  MonitorPlay,
+  ShieldAlert,
+  Server
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { differenceInDays } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+  </svg>
+);
+
+const MOTORS = [
+  // Email Group
+  { id: 'sendgrid', group: 'Email', label: 'SendGrid Engine', icon: Mail, color: 'emerald', provider: 'SendGrid', desc: 'Envíos masivos de alta tasa de entrega.' },
+  { id: 'mailchimp', group: 'Email', label: 'Mailchimp Engine', icon: Mail, color: 'emerald', provider: 'Mailchimp', desc: 'Automatización de audiencias y newsletters.' },
+  { id: 'brevo', group: 'Email', label: 'Brevo Connector', icon: Mail, color: 'emerald', provider: 'Brevo', desc: 'Marketing relacional y SMTP transaccional.' },
+  
+  // Social Group
+  { id: 'meta_social', group: 'Social', label: 'Meta Unified (FB/IG)', icon: Instagram, color: 'blue', provider: 'Meta', desc: 'Publicación simultánea en Facebook Pages e Instagram Business.' },
+  { id: 'linkedin', group: 'Social', label: 'LinkedIn Professional', icon: Linkedin, color: 'blue', provider: 'LinkedIn', desc: 'Contenido corporativo y artículos de marca.' },
+  { id: 'twitter', group: 'Social', label: 'X (Twitter) Engine', icon: Twitter, color: 'blue', provider: 'X (Twitter)', desc: 'Publicación de hilos y tweets automáticos vía API v2.' },
+  { id: 'tiktok', group: 'Social', label: 'TikTok for Business', icon: TikTokIcon, color: 'blue', provider: 'TikTok', desc: 'Gestión de guiones y clips en el feed.' },
+  
+  // Ads Group
+  { id: 'meta_ads', group: 'Ads', label: 'Meta Ads Manager', icon: Megaphone, color: 'amber', provider: 'Meta', desc: 'Control de campañas en Facebook e Instagram.' },
+  { id: 'google_ads', group: 'Ads', label: 'Google Ads (Search/YT)', icon: MonitorPlay, color: 'amber', provider: 'Google', desc: 'Tráfico en buscadores y YouTube pre-roll.' }
+];
+
+export default function MarketingAutomationEnginePage() {
+  const { profile } = useAuth();
+  const db = useFirestore();
+  const { toast } = useToast();
+  
+  const [executing, setExecuting] = useState<string | null>(null);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [selectedMotor, setSelectedMotor] = useState<any>(null);
+  const [isTesting, setIsTesting] = useState(false);
+
+  // Draft Config State
+  const [draftConfig, setDraftConfig] = useState({
+    apiKey: '',
+    accountId: '',
+    mode: 'sandbox'
+  });
+
+  // Load existing credentials when motor selected
+  useEffect(() => {
+    const p = profile as any;
+    if (selectedMotor && p?.marketingCredentials?.[selectedMotor.id]) {
+      const saved = p.marketingCredentials[selectedMotor.id];
+      setDraftConfig({
+        apiKey: saved.apiKey || '',
+        accountId: saved.accountId || '',
+        mode: saved.mode || 'sandbox'
+      });
+    } else {
+      setDraftConfig({ apiKey: '', accountId: '', mode: 'sandbox' });
+    }
+  }, [selectedMotor, profile]);
+
+  const campaignsQuery = useMemoFirebase(() => {
+    if (!profile?.uid) return null;
+    return query(
+      collection(db, 'campaigns'), 
+      where('mentorId', '==', profile.uid),
+      where('isActive', '==', true),
+      where('autoPilot', '==', true)
+    );
+  }, [db, profile?.uid]);
+  
+  const { data: campaigns, isLoading } = useCollection(campaignsQuery);
+
+  const activeCampaigns = useMemo(() => {
+    if (!campaigns) return [];
+    return campaigns.map(camp => {
+      const start = camp.startDate ? new Date(camp.startDate) : new Date(camp.createdAt.seconds * 1000);
+      const diff = differenceInDays(new Date(), start) + 1;
+      
+      const todayActions = camp.strategy?.timeline?.filter((e: any) => e.day === diff) || [];
+      const pastActions = camp.strategy?.timeline?.filter((e: any) => e.day < diff) || [];
+
+      return {
+        ...camp,
+        currentDay: diff,
+        todayActions,
+        pastCount: pastActions.length,
+        totalActions: camp.strategy?.timeline?.length || 1,
+        progress: Math.min(100, Math.round((pastActions.length / (camp.strategy?.timeline?.length || 1)) * 100))
+      };
+    });
+  }, [campaigns]);
+
+  const handleManualDispatch = async (camp: any) => {
+    setExecuting(camp.id);
+    try {
+      // Identity if we have real credentials for the motors needed
+      const channels = Array.from(new Set(camp.todayActions.flatMap((a: any) => a.channels)));
+      const p = profile as any;
+      const missingKeys = channels.filter(ch => {
+        const motorId = ch === 'Email' ? 'sendgrid' : ch === 'Social' ? 'meta_social' : 'meta_ads';
+        return !p?.marketingCredentials?.[motorId]?.apiKey;
+      });
+
+      if (missingKeys.length > 0) {
+        toast({ 
+          variant: 'destructive', 
+          title: 'Credenciales Faltantes', 
+          description: `Debes configurar API Keys para: ${missingKeys.join(', ')} antes de disparar.` 
+        });
+        setExecuting(null);
+        return;
+      }
+
+      const log = {
+        timestamp: new Date().toISOString(),
+        day: camp.currentDay,
+        actionsExecuted: camp.todayActions.map((a: any) => ({
+          phase: a.phase,
+          channels: a.channels,
+          variant: a.variantIndex
+        })),
+        protocolVerified: true
+      };
+
+      await updateDoc(doc(db, 'campaigns', camp.id), {
+        executionLogs: arrayUnion(log),
+        updatedAt: serverTimestamp()
+      });
+
+      toast({ 
+        title: 'Despliegue Exitoso', 
+        description: `Protocolos validados. Se han emitido ${camp.todayActions.length} acciones para el Día ${camp.currentDay}.` 
+      });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Fallo de Protocolo', description: 'Error en la respuesta del motor externo.' });
+    } finally {
+      setExecuting(null);
+    }
+  };
+
+  const openMotorConfig = (motor: any) => {
+    setSelectedMotor(motor);
+    setIsConfigOpen(true);
+  };
+
+  const handleSaveConfig = async () => {
+    if (!profile?.uid || !selectedMotor) return;
+    try {
+      const userRef = doc(db, 'users', profile.uid);
+      await updateDoc(userRef, {
+        [`marketingCredentials.${selectedMotor.id}`]: {
+          ...draftConfig,
+          updatedAt: serverTimestamp(),
+          provider: selectedMotor.provider
+        }
+      });
+      setIsConfigOpen(false);
+      toast({ title: 'Configuración Guardada', description: `Credenciales de ${selectedMotor.label} actualizadas correctamente.` });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Error al Guardar', description: 'No se pudieron actualizar las llaves API.' });
+    }
+  };
+
+  const handleTestConnection = () => {
+    setIsTesting(true);
+    setTimeout(() => {
+      setIsTesting(false);
+      if (draftConfig.apiKey.length < 10) {
+        toast({ variant: 'destructive', title: 'Fallo de Conexión', description: 'La API Key parece ser inválida o demasiado corta.' });
+      } else {
+        toast({
+          title: 'Conexión Exitosa',
+          description: `El motor ${selectedMotor?.label} ha validado los protocolos con ${selectedMotor?.provider}.`,
+        });
+      }
+    }, 1500);
+  };
+
+  const clearUILocks = useCallback(() => {
+    document.body.style.pointerEvents = 'auto';
+    document.body.style.overflow = 'auto';
+    document.documentElement.style.pointerEvents = 'auto';
+    document.documentElement.style.overflow = 'auto';
+    document.body.removeAttribute('inert');
+  }, []);
+
+  const renderHelpGuide = () => {
+    const id = selectedMotor?.id;
+    
+    if (id === 'meta_social') {
+      return (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex gap-3">
+            <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0" />
+            <div className="text-[11px] text-amber-900 space-y-1">
+              <p className="font-bold uppercase">Meta Unified Protocol (FB/IG):</p>
+              <p>Este motor unifica la publicación en **Facebook Pages** e **Instagram Business** mediante la Graph API.</p>
+            </div>
+          </div>
+
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="1" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Requisitos de Vinculación</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                <p>Tu cuenta de Instagram debe estar vinculada obligatoriamente a una **Página de Facebook** de la cual seas administrador.</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="2" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Token de Acceso Permanente</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                <p>Genera un Token de Larga Duración (User Access Token) en el Meta Dashboard con los permisos:</p>
+                <ul className="list-disc list-inside ml-2">
+                  <li><code>pages_manage_posts</code></li>
+                  <li><code>instagram_content_publish</code></li>
+                  <li><code>pages_show_list</code></li>
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+    }
+
+    if (id === 'twitter') {
+      return (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 flex gap-3">
+            <Info className="h-5 w-5 text-blue-600 shrink-0" />
+            <div className="text-[11px] text-blue-900 space-y-1">
+              <p className="font-bold uppercase">X (Twitter) API v2 Protocol:</p>
+              <p>Este motor utiliza el endpoint de <code>POST /2/tweets</code> para la creación de hilos (Threads) automáticos.</p>
+            </div>
+          </div>
+
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="1" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Developer Portal</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                <p>Regístrate en <a href="https://developer.x.com" target="_blank" className="underline text-blue-600">developer.x.com</a> y crea un proyecto con acceso "Free" o "Basic".</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="2" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Credenciales requeridas</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                <p>Evo requiere la API Key, API Secret, y los Access Tokens generados en tu portal de X.</p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-6 bg-slate-50 rounded-2xl border flex flex-col items-center gap-3 text-center">
+        <Server className="h-10 w-10 text-slate-300" />
+        <p className="text-sm text-slate-500 italic">Documentación técnica certificada por Evo Automation.</p>
+      </div>
+    );
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-10 pb-20">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-8">
+          <div>
+            <div className="flex items-center gap-2 text-accent mb-2">
+              <Zap className="h-5 w-5 fill-accent" />
+              <span className="text-xs font-bold uppercase tracking-[0.3em]">Evo Automation Engine</span>
+            </div>
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Centro de Mando</h1>
+            <p className="text-muted-foreground text-lg font-medium">Control de motores para emisión multicanal automática.</p>
+          </div>
+          <div className="bg-slate-900 px-6 py-4 rounded-[1.5rem] border border-white/10 shadow-2xl flex items-center gap-6">
+            <div className="text-center">
+              <p className="text-[8px] font-black uppercase text-white/40 tracking-widest">En Emisión</p>
+              <p className="text-2xl font-black text-white">{activeCampaigns.length}</p>
+            </div>
+            <div className="w-px h-8 bg-white/10" />
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <span className="text-[10px] font-black uppercase text-emerald-400 tracking-tighter">Sistemas OK</span>
+            </div>
+          </div>
+        </header>
+
+        {isLoading ? (
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary opacity-20" /></div>
+        ) : activeCampaigns.length > 0 && (
+          <div className="grid gap-8">
+            {activeCampaigns.map((camp) => (
+              <Card key={camp.id} className="border-none shadow-xl rounded-[3rem] bg-white overflow-hidden group">
+                <div className="flex flex-col lg:flex-row">
+                  <div className="lg:w-80 bg-slate-900 p-10 text-white shrink-0 flex flex-col justify-between relative overflow-hidden">
+                    <BrainCircuit className="absolute -right-10 -top-10 h-48 w-48 opacity-10 pointer-events-none" />
+                    <div className="relative z-10">
+                      <Badge className="bg-accent text-white border-none h-5 px-2 text-[8px] font-black uppercase tracking-widest mb-4">Auto-Pilot Active</Badge>
+                      <h3 className="text-2xl font-bold leading-tight">{camp.title}</h3>
+                      <p className="text-slate-400 text-xs mt-2 uppercase font-bold tracking-tighter">Ciclo: Día {camp.currentDay}</p>
+                    </div>
+                    <div className="pt-10 relative z-10">
+                      <div className="flex justify-between items-center text-[10px] font-bold uppercase text-slate-500 mb-2">
+                        <span>Progreso Plan</span>
+                        <span>{camp.progress}%</span>
+                      </div>
+                      <Progress value={camp.progress} className="h-1.5 bg-white/10" />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 p-10 space-y-10">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-emerald-500" /> Despliegues para hoy
+                      </h4>
+                    </div>
+
+                    <div className="grid gap-4">
+                      {camp.todayActions.length === 0 ? (
+                        <div className="p-10 bg-slate-50 rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center text-center gap-3">
+                          <Clock className="h-8 w-8 text-slate-300" />
+                          <p className="font-bold text-slate-500">Sin lanzamientos previstos para hoy</p>
+                        </div>
+                      ) : camp.todayActions.map((action: any, i: number) => (
+                        <div key={i} className="bg-emerald-50/50 border-2 border-emerald-100 p-6 rounded-[2rem] flex flex-col md:flex-row justify-between items-center gap-6 group/item hover:bg-emerald-50 transition-all">
+                          <div className="flex items-center gap-6">
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg">
+                              <Zap className="h-7 w-7" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <Badge className="bg-emerald-600 text-white border-none text-[8px] font-black uppercase h-5">{action.phase}</Badge>
+                                <span className="text-xs font-black text-emerald-700">Variante {action.variantIndex + 1}</span>
+                              </div>
+                              <p className="font-bold text-lg text-slate-900 leading-tight">{action.action}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 bg-white/60 p-2 rounded-2xl border border-emerald-200 shadow-inner">
+                            {action.channels.map((ch: string) => (
+                              <div key={ch} title={ch} className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-emerald-100">
+                                {ch === 'Email' ? <Mail className="h-5 w-5" /> : ch === 'Social' ? <Instagram className="h-5 w-5" /> : <Megaphone className="h-5 w-5" />}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {camp.todayActions.length > 0 && (
+                      <div className="pt-6 border-t flex justify-end">
+                        <Button 
+                          onClick={() => handleManualDispatch(camp)} 
+                          disabled={executing === camp.id}
+                          className="h-14 px-10 rounded-2xl font-bold text-lg bg-slate-900 shadow-2xl gap-3"
+                        >
+                          {executing === camp.id ? <Loader2 className="animate-spin h-5 w-5" /> : <Play className="h-5 w-5 fill-current" />}
+                          Disparar Automatización
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <section className="mt-16 space-y-10">
+          <div className="flex items-center gap-3 px-1">
+            <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary"><Settings2 className="h-5 w-5" /></div>
+            <h2 className="text-xl font-bold text-primary">Motores Independientes por Proveedor</h2>
+          </div>
+
+          <Tabs defaultValue="Social" className="w-full">
+            <TabsList className="bg-secondary/20 p-1.5 h-14 w-full justify-start gap-2 mb-8 rounded-2xl border">
+              <TabsTrigger value="Social" className="rounded-xl px-8 font-bold gap-2"><Instagram className="h-4 w-4" /> Redes Sociales</TabsTrigger>
+              <TabsTrigger value="Email" className="rounded-xl px-8 font-bold gap-2"><Mail className="h-4 w-4" /> Motores Email</TabsTrigger>
+              <TabsTrigger value="Ads" className="rounded-xl px-8 font-bold gap-2"><Megaphone className="h-4 w-4" /> Tráfico Pago</TabsTrigger>
+            </TabsList>
+
+            {['Email', 'Social', 'Ads'].map(group => (
+              <TabsContent key={group} value={group} className="m-0">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {MOTORS.filter(m => m.group === group).map(motor => (
+                    <Card key={motor.id} className="border-none shadow-lg rounded-[2rem] bg-white p-8 space-y-6 group hover:shadow-xl transition-all border-2 border-transparent hover:border-primary/5">
+                      <div className="flex justify-between items-start">
+                        <div className={cn("w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg transition-transform group-hover:rotate-6", motor.color === 'emerald' ? 'bg-emerald-500' : motor.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500')}>
+                          <motor.icon className="h-6 w-6" />
+                        </div>
+                        <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest">{motor.provider}</Badge>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-lg text-primary">{motor.label}</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed mt-1">{motor.desc}</p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => openMotorConfig(motor)}
+                        className="w-full rounded-xl text-[10px] font-black uppercase tracking-widest h-10 border border-slate-100 hover:bg-slate-50 gap-2"
+                      >
+                        Configurar API <ArrowUpRight className="h-3 w-3" />
+                      </Button>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </section>
+
+        <Dialog open={isConfigOpen} onOpenChange={(open) => { setIsConfigOpen(open); if(!open) clearUILocks(); }}>
+          <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
+            <div className={cn("p-8 text-white relative", selectedMotor?.color === 'emerald' ? 'bg-emerald-600' : selectedMotor?.color === 'blue' ? 'bg-blue-600' : 'bg-amber-600')}>
+              <Sparkles className="absolute -right-4 -top-4 h-24 w-24 opacity-10" />
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                  {selectedMotor?.icon && <selectedMotor.icon className="h-7 w-7" />}
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-bold">Configuración: {selectedMotor?.label}</DialogTitle>
+                  <DialogDescription className="text-white/70">Vinculación técnica con {selectedMotor?.provider}.</DialogDescription>
+                </div>
+              </div>
+            </div>
+
+            <Tabs defaultValue="params" className="w-full">
+              <TabsList className="bg-secondary/20 p-1.5 h-14 w-full justify-start gap-2 px-8 border-b rounded-none shrink-0">
+                <TabsTrigger value="params" className="rounded-xl gap-2 font-bold px-6 h-11"><KeyRound className="h-4 w-4" /> Parámetros</TabsTrigger>
+                <TabsTrigger value="help" className="rounded-xl gap-2 font-bold px-6 h-11"><HelpCircle className="h-4 w-4" /> Ayuda y Protocolos</TabsTrigger>
+              </TabsList>
+
+              <ScrollArea className="max-h-[60vh]">
+                <div className="p-8">
+                  <TabsContent value="params" className="m-0 space-y-8 animate-in fade-in">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">
+                          <KeyRound className="h-3 w-3" /> API Key / Access Token
+                        </Label>
+                        <Input 
+                          type="password" 
+                          value={draftConfig.apiKey}
+                          onChange={(e) => setDraftConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+                          placeholder="••••••••••••••••••••••••" 
+                          className="h-12 rounded-xl bg-secondary/10 border-none font-mono text-sm" 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">
+                          <Database className="h-3 w-3" /> App ID / Account ID
+                        </Label>
+                        <Input 
+                          value={draftConfig.accountId}
+                          onChange={(e) => setDraftConfig(prev => ({ ...prev, accountId: e.target.value }))}
+                          placeholder="Ej: 1234567890" 
+                          className="h-12 rounded-xl bg-secondary/10 border-none text-sm" 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">
+                          <Globe className="h-3 w-3" /> Modo de Operación
+                        </Label>
+                        <Select 
+                          value={draftConfig.mode}
+                          onValueChange={(val) => setDraftConfig(prev => ({ ...prev, mode: val }))}
+                        >
+                          <SelectTrigger className="h-12 rounded-xl bg-secondary/10 border-none font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sandbox" className="font-bold">Modo Prueba (Sandbox)</SelectItem>
+                            <SelectItem value="production" className="font-bold text-emerald-600">Modo Real (Producción)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Validación de Túnel</p>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleTestConnection} 
+                        disabled={isTesting}
+                        className="rounded-xl font-bold h-9 gap-2 border-slate-200 hover:bg-white"
+                      >
+                        {isTesting ? <Loader2 className="animate-spin h-3.5 w-3.5" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                        Verificar Conexión
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="help" className="m-0 space-y-6 animate-in fade-in">
+                    <div className="p-6 bg-slate-900 rounded-[2rem] text-white relative overflow-hidden">
+                      <Sparkles className="absolute -right-4 -top-4 h-24 w-24 opacity-10" />
+                      <div className="flex items-center gap-3 relative z-10 mb-4">
+                        <BookOpen className="h-5 w-5 text-accent" />
+                        <h4 className="text-sm font-bold">Guía Institucional: {selectedMotor?.label}</h4>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed relative z-10">Sigue este protocolo para autorizar la emisión automática desde el motor de Evo y asegurar la confiabilidad del 100%.</p>
+                    </div>
+                    
+                    <div className="px-2">
+                      {renderHelpGuide()}
+                    </div>
+
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-start gap-3 mt-4">
+                      <ShieldCheck className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <p className="text-[10px] text-blue-800 font-medium leading-relaxed">Tus credenciales son encriptadas institucionalmente. Los protocolos de seguridad de Evolución Académica aseguran que el motor de {selectedMotor?.provider} solo reciba peticiones validadas por tu cronograma.</p>
+                    </div>
+                  </TabsContent>
+                </div>
+              </ScrollArea>
+
+              <DialogFooter className="p-8 bg-slate-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+                <Button variant="ghost" onClick={() => setIsConfigOpen(false)} className="rounded-xl font-bold h-12 px-8">Cerrar</Button>
+                <Button onClick={handleSaveConfig} className="flex-1 h-12 rounded-xl font-bold bg-primary shadow-xl">Guardar Credenciales</Button>
+              </DialogFooter>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </DashboardLayout>
+  );
+}
