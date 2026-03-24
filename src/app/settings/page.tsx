@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useFirebase } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDocs, query, where, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -134,6 +134,30 @@ export default function SettingsPage() {
     if (!user) return;
     setLoading(true);
 
+    // Validar unicidad del username
+    const desiredUsername = (formData.username || formData.displayName.toLowerCase().replace(/[^a-z0-9]/g, '-') || user.uid.substring(0, 8)).toLowerCase().trim();
+    if (desiredUsername && desiredUsername !== (profile?.username || '').toLowerCase().trim()) {
+      try {
+        const usernameQuery = query(
+          collection(db, 'users'),
+          where('username', '==', desiredUsername)
+        );
+        const snap = await getDocs(usernameQuery);
+        const conflict = snap.docs.find(d => d.id !== user.uid);
+        if (conflict) {
+          toast({
+            variant: 'destructive',
+            title: 'Nombre de usuario no disponible',
+            description: `"${desiredUsername}" ya está en uso por otro tutor. Elige uno diferente.`
+          });
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        // Si falla la verificación, continuamos (no bloqueamos el guardado)
+      }
+    }
+
     const userRef = doc(db, 'users', user.uid);
     const updateData = {
       displayName: formData.displayName,
@@ -228,7 +252,39 @@ export default function SettingsPage() {
   
   const isMentorOrAdmin = profile?.roles?.some(role => role === 'mentor' || role === 'admin');
   const previewUsername = formData.username || profile?.username;
-  const tutorProfileUrl = previewUsername ? `/tutor/${previewUsername}` : null;
+  const RESERVED_PATHS = [
+    'admin', 'api', 'auth', 'courses', 'dashboard', 'mentoria', 
+    'my-courses', 'seguimientos', 'settings', 'tasks', 'v', 
+    'about', 'services', 'privacy', 'terms', 'tutor', 'alumnos'
+  ];
+  
+  // Enmascaramiento: la URL pública debe usar el subdominio si no es una ruta reservada
+  // Enmascaramiento: la URL pública debe usar el subdominio si hay un username
+  const getSubdomainUrl = () => {
+    if (!previewUsername || !origin) return null;
+    
+    const parts = origin.split('://');
+    const protocol = parts[0];
+    const fullHost = parts[1]; // ej: admin.localhost:9002 o juan.btechacademy.com
+    
+    let baseHost = fullHost;
+    
+    // Limpiamos el host de cualquier subdominio previo
+    if (fullHost.includes('localhost')) {
+      // Especial para localhost:9002 o tutor.localhost:9002
+      baseHost = fullHost.includes('.') ? fullHost.split('.').slice(-1)[0] : fullHost;
+    } else {
+      // Para dominios reales: tomamos solo los últimos 2 segmentos (dominio.com)
+      const hostParts = fullHost.split('.');
+      if (hostParts.length > 2) {
+        baseHost = hostParts.slice(-2).join('.');
+      }
+    }
+    
+    return `${protocol}://${previewUsername.toLowerCase()}.${baseHost}`;
+  };
+
+  const tutorProfileUrl = getSubdomainUrl();
   const isPublic = (profile?.profile as any)?.publicProfile?.enabled ?? true;
 
   return (
@@ -562,19 +618,21 @@ export default function SettingsPage() {
                                 <div className="flex items-center gap-3 w-full sm:w-auto">
                                   <Input 
                                     readOnly 
-                                    value={origin + tutorProfileUrl} 
+                                    value={tutorProfileUrl || ''} 
                                     className="h-12 rounded-xl bg-slate-50 border-slate-100 font-mono text-[10px] min-w-[200px]"
                                   />
                                   <Button 
                                     onClick={() => {
-                                      navigator.clipboard.writeText(origin + tutorProfileUrl);
-                                      toast({ title: 'Copiado', description: 'Enlace copiado al portapapeles' });
+                                      if (tutorProfileUrl) {
+                                        navigator.clipboard.writeText(tutorProfileUrl);
+                                        toast({ title: 'Copiado', description: 'Enlace copiado al portapapeles' });
+                                      }
                                     }}
                                     className="rounded-xl h-12 font-bold bg-accent text-accent-foreground px-6"
                                   >
                                     Copiar
                                   </Button>
-                                  <Link href={tutorProfileUrl} target="_blank">
+                                  <Link href={tutorProfileUrl || '#'} target="_blank">
                                     <Button variant="outline" className="rounded-xl h-12 font-bold px-6 border-2">Visitar</Button>
                                   </Link>
                                 </div>

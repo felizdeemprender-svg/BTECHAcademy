@@ -10,12 +10,11 @@ export async function GET(
     const { firestore } = getFirebaseServer();
     const tutorId = (await params).tutorId;
 
-    // Obtener cursos del tutor usando Web SDK
+    // Obtener TODOS los cursos del tutor (filtramos visibilidad en memoria)
     const coursesQuery = query(
       collection(firestore, 'courses'),
       where('mentorId', '==', tutorId),
-      where('isActive', '==', true),
-      limit(20)
+      limit(50)
     );
 
     const coursesSnapshot = await getDocs(coursesQuery);
@@ -37,17 +36,19 @@ export async function GET(
       }
     });
 
-    // Filtrar por estado, visibilidad pública y QUE TENGAN LANDING
+    // Filtrar por visibilidad: mostrar cursos que tengan landing y no estén rechazados.
+    // isActive=false puede indicar que no pasó por auditoría aún, pero si tiene landing activa debe mostrarse.
     const validCourses = coursesSnapshot.docs.filter(doc => {
       const c = doc.data();
       const hasLanding = !!salesPagesMap[doc.id];
-      const isPublished = c.status === 'published' || c.status === 'approved';
+      const isNotRejected = c.status !== 'rejected';
+      const isExplicitlyHidden = c.isActive === false && !salesPagesMap[doc.id];
       const isPublic = c.publicListing !== false;
-      return hasLanding && isPublished && isPublic;
+      return hasLanding && isNotRejected && !isExplicitlyHidden && isPublic;
     }).sort((a, b) => {
       const dateA = a.data().createdAt?.toDate?.() || new Date(0);
       const dateB = b.data().createdAt?.toDate?.() || new Date(0);
-      return dateB - dateA; // Descending
+      return (dateB as any) - (dateA as any);
     });
 
     // Enriquecer cursos con tags

@@ -125,7 +125,13 @@ export default function MarketingAutomationEnginePage() {
 
   const campaigns = useMemo(() => {
     if (!rawCampaigns) return null;
-    return rawCampaigns.filter(c => c.isActive && c.autoPilot);
+    return rawCampaigns
+      .filter(c => c.isActive && (c.autoPilot || c.status === 'active'))
+      .sort((a, b) => {
+        const dateA = a.createdAt?.seconds || 0;
+        const dateB = b.createdAt?.seconds || 0;
+        return dateB - dateA;
+      });
   }, [rawCampaigns]);
 
   const activeCampaigns = useMemo(() => {

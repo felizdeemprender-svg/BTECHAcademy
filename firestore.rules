@@ -123,19 +123,14 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow get: if true;
-      allow list: if true; // Cambiado a true para permitir Marketplace y Perfil Público sin login
-      allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin() || isMentor()); 
+      allow list: if isAdmin(); // Solo administración central puede ver el padrón completo
+      allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin()); 
       allow update: if isSignedIn() && (
         request.auth.uid == userId || 
         isAdmin() || 
         (exists(resource.data) && resource.data.get('email', '').lower() == request.auth.token.email.lower())
       );
-      allow delete: if isAdmin() || (
-        isSignedIn() && (
-          request.auth.uid == userId || 
-          resource.data.get('email', '').lower() == request.auth.token.email.lower()
-        )
-      );
+      allow delete: if isAdmin();
 
       match /private/config {
         allow read, write: if isSignedIn() && request.auth.uid == userId;

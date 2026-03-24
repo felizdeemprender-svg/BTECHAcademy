@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use, useCallback } from 'react';
+import { useState, useEffect, use, useCallback, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
@@ -85,32 +85,45 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
     if (!mentorProfile?.uid) return null;
     return query(
       collection(db, 'users', mentorProfile.uid, 'studentNotes'), 
-      where('studentId', '==', studentId),
-      orderBy('createdAt', 'desc')
+      where('studentId', '==', studentId)
     );
   }, [db, mentorProfile?.uid, studentId]);
-  const { data: notes } = useCollection(notesQuery);
+  const { data: rawNotes } = useCollection(notesQuery);
+  const notes = useMemo(() => rawNotes ? [...rawNotes].sort((a, b) => {
+    const dateA = a.createdAt?.toDate?.() || new Date(0);
+    const dateB = b.createdAt?.toDate?.() || new Date(0);
+    return dateB.getTime() - dateA.getTime();
+  }) : null, [rawNotes]);
 
   const tasksQuery = useMemoFirebase(() => {
     if (!mentorProfile?.uid) return null;
     return query(
-      collection(db, 'users', studentId, 'individualTasks'),
-      where('mentorId', '==', mentorProfile.uid),
-      orderBy('createdAt', 'desc')
+      collection(db, 'users', studentId, 'individualTasks')
     );
   }, [db, mentorProfile?.uid, studentId]);
-  const { data: tasks } = useCollection(tasksQuery);
+  const { data: rawTasks } = useCollection(tasksQuery);
+  const tasks = useMemo(() => rawTasks ? [...rawTasks]
+    .filter(t => t.mentorId === mentorProfile?.uid)
+    .sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    }) : null, [rawTasks, mentorProfile?.uid]);
 
   const followUpsQuery = useMemoFirebase(() => {
     if (!mentorProfile?.uid) return null;
     return query(
       collection(db, 'followups'),
       where('studentId', '==', studentId),
-      where('mentorId', '==', mentorProfile.uid),
-      orderBy('createdAt', 'desc')
+      where('mentorId', '==', mentorProfile.uid)
     );
   }, [db, mentorProfile?.uid, studentId]);
-  const { data: followUps } = useCollection(followUpsQuery);
+  const { data: rawFollowUps } = useCollection(followUpsQuery);
+  const followUps = useMemo(() => rawFollowUps ? [...rawFollowUps].sort((a, b) => {
+    const dateA = a.createdAt?.toDate?.() || new Date(0);
+    const dateB = b.createdAt?.toDate?.() || new Date(0);
+    return dateB.getTime() - dateA.getTime();
+  }) : null, [rawFollowUps]);
 
   const fetchAcademicData = useCallback(async () => {
     if (!mentorProfile || !studentId) return;

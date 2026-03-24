@@ -282,7 +282,11 @@ function BuilderContent() {
 
   const courses = useMemo(() => {
     if (!rawCourses) return null;
-    return rawCourses.filter(c => c.status === 'approved');
+    // Permitimos draft y pending para que puedan adelantar el marketing 
+    // mientras se termina el contenido o auditoría.
+    return rawCourses
+      .filter(c => c.status !== 'rejected')
+      .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
   }, [rawCourses]);
 
   const collectionsQuery = useMemoFirebase(() => {

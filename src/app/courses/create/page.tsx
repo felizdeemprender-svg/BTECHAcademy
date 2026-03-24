@@ -783,12 +783,19 @@ export default function CreateCoursePage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-end">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Inscribir Alumno</Label>
-                    <div className="flex items-center gap-3 bg-secondary/5 px-4 py-2 rounded-xl border border-dashed">
+                    <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border shadow-sm ring-1 ring-primary/5">
                       <div className="text-right">
-                        <p className="text-[10px] font-bold uppercase tracking-tighter">{isInvitation ? 'Cortesía' : 'Facturable'}</p>
-                        <p className="text-[8px] text-muted-foreground leading-tight">{isInvitation ? 'Sin costo / Límite plan' : 'Venta directa / Ilimitado'}</p>
+                        <Badge className={cn(
+                          "text-[9px] px-2 h-5 border-none shadow-none uppercase font-black tracking-widest mb-0.5",
+                          isInvitation ? "bg-amber-100 text-amber-700 hover:bg-amber-100" : "bg-primary text-white hover:bg-primary"
+                        )}>
+                          {isInvitation ? 'Cortesía' : 'Facturable'}
+                        </Badge>
+                        <p className="text-[8px] text-muted-foreground font-bold tracking-tight">
+                          {isInvitation ? 'CONSUME LÍMITE PLAN' : 'VENTA DIRECTA / ILIMITADO'}
+                        </p>
                       </div>
-                      <Switch checked={isInvitation} onCheckedChange={setIsInvitation} className="scale-75" />
+                      <Switch checked={isInvitation} onCheckedChange={setIsInvitation} className="scale-90" />
                     </div>
                   </div>
                   <div className="flex gap-3">
