@@ -37,8 +37,8 @@ export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    // Forzamos el uso de la base de datos 'default' (sin paréntesis) según requerimiento del entorno.
-    firestore: getFirestore(firebaseApp, 'default'),
+    // Usamos el ID estándar '(default)' con paréntesis para asegurar compatibilidad total.
+    firestore: getFirestore(firebaseApp, '(default)'),
     storage: getStorage(firebaseApp)
   };
 }
