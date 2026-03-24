@@ -267,8 +267,9 @@ export default function DashboardPage() {
             <h1 className="text-4xl font-headline font-bold text-slate-900 tracking-tight">
               {isAdmin ? "Panel Global" : isMentor ? "Mi Panel de Mentor" : "Mi Evolución"}
             </h1>
-            <p className="text-slate-500 font-medium mt-1">
+            <p className="text-slate-500 font-medium mt-1 inline-flex items-center gap-2">
               {isAdmin ? "Control total del ecosistema." : `Bienvenido de nuevo, ${profile.displayName}.`}
+              <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-md font-mono">v1.0.1-prod</span>
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

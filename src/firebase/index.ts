@@ -37,8 +37,8 @@ export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    // Dejamos que Firebase identifique automáticamente la instancia por defecto.
-    firestore: getFirestore(firebaseApp),
+    // Forzamos (default) con paréntesis para asegurar sincronización con las reglas.
+    firestore: getFirestore(firebaseApp, '(default)'),
     storage: getStorage(firebaseApp)
   };
 }
