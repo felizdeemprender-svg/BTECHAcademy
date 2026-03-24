@@ -10,19 +10,25 @@ const RESERVED_PATHS = [
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hostname = request.headers.get('host') || '';
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const hostHeader = request.headers.get('host') || '';
+  const hostname = forwardedHost || hostHeader;
   const segments = pathname.split('/').filter(Boolean);
 
   const hostParts = hostname.split('.');
-  // Detectar cualquier dominio gestionado por Firebase (incluyendo App Hosting con múltiples subpartes)
+  // Detectar cualquier dominio gestionado por Firebase o Google Cloud
   const isFirebaseDefault = hostname.endsWith('.hosted.app') || 
                             hostname.endsWith('.web.app') || 
                             hostname.endsWith('.firebaseapp.com') ||
+                            hostname.endsWith('.run.app') ||
+                            hostname.endsWith('.cloudfunctions.net') ||
                             hostname.includes('.hosted.app') ||
-                            hostname.includes('.firebaseapp.com');
+                            hostname.includes('.firebaseapp.com') ||
+                            hostname.includes('.run.app');
   
   // Solo permitimos lógica de subdominios en localhost o en dominios personalizados con wildcard DNS
   const supportsSubdomains = hostname.includes('localhost') || !isFirebaseDefault;
+
   
   let subdomain = null;
 
