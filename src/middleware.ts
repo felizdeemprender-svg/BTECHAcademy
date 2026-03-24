@@ -14,28 +14,28 @@ export async function middleware(request: NextRequest) {
   const segments = pathname.split('/').filter(Boolean);
 
   const hostParts = hostname.split('.');
-  const isFirebaseDefault = hostname.includes('.hosted.app') || 
-                            hostname.includes('.web.app') || 
+  // Detectar cualquier dominio gestionado por Firebase (incluyendo App Hosting con múltiples subpartes)
+  const isFirebaseDefault = hostname.endsWith('.hosted.app') || 
+                            hostname.endsWith('.web.app') || 
+                            hostname.endsWith('.firebaseapp.com') ||
+                            hostname.includes('.hosted.app') ||
                             hostname.includes('.firebaseapp.com');
   
-  // Solo permitimos subdominios en localhost o en dominios que NO sean los por defecto de Firebase
-  // (Asumiendo que los dominios personalizados sí soportarán wildcard o están configurados)
+  // Solo permitimos lógica de subdominios en localhost o en dominios personalizados con wildcard DNS
   const supportsSubdomains = hostname.includes('localhost') || !isFirebaseDefault;
   
   let subdomain = null;
 
   if (supportsSubdomains) {
     if (hostParts.length > 2 && !hostname.includes('localhost')) {
-      // btechacademy.com (2 parts) -> no subdomain
       subdomain = hostParts[0] !== 'www' ? hostParts[0] : null;
     } else if (hostParts.length > 1 && hostname.includes('localhost')) {
-      // localhost (1 part) -> no subdomain
       subdomain = hostParts[0];
     }
   }
 
-  // 2. Redirección de Rutas Internas Forzadas (Evitar /tutor/usuario y /v/resolver)
-  // Solo si el entorno SOPORTA subdominios. Si no, permitimos la ruta normal.
+  // 2. Redirección de Rutas Internas: /tutor/[username] y /v/
+  // En Firebase Hosting, NO redirigimos a subdominios — dejamos la ruta directa funcionar.
   if (supportsSubdomains && !subdomain && (pathname.startsWith('/tutor/') || pathname.startsWith('/v/'))) {
     const username = segments[1]?.toLowerCase();
     if (username) {
@@ -43,7 +43,6 @@ export async function middleware(request: NextRequest) {
       if (hostname.includes('localhost')) {
         url.host = `${username}.localhost:9002`;
       } else {
-        const hostParts = hostname.split('.');
         const mainHost = hostParts.length > 2 ? hostParts.slice(-2).join('.') : hostname;
         url.host = `${username}.${mainHost}`;
       }
