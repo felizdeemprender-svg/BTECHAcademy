@@ -143,7 +143,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(
-  request: NextRequest
+  request: NextRequest,
+  _context: any
 ) {
   try {
     const { firestore } = getFirebaseServer();
@@ -194,7 +195,8 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest
+  request: NextRequest,
+  _context: any
 ) {
   try {
     const { firestore } = getFirebaseServer();

@@ -26,7 +26,8 @@ import {
   Zap,
   PlayCircle,
   Settings2,
-  Cpu
+  Cpu,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';

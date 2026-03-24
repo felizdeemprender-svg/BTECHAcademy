@@ -83,7 +83,7 @@ export function useTutorPermissions(tutorId: string): UseTutorPermissionsReturn 
 
   const hasSubscription = permissions !== null;
   const isSubscriptionActive = permissions?.canPublishCourses || false;
-  const subscriptionType = permissions?.maxCourses > 0 ? 'premium' : 'free';
+  const subscriptionType = (permissions?.maxCourses ?? 0) > 0 ? 'premium' : 'free';
 
   return {
     permissions,

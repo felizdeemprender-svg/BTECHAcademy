@@ -431,7 +431,6 @@ export default function AdminUsersPage() {
                               setPendingUser(JSON.parse(JSON.stringify(user))); // Deep copy for pending changes
                               setIsPermissionsOpen(true); 
                             }}
-                            title="Cambiar Permisos"
                           >
                             <Shield className="h-4 w-4" />
                           </Button>
