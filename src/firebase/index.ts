@@ -37,8 +37,8 @@ export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    // Usamos el ID estándar '(default)' con paréntesis para asegurar compatibilidad total.
-    firestore: getFirestore(firebaseApp, '(default)'),
+    // Dejamos que Firebase identifique automáticamente la instancia por defecto.
+    firestore: getFirestore(firebaseApp),
     storage: getStorage(firebaseApp)
   };
 }
