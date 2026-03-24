@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { Card, CardContent } from '@/components/ui/card';
@@ -218,8 +218,13 @@ export default function ManageCoursesPage() {
   const termsConfigRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
   const { data: termsConfig } = useDoc(termsConfigRef);
 
-  const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags'), orderBy('name', 'asc')), [db]);
-  const { data: allTags } = useCollection(tagsQuery);
+  const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags')), [db]);
+  const { data: rawTags } = useCollection(tagsQuery);
+
+  const allTags = useMemo(() => {
+    if (!rawTags) return null;
+    return [...rawTags].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }, [rawTags]);
 
   const isAdmin = profile?.roles.includes('admin');
   const isMentor = profile?.roles.includes('mentor');
@@ -281,7 +286,7 @@ export default function ManageCoursesPage() {
     setSelectedAiTags([]);
 
     try {
-      const existingNames = allTags?.map(t => t.name.toLowerCase()) || [];
+      const existingNames = allTags?.map((t: any) => t.name.toLowerCase()) || [];
       const result = await generateTagSuggestions({
         branch: branchInput,
         existingTags: existingNames
@@ -625,11 +630,17 @@ export default function ManageCoursesPage() {
     try {
       const q = query(
         collection(db, 'moderation-logs'), 
-        where('courseId', '==', course.id),
-        orderBy('createdAt', 'desc')
+        where('courseId', '==', course.id)
       );
       const snap = await getDocs(q);
-      setModerationLogs(snap.docs.map(d => ({ ...d.data(), id: d.id })));
+      const logs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      // Sort in memory
+      logs.sort((a: any, b: any) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+      setModerationLogs(logs);
     } finally { setLoadingLogs(false); }
   };
 
@@ -644,11 +655,11 @@ export default function ManageCoursesPage() {
         const limitCount = sub?.invitationsPerCourse || 0;
         const q = query(
           collection(db, 'enrollments'), 
-          where('courseId', '==', selectedId),
-          where('isInvited', '==', true)
+          where('courseId', '==', selectedId)
         );
         const snap = await getDocs(q);
-        if (snap.size >= limitCount) {
+        const invitedCount = snap.docs.filter(d => d.data().isInvited === true).length;
+        if (invitedCount >= limitCount) {
           throw new Error(`Has alcanzado el límite de ${limitCount} invitados por curso de tu plan.`);
         }
       }
@@ -778,7 +789,7 @@ export default function ManageCoursesPage() {
                           <div><p className="font-bold text-sm text-foreground line-clamp-1">{course.title}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {course.tagIds?.length > 0 ? course.tagIds.map((tid: string) => {
-                                const tag = allTags?.find(t => t.id === tid);
+                                const tag = allTags?.find((t: any) => t.id === tid);
                                 return tag ? <Badge key={tid} variant="outline" className="text-[8px] h-3 px-1 border-primary/20 text-primary/70">{tag.name}</Badge> : null;
                               }) : <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
                             </div>

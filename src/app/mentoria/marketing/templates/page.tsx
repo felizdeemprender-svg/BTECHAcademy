@@ -155,9 +155,18 @@ export default function MarketingTemplatesPage() {
 
   const collectionsQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
-    return query(collection(db, 'templateCollections'), where('ownerId', '==', profile.uid), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'templateCollections'), where('ownerId', '==', profile.uid));
   }, [db, profile?.uid]);
-  const { data: collections, isLoading } = useCollection(collectionsQuery);
+  const { data: rawCollections, isLoading } = useCollection(collectionsQuery);
+
+  const collections = useMemo(() => {
+    if (!rawCollections) return null;
+    return [...rawCollections].sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [rawCollections]);
 
   const selectedCollection = useMemo(() => {
     if (!selectedId || !collections) return null;

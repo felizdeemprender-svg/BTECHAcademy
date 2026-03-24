@@ -53,7 +53,6 @@ export default function AdminUsersPage() {
   const [userForPermissions, setUserForPermissions] = useState<any>(null);
   const [pendingUser, setPendingUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
   
   const [newUserData, setNewUserData] = useState({
     email: '',
@@ -69,13 +68,11 @@ export default function AdminUsersPage() {
 
   const { data: usersRaw, isLoading } = useCollection(usersQuery);
 
-  // Cargar planes de suscripción
-  useEffect(() => {
-    fetch('/api/admin/subscription-plans')
-      .then(res => res.json())
-      .then(data => setSubscriptionPlans(data.plans || []))
-      .catch(err => console.error('Error loading plans:', err));
-  }, []);
+  // Cargar planes de suscripción en tiempo real
+  const plansQuery = useMemoFirebase(() => {
+    return query(collection(db, 'subscriptionPlans'), orderBy('createdAt', 'desc'));
+  }, [db]);
+  const { data: subscriptionPlans = [] } = useCollection(plansQuery);
 
   const consolidatedUsers = useMemo(() => {
     if (!usersRaw) return [];
@@ -625,7 +622,7 @@ export default function AdminUsersPage() {
                         <Select 
                           value={pendingUser?.subscription?.name || ''} 
                           onValueChange={(planName) => {
-                            const selectedPlan = subscriptionPlans.find(p => p.name === planName);
+                            const selectedPlan = (subscriptionPlans || []).find(p => p.name === planName);
                             if (selectedPlan) updateSubscriptionPlan(selectedPlan);
                           }}
                         >
@@ -633,7 +630,7 @@ export default function AdminUsersPage() {
                             <SelectValue placeholder="Elegir un plan de suscripción..." />
                           </SelectTrigger>
                           <SelectContent>
-                            {subscriptionPlans.map((plan) => (
+                            {(subscriptionPlans || []).map((plan) => (
                               <SelectItem key={plan.id} value={plan.name}>
                                 <div className="flex items-center justify-between w-full gap-4">
                                   <span className="font-bold">{plan.name}</span>
@@ -650,8 +647,10 @@ export default function AdminUsersPage() {
                       {pendingUser?.subscription && (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
                           <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                            <Label className="text-[9px] font-black uppercase text-slate-400">Máx. Publicados</Label>
+                            <Label htmlFor="limit-courses" className="text-[9px] font-black uppercase text-slate-400">Máx. Publicados</Label>
                             <Input 
+                              id="limit-courses"
+                              name="limit-courses"
                               type="number" 
                               value={pendingUser.subscription.limits?.maxCourses ?? 0}
                               onChange={(e) => {
@@ -670,8 +669,10 @@ export default function AdminUsersPage() {
                           </div>
                           
                           <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                            <Label className="text-[9px] font-black uppercase text-slate-400">Máx. Estudiantes</Label>
+                            <Label htmlFor="limit-students" className="text-[9px] font-black uppercase text-slate-400">Máx. Estudiantes</Label>
                             <Input 
+                              id="limit-students"
+                              name="limit-students"
                               type="number" 
                               value={pendingUser.subscription.limits?.maxStudents ?? 0}
                               onChange={(e) => {
@@ -690,8 +691,10 @@ export default function AdminUsersPage() {
                           </div>
 
                           <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                            <Label className="text-[9px] font-black uppercase text-slate-400">Invitaciones</Label>
+                            <Label htmlFor="limit-invitations" className="text-[9px] font-black uppercase text-slate-400">Invitaciones</Label>
                             <Input 
+                              id="limit-invitations"
+                              name="limit-invitations"
                               type="number" 
                               value={pendingUser.subscription.invitationsPerCourse ?? 0}
                               onChange={(e) => {

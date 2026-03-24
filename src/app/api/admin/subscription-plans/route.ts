@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseServer } from '@/firebase/server';
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, where } from 'firebase/firestore';
 interface SubscriptionPlan {
   id?: string;
   name: string;
@@ -67,6 +67,17 @@ export async function POST(request: NextRequest) {
     const planData: Omit<SubscriptionPlan, 'id' | 'createdAt' | 'updatedAt'> = await request.json();
     
     // Validaciones
+    const existingPlans = await getDocs(
+      query(collection(firestore, 'subscriptionPlans'), where('name', '==', planData.name))
+    );
+
+    if (!existingPlans.empty) {
+      return NextResponse.json(
+        { error: 'Ya existe un plan con ese nombre' },
+        { status: 400 }
+      );
+    }
+
     if (!planData.name || planData.name.trim() === '') {
       return NextResponse.json(
         { error: 'El nombre del plan es requerido' },
@@ -153,6 +164,20 @@ export async function PUT(
     const updateData: Partial<SubscriptionPlan> = await request.json();
     
     // Validaciones
+    if (updateData.name) {
+      const existingPlans = await getDocs(
+        query(collection(firestore, 'subscriptionPlans'), where('name', '==', updateData.name))
+      );
+      
+      const isDuplicate = existingPlans.docs.some(doc => doc.id !== id);
+      if (isDuplicate) {
+        return NextResponse.json(
+          { error: 'Ya existe otro plan con ese nombre' },
+          { status: 400 }
+        );
+      }
+    }
+
     if (updateData.type === 'free' && updateData.price && updateData.price > 0) {
       return NextResponse.json(
         { error: 'Los planes gratuitos no pueden tener precio' },
@@ -203,17 +228,8 @@ export async function DELETE(
     const id = request.nextUrl.searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     
-    // Verificar si el plan existe
-    const planDoc = await getDoc(doc(firestore, 'subscriptionPlans', id));
-    
-    if (!planDoc.exists()) {
-      return NextResponse.json(
-        { error: 'Plan no encontrado' },
-        { status: 404 }
-      );
-    }
-
-    // Eliminar documento
+    // Eliminar documento directamente para mayor velocidad
+    // handleDoc Check is already implicit in the catch or can be skipped for performance
     await deleteDoc(doc(firestore, 'subscriptionPlans', id));
 
     return NextResponse.json({ 

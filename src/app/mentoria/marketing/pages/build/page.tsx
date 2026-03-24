@@ -276,18 +276,37 @@ function BuilderContent() {
 
   const coursesQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
-    return query(collection(db, 'courses'), where('mentorId', '==', profile.uid), where('status', '==', 'approved'));
+    return query(collection(db, 'courses'), where('mentorId', '==', profile.uid));
   }, [db, profile?.uid]);
-  const { data: courses, isLoading: coursesLoading } = useCollection(coursesQuery);
+  const { data: rawCourses, isLoading: coursesLoading } = useCollection(coursesQuery);
+
+  const courses = useMemo(() => {
+    if (!rawCourses) return null;
+    return rawCourses.filter(c => c.status === 'approved');
+  }, [rawCourses]);
 
   const collectionsQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
-    return query(collection(db, 'templateCollections'), where('ownerId', '==', profile.uid), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'templateCollections'), where('ownerId', '==', profile.uid));
   }, [db, profile?.uid]);
-  const { data: collections, isLoading: collectionsLoading } = useCollection(collectionsQuery);
+  const { data: rawCollections, isLoading: collectionsLoading } = useCollection(collectionsQuery);
 
-  const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags'), orderBy('name', 'asc')), [db]);
-  const { data: allTags } = useCollection(tagsQuery);
+  const collections = useMemo(() => {
+    if (!rawCollections) return null;
+    return [...rawCollections].sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [rawCollections]);
+
+  const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags')), [db]);
+  const { data: rawTags } = useCollection(tagsQuery);
+
+  const allTags = useMemo(() => {
+    if (!rawTags) return null;
+    return [...rawTags].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }, [rawTags]);
 
   const selectedCourse = useMemo(() => {
     return courses?.find(c => c.id === selectedCourseId);

@@ -103,7 +103,12 @@ export default function DashboardPage() {
     const ref = collection(db, 'followups');
     if (isAdmin) return query(ref, limit(10));
     if (isMentor) return query(ref, where('mentorId', '==', profile.uid), limit(10));
-    return query(ref, or(where('studentId', '==', profile.uid), where('studentEmail', '==', profile.email?.toLowerCase().trim())), limit(10));
+    
+    // Alumno: Aseguramos email para evitar queries invalidas
+    const studentEmail = profile.email?.toLowerCase().trim();
+    if (!studentEmail) return query(ref, where('studentId', '==', profile.uid), limit(10));
+    
+    return query(ref, or(where('studentId', '==', profile.uid), where('studentEmail', '==', studentEmail)), limit(10));
   }, [db, profile?.uid, profile?.email, isMentor, isAdmin, isAuthLoading]);
   const { data: recentFollowUpsRaw } = useCollection(recentFollowUpsQuery);
 
@@ -123,7 +128,12 @@ export default function DashboardPage() {
     if (!profile?.uid || isAuthLoading) return null;
     const ref = collectionGroup(db, 'individualTasks');
     if (isAdmin || isMentor) return query(ref, where('mentorId', '==', profile.uid), limit(50));
-    return query(ref, or(where('studentId', '==', profile.uid), where('studentEmail', '==', profile.email?.toLowerCase().trim())), limit(20));
+    
+    // Alumno: Aseguramos email
+    const studentEmail = profile.email?.toLowerCase().trim();
+    if (!studentEmail) return query(ref, where('studentId', '==', profile.uid), limit(20));
+
+    return query(ref, or(where('studentId', '==', profile.uid), where('studentEmail', '==', studentEmail)), limit(20));
   }, [db, profile?.uid, profile?.email, isMentor, isAdmin, isAuthLoading]);
   const { data: recentChallengesRaw } = useCollection(recentChallengesQuery);
 
@@ -147,7 +157,16 @@ export default function DashboardPage() {
     if (!profile?.uid || isAuthLoading || (!isMentor && !isAdmin)) return null;
     return query(collection(db, 'salesPages'), where('mentorId', '==', profile.uid), limit(50));
   }, [db, profile?.uid, isMentor, isAdmin, isAuthLoading]);
-  const { data: marketingPages } = useCollection(marketingStatsQuery);
+  const { data: rawMarketingPages } = useCollection(marketingStatsQuery);
+
+  const marketingPages = useMemo(() => {
+    if (!rawMarketingPages) return null;
+    return [...rawMarketingPages].sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.()?.getTime() || 0;
+      const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
+      return dateB - dateA;
+    });
+  }, [rawMarketingPages]);
 
   const aggregateMarketingStats = useMemo(() => {
     if (!marketingPages) return { clicks: 0, conversions: 0, impacts: 0 };

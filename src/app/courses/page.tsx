@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,6 +16,8 @@ import { CourseCard } from '@/components/courses/course-card';
 import { LandingHeader } from '@/components/layout/LandingHeader';
 import { LandingFooter } from '@/components/layout/LandingFooter';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 
 interface Course {
   id: string;
@@ -39,7 +41,7 @@ interface Course {
       status: string;
       plan: string;
     };
-    publicProfile: {
+    publicProfile?: {
       enabled: boolean;
       showStats: boolean;
     };
@@ -66,8 +68,7 @@ const levels = ['Todos', 'Principiante', 'Intermedio', 'Avanzado'];
 
 export default function CoursesPage() {
   const { toast } = useToast();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const db = useFirestore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedLevel, setSelectedLevel] = useState('Todos');
@@ -75,42 +76,149 @@ export default function CoursesPage() {
   const [sortBy, setSortBy] = useState('newest');
   const [requestingId, setRequestingId] = useState<string | null>(null);
 
-  const fetchCourses = async () => {
-    setLoading(true);
-    
-    try {
-      const params = new URLSearchParams({
-        category: selectedCategory,
-        level: selectedLevel,
-        price: priceFilter,
-        sortBy: sortBy,
-        search: searchTerm,
-        limit: '12'
-      });
+  // 1. Fetch Basic Collections
+  const coursesQuery = useMemoFirebase(() => {
+    return query(
+      collection(db, 'courses'),
+      where('isActive', '==', true),
+      where('status', '==', 'published'),
+      where('publicListing', '==', true)
+    );
+  }, [db]);
+  const { data: rawCourses = [], isLoading: coursesLoading } = useCollection(coursesQuery);
 
-      const response = await fetch(`/api/courses/marketplace?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch courses');
-      }
-      
-      const data = await response.json();
-      setCourses(data.courses || []);
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudieron cargar los cursos. Intenta nuevamente.',
-      });
-    } finally {
-      setLoading(false);
+  const salesPagesQuery = useMemoFirebase(() => {
+    return query(collection(db, 'salesPages'), where('isActive', '==', true));
+  }, [db]);
+  const { data: salesPages = [], isLoading: salesLoading } = useCollection(salesPagesQuery);
+
+  const mentorsQuery = useMemoFirebase(() => {
+    return query(collection(db, 'users'), where('isMentor', '==', true));
+  }, [db]);
+  const { data: mentors = [], isLoading: mentorsLoading } = useCollection(mentorsQuery);
+
+  const tagsQuery = useMemoFirebase(() => {
+    return collection(db, 'tags');
+  }, [db]);
+  const { data: allTags = [], isLoading: tagsLoading } = useCollection(tagsQuery);
+
+  // 2. Compute Filtered & Enriched Courses
+  const enrichedCourses = useMemo(() => {
+    if (coursesLoading || salesLoading || mentorsLoading || tagsLoading) return [];
+
+    // Create a map of sales pages by courseId
+    const salesMap = new Map();
+    (salesPages || []).forEach(sp => {
+      if (sp.courseId) salesMap.set(sp.courseId, sp.id);
+    });
+
+    // Create a map of mentors by id
+    const mentorMap = new Map();
+    (mentors || []).forEach(m => mentorMap.set(m.id, m));
+
+    // Create a map of tags by id
+    const tagMap = new Map();
+    (allTags || []).forEach(t => tagMap.set(t.id, t.name));
+
+    return (rawCourses || [])
+      .filter(course => {
+        // Must have an active sales page
+        if (!salesMap.has(course.id)) return false;
+
+        const mentor = mentorMap.get(course.mentorId);
+        // If mentor doesn't exist or is enterprise, exclude from general catalog
+        if (!mentor || mentor.subscription?.status !== 'active' || mentor.subscription?.isEnterprise === true) {
+          return false;
+        }
+
+        // Apply Price Filter
+        if (priceFilter === 'free' && course.price > 0) return false;
+        if (priceFilter === 'paid' && course.price === 0) return false;
+
+        // Apply Level Filter
+        if (selectedLevel !== 'Todos' && course.level?.toLowerCase() !== selectedLevel.toLowerCase()) return false;
+
+        // Apply Search Term
+        if (searchTerm) {
+          const search = searchTerm.toLowerCase();
+          const matchesTitle = course.title?.toLowerCase().includes(search);
+          const matchesDesc = course.description?.toLowerCase().includes(search);
+          const matchesTutor = mentor.displayName?.toLowerCase().includes(search);
+          if (!matchesTitle && !matchesDesc && !matchesTutor) return false;
+        }
+
+        return true;
+      })
+      .map(course => {
+        const mentor = mentorMap.get(course.mentorId);
+        const courseTags = (course.tagIds || []).map((id: string) => tagMap.get(id)).filter(Boolean);
+
+        // Apply Category Filter (after tags are resolved)
+        if (selectedCategory !== 'Todos') {
+          if (!courseTags.some((t: string) => t.toLowerCase().includes(selectedCategory.toLowerCase()))) {
+            return null;
+          }
+        }
+
+        return {
+          id: course.id,
+          slug: course.slug || course.title?.toLowerCase().replace(/\s+/g, '-'),
+          title: course.title || 'Sin título',
+          description: course.description || 'Sin descripción',
+          price: course.price || 0,
+          currency: course.currency || 'USD',
+          duration: course.duration || 0,
+          level: course.level || 'beginner',
+          tags: courseTags,
+          thumbnail: course.thumbnail || `https://loremflickr.com/600/400/education,course?lock=${course.id}`,
+          rating: course.rating || 4.5,
+          students: course.studentsCount || 0,
+          salesPageId: salesMap.get(course.id),
+          tutor: {
+            id: course.mentorId,
+            username: mentor.username || mentor.displayName?.toLowerCase().replace(/\s+/g, '-'),
+            displayName: mentor.displayName || mentor.email?.split('@')[0],
+            photo: mentor.photoURL || `https://loremflickr.com/60/60/person,professional?lock=${course.mentorId}`,
+            subscription: {
+              status: mentor.subscription?.status || 'active',
+              plan: mentor.subscription?.plan || 'free'
+            }
+          },
+          pricing: {
+            type: course.price === 0 ? 'free' : 'paid',
+            amount: course.price || 0,
+            currency: course.currency || 'USD'
+          }
+        };
+      })
+      .filter(Boolean) as Course[];
+  }, [rawCourses, salesPages, mentors, allTags, coursesLoading, salesLoading, mentorsLoading, tagsLoading, searchTerm, selectedCategory, selectedLevel, priceFilter]);
+
+  // Sorting
+  const sortedCourses = useMemo(() => {
+    const list = [...enrichedCourses];
+    switch (sortBy) {
+      case 'newest':
+        list.sort((a, b) => (b.id > a.id ? 1 : -1)); // Approximate by ID if no createdAt as date
+        break;
+      case 'rating':
+        list.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'students':
+        list.sort((a, b) => b.students - a.students);
+        break;
+      case 'price_low':
+        list.sort((a, b) => a.price - b.price);
+        break;
+      case 'price_high':
+        list.sort((a, b) => b.price - a.price);
+        break;
     }
-  };
+    return list;
+  }, [enrichedCourses, sortBy]);
 
-  useEffect(() => {
-    fetchCourses();
-  }, [searchTerm, selectedCategory, selectedLevel, priceFilter, sortBy]);
+  const loading = coursesLoading || salesLoading || mentorsLoading || tagsLoading;
+  const courses = sortedCourses;
 
   const handleRequestInvitation = async (courseId: string) => {
     setRequestingId(courseId);

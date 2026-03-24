@@ -18,7 +18,7 @@ export function getFirebaseServer() {
     return {
       firebaseApp,
       auth: getAuth(firebaseApp),
-      firestore: getFirestore(firebaseApp, 'default'),
+      firestore: getFirestore(firebaseApp, '(default)'),
       storage: getStorage(firebaseApp)
     };
   }
@@ -27,7 +27,7 @@ export function getFirebaseServer() {
   return {
     firebaseApp: app,
     auth: getAuth(app),
-    firestore: getFirestore(app, 'default'),
+    firestore: getFirestore(app, '(default)'),
     storage: getStorage(app)
   };
 }

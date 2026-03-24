@@ -34,6 +34,19 @@ service cloud.firestore {
       );
     }
 
+
+    // Regla global para consultas de grupo (Collection Group) en desafíos
+    match /{path=**}/individualTasks/{taskId} {
+      allow read, list: if isSignedIn();
+      allow create: if isSignedIn() && (isMentor() || isAdmin());
+      allow update, delete: if isSignedIn() && (
+        isAdmin() || 
+        resource.data.mentorId == request.auth.uid || 
+        resource.data.studentId == request.auth.uid ||
+        resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower()
+      );
+    }
+
     match /salesPages/{pageId} {
       allow read: if true;
       allow update: if (isAdmin() || isMarketing() || isMentor()) || 
@@ -47,7 +60,8 @@ service cloud.firestore {
     }
 
     match /templateCollections/{collectionId} {
-      allow read, write: if isAdmin() || isMarketing() || isMentor();
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isMarketing() || isMentor();
     }
 
     match /followups/{followUpId} {
@@ -145,17 +159,6 @@ service cloud.firestore {
       }
     }
 
-    // Regla global para consultas de grupo (Collection Group) en desafíos
-    match /{path=**}/individualTasks/{taskId} {
-      allow read, list: if isSignedIn();
-      allow create: if isSignedIn() && (isMentor() || isAdmin());
-      allow update, delete: if isSignedIn() && (
-        isAdmin() || 
-        resource.data.mentorId == request.auth.uid || 
-        resource.data.studentId == request.auth.uid ||
-        resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower()
-      );
-    }
 
     match /quiz_attempts/{attemptId} {
       allow read: if isSignedIn();
@@ -169,7 +172,7 @@ service cloud.firestore {
 
     match /subscriptionPlans/{planId} {
       allow read: if true;
-      allow write: if isAdmin() || true; // temporalmente true para que backend pueda crearla
+      allow write: if isAdmin(); 
     }
 
     match /mentor-subscriptions/{id} {

@@ -42,6 +42,19 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  serverTimestamp, 
+  where,
+  getDocs
+} from 'firebase/firestore';
 
 interface SubscriptionPlan {
   id: string;
@@ -67,8 +80,12 @@ interface SubscriptionPlan {
     hasAnalytics: boolean;
     hasPrioritySupport: boolean;
   };
-  createdAt: Date;
-  updatedAt: Date;
+  hasCustomPage?: boolean;
+  requiresFreeCourses?: boolean;
+  freeCoursesCount?: number;
+  invitationsPerCourse?: number;
+  createdAt: any;
+  updatedAt: any;
 }
 
 const subscriptionPlans: SubscriptionPlan[] = [
@@ -206,10 +223,16 @@ const subscriptionPlans: SubscriptionPlan[] = [
 
 export default function AdminSubscriptionsPage() {
   const { toast } = useToast();
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const db = useFirestore();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
+  
+  // Real-time Query
+  const plansQuery = useMemoFirebase(() => {
+    return query(collection(db, 'subscriptionPlans'), orderBy('createdAt', 'desc'));
+  }, [db]);
+  const { data: plans = [], isLoading: loading } = useCollection(plansQuery);
+
   const [formData, setFormData] = useState<Partial<SubscriptionPlan>>({
     name: '',
     type: 'fixed',
@@ -235,98 +258,59 @@ export default function AdminSubscriptionsPage() {
     }
   });
 
-  // Cargar planes desde la API
-  useEffect(() => {
-    fetchPlans();
-  }, []);
-
-  const fetchPlans = async () => {
-    try {
-      const response = await fetch('/api/admin/subscription-plans');
-      if (response.ok) {
-        const data = await response.json();
-        setPlans(data.plans || []);
-      }
-    } catch (error) {
-      console.error('Error loading plans:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required fields
     if (!formData.name || formData.name.trim() === '') {
-      console.error('El nombre del plan es requerido');
+      toast({ variant: 'destructive', title: 'Error', description: 'El nombre del plan es requerido' });
       return;
     }
     
+    // Validate Duplicate Name (Local Check for speed)
+    const isDuplicate = (plans || []).some(d => d.name === formData.name && d.id !== editingPlan?.id);
+    
+    if (isDuplicate) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Ya existe un plan con ese nombre' });
+      return;
+    }
+
     if (!formData.features || formData.features.length === 0) {
-      console.error('Las características del plan son requeridas');
+      toast({ variant: 'destructive', title: 'Error', description: 'Las características del plan son requeridas' });
       return;
     }
     
     // Validate at least one permission is active
     if (!formData.permissions || Object.values(formData.permissions).every(p => p === false)) {
-      console.error('Al menos un permiso debe estar activo');
+      toast({ variant: 'destructive', title: 'Error', description: 'Al menos un permiso debe estar activo' });
       return;
     }
     
     try {
-      const url = editingPlan 
-        ? `/api/admin/subscription-plans?id=${editingPlan.id}`
-        : '/api/admin/subscription-plans';
-      
-      const method = editingPlan ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      
-      if (response.ok) {
-        await fetchPlans();
-        setShowCreateForm(false);
-        setEditingPlan(null);
-        setFormData({
-          name: '',
-          type: 'fixed',
-          price: 29.99,
-          percentageRate: 15,
-          durationMonths: 12,
-          maxSimultaneousCourses: 5,
-          isActive: true,
-          features: [],
-          permissions: {
-            academic_management: false,
-            mentor_challenges: false,
-            students_view: false,
-            followups_management: false,
-            marketing_access: false
-          },
-          limits: {
-            maxCourses: 10,
-            maxStudents: 200,
-            hasCustomBranding: false,
-            hasAnalytics: true,
-            hasPrioritySupport: false
-          }
-        });
-        
-        // Show success message
-        const message = editingPlan ? 'Plan actualizado exitosamente' : 'Plan creado exitosamente';
-        toast({ title: 'Éxito', description: message });
-        
+      const planToSave = {
+        ...formData,
+        updatedAt: serverTimestamp(),
+      };
+
+      if (editingPlan) {
+        await updateDoc(doc(db, 'subscriptionPlans', editingPlan.id), planToSave);
       } else {
-        const errorData = await response.json();
-        const errorMessage = errorData.error || 'Error desconocido al guardar el plan';
-        toast({ variant: 'destructive', title: 'Error', description: errorMessage });
+        await addDoc(collection(db, 'subscriptionPlans'), {
+          ...planToSave,
+          createdAt: serverTimestamp(),
+        });
       }
+      
+      setShowCreateForm(false);
+      setEditingPlan(null);
+      
+      // Show success message
+      const successMessage = editingPlan ? 'Plan actualizado exitosamente' : 'Plan creado exitosamente';
+      toast({ title: 'Éxito', description: successMessage });
+      
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Error al conectar con el servidor' });
+      console.error('Error saving plan:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Error al conectar con la base de datos' });
     }
   };
 
@@ -339,34 +323,14 @@ export default function AdminSubscriptionsPage() {
   const handleDelete = async (id: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar este plan?')) {
       try {
-        const response = await fetch(`/api/admin/subscription-plans?id=${id}`, {
-          method: 'DELETE'
-        });
-
-        if (response.ok) {
-          toast({ title: 'Plan eliminado', description: 'El plan ha sido eliminado correctamente.' });
-          await fetchPlans();
-        } else {
-          const errorData = await response.json();
-          toast({ variant: 'destructive', title: 'Error', description: errorData.error || 'No se pudo eliminar el plan' });
-        }
+        await deleteDoc(doc(db, 'subscriptionPlans', id));
+        toast({ title: 'Plan eliminado', description: 'El plan ha sido eliminado correctamente.' });
       } catch (error) {
+        console.error('Error deleting plan:', error);
         toast({ variant: 'destructive', title: 'Error', description: 'Error de conexión' });
       }
     }
   };
-
-  if (loading) {
-    return (
-    <DashboardLayout>
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    </DashboardLayout>
-  );
-  }
 
   return (
     <DashboardLayout>
@@ -382,6 +346,13 @@ export default function AdminSubscriptionsPage() {
               setEditingPlan(null);
               setFormData({
                 name: '', type: 'fixed', price: 29.99, percentageRate: 15, durationMonths: 12, maxSimultaneousCourses: 5, isActive: true, features: [],
+                permissions: {
+                  academic_management: false,
+                  mentor_challenges: false,
+                  students_view: false,
+                  followups_management: false,
+                  marketing_access: false
+                },
                 limits: { maxCourses: 10, maxStudents: 200, hasCustomBranding: false, hasAnalytics: true, hasPrioritySupport: false }
               });
               setShowCreateForm(true);
@@ -394,10 +365,10 @@ export default function AdminSubscriptionsPage() {
         {/* Global KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Total Planes', value: plans.length, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-            { label: 'Planes de Pago', value: plans.filter(p => p.type !== 'free').length, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Activos', value: plans.filter(p => p.isActive).length, icon: ShieldCheck, color: 'text-purple-600', bg: 'bg-purple-50' },
-            { label: 'Ingresos MRR Pot.', value: `$${plans.reduce((sum, p) => sum + (p.price || 0), 0).toFixed(2)}`, icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: 'Total Planes', value: (plans || []).length, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+            { label: 'Planes de Pago', value: (plans || []).filter(p => p.type !== 'free').length, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: 'Activos', value: (plans || []).filter(p => p.isActive).length, icon: ShieldCheck, color: 'text-purple-600', bg: 'bg-purple-50' },
+            { label: 'Ingresos MRR Pot.', value: `$${(plans || []).reduce((sum, p) => sum + (p.price || 0), 0).toFixed(2)}`, icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-50' },
           ].map((kpi, i) => (
             <Card key={i} className="border-none shadow-sm bg-white/50 backdrop-blur-sm overflow-hidden group">
               <CardContent className="p-6 relative">
@@ -430,7 +401,9 @@ export default function AdminSubscriptionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {plans.length === 0 ? (
+                {loading ? (
+                  <TableRow><TableCell colSpan={8} className="text-center py-20 animate-pulse text-muted-foreground">Sincronizando planes...</TableCell></TableRow>
+                ) : (!plans || plans.length === 0) ? (
                   <TableRow><TableCell colSpan={8} className="text-center py-20 italic text-muted-foreground">No hay planes configurados.</TableCell></TableRow>
                 ) : plans.map((plan) => (
                   <TableRow key={plan.id} className="hover:bg-secondary/20 border-b transition-colors">
@@ -512,7 +485,7 @@ export default function AdminSubscriptionsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <Label htmlFor="planName" className="text-xs font-bold uppercase tracking-widest text-slate-500">Nombre del Nivel</Label>
-                    <Input id="planName" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Plan Profesional" className="h-12 rounded-xl border-slate-200" required />
+                    <Input id="planName" name="planName" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Plan Profesional" className="h-12 rounded-xl border-slate-200" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="planType" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tipo de Contrato</Label>
@@ -530,32 +503,32 @@ export default function AdminSubscriptionsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
                   <div className="space-y-2">
                     <Label htmlFor="planPrice" className="text-xs font-bold uppercase tracking-widest text-slate-500">Fijo (USD/mes)</Label>
-                    <Input id="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free' || formData.type === 'percentage'} className="h-12 rounded-xl bg-slate-50" />
+                    <Input id="planPrice" name="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free' || formData.type === 'percentage'} className="h-12 rounded-xl bg-slate-50" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="planPercentage" className="text-xs font-bold uppercase tracking-widest text-slate-500">Regalía (%)</Label>
-                    <Input id="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} disabled={formData.type !== 'percentage'} className="h-12 rounded-xl bg-slate-50" />
+                    <Input id="planPercentage" name="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} disabled={formData.type !== 'percentage'} className="h-12 rounded-xl bg-slate-50" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="planDuration" className="text-xs font-bold uppercase tracking-widest text-slate-500">Duración mínima (m)</Label>
-                    <Input id="planDuration" type="number" min="1" value={formData.durationMonths} onChange={(e) => setFormData({...formData, durationMonths: parseInt(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
+                    <Input id="planDuration" name="planDuration" type="number" min="1" value={formData.durationMonths} onChange={(e) => setFormData({...formData, durationMonths: parseInt(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <Label htmlFor="planMaxCourses" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Cursos Publicados</Label>
-                    <Input id="planMaxCourses" type="number" min="-1" value={formData.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val, limits: { ...formData.limits, maxCourses: isNaN(val) ? 0 : val } as any}); }} placeholder="10 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
+                    <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val, limits: { ...formData.limits, maxCourses: isNaN(val) ? 0 : val } as any}); }} placeholder="10 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Alumnos (Base)</Label>
-                    <Input id="planMaxStudents" type="number" min="-1" value={formData.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, limits: { ...formData.limits, maxStudents: isNaN(val) ? 0 : val } as any}); }} placeholder="200 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
+                    <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, limits: { ...formData.limits, maxStudents: isNaN(val) ? 0 : val } as any}); }} placeholder="200 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="planFeatures" className="text-xs font-bold uppercase tracking-widest text-slate-500">Propuesta de Valor (1 línea = 1 viñeta)</Label>
-                  <Textarea id="planFeatures" rows={4} value={formData.features?.join('\n') || ''} onChange={(e) => setFormData({...formData, features: e.target.value.split('\n')})} placeholder="Perfil premium&#10;Analytics avanzadas&#10;API" className="rounded-xl border-slate-200" required />
+                  <Textarea id="planFeatures" name="planFeatures" rows={4} value={formData.features?.join('\n') || ''} onChange={(e) => setFormData({...formData, features: e.target.value.split('\n')})} placeholder="Perfil premium&#10;Analytics avanzadas&#10;API" className="rounded-xl border-slate-200" required />
                 </div>
 
                 <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-6">
@@ -569,8 +542,16 @@ export default function AdminSubscriptionsPage() {
                       { k: 'mentor_challenges', l: 'Emitir Desafíos', i: Target }
                     ].map(perm => (
                       <div key={perm.k} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
-                        <div className="flex items-center gap-3"><perm.i className="h-4 w-4 text-indigo-500" /><Label className="cursor-pointer">{perm.l}</Label></div>
-                        <Switch checked={(formData.permissions as any)?.[perm.k] || false} onCheckedChange={(c) => setFormData({...formData, permissions: {...formData.permissions, [perm.k]: c} as any})} />
+                        <div className="flex items-center gap-3">
+                          <perm.i className="h-4 w-4 text-indigo-500" />
+                          <Label htmlFor={`perm-${perm.k}`} className="cursor-pointer">{perm.l}</Label>
+                        </div>
+                        <Switch 
+                          id={`perm-${perm.k}`}
+                          name={`perm-${perm.k}`}
+                          checked={(formData.permissions as any)?.[perm.k] || false} 
+                          onCheckedChange={(c) => setFormData({...formData, permissions: {...formData.permissions, [perm.k]: c} as any})} 
+                        />
                       </div>
                     ))}
                   </div>
@@ -583,8 +564,8 @@ export default function AdminSubscriptionsPage() {
             <div className="p-6 bg-white border-t border-slate-100 shrink-0 flex justify-between items-center rounded-b-[2rem]">
               <div className="flex gap-6 items-center">
                 <div className="flex gap-2 items-center">
-                  <Switch checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-emerald-500" />
-                  <Label className="font-bold text-xs uppercase tracking-widest text-slate-500">{formData.isActive ? 'Comercializable' : 'Desactivado'}</Label>
+                  <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-emerald-500" />
+                  <Label htmlFor="plan-is-active" className="font-bold text-xs uppercase tracking-widest text-slate-500 cursor-pointer">{formData.isActive ? 'Comercializable' : 'Desactivado'}</Label>
                 </div>
               </div>
               <div className="flex gap-3">

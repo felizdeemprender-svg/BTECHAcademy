@@ -117,13 +117,16 @@ export default function MarketingAutomationEnginePage() {
     if (!profile?.uid) return null;
     return query(
       collection(db, 'campaigns'), 
-      where('mentorId', '==', profile.uid),
-      where('isActive', '==', true),
-      where('autoPilot', '==', true)
+      where('mentorId', '==', profile.uid)
     );
   }, [db, profile?.uid]);
   
-  const { data: campaigns, isLoading } = useCollection(campaignsQuery);
+  const { data: rawCampaigns, isLoading } = useCollection(campaignsQuery);
+
+  const campaigns = useMemo(() => {
+    if (!rawCampaigns) return null;
+    return rawCampaigns.filter(c => c.isActive && c.autoPilot);
+  }, [rawCampaigns]);
 
   const activeCampaigns = useMemo(() => {
     if (!campaigns) return [];

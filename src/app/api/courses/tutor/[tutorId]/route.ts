@@ -23,14 +23,13 @@ export async function GET(
     // Obtener SalesPages asociadas a este tutor para vincularlas con los cursos
     const salesPagesQuery = query(
       collection(firestore, 'salesPages'),
-      where('mentorId', '==', tutorId),
-      where('isActive', '==', true)
+      where('mentorId', '==', tutorId)
     );
     const salesPagesSnapshot = await getDocs(salesPagesQuery);
     const salesPagesMap: Record<string, { id: string, price?: number }> = {};
     salesPagesSnapshot.docs.forEach(doc => {
       const data = doc.data();
-      if (data.courseId) {
+      if (data.courseId && data.isActive) { // Filter isActive here
         salesPagesMap[data.courseId] = { 
           id: doc.id, 
           price: data.price 

@@ -33,15 +33,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Valid subscription required' }, { status: 403 });
       }
 
-      // Contar cursos activos
+      // Contar cursos activos (filtrando en memoria para evitar problemas de índices)
       const coursesQuery = query(
         collection(firestore, 'courses'),
-        where('mentorId', '==', mentorId),
-        where('isActive', '==', true)
+        where('mentorId', '==', mentorId)
       );
       
       const coursesSnap = await getDocs(coursesQuery);
-      const activeCoursesCount = coursesSnap.size;
+      const activeCoursesCount = coursesSnap.docs.filter(doc => doc.data().isActive === true).length;
 
       if (activeCoursesCount >= subscription.maxSimultaneousCourses) {
         return NextResponse.json({ 

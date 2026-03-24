@@ -150,6 +150,7 @@ export default function CreateCoursePage() {
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [isInvitation, setIsInvitation] = useState(false);
   const [courseId, setCourseId] = useState<string | null>(null);
   const [moduleOrder, setModuleOrder] = useState(1);
   const [showNextModuleDialog, setShowNextModuleDialog] = useState(false);
@@ -257,26 +258,25 @@ export default function CreateCoursePage() {
       status: 'pending_terms',
       termsAccepted: false,
       settings: { skipAllowed: courseData.skipAllowed },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     };
 
-    fetch('/api/courses/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    .then(async (res) => {
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || 'Error al iniciar programa');
-      }
-      setCourseId(newCourseRef.id);
-      setStep(2);
-      toast({ title: 'Programa Académico Iniciado' });
-    })
-    .catch((err) => {
-      toast({ variant: 'destructive', title: 'Error de Creación', description: err.message });
-    })
-    .finally(() => setLoading(false));
+    setDoc(newCourseRef, payload)
+      .then(() => {
+        setCourseId(newCourseRef.id);
+        setStep(2);
+        toast({ title: 'Programa Académico Iniciado' });
+      })
+      .catch((err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ 
+          path: newCourseRef.path, 
+          operation: 'create', 
+          requestResourceData: payload 
+        }));
+        toast({ variant: 'destructive', title: 'Error de Creación', description: 'No tienes permisos para crear programas academicos o tu suscripción ha expirado.' });
+      })
+      .finally(() => setLoading(false));
   };
 
   const isCompatibleWithAI = (file: File | undefined) => {
@@ -469,26 +469,30 @@ export default function CreateCoursePage() {
     if (!inviteEmail || !courseId || !profile?.uid) return;
     setAddingStudent(true);
     try {
-      const response = await fetch('/api/courses/invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          inviteEmail, 
-          courseId, 
-          mentorId: profile.uid 
-        })
-      });
+      // Usamos setDoc directo para enrollments heredando contexto de auth
+      const enrollmentId = Math.random().toString(36).substring(2, 15);
+      const enrollmentRef = doc(db, 'enrollments', enrollmentId);
       
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || data.error || 'Error al inscribir alumno');
-      }
+      const enrollmentData = {
+        id: enrollmentId,
+        courseId,
+        mentorId: profile.uid,
+        inviteEmail: inviteEmail.toLowerCase().trim(),
+        studentName: inviteEmail.split('@')[0],
+        status: 'active',
+        isInvited: isInvitation,
+        isDirect: !isInvitation,
+        enrolledAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      };
 
-      setInvitedStudents(prev => [data.enrollment, ...prev]);
+      await setDoc(enrollmentRef, enrollmentData);
+      
+      setInvitedStudents(prev => [enrollmentData, ...prev]);
       setInviteEmail('');
-      toast({ title: 'Alumno inscrito exitosamente' });
+      toast({ title: isInvitation ? 'Invitación de cortesía enviada' : 'Alumno facturable inscrito' });
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Aviso de Límite', description: err.message });
+      toast({ variant: 'destructive', title: 'Error de Inscripción', description: 'No se pudo inscribir al alumno. Verifica tus permisos o límites.' });
     } finally { 
       setAddingStudent(false); 
     }
@@ -776,8 +780,54 @@ export default function CreateCoursePage() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
               <CardHeader className="bg-primary/5 p-10"><div className="flex justify-between items-center"><div><CardTitle className="text-2xl font-bold">4. Matrícula</CardTitle></div><Button variant="ghost" onClick={() => setStep(5)} className="rounded-xl">Saltar</Button></div></CardHeader>
               <CardContent className="p-10 space-y-10">
-                <div className="space-y-4"><Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Inscribir Alumno</Label><div className="flex gap-3"><Input placeholder="alumno@institucion.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} className="h-14 rounded-2xl border-2" /><Button onClick={handleInviteStudent} disabled={!inviteEmail || addingStudent} className="h-14 px-8 rounded-2xl font-bold">{addingStudent ? <Loader2 className="animate-spin" /> : <UserPlus className="mr-2" />} Inscribir</Button></div></div>
-                <div className="grid gap-3">{invitedStudents.map((stu, i) => (<div key={i} className="flex items-center justify-between p-4 bg-secondary/10 rounded-2xl border"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><Mail className="h-4 w-4 text-primary" /></div><div><p className="font-bold text-sm">{stu.studentName}</p><p className="text-[10px] text-muted-foreground">{stu.inviteEmail}</p></div></div><Badge className="bg-emerald-50 text-emerald-700 border-none">Inscrito</Badge></div>))}</div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Inscribir Alumno</Label>
+                    <div className="flex items-center gap-3 bg-secondary/5 px-4 py-2 rounded-xl border border-dashed">
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold uppercase tracking-tighter">{isInvitation ? 'Cortesía' : 'Facturable'}</p>
+                        <p className="text-[8px] text-muted-foreground leading-tight">{isInvitation ? 'Sin costo / Límite plan' : 'Venta directa / Ilimitado'}</p>
+                      </div>
+                      <Switch checked={isInvitation} onCheckedChange={setIsInvitation} className="scale-75" />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Input placeholder="alumno@institucion.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} className="h-14 rounded-2xl border-2" />
+                    <Button onClick={handleInviteStudent} disabled={!inviteEmail || addingStudent} className="h-14 px-8 rounded-2xl font-bold">
+                      {addingStudent ? <Loader2 className="animate-spin" /> : <UserPlus className="mr-2" />} Inscribir
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid gap-3">
+                  {invitedStudents.map((stu, i) => (
+                    <div key={i} className={cn(
+                      "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                      stu.isInvited ? "bg-amber-50/30 border-amber-200/50" : "bg-secondary/10 border-border"
+                    )}>
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center border-2 border-white shadow-sm",
+                          stu.isInvited ? "bg-amber-100/50" : "bg-primary/10"
+                        )}>
+                          <Mail className={cn("h-4 w-4", stu.isInvited ? "text-amber-600" : "text-primary")} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm flex items-center gap-2">
+                            {stu.studentName}
+                            <Badge className={cn(
+                              "text-[8px] px-1.5 h-4 border-none shadow-none uppercase tracking-widest font-black",
+                              stu.isInvited ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                            )}>
+                              {stu.isInvited ? 'Cortesía' : 'Facturable'}
+                            </Badge>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">{stu.inviteEmail}</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-emerald-50 text-emerald-700 border-none">Activo</Badge>
+                    </div>
+                  ))}
+                </div>
                 <Button onClick={() => setStep(5)} className="w-full h-16 rounded-[1.5rem] text-lg font-bold shadow-2xl">Continuar a Términos <ArrowRight className="h-5 w-5 ml-2" /></Button>
               </CardContent>
             </Card>

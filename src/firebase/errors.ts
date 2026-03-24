@@ -91,8 +91,8 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   return {
     auth: authObject,
     method: context.operation,
-    // Se utiliza el ID 'default' para coincidir con la base de datos real del proyecto.
-    path: `/databases/default/documents/${context.path}`,
+    // Se utiliza el ID '(default)' para coincidir con la base de datos real del proyecto.
+    path: `/databases/(default)/documents/${context.path}`,
     resource: context.requestResourceData ? { data: context.requestResourceData } : undefined,
   };
 }

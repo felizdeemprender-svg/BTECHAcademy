@@ -20,7 +20,7 @@ export function initializeFirebase() {
     } catch (e) {
       // Only warn in production because it's normal to use the firebaseConfig to initialize
       // during development
-      if (process.env.NODE_ENV === "production") {
+      if (typeof process !== 'undefined' && process.env.NODE_ENV === "production") {
         console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
       firebaseApp = initializeApp(firebaseConfig);
@@ -37,7 +37,6 @@ export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    // Forzamos (default) con paréntesis para asegurar sincronización con las reglas.
     firestore: getFirestore(firebaseApp, '(default)'),
     storage: getStorage(firebaseApp)
   };

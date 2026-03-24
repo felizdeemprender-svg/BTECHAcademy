@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -55,9 +55,18 @@ export default function CampaignsDashboardPage() {
   // Campaigns Query
   const campaignsQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
-    return query(collection(db, 'campaigns'), where('mentorId', '==', profile.uid), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'campaigns'), where('mentorId', '==', profile.uid));
   }, [db, profile?.uid]);
-  const { data: campaigns, isLoading: campaignsLoading } = useCollection(campaignsQuery);
+  const { data: rawCampaigns, isLoading: campaignsLoading } = useCollection(campaignsQuery);
+
+  const campaigns = useMemo(() => {
+    if (!rawCampaigns) return null;
+    return [...rawCampaigns].sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [rawCampaigns]);
 
   const handleDeleteCampaign = async (id: string) => {
     try {

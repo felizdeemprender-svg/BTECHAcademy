@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CourseCard } from '@/components/courses/course-card';
 import { BookOpen, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,26 +33,83 @@ interface Course {
 
 export default function CourseCatalogPreview() {
   const { toast } = useToast();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const db = useFirestore();
+  
+  // 1. Fetch Collections
+  const coursesQuery = useMemoFirebase(() => {
+    return query(
+      collection(db, 'courses'),
+      where('isActive', '==', true),
+      where('status', '==', 'published'),
+      where('publicListing', '==', true)
+    );
+  }, [db]);
+  const { data: rawCourses = [], isLoading: coursesLoading } = useCollection(coursesQuery);
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const response = await fetch('/api/courses/marketplace?limit=4&sortBy=newest');
-        if (response.ok) {
-          const data = await response.json();
-          setCourses(data.courses || []);
-        }
-      } catch (error) {
-        console.error('Error fetching catalog preview:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const salesPagesQuery = useMemoFirebase(() => {
+    return query(collection(db, 'salesPages'), where('isActive', '==', true));
+  }, [db]);
+  const { data: salesPages = [], isLoading: salesLoading } = useCollection(salesPagesQuery);
 
-    fetchCourses();
-  }, []);
+  const mentorsQuery = useMemoFirebase(() => {
+    return query(collection(db, 'users'), where('isMentor', '==', true));
+  }, [db]);
+  const { data: mentors = [], isLoading: mentorsLoading } = useCollection(mentorsQuery);
+
+  // 2. Compute Enriched Courses
+  const courses = useMemo(() => {
+    if (coursesLoading || salesLoading || mentorsLoading) return [];
+
+    const salesMap = new Map();
+    (salesPages || []).forEach(sp => {
+      if (sp.courseId) salesMap.set(sp.courseId, sp.id);
+    });
+
+    const mentorMap = new Map();
+    (mentors || []).forEach(m => mentorMap.set(m.id, m));
+
+    return (rawCourses || [])
+      .filter(course => {
+        if (!salesMap.has(course.id)) return false;
+        const mentor = mentorMap.get(course.mentorId);
+        return mentor && mentor.subscription?.status === 'active' && mentor.subscription?.isEnterprise !== true;
+      })
+      .slice(0, 4) // Show only 4 for preview
+      .map(course => {
+        const mentor = mentorMap.get(course.mentorId);
+        
+        return {
+          id: course.id,
+          slug: course.slug || course.title?.toLowerCase().replace(/\s+/g, '-'),
+          title: course.title || 'Sin título',
+          description: course.description || 'Sin descripción',
+          price: course.price || 0,
+          currency: course.currency || 'USD',
+          thumbnail: course.thumbnail || `https://loremflickr.com/600/400/education,course?lock=${course.id}`,
+          rating: course.rating || 4.5,
+          students: course.studentsCount || 0,
+          duration: course.duration || 0,
+          tags: course.tagIds || [], // Simplifed tags for preview
+          salesPageId: salesMap.get(course.id),
+          tutor: {
+            id: course.mentorId,
+            username: mentor.username || mentor.displayName?.toLowerCase().replace(/\s+/g, '-'),
+            displayName: mentor.displayName || mentor.email?.split('@')[0],
+            photo: mentor.photoURL || `https://loremflickr.com/60/60/person,professional?lock=${course.mentorId}`,
+            subscription: {
+              status: mentor.subscription?.status || 'active'
+            }
+          },
+          pricing: {
+            type: course.price === 0 ? 'free' : 'paid',
+            amount: course.price || 0,
+            currency: course.currency || 'USD'
+          }
+        };
+      }) as unknown as Course[];
+  }, [rawCourses, salesPages, mentors, coursesLoading, salesLoading, mentorsLoading]);
+
+  const loading = coursesLoading || salesLoading || mentorsLoading;
 
   if (loading) return (
     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 animate-pulse">

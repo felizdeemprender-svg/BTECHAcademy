@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -35,11 +35,22 @@ export default function SalesPagesDashboardPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+
+
   const pagesQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
-    return query(collection(db, 'salesPages'), where('mentorId', '==', profile.uid), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'salesPages'), where('mentorId', '==', profile.uid));
   }, [db, profile?.uid]);
-  const { data: pages, isLoading } = useCollection(pagesQuery);
+  const { data: rawPages, isLoading } = useCollection(pagesQuery);
+
+  const pages = useMemo(() => {
+    if (!rawPages) return null;
+    return [...rawPages].sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [rawPages]);
 
   const handleCopyLink = (id: string, variant: number) => {
     const url = `${window.location.origin}/v/${id}?v=${variant}`;

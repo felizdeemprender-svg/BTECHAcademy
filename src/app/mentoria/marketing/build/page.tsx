@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -77,11 +77,24 @@ export default function CampaignOrchestratorPage() {
   const [coordinationPlan, setCoordinationPlan] = useState<CoordinationOutput | null>(null);
 
   // Pack Multimedia Query
-  const pagesQuery = useMemoFirebase(() => {
-    if (!profile?.uid) return null;
-    return query(collection(db, 'salesPages'), where('mentorId', '==', profile.uid), orderBy('createdAt', 'desc'));
+  const salesPagesQuery = useMemoFirebase(() => {
+    if (!db || !profile?.uid) return null;
+    return query(
+      collection(db, 'salesPages'),
+      where('mentorId', '==', profile.uid)
+    );
   }, [db, profile?.uid]);
-  const { data: salesPages, isLoading: pagesLoading } = useCollection(pagesQuery);
+
+  const { data: rawSalesPages, isLoading: pagesLoading } = useCollection(salesPagesQuery);
+
+  const salesPages = useMemo(() => {
+    if (!rawSalesPages) return null;
+    return [...rawSalesPages].sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [rawSalesPages]);
 
   const handleGeneratePlan = async () => {
     if (!selectedPageId || !campaignTitle) return;

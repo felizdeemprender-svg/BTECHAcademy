@@ -58,12 +58,20 @@ export default function CampaignTrackingPage() {
     if (!db || !profile?.uid) return null;
     return query(
       collection(db, 'salesPages'),
-      where('mentorId', '==', profile.uid),
-      orderBy('createdAt', 'desc')
+      where('mentorId', '==', profile.uid)
     );
   }, [db, profile?.uid]);
 
-  const { data: campaigns, isLoading } = useCollection(salesPagesQuery);
+  const { data: rawCampaigns, isLoading } = useCollection(salesPagesQuery);
+
+  const campaigns = useMemo(() => {
+    if (!rawCampaigns) return null;
+    return [...rawCampaigns].sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [rawCampaigns]);
 
   // Real stats from Firestore
   const enrichedCampaigns = useMemo(() => {
