@@ -34,18 +34,13 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 2. Redirección de Rutas Internas: /tutor/[username] y /v/
-  // En Firebase Hosting, NO redirigimos a subdominios — dejamos la ruta directa funcionar.
-  if (supportsSubdomains && !subdomain && (pathname.startsWith('/tutor/') || pathname.startsWith('/v/'))) {
+  // 2. Redirección de Rutas Internas: /tutor/[username] en localhost -> subdominio
+  // En producción (Firebase Hosting) NO redirigimos: la ruta /tutor/[username] funciona directamente.
+  if (hostname.includes('localhost') && !subdomain && pathname.startsWith('/tutor/')) {
     const username = segments[1]?.toLowerCase();
     if (username) {
       const url = request.nextUrl.clone();
-      if (hostname.includes('localhost')) {
-        url.host = `${username}.localhost:9002`;
-      } else {
-        const mainHost = hostParts.length > 2 ? hostParts.slice(-2).join('.') : hostname;
-        url.host = `${username}.${mainHost}`;
-      }
+      url.host = `${username}.localhost:9002`;
       url.pathname = segments.length > 2 ? `/${segments.slice(2).join('/')}` : '/';
       return NextResponse.redirect(url);
     }
