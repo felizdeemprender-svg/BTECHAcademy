@@ -23,10 +23,10 @@ export function LandingHeader() {
       
       <nav className="hidden md:flex items-center gap-8">
         <Link 
-          href="/catalogo" 
+          href="/courses" 
           className={cn(
             "text-sm font-bold transition-colors",
-            pathname === '/catalogo' ? "text-primary" : "text-slate-500 hover:text-primary"
+            pathname === '/courses' ? "text-primary" : "text-slate-500 hover:text-primary"
           )}
         >
           Catálogo

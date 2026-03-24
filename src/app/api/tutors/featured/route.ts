@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getFirebaseServer } from '@/firebase/server';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 
 export async function GET() {
   try {
@@ -10,7 +10,8 @@ export async function GET() {
     const q = query(
       collection(firestore, 'users'),
       where('subscription.isPublic', '==', true),
-      where('subscription.status', '==', 'active')
+      where('subscription.status', '==', 'active'),
+      limit(8)
     );
     
     const querySnapshot = await getDocs(q);

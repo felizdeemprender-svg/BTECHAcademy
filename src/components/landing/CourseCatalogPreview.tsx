@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CourseCard } from '@/components/courses/course-card';
 import { BookOpen, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, limit } from 'firebase/firestore';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,18 +41,19 @@ export default function CourseCatalogPreview() {
       collection(db, 'courses'),
       where('isActive', '==', true),
       where('status', '==', 'published'),
-      where('publicListing', '==', true)
+      where('publicListing', '==', true),
+      limit(20)
     );
   }, [db]);
   const { data: rawCourses = [], isLoading: coursesLoading } = useCollection(coursesQuery);
 
   const salesPagesQuery = useMemoFirebase(() => {
-    return query(collection(db, 'salesPages'), where('isActive', '==', true));
+    return query(collection(db, 'salesPages'), where('isActive', '==', true), limit(20));
   }, [db]);
   const { data: salesPages = [], isLoading: salesLoading } = useCollection(salesPagesQuery);
 
   const mentorsQuery = useMemoFirebase(() => {
-    return query(collection(db, 'users'), where('isMentor', '==', true));
+    return query(collection(db, 'users'), where('isMentor', '==', true), limit(40));
   }, [db]);
   const { data: mentors = [], isLoading: mentorsLoading } = useCollection(mentorsQuery);
 
