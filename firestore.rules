@@ -145,14 +145,16 @@ service cloud.firestore {
       }
     }
 
+    // Regla global para consultas de grupo (Collection Group) en desafíos
     match /{path=**}/individualTasks/{taskId} {
-      allow list: if isSignedIn();
-      allow get: if isSignedIn();
-      allow delete: if isAdmin() || (isSignedIn() && (
+      allow read, list: if isSignedIn();
+      allow create: if isSignedIn() && (isMentor() || isAdmin());
+      allow update, delete: if isSignedIn() && (
+        isAdmin() || 
         resource.data.mentorId == request.auth.uid || 
-        resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower() ||
-        resource.data.studentId == request.auth.uid
-      ));
+        resource.data.studentId == request.auth.uid ||
+        resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower()
+      );
     }
 
     match /quiz_attempts/{attemptId} {
