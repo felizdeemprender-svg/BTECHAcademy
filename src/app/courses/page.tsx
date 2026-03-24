@@ -17,7 +17,7 @@ import { LandingHeader } from '@/components/layout/LandingHeader';
 import { LandingFooter } from '@/components/layout/LandingFooter';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
 
 interface Course {
   id: string;
@@ -81,11 +81,14 @@ export default function CoursesPage() {
     return query(
       collection(db, 'courses'),
       where('isActive', '==', true),
-      where('status', '==', 'published'),
       where('publicListing', '==', true)
     );
   }, [db]);
   const { data: rawCourses = [], isLoading: coursesLoading } = useCollection(coursesQuery);
+
+  const finalCourses = useMemo(() => {
+    return (rawCourses || []).filter(c => c.status === 'published' || c.status === 'approved');
+  }, [rawCourses]);
 
   const salesPagesQuery = useMemoFirebase(() => {
     return query(collection(db, 'salesPages'), where('isActive', '==', true));
@@ -93,7 +96,7 @@ export default function CoursesPage() {
   const { data: salesPages = [], isLoading: salesLoading } = useCollection(salesPagesQuery);
 
   const mentorsQuery = useMemoFirebase(() => {
-    return query(collection(db, 'users'), where('isMentor', '==', true));
+    return query(collection(db, 'users'), where('isMentor', '==', true), limit(40));
   }, [db]);
   const { data: mentors = [], isLoading: mentorsLoading } = useCollection(mentorsQuery);
 
@@ -102,9 +105,14 @@ export default function CoursesPage() {
   }, [db]);
   const { data: allTags = [], isLoading: tagsLoading } = useCollection(tagsQuery);
 
+  const plansQuery = useMemoFirebase(() => {
+    return query(collection(db, 'subscriptionPlans'));
+  }, [db]);
+  const { data: subscriptionPlans = [], isLoading: plansLoading } = useCollection(plansQuery);
+
   // 2. Compute Filtered & Enriched Courses
   const enrichedCourses = useMemo(() => {
-    if (coursesLoading || salesLoading || mentorsLoading || tagsLoading) return [];
+    if (coursesLoading || salesLoading || mentorsLoading || tagsLoading || plansLoading) return [];
 
     // Create a map of sales pages by courseId
     const salesMap = new Map();
@@ -120,16 +128,27 @@ export default function CoursesPage() {
     const tagMap = new Map();
     (allTags || []).forEach(t => tagMap.set(t.id, t.name));
 
-    return (rawCourses || [])
+    // Create a map of plans by name (or id if we have it)
+    const planMap = new Map();
+    (subscriptionPlans || []).forEach(p => planMap.set(p.name, p));
+
+    return (finalCourses || [])
       .filter(course => {
         // Must have an active sales page
         if (!salesMap.has(course.id)) return false;
 
         const mentor = mentorMap.get(course.mentorId);
+        const isAdminMentor = mentor?.roles?.includes('admin');
+        
+        // Determinar si es empresa basándonos en el flag o en el plan actual
+        const plan = mentor?.subscription?.name ? planMap.get(mentor.subscription.name) : null;
+        const isEnterprise = mentor?.subscription?.isEnterprise === true || plan?.isEnterprise === true;
+        
         // If mentor doesn't exist or is enterprise, exclude from general catalog
-        if (!mentor || mentor.subscription?.status !== 'active' || mentor.subscription?.isEnterprise === true) {
-          return false;
-        }
+        if (!mentor || isEnterprise) return false;
+        
+        // Admin mentors bypass the 'active' subscription check
+        if (!isAdminMentor && mentor.subscription?.status !== 'active') return false;
 
         // Apply Price Filter
         if (priceFilter === 'free' && course.price > 0) return false;

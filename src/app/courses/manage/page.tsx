@@ -404,10 +404,11 @@ export default function ManageCoursesPage() {
       };
       await setDoc(logRef, logData);
 
-      const finalStatus = modResult.isSensitive ? 'pending' : 'approved';
+      const finalStatus = modResult.isSensitive ? 'pending' : 'published';
       const updateData: any = { 
         status: finalStatus,
-        isActive: finalStatus === 'approved' ? true : false,
+        isActive: finalStatus === 'published',
+        publicListing: finalStatus === 'published',
         moderationReason: modResult.isSensitive ? modResult.reason : null,
         updatedAt: serverTimestamp() 
       };
@@ -548,7 +549,12 @@ export default function ManageCoursesPage() {
   const handleModerateCourse = (courseId: string, approved: boolean) => {
     if (!isAdmin) return;
     const courseRef = doc(db, 'courses', courseId);
-    const updateData = { status: approved ? 'approved' : 'rejected', isActive: approved, updatedAt: serverTimestamp() };
+    const updateData = { 
+      status: approved ? 'published' : 'rejected', 
+      isActive: approved, 
+      publicListing: approved, 
+      updatedAt: serverTimestamp() 
+    };
     updateDoc(courseRef, updateData)
       .then(() => toast({ title: approved ? 'Curso Autorizado' : 'Curso Rechazado' }))
       .catch(async (e) => {
@@ -800,13 +806,13 @@ export default function ManageCoursesPage() {
                       <TableCell className="text-center">
                         <Badge className={cn(
                           "text-[9px] uppercase tracking-widest px-2 h-5",
-                          course.status === 'approved' ? "bg-emerald-50 text-emerald-700" 
+                          course.status === 'published' || course.status === 'approved' ? "bg-emerald-50 text-emerald-700" 
                           : course.status === 'pending' ? "bg-amber-50 text-amber-700 animate-pulse"
                           : course.status === 'pending_terms' ? "bg-rose-50 text-rose-700"
                           : "bg-muted text-muted-foreground"
                         )}>
-                          {course.status === 'approved' ? <ShieldCheck className="h-2 w-2 mr-1" /> : course.status === 'pending_terms' ? <Scale className="h-2 w-2 mr-1" /> : <Clock className="h-2 w-2 mr-1" />}
-                          {course.status === 'pending_terms' ? 'Sin Términos' : (course.status || 'draft')}
+                          {course.status === 'published' || course.status === 'approved' ? <ShieldCheck className="h-2 w-2 mr-1" /> : course.status === 'pending_terms' ? <Scale className="h-2 w-2 mr-1" /> : <Clock className="h-2 w-2 mr-1" />}
+                          {course.status === 'pending_terms' ? 'Sin Términos' : (course.status === 'published' ? 'publicado' : course.status || 'draft')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">

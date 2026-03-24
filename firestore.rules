@@ -123,7 +123,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow get: if true;
-      allow list: if isAdmin(); // Solo administración central puede ver el padrón completo
+      allow list: if isSignedIn() || request.query.limit <= 40; 
       allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin()); 
       allow update: if isSignedIn() && (
         request.auth.uid == userId || 

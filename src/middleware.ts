@@ -13,24 +13,30 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const segments = pathname.split('/').filter(Boolean);
 
-  // 1. Detección de Subdominio
-  // localhost:9002 -> no subdomain
-  // juan.localhost:9002 -> subdomain 'juan'
-  // btechacademy.com -> no subdomain
-  // juan.btechacademy.com -> subdomain 'juan'
   const hostParts = hostname.split('.');
+  const isFirebaseDefault = hostname.includes('.hosted.app') || 
+                            hostname.includes('.web.app') || 
+                            hostname.includes('.firebaseapp.com');
+  
+  // Solo permitimos subdominios en localhost o en dominios que NO sean los por defecto de Firebase
+  // (Asumiendo que los dominios personalizados sí soportarán wildcard o están configurados)
+  const supportsSubdomains = hostname.includes('localhost') || !isFirebaseDefault;
+  
   let subdomain = null;
 
-  if (hostParts.length > 2 && !hostname.includes('localhost')) {
-    // btechacademy.com (2 parts) -> no subdomain
-    subdomain = hostParts[0] !== 'www' ? hostParts[0] : null;
-  } else if (hostParts.length > 1 && hostname.includes('localhost')) {
-    // localhost (1 part) -> no subdomain
-    subdomain = hostParts[0];
+  if (supportsSubdomains) {
+    if (hostParts.length > 2 && !hostname.includes('localhost')) {
+      // btechacademy.com (2 parts) -> no subdomain
+      subdomain = hostParts[0] !== 'www' ? hostParts[0] : null;
+    } else if (hostParts.length > 1 && hostname.includes('localhost')) {
+      // localhost (1 part) -> no subdomain
+      subdomain = hostParts[0];
+    }
   }
 
   // 2. Redirección de Rutas Internas Forzadas (Evitar /tutor/usuario y /v/resolver)
-  if (!subdomain && (pathname.startsWith('/tutor/') || pathname.startsWith('/v/'))) {
+  // Solo si el entorno SOPORTA subdominios. Si no, permitimos la ruta normal.
+  if (supportsSubdomains && !subdomain && (pathname.startsWith('/tutor/') || pathname.startsWith('/v/'))) {
     const username = segments[1]?.toLowerCase();
     if (username) {
       const url = request.nextUrl.clone();
@@ -78,7 +84,8 @@ export async function middleware(request: NextRequest) {
 
   // 4. Lógica de Enmascaramiento por Ruta: Redirigir a Subdominio (Forzar Limpieza)
   // /juan -> juan.dominio.com
-  if (segments.length === 1) {
+  // SOLO si soporta subdominios.
+  if (supportsSubdomains && segments.length === 1) {
     const url = request.nextUrl.clone();
     const username = segments[0].toLowerCase();
     
@@ -98,7 +105,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // /juan/oferta -> juan.dominio.com/oferta
-  if (segments.length === 2) {
+  if (supportsSubdomains && segments.length === 2) {
     const url = request.nextUrl.clone();
     const username = segments[0].toLowerCase();
     

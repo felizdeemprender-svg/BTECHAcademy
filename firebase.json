@@ -4,6 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "btechacademy-8b329",
     "source": ".",
     "ignore": [
       "firebase.json",

@@ -257,6 +257,7 @@ export default function CreateCoursePage() {
       isActive: false,
       status: 'pending_terms',
       termsAccepted: false,
+      publicListing: false,
       settings: { skipAllowed: courseData.skipAllowed },
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()

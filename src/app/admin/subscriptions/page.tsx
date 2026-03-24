@@ -80,6 +80,7 @@ interface SubscriptionPlan {
     hasAnalytics: boolean;
     hasPrioritySupport: boolean;
   };
+  isEnterprise?: boolean;
   hasCustomPage?: boolean;
   requiresFreeCourses?: boolean;
   freeCoursesCount?: number;
@@ -255,7 +256,8 @@ export default function AdminSubscriptionsPage() {
       hasCustomBranding: false,
       hasAnalytics: true,
       hasPrioritySupport: false
-    }
+    },
+    isEnterprise: false
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -289,6 +291,11 @@ export default function AdminSubscriptionsPage() {
     try {
       const planToSave = {
         ...formData,
+        // Si es Empresa, el tipo debe ser fixed independientemente de lo demás
+        type: formData.isEnterprise ? 'fixed' : formData.type,
+        // Limpiar datos según el tipo final
+        price: (formData.isEnterprise || formData.type === 'fixed') ? formData.price : 0,
+        percentageRate: (!formData.isEnterprise && formData.type === 'percentage') ? formData.percentageRate : 0,
         updatedAt: serverTimestamp(),
       };
 
@@ -443,9 +450,14 @@ export default function AdminSubscriptionsPage() {
                     </TableCell>
 
                     <TableCell className="text-center">
-                      <Badge variant={plan.isActive ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", plan.isActive ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground")}>
-                        {plan.isActive ? 'Activo' : 'Inactivo'}
-                      </Badge>
+                      <div className="flex flex-col items-center gap-1">
+                        <Badge variant={plan.isEnterprise ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", plan.isEnterprise ? "bg-indigo-50 text-indigo-700" : "bg-slate-50 text-slate-500 uppercase")}>
+                          {plan.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
+                        </Badge>
+                        <Badge variant="outline" className="text-[9px] opacity-70 px-0 h-3 border-none bg-transparent">
+                          {plan.isActive ? '✓ Disponible' : '✗ Oculto'}
+                        </Badge>
+                      </div>
                     </TableCell>
 
                     <TableCell className="text-right px-6">
@@ -489,26 +501,39 @@ export default function AdminSubscriptionsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="planType" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tipo de Contrato</Label>
-                    <Select value={formData.type} onValueChange={(value) => setFormData({...formData, type: value as 'free' | 'fixed' | 'percentage'})}>
-                      <SelectTrigger className="h-12 rounded-xl border-slate-200"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="free" className="font-bold">Gratuito</SelectItem>
-                        <SelectItem value="fixed" className="font-bold">Abono Fijo</SelectItem>
-                        <SelectItem value="percentage" className="font-bold">Regalías / Revenue Share</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <Select 
+                        value={formData.type} 
+                        onValueChange={(value) => setFormData({...formData, type: value as 'free' | 'fixed' | 'percentage'})}
+                        disabled={formData.isActive}
+                      >
+                        <SelectTrigger className="h-12 rounded-xl border-slate-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="font-sans">
+                          <SelectItem value="free" className="font-bold" disabled={formData.isActive}>Gratuito</SelectItem>
+                          <SelectItem value="fixed" className="font-bold">Abono Fijo</SelectItem>
+                          <SelectItem value="percentage" className="font-bold" disabled={formData.isActive}>Regalías / Revenue Share</SelectItem>
+                        </SelectContent>
+                      </Select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                  <div className="space-y-2">
-                    <Label htmlFor="planPrice" className="text-xs font-bold uppercase tracking-widest text-slate-500">Fijo (USD/mes)</Label>
-                    <Input id="planPrice" name="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free' || formData.type === 'percentage'} className="h-12 rounded-xl bg-slate-50" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="planPercentage" className="text-xs font-bold uppercase tracking-widest text-slate-500">Regalía (%)</Label>
-                    <Input id="planPercentage" name="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} disabled={formData.type !== 'percentage'} className="h-12 rounded-xl bg-slate-50" />
-                  </div>
+                <div className={cn(
+                  "grid grid-cols-1 md:grid-cols-3 gap-8 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm",
+                  formData.type === 'free' && "opacity-50 pointer-events-none"
+                )}>
+                  {formData.type !== 'percentage' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="planPrice" className="text-xs font-bold uppercase tracking-widest text-slate-500">Fijo (USD/mes)</Label>
+                      <Input id="planPrice" name="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free'} className="h-12 rounded-xl bg-slate-50" />
+                    </div>
+                  )}
+                  {formData.type === 'percentage' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="planPercentage" className="text-xs font-bold uppercase tracking-widest text-slate-500">Regalía (%)</Label>
+                      <Input id="planPercentage" name="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="planDuration" className="text-xs font-bold uppercase tracking-widest text-slate-500">Duración mínima (m)</Label>
                     <Input id="planDuration" name="planDuration" type="number" min="1" value={formData.durationMonths} onChange={(e) => setFormData({...formData, durationMonths: parseInt(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
@@ -564,8 +589,29 @@ export default function AdminSubscriptionsPage() {
             <div className="p-6 bg-white border-t border-slate-100 shrink-0 flex justify-between items-center rounded-b-[2rem]">
               <div className="flex gap-6 items-center">
                 <div className="flex gap-2 items-center">
+                  <Switch 
+                    id="plan-is-enterprise" 
+                    name="plan-is-enterprise" 
+                    checked={formData.isEnterprise} 
+                    onCheckedChange={(c) => {
+                      setFormData({
+                        ...formData, 
+                        isEnterprise: c,
+                        // Si es Empresa (true), forzar a Fijo
+                        type: c ? 'fixed' : formData.type
+                      });
+                    }} 
+                    className="data-[state=checked]:bg-indigo-600" 
+                  />
+                  <Label htmlFor="plan-is-enterprise" className="font-bold text-xs uppercase tracking-widest text-slate-500 cursor-pointer">
+                    {formData.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
+                  </Label>
+                </div>
+              </div>
+              <div className="flex gap-3 items-center">
+                <div className="flex gap-2 items-center mr-4">
                   <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-emerald-500" />
-                  <Label htmlFor="plan-is-active" className="font-bold text-xs uppercase tracking-widest text-slate-500 cursor-pointer">{formData.isActive ? 'Comercializable' : 'Desactivado'}</Label>
+                  <Label htmlFor="plan-is-active" className="font-bold text-[9px] uppercase tracking-widest text-slate-400 cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>
                 </div>
               </div>
               <div className="flex gap-3">

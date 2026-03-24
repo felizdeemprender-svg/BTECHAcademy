@@ -175,6 +175,7 @@ export default function AdminUsersPage() {
       status: SubscriptionStatus.ACTIVE,
       type: plan.type,
       name: plan.name,
+      isEnterprise: plan.isEnterprise || false,
       startDate,
       endDate,
       hasCustomPage: plan.hasCustomPage || false,
