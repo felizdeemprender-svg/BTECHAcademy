@@ -245,7 +245,17 @@ export default function ManageCoursesPage() {
   const sub = profile?.subscription;
   const isExpired = sub ? new Date(sub.endDate) < new Date() : true;
   const limitCount = sub?.maxSimultaneousCourses || 0;
-  const activeCount = courses?.filter((c: any) => c.isActive !== false).length || 0;
+  const activeCount = courses?.filter((c: any) => c.isActive === true).length || 0;
+
+  // Debug logging para investigar el problema
+  console.log('🔍 DEBUG - Datos de suscripción:', {
+    userEmail: profile?.email,
+    subscription: sub,
+    isExpired,
+    limitCount,
+    activeCount,
+    courses: courses?.map(c => ({ id: c.id, title: c.title, isActive: c.isActive }))
+  });
 
   const handleNewCourse = () => {
     if (isAdmin) {
