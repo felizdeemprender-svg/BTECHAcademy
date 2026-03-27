@@ -169,6 +169,7 @@ export default function ManageCoursesPage() {
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   const [isAssociatedDialogOpen, setIsAssociatedDialogOpen] = useState(false);
   const [isTermsDialogOpen, setIsTermsDialogOpen] = useState(false);
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
@@ -238,26 +239,38 @@ export default function ManageCoursesPage() {
     return query(coursesRef, where('mentorId', '==', profile.uid));
   }, [db, profile?.uid, isAdmin]);
 
-  // Completely disabled to prevent Firestore errors
-  const { data: courses } = { data: [] };
-  const isLoading = false; // Simplificado para evitar errores
+  // Consulta a Firestore restaurada para mostrar cursos
+  const { data: courses, isLoading } = useCollection(coursesQuery);
 
   const sub = profile?.subscription;
   const isExpired = sub ? new Date(sub.endDate) < new Date() : true;
   const limitCount = sub?.maxSimultaneousCourses || 0;
-  const activeCount = 0; // Simplificado para evitar errores
+  const activeCount = courses?.filter((c: any) => c.isActive !== false).length || 0;
 
   const handleNewCourse = () => {
     if (isAdmin) {
       router.push('/courses/create');
       return;
     }
-    // Simplified - just show upgrade dialog
-    toast({ 
-      variant: 'destructive', 
-      title: 'Función Temporalmente Desactivada', 
-      description: 'La creación de cursos está temporalmente desactivada para evitar refrescos constantes.' 
-    });
+
+    // Verificar límites de suscripción
+    if (isExpired) {
+      setUpgradeDialogOpen(true);
+      return;
+    }
+
+    if (activeCount >= limitCount) {
+      toast({
+        variant: 'destructive',
+        title: 'Límite de cursos alcanzado',
+        description: `Tu plan actual permite ${limitCount} cursos simultáneos. Actualiza tu plan para crear más.`
+      });
+      setUpgradeDialogOpen(true);
+      return;
+    }
+
+    // Permitir crear curso
+    router.push('/courses/create');
   };
 
   const handleGenerateAiTags = async () => {
