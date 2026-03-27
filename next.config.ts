@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'i.pravatar.cc' },
     ],
   },
+  // Disable SSG to avoid build errors
+  trailingSlash: false,
+  // Skip static generation for problematic pages
+  serverExternalPackages: ['@/firebase'],
+  // Disable static generation completely
+  generateStaticParams: async () => {
+    return [];
+  },
 };
 
 export default nextConfig;

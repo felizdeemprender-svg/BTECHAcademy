@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -43,6 +43,7 @@ interface NavSection {
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { profile } = useAuth();
   const [openSections, setOpenSections] = useState<string[]>(['Cursos', 'Comercialización']);
 
@@ -57,6 +58,12 @@ export function SidebarNav() {
     return items;
   };
 
+  // Navegación optimizada para evitar recargas del menú
+  const handleNavigation = (href: string) => {
+    if (href === pathname) return; // No navegar si ya estamos en la misma página
+    router.push(href);
+  };
+
   const sections: NavSection[] = [
     {
       label: 'Cursos',
@@ -65,6 +72,11 @@ export function SidebarNav() {
         { name: 'Catálogo', href: '/courses', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: BookOpen },
         { name: 'Mis Cursos', href: '/my-courses', roles: ['alumno'], icon: Library },
         { name: 'Mis Desafíos', href: '/tasks', roles: ['alumno'], icon: Zap },
+      ]
+    },
+    {
+      label: 'Admin de Cursos',
+      items: [
         { name: 'Gestión Académica', href: '/courses/manage', roles: ['mentor', 'admin'], subPermission: 'academic_management', icon: GraduationCap },
         { name: 'Desafíos (Mentor)', href: '/mentoria/desafios', roles: ['mentor', 'admin'], subPermission: 'mentor_challenges', icon: Target },
         { name: 'Alumnos', href: '/alumnos', roles: ['mentor', 'admin'], subPermission: 'students_view', icon: Users },
@@ -165,11 +177,11 @@ export function SidebarNav() {
             )}>
               <div className="pt-1.5 space-y-1">
                 {section.items.map((item, index) => (
-                  <a
+                  <button
                     key={`${item.href}-${index}`}
-                    href={item.href}
+                    onClick={() => handleNavigation(item.href)}
                     className={cn(
-                      "group flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ml-1",
+                      "group flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ml-1 w-full text-left",
                       pathname === item.href 
                         ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10" 
                         : "text-[hsl(var(--sidebar-foreground)/0.6)] hover:bg-white/5 hover:text-white"
@@ -180,7 +192,7 @@ export function SidebarNav() {
                     {pathname === item.href && (
                       <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent),0.8)]" />
                     )}
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>

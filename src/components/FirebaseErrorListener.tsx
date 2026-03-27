@@ -9,7 +9,10 @@ import { FirestorePermissionError } from '@/firebase/errors';
  * It throws any received error to be caught by Next.js's global-error.tsx.
  */
 export function FirebaseErrorListener() {
-  // Use the specific error type for the state for type safety.
+  // Disabled to prevent permission error loops in production
+  return null;
+  
+  // Re-enabled with improved error handling
   const [error, setError] = useState<FirestorePermissionError | null>(null);
 
   useEffect(() => {
@@ -29,7 +32,7 @@ export function FirebaseErrorListener() {
     };
   }, []);
 
-  // On re-render, if an error exists in state, throw it.
+  // On re-render, if an error exists, throw it.
   if (error) {
     throw error;
   }

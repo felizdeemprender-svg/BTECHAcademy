@@ -179,7 +179,9 @@ export default function FollowUpsPage() {
     );
   }, [db, profile?.uid, profile?.email, isAdmin, isMentor]);
 
-  const { data: followUps, isLoading: followUpsLoading } = useCollection(followUpsQuery);
+  // Solo ejecutar useCollection si el usuario tiene permisos
+  const hasPermission = isAdmin || isMentor || (profile?.roles?.includes('alumno'));
+  const { data: followUps, isLoading: followUpsLoading } = useCollection(hasPermission ? followUpsQuery : null);
 
   const [formData, setFormData] = useState({
     title: '',

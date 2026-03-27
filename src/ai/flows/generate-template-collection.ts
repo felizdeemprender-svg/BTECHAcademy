@@ -1,11 +1,14 @@
 'use server';
 /**
- * @fileOverview Un flujo de Genkit para generar una colección de templates estratégicos (blueprint).
- * Utiliza el modelo predeterminado configurado en el núcleo de Genkit.
+ * @fileOverview Flujo de Genkit para generar colección de templates
+ * Utiliza el modelo predeterminado configurado en el núcleo de Genkit
+ * Incluye validación y pre-conformación para APIs externas
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { validateAndPreconformTemplates } from '@/lib/template-validator';
+import { analyzeColorSimilarity, generateColorRecommendations } from '@/lib/color-matcher';
 
 const DesignTokensSchema = z.object({
   primary: z.string().describe('Color primario (Hex)'),
@@ -73,6 +76,14 @@ const CollectionOutputSchema = z.object({
   emails: z.array(EmailVariantSchema).optional(),
   socials: z.array(SocialVariantSchema).optional(),
   ads: z.array(AdsVariantSchema).optional(),
+  validationMetadata: z.object({
+    colorAnalysis: z.any().optional(),
+    recommendations: z.any().optional(),
+    preconformedResults: z.any().optional(),
+    validatedAt: z.string().optional(),
+    error: z.string().optional(),
+    fallbackMode: z.boolean().optional()
+  }).optional()
 });
 export type CollectionOutput = z.infer<typeof CollectionOutputSchema>;
 
@@ -124,6 +135,76 @@ Devuelve un objeto JSON estructurado que contenga exclusivamente los arrays de l
     });
 
     if (!output) throw new Error('Fallo al generar el blueprint multicanal.');
-    return output;
+
+    // 🔍 VALIDACIÓN Y PRE-CONFORMACIÓN PARA APIs
+    console.log('🔍 Iniciando validación y pre-conformación para APIs externas...');
+    
+    try {
+      // Extraer design tokens del primer template disponible
+      const firstTemplate = output.landings?.[0] || output.emails?.[0] || output.socials?.[0] || output.ads?.[0];
+      const designTokens = firstTemplate?.designTokens;
+
+      if (designTokens) {
+        console.log('🎨 Design Tokens detectados:', designTokens);
+        
+        // Analizar compatibilidad de colores
+        const colorAnalysis = analyzeColorSimilarity(designTokens.primary, ['twitter', 'instagram', 'linkedin', 'tiktok']);
+        console.log('📊 Análisis de compatibilidad de colores:', colorAnalysis);
+
+        // Generar recomendaciones
+        const recommendations = generateColorRecommendations(designTokens.primary, ['twitter', 'instagram', 'linkedin', 'tiktok']);
+        console.log('💡 Recomendaciones de ajuste:', recommendations);
+
+        // Validar y pre-conformar templates
+        const templatesToValidate = [
+          output.landings || [],
+          output.emails || [],
+          output.socials || [],
+          output.ads || []
+        ];
+
+        const platforms = ['landing', 'email', 'social', 'ads'];
+        const designTokensMap = templatesToValidate.map(templates => 
+          templates.length > 0 ? designTokens : {}
+        );
+
+        console.log('🚀 Iniciando pre-conformación masiva de templates...');
+        const preconformedResults = await validateAndPreconformTemplates(
+          templatesToValidate,
+          designTokensMap,
+          platforms
+        );
+
+        console.log('✅ Pre-conformación completada:', preconformedResults);
+
+        // Enriquecer output con metadatos de validación
+        const enrichedOutput = {
+          ...output,
+          validationMetadata: {
+            colorAnalysis,
+            recommendations,
+            preconformedResults,
+            validatedAt: new Date().toISOString()
+          }
+        };
+
+        return enrichedOutput;
+      }
+
+      return output;
+    } catch (validationError: any) {
+      console.error('❌ Error en validación de APIs:', validationError);
+      console.log('⚠️ Continuando con templates sin pre-conformación...');
+      
+      // Devolver output original aunque falle la validación
+      return {
+        ...output,
+        validationMetadata: {
+          error: validationError.message,
+          fallbackMode: true,
+          validatedAt: new Date().toISOString()
+        }
+      };
+    }
   }
 );

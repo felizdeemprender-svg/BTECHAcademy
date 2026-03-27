@@ -7,8 +7,6 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { LandingHeader } from '@/components/layout/LandingHeader';
 import { LandingFooter } from '@/components/layout/LandingFooter';
-import PlansSection from '@/components/landing/PlansSection';
-import CourseCatalogPreview from '@/components/landing/CourseCatalogPreview';
 
 export default function LandingPage() {
   return (
@@ -30,83 +28,123 @@ export default function LandingPage() {
               Gemini 2.5 Pro Integration Active
             </div>
             
-            <h1 className="font-bold text-6xl lg:text-8xl leading-[0.9] text-primary tracking-tighter">
-              El Futuro de la <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary bg-300% animate-gradient">Educación</span> es Hoy
+            <h1 className="font-headline text-5xl lg:text-7xl font-bold leading-tight text-primary">
+              La <span className="text-accent">Plataforma</span> que Transforma Mentores en <span className="text-accent">Líderes</span>
             </h1>
             
-            <p className="text-xl text-slate-500 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
-              BTECH by Academy trasciende la enseñanza tradicional. Nuestra plataforma combina IA de vanguardia con un ecosistema de gestión exclusivo para instituciones y mentores de alto impacto.
+            <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              Potencia tu marca personal, automatiza tu gestión educativa y accede a una red exclusiva de conocimiento institucional con IA de última generación.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-6">
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Link href="/auth">
+                <Button size="lg" className="h-16 px-12 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">
+                  <Rocket className="w-6 h-6 mr-2" />
+                  Comenzar Ahora
+                </Button>
+              </Link>
               <Link href="/courses">
-                <Button size="lg" className="h-16 px-10 text-lg bg-primary hover:bg-primary/95 shadow-2xl shadow-primary/30 rounded-2xl font-black group transition-all">
-                  Explorar Catálogo <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+                <Button size="lg" variant="outline" className="h-16 px-12 text-lg border-2 hover:bg-secondary">
+                  <BookOpen className="w-6 h-6 mr-2" />
+                  Explorar Cursos
                 </Button>
               </Link>
-              <Link href="/about">
-                <Button size="lg" variant="outline" className="h-16 px-10 text-lg border-2 border-slate-200 hover:border-primary hover:bg-secondary/50 rounded-2xl font-bold transition-all">
-                  Más Información
-                </Button>
-              </Link>
-            </div>
-
-            {/* Micro Stats in Hero */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-10 pt-10 border-t border-slate-100">
-              <div className="space-y-1">
-                <p className="text-3xl font-black text-primary">500+</p>
-                <p className="text-xs uppercase font-bold text-slate-400 tracking-widest">Cursos Activos</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-black text-primary">12k+</p>
-                <p className="text-xs uppercase font-bold text-slate-400 tracking-widest">Estudiantes</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-3xl font-black text-primary">98%</p>
-                <p className="text-xs uppercase font-bold text-slate-400 tracking-widest">Certificaciones</p>
-              </div>
             </div>
           </div>
-
-          <div className="flex-1 relative w-full aspect-square max-w-[600px] group">
-            <div className="absolute inset-0 bg-primary/20 blur-[120px] rounded-full group-hover:bg-accent/20 transition-colors duration-1000" />
-            <div className="relative h-full w-full rounded-[3.5rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)] border-[8px] border-white/50 backdrop-blur-sm transform rotate-1 group-hover:rotate-0 transition-transform duration-700">
-              <Image 
-                src="https://loremflickr.com/1200/1200/education,technology,learning?lock=1" 
-                alt="Plataforma BTECH by Academy"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover scale-110 group-hover:scale-100 transition-transform duration-1000"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-              
-              {/* Floating Element */}
-              <div className="absolute bottom-8 left-8 right-8 bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-xl flex items-center justify-between border border-white/20">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center">
-                    <Trophy className="text-white h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Nivel Institucional</p>
-                    <p className="font-black text-primary text-xl">Certificación Oro</p>
-                  </div>
-                </div>
-                <div className="flex -space-x-3">
-                  {[1,2,3,4].map(i => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center overflow-hidden">
-                      <Image src={`https://i.pravatar.cc/100?u=${i}`} alt="user" width={32} height={32} />
-                    </div>
-                  ))}
+          
+          <div className="flex-1 relative">
+            <div className="relative w-full h-96 lg:h-full min-h-[400px]">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl animate-pulse" />
+              <div className="absolute inset-4 bg-white rounded-2xl shadow-2xl flex items-center justify-center">
+                <div className="text-center space-y-4 p-8">
+                  <GraduationCap className="w-16 h-16 text-primary mx-auto" />
+                  <h3 className="text-2xl font-bold text-primary">BTECHAcademy</h3>
+                  <p className="text-muted-foreground">Educación de Alto Impacto</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Course Catalog Section */}
-        <CourseCatalogPreview />
+        {/* Features Section */}
+        <section className="py-24 bg-white">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-16">
+              <Badge className="mb-4">Características Principales</Badge>
+              <h2 className="text-4xl font-bold text-primary mb-4">Todo lo que necesitas para tener éxito</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Herramientas avanzadas diseñadas para mentores modernos que buscan impacto real
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto">
+                  <Sparkles className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">IA Integrada</h3>
+                <p className="text-muted-foreground">Gemini 2.5 Pro para contenido personalizado y automatización inteligente</p>
+              </div>
+              
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto">
+                  <Users className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">Gestión de Alumnos</h3>
+                <p className="text-muted-foreground">Seguimiento detallado y análisis de progreso en tiempo real</p>
+              </div>
+              
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto">
+                  <ShieldCheck className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">Seguridad Total</h3>
+                <p className="text-muted-foreground">Protección de datos y contenido con encriptación de nivel empresarial</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="py-24 bg-gradient-to-br from-primary/5 to-accent/5">
+          <div className="container mx-auto px-6">
+            <div className="grid md:grid-cols-4 gap-8 text-center">
+              <div className="space-y-2">
+                <div className="text-4xl font-bold text-primary">500+</div>
+                <div className="text-muted-foreground">Mentores Activos</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-4xl font-bold text-primary">10K+</div>
+                <div className="text-muted-foreground">Estudiantes</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-4xl font-bold text-primary">98%</div>
+                <div className="text-muted-foreground">Satisfacción</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-4xl font-bold text-primary">50+</div>
+                <div className="text-muted-foreground">Cursos Premium</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-24 bg-white">
+          <div className="container mx-auto px-6 text-center">
+            <Badge className="mb-4">Comienza Hoy</Badge>
+            <h2 className="text-4xl font-bold text-primary mb-4">¿Listo para transformar tu futuro?</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              Únete a miles de mentores que ya están cambiando vidas con BTECHAcademy
+            </p>
+            <Link href="/auth">
+              <Button size="lg" className="h-16 px-12 text-lg bg-primary hover:bg-primary/90 shadow-xl">
+                <UserCheck className="w-6 h-6 mr-2" />
+                Crear Cuenta Gratuita
+              </Button>
+            </Link>
+          </div>
+        </section>
 
         {/* Global KPIs / Trust Indicators */}
         <section className="bg-slate-50 py-24 border-y border-slate-200/60">
@@ -160,7 +198,37 @@ export default function LandingPage() {
         </section>
 
         {/* Subscriptions Section */}
-        <PlansSection />
+        <section className="py-24 bg-white">
+          <div className="container mx-auto px-6 text-center">
+            <Badge className="mb-4">Planes Disponibles</Badge>
+            <h2 className="text-4xl font-bold text-primary mb-4">Elige tu Plan</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              Planes flexibles para mentores en diferentes etapas de crecimiento
+            </p>
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <div className="bg-white p-8 rounded-2xl border border-slate-200">
+                <h3 className="text-xl font-bold text-primary mb-4">Básico</h3>
+                <p className="text-3xl font-bold mb-4">Gratis</p>
+                <p className="text-muted-foreground mb-6">Perfecto para comenzar</p>
+                <Link href="/auth">
+                  <Button className="w-full">Comenzar Gratis</Button>
+                </Link>
+              </div>
+              <div className="bg-primary text-white p-8 rounded-2xl">
+                <h3 className="text-xl font-bold mb-4">Profesional</h3>
+                <p className="text-3xl font-bold mb-4">$29/mes</p>
+                <p className="text-primary-foreground mb-6">Para mentores activos</p>
+                <Button variant="secondary" className="w-full">Prueba Gratuita</Button>
+              </div>
+              <div className="bg-slate-900 text-white p-8 rounded-2xl">
+                <h3 className="text-xl font-bold mb-4">Enterprise</h3>
+                <p className="text-3xl font-bold mb-4">$99/mes</p>
+                <p className="text-slate-300 mb-6">Para instituciones</p>
+                <Button variant="outline" className="w-full border-white text-white hover:bg-white hover:text-slate-900">Contactar</Button>
+              </div>
+            </div>
+          </div>
+        </section>
 
       </main>
 

@@ -6,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { GraduationCap, Sparkles, Users, Target, Award, Globe, Heart, Lightbulb, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { LandingHeader } from '@/components/layout/LandingHeader';
+import { LandingFooter } from '@/components/layout/LandingFooter';
 
 export default function AboutPage() {
   const team = [
@@ -56,9 +58,18 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-white to-accent/10">
+    <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans selection:bg-primary/10">
+      {/* Dynamic Background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[20%] right-[-5%] w-[30%] h-[30%] bg-accent/5 blur-[100px] rounded-full" />
+      </div>
+
+      <LandingHeader />
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-white to-accent/10">
         <div className="container mx-auto px-6 py-24 lg:py-32">
           <div className="text-center max-w-4xl mx-auto space-y-8">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm font-semibold">
@@ -260,6 +271,9 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+      </main>
+      
+      <LandingFooter />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { CollectionManager } from './components/collection-manager';
 import { AIGenerator } from './components/ai-generator';
-import { TemplateViewerProduction } from './components/template-viewer-production';
+import { IdentityDesigner } from './components/identity-designer';
 import { useCollections } from './hooks/use-collections';
 import { useAIGeneration } from './hooks/use-ai-generation';
 import { useIdentityDesign } from './hooks/use-identity-design';
@@ -13,14 +13,14 @@ import { useIdentityDesign } from './hooks/use-identity-design';
 export default function MarketingTemplatesPage() {
   const { profile } = useAuth();
   
-  // TODOS los hooks primero - sin condicionales
+  // Hooks personalizados
   const { 
     collections, 
     isLoading, 
     createCollection, 
     deleteCollection, 
     updateCollection 
-  } = useCollections(profile || null);
+  } = useCollections(profile);
   
   const {
     isGenerating,
@@ -32,58 +32,34 @@ export default function MarketingTemplatesPage() {
     generateTemplates,
     updateEnabledChannels,
     updateSocialTargets
-  } = useAIGeneration(profile);
+  } = useAIGeneration();
 
   const {
     isDesigning,
     designProgress,
     identityDesign,
     isDesignApproved,
-    designGallery,
-    currentDesignIndex,
     generateIdentityDesign,
     updateIdentityDesign,
     approveDesign,
-    resetDesign,
-    navigateDesign,
-    hasNextDesign,
-    hasPrevDesign
+    resetDesign
   } = useIdentityDesign();
 
+  // Estados de UI
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isIdentityDesignerOpen, setIsIdentityDesignerOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [campaignDirectives, setCampaignDirectives] = useState('');
-  const [isViewerOpen, setIsViewerOpen] = useState(false);
 
-  // Colección seleccionada - siempre después de todos los hooks
+  // Colección seleccionada
   const selectedCollection = useMemo(() => {
     if (!selectedId || !collections) return null;
     return collections.find(c => c.id === selectedId);
   }, [selectedId, collections]);
 
-  // Debug: Verificar si profile está disponible
-  console.log('Profile:', profile);
-  console.log('Collections:', collections);
-  console.log('IsLoading:', isLoading);
-  
-  // Solo ahora podemos hacer early return (después de TODOS los hooks)
-  if (!profile) {
-    return (
-      <DashboardLayout>
-        <div className="flex h-screen items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando información de usuario...</p>
-            <p className="text-sm text-gray-500 mt-2">Si persiste, inicia sesión nuevamente</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   // Handlers
   const handleCreateNew = () => {
-    setIsCreateOpen(true);
+    setIsIdentityDesignerOpen(true);
   };
 
   const handleGenerateDesign = async (directives: string) => {
@@ -97,24 +73,31 @@ export default function MarketingTemplatesPage() {
 
   const handleApproveDesign = () => {
     approveDesign();
+    setIsIdentityDesignerOpen(false);
+    setIsCreateOpen(true);
   };
 
   const handleGenerate = async (name: string, directives: string) => {
-    const success = await generateTemplates(
-      'new-collection', // collectionId
-      name, 
-      directives, 
-      identityDesign?.designTokens
-    );
-    if (success) {
-      resetDesign(); // Resetear para próxima campaña
+    const collectionId = await createCollection(name, directives);
+    if (collectionId) {
+      const success = await generateTemplates(
+        collectionId, 
+        name, 
+        directives, 
+        identityDesign?.designTokens
+      );
+      if (success) {
+        setSelectedId(collectionId);
+        resetDesign(); // Resetear para próxima campaña
+      }
+      return success;
     }
-    return success;
+    return false;
   };
 
   const handleViewCollection = (id: string) => {
     setSelectedId(id);
-    setIsViewerOpen(true);
+    // Aquí podríamos abrir un modal de vista o navegar a una página de detalles
   };
 
   const handleDeleteCollection = async (id: string) => {
@@ -124,16 +107,6 @@ export default function MarketingTemplatesPage() {
         setSelectedId(null);
       }
     }
-  };
-
-  const handleEditTemplate = (template: any, type: string) => {
-    console.log('Edit template:', template, type);
-    // TODO: Implementar edición de templates
-  };
-
-  const handleRefineTemplate = (template: any, type: string) => {
-    console.log('Refine template:', template, type);
-    // TODO: Implementar refinamiento con IA
   };
 
   return (
@@ -160,16 +133,35 @@ export default function MarketingTemplatesPage() {
 
         {/* Vista Previa de Colección Seleccionada */}
         {selectedCollection && (
-          <TemplateViewerProduction 
-            collection={selectedCollection}
-            isOpen={isViewerOpen}
-            onClose={() => setIsViewerOpen(false)}
-            onEdit={handleEditTemplate}
-            onRefine={handleRefineTemplate}
-          />
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Vista Previa: {selectedCollection.name}
+            </h2>
+            {/* Aquí podríamos agregar un componente de vista previa */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <p className="text-gray-600">
+                Vista previa de la colección seleccionada. 
+                Los templates se mostrarían aquí con opciones de edición y refinamiento.
+              </p>
+            </div>
+          </div>
         )}
 
-        {/* Modal de Generación AI con Flujo Integrado */}
+        {/* Modal de Diseño de Identidad */}
+        <IdentityDesigner
+          isOpen={isIdentityDesignerOpen}
+          onClose={() => setIsIdentityDesignerOpen(false)}
+          directives={campaignDirectives}
+          identityDesign={identityDesign}
+          isDesigning={isDesigning}
+          designProgress={designProgress}
+          isDesignApproved={isDesignApproved}
+          onGenerateDesign={handleGenerateDesign}
+          onUpdateDesign={handleUpdateDesign}
+          onApproveDesign={handleApproveDesign}
+        />
+
+        {/* Modal de Generación AI */}
         <AIGenerator
           isOpen={isCreateOpen}
           onClose={() => {
@@ -185,19 +177,6 @@ export default function MarketingTemplatesPage() {
           onChannelsChange={updateEnabledChannels}
           onSocialTargetsChange={updateSocialTargets}
           onHealthCheck={performHealthCheck}
-          // Props para diseño de identidad
-          identityDesign={identityDesign}
-          isDesigning={isDesigning}
-          designProgress={designProgress}
-          isDesignApproved={isDesignApproved}
-          designGallery={designGallery}
-          currentDesignIndex={currentDesignIndex}
-          onGenerateDesign={handleGenerateDesign}
-          onUpdateDesign={handleUpdateDesign}
-          onApproveDesign={handleApproveDesign}
-          onNavigateDesign={navigateDesign}
-          hasNextDesign={hasNextDesign}
-          hasPrevDesign={hasPrevDesign}
         />
       </div>
     </DashboardLayout>

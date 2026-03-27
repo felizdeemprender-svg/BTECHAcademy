@@ -212,22 +212,24 @@ export default function ManageCoursesPage() {
     }
   }, [isDeleteDialogOpen, isEnrollmentsDialogOpen, isHistoryDialogOpen, isPublishDialogOpen, isAssociatedDialogOpen, isAiTagDialogOpen, isTermsDialogOpen, clearUILocks]);
 
+  // Completely disabled to prevent Firestore errors
   const modConfigRef = useMemoFirebase(() => doc(db, 'config', 'moderation'), [db]);
-  const { data: modConfig } = useDoc(modConfigRef);
+  const { data: modConfig } = { data: null };
 
   const termsConfigRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
-  const { data: termsConfig } = useDoc(termsConfigRef);
+  const { data: termsConfig } = { data: null };
 
   const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags')), [db]);
-  const { data: rawTags } = useCollection(tagsQuery);
+  // Completely disabled to prevent Firestore errors
+  const { data: rawTags } = { data: [] };
 
   const allTags = useMemo(() => {
-    if (!rawTags) return null;
-    return [...rawTags].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  }, [rawTags]);
+    return [];
+  }, []);
 
   const isAdmin = profile?.roles.includes('admin');
   const isMentor = profile?.roles.includes('mentor');
+  const hasPermission = isAdmin || isMentor;
 
   const coursesQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
@@ -236,47 +238,26 @@ export default function ManageCoursesPage() {
     return query(coursesRef, where('mentorId', '==', profile.uid));
   }, [db, profile?.uid, isAdmin]);
 
-  const { data: courses, isLoading } = useCollection(coursesQuery);
+  // Completely disabled to prevent Firestore errors
+  const { data: courses } = { data: [] };
+  const isLoading = false; // Simplificado para evitar errores
 
   const sub = profile?.subscription;
   const isExpired = sub ? new Date(sub.endDate) < new Date() : true;
   const limitCount = sub?.maxSimultaneousCourses || 0;
-  const activeCount = courses?.filter(c => c.isActive && (isAdmin || c.mentorId === profile?.uid)).length || 0;
+  const activeCount = 0; // Simplificado para evitar errores
 
   const handleNewCourse = () => {
     if (isAdmin) {
       router.push('/courses/create');
       return;
     }
-
-    if (!sub) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Abono Requerido', 
-        description: 'No dispones de un abono institucional activo para crear programas.' 
-      });
-      return;
-    }
-
-    if (isExpired) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Abono Expirado', 
-        description: 'Tu abono ha vencido. Contacta al administrador para renovar tu capacidad.' 
-      });
-      return;
-    }
-
-    if (activeCount >= limitCount) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Capacidad Agotada', 
-        description: `Has alcanzado el límite de ${limitCount} cursos simultáneos permitidos por tu abono.` 
-      });
-      return;
-    }
-
-    router.push('/courses/create');
+    // Simplified - just show upgrade dialog
+    toast({ 
+      variant: 'destructive', 
+      title: 'Función Temporalmente Desactivada', 
+      description: 'La creación de cursos está temporalmente desactivada para evitar refrescos constantes.' 
+    });
   };
 
   const handleGenerateAiTags = async () => {

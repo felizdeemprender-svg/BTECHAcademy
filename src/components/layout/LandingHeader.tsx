@@ -23,6 +23,15 @@ export function LandingHeader() {
       
       <nav className="hidden md:flex items-center gap-8">
         <Link 
+          href="/" 
+          className={cn(
+            "text-sm font-bold transition-colors",
+            pathname === '/' ? "text-primary" : "text-slate-500 hover:text-primary"
+          )}
+        >
+          Inicio
+        </Link>
+        <Link 
           href="/courses" 
           className={cn(
             "text-sm font-bold transition-colors",
@@ -31,8 +40,24 @@ export function LandingHeader() {
         >
           Catálogo
         </Link>
-        <Link href="/about" className="text-sm font-bold text-slate-500 hover:text-primary transition-colors">Institución</Link>
-        <Link href="/services" className="text-sm font-bold text-slate-500 hover:text-primary transition-colors">Servicios</Link>
+        <Link 
+          href="/about" 
+          className={cn(
+            "text-sm font-bold transition-colors",
+            pathname === '/about' ? "text-primary" : "text-slate-500 hover:text-primary"
+          )}
+        >
+          Institución
+        </Link>
+        <Link 
+          href="/services" 
+          className={cn(
+            "text-sm font-bold transition-colors",
+            pathname === '/services' ? "text-primary" : "text-slate-500 hover:text-primary"
+          )}
+        >
+          Servicios
+        </Link>
       </nav>
 
       <div className="flex gap-4 items-center">
