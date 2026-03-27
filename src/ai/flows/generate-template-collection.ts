@@ -7,7 +7,13 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { validateAndPreconformTemplates } from '@/lib/template-validator';
+import { 
+  validateTwitterTemplates,
+  validateInstagramTemplates,
+  validateLinkedInTemplates,
+  validateTikTokTemplates,
+  validateAdsTemplates
+} from '@/lib/template-validator';
 import { analyzeColorSimilarity, generateColorRecommendations } from '@/lib/color-matcher';
 
 const DesignTokensSchema = z.object({
@@ -41,7 +47,7 @@ const SocialVariantSchema = z.object({
   designTokens: DesignTokensSchema,
   hook: z.string().describe('Estructura del gancho inicial.'),
   caption: z.string().describe('Estructura del cuerpo del post.'),
-  hashtags: z.array(z.string()),
+  hashtags: z.array(z.string()).optional().describe('Array de hashtags opcional.'),
   slideCount: z.number().optional().describe('Cantidad de placas, tweets o fragmentos según plataforma.'),
 });
 
@@ -56,6 +62,7 @@ const AdsVariantSchema = z.object({
 const CollectionInputSchema = z.object({
   directives: z.string().describe('Directivas estratégicas del mentor.'),
   mentorName: z.string().optional(),
+  designTokens: DesignTokensSchema.describe('Tokens de diseño seleccionados por el usuario'),
   enabledChannels: z.object({
     landings: z.boolean(),
     emails: z.boolean(),
@@ -107,6 +114,15 @@ const generateTemplateCollectionFlow = ai.defineFlow(
     const { output } = await ai.generate({
       prompt: `Actúa como un Director de Arte y Arquitecto de Marketing Digital. Tu tarea es generar un "Blueprint de Identidad" multicanal.
 
+IDENTIDAD VISUAL SELECCIONADA (USA ESTOS COLORES OBLIGATORIAMENTE):
+- Color Primario: ${input.designTokens.primary}
+- Color Secundario: ${input.designTokens.secondary} 
+- Color Acento: ${input.designTokens.accent}
+- Fuente Títulos: ${input.designTokens.fontHeading}
+- Fuente Cuerpo: ${input.designTokens.fontBody}
+
+¡IMPORTANTE! DEBES USAR EXACTAMENTE ESTOS COLORES EN TODOS LOS TEMPLATES. NO GENERES COLORES DIFERENTES.
+
 FILTRO DE GENERACIÓN (Solo genera para estos canales):
 - Landings: ${input.enabledChannels.landings ? 'HABILITADO (3 variantes: Minimal, Balanced, Detailed)' : 'DESACTIVADO'}
 - Emails: ${input.enabledChannels.emails ? 'HABILITADO (3 variantes)' : 'DESACTIVADO'}
@@ -116,17 +132,54 @@ FILTRO DE GENERACIÓN (Solo genera para estos canales):
 SI LAS REDES SOCIALES ESTÁN HABILITADAS, ESTAS SON LAS CUOTAS EXACTAS QUE DEBES GENERAR (¡No te desvíes!):
 - Twitter: ${input.platforms?.twitter?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.twitter.thread || 0} hilos [type="thread"] y ${input.platforms.twitter.single_post || 0} tweets [type="single_post"])` : 'NO'}
 - Instagram: ${input.platforms?.instagram?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.instagram.story || 0} stories [type="story"], ${input.platforms.instagram.carousel || 0} carruseles [type="carousel"] y ${input.platforms.instagram.single_post || 0} fotos de muro [type="single_post"])` : 'NO'}
-- TikTok: ${input.platforms?.tiktok?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.tiktok.short_video || 0} videos cortos [type="short_video"] y ${input.platforms.tiktok.carousel || 0} carruseles fotográficos [type="carousel"])` : 'NO'}
-- LinkedIn: ${input.platforms?.linkedin?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.linkedin.document || 0} posts de documento [type="document"], ${input.platforms.linkedin.single_post || 0} posts de autoridad [type="single_post"], y ${input.platforms.linkedin.carousel || 0} carruseles [type="carousel"])` : 'NO'}
+- TikTok: ${input.platforms?.tiktok?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.tiktok.short_video || 0} videos cortos [type="short_video"] y ${input.platforms.tiktok.carousel || 0} carruseles fotográficos [type="carousel"]). ¡OBLIGATORIO GENERAR TIKTOK!` : 'NO'}
+- LinkedIn: ${input.platforms?.linkedin?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.linkedin.document || 0} posts de documento [type="document"], ${input.platforms.linkedin.single_post || 0} posts de autoridad [type="single_post"], y ${input.platforms.linkedin.carousel || 0} carruseles [type="carousel"]). ¡OBLIGATORIO GENERAR LINKEDIN!` : 'NO'}
+
+¡ATENCIÓN CRÍTICA! DEBES GENERAR TEMPLATES PARA TODAS LAS PLATAFORMAS HABILITADAS:
+${input.platforms?.tiktok?.enabled ? `✅ TIKTOK HABILITADO: Genera ${input.platforms.tiktok.short_video || 0} videos cortos con platform: "tiktok" y type: "short_video"` : ''}
+${input.platforms?.linkedin?.enabled ? `✅ LINKEDIN HABILITADO: Genera ${input.platforms.linkedin.document || 0} documentos con platform: "linkedin" y type: "document"` : ''}
+
+REGLA DE ORO: Si una plataforma está habilitada, DEBES generar sus templates. NO OMITAS NINGUNA PLATAFORMA HABILITADA.
+
+¡ALERTA ESPECIAL PARA LINKEDIN! 
+${input.platforms?.linkedin?.enabled ? `
+- DEBES generar ${input.platforms.linkedin.document || 0} posts de tipo "document" para LinkedIn
+- Cada post "document" debe tener: platform: "linkedin", type: "document", hook, caption
+- Los posts "document" de LinkedIn son contenido profesional tipo artículo o documento PDF
+- Ejemplo: { "platform": "linkedin", "type": "document", "hook": "Título profesional", "caption": "Contenido del artículo..." }` : ''}
 
 REGLAS ESPECÍFICAS DE COPYWRITING Y DISEÑO:
-1. LANDINGS (Sitios Web): Genera Títulos (Headlines) CORTOS, persuasivos y orientados a conversión (máximo 8 palabras). El subheadline debe ser un subtítulo directo (1-2 líneas). ¡COMPLETAMENTE PROHIBIDO usar saludos de carta o estilo email ("Hola", "Espero que")!
+1. LANDINGS (Sitios Web): Genera Títulos (Headlines) CORTOS, persuasivos y orientados a conversión (máximo 8 palabras). El subheadline debe ser un subtítulo directo (1-2 líneas). ¡COMPLETAMENTE PROHIBIDO usar saludos de carta o estilo email ("Hola", "Espero que")! ✅ USA LOS COLORES GENERADOS EN designTokens.
 2. EMAILS: Son correos conversacionales. Usa Asuntos intrigantes y Cuerpos de texto (Body) persuasivos que desarrollen una historia o beneficio, con saludo y despedida.
 3. ADS & SOCIALS: Redacta ganchos (hooks) directos y textos asertivos optimizados para capturar atención en segundos.
-4. TOKENS: Define tokens de diseño coherentes (primary, secondary, accent, fontHeading, fontBody) para cada estilo.
-5. TONO: Basa todo el ADN en las directivas del usuario: "${input.directives}".
 
-Devuelve un objeto JSON estructurado que contenga exclusivamente los arrays de los canales habilitados.`,
+REGLAS DE CONTENIDO VACÍO (PARA LLENAR EN SIGUIENTE ETAPA):
+- Para landings: sectionCount es obligatorio, otros campos de contenido pueden quedar vacíos
+- Para emails: subject, body, preheader son obligatorios
+- Para socials: hook y caption son obligatorios, hashtags opcional
+- Para ads: headlines y descriptions son obligatorios, keywords opcional
+- NO generes URLs, imágenes, o contenido multimedia - eso va en la siguiente etapa
+
+REGLAS CRÍTICAS DE ESTRUCTURA JSON:
+¡CADA TEMPLATE DEBE INCLUIR TODOS LOS CAMPOS REQUERIDOS SIN EXCEPCIÓN!
+- designTokens: SIEMPRE debe incluir primary, secondary, accent, fontHeading, fontBody
+- socials: SIEMPRE debe incluir hook y caption (OBLIGATORIO)
+- ads: SIEMPRE debe incluir headlines y descriptions (OBLIGATORIO)
+- hashtags: Solo incluir si son relevantes para el contenido
+
+VERIFICACIÓN FINAL OBLIGATORIA:
+${input.platforms?.linkedin?.enabled ? `
+✅ LINKEDIN DEBE ESTAR PRESENTE: Si LinkedIn está habilitado, el array "socials" DEBE contener ${input.platforms.linkedin.document || 0} elementos con platform: "linkedin" y type: "document".
+❌ ERROR SI NO SE GENERA: Si no generas los posts de LinkedIn, el resultado será inválido.` : ''}
+
+TOKENS DE DISEÑO:
+Define tokens de diseño coherentes (primary, secondary, accent, fontHeading, fontBody) para cada estilo. Usa colores hex válidos (#XXXXXX) y fuentes web estándar.
+
+TONO: Basa todo el ADN en las directivas del usuario: "${input.directives}".
+
+IMPORTANTE: Genera datos COMPLETOS. No dejes campos vacíos o undefined. Cada objeto debe tener todos sus campos requeridos según el schema.
+
+Devuelve un objeto JSON estructurado que contenga exclusivamente los arrays de los canales habilitados con DATOS COMPLETOS.`,
       output: { schema: CollectionOutputSchema },
       config: { 
         temperature: 0.7,
@@ -136,7 +189,7 @@ Devuelve un objeto JSON estructurado que contenga exclusivamente los arrays de l
 
     if (!output) throw new Error('Fallo al generar el blueprint multicanal.');
 
-    // 🔍 VALIDACIÓN Y PRE-CONFORMACIÓN PARA APIs
+    // 🔍 VALIDACIÓN Y PRE-CONFORMACIÓN PARA APIs EXTERNAS
     console.log('🔍 Iniciando validación y pre-conformación para APIs externas...');
     
     try {
@@ -155,36 +208,74 @@ Devuelve un objeto JSON estructurado que contenga exclusivamente los arrays de l
         const recommendations = generateColorRecommendations(designTokens.primary, ['twitter', 'instagram', 'linkedin', 'tiktok']);
         console.log('💡 Recomendaciones de ajuste:', recommendations);
 
-        // Validar y pre-conformar templates
-        const templatesToValidate = [
-          output.landings || [],
-          output.emails || [],
-          output.socials || [],
-          output.ads || []
-        ];
+        // ✅ VALIDACIÓN INDIVIDUAL POR RED SOCIAL
+        const validatedResults: any = {
+          landings: output.landings || [], // ✅ Sin validación - usan colores originales
+          emails: output.emails || [],     // ✅ Sin validación - usan colores originales
+          socials: [],                    // ✅ Se validará individualmente por plataforma
+          ads: []                         // ✅ Se validará individualmente por plataforma
+        };
 
-        const platforms = ['landing', 'email', 'social', 'ads'];
-        const designTokensMap = templatesToValidate.map(templates => 
-          templates.length > 0 ? designTokens : {}
-        );
+        // ✅ VALIDAR CADA RED SOCIAL INDIVIDUALMENTE
+        if (output.socials && output.socials.length > 0) {
+          console.log('🔍 Validando social media individualmente...');
+          
+          // Agrupar socials por plataforma
+          const socialsByPlatform = {
+            twitter: output.socials.filter(s => s.platform === 'twitter'),
+            instagram: output.socials.filter(s => s.platform === 'instagram'),
+            linkedin: output.socials.filter(s => s.platform === 'linkedin'),
+            tiktok: output.socials.filter(s => s.platform === 'tiktok')
+          };
 
-        console.log('🚀 Iniciando pre-conformación masiva de templates...');
-        const preconformedResults = await validateAndPreconformTemplates(
-          templatesToValidate,
-          designTokensMap,
-          platforms
-        );
+          // Validar cada plataforma con su función específica
+          if (socialsByPlatform.twitter.length > 0) {
+            console.log(`🔍 Validando Twitter (${socialsByPlatform.twitter.length} templates)...`);
+            const twitterValidated = await validateTwitterTemplates(socialsByPlatform.twitter, designTokens);
+            validatedResults.socials.push(...twitterValidated);
+          }
 
-        console.log('✅ Pre-conformación completada:', preconformedResults);
+          if (socialsByPlatform.instagram.length > 0) {
+            console.log(`🔍 Validando Instagram (${socialsByPlatform.instagram.length} templates)...`);
+            const instagramValidated = await validateInstagramTemplates(socialsByPlatform.instagram, designTokens);
+            validatedResults.socials.push(...instagramValidated);
+          }
+
+          if (socialsByPlatform.linkedin.length > 0) {
+            console.log(`🔍 Validando LinkedIn (${socialsByPlatform.linkedin.length} templates)...`);
+            const linkedinValidated = await validateLinkedInTemplates(socialsByPlatform.linkedin, designTokens);
+            validatedResults.socials.push(...linkedinValidated);
+          }
+
+          if (socialsByPlatform.tiktok.length > 0) {
+            console.log(`🔍 Validando TikTok (${socialsByPlatform.tiktok.length} templates)...`);
+            const tiktokValidated = await validateTikTokTemplates(socialsByPlatform.tiktok, designTokens);
+            validatedResults.socials.push(...tiktokValidated);
+          }
+        }
+
+        // ✅ VALIDAR ADS CON FUNCIÓN ESPECÍFICA
+        if (output.ads && output.ads.length > 0) {
+          console.log('🔍 Validando ads individualmente...');
+          
+          const adsValidated = await validateAdsTemplates(output.ads, designTokens);
+          validatedResults.ads = adsValidated;
+        }
+
+        console.log('✅ Validación individual completada:', validatedResults);
 
         // Enriquecer output con metadatos de validación
         const enrichedOutput = {
-          ...output,
+          landings: validatedResults.landings,
+          emails: validatedResults.emails,
+          socials: validatedResults.socials,
+          ads: validatedResults.ads,
           validationMetadata: {
             colorAnalysis,
             recommendations,
-            preconformedResults,
-            validatedAt: new Date().toISOString()
+            validatedResults,
+            validatedAt: new Date().toISOString(),
+            validationType: 'individual_by_platform'
           }
         };
 
@@ -196,11 +287,14 @@ Devuelve un objeto JSON estructurado que contenga exclusivamente los arrays de l
       console.error('❌ Error en validación de APIs:', validationError);
       console.log('⚠️ Continuando con templates sin pre-conformación...');
       
+      // ✅ CORRECCIÓN: Validar que validationError exista antes de acceder a message
+      const errorMessage = validationError?.message || validationError?.toString() || "Error desconocido en validación";
+      
       // Devolver output original aunque falle la validación
       return {
         ...output,
         validationMetadata: {
-          error: validationError.message,
+          error: errorMessage,
           fallbackMode: true,
           validatedAt: new Date().toISOString()
         }

@@ -107,12 +107,28 @@ export function useAIGeneration(profile?: any) {
       const result = await generateTemplateCollection({
         directives,
         mentorName: profile?.displayName,
+        designTokens, // ✅ Agregar los colores seleccionados
         enabledChannels,
         platforms
       });
 
-      if (!result || !result.landings || !result.emails) {
-        throw new Error('La IA no generó templates válidos');
+      console.log('🔍 Resultado de generateTemplateCollection:', result);
+      console.log('🔍 Tipo de resultado:', typeof result);
+      console.log('🔍 Resultado es null/undefined:', result === null || result === undefined);
+      
+      if (result && typeof result === 'object') {
+        console.log('🔍 Resultado tiene landings:', 'landings' in result);
+        console.log('🔍 Resultado tiene emails:', 'emails' in result);
+        console.log('🔍 Resultado tiene socials:', 'socials' in result);
+        console.log('🔍 Resultado tiene ads:', 'ads' in result);
+      }
+
+      if (!result) {
+        throw new Error('La IA no generó ningún resultado');
+      }
+
+      if (!result.landings || !result.emails) {
+        throw new Error('La IA no generó landings o emails válidos');
       }
 
       // Guardar en Firestore con batching optimizado
@@ -155,7 +171,46 @@ export function useAIGeneration(profile?: any) {
       return true;
 
     } catch (error: any) {
-      console.error('❌ Error en generación:', error);
+      // ✅ CORRECCIÓN: Manejo seguro de cualquier tipo de error
+      let errorMessage = "Error desconocido en la generación";
+      let errorStack = "";
+      
+      if (error !== null && error !== undefined) {
+        if (typeof error === 'object') {
+          // ✅ Usar any para acceder a propiedades dinámicas
+          const errorAny = error as any;
+          if (errorAny.message && typeof errorAny.message === 'string') {
+            errorMessage = errorAny.message;
+          } else if (errorAny.toString && typeof errorAny.toString === 'function') {
+            errorMessage = errorAny.toString();
+          } else {
+            try {
+              errorMessage = JSON.stringify(error);
+            } catch {
+              errorMessage = "Error object (no serializable)";
+            }
+          }
+          
+          if (errorAny.stack && typeof errorAny.stack === 'string') {
+            errorStack = errorAny.stack;
+          }
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        } else {
+          errorMessage = String(error);
+        }
+        
+        console.error('❌ Error en generación:', errorMessage);
+        if (errorStack) {
+          console.error('❌ Stack trace:', errorStack);
+        }
+      } else {
+        console.error('❌ Error en generación: Error es null o undefined');
+      }
+      
+      // Mostrar el error completo en consola para debugging
+      console.error('❌ Error completo:', error);
+      console.error('❌ Tipo de error:', typeof error);
       
       setGenerationProgress({ 
         current: 0, 
@@ -163,9 +218,12 @@ export function useAIGeneration(profile?: any) {
         label: "Error en la generación" 
       });
 
+      // ✅ CORRECCIÓN: Asegurar que errorMessage siempre sea válido
+      const finalErrorMessage = errorMessage || "Error desconocido en la generación";
+      
       toast({
         title: "❌ Error en la Generación",
-        description: error.message || "No se pudieron generar los templates. Inténtalo nuevamente.",
+        description: finalErrorMessage,
         variant: "destructive"
       });
 

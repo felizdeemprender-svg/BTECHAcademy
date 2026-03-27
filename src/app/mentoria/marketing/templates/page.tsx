@@ -136,6 +136,12 @@ export default function MarketingTemplatesPage() {
     // TODO: Implementar refinamiento con IA
   };
 
+  const handleUpdateCollection = (updatedCollection: TemplateCollection) => {
+    if (selectedCollection?.id) {
+      updateCollection(selectedCollection.id, updatedCollection);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -158,14 +164,13 @@ export default function MarketingTemplatesPage() {
           setSelectedId={setSelectedId}
         />
 
-        {/* Vista Previa de Colección Seleccionada */}
+        {/* Vista Individual de Colección Seleccionada */}
         {selectedCollection && (
           <TemplateViewerProduction 
             collection={selectedCollection}
             isOpen={isViewerOpen}
             onClose={() => setIsViewerOpen(false)}
-            onEdit={handleEditTemplate}
-            onRefine={handleRefineTemplate}
+            onUpdateCollection={handleUpdateCollection}
           />
         )}
 
