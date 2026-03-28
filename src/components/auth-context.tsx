@@ -268,6 +268,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [auth, db]);
 
+  // Escuchar actualizaciones de suscripción desde admin
+  useEffect(() => {
+    const handleSubscriptionUpdate = (event: any) => {
+      console.log('🔍 DEBUG - Evento subscription-updated recibido:', event.detail);
+      const { userId, subscription } = event.detail;
+      
+      // Si el usuario actual es el que se actualizó, recargar profile
+      if (profile && profile.uid === userId && subscription) {
+        console.log('🔍 DEBUG - Recargando profile por actualización de suscripción');
+        setProfile(prev => prev ? {
+          ...prev,
+          subscription: subscription
+        } : null);
+      }
+    };
+
+    window.addEventListener('subscription-updated', handleSubscriptionUpdate);
+    
+    return () => {
+      window.removeEventListener('subscription-updated', handleSubscriptionUpdate);
+    };
+  }, [profile]);
+
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });

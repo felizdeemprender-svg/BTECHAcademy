@@ -18,7 +18,9 @@ import {
   Loader2,
   CheckCircle2,
   FileText,
-  Video
+  Video,
+  AlertCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageEditor } from '@/components/courses/ImageEditor';
@@ -45,6 +47,93 @@ interface TemplateEditorProps {
   loading: boolean;
   onSave: () => void;
 }
+
+// Componente optimizado para mostrar solo errores críticos
+const OptimizedValidationReport = ({ generatedAssets }: { generatedAssets: any }) => {
+  const [showDetails, setShowDetails] = useState(false);
+  
+  // Recolectar todos los errores y advertencias
+  const allErrors: any[] = [];
+  const allWarnings: any[] = [];
+  
+  // Revisar cada tipo de contenido
+  ['socials', 'landings', 'emails', 'ads'].forEach(channel => {
+    const assets = generatedAssets?.[channel] || [];
+    assets.forEach((asset: any) => {
+      const validation = asset?.validationResults;
+      if (validation) {
+        if (validation.errors) allErrors.push(...validation.errors);
+        if (validation.warnings) allWarnings.push(...validation.warnings);
+      }
+    });
+  });
+  
+  // Si no hay errores ni advertencias, mostrar estado saludable
+  if (allErrors.length === 0 && allWarnings.length === 0) {
+    return (
+      <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+        <div className="flex items-center gap-3">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+          <span className="font-bold text-emerald-800">✅ Todo compatible con APIs</span>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setShowDetails(!showDetails)}
+          className="text-emerald-600 hover:bg-emerald-100"
+        >
+          {showDetails ? 'Ocultar' : 'Ver'} detalles
+        </Button>
+      </div>
+    );
+  }
+  
+  // Si hay errores críticos, mostrarlos prominentemente
+  if (allErrors.length > 0) {
+    return (
+      <div className="space-y-4">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+          <div className="flex items-center gap-3 mb-2">
+            <AlertCircle className="h-5 w-5 text-red-600" />
+            <span className="font-bold text-red-800">❌ {allErrors.length} errores críticos no corregibles</span>
+          </div>
+          <div className="text-sm text-red-700">
+            Estos errores deben ser corregidos manualmente para asegurar compatibilidad.
+          </div>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={() => setShowDetails(!showDetails)}
+          className="w-full"
+        >
+          {showDetails ? 'Ocultar' : 'Ver'} reporte completo
+        </Button>
+      </div>
+    );
+  }
+  
+  // Si hay advertencias, mostrarlas de forma compacta
+  return (
+    <div className="space-y-4">
+      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+        <div className="flex items-center gap-3 mb-2">
+          <AlertTriangle className="h-5 w-5 text-amber-600" />
+          <span className="font-bold text-amber-800">⚠️ {allWarnings.length} advertencias (corregidas automáticamente)</span>
+        </div>
+        <div className="text-sm text-amber-700">
+          El sistema aplicó las adaptaciones necesarias para mantener la compatibilidad.
+        </div>
+      </div>
+      <Button 
+        variant="outline" 
+        onClick={() => setShowDetails(!showDetails)}
+        className="w-full"
+      >
+        {showDetails ? 'Ocultar' : 'Ver'} detalles de adaptación
+      </Button>
+    </div>
+  );
+};
 
 export function TemplateEditor({
   generatedAssets,
@@ -82,67 +171,6 @@ export function TemplateEditor({
         </Button>
       </header>
 
-      {/* Reporte de Validación de APIs */}
-      {generatedAssets && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-bold flex items-center gap-2">
-            <FileText className="h-5 w-5 text-blue-500" />
-            Validación de Compatibilidad con APIs
-          </h3>
-          
-          {/* Validación para cada tipo de contenido */}
-          <div className="grid gap-4">
-            {/* Validación de Redes Sociales */}
-            {generatedAssets.socials && generatedAssets.socials.length > 0 && (
-              <ValidationReport 
-                validationResults={
-                  generatedAssets.socials[0]?.validationResults || 
-                  { isValid: false, errors: [], warnings: [], platformAdaptations: {} }
-                }
-                platform="Redes Sociales"
-                showDetails={true}
-              />
-            )}
-            
-            {/* Validación de Landings */}
-            {generatedAssets.landings && generatedAssets.landings.length > 0 && (
-              <ValidationReport 
-                validationResults={
-                  generatedAssets.landings[0]?.validationResults || 
-                  { isValid: true, errors: [], warnings: [], platformAdaptations: {} }
-                }
-                platform="Landing Pages"
-                showDetails={false}
-              />
-            )}
-            
-            {/* Validación de Emails */}
-            {generatedAssets.emails && generatedAssets.emails.length > 0 && (
-              <ValidationReport 
-                validationResults={
-                  generatedAssets.emails[0]?.validationResults || 
-                  { isValid: true, errors: [], warnings: [], platformAdaptations: {} }
-                }
-                platform="Email Marketing"
-                showDetails={false}
-              />
-            )}
-            
-            {/* Validación de Ads */}
-            {generatedAssets.ads && generatedAssets.ads.length > 0 && (
-              <ValidationReport 
-                validationResults={
-                  generatedAssets.ads[0]?.validationResults || 
-                  { isValid: true, errors: [], warnings: [], platformAdaptations: {} }
-                }
-                platform="Publicidad Digital"
-                showDetails={false}
-              />
-            )}
-          </div>
-        </div>
-      )}
-
       <Tabs defaultValue="landing" className="w-full">
         <TabsList className="bg-secondary/20 p-1.5 h-16 w-full justify-start gap-2 px-8 rounded-[1.5rem] border shadow-sm mb-10">
           <TabsTrigger value="landing" className="rounded-xl gap-2 font-bold px-8 h-12">
@@ -157,18 +185,21 @@ export function TemplateEditor({
           <TabsTrigger value="ads" className="rounded-xl gap-2 font-bold px-8 h-12">
             <Megaphone className="h-4 w-4" /> Ads
           </TabsTrigger>
+          <TabsTrigger value="apis" className="rounded-xl gap-2 font-bold px-8 h-12">
+            <FileText className="h-4 w-4" /> APIs/Compat.
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="landing">
           <Tabs value={activeLandingIdx.toString()} onValueChange={v => setActiveLandingIdx(parseInt(v))}>
             <TabsList className="bg-white p-1 rounded-xl mb-8 border shadow-sm">
-              {generatedAssets.landings.map((l: any, i: number) => (
+              {generatedAssets?.landings?.map((l: any, i: number) => (
                 <TabsTrigger key={i} value={i.toString()} className="rounded-lg px-6 font-bold capitalize">
                   {l.marketingName || `Ruta ${i + 1}`}
                 </TabsTrigger>
               ))}
             </TabsList>
-            {generatedAssets.landings.map((l: any, lIdx: number) => (
+            {generatedAssets?.landings?.map((l: any, lIdx: number) => (
               <TabsContent key={lIdx} value={lIdx.toString()} className="space-y-10">
                 <Card className="p-10 rounded-[2.5rem] bg-white shadow-xl">
                   <div className="space-y-6">
@@ -276,13 +307,13 @@ export function TemplateEditor({
         <TabsContent value="email">
           <Tabs value={activeEmailIdx.toString()} onValueChange={v => setActiveEmailIdx(parseInt(v))}>
             <TabsList className="bg-white p-1 rounded-xl mb-8 border shadow-sm">
-              {generatedAssets.emails.map((e: any, i: number) => (
+              {generatedAssets?.emails?.map((e: any, i: number) => (
                 <TabsTrigger key={i} value={i.toString()} className="rounded-lg px-6 font-bold">
                   {e.marketingName || `Email ${i + 1}`}
                 </TabsTrigger>
               ))}
             </TabsList>
-            {generatedAssets.emails.map((e: any, eIdx: number) => {
+            {generatedAssets?.emails?.map((e: any, eIdx: number) => {
               const blueprintEmail = blueprintData?.assets?.emails?.[eIdx];
               const tokens = blueprintEmail?.designTokens;
               return (
@@ -383,7 +414,7 @@ export function TemplateEditor({
 
         <TabsContent value="social">
           {(() => {
-            const platforms = Array.from(new Set(generatedAssets.socials.map((s: any) => s.platform))) as string[];
+            const platforms = Array.from(new Set(generatedAssets?.socials?.map((s: any) => s.platform))) as string[];
             if (!platforms.length) return <p className="text-muted-foreground font-bold p-8 text-center bg-slate-50 rounded-2xl border">No hay redes sociales generadas para este lanzamiento.</p>;
             return (
               <Tabs defaultValue={platforms[0] || ''}>
@@ -395,7 +426,7 @@ export function TemplateEditor({
                   ))}
                 </TabsList>
                 {platforms.map((p: string) => {
-                  const platSocials = (generatedAssets.socials as any[]).map((s: any, i: number) => ({ ...s, originalIndex: i })).filter((s: any) => s.platform === p);
+                  const platSocials = (generatedAssets?.socials as any[])?.map((s: any, i: number) => ({ ...s, originalIndex: i })).filter((s: any) => s.platform === p);
                   return (
                     <TabsContent key={p || 'unknown'} value={p || 'unknown'} className="animate-in fade-in space-y-8">
                       <Tabs defaultValue={platSocials[0]?.originalIndex.toString()}>
@@ -431,7 +462,7 @@ export function TemplateEditor({
                                         className="text-[10px] font-bold bg-slate-50 border-none rounded-lg h-7 px-2 outline-none"
                                       >
                                         <option value="">Ninguna (Link en Bio)</option>
-                                        {generatedAssets.landings.map((l: any, lIdx: number) => (
+                                        {generatedAssets?.landings?.map((l: any, lIdx: number) => (
                                           <option key={lIdx} value={lIdx}>Landing {lIdx + 1}: {l.headline.substring(0, 20)}...</option>
                                         ))}
                                       </select>
@@ -551,18 +582,18 @@ export function TemplateEditor({
         <TabsContent value="ads">
           <Tabs value={activeAdsIdx.toString()} onValueChange={v => setActiveAdsIdx(parseInt(v))}>
             <TabsList className="bg-white p-1 rounded-xl mb-8 border shadow-sm">
-              {generatedAssets.ads.map((ad: any, i: number) => (
+              {generatedAssets?.ads?.map((ad: any, i: number) => (
                 <TabsTrigger key={i} value={i.toString()} className="rounded-lg px-6 font-bold">
-                  {ad.marketingName || `Ads ${i + 1}`}
+                  {ad?.marketingName || `Ads ${i + 1}`}
                 </TabsTrigger>
               ))}
             </TabsList>
-            {generatedAssets.ads.map((a: any, aIdx: number) => (
+            {generatedAssets?.ads?.map((a: any, aIdx: number) => (
               <TabsContent key={aIdx} value={aIdx.toString()} className="grid lg:grid-cols-2 gap-10">
                 <div className="col-span-full bg-white p-6 rounded-[2rem] shadow-sm flex items-center gap-6">
                   <Label className="text-[10px] font-black uppercase text-slate-400 shrink-0">Nombre del Set:</Label>
                   <Input 
-                    value={a.marketingName} 
+                    value={a?.marketingName} 
                     onChange={e => updateAsset('ads', aIdx, 'marketingName', e.target.value)} 
                     className="h-12 rounded-xl bg-slate-50 border-none px-6 font-bold" 
                   />
@@ -605,6 +636,90 @@ export function TemplateEditor({
               </TabsContent>
             ))}
           </Tabs>
+        </TabsContent>
+
+        {/* Nueva pestaña de APIs/Compatibilidad */}
+        <TabsContent value="apis" className="space-y-8">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <FileText className="h-6 w-6 text-blue-500" />
+              <h3 className="text-2xl font-bold">Validación de Compatibilidad con APIs</h3>
+            </div>
+            
+            {/* Reporte optimizado - solo muestra errores críticos */}
+            <OptimizedValidationReport generatedAssets={generatedAssets} />
+            
+            {/* Reporte completo en acordeón */}
+            {(() => {
+              const [showFullReport, setShowFullReport] = useState(false);
+              
+              return (
+                <div className={showFullReport ? 'space-y-6' : ''}>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowFullReport(!showFullReport)}
+                    className="w-full"
+                  >
+                    {showFullReport ? 'Ocultar' : 'Mostrar'} reporte completo de validación
+                  </Button>
+                  
+                  {showFullReport && (
+                    <div className="space-y-6">
+                      <h4 className="text-lg font-bold text-slate-700">Reporte Detallado por Plataforma</h4>
+                      
+                      {/* Validación de Redes Sociales */}
+                      {generatedAssets?.socials && generatedAssets.socials.length > 0 && (
+                        <ValidationReport 
+                          validationResults={
+                            generatedAssets.socials[0]?.validationResults || 
+                            { isValid: false, errors: [], warnings: [], platformAdaptations: {} }
+                          }
+                          platform="Redes Sociales"
+                          showDetails={true}
+                        />
+                      )}
+                      
+                      {/* Validación de Landings */}
+                      {generatedAssets?.landings && generatedAssets.landings.length > 0 && (
+                        <ValidationReport 
+                          validationResults={
+                            generatedAssets.landings[0]?.validationResults || 
+                            { isValid: true, errors: [], warnings: [], platformAdaptations: {} }
+                          }
+                          platform="Landing Pages"
+                          showDetails={false}
+                        />
+                      )}
+                      
+                      {/* Validación de Emails */}
+                      {generatedAssets?.emails && generatedAssets.emails.length > 0 && (
+                        <ValidationReport 
+                          validationResults={
+                            generatedAssets.emails[0]?.validationResults || 
+                            { isValid: true, errors: [], warnings: [], platformAdaptations: {} }
+                          }
+                          platform="Email Marketing"
+                          showDetails={false}
+                        />
+                      )}
+                      
+                      {/* Validación de Ads */}
+                      {generatedAssets?.ads && generatedAssets.ads.length > 0 && (
+                        <ValidationReport 
+                          validationResults={
+                            generatedAssets.ads[0]?.validationResults || 
+                            { isValid: true, errors: [], warnings: [], platformAdaptations: {} }
+                          }
+                          platform="Publicidad Digital"
+                          showDetails={false}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

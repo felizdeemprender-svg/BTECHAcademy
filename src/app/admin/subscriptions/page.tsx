@@ -257,6 +257,7 @@ export default function AdminSubscriptionsPage() {
       hasAnalytics: true,
       hasPrioritySupport: false
     },
+    invitationsPerCourse: 5,
     isEnterprise: false
   });
 
@@ -296,6 +297,8 @@ export default function AdminSubscriptionsPage() {
         // Limpiar datos según el tipo final
         price: (formData.isEnterprise || formData.type === 'fixed') ? formData.price : 0,
         percentageRate: (!formData.isEnterprise && formData.type === 'percentage') ? formData.percentageRate : 0,
+        // Asegurar que invitationsPerCourse se guarde
+        invitationsPerCourse: formData.invitationsPerCourse || 5,
         updatedAt: serverTimestamp(),
       };
 
@@ -454,9 +457,15 @@ export default function AdminSubscriptionsPage() {
                         <Badge variant={plan.isEnterprise ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", plan.isEnterprise ? "bg-indigo-50 text-indigo-700" : "bg-slate-50 text-slate-500 uppercase")}>
                           {plan.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
                         </Badge>
+                        <div className="text-[8px] text-slate-400 mt-1">
+                          {plan.isEnterprise ? 'Para organizaciones con múltiples usuarios' : 'Para tutores independientes y mentores'}
+                        </div>
                         <Badge variant="outline" className="text-[9px] opacity-70 px-0 h-3 border-none bg-transparent">
                           {plan.isActive ? '✓ Disponible' : '✗ Oculto'}
                         </Badge>
+                        <div className="text-[8px] text-slate-400 mt-1">
+                          {plan.isActive ? 'Visible para nuevos suscriptores' : 'No disponible para nuevos suscriptores'}
+                        </div>
                       </div>
                     </TableCell>
 
@@ -540,7 +549,7 @@ export default function AdminSubscriptionsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="space-y-2">
                     <Label htmlFor="planMaxCourses" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Cursos Publicados</Label>
                     <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val, limits: { ...formData.limits, maxCourses: isNaN(val) ? 0 : val } as any}); }} placeholder="10 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
@@ -548,6 +557,10 @@ export default function AdminSubscriptionsPage() {
                   <div className="space-y-2">
                     <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Alumnos (Base)</Label>
                     <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, limits: { ...formData.limits, maxStudents: isNaN(val) ? 0 : val } as any}); }} placeholder="200 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="planInvitationsPerCourse" className="text-xs font-bold uppercase tracking-widest text-slate-500">Alumnos Invitados por Curso</Label>
+                    <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, invitationsPerCourse: isNaN(val) ? 0 : val}); }} placeholder="5" className="h-12 rounded-xl border-slate-200" />
                   </div>
                 </div>
 
@@ -581,8 +594,6 @@ export default function AdminSubscriptionsPage() {
                     ))}
                   </div>
                 </div>
-
-
               </form>
             </div>
 
@@ -606,12 +617,18 @@ export default function AdminSubscriptionsPage() {
                   <Label htmlFor="plan-is-enterprise" className="font-bold text-xs uppercase tracking-widest text-slate-500 cursor-pointer">
                     {formData.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
                   </Label>
+                  <div className="text-[8px] text-slate-400 mt-1">
+                    {formData.isEnterprise ? 'Organización con múltiples tutores y administración centralizada' : 'Tutor individual o mentor independiente'}
+                  </div>
                 </div>
               </div>
               <div className="flex gap-3 items-center">
                 <div className="flex gap-2 items-center mr-4">
                   <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-emerald-500" />
                   <Label htmlFor="plan-is-active" className="font-bold text-[9px] uppercase tracking-widest text-slate-400 cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>
+                  <div className="text-[8px] text-slate-400 mt-1">
+                    {formData.isActive ? 'El plan será visible y disponible para nuevos suscriptores' : 'El plan no estará disponible para nuevos suscriptores (solo existentes)'}
+                  </div>
                 </div>
               </div>
               <div className="flex gap-3">

@@ -196,6 +196,35 @@ export default function ManageCoursesPage() {
   const [selectedAiTags, setSelectedAiTags] = useState<string[]>([]);
   const [isSavingAiTags, setIsSavingAiTags] = useState(false);
 
+  // Firebase hooks (deben estar antes del return)
+  const modConfigRef = useMemoFirebase(() => doc(db, 'config', 'moderation'), [db]);
+  const { data: modConfig } = { data: null };
+
+  const termsConfigRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
+  const { data: termsConfig } = { data: null };
+
+  const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags')), [db]);
+  const { data: rawTags } = { data: [] };
+
+  const allTags = useMemo(() => {
+    return [];
+  }, []);
+
+  // Calcular isAdmin y isMentor antes del return
+  const isAdmin = profile?.roles.includes('admin');
+  const isMentor = profile?.roles.includes('mentor');
+  const hasPermission = isAdmin || isMentor;
+
+  const coursesQuery = useMemoFirebase(() => {
+    if (!profile?.uid) return null;
+    const coursesRef = collection(db, 'courses');
+    if (isAdmin) return query(coursesRef);
+    return query(coursesRef, where('mentorId', '==', profile.uid));
+  }, [db, profile?.uid, isAdmin]);
+
+  // Consulta a Firestore restaurada para mostrar cursos
+  const { data: courses, isLoading } = useCollection(coursesQuery);
+
   const clearUILocks = useCallback(() => {
     document.body.style.pointerEvents = 'auto';
     document.body.style.overflow = 'auto';
@@ -213,38 +242,35 @@ export default function ManageCoursesPage() {
     }
   }, [isDeleteDialogOpen, isEnrollmentsDialogOpen, isHistoryDialogOpen, isPublishDialogOpen, isAssociatedDialogOpen, isAiTagDialogOpen, isTermsDialogOpen, clearUILocks]);
 
-  // Completely disabled to prevent Firestore errors
-  const modConfigRef = useMemoFirebase(() => doc(db, 'config', 'moderation'), [db]);
-  const { data: modConfig } = { data: null };
+  // Debug logging para autenticación
+  console.log('🔍 DEBUG - Estado de autenticación:', {
+    profile,
+    profileExists: !!profile,
+    profileKeys: profile ? Object.keys(profile) : [],
+    authLoading: !profile
+  });
 
-  const termsConfigRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
-  const { data: termsConfig } = { data: null };
-
-  const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags')), [db]);
-  // Completely disabled to prevent Firestore errors
-  const { data: rawTags } = { data: [] };
-
-  const allTags = useMemo(() => {
-    return [];
-  }, []);
-
-  const isAdmin = profile?.roles.includes('admin');
-  const isMentor = profile?.roles.includes('mentor');
-  const hasPermission = isAdmin || isMentor;
-
-  const coursesQuery = useMemoFirebase(() => {
-    if (!profile?.uid) return null;
-    const coursesRef = collection(db, 'courses');
-    if (isAdmin) return query(coursesRef);
-    return query(coursesRef, where('mentorId', '==', profile.uid));
-  }, [db, profile?.uid, isAdmin]);
-
-  // Consulta a Firestore restaurada para mostrar cursos
-  const { data: courses, isLoading } = useCollection(coursesQuery);
+  // Si el perfil está cargando, mostrar loading (después de todos los hooks)
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando perfil...</p>
+        </div>
+      </div>
+    );
+  }
 
   const sub = profile?.subscription;
   const isExpired = sub ? new Date(sub.endDate) < new Date() : true;
-  const limitCount = sub?.maxSimultaneousCourses || 0;
+  
+  // Intentar obtener el límite desde múltiples fuentes posibles
+  const limitCount = sub?.maxSimultaneousCourses || 
+                     sub?.limits?.maxCourses || 
+                     sub?.limits?.maxSimultaneousCourses || 
+                     0;
+  
   const activeCount = courses?.filter((c: any) => c.isActive === true).length || 0;
 
   // Debug logging para investigar el problema
@@ -254,6 +280,11 @@ export default function ManageCoursesPage() {
     isExpired,
     limitCount,
     activeCount,
+    // Mostrar todas las posibles fuentes del límite
+    maxSimultaneousCourses: sub?.maxSimultaneousCourses,
+    limitsMaxCourses: sub?.limits?.maxCourses,
+    limitsMaxSimultaneousCourses: sub?.limits?.maxSimultaneousCourses,
+    limits: sub?.limits,
     courses: courses?.map(c => ({ id: c.id, title: c.title, isActive: c.isActive }))
   });
 
@@ -663,6 +694,16 @@ export default function ManageCoursesPage() {
       // 1. Si es INVITACIÓN, verificar límite del plan
       if (isInvitation && !isAdmin) {
         const limitCount = sub?.invitationsPerCourse || 0;
+        
+        // Debug para ver el valor real del plan
+        console.log('🔍 DEBUG - Verificación de invitaciones:', {
+          isInvitation,
+          isAdmin,
+          planInvitationsPerCourse: sub?.invitationsPerCourse,
+          limitCount,
+          selectedId
+        });
+        
         const q = query(
           collection(db, 'enrollments'), 
           where('courseId', '==', selectedId)

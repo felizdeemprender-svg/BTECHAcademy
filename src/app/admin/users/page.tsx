@@ -75,8 +75,15 @@ export default function AdminUsersPage() {
   }, [db]);
   const { data: subscriptionPlans = [] } = useCollection(plansQuery);
 
+  // Debug para ver qué planes se cargan
+  console.log('🔍 DEBUG - Planes cargados:', subscriptionPlans);
+  const saSasPlan = subscriptionPlans?.find(p => p.name === 'saSas');
+  console.log('🔍 DEBUG - Plan saSas:', saSasPlan);
+  console.log('🔍 DEBUG - invitationsPerCourse en saSas:', saSasPlan?.invitationsPerCourse);
+
   const consolidatedUsers = useMemo(() => {
-    if (!usersRaw) return [];
+    // Esperar a que carguen los planes y usuarios
+    if (!usersRaw || !subscriptionPlans || subscriptionPlans.length === 0) return [];
     const userMap = new Map();
     
     for (const user of usersRaw) {
@@ -201,6 +208,15 @@ export default function AdminUsersPage() {
       }
     };
 
+    // Debug para ver qué se asigna
+    console.log('🔍 DEBUG - Asignando subscription:', {
+      planName: plan.name,
+      planInvitationsPerCourse: plan.invitationsPerCourse,
+      planInvitationsPerCourseType: typeof plan.invitationsPerCourse,
+      finalValue: plan.invitationsPerCourse || 0,
+      planObject: plan
+    });
+
     setPendingUser({
       ...pendingUser,
       subscription: {
@@ -214,6 +230,14 @@ export default function AdminUsersPage() {
     if (!pendingUser) return;
     setLoading(true);
     
+    // Debug para ver qué se va a guardar
+    console.log('🔍 DEBUG - Guardando usuario:', {
+      userId: pendingUser.id,
+      subscriptionAGuardar: pendingUser.subscription,
+      subscriptionType: typeof pendingUser.subscription,
+      subscriptionInvitationsPerCourse: pendingUser.subscription?.invitationsPerCourse
+    });
+    
     try {
       const userRef = doc(db, 'users', pendingUser.id);
       await updateDoc(userRef, {
@@ -222,6 +246,15 @@ export default function AdminUsersPage() {
         subscription: pendingUser.subscription || null,
         updatedAt: serverTimestamp()
       });
+      
+      // Refrescar el profile del tutor si se actualizó su suscripción
+      if (pendingUser.subscription) {
+        console.log('🔍 DEBUG - Refrescando profile del tutor:', pendingUser.id);
+        // Forzar recarga del profile en el auth context
+        window.dispatchEvent(new CustomEvent('subscription-updated', { 
+          detail: { userId: pendingUser.id, subscription: pendingUser.subscription } 
+        }));
+      }
       
       toast({ title: 'Cambios guardados', description: 'El perfil institucional ha sido actualizado con éxito.' });
       setIsPermissionsOpen(false);
