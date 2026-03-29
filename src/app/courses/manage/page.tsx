@@ -7,7 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, doc, deleteDoc, getDocs, updateDoc, setDoc, serverTimestamp, getDoc, orderBy, getCountFromServer, writeBatch } from 'firebase/firestore';
+import { collection, doc, updateDoc, query, orderBy, setDoc, serverTimestamp, deleteDoc, where, getDocs, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { 
   Plus, 
   Trash2, 
@@ -242,14 +244,6 @@ export default function ManageCoursesPage() {
     }
   }, [isDeleteDialogOpen, isEnrollmentsDialogOpen, isHistoryDialogOpen, isPublishDialogOpen, isAssociatedDialogOpen, isAiTagDialogOpen, isTermsDialogOpen, clearUILocks]);
 
-  // Debug logging para autenticación
-  console.log('🔍 DEBUG - Estado de autenticación:', {
-    profile,
-    profileExists: !!profile,
-    profileKeys: profile ? Object.keys(profile) : [],
-    authLoading: !profile
-  });
-
   // Si el perfil está cargando, mostrar loading (después de todos los hooks)
   if (!profile) {
     return (
@@ -272,21 +266,6 @@ export default function ManageCoursesPage() {
                      0;
   
   const activeCount = courses?.filter((c: any) => c.isActive === true).length || 0;
-
-  // Debug logging para investigar el problema
-  console.log('🔍 DEBUG - Datos de suscripción:', {
-    userEmail: profile?.email,
-    subscription: sub,
-    isExpired,
-    limitCount,
-    activeCount,
-    // Mostrar todas las posibles fuentes del límite
-    maxSimultaneousCourses: sub?.maxSimultaneousCourses,
-    limitsMaxCourses: sub?.limits?.maxCourses,
-    limitsMaxSimultaneousCourses: sub?.limits?.maxSimultaneousCourses,
-    limits: sub?.limits,
-    courses: courses?.map(c => ({ id: c.id, title: c.title, isActive: c.isActive }))
-  });
 
   const handleNewCourse = () => {
     if (isAdmin) {
@@ -694,16 +673,6 @@ export default function ManageCoursesPage() {
       // 1. Si es INVITACIÓN, verificar límite del plan
       if (isInvitation && !isAdmin) {
         const limitCount = sub?.invitationsPerCourse || 0;
-        
-        // Debug para ver el valor real del plan
-        console.log('🔍 DEBUG - Verificación de invitaciones:', {
-          isInvitation,
-          isAdmin,
-          planInvitationsPerCourse: sub?.invitationsPerCourse,
-          limitCount,
-          selectedId
-        });
-        
         const q = query(
           collection(db, 'enrollments'), 
           where('courseId', '==', selectedId)
@@ -726,18 +695,71 @@ export default function ManageCoursesPage() {
         studentId = userSnap.docs[0].id;
         studentName = userSnap.docs[0].data().displayName || studentName;
       } else {
-        const tempId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
-        studentId = tempId;
-        const newUser = {
-          uid: studentId,
-          email: normalizedEmail,
-          displayName: studentName,
-          roles: ['alumno'],
-          isActive: true,
-          isPreRegistered: true,
-          createdAt: serverTimestamp()
-        };
-        await setDoc(doc(db, 'users', studentId), newUser);
+        console.log('🔍 PASO 2 - Creando nuevo usuario en Firebase Auth...');
+        
+        // Generar una contraseña temporal
+        const tempPassword = Math.random().toString(36).slice(-8) + 'A1!';
+        
+        try {
+          // Crear usuario en Firebase Authentication
+          const auth = getAuth();
+          const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, tempPassword);
+          
+          // Enviar correo de verificación
+          await sendEmailVerification(userCredential.user);
+          
+          studentId = userCredential.user.uid;
+          
+          console.log('🔍 PASO 2 - Usuario creado en Firebase Auth, correo enviado');
+          
+          // Crear el usuario en Firestore
+          const newUser = {
+            uid: studentId,
+            email: normalizedEmail,
+            displayName: studentName,
+            roles: ['alumno'],
+            isActive: true,
+            isPreRegistered: true,
+            createdAt: serverTimestamp(),
+            tempPassword: tempPassword // Guardar para poder comunicarla
+          };
+          
+          await setDoc(doc(db, 'users', studentId), newUser);
+          console.log('🔍 PASO 2 - Usuario creado en Firestore');
+          
+          toast({ 
+            title: 'Usuario creado exitosamente', 
+            description: `Se ha enviado un correo de verificación a ${normalizedEmail}. La contraseña temporal es: ${tempPassword}` 
+          });
+          
+        } catch (e: any) {
+          console.error('🔍 ERROR - Creando usuario en Firebase Auth:', e);
+          
+          // Si el usuario ya existe en Firebase Auth, obtener su UID
+          if (e.code === 'auth/email-already-in-use') {
+            // Buscar el usuario existente
+            const auth = getAuth();
+            // Aquí necesitaríamos una función para obtener el UID del usuario existente
+            // Por ahora, creamos un ID temporal
+            const tempId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
+            studentId = tempId;
+            
+            const newUser = {
+              uid: studentId,
+              email: normalizedEmail,
+              displayName: studentName,
+              roles: ['alumno'],
+              isActive: true,
+              isPreRegistered: true,
+              createdAt: serverTimestamp()
+            };
+            
+            await setDoc(doc(db, 'users', studentId), newUser);
+            console.log('🔍 PASO 2 - Usuario existente, creado en Firestore');
+          } else {
+            throw e;
+          }
+        }
       }
 
       // 3. Crear inscripción (Carga Directa vs Invitación)
@@ -750,16 +772,20 @@ export default function ManageCoursesPage() {
         inviteEmail: normalizedEmail,
         status: 'active',
         isInvited: isInvitation, 
-        isDirect: !isInvitation, // Si no es invitación, es carga directa (se factura)
+        isDirect: !isInvitation,
         enrolledAt: serverTimestamp(),
         progress: { completedModules: [] }
       };
 
       await setDoc(newEnrollRef, enrollmentData);
 
+      console.log('🔍 PASO 4 - Actualizando estado local...');
       setInscriptions(prev => [enrollmentData, ...prev]);
+      console.log('🔍 PASO 4 - Estado actualizado');
       setInviteEmail('');
+      console.log('🔍 PASO 4 - Email limpiado');
       toast({ title: isInvitation ? 'Invitación enviada exitosamente' : 'Alumno cargado exitosamente' });
+      console.log('🔍 PASO 4 - Toast mostrado');
     } catch (err: any) {
       const isLimit = err.message.includes('límite') || err.message.includes('limit');
       toast({ 
