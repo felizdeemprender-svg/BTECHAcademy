@@ -4,7 +4,7 @@
  * @fileOverview Diagnóstico de salud del motor de IA utilizando Gemini 1.5 Flash.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, validateApiKey } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const HealthOutputSchema = z.object({

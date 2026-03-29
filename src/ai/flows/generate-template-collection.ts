@@ -5,7 +5,7 @@
  * Incluye validación y pre-conformación para APIs externas
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, validateApiKey } from '../genkit';
 import { z } from 'genkit';
 import { 
   validateTwitterTemplates,
@@ -95,6 +95,16 @@ const CollectionOutputSchema = z.object({
 export type CollectionOutput = z.infer<typeof CollectionOutputSchema>;
 
 export async function generateTemplateCollection(input: CollectionInput): Promise<CollectionOutput> {
+  // Validar API key antes de procesar
+  console.log('🔍 [Templates] Validando API key...');
+  try {
+    validateApiKey();
+    console.log('✅ [Templates] API key validada');
+  } catch (e: any) {
+    console.error('❌ [Templates] API key no disponible:', e.message);
+    throw new Error('No se pudo conectar con Gemini: ' + e.message);
+  }
+  
   try {
     return await generateTemplateCollectionFlow(input);
   } catch (error: any) {
