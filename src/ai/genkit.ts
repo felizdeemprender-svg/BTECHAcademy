@@ -1,44 +1,59 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
-// Cargar variables de entorno de forma segura
-try {
-  // Para Server Actions en Next.js, intentar cargar desde process.env primero
-  // Si no están disponibles, intentar con dotenv
-  if (!process.env.GOOGLE_GENAI_API_KEY && !process.env.GOOGLE_API_KEY) {
+// Detectar ambiente
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Cargar variables de entorno de forma segura (solo en desarrollo)
+if (!isProduction) {
+  try {
     const dotenv = require('dotenv');
     const path = require('path');
     dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
-    console.log('� Variables cargadas desde .env.local');
+    console.log('🔧 Modo DESARROLLO: Variables cargadas desde .env.local');
+  } catch (e) {
+    console.warn('⚠️ No se pudo cargar dotenv');
   }
-} catch (e) {
-  console.warn('⚠️ No se pudo cargar dotenv, usando process.env');
+} else {
+  console.log('🚀 Modo PRODUCCIÓN: Usando variables de Firebase');
 }
 
 /**
- * Obtiene la API key de Gemini según el ambiente
+ * Obtiene la API key según el ambiente:
+ * - Desarrollo: GOOGLE_GENAI_API_KEY (de .env.local)
+ * - Producción: GOOGLE_GENAI_API_KEY_PROD (de Firebase)
  */
 function getApiKey(): string | undefined {
-  // Revisar variables de entorno (local o producción)
-  const key = process.env.GOOGLE_GENAI_API_KEY || 
-              process.env.GOOGLE_API_KEY ||
-              process.env.GOOGLE_GENAI_API_KEY_PROD ||
-              process.env.GOOGLE_API_KEY_PROD;
-  
-  if (key) {
-    console.log('🔑 API key configurada');
-    return key;
+  if (isProduction) {
+    // En producción, usar variable específica de producción
+    const prodKey = process.env.GOOGLE_GENAI_API_KEY_PROD || process.env.GOOGLE_API_KEY_PROD;
+    if (prodKey) {
+      console.log('🔑 Usando API key de PRODUCCIÓN');
+      return prodKey;
+    }
+    console.error('❌ ERROR: GOOGLE_GENAI_API_KEY_PROD no configurada en producción');
+    return undefined;
+  } else {
+    // En desarrollo, usar variable de desarrollo
+    const devKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (devKey) {
+      console.log('🔑 Usando API key de DESARROLLO');
+      return devKey;
+    }
+    console.error('❌ ERROR: GOOGLE_GENAI_API_KEY no configurada en .env.local');
+    return undefined;
   }
-  
-  return undefined;
 }
 
 const apiKey = getApiKey();
 
 if (!apiKey) {
   console.error('❌ ERROR CRÍTICO: No se encontró API key de Gemini');
-  console.error('   Asegúrate de configurar GOOGLE_GENAI_API_KEY en .env.local (local)');
-  console.error('   o en Firebase Environment Variables (producción)');
+  if (isProduction) {
+    console.error('   Configura GOOGLE_GENAI_API_KEY_PROD en Firebase Environment Variables');
+  } else {
+    console.error('   Configura GOOGLE_GENAI_API_KEY en .env.local');
+  }
 }
 
 export const ai = genkit({
@@ -56,7 +71,8 @@ export const ai = genkit({
 export function validateApiKey(): string {
   const key = getApiKey();
   if (!key) {
-    throw new Error('API key de Gemini no configurada. Revisa GOOGLE_GENAI_API_KEY');
+    const varName = isProduction ? 'GOOGLE_GENAI_API_KEY_PROD' : 'GOOGLE_GENAI_API_KEY';
+    throw new Error(`API key de Gemini no configurada. Revisa ${varName}`);
   }
   return key;
 }
