@@ -127,7 +127,7 @@ export default function MyCoursesPage() {
               const totalModules = course?.modulesCount || 1;
               const progressPercent = Math.min(100, Math.round((completedModulesCount / totalModules) * 100));
               
-              const isApproved = course?.status === 'approved';
+              const isApproved = course?.status === 'approved' || course?.status === 'published';
               const isActive = enroll.status === 'active' && isApproved;
 
               return (
