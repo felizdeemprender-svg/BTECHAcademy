@@ -25,13 +25,28 @@ if (!isProduction) {
  */
 function getApiKey(): string | undefined {
   if (isProduction) {
-    // En producción, usar variable específica de producción
+    // En producción, intentar leer desde Firebase Functions Config primero
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const functions = require('firebase-functions');
+      const config = functions.config();
+      if (config?.google?.genai_api_key_prod) {
+        console.log('🔑 Usando API key de Firebase Functions Config');
+        return config.google.genai_api_key_prod;
+      }
+    } catch (e) {
+      console.warn('⚠️ No se pudo leer functions.config(), intentando process.env');
+    }
+    
+    // Fallback: intentar desde process.env (Firebase Environment Variables)
     const prodKey = process.env.GOOGLE_GENAI_API_KEY_PROD || process.env.GOOGLE_API_KEY_PROD;
     if (prodKey) {
-      console.log('🔑 Usando API key de PRODUCCIÓN');
+      console.log('🔑 Usando API key de PRODUCCIÓN (env var)');
       return prodKey;
     }
+    
     console.error('❌ ERROR: GOOGLE_GENAI_API_KEY_PROD no configurada en producción');
+    console.error('   Configura con: firebase functions:config:set google.genai_api_key_prod="TU_API_KEY"');
     return undefined;
   } else {
     // En desarrollo, usar variable de desarrollo
