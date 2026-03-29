@@ -134,12 +134,13 @@ export default function MyCoursesPage() {
                 <Card key={enroll.id} className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col rounded-3xl bg-white">
                   <div className="relative aspect-video overflow-hidden">
                     <Image 
-                      src={`https://loremflickr.com/600/400/education,course?lock=${enroll.courseId}`} 
+                      src={course?.thumbnail || `https://loremflickr.com/600/400/education,course?lock=${enroll.courseId}`} 
                       alt={course?.title || 'Curso'} 
                       fill 
                       sizes="400px"
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
                       data-ai-hint="course cover"
+                      unoptimized={!!course?.thumbnail}
                     />
                     <div className="absolute top-4 left-4">
                       <Badge className={cn(

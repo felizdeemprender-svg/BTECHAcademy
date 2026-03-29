@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, query, orderBy, setDoc, serverTimestamp, deleteDoc, where, getDocs, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, query, orderBy, setDoc, serverTimestamp, deleteDoc, where, getDocs, arrayUnion, arrayRemove, getDoc, writeBatch } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { getAuth } from 'firebase/auth';
 import { 
@@ -206,11 +206,30 @@ export default function ManageCoursesPage() {
   const { data: termsConfig } = { data: null };
 
   const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags')), [db]);
-  const { data: rawTags } = { data: [] };
+  const { data: allTagsSnapshot } = useCollection(tagsQuery);
 
   const allTags = useMemo(() => {
-    return [];
-  }, []);
+    console.log('🔍 allTags actualizado, tipo:', typeof allTagsSnapshot, 'es array:', Array.isArray(allTagsSnapshot));
+    
+    // useCollection puede devolver array directamente o objeto con .docs
+    let docsArray;
+    if (Array.isArray(allTagsSnapshot)) {
+      docsArray = allTagsSnapshot;
+    } else if (allTagsSnapshot?.docs) {
+      docsArray = allTagsSnapshot.docs;
+    } else {
+      console.log('❌ No hay datos en allTagsSnapshot');
+      return [];
+    }
+    
+    console.log('🔍 Procesando', docsArray.length, 'etiquetas');
+    const tags = docsArray.map((doc: any) => ({ 
+      id: doc.id, 
+      ...doc.data?.() 
+    }));
+    console.log('🔍 Etiquetas cargadas:', tags.map(t => t.name));
+    return tags;
+  }, [allTagsSnapshot]);
 
   // Calcular isAdmin y isMentor antes del return
   const isAdmin = profile?.roles.includes('admin');
@@ -322,32 +341,93 @@ export default function ManageCoursesPage() {
   };
 
   const handleLoadAiSelectedTags = async () => {
-    if (selectedAiTags.length === 0) return;
+    console.log('🔍 handleLoadAiSelectedTags llamado');
+    console.log('🔍 selectedAiTags:', selectedAiTags);
+    console.log('🔍 aiTagSuggestions:', aiTagSuggestions);
+    
+    if (selectedAiTags.length === 0) {
+      console.log('❌ No hay etiquetas seleccionadas - saliendo');
+      return;
+    }
+    
+    console.log('🔍 Pasó validación de etiquetas seleccionadas');
+    console.log('🔍 Configurando setIsSavingAiTags(true)...');
     setIsSavingAiTags(true);
+    console.log('🔍 setIsSavingAiTags configurado');
+    
     try {
-      const batch = writeBatch(db);
+      console.log('🔍 Creando batch...');
+      console.log('🔍 Verificando db:', db);
+      console.log('🔍 db type:', typeof db);
+      
+      if (!db) {
+        console.error('❌ db no está disponible');
+        throw new Error('Firestore no está inicializado');
+      }
+      
+      console.log('🔍 Intentando crear writeBatch...');
+      let batch;
+      try {
+        batch = writeBatch(db);
+        console.log('✅ writeBatch creado exitosamente');
+      } catch (batchError) {
+        console.error('❌ Error al crear writeBatch:', batchError);
+        throw batchError;
+      }
+      
+      console.log('🔍 Batch creado');
       const newTagIds: string[] = [];
 
       for (const name of selectedAiTags) {
+        console.log('🔍 Iniciando loop para etiqueta:', name);
         const suggestion = aiTagSuggestions.find(s => s.name === name);
+        console.log('🔍 Procesando etiqueta:', name, 'suggestion:', suggestion);
+        
         if (suggestion) {
+          console.log('🔍 Creando referencia para etiqueta:', name);
           const newTagRef = doc(collection(db, 'tags'));
-          batch.set(newTagRef, {
+          console.log('🔍 Referencia creada:', newTagRef.id);
+          
+          console.log('🔍 Agregando al batch...');
+          const tagData = {
             ...suggestion,
             id: newTagRef.id,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
-          });
+          };
+          console.log('🔍 Datos a guardar:', tagData);
+          batch.set(newTagRef, tagData);
           newTagIds.push(newTagRef.id);
+          console.log('🔍 Etiqueta agregada al batch. newTagIds:', newTagIds);
+        } else {
+          console.log('❌ No se encontró sugerencia para:', name);
         }
       }
       
-      await batch.commit();
-      setSelectedTags(prev => [...prev, ...newTagIds]);
-      toast({ title: 'Taxonomía SEO Actualizada', description: `Se han incorporado ${newTagIds.length} etiquetas clave.` });
-      setIsAiTagDialogOpen(false);
-      setAiTagSuggestions([]);
-      setBranchInput('');
+      console.log('🔍 Loop completado. Enviando batch con', newTagIds.length, 'etiquetas');
+      
+      try {
+        console.log('🔍 Ejecutando batch.commit()...');
+        await batch.commit();
+        console.log('✅ batch.commit() exitoso');
+        
+        console.log('🔍 Actualizando estado local...');
+        setSelectedTags(prev => [...prev, ...newTagIds]);
+        console.log('✅ Estado actualizado');
+        
+        // NO recargar automáticamente para poder ver los datos
+        console.log('🔍 NO recargando - revisa la consola para depurar');
+        
+        toast({ title: 'Taxonomía SEO Actualizada', description: `Se han incorporado ${newTagIds.length} etiquetas clave.` });
+        setIsAiTagDialogOpen(false);
+        setAiTagSuggestions([]);
+        setBranchInput('');
+        console.log('✅ Diálogo cerrado y estado limpiado');
+        
+      } catch (firestoreError) {
+        console.error('❌ Error en batch.commit():', firestoreError);
+        throw firestoreError;
+      }
     } catch (e: any) {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: 'tags',
@@ -1072,23 +1152,23 @@ export default function ManageCoursesPage() {
               </div>
 
               <div className="flex flex-wrap gap-2 p-4 bg-secondary/10 rounded-2xl border border-dashed min-h-[100px]">
-                {allTags?.length === 0 ? (
+                {selectedTags?.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic flex items-center justify-center w-full">Usa "Sugerencias IA" para generar taxonomía estratégica.</p>
-                ) : allTags?.map(tag => (
-                  <Badge 
-                    key={tag.id}
-                    variant={selectedTags.includes(tag.id) ? 'default' : 'outline'}
-                    className={cn(
-                      "cursor-pointer py-1.5 px-3 rounded-lg text-[10px] font-bold transition-all",
-                      selectedTags.includes(tag.id) ? "shadow-sm" : "bg-white hover:bg-primary/5"
-                    )}
-                    onClick={() => {
-                      setSelectedTags(prev => prev.includes(tag.id) ? prev.filter(id => id !== tag.id) : [...prev, tag.id]);
-                    }}
-                  >
-                    {tag.name}
-                  </Badge>
-                ))}
+                ) : selectedTags?.map(tagId => {
+                  const tag = allTags?.find((t: any) => t.id === tagId);
+                  return tag ? (
+                    <Badge 
+                      key={tag.id}
+                      variant='default'
+                      className="cursor-pointer py-1.5 px-3 rounded-lg text-[10px] font-bold transition-all shadow-sm"
+                      onClick={() => {
+                        setSelectedTags(prev => prev.filter(id => id !== tag.id));
+                      }}
+                    >
+                      {tag.name} ✕
+                    </Badge>
+                  ) : null;
+                })}
               </div>
 
               <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex gap-3 items-start">

@@ -29,11 +29,12 @@ import {
   ClipboardCheck,
   FileText,
   Check,
-  Info
+  Info,
+  Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useCollection, useMemoFirebase, useFirebase } from '@/firebase';
-import { doc, updateDoc, serverTimestamp, collection, query, orderBy, setDoc } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, collection, query, orderBy, setDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -70,6 +71,7 @@ interface SupportMaterial {
 interface ModuleData {
   id?: string;
   title: string;
+  description?: string;
   contentType: 'video' | 'text';
   contentBody: string;
   videoUrl: string;
@@ -199,6 +201,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   const openEditModule = (mod: any) => {
     setCurrentModule({
       ...mod,
+      description: mod.description || '',
       supportMaterials: mod.supportMaterials || [],
       questions: mod.questions || [],
       supportQuestions: mod.supportQuestions || [],
@@ -213,6 +216,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     const nextOrder = (modules?.length || 0) + 1;
     setCurrentModule({
       title: '',
+      description: '',
       contentType: 'text',
       contentBody: '',
       videoUrl: '',
@@ -405,6 +409,38 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     }
   };
 
+  const handleDeleteModule = async (moduleId: string, moduleTitle: string) => {
+    if (!id) return;
+    
+    if (!confirm(`¿Estás seguro de que quieres eliminar el módulo "${moduleTitle}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      await deleteDoc(doc(db, 'courses', id, 'modules', moduleId));
+      
+      toast({ 
+        title: 'Módulo Eliminado', 
+        description: 'El módulo ha sido eliminado exitosamente.' 
+      });
+      
+      // Recargar la página para actualizar la lista
+      window.location.reload();
+      
+    } catch (err: any) {
+      console.error('Error al eliminar módulo:', err);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Error al eliminar módulo',
+        description: err.message || 'Ocurrió un fallo al eliminar el módulo.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderQuestionEditor = (q: Question, qIdx: number, isSupport: boolean) => (
     <Card key={q.id} className={`p-6 ${isSupport ? 'bg-emerald-50/30' : 'bg-muted/10'} rounded-[2rem] relative border-none shadow-sm`}>
       <Button 
@@ -590,7 +626,17 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground mt-1">{mod.contentType}</Badge>
                     </div>
                   </div>
-                  <Button variant="outline" size="icon" onClick={() => openEditModule(mod)} className="rounded-xl h-11 w-11"><Pencil className="h-5 w-5 text-primary" /></Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={() => openEditModule(mod)} className="rounded-xl h-11 w-11"><Pencil className="h-5 w-5 text-primary" /></Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => handleDeleteModule(mod.id, mod.title)} 
+                      className="rounded-xl h-11 w-11 text-red-500 border-red-200 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </Card>
               ))}
             </div>
@@ -606,7 +652,26 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
             <ScrollArea className="flex-1 p-8">
               {currentModule && (
                 <div className="space-y-10">
-                  <div className="space-y-2"><Label>Nombre de la Clase</Label><Input value={currentModule.title} onChange={e => setCurrentModule({...currentModule!, title: e.target.value})} className="h-14 font-bold rounded-xl text-xl" /></div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Nombre de la Clase</Label>
+                      <Input 
+                        value={currentModule.title} 
+                        onChange={e => setCurrentModule({...currentModule!, title: e.target.value})} 
+                        className="h-14 font-bold rounded-xl text-xl" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Descripción de la Clase</Label>
+                      <Textarea 
+                        value={currentModule.description || ''} 
+                        onChange={e => setCurrentModule({...currentModule!, description: e.target.value})} 
+                        className="min-h-[100px] rounded-xl text-sm" 
+                        placeholder="Describe el contenido y objetivos de esta clase..."
+                      />
+                      <p className="text-xs text-muted-foreground">Esta descripción será visible para los alumnos al iniciar la clase.</p>
+                    </div>
+                  </div>
                   <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({...currentModule!, contentType: v as any})}>
                     <TabsList className="mb-6 h-12 rounded-2xl p-1 bg-muted">
                       <TabsTrigger value="text" className="rounded-xl font-bold">Bibliografía</TabsTrigger>
@@ -726,12 +791,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                   <div className="pt-10 border-t space-y-8">
                     <div className="flex justify-between items-center">
                       <h4 className="font-bold text-xl flex items-center gap-3"><CheckCircle2 className="h-6 w-6 text-primary" /> Evaluación Académica</h4>
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setCurrentModule({...currentModule!, questions: [...currentModule!.questions, { id: generateId(), type: 'multiple_choice', question: '', correctAnswer: '', options: ['','','',''] }]})} className="rounded-xl font-bold"><Plus className="h-4 w-4 mr-2" /> Añadir Manual</Button>
-                        <Button onClick={() => { setAiTargetType('main'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-xl gap-2 bg-accent hover:bg-accent/90 text-white font-bold shadow-lg"><Sparkles className="h-4 w-4" /> Generar con IA</Button>
-                      </div>
+                      <Button onClick={() => { setAiTargetType('main'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-xl gap-2 bg-accent hover:bg-accent/90 text-white font-bold shadow-lg"><Sparkles className="h-4 w-4" /> Generar con IA</Button>
                     </div>
                     <div className="space-y-6">{currentModule.questions.map((q, qIdx) => renderQuestionEditor(q, qIdx, false))}</div>
+                    <div className="flex justify-center pt-4">
+                      <Button variant="outline" onClick={() => setCurrentModule({...currentModule!, questions: [...currentModule!.questions, { id: generateId(), type: 'multiple_choice', question: '', correctAnswer: '', options: ['','','',''] }]})} className="rounded-xl font-bold"><Plus className="h-4 w-4 mr-2" /> Añadir Manual</Button>
+                    </div>
                   </div>
 
                   <div className="bg-emerald-50/50 p-8 rounded-[3rem] border-2 border-dashed border-emerald-200/50 space-y-6">

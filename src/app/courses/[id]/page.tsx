@@ -4,7 +4,7 @@
 import { useState, useEffect, use, useRef } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, orderBy, where, updateDoc, getDoc, setDoc, serverTimestamp, addDoc, or, and } from 'firebase/firestore';
+import { doc, collection, query, orderBy, where, updateDoc, getDoc, setDoc, serverTimestamp, addDoc, or, and, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -36,7 +36,8 @@ import {
   UserPlus,
   Eye,
   X,
-  Play
+  Play,
+  Trash2
 } from 'lucide-react';
 import { evaluateQuizPerformance, EvaluationOutput } from '@/ai/flows/evaluate-quiz-performance';
 import { useToast } from '@/hooks/use-toast';
@@ -57,9 +58,20 @@ function getSecureVideoUrl(url: string) {
   
   // YouTube Handler
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
-    if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
-    else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
-    else if (url.includes('embed/')) videoId = url.split('embed/')[1].split('?')[0];
+    if (url.includes('v=')) {
+      videoId = url.split('v=')[1].split('&')[0];
+    } else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1].split('?')[0];
+    } else if (url.includes('embed/')) {
+      videoId = url.split('embed/')[1].split('?')[0];
+    } else if (url.includes('/shorts/')) {
+      videoId = url.split('/shorts/')[1].split('?')[0];
+    } else if (url.includes('/live/')) {
+      videoId = url.split('/live/')[1].split('?')[0];
+    } else {
+      // Si no coincide con ningún formato, devolver la URL original
+      return url;
+    }
     
     return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&iv_load_policy=3&controls=1&hl=es&disablekb=1&fs=0&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`;
   }
@@ -229,6 +241,33 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
     }
   };
 
+  const handleDeleteModule = async (moduleId: string) => {
+    if (!authProfile || !course) return;
+    
+    // Verificar que el usuario es mentor o admin
+    if (!isOwner && !isAdmin) {
+      toast({ variant: 'destructive', title: 'No tienes permisos para eliminar módulos' });
+      return;
+    }
+
+    try {
+      // Eliminar el módulo
+      await deleteDoc(doc(db, 'courses', course.id, 'modules', moduleId));
+      
+      toast({ 
+        title: 'Módulo Eliminado', 
+        description: 'El módulo ha sido eliminado exitosamente.' 
+      });
+      
+      // Recargar la página para actualizar la lista de módulos
+      window.location.reload();
+      
+    } catch (e) {
+      console.error('Error al eliminar módulo:', e);
+      toast({ variant: 'destructive', title: 'Error al eliminar módulo' });
+    }
+  };
+
   const handleSubmitEvaluation = async (isSupport: boolean = false) => {
     const targetQuestions = isSupport ? (activeModule?.supportQuestions || []) : (activeModule?.questions || []);
     if (!activeModule || targetQuestions.length === 0) return;
@@ -310,9 +349,20 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
 
   if (courseLoading || modulesLoading) return <DashboardLayout><div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-primary" /></div></DashboardLayout>;
 
-  const isApproved = course?.status === 'approved';
+  const isApproved = course?.status === 'approved' || course?.status === 'published';
   const isOwner = course?.mentorId === authProfile?.uid;
   const isAdmin = authProfile?.roles.includes('admin');
+  
+  // Diagnóstico temporal
+  console.log('🔍 PERMISOS - Editor Académico:', {
+    userEmail: authProfile?.email,
+    userUID: authProfile?.uid,
+    courseMentorId: course?.mentorId,
+    isOwner,
+    isAdmin,
+    canDelete: isOwner || isAdmin
+  });
+  
   const hasAccessPermission = enrollment?.status === 'active' || isOwner || isAdmin;
   const isAccessActive = hasAccessPermission && (isApproved || isOwner || isAdmin);
   const currentQuestions = (showSupportQuiz ? activeModule?.supportQuestions : activeModule?.questions) || [];
@@ -331,6 +381,11 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                 <div className="text-right">
                    <h2 className="font-bold text-primary text-xl leading-tight" style={{ color: primaryColor }}>{course?.title}</h2>
                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{course?.category}</p>
+                   {course?.description && (
+                     <p className="text-sm text-muted-foreground mt-2 max-w-md leading-relaxed">
+                       {course.description}
+                     </p>
+                   )}
                 </div>
                 {logoUrl && <div className="w-12 h-12 relative flex-shrink-0"><Image src={logoUrl} alt="Logo" fill sizes="48px" className="object-contain" unoptimized /></div>}
              </div>
@@ -422,7 +477,14 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
 
           {isAccessActive && (
             <div className="space-y-4">
-              <h1 className="text-3xl font-bold text-primary" style={{ color: primaryColor }}>{activeModule?.title}</h1>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold text-primary" style={{ color: primaryColor }}>{activeModule?.title}</h1>
+                {activeModule?.description && (
+                  <p className="text-muted-foreground text-base leading-relaxed max-w-3xl">
+                    {activeModule.description}
+                  </p>
+                )}
+              </div>
               <Tabs defaultValue="content" className="w-full">
                 <TabsList className="mb-6 h-12 bg-secondary/30 p-1 rounded-xl">
                   <TabsTrigger value="content" className="rounded-lg px-8 font-bold">Bibliografía</TabsTrigger>
@@ -579,10 +641,31 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                   const isCompleted = enrollment?.progress?.completedModules?.includes(mod.id);
                   const isActive = activeModuleIndex === idx;
                   return (
-                    <button key={mod.id} onClick={() => isAccessActive && setActiveModuleIndex(idx)} className={cn("w-full text-left p-4 rounded-xl transition-all border-2", !isAccessActive ? 'opacity-40 grayscale cursor-not-allowed' : isActive ? 'text-white border-primary shadow-md' : isCompleted ? 'bg-emerald-50 text-emerald-700' : 'hover:bg-muted/50 border-transparent')} style={isActive ? {backgroundColor: primaryColor, borderColor: primaryColor} : {}}>
-                      <div className="flex justify-between items-center mb-1"><p className="text-[8px] uppercase font-bold tracking-widest opacity-60">Clase {idx + 1}</p>{isCompleted && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}</div>
-                      <p className="text-xs font-bold line-clamp-1">{mod.title}</p>
-                    </button>
+                    <div key={mod.id} className="group relative">
+                      <button onClick={() => isAccessActive && setActiveModuleIndex(idx)} className={cn("w-full text-left p-4 rounded-xl transition-all border-2", !isAccessActive ? 'opacity-40 grayscale cursor-not-allowed' : isActive ? 'text-white border-primary shadow-md' : isCompleted ? 'bg-emerald-50 text-emerald-700' : 'hover:bg-muted/50 border-transparent')} style={isActive ? {backgroundColor: primaryColor, borderColor: primaryColor} : {}}>
+                        <div className="flex justify-between items-center mb-1">
+                          <p className="text-[8px] uppercase font-bold tracking-widest opacity-60">Clase {idx + 1}</p>
+                          <div className="flex items-center gap-2">
+                            {isCompleted && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+                            {(isOwner || isAdmin) && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`¿Estás seguro de que quieres eliminar el módulo "${mod.title}"?`)) {
+                                    handleDeleteModule(mod.id);
+                                  }
+                                }}
+                                className="opacity-70 hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-100 text-red-500"
+                                title="Eliminar módulo"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs font-bold line-clamp-1">{mod.title}</p>
+                      </button>
+                    </div>
                   );
                 })}
               </div>

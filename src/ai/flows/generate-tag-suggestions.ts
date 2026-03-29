@@ -23,6 +23,18 @@ const TagSuggestionOutputSchema = z.object({
 export type TagSuggestionOutput = z.infer<typeof TagSuggestionOutputSchema>;
 
 export async function generateTagSuggestions(input: TagSuggestionInput): Promise<TagSuggestionOutput> {
+  // Diagnóstico: verificar si la API key está disponible en el servidor
+  console.log('🔍 SERVER: Verificando API key en generateTagSuggestions');
+  console.log('🔍 SERVER: GOOGLE_GENAI_API_KEY existe:', !!process.env.GOOGLE_GENAI_API_KEY);
+  console.log('🔍 SERVER: GOOGLE_API_KEY existe:', !!process.env.GOOGLE_API_KEY);
+  
+  const apiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    console.error('❌ SERVER: No hay API key disponible para Gemini');
+    throw new Error('No se pudo conectar con Gemini: API key no configurada en el servidor');
+  }
+  
+  console.log('✅ SERVER: API key disponible, ejecutando flow...');
   return generateTagSuggestionsFlow(input);
 }
 

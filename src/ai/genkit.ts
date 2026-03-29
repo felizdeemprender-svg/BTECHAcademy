@@ -17,7 +17,7 @@ dotenv.config({ path: join(__dirname, '../../.env.local') });
 export const ai = genkit({
   plugins: [
     googleAI({ 
-      apiKey: process.env.GOOGLE_GENAI_API_KEY 
+      apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY
     }),
   ],
   model: 'googleai/gemini-2.5-flash',

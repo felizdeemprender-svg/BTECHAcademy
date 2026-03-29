@@ -47,6 +47,9 @@ function getSecureVideoUrl(url: string) {
     if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
     else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
     else if (url.includes('embed/')) videoId = url.split('embed/')[1].split('?')[0];
+    else if (url.includes('/shorts/')) videoId = url.split('/shorts/')[1].split('?')[0];
+    else if (url.includes('/live/')) videoId = url.split('/live/')[1].split('?')[0];
+    else return url;
     
     return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&iv_load_policy=3&controls=1&hl=es&disablekb=1&fs=0&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`;
   }
