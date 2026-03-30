@@ -209,25 +209,22 @@ export default function ManageCoursesPage() {
   const { data: allTagsSnapshot } = useCollection(tagsQuery);
 
   const allTags = useMemo(() => {
-    console.log('🔍 allTags actualizado, tipo:', typeof allTagsSnapshot, 'es array:', Array.isArray(allTagsSnapshot));
+    if (!allTagsSnapshot) return [];
     
-    // useCollection puede devolver array directamente o objeto con .docs
-    let docsArray;
-    if (Array.isArray(allTagsSnapshot)) {
-      docsArray = allTagsSnapshot;
-    } else if (allTagsSnapshot?.docs) {
-      docsArray = allTagsSnapshot.docs;
-    } else {
-      console.log('❌ No hay datos en allTagsSnapshot');
-      return [];
-    }
+    // Si useCollection ya nos da un arreglo mapeado con la data
+    let docsArray = Array.isArray(allTagsSnapshot) ? allTagsSnapshot : (allTagsSnapshot as any).docs || [];
     
-    console.log('🔍 Procesando', docsArray.length, 'etiquetas');
-    const tags = docsArray.map((doc: any) => ({ 
-      id: doc.id, 
-      ...doc.data?.() 
-    }));
-    console.log('🔍 Etiquetas cargadas:', tags.map(t => t.name));
+    const tags = docsArray.map((doc: any) => {
+      // Si la colección ya viene transformada, el objeto ya tiene 'name'. 
+      // Si viene cruda de Firebase, tiene el método .data()
+      const data = typeof doc.data === 'function' ? doc.data() : doc;
+      return { 
+        id: doc.id || data.id, 
+        ...data 
+      };
+    });
+    
+    console.log('🔍 Etiquetas cargadas (limpias):', tags.map(t => t.name));
     return tags;
   }, [allTagsSnapshot]);
 
@@ -319,7 +316,7 @@ export default function ManageCoursesPage() {
     setSelectedAiTags([]);
 
     try {
-      const existingNames = allTags?.map((t: any) => t.name.toLowerCase()) || [];
+      const existingNames = (allTags || []).map((t: any) => (t.name || '').toLowerCase()).filter(Boolean);
       const result = await generateTagSuggestions({
         branch: branchInput,
         existingTags: existingNames
