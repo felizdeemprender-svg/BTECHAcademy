@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
 
       const promptPremium = `${finalPrompt.trim()}. 4k resolution, hyperrealistic, award winning photography, professional corporate style, no text, no words.`;
 
-      // Endpoint para Imagen 3 en Google AI Studio (Beta)
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`;
+      // Endpoint para Imagen 4 en Google AI Studio (Beta)
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
       
       const reqBody = {
         instances: [{ prompt: promptPremium }],
@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
 
       if (!premiumRes.ok) {
         const errText = await premiumRes.text();
-        console.error('[generate-image] Imagen 3 falló:', errText);
-        throw new Error('El modelo premium de Google falló. Revisa tu API Key o cuota.');
+        console.error('❌ Error de Google Imagen 3:', errText);
+        throw new Error(`El modelo premium falló (${premiumRes.status}): ${errText}`);
       }
 
       const premiumData = await premiumRes.json();

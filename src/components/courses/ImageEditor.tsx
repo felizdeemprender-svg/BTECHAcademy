@@ -98,7 +98,7 @@ export function ImageEditor({
 
       // En lugar de subirla directamente a Firebase Storage, pasamos el Base64 (Data URI)
       // para que el usuario pueda previsualizarlo libremente sin quemar recursos de nube.
-      onUpdate(data.imageDataUrl);
+      onUpdate?.(data.imageDataUrl);
       
       toast({ title: 'Imagen de IA generada', description: 'Cargada como borrador. Guarda para confirmarla definitivamente.' });
     } catch (err: any) {
