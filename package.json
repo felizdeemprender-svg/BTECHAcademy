@@ -12,7 +12,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy:firebase": "npx firebase deploy",
+    "deploy:all": "npx firebase deploy && git add . && git commit -m \"Deploy unificado y sincronizacion de entornos\" && git push origin main"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.28.0",

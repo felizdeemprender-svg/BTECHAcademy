@@ -96,6 +96,9 @@ export async function GET(
           instagram: tutor.profile?.socials?.instagram || '',
           youtube: tutor.profile?.socials?.youtube || '',
           tiktok: tutor.profile?.socials?.tiktok || '',
+          whatsapp: tutor.profile?.socials?.whatsapp || '',
+          phone: tutor.profile?.socials?.phone || '',
+          calendly: tutor.profile?.socials?.calendly || '',
         },
         stats: {
           totalStudents: tutor.stats?.totalStudents || 0,

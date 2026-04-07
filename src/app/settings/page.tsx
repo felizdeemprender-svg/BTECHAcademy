@@ -532,31 +532,35 @@ export default function SettingsPage() {
                         <div className="space-y-8">
                           <div className="grid sm:grid-cols-3 gap-8">
                             <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col gap-1">
-                              <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2"><Zap className="h-3 w-3 text-primary" /> Tipo de Abono</span>
-                              <p className="text-2xl font-bold text-primary">{sub.planName}</p>
+                              <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2"><Zap className="h-3 w-3 text-primary" /> Plan Asignado</span>
+                              <p className="text-2xl font-bold text-primary">{sub.name || sub.planName || 'Plan Personalizado'}</p>
                             </div>
                             <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col gap-1">
                               <span className="text-[10px] font-bold uppercase text-primary tracking-widest flex items-center gap-2"><Layers className="h-3 w-3 text-primary" /> Cursos Activos</span>
-                              <p className="text-2xl font-bold text-primary">{sub.limits?.maxCourses === -1 ? 'Ilimitados' : `${sub.limits?.maxCourses || sub.maxSimultaneousCourses || 0} Máx.`}</p>
+                              <p className="text-2xl font-bold text-primary">{sub.limits?.maxCourses === -1 ? 'Ilimitados' : `${sub.limits?.maxCourses ?? sub.maxSimultaneousCourses ?? 0} Máx.`}</p>
                             </div>
                             <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col gap-1">
                               <span className="text-[10px] font-bold uppercase text-primary tracking-widest flex items-center gap-2"><Users className="h-3 w-3 text-primary" /> Estudiantes</span>
-                              <p className="text-2xl font-bold text-primary">{sub.limits?.maxStudents === -1 ? 'Ilimitados' : sub.limits?.maxStudents || 0}</p>
+                              <p className="text-2xl font-bold text-primary">{sub.limits?.maxStudents === -1 ? 'Ilimitados' : sub.limits?.maxStudents ?? 0}</p>
                             </div>
                           </div>
 
-                          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div className="bg-white/50 p-4 rounded-xl border border-primary/5 flex flex-col">
-                              <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter">Invitaciones/Curso</span>
-                              <p className="text-lg font-black text-primary">{sub.invitationsPerCourse || 0}</p>
+                          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex flex-col">
+                              <span className="text-[8px] font-black uppercase text-amber-600 tracking-tighter flex items-center gap-1"><Sparkles className="h-3 w-3" /> IA PREMIUM</span>
+                              <p className="text-lg font-black text-amber-700">{sub.hasPremiumAI ? 'HABILITADA' : 'NO'}</p>
                             </div>
-                            <div className="bg-white/50 p-4 rounded-xl border border-primary/5 flex flex-col">
-                              <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter">Branding Propio</span>
-                              <p className="text-lg font-black text-primary">{sub.limits?.hasCustomBranding ? 'SÍ' : 'NO'}</p>
+                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col">
+                              <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">Invitaciones/Curso</span>
+                              <p className="text-lg font-black text-slate-800">{sub.invitationsPerCourse || 0}</p>
                             </div>
-                            <div className="bg-white/50 p-4 rounded-xl border border-primary/5 flex flex-col">
-                              <span className="text-[8px] font-black uppercase text-muted-foreground tracking-tighter">Analíticas</span>
-                              <p className="text-lg font-black text-primary">{sub.limits?.hasAnalytics ? 'SÍ' : 'NO'}</p>
+                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col">
+                              <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">Branding Propio</span>
+                              <p className="text-lg font-black text-slate-800">{sub.limits?.hasCustomBranding ? 'SÍ' : 'NO'}</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col">
+                              <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">Analíticas Avanzadas</span>
+                              <p className="text-lg font-black text-slate-800">{sub.limits?.hasAnalytics ? 'SÍ' : 'NO'}</p>
                             </div>
                           </div>
 
@@ -698,11 +702,45 @@ export default function SettingsPage() {
                         </div>
                       </div>
 
-                      <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex gap-4 items-start">
-                        <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                        <div className="text-[11px] text-blue-800 space-y-2 leading-relaxed">
-                          <p className="font-bold uppercase tracking-tight">¿Dónde encuentro estas credenciales?</p>
-                          <p>Ingresa a tu panel de <a href="https://www.mercadopago.com.ar/developers/panel/credentials" target="_blank" className="underline font-bold">MercadoPago Developers</a>, selecciona tu aplicación y busca la sección de **Credenciales de Producción**.</p>
+                      <div className="space-y-6">
+                        <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
+                          <h4 className="flex items-center gap-2 text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider">
+                            <Info className="h-4 w-4" /> ¿Cómo Funciona la Integración?
+                          </h4>
+                          <div className="grid sm:grid-cols-2 gap-6">
+                            <div className="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm space-y-2">
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold mb-3">1</div>
+                              <p className="text-sm font-bold text-slate-800">Cobro 100% Directo</p>
+                              <p className="text-xs text-slate-500 leading-relaxed">Al conectar tus credenciales, el alumno paga y el dinero va <strong>directo a tu cuenta de MercadoPago</strong>. BTECHAcademy no retiene comisiones ni intermedia en la transacción.</p>
+                            </div>
+                            <div className="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm space-y-2">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold mb-3">2</div>
+                              <p className="text-sm font-bold text-slate-800">Solo el valor del curso</p>
+                              <p className="text-xs text-slate-500 leading-relaxed">El sistema generará el link de pago automáticamente por el <strong>valor exacto</strong> que le configures a tu curso en el panel de ventas. Nada más, nada menos.</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
+                          <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">Instrucciones para obtener tus Credenciales</h4>
+                          <ol className="relative border-l-2 border-slate-200 ml-3 space-y-6 text-sm text-slate-600">
+                            <li className="pl-6 relative">
+                              <span className="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700 border-4 border-slate-50">A</span>
+                              <p>Inicia sesión en tu cuenta de <a href="https://www.mercadopago.com.ar/developers/panel/credentials" target="_blank" className="font-bold text-primary hover:underline">Mercado Pago Developers</a>.</p>
+                            </li>
+                            <li className="pl-6 relative">
+                              <span className="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700 border-4 border-slate-50">B</span>
+                              <p>Crea una nueva <strong>Aplicación</strong> y selecciónala.</p>
+                            </li>
+                            <li className="pl-6 relative">
+                              <span className="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700 border-4 border-slate-50">C</span>
+                              <p>En el menú lateral, ve a la sección <strong>Credenciales de Producción</strong>.</p>
+                            </li>
+                            <li className="pl-6 relative">
+                              <span className="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700 border-4 border-slate-50">D</span>
+                              <p>Copia el <strong>Access Token</strong> y la <strong>Public Key</strong> y pégalos en los campos de arriba.</p>
+                            </li>
+                          </ol>
                         </div>
                       </div>
                     </div>

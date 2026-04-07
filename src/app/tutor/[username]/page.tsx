@@ -16,7 +16,11 @@ import {
   AlertCircle,
   CreditCard,
   Instagram,
-  Youtube
+  Youtube,
+  Twitter,
+  Phone,
+  MessageCircle,
+  Calendar
 } from 'lucide-react';
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -44,6 +48,9 @@ interface TutorData {
     instagram?: string;
     youtube?: string;
     tiktok?: string;
+    whatsapp?: string;
+    phone?: string;
+    calendly?: string;
   };
   stats: {
     totalStudents: number;
@@ -82,6 +89,12 @@ interface Course {
   tags: string[];
   salesPageId?: string | null;
 }
+
+const ensureAbsoluteUrl = (url?: string) => {
+  if (!url) return '#';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `https://${url}`;
+};
 
 export default function TutorProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params);
@@ -270,8 +283,20 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
                 {tutorData.email}
               </a>
             )}
+            {tutorData.socialLinks.phone && (
+              <a href={`tel:${tutorData.socialLinks.phone}`} className="flex items-center gap-2 text-muted-foreground hover:text-brand transition-colors whitespace-nowrap">
+                <Phone className="h-4 w-4" />
+                {tutorData.socialLinks.phone}
+              </a>
+            )}
+            {tutorData.socialLinks.whatsapp && (
+              <a href={`https://wa.me/${tutorData.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-brand transition-colors whitespace-nowrap">
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp
+              </a>
+            )}
             {tutorData.socialLinks.website && (
-              <a href={tutorData.socialLinks.website} target="_blank" className="flex items-center gap-2 text-muted-foreground hover:text-brand transition-colors whitespace-nowrap">
+              <a href={ensureAbsoluteUrl(tutorData.socialLinks.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-brand transition-colors whitespace-nowrap">
                 <Globe className="h-4 w-4" />
                 Sitio Web
               </a>
@@ -279,14 +304,29 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
           </div>
           <div className="hidden md:flex items-center gap-4">
             {tutorData.socialLinks.linkedin && (
-              <Link href={tutorData.socialLinks.linkedin} target="_blank" className="text-muted-foreground hover:text-brand transition-colors">
+              <a href={ensureAbsoluteUrl(tutorData.socialLinks.linkedin)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-brand transition-colors">
                 <Linkedin className="h-4 w-4" />
-              </Link>
+              </a>
             )}
             {tutorData.socialLinks.instagram && (
-              <Link href={tutorData.socialLinks.instagram} target="_blank" className="text-muted-foreground hover:text-brand transition-colors">
+              <a href={ensureAbsoluteUrl(tutorData.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-brand transition-colors">
                 <Instagram className="h-4 w-4" />
-              </Link>
+              </a>
+            )}
+            {tutorData.socialLinks.youtube && (
+              <a href={ensureAbsoluteUrl(tutorData.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-brand transition-colors">
+                <Youtube className="h-4 w-4" />
+              </a>
+            )}
+            {tutorData.socialLinks.twitter && (
+              <a href={ensureAbsoluteUrl(tutorData.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-brand transition-colors">
+                <Twitter className="h-4 w-4" />
+              </a>
+            )}
+            {tutorData.socialLinks.tiktok && (
+              <a href={ensureAbsoluteUrl(tutorData.socialLinks.tiktok)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-brand transition-colors">
+                <TikTokIcon className="h-4 w-4" />
+              </a>
             )}
           </div>
         </div>
@@ -463,6 +503,24 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
                     {tutorData.email}
                   </a>
                 )}
+                {tutorData.socialLinks.phone && (
+                  <a href={`tel:${tutorData.socialLinks.phone}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-brand transition-colors">
+                    <Phone className="h-4 w-4" />
+                    {tutorData.socialLinks.phone}
+                  </a>
+                )}
+                {tutorData.socialLinks.whatsapp && (
+                  <a href={`https://wa.me/${tutorData.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-brand transition-colors">
+                    <MessageCircle className="h-4 w-4" />
+                    WhatsApp
+                  </a>
+                )}
+                {tutorData.socialLinks.calendly && (
+                  <a href={ensureAbsoluteUrl(tutorData.socialLinks.calendly)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-brand transition-colors font-medium">
+                    <Calendar className="h-4 w-4 text-brand" />
+                    Agendar Mentoría
+                  </a>
+                )}
                 {tutorData.location && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4" />
@@ -474,21 +532,36 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
 
             <div className="space-y-4">
               <h4 className="font-bold text-brand">Siguenos</h4>
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 {tutorData.socialLinks.linkedin && (
-                  <Link href={tutorData.socialLinks.linkedin} target="_blank" className={cn("p-2 rounded-full transition-colors hover:bg-brand/10", isDark ? "bg-slate-800" : "bg-slate-100")}>
+                  <a href={ensureAbsoluteUrl(tutorData.socialLinks.linkedin)} target="_blank" rel="noopener noreferrer" className={cn("p-2 rounded-full transition-colors hover:bg-brand/10", isDark ? "bg-slate-800" : "bg-slate-100")}>
                     <Linkedin className="h-5 w-5 text-brand" />
-                  </Link>
+                  </a>
                 )}
                 {tutorData.socialLinks.instagram && (
-                  <Link href={tutorData.socialLinks.instagram} target="_blank" className={cn("p-2 rounded-full transition-colors hover:bg-brand/10", isDark ? "bg-slate-800" : "bg-slate-100")}>
+                  <a href={ensureAbsoluteUrl(tutorData.socialLinks.instagram)} target="_blank" rel="noopener noreferrer" className={cn("p-2 rounded-full transition-colors hover:bg-brand/10", isDark ? "bg-slate-800" : "bg-slate-100")}>
                     <Instagram className="h-5 w-5 text-brand" />
-                  </Link>
+                  </a>
+                )}
+                {tutorData.socialLinks.youtube && (
+                  <a href={ensureAbsoluteUrl(tutorData.socialLinks.youtube)} target="_blank" rel="noopener noreferrer" className={cn("p-2 rounded-full transition-colors hover:bg-brand/10", isDark ? "bg-slate-800" : "bg-slate-100")}>
+                    <Youtube className="h-5 w-5 text-brand" />
+                  </a>
+                )}
+                {tutorData.socialLinks.twitter && (
+                  <a href={ensureAbsoluteUrl(tutorData.socialLinks.twitter)} target="_blank" rel="noopener noreferrer" className={cn("p-2 rounded-full transition-colors hover:bg-brand/10", isDark ? "bg-slate-800" : "bg-slate-100")}>
+                    <Twitter className="h-5 w-5 text-brand" />
+                  </a>
+                )}
+                {tutorData.socialLinks.tiktok && (
+                  <a href={ensureAbsoluteUrl(tutorData.socialLinks.tiktok)} target="_blank" rel="noopener noreferrer" className={cn("p-2 rounded-full transition-colors hover:bg-brand/10", isDark ? "bg-slate-800" : "bg-slate-100")}>
+                    <TikTokIcon className="h-5 w-5 text-brand" />
+                  </a>
                 )}
                 {tutorData.socialLinks.website && (
-                  <Link href={tutorData.socialLinks.website} target="_blank" className={cn("p-2 rounded-full transition-colors hover:bg-brand/10", isDark ? "bg-slate-800" : "bg-slate-100")}>
+                  <a href={ensureAbsoluteUrl(tutorData.socialLinks.website)} target="_blank" rel="noopener noreferrer" className={cn("p-2 rounded-full transition-colors hover:bg-brand/10", isDark ? "bg-slate-800" : "bg-slate-100")}>
                     <Globe className="h-5 w-5 text-brand" />
-                  </Link>
+                  </a>
                 )}
               </div>
             </div>

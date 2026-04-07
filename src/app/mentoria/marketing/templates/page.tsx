@@ -9,6 +9,7 @@ import { TemplateViewerProduction } from './components/template-viewer-productio
 import { useCollections } from './hooks/use-collections';
 import { useAIGeneration } from './hooks/use-ai-generation';
 import { useIdentityDesign } from './hooks/use-identity-design';
+import { TemplateCollection } from './types/template-types';
 
 export default function MarketingTemplatesPage() {
   const { profile } = useAuth();
@@ -118,11 +119,9 @@ export default function MarketingTemplatesPage() {
   };
 
   const handleDeleteCollection = async (id: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta colección?')) {
-      await deleteCollection(id);
-      if (selectedId === id) {
-        setSelectedId(null);
-      }
+    await deleteCollection(id);
+    if (selectedId === id) {
+      setSelectedId(null);
     }
   };
 

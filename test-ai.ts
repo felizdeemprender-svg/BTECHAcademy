@@ -1,19 +1,31 @@
-import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/google-genai';
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
 
-const ai = genkit({
-  plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY })],
-  model: 'googleai/gemini-2.5-flash'
-});
+import 'dotenv/config';
 
-async function run() {
+async function listAllModels() {
+  const apiKey = process.env.GOOGLE_GENAI_API_KEY;
+  if (!apiKey) return;
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=100`;
+  
   try {
-    const response = await ai.generate({ prompt: 'Dime HOLA' });
-    console.log("AI Response:", response.text);
-  } catch (e: any) {
-    console.error("Error:", e.message);
+    const res = await fetch(endpoint);
+    const data = await res.json();
+    if (res.ok) {
+      console.log('✅ LISTA COMPLETA DE MODELOS:');
+      const imagenModels = data.models.filter((m: any) => m.name.includes('image') || m.name.includes('imagen') || m.name.includes('vision'));
+      if (imagenModels.length > 0) {
+        console.log('🔥 MODELOS DE IMAGEN ENCONTRADOS:');
+        imagenModels.forEach((m: any) => console.log(`- ${m.name} (Soporta: ${m.supportedGenerationMethods.join(', ')})`));
+      } else {
+        console.log('⚠️ NO SE ENCONTRARON MODELOS DE IMAGEN. Todos los modelos:');
+        data.models.forEach((m: any) => console.log(`- ${m.name}`));
+      }
+    } else {
+      console.error('❌ ERROR:', JSON.stringify(data, null, 2));
+    }
+  } catch (err) {
+    console.error('❌ ERROR:', err);
   }
 }
-run();
+
+listAllModels();

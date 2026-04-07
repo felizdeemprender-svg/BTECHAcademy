@@ -4,7 +4,7 @@
 import { useState, useEffect, use, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -80,9 +80,9 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     if (page?.mentorId) {
-      getDocs(query(collection(db, 'users'), where('uid', '==', page.mentorId))).then(snap => {
+      getDocs(query(collection(db, 'users'), where('uid', '==', page.mentorId), limit(1))).then(snap => {
         if (!snap.empty) setMentorProfile(snap.docs[0].data());
-      });
+      }).catch(err => console.error('Error fetching mentor profile:', err));
     }
   }, [db, page?.mentorId]);
 

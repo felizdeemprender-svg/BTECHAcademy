@@ -36,8 +36,8 @@ export function useAIGeneration(profile?: any) {
   const [socialTargets, setSocialTargets] = useState<Record<string, SocialTarget>>({
     twitter: { enabled: true, thread: 3, single_post: 2 },
     instagram: { enabled: true, story: 5, carousel: 3, single_post: 2 },
-    tiktok: { enabled: true, short_video: 3 },
-    linkedin: { enabled: true, document: 2, single_post: 2 }
+    tiktok: { enabled: true, short_video: 3, carousel: 3 },
+    linkedin: { enabled: true, document: 2, single_post: 2, carousel: 2 }
   });
 
   // Health check - optimizado para evitar llamadas constantes
@@ -94,12 +94,14 @@ export function useAIGeneration(profile?: any) {
         } : undefined,
         tiktok: socialTargets.tiktok.enabled ? {
           enabled: true,
-          short_video: socialTargets.tiktok.short_video || 3
+          short_video: socialTargets.tiktok.short_video || 3,
+          carousel: socialTargets.tiktok.carousel || 3
         } : undefined,
         linkedin: socialTargets.linkedin.enabled ? {
           enabled: true,
           document: socialTargets.linkedin.document || 2,
-          single_post: socialTargets.linkedin.single_post || 2
+          single_post: socialTargets.linkedin.single_post || 2,
+          carousel: socialTargets.linkedin.carousel || 2
         } : undefined
       };
 

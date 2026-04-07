@@ -143,7 +143,7 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
       </CardContent>
       
     <CardFooter className="p-6 pt-0 gap-3">
-        <Link href={course.salesPageId ? `/v/${course.salesPageId}` : `/courses/${course.id}`} className="flex-1">
+        <Link href={course.salesPageId ? `/v/${course.salesPageId}?v=2` : `/courses/${course.id}`} className="flex-1">
           <Button variant="outline" className="w-full rounded-xl border-2 h-12 font-bold transition-all hover:bg-primary/5">
             {course.salesPageId ? 'Ver Landing de Venta' : 'Ver Detalles'}
           </Button>

@@ -365,14 +365,19 @@ export const LandingMockup = ({ template, index }: { template: any, index: numbe
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border shadow-inner">
-            <div className="w-4 h-4 bg-blue-500 rounded" />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border shadow-inner">
+              <div className="w-4 h-4 bg-blue-500 rounded" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase text-slate-900 leading-none">Landing Page</p>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Variante {index + 1}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] font-black uppercase text-slate-900 leading-none">Landing Page</p>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Variante {index + 1}</p>
-          </div>
+          <Badge className="bg-blue-500 text-white border-none text-[8px] font-black uppercase h-5">
+            {dynamicSections.length} Secciones
+          </Badge>
         </div>
       </div>
 
@@ -381,38 +386,6 @@ export const LandingMockup = ({ template, index }: { template: any, index: numbe
         validationResults={template.validationResults} 
         platformAdaptations={template.platformAdaptations} 
       />
-
-      <div className="flex items-center gap-2">
-        <Badge className="bg-blue-500 text-white border-none text-[8px] font-black uppercase h-5">
-          {dynamicSections.length} Secciones
-        </Badge>
-        <button 
-          onClick={() => {
-            // Llamar a la función de edición del padre
-            const event = new CustomEvent('editLanding', { detail: { template, index } });
-            window.dispatchEvent(event);
-          }}
-          className="rounded-xl font-bold h-8 px-4 text-xs bg-white border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-1"
-        >
-          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          Editar
-        </button>
-        <button 
-          onClick={() => {
-            // Llamar a la función de IA del padre
-            const event = new CustomEvent('aiLanding', { detail: { template, index } });
-            window.dispatchEvent(event);
-          }}
-          className="rounded-xl font-bold h-8 px-4 text-xs bg-white border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-1"
-        >
-          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-          </svg>
-          IA
-        </button>
-      </div>
 
       <div className="relative mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white bg-white aspect-[16/10] max-w-[800px]">
         <div className="h-full w-full overflow-y-auto bg-white">
