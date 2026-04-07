@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { validateAndPreconformTemplates, TemplateMetadata } from '@/lib/template-validator';
 import { validateAndAdjustDesignForAPIs } from '@/lib/platform-protocols';
 import { generateExportPacks, ExportOptions } from '@/lib/content-exporter';
+import { uploadPendingImagesInObject } from '@/lib/upload-base64';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -306,15 +307,15 @@ function BuilderContent() {
                 const uniqueSeed = baseSeed + counter + Math.floor(Math.random() * 1000);
 
                 if (path.includes('aboutMentor') || val.includes('mentor') || val.includes('tutor') || val.includes('expert')) {
-                  o[key] = profile?.photoURL || `https://loremflickr.com/800/800/professional,speaker,expert?lock=${uniqueSeed}`;
+                  o[key] = profile?.photoURL || `https://image.pollinations.ai/prompt/${encodeURIComponent('professional corporate portrait, close up, warm lighting')}?width=800&height=800&model=flux&nologo=true&seed=${uniqueSeed}`;
                 } else if (val.includes('logo')) {
-                  o[key] = course?.logo || `https://loremflickr.com/800/800/logo,brand?lock=${uniqueSeed}`;
+                  o[key] = course?.logo || `https://image.pollinations.ai/prompt/${encodeURIComponent('minimalist modern tech brand logo isolated on white')}?width=800&height=800&model=flux&nologo=true&seed=${uniqueSeed}`;
                 } else if (counter === 0 && course?.thumbnail && !path.includes('social')) {
                   o[key] = course.thumbnail;
                 } else {
-                  // Use sanitized global keywords
-                  const kw = globalKeywords || 'business,strategy,growth';
-                  o[key] = `https://loremflickr.com/800/800/${kw}?lock=${uniqueSeed}`;
+                  // Use sanitized global keywords, feed to IA
+                  const promptText = `modern corporate illustration or photography about ${globalKeywords || 'business'}`;
+                  o[key] = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=800&height=600&model=flux&nologo=true&seed=${uniqueSeed}`;
                 }
               }
               counter++;
@@ -584,16 +585,22 @@ function BuilderContent() {
         updatedAt: serverTimestamp(),
       };
 
+      // == RECOLECTOR DE IMÁGENES EFÍMERAS (LAZY UPLOAD) ==
+      // Todas las imágenes generadas por IA que dejamos en Base64 para ahorrar Storage, 
+      // se suben a Firebase Storage AHORA MISMO, justo antes de sellar el documento en Firestore.
+      console.log('☁️ Ejecutando Lazy Upload de imágenes seleccionadas en pack multimedia...');
+      const cleanPageData = await uploadPendingImagesInObject(pageData, storage, `campaigns/${pageId}/assets`);
+      
       if (!editId) {
-        pageData.createdAt = serverTimestamp();
+        cleanPageData.createdAt = serverTimestamp();
       }
 
       try {
         if (editId) {
-          const { createdAt, ...updateData } = pageData;
+          const { createdAt, ...updateData } = cleanPageData;
           await updateDoc(pageRef, updateData);
         } else {
-          await setDoc(pageRef, pageData);
+          await setDoc(pageRef, cleanPageData);
         }
       } catch (firestoreErr: any) {
         console.error("Firestore Error:", firestoreErr);

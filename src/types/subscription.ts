@@ -27,6 +27,7 @@ export interface TutorSubscription {
   name?: string;           // Nombre del plan asigando
   status: SubscriptionStatus;
   type: 'free' | 'fixed' | 'percentage';
+  hasPremiumAI?: boolean;  // Si el abono incluye motor IA Premium
   isEnterprise?: boolean;  // Identifica si es un perfil de Empresa
   startDate?: string;      // Fecha de inicio (ISO)
   endDate?: string;        // Fecha de fin (ISO)

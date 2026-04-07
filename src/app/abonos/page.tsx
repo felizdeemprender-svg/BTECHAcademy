@@ -36,7 +36,8 @@ export default function AbonosPage() {
     name: '',
     durationMonths: 12,
     maxSimultaneousCourses: 5,
-    isActive: true
+    isActive: true,
+    hasPremiumAI: false
   });
 
   const handleOpenDialog = (plan: any = null) => {
@@ -46,11 +47,12 @@ export default function AbonosPage() {
         name: plan.name,
         durationMonths: plan.durationMonths,
         maxSimultaneousCourses: plan.maxSimultaneousCourses,
-        isActive: plan.isActive !== false
+        isActive: plan.isActive !== false,
+        hasPremiumAI: plan.hasPremiumAI === true
       });
     } else {
       setEditingPlan(null);
-      setFormData({ name: '', durationMonths: 12, maxSimultaneousCourses: 5, isActive: true });
+      setFormData({ name: '', durationMonths: 12, maxSimultaneousCourses: 5, isActive: true, hasPremiumAI: false });
     }
     setIsDialogOpen(true);
   };
@@ -147,6 +149,11 @@ export default function AbonosPage() {
                         <Layers className="h-4 w-4 opacity-40" />
                         Hasta {plan.maxSimultaneousCourses}
                       </div>
+                      {plan.hasPremiumAI && (
+                        <div className="text-[8px] text-amber-500 uppercase tracking-widest mt-1 flex justify-center items-center gap-1">
+                          ✨ IA Premium
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge className={cn(
@@ -224,6 +231,20 @@ export default function AbonosPage() {
                     className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
                   />
                 </div>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-500 font-bold">✨</span>
+                  <Label htmlFor="plan-ai" className="font-bold text-sm cursor-pointer text-amber-900">Incluye Motor IA Premium (Imagen 3)</Label>
+                </div>
+                <input 
+                  id="plan-ai"
+                  name="hasPremiumAI"
+                  type="checkbox" 
+                  checked={formData.hasPremiumAI} 
+                  onChange={e => setFormData({...formData, hasPremiumAI: e.target.checked})}
+                  className="h-5 w-5 accent-amber-500 cursor-pointer"
+                />
               </div>
               <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
                 <div className="flex items-center gap-2">

@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils';
 import { generateQuizQuestions } from '@/ai/flows/generate-quiz-questions';
 import { extractDocumentText } from '@/ai/flows/extract-document-text-flow';
 import { ImageEditor } from '@/components/courses/ImageEditor';
+import { uploadPendingImagesInObject } from '@/lib/upload-base64';
 
 interface Question {
   id: string;
@@ -180,9 +181,13 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     if (!id || !formData.title) return;
     setLoading(true);
     const ref = doc(db, 'courses', id);
+    
+    // Lazy upload para procesar posibles Base64 de la IA
+    const cleanFormData = await uploadPendingImagesInObject(formData, storage, `courses/${id}/assets`);
+    
     const updateData = prepareForFirestore({
-      ...formData,
-      settings: { skipAllowed: formData.skipAllowed },
+      ...cleanFormData,
+      settings: { skipAllowed: cleanFormData.skipAllowed },
       updatedAt: serverTimestamp()
     });
     updateDoc(ref, updateData).then(() => {
@@ -377,10 +382,13 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         return mat;
       }));
 
+      // Lazy upload general por si añadimos ImageEditor en preguntas de modulo algun dia
+      const objWithUploadedFiles = await uploadPendingImagesInObject(currentModule, storage, `courses/${id}/modules`);
+
       const modId = currentModule.id || generateId();
       const modRef = doc(db, 'courses', id, 'modules', modId);
       const data = prepareForFirestore({ 
-        ...currentModule,
+        ...objWithUploadedFiles,
         supportMaterials: updatedMaterials,
         id: modId, 
         courseId: id,
@@ -586,6 +594,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       courseId={id!} 
                       channel="thumbnails" 
                       keywords={formData.title}
+                      description={formData.description}
                     />
                   </div>
                   

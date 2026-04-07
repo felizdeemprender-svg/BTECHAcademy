@@ -284,7 +284,7 @@ export function TemplateEditor({
                           courseId={selectedCourseId || ''} 
                           channel="landing" 
                           keywords={
-                            (() => {
+                            [section.title, (() => {
                               const selectedCourse = courses?.find(c => c.id === selectedCourseId);
                               return [
                                 ...(allTags?.filter(t => selectedCourse?.tagIds?.includes(t.id)).map(t => 
@@ -292,8 +292,9 @@ export function TemplateEditor({
                                 ) || []),
                                 selectedCourse?.title?.split(' ')[0].toLowerCase()
                               ].filter(Boolean).join(',');
-                            })()
+                            })()].filter(Boolean).join(',')
                           } 
+                          description={section.paragraph}
                         />
                       </div>
                     </Card>
@@ -524,6 +525,8 @@ export function TemplateEditor({
                                               }} 
                                               courseId={selectedCourseId || ''} 
                                               channel="social" 
+                                              keywords={s.marketingName || ''}
+                                              description={slide.text || s.caption || ''}
                                             />
                                           </div>
                                         </div>

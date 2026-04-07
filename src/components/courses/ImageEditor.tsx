@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useFirebase } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import Image from 'next/image';
+import { useAuth } from '@/components/auth-context';
+import { cn } from '@/lib/utils';
 
 interface ImageEditorProps {
   url: string;
@@ -24,6 +26,7 @@ interface ImageEditorProps {
   courseId: string;
   channel: string;
   keywords?: string;
+  description?: string;
   aiPromptHint?: string;
 }
 
@@ -34,13 +37,20 @@ export function ImageEditor({
   courseId,
   channel,
   keywords,
+  description,
   aiPromptHint
 }: ImageEditorProps) {
+  const { profile } = useAuth();
   const { storage } = useFirebase();
   const [uploading, setUploading] = useState(false);
   const [generatingAi, setGeneratingAi] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [filters, setFilters] = useState('');
+
+  useEffect(() => {
+    // legacy cleanup ignored
+  }, [url, keywords]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,45 +70,37 @@ export function ImageEditor({
     }
   };
 
-  const randomize = () => {
-    const seed = Math.floor(Math.random() * 100000);
-    const baseTags = ['business', 'learning', 'office', 'startup', 'student', 'success', 'meeting', 'workspace'];
-    const randomTag = baseTags[Math.floor(Math.random() * baseTags.length)];
-    onUpdate(`https://loremflickr.com/800/800/${randomTag},professional?lock=${seed}`);
-  };
 
-  const handleGenerateAi = async () => {
+
+  const handleGenerateAi = async (engine: 'free' | 'premium' = 'free') => {
     setGeneratingAi(true);
     try {
-      const baseKw = keywords?.split(',').slice(0, 4).join(', ') || 'education, online course, professional';
-      const hint = aiPromptHint || label;
-      const prompt = `High quality marketing photo for an online course about ${baseKw}. Context: ${hint}. Photorealistic, clean background, professional lighting, 4:3 aspect ratio. No text overlays.`;
-
       const res = await fetch('/api/ai/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ 
+          prompt: '', // Fallback vacio, backend usará Gemini
+          keywords: keywords || '',
+          contextHint: (description ? `Course description: ${description}. ` : '') + (aiPromptHint || label || ''),
+          engine
+        }),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.imageDataUrl) {
-        throw new Error(data.error || 'No se recibió imagen de la IA.');
+      if (!data || !res.ok || !data.imageDataUrl) {
+        throw new Error(data?.error || 'No se recibió imagen de la IA o formato inválido.');
       }
 
-      const base64 = data.imageDataUrl.split(',')[1];
-      const byteCharacters = atob(base64);
-      const byteArray = new Uint8Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteArray[i] = byteCharacters.charCodeAt(i);
+      // DEBUG: Mostrar el prompt generado por Gemini para verificar
+      if (data.generatedPrompt) {
+        toast({ title: 'Prompt Generado (Debug)', description: data.generatedPrompt, duration: 8000 });
       }
-      const blob = new Blob([byteArray], { type: 'image/jpeg' });
 
-      const storagePath = `campaigns/${courseId}/${channel}/ai_${Date.now()}.jpg`;
-      const sRef = ref(storage, storagePath);
-      const snapshot = await uploadBytes(sRef, blob);
-      const downloadUrl = await getDownloadURL(snapshot.ref);
-      onUpdate(downloadUrl);
-      toast({ title: '¡Imagen generada con IA!', description: 'Guardada en Storage y lista para usar.' });
+      // En lugar de subirla directamente a Firebase Storage, pasamos el Base64 (Data URI)
+      // para que el usuario pueda previsualizarlo libremente sin quemar recursos de nube.
+      onUpdate(data.imageDataUrl);
+      
+      toast({ title: 'Imagen de IA generada', description: 'Cargada como borrador. Guarda para confirmarla definitivamente.' });
     } catch (err: any) {
       console.error('[AI Image]', err);
       toast({ variant: 'destructive', title: 'Error de generación IA', description: err.message });
@@ -115,31 +117,47 @@ export function ImageEditor({
       <div className="flex gap-2">
         <Input 
           value={url} 
-          onChange={e => onUpdate(e.target.value)} 
-          className="h-10 text-[10px] font-mono bg-slate-50 text-slate-900 border-none px-4"
-          placeholder="URL de la imagen..."
+          onChange={() => {}}
+          className="h-10 text-[10px] font-mono bg-slate-50 text-slate-900 border-none px-4 flex-1 opacity-60"
+          placeholder="Sin imagen configurada"
+          disabled
+          title="Borra la imagen actual con el ícono del basurero si quieres cambiarla."
         />
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 shrink-0 border-slate-200" 
-          onClick={randomize}
+          className="h-10 w-10 shrink-0 border-violet-200 text-violet-600 hover:bg-violet-50 relative group" 
+          onClick={() => handleGenerateAi('free')}
           disabled={isBusy}
-          title="Imagen aleatoria por temática"
+          title="Generar IA Gratis (Pollinations Flux)"
           type="button"
         >
-          <RefreshCw className="h-4 w-4" />
+          {generatingAi ? <Loader2 className="h-4 w-4 animate-spin text-violet-500" /> : <Sparkles className="h-4 w-4" />}
+          <span className="absolute -top-1 -right-1 text-[8px] bg-slate-100 px-1 rounded-full border">Free</span>
         </Button>
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 shrink-0 border-violet-200 text-violet-600 hover:bg-violet-50" 
-          onClick={handleGenerateAi}
+          className={cn(
+            "h-10 w-10 shrink-0 border-amber-200 relative group transition-all",
+            profile?.subscription?.hasPremiumAI === true || profile?.roles?.includes('admin')
+              ? "text-amber-600 hover:bg-amber-50"
+              : "opacity-40 grayscale" // Quitamos pointer-events-none para que el onClick pueda avisar por qué no funciona
+          )} 
+          onClick={() => {
+            const hasAccess = profile?.subscription?.hasPremiumAI === true || profile?.roles?.includes('admin');
+            if (!hasAccess) {
+              toast({ variant: 'destructive', title: 'Función Premium Requerida', description: 'Tu Abono actual no incluye el Motor de IA realista. Contacta a soporte para actualizar tu plan.' });
+              return;
+            }
+            handleGenerateAi('premium');
+          }}
           disabled={isBusy}
-          title="Generar imagen con IA"
+          title="Generar IA Realista PRO (Google Imagen 3)"
           type="button"
         >
-          {generatingAi ? <Loader2 className="h-4 w-4 animate-spin text-violet-500" /> : <Sparkles className="h-4 w-4" />}
+          {generatingAi ? <Loader2 className="h-4 w-4 animate-spin text-amber-500" /> : <Sparkles className="h-4 w-4 fill-amber-500 text-amber-500" />}
+          <span className="absolute -top-1 -right-1 text-[8px] bg-amber-100 text-amber-900 px-1 rounded-full border border-amber-200 font-bold">PRO</span>
         </Button>
         <Button 
           variant="outline" 
@@ -167,7 +185,7 @@ export function ImageEditor({
       {generatingAi && (
         <div className="flex items-center gap-2 text-[10px] font-bold text-violet-500 animate-pulse px-1">
           <Sparkles className="h-3 w-3" />
-          Generando imagen con IA y guardando en Storage...
+          Procesando con Motor IA Inteligente...
         </div>
       )}
       <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50 shadow-inner">

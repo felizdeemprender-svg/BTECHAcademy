@@ -82,6 +82,7 @@ interface SubscriptionPlan {
   };
   isEnterprise?: boolean;
   hasCustomPage?: boolean;
+  hasPremiumAI?: boolean;
   requiresFreeCourses?: boolean;
   freeCoursesCount?: number;
   invitationsPerCourse?: number;
@@ -144,6 +145,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
       followups_management: false,
       marketing_access: false
     },
+    hasPremiumAI: false,
     limits: {
       maxCourses: 10,
       maxStudents: 200,
@@ -242,6 +244,7 @@ export default function AdminSubscriptionsPage() {
     durationMonths: 12,
     maxSimultaneousCourses: 5,
     isActive: true,
+    hasPremiumAI: false,
     features: [],
     permissions: {
       academic_management: false,
@@ -297,6 +300,7 @@ export default function AdminSubscriptionsPage() {
         // Limpiar datos según el tipo final
         price: (formData.isEnterprise || formData.type === 'fixed') ? formData.price : 0,
         percentageRate: (!formData.isEnterprise && formData.type === 'percentage') ? formData.percentageRate : 0,
+        hasPremiumAI: formData.hasPremiumAI === true,
         // Asegurar que invitationsPerCourse se guarde
         invitationsPerCourse: formData.invitationsPerCourse || 5,
         updatedAt: serverTimestamp(),
@@ -355,7 +359,7 @@ export default function AdminSubscriptionsPage() {
             <Button onClick={() => {
               setEditingPlan(null);
               setFormData({
-                name: '', type: 'fixed', price: 29.99, percentageRate: 15, durationMonths: 12, maxSimultaneousCourses: 5, isActive: true, features: [],
+                name: '', type: 'fixed', price: 29.99, percentageRate: 15, durationMonths: 12, maxSimultaneousCourses: 5, isActive: true, features: [], hasPremiumAI: false,
                 permissions: {
                   academic_management: false,
                   mentor_challenges: false,
@@ -431,6 +435,7 @@ export default function AdminSubscriptionsPage() {
                           <div className="flex flex-wrap gap-1 mt-1">
                             <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-primary/20 text-primary/70">{plan.durationMonths} meses</Badge>
                             {plan.type === 'free' && <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-slate-200 text-slate-500">Gratuita</Badge>}
+                            {plan.hasPremiumAI && <span className="ml-1 text-[10px]" title="Incluye Motor IA Premium">🌟</span>}
                           </div>
                         </div>
                       </div>
@@ -597,8 +602,8 @@ export default function AdminSubscriptionsPage() {
               </form>
             </div>
 
-            <div className="p-6 bg-white border-t border-slate-100 shrink-0 flex justify-between items-center rounded-b-[2rem]">
-              <div className="flex gap-6 items-center">
+            <div className="p-6 bg-white border-t border-slate-100 shrink-0 flex flex-col md:flex-row gap-4 justify-between items-center rounded-b-[2rem]">
+              <div className="flex flex-wrap gap-6 items-center">
                 <div className="flex gap-2 items-center">
                   <Switch 
                     id="plan-is-enterprise" 
@@ -617,26 +622,30 @@ export default function AdminSubscriptionsPage() {
                   <Label htmlFor="plan-is-enterprise" className="font-bold text-xs uppercase tracking-widest text-slate-500 cursor-pointer">
                     {formData.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
                   </Label>
-                  <div className="text-[8px] text-slate-400 mt-1">
-                    {formData.isEnterprise ? 'Organización con múltiples tutores y administración centralizada' : 'Tutor individual o mentor independiente'}
-                  </div>
                 </div>
-              </div>
-              <div className="flex gap-3 items-center">
-                <div className="flex gap-2 items-center mr-4">
+                
+                <div className="flex gap-2 items-center px-4 py-2 bg-amber-50 rounded-xl border border-amber-200">
+                  <Switch 
+                    id="plan-has-ai" 
+                    name="plan-has-ai" 
+                    checked={formData.hasPremiumAI} 
+                    onCheckedChange={(c) => setFormData({...formData, hasPremiumAI: c})} 
+                    className="data-[state=checked]:bg-amber-500" 
+                  />
+                  <Label htmlFor="plan-has-ai" className="font-bold text-[10px] uppercase tracking-widest text-amber-900 cursor-pointer">✨ IA Premium (Imagen 3)</Label>
+                </div>
+
+                <div className="flex gap-2 items-center">
                   <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-emerald-500" />
-                  <Label htmlFor="plan-is-active" className="font-bold text-[9px] uppercase tracking-widest text-slate-400 cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>
-                  <div className="text-[8px] text-slate-400 mt-1">
-                    {formData.isActive ? 'El plan será visible y disponible para nuevos suscriptores' : 'El plan no estará disponible para nuevos suscriptores (solo existentes)'}
-                  </div>
+                  <Label htmlFor="plan-is-active" className="font-bold text-[10px] uppercase tracking-widest text-slate-500 cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>
                 </div>
               </div>
-              <div className="flex gap-3">
-                <Button type="button" variant="outline" className="rounded-xl h-12 px-6" onClick={() => setShowCreateForm(false)}>
+              <div className="flex gap-3 mt-4 md:mt-0 w-full md:w-auto">
+                <Button type="button" variant="outline" className="flex-1 md:flex-auto rounded-xl h-12 px-6" onClick={() => setShowCreateForm(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" form="plan-form" className="rounded-xl h-12 px-8 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 font-bold text-white">
-                  {editingPlan ? 'Guardar Cambios' : 'Emitir Plan de Negocio'}
+                <Button type="submit" form="plan-form" className="flex-1 md:flex-auto rounded-xl h-12 px-8 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 font-bold text-white">
+                  {editingPlan ? 'Guardar Cambios' : 'Emitir Plan'}
                 </Button>
               </div>
             </div>

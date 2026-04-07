@@ -180,6 +180,7 @@ export default function AdminUsersPage() {
       type: plan.type,
       name: plan.name,
       isEnterprise: plan.isEnterprise || false,
+      hasPremiumAI: plan.hasPremiumAI === true,
       startDate,
       endDate,
       hasCustomPage: plan.hasCustomPage || false,
@@ -658,9 +659,32 @@ export default function AdminUsersPage() {
                         </Select>
                       </div>
 
-                      {pendingUser?.subscription && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-                          <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
+                        <div className="space-y-1.5 p-4 bg-amber-50 rounded-2xl border border-amber-100 shadow-sm flex flex-col justify-center items-center">
+                           <Label htmlFor="limit-ai" className="text-[9px] font-black uppercase text-amber-700">IA Premium</Label>
+                           <Switch 
+                             id="limit-ai"
+                             checked={pendingUser?.subscription?.hasPremiumAI === true}
+                             onCheckedChange={(c) => {
+                               const currentSub = pendingUser.subscription || { 
+                                 status: 'active', 
+                                 type: 'free', 
+                                 limits: { maxCourses: 0, maxStudents: 0, hasCustomBranding: false, hasAnalytics: false, hasPrioritySupport: false },
+                                 publicProfile: { enabled: false, showStats: false, showContact: false, allowPublicCourses: false }
+                               };
+                               setPendingUser({
+                                 ...pendingUser,
+                                 subscription: { ...currentSub, hasPremiumAI: c }
+                               });
+                             }}
+                             className="data-[state=checked]:bg-amber-500 scale-90 my-1"
+                           />
+                           <p className="text-[7px] text-amber-600/70 font-bold uppercase mt-1 text-center leading-tight">Motor Imagen 3</p>
+                        </div>
+                        
+                        {pendingUser?.subscription && (
+                          <>
+                            <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                             <Label htmlFor="limit-courses" className="text-[9px] font-black uppercase text-slate-400">Máx. Publicados</Label>
                             <Input 
                               id="limit-courses"
@@ -725,8 +749,9 @@ export default function AdminUsersPage() {
                             />
                             <p className="text-[7px] text-slate-400 font-bold uppercase mt-1">Por cada curso</p>
                           </div>
-                        </div>
-                      )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
