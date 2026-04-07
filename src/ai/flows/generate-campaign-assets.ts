@@ -19,7 +19,7 @@ const LandingFilledSchema = z.object({
     title: z.string(),
     paragraph: z.string(),
     imageUrl: z.string(),
-    microBullets: z.array(z.string()),
+    microBullets: z.array(z.string()).length(3).describe('Genera exactamente 3 viñetas persuasivas por sección.'),
   })).describe('Genera exactamente el número de secciones indicadas en el blueprint (sectionCount).'),
   benefits: z.array(z.string()),
   aboutMentor: z.string(),
@@ -99,7 +99,7 @@ const generateCampaignFlow = ai.defineFlow(
 Tu tarea es llenar una arquitectura de marketing (Blueprint) con el contenido real de un curso para crear una campaña de alto rendimiento.
 
 REGLAS CRÍTICAS DE CONSTRUCCIÓN:
-1. **Landings**: Para cada landing, observa el campo 'sectionCount'. Debes generar EXACTAMENTE esa cantidad de objetos dentro del array 'sections'. La narrativa debe ser educativa y persuasiva.
+1. **Landings**: Para cada landing, observa el campo 'sectionCount'. Debes generar EXACTAMENTE esa cantidad de objetos dentro del array 'sections'. Cada sección debe tener EXACTAMENTE 3 viñetas (microBullets) potentes. La narrativa debe ser educativa y persuasiva.
 2. **Social Media**: 
    - Observa el campo 'slideCount' en cada blueprint social. Debes generar EXACTAMENTE esa cantidad de objetos en el array 'slides'.
    - Adapta el tono al canal (LinkedIn: profesional/autoridad, TikTok: dinámico/entretenido, Twitter: directo/informativo, Instagram: aspiracional/visual).

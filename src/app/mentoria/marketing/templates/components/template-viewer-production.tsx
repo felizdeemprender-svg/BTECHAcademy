@@ -10,13 +10,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  X, 
-  LayoutTemplate, 
-  Mail, 
-  Megaphone, 
-  Settings2, 
-  Sparkles, 
+import {
+  X,
+  LayoutTemplate,
+  Mail,
+  Megaphone,
+  Settings2,
+  Sparkles,
   Loader2,
   Instagram,
   Twitter,
@@ -59,7 +59,7 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
         ...variant.designTokens
       }
     };
-    
+
     setEditingVariant(variantWithTokens);
     setEditingChannel(channel);
     setEditingIndex(index);
@@ -75,10 +75,10 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
 
   const handleSaveEdit = () => {
     if (!editingVariant || editingIndex === -1 || !collection) return;
-    
+
     // Guardar los cambios en la colección real
     const updatedCollection = { ...collection };
-    
+
     // Actualizar el variant específico según el canal
     if (editingChannel === 'landing' && updatedCollection.assets?.landings) {
       updatedCollection.assets.landings[editingIndex] = editingVariant;
@@ -89,15 +89,15 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
     } else if (editingChannel === 'ads' && updatedCollection.assets?.ads) {
       updatedCollection.assets.ads[editingIndex] = editingVariant;
     }
-    
+
     // Actualizar el estado de la colección usando la función de actualización
     if (onUpdateCollection) {
       onUpdateCollection(updatedCollection);
     }
-    
+
     // Cerrar modal
     handleCloseEditModal();
-    
+
     // Mostrar feedback
     alert('¡Cambios guardados exitosamente!');
   };
@@ -131,7 +131,7 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
   };
 
   const totalTemplates = Object.values(collection?.assets || {}).reduce(
-    (total: number, channel: any) => total + (Array.isArray(channel) ? channel.length : 0), 
+    (total: number, channel: any) => total + (Array.isArray(channel) ? channel.length : 0),
     0
   );
 
@@ -191,9 +191,9 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                     <Tabs defaultValue={collection?.assets?.landings?.[0] ? `landing-0` : ""} className="w-full">
                       <TabsList className="bg-white p-1 rounded-xl border shadow-sm flex-wrap h-auto px-4">
                         {collection?.assets?.landings?.map((l: any, lIdx: number) => (
-                          <TabsTrigger 
-                            key={lIdx} 
-                            value={`landing-${lIdx}`} 
+                          <TabsTrigger
+                            key={lIdx}
+                            value={`landing-${lIdx}`}
                             className="rounded-lg px-4 font-bold text-sm"
                           >
                             Landing {lIdx + 1}
@@ -208,17 +208,17 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                             </CardContent>
                             <div className="p-4 border-t">
                               <div className="flex justify-end gap-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => handleOpenEditVariant(l, 'landing', lIdx)}
                                   className="rounded-xl font-bold h-8 px-4 text-xs"
                                 >
                                   <Settings2 className="h-3 w-3 mr-1" /> Editar
                                 </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => handleRefineVariantAI('landing', l, lIdx)}
                                   disabled={isRefining === `landing-${lIdx}`}
                                   className="rounded-xl font-bold h-8 px-4 text-xs"
@@ -243,9 +243,9 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                     <Tabs defaultValue={collection?.assets?.emails?.[0] ? `email-0` : ""} className="w-full">
                       <TabsList className="bg-white p-1 rounded-xl border shadow-sm flex-wrap h-auto px-4">
                         {collection?.assets?.emails?.map((e: any, eIdx: number) => (
-                          <TabsTrigger 
-                            key={eIdx} 
-                            value={`email-${eIdx}`} 
+                          <TabsTrigger
+                            key={eIdx}
+                            value={`email-${eIdx}`}
                             className="rounded-lg px-4 font-bold text-sm"
                           >
                             Email {eIdx + 1}
@@ -260,17 +260,17 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                             </CardContent>
                             <div className="p-4 border-t">
                               <div className="flex justify-end gap-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => handleOpenEditVariant(e, 'email', eIdx)}
                                   className="rounded-xl font-bold h-8 px-4 text-xs"
                                 >
                                   <Settings2 className="h-3 w-3 mr-1" /> Editar
                                 </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => handleRefineVariantAI('email', e, eIdx)}
                                   disabled={isRefining === `email-${eIdx}`}
                                   className="rounded-xl font-bold h-8 px-4 text-xs"
@@ -318,17 +318,17 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                               </CardContent>
                               <div className="p-4 border-t">
                                 <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => handleOpenEditVariant(s, 'social', sIdx)}
                                     className="rounded-xl font-bold h-8 px-4 text-xs"
                                   >
                                     <Settings2 className="h-3 w-3 mr-1" /> Editar
                                   </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => handleRefineVariantAI('social', s, sIdx)}
                                     disabled={isRefining === `social-${sIdx}`}
                                     className="rounded-xl font-bold h-8 px-4 text-xs"
@@ -357,17 +357,17 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                               </CardContent>
                               <div className="p-4 border-t">
                                 <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => handleOpenEditVariant(s, 'social', sIdx)}
                                     className="rounded-xl font-bold h-8 px-4 text-xs"
                                   >
                                     <Settings2 className="h-3 w-3 mr-1" /> Editar
                                   </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => handleRefineVariantAI('social', s, sIdx)}
                                     disabled={isRefining === `social-${sIdx}`}
                                     className="rounded-xl font-bold h-8 px-4 text-xs"
@@ -396,17 +396,17 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                               </CardContent>
                               <div className="p-4 border-t">
                                 <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => handleOpenEditVariant(s, 'social', sIdx)}
                                     className="rounded-xl font-bold h-8 px-4 text-xs"
                                   >
                                     <Settings2 className="h-3 w-3 mr-1" /> Editar
                                   </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => handleRefineVariantAI('social', s, sIdx)}
                                     disabled={isRefining === `social-${sIdx}`}
                                     className="rounded-xl font-bold h-8 px-4 text-xs"
@@ -435,17 +435,17 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                               </CardContent>
                               <div className="p-4 border-t">
                                 <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => handleOpenEditVariant(s, 'social', sIdx)}
                                     className="rounded-xl font-bold h-8 px-4 text-xs"
                                   >
                                     <Settings2 className="h-3 w-3 mr-1" /> Editar
                                   </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => handleRefineVariantAI('social', s, sIdx)}
                                     disabled={isRefining === `social-${sIdx}`}
                                     className="rounded-xl font-bold h-8 px-4 text-xs"
@@ -471,9 +471,9 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                     <Tabs defaultValue={collection?.assets?.ads?.[0] ? `ad-0` : ""} className="w-full">
                       <TabsList className="bg-white p-1 rounded-xl border shadow-sm flex-wrap h-auto px-4">
                         {collection?.assets?.ads?.map((a: any, aIdx: number) => (
-                          <TabsTrigger 
-                            key={aIdx} 
-                            value={`ad-${aIdx}`} 
+                          <TabsTrigger
+                            key={aIdx}
+                            value={`ad-${aIdx}`}
                             className="rounded-lg px-4 font-bold text-sm"
                           >
                             Anuncio {aIdx + 1}
@@ -488,17 +488,17 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                             </CardContent>
                             <div className="p-4 border-t">
                               <div className="flex justify-end gap-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => handleOpenEditVariant(a, 'ad', aIdx)}
                                   className="rounded-xl font-bold h-8 px-4 text-xs"
                                 >
                                   <Settings2 className="h-3 w-3 mr-1" /> Editar
                                 </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => handleRefineVariantAI('ad', a, aIdx)}
                                   disabled={isRefining === `ad-${aIdx}`}
                                   className="rounded-xl font-bold h-8 px-4 text-xs"
@@ -523,7 +523,7 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
           </Tabs>
         </div>
       </DialogContent>
-      
+
       {/* Editor Modal - Ajustes de Blueprint como en la versión 1 */}
       <Dialog open={isEditVariantOpen} onOpenChange={setIsEditVariantOpen}>
         <DialogTitle className="text-2xl font-bold">Ajustes de Blueprint</DialogTitle>
@@ -555,7 +555,7 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                       <p className="text-xs font-bold">Cantidad de Secciones</p>
                       <p className="text-[9px] text-muted-foreground uppercase">Minimal (1-3), Balanced (3-5), Detailed (5-7)</p>
                     </div>
-                    <Input type="number" className="w-20 h-10 font-black text-center bg-white border-none" value={editingVariant?.sectionCount || 0} onChange={e => setEditingVariant({...editingVariant, sectionCount: parseInt(e.target.value) || 0})} />
+                    <Input type="number" className="w-20 h-10 font-black text-center bg-white border-none" value={editingVariant?.sectionCount || 0} onChange={e => setEditingVariant({ ...editingVariant, sectionCount: parseInt(e.target.value) || 0 })} />
                   </div>
                 </section>
               )}
@@ -567,16 +567,16 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-xs font-bold">
-                          {editingVariant?.type === 'thread' ? 'Cantidad de Tweets' : 
-                           (editingVariant?.type === 'carousel' || editingVariant?.type === 'document') ? 'Cantidad de Placas' : 'Profundidad de Contenido'}
+                          {editingVariant?.type === 'thread' ? 'Cantidad de Tweets' :
+                            (editingVariant?.type === 'carousel' || editingVariant?.type === 'document') ? 'Cantidad de Placas' : 'Profundidad de Contenido'}
                         </p>
                         <p className="text-[9px] text-muted-foreground uppercase">Ajuste técnico para la API de {editingVariant?.platform}</p>
                       </div>
-                      <Input 
-                        type="number" 
-                        className="w-20 h-10 font-black text-center bg-white border-none" 
-                        value={editingVariant?.slideCount || 0} 
-                        onChange={e => setEditingVariant({...editingVariant, slideCount: parseInt(e.target.value) || 0})} 
+                      <Input
+                        type="number"
+                        className="w-20 h-10 font-black text-center bg-white border-none"
+                        value={editingVariant?.slideCount || 0}
+                        onChange={e => setEditingVariant({ ...editingVariant, slideCount: parseInt(e.target.value) || 0 })}
                       />
                     </div>
                   </div>
@@ -588,30 +588,30 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Fuente Títulos (Heading)</Label>
-                    <Input 
-                      value={editingVariant?.designTokens?.fontHeading || 'Space Grotesk'} 
+                    <Input
+                      value={editingVariant?.designTokens?.fontHeading || 'Space Grotesk'}
                       onChange={e => setEditingVariant({
-                        ...editingVariant, 
-                        designTokens: { 
-                          ...editingVariant.designTokens, 
-                          fontHeading: e.target.value 
+                        ...editingVariant,
+                        designTokens: {
+                          ...editingVariant.designTokens,
+                          fontHeading: e.target.value
                         }
-                      })} 
-                      className="h-12 rounded-xl bg-secondary/10 border-none font-bold" 
+                      })}
+                      className="h-12 rounded-xl bg-secondary/10 border-none font-bold"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Fuente Lectura (Body)</Label>
-                    <Input 
-                      value={editingVariant?.designTokens?.fontBody || 'Inter'} 
+                    <Input
+                      value={editingVariant?.designTokens?.fontBody || 'Inter'}
                       onChange={e => setEditingVariant({
-                        ...editingVariant, 
-                        designTokens: { 
-                          ...editingVariant.designTokens, 
-                          fontBody: e.target.value 
+                        ...editingVariant,
+                        designTokens: {
+                          ...editingVariant.designTokens,
+                          fontBody: e.target.value
                         }
-                      })} 
-                      className="h-12 rounded-xl bg-secondary/10 border-none font-bold" 
+                      })}
+                      className="h-12 rounded-xl bg-secondary/10 border-none font-bold"
                     />
                   </div>
                 </div>
@@ -628,37 +628,37 @@ export const TemplateViewerProduction = ({ collection, isOpen, onClose, onUpdate
                     <div key={c.id} className="space-y-2">
                       <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">{c.label}</Label>
                       <div className="flex flex-col items-center gap-2">
-                        <Input 
-                          type="color" 
-                          className="w-12 h-12 p-0 border-none rounded-xl cursor-pointer shadow-md" 
-                          value={editingVariant?.designTokens?.[c.id] || '#000000'} 
+                        <Input
+                          type="color"
+                          className="w-12 h-12 p-0 border-none rounded-xl cursor-pointer shadow-md"
+                          value={editingVariant?.designTokens?.[c.id] || '#000000'}
                           onChange={e => setEditingVariant({
-                            ...editingVariant, 
-                            designTokens: { 
-                              ...editingVariant.designTokens, 
-                              [c.id]: e.target.value 
+                            ...editingVariant,
+                            designTokens: {
+                              ...editingVariant.designTokens,
+                              [c.id]: e.target.value
                             }
                           })
-                        } 
+                          }
                         />
-                        <Input 
-                          value={editingVariant?.designTokens?.[c.id] || '#000000'} 
-                          className="text-[10px] h-8 font-mono text-center" 
+                        <Input
+                          value={editingVariant?.designTokens?.[c.id] || '#000000'}
+                          className="text-[10px] h-8 font-mono text-center"
                           onChange={e => setEditingVariant({
-                            ...editingVariant, 
-                            designTokens: { 
-                              ...editingVariant.designTokens, 
-                              [c.id]: e.target.value 
+                            ...editingVariant,
+                            designTokens: {
+                              ...editingVariant.designTokens,
+                              [c.id]: e.target.value
                             }
                           })
-                        } 
+                          }
                         />
                       </div>
                     </div>
                   ))}
                 </div>
               </section>
-              
+
               <Button onClick={handleSaveEdit} disabled={isSavingEdit} className="w-full h-16 rounded-[1.5rem] font-bold text-xl shadow-2xl bg-primary">
                 {isSavingEdit ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2 h-5 w-5" />} Guardar Ajustes del Blueprint
               </Button>

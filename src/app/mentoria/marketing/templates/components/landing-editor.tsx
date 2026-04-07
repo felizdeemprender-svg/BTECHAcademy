@@ -8,11 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  X, 
-  Palette, 
-  Type, 
-  Save, 
+import {
+  X,
+  Palette,
+  Type,
+  Save,
   RefreshCw,
   Eye,
   LayoutTemplate
@@ -26,10 +26,10 @@ interface LandingEditorProps {
   designTokens?: any;
 }
 
-export function LandingEditor({ 
-  isOpen, 
-  onClose, 
-  template, 
+export function LandingEditor({
+  isOpen,
+  onClose,
+  template,
   onSave,
   designTokens
 }: LandingEditorProps) {
@@ -104,22 +104,20 @@ export function LandingEditor({
         <div className="flex border-b">
           <button
             onClick={() => setActiveTab('content')}
-            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
-              activeTab === 'content' 
-                ? 'border-blue-500 text-blue-600' 
+            className={`px-4 py-2 font-medium border-b-2 transition-colors ${activeTab === 'content'
+                ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             <Type className="h-4 w-4 mr-2 inline" />
             Contenido
           </button>
           <button
             onClick={() => setActiveTab('design')}
-            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
-              activeTab === 'design' 
-                ? 'border-blue-500 text-blue-600' 
+            className={`px-4 py-2 font-medium border-b-2 transition-colors ${activeTab === 'design'
+                ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             <Palette className="h-4 w-4 mr-2 inline" />
             Diseño
@@ -145,7 +143,7 @@ export function LandingEditor({
                       className="text-lg font-semibold"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="subheadline">Subheadline</Label>
                     <Textarea
@@ -191,7 +189,7 @@ export function LandingEditor({
                 </CardHeader>
                 <CardContent>
                   <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300">
-                    <h1 
+                    <h1
                       className="text-3xl font-bold mb-3"
                       style={{ color: editedTokens.primary }}
                     >
@@ -200,7 +198,7 @@ export function LandingEditor({
                     <p className="text-lg text-gray-600 mb-6">
                       {editedTemplate.subheadline || 'Tu subheadline descriptiva aquí...'}
                     </p>
-                    <button 
+                    <button
                       className="px-6 py-3 rounded-lg font-semibold text-white"
                       style={{ backgroundColor: editedTokens.accent }}
                     >
@@ -360,7 +358,7 @@ export function LandingEditor({
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center">
-                      <div 
+                      <div
                         className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
                         style={{ backgroundColor: editedTokens.primary }}
                       />
@@ -368,7 +366,7 @@ export function LandingEditor({
                       <p className="text-xs text-gray-500">{editedTokens.primary}</p>
                     </div>
                     <div className="text-center">
-                      <div 
+                      <div
                         className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
                         style={{ backgroundColor: editedTokens.secondary }}
                       />
@@ -376,7 +374,7 @@ export function LandingEditor({
                       <p className="text-xs text-gray-500">{editedTokens.secondary}</p>
                     </div>
                     <div className="text-center">
-                      <div 
+                      <div
                         className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
                         style={{ backgroundColor: editedTokens.accent }}
                       />
@@ -385,13 +383,13 @@ export function LandingEditor({
                     </div>
                   </div>
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <h3 
+                    <h3
                       className="text-xl font-bold mb-2"
                       style={{ fontFamily: editedTokens.fontHeading, color: editedTokens.primary }}
                     >
                       Título de Ejemplo
                     </h3>
-                    <p 
+                    <p
                       className="text-sm"
                       style={{ fontFamily: editedTokens.fontBody }}
                     >

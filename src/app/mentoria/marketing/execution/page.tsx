@@ -250,7 +250,9 @@ export default function MarketingAutomationEnginePage() {
 
   const renderHelpGuide = () => {
     const id = selectedMotor?.id;
+    const group = selectedMotor?.group;
     
+    // 1. SOCIAL GROUP
     if (id === 'meta_social') {
       return (
         <div className="space-y-6 animate-in fade-in">
@@ -261,23 +263,53 @@ export default function MarketingAutomationEnginePage() {
               <p>Este motor unifica la publicación en **Facebook Pages** e **Instagram Business** mediante la Graph API.</p>
             </div>
           </div>
-
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="1" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Requisitos de Vinculación</AccordionTrigger>
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Vinculación de Cuentas</AccordionTrigger>
               <AccordionContent className="text-slate-500 space-y-2">
-                <p>Tu cuenta de Instagram debe estar vinculada obligatoriamente a una **Página de Facebook** de la cual seas administrador.</p>
+                <p>Tu cuenta de Instagram debe ser de tipo **Business** y estar vinculada a una Página de Facebook de la cual seas Administrador.</p>
+                <a href="https://business.facebook.com/settings/instagram-account-v2" target="_blank" className="text-blue-600 text-[10px] font-bold flex items-center gap-1 hover:underline"><ExternalLink className="h-3 w-3" /> Configuración de Negocio Meta</a>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
               <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Token de Acceso Permanente</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-3">
+                <p>Genera un **User Access Token** en el <a href="https://developers.facebook.com/tools/explorer" target="_blank" className="underline">Explorador de la API Graph</a> con estos permisos:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="text-[9px]">pages_manage_posts</Badge>
+                  <Badge variant="secondary" className="text-[9px]">instagram_content_publish</Badge>
+                  <Badge variant="secondary" className="text-[9px]">pages_show_list</Badge>
+                </div>
+                <p className="text-[10px] italic">Intercambia este token por uno de "Larga Duración" (60 días) en el panel de herramientas.</p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+    }
+
+    if (id === 'linkedin') {
+      return (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 flex gap-3">
+            <Linkedin className="h-5 w-5 text-blue-600 shrink-0" />
+            <div className="text-[11px] text-blue-900 space-y-1">
+              <p className="font-bold uppercase">LinkedIn Professional Engine:</p>
+              <p>Emisión de contenido corporativo y artículos de marca a través de la API de LinkedIn Marketing.</p>
+            </div>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="1" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. LinkedIn Developer Portal</AccordionTrigger>
               <AccordionContent className="text-slate-500 space-y-2">
-                <p>Genera un Token de Larga Duración (User Access Token) en el Meta Dashboard con los permisos:</p>
-                <ul className="list-disc list-inside ml-2">
-                  <li><code>pages_manage_posts</code></li>
-                  <li><code>instagram_content_publish</code></li>
-                  <li><code>pages_show_list</code></li>
-                </ul>
+                <p>Crea una App en el <a href="https://www.linkedin.com/developers/apps" target="_blank" className="underline text-blue-600 font-bold">Portal de Desarrolladores</a> y vincúlala a tu Página de Empresa.</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="2" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Scopes Requeridos</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                <p>Asegúrate de solicitar los permisos **"Share on LinkedIn"** y **"Sign In with LinkedIn"**. Los scopes técnicos son:</p>
+                <code className="block p-2 bg-slate-100 rounded text-[10px]">w_member_social, w_organization_social</code>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -288,25 +320,114 @@ export default function MarketingAutomationEnginePage() {
     if (id === 'twitter') {
       return (
         <div className="space-y-6 animate-in fade-in">
-          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 flex gap-3">
-            <Info className="h-5 w-5 text-blue-600 shrink-0" />
-            <div className="text-[11px] text-blue-900 space-y-1">
-              <p className="font-bold uppercase">X (Twitter) API v2 Protocol:</p>
-              <p>Este motor utiliza el endpoint de <code>POST /2/tweets</code> para la creación de hilos (Threads) automáticos.</p>
+          <div className="bg-slate-900 p-4 rounded-xl border border-white/10 flex gap-3 text-white">
+            <Twitter className="h-5 w-5 text-blue-400 shrink-0" />
+            <div className="text-[11px] text-white/70 space-y-1">
+              <p className="font-bold uppercase text-white">X (Twitter) v2 Protocol:</p>
+              <p>Este motor utiliza la API v2 para publicar ganchos y hilos automáticos de alto impacto.</p>
             </div>
           </div>
-
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="1" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Developer Portal</AccordionTrigger>
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Developer Portal (Project)</AccordionTrigger>
               <AccordionContent className="text-slate-500 space-y-2">
-                <p>Regístrate en <a href="https://developer.x.com" target="_blank" className="underline text-blue-600">developer.x.com</a> y crea un proyecto con acceso "Free" o "Basic".</p>
+                <p>Crea un **Project** y una **App** en <a href="https://developer.x.com" target="_blank" className="underline text-blue-600">developer.x.com</a>.</p>
+                <p className="text-[10px] text-amber-600 font-bold">⚠️ Configura los permisos de la App como "Read and Write".</p>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Credenciales requeridas</AccordionTrigger>
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Credenciales OAuth 1.0a</AccordionTrigger>
               <AccordionContent className="text-slate-500 space-y-2">
-                <p>Evo requiere la API Key, API Secret, y los Access Tokens generados en tu portal de X.</p>
+                <p>Evo utiliza el par de llaves: <code>API Key</code> + <code>API Secret</code> y los <code>Access Tokens</code> generados en la pestaña "Keys and Tokens".</p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+    }
+
+    if (id === 'tiktok') {
+      return (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex gap-3">
+            <TikTokIcon className="h-5 w-5 text-slate-900 shrink-0" />
+            <div className="text-[11px] text-slate-600 space-y-1">
+              <p className="font-bold uppercase">TikTok for Business API:</p>
+              <p>Protocolo para la subida y gestión de videos cortos en el feed comercial.</p>
+            </div>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="1" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. TikTok Developers</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                <p>Regístrate en <a href="https://developers.tiktok.com" target="_blank" className="underline text-blue-600">TikTok Developers</a> y crea una App de tipo "Content Posting".</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="2" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Permisos de Video</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                <p>Activa los permisos <code>video.upload</code> y <code>video.list</code> para permitir que Evo gestione tus clips.</p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+    }
+
+    // 2. EMAIL GROUP
+    if (group === 'Email') {
+      return (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex gap-3">
+            <Mail className="h-5 w-5 text-emerald-600 shrink-0" />
+            <div className="text-[11px] text-emerald-900 space-y-1">
+              <p className="font-bold uppercase">{selectedMotor.label}:</p>
+              <p>Envío masivo y automatizado con alta tasa de entregabilidad.</p>
+            </div>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="1" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Ubicación de la API Key</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                {id === 'sendgrid' && <p>Ve a **Settings → API Keys** en SendGrid y crea una con "Full Access" o "Mail Send".</p>}
+                {id === 'mailchimp' && <p>Busca en **Account → Extras → API Keys**. Genera una nueva llave exclusiva para Evo.</p>}
+                {id === 'brevo' && <p>Entra a **SMTP & API** y genera una llave de versión **v3**.</p>}
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="2" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Dominio Remitente</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                <p>Es vital que hayas verificado tu dominio (Single Sender Verification) antes de intentar emitir correos masivos.</p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+    }
+
+    // 3. ADS GROUP
+    if (group === 'Ads') {
+      return (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex gap-3">
+            <Megaphone className="h-5 w-5 text-amber-600 shrink-0" />
+            <div className="text-[11px] text-amber-900 space-y-1">
+              <p className="font-bold uppercase">Publicidad Digital (Ads Engine):</p>
+              <p>Gestión automatizada de presupuestos y variantes creativas.</p>
+            </div>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="1" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. ID de Cuenta Publicitaria</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                <p>Ingresa el **Account ID** que encontrarás en el panel superior de tu gestor de anuncios ({selectedMotor.provider}).</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="2" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Token de Desarrollador</AccordionTrigger>
+              <AccordionContent className="text-slate-500 space-y-2">
+                {id === 'meta_ads' && <p>Asegúrate de que el Token de Meta incluya el permiso <code>ads_management</code>.</p>}
+                {id === 'google_ads' && <p>Necesitarás el **Developer Token** aprobado de tu Google Ads Manager Center y las credenciales de OAuth CLIENT ID.</p>}
               </AccordionContent>
             </AccordionItem>
           </Accordion>

@@ -8,10 +8,10 @@ import { doc, collection, query, where, getDocs, limit } from 'firebase/firestor
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Loader2, 
-  Rocket, 
-  ShieldCheck, 
+import {
+  Loader2,
+  Rocket,
+  ShieldCheck,
   Play,
   Award,
   Sparkles,
@@ -42,7 +42,7 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 function getSecureVideoUrl(url: string) {
   if (!url) return '';
   let videoId = '';
-  
+
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
     else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
@@ -50,15 +50,15 @@ function getSecureVideoUrl(url: string) {
     else if (url.includes('/shorts/')) videoId = url.split('/shorts/')[1].split('?')[0];
     else if (url.includes('/live/')) videoId = url.split('/live/')[1].split('?')[0];
     else return url;
-    
+
     return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&iv_load_policy=3&controls=1&hl=es&disablekb=1&fs=0&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`;
   }
-  
+
   if (url.includes('vimeo.com')) {
     const vimeoId = url.split('/').pop()?.split('?')[0];
     return `https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&player_id=0&app_id=58479&title=0&byline=0&portrait=0`;
   }
-  
+
   return url;
 }
 
@@ -66,11 +66,11 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const searchParams = useSearchParams();
   const variantIdx = parseInt(searchParams.get('v') || '0');
-  
+
   const db = useFirestore();
   const { toast } = useToast();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  
+
   const [loading, setLoading] = useState(false);
   const [mentorProfile, setMentorProfile] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -88,10 +88,10 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   const togglePlayback = () => {
     if (!iframeRef.current || !content?.videoUrl) return;
-    
+
     const isYouTube = content.videoUrl.includes('youtube.com') || content.videoUrl.includes('youtu.be');
     const isVimeo = content.videoUrl.includes('vimeo.com');
-    
+
     if (isYouTube) {
       const command = isPlaying ? 'pauseVideo' : 'playVideo';
       iframeRef.current.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: command, args: '' }), '*');
@@ -99,17 +99,17 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       const command = isPlaying ? 'pause' : 'play';
       iframeRef.current.contentWindow?.postMessage(JSON.stringify({ method: command }), '*');
     }
-    
+
     setIsPlaying(!isPlaying);
   };
 
   const handlePurchase = async () => {
     setLoading(true);
-    
+
     // Attribution Tracking
     const source = searchParams.get('s') || 'direct';
     const channel = searchParams.get('c') || 'direct';
-    
+
     try {
       const { setDoc, increment } = await import('firebase/firestore');
       const pageRef = doc(db, 'salesPages', id);
@@ -128,9 +128,9 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       // silent
     }
 
-    toast({ 
-      title: 'Redirigiendo a Pago Seguro', 
-      description: 'Conectando con MercadoPago Checkout Pro...' 
+    toast({
+      title: 'Redirigiendo a Pago Seguro',
+      description: 'Conectando con MercadoPago Checkout Pro...'
     });
     setTimeout(() => {
       setLoading(false);
@@ -159,9 +159,9 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const fontBody = tokens.fontBody || 'inherit';
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-slate-50 text-slate-900 selection:bg-primary/20"
-      style={{ 
+      style={{
         fontFamily: fontBody,
         ['--primary' as any]: primaryColor,
         ['--secondary' as any]: secondaryColor,
@@ -174,7 +174,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         .font-headline { font-family: ${fontHeading}, sans-serif !important; }
         .font-body { font-family: ${fontBody}, sans-serif !important; }
       `}</style>
-      
+
       {/* Header - Marca Blanca */}
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100 font-body">
         <div className="container mx-auto px-6 h-20 flex justify-between items-center">
@@ -206,27 +206,27 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           </p>
 
           {content.videoUrl && (
-            <div 
+            <div
               className="max-w-4xl mx-auto aspect-video rounded-[3rem] overflow-hidden shadow-3xl border-[12px] border-slate-50 bg-black relative group/video-container select-none"
               onContextMenu={(e) => e.preventDefault()}
             >
-              <iframe 
+              <iframe
                 ref={iframeRef}
-                className="w-full h-full" 
-                src={getSecureVideoUrl(content.videoUrl)} 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen 
+                className="w-full h-full"
+                src={getSecureVideoUrl(content.videoUrl)}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
               />
-              
+
               {/* MÁSCARA DE SEGURIDAD TOTAL */}
-              <div 
+              <div
                 className="absolute inset-0 z-30 bg-transparent cursor-pointer"
                 onClick={togglePlayback}
                 onContextMenu={(e) => e.preventDefault()}
               >
                 {/* Ocultamiento Superior */}
                 <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/20 to-transparent pointer-events-auto" />
-                
+
                 {/* Bloqueo Inferior */}
                 <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 to-transparent pointer-events-auto cursor-not-allowed" />
 
@@ -276,7 +276,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
               <div className="flex-1 w-full aspect-[4/3] rounded-[3rem] bg-slate-100 border-[12px] border-white shadow-2xl relative overflow-hidden group">
-                <Image src={s.imageUrl || `https://loremflickr.com/800/600/${(page.aiContent?.courseKeywords || 'business,education,growth').split(',').slice(0,3).join(',')},professional?lock=${i + 1}`} alt="Visual" fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                <Image src={s.imageUrl || `https://loremflickr.com/800/600/${(page.aiContent?.courseKeywords || 'business,education,growth').split(',').slice(0, 3).join(',')},professional?lock=${i + 1}`} alt="Visual" fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
               </div>
             </div>
           </div>
@@ -290,13 +290,13 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         </div>
         <div className="container mx-auto px-6 max-w-5xl relative z-10 text-center space-y-12">
           <div className="inline-block p-1 rounded-full bg-white/5 border border-white/10 mb-4">
-            <Image 
-              src={mentorProfile?.photoURL || 'https://placehold.co/200/png'} 
-              alt="Mentor" 
-              width={120} 
-              height={120} 
-              className="rounded-full grayscale" 
-              unoptimized 
+            <Image
+              src={mentorProfile?.photoURL || 'https://placehold.co/200/png'}
+              alt="Mentor"
+              width={120}
+              height={120}
+              className="rounded-full grayscale"
+              unoptimized
             />
           </div>
           <div className="space-y-4">

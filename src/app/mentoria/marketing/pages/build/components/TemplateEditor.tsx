@@ -229,16 +229,27 @@ export function TemplateEditor({
                           className="text-lg font-bold text-slate-500 border-none bg-slate-50 rounded-2xl p-6 italic" 
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-accent ml-1 flex items-center gap-2">
-                          <Video className="h-3 w-3" /> Vídeo Ventas
-                        </Label>
-                        <Input 
-                          value={l.videoUrl || ''} 
-                          onChange={e => updateAsset('landings', lIdx, 'videoUrl', e.target.value)} 
-                          className="h-14 rounded-2xl border-none bg-accent/5 px-6 font-mono text-xs" 
-                          placeholder="URL YouTube/Vimeo" 
-                        />
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-accent ml-1 flex items-center gap-2">
+                            <Video className="h-3 w-3" /> Vídeo Ventas
+                          </Label>
+                          <Input 
+                            value={l.videoUrl || ''} 
+                            onChange={e => updateAsset('landings', lIdx, 'videoUrl', e.target.value)} 
+                            className="h-14 rounded-2xl border-none bg-accent/5 px-6 font-mono text-xs" 
+                            placeholder="URL YouTube/Vimeo" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-blue-600 ml-1">Nombre del Botón Acceso (CTA)</Label>
+                          <Input 
+                            value={l.ctaText || 'Acceder ahora'} 
+                            onChange={e => updateAsset('landings', lIdx, 'ctaText', e.target.value)} 
+                            className="h-14 rounded-2xl border-none bg-blue-50 px-6 font-black text-blue-700" 
+                            placeholder="Ej: Inscribirme al Curso" 
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -269,8 +280,31 @@ export function TemplateEditor({
                                 newS[sIdx].paragraph = e.target.value; 
                                 updateAsset('landings', lIdx, 'sections', newS); 
                               }} 
-                              className="min-h-[150px] border-none bg-slate-50 rounded-2xl p-6 text-slate-600 font-medium" 
+                              className="min-h-[120px] border-none bg-slate-50 rounded-2xl p-6 text-slate-600 font-medium" 
                             />
+                          </div>
+                          
+                          {/* Edición de Viñetas (3 fijas) */}
+                          <div className="space-y-3 pt-2">
+                            <Label className="text-[9px] font-black uppercase text-slate-400">Viñetas de Valor (3 máx)</Label>
+                            <div className="space-y-2">
+                              {[0, 1, 2].map(bIdx => (
+                                <div key={bIdx} className="flex items-center gap-3 bg-white border border-slate-100 rounded-xl px-4 h-10 shadow-sm">
+                                  <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                                  <input 
+                                    value={section.microBullets?.[bIdx] || ''} 
+                                    onChange={e => {
+                                      const newS = [...l.sections];
+                                      if (!newS[sIdx].microBullets) newS[sIdx].microBullets = ['', '', ''];
+                                      newS[sIdx].microBullets[bIdx] = e.target.value;
+                                      updateAsset('landings', lIdx, 'sections', newS);
+                                    }}
+                                    placeholder={`Beneficio ${bIdx + 1}...`}
+                                    className="flex-1 text-xs font-bold text-slate-700 bg-transparent border-none outline-none"
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                         <ImageEditor 
