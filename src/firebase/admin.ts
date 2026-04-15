@@ -5,26 +5,33 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export function getAdminApp() {
-  if (getApps().length === 0) {
-    const serviceAccountPath = path.join(process.cwd(), 'service-account.json');
-    
-    let config: any = {
-      projectId: process.env.FB_ADMIN_PROJECT_ID || firebaseConfig.projectId,
+  if (getApps().length > 0) return getApp();
+
+  const serviceAccountPath = path.join(process.cwd(), 'service-account.json');
+  
+  // 1. Local Development with Service Account
+  if (fs.existsSync(serviceAccountPath)) {
+    console.log('[Firebase Admin] Usando archivo service-account.json');
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    return initializeApp({
+      credential: cert(serviceAccount),
       storageBucket: process.env.FB_ADMIN_STORAGE_BUCKET || firebaseConfig.storageBucket
-    };
-
-    // Si el archivo de cuenta de servicio existe, lo usamos para autenticar localmente
-    if (fs.existsSync(serviceAccountPath)) {
-      console.log('[Firebase Admin] Usando archivo service-account.json');
-      const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-      config.credential = cert(serviceAccount);
-    } else {
-      console.warn('[Firebase Admin] No se encontró service-account.json. Usando credenciales por defecto (puede fallar localmente).');
-    }
-
-    return initializeApp(config);
+    });
   }
-  return getApp();
+
+  // 2. Custom Environment Variables (Optional)
+  if (process.env.FB_ADMIN_PROJECT_ID) {
+    console.log('[Firebase Admin] Inicializando con variables FB_ADMIN');
+    return initializeApp({
+      projectId: process.env.FB_ADMIN_PROJECT_ID,
+      storageBucket: process.env.FB_ADMIN_STORAGE_BUCKET
+    });
+  }
+
+  // 3. Production Default (Managed Environments)
+  // En Cloud Functions o App Hosting, initializeApp() detecta automáticamente las credenciales.
+  console.log('[Firebase Admin] Inicializando con credenciales por defecto del entorno.');
+  return initializeApp();
 }
 
 export function getAdminFirestore() {
