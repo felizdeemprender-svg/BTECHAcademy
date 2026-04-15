@@ -21,3 +21,12 @@ export const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || appHostingConfig.appId,
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || appHostingConfig.measurementId
 };
+
+// Diagnostic log for production debugging
+if (typeof window !== 'undefined') {
+  if (!firebaseConfig.apiKey) {
+    console.error('[Firebase Config] CRÍTICO: No se detectó apiKey de Firebase. Verifica las variables de entorno.');
+  } else {
+    console.log('[Firebase Config] Inicializado correctamente con proyecto:', firebaseConfig.projectId);
+  }
+}

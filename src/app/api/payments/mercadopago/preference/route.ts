@@ -127,7 +127,13 @@ export async function POST(req: NextRequest) {
     console.error('Error en Preferencia MercadoPago:', error);
     return NextResponse.json({ 
       error: 'Error interno del servidor', 
-      details: error.message 
+      details: error.message,
+      stack: error.stack,
+      env_detect: {
+        has_fb_config: !!process.env.FIREBASE_CONFIG,
+        has_admin_project: !!process.env.FB_ADMIN_PROJECT_ID,
+        node_env: process.env.NODE_ENV
+      }
     }, { status: 500 });
   }
 }

@@ -28,7 +28,21 @@ export function getAdminApp() {
     });
   }
 
-  // 3. Production Default (Managed Environments)
+  // 3. Automated Detection (FIREBASE_CONFIG is auto-set by the runtime)
+  if (process.env.FIREBASE_CONFIG) {
+    try {
+      const fbConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+      console.log('[Firebase Admin] Inicializando usando FIREBASE_CONFIG detectado.');
+      return initializeApp({
+        projectId: fbConfig.projectId,
+        storageBucket: fbConfig.storageBucket || `${fbConfig.projectId}.appspot.com`
+      });
+    } catch (e) {
+      console.error('[Firebase Admin] Error parseando FIREBASE_CONFIG:', e);
+    }
+  }
+
+  // 4. Production Default (Managed Environments)
   // En Cloud Functions o App Hosting, initializeApp() detecta automáticamente las credenciales.
   console.log('[Firebase Admin] Inicializando con credenciales por defecto del entorno.');
   return initializeApp();
