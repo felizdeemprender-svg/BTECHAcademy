@@ -158,6 +158,16 @@ export default function SettingsPage() {
       }
     }
 
+    if (formData.mpAccessToken && formData.mpPublicKey && formData.mpAccessToken === formData.mpPublicKey) {
+      toast({
+        variant: 'destructive',
+        title: 'Error de Seguridad',
+        description: 'El Access Token no puede ser igual a la Public Key. Por favor verifica tus credenciales en Mercado Pago.'
+      });
+      setLoading(false);
+      return;
+    }
+
     const userRef = doc(db, 'users', user.uid);
     const updateData = {
       displayName: formData.displayName,

@@ -15,7 +15,11 @@ import {
   Layout, 
   Loader2, 
   Lightbulb,
-  DollarSign
+  DollarSign,
+  Zap,
+  UserCheck,
+  Rocket,
+  Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +33,8 @@ interface CampaignGeneratorProps {
   setPageTitle: (title: string) => void;
   targetAudience: string;
   setTargetAudience: (audience: string) => void;
+  campaignMission: 'venta' | 'autoridad' | 'lanzamiento' | 'leads';
+  setCampaignMission: (mission: 'venta' | 'autoridad' | 'lanzamiento' | 'leads') => void;
   price: number;
   setPrice: (price: number) => void;
   courses: any[] | null;
@@ -36,11 +42,20 @@ interface CampaignGeneratorProps {
   allTags: any[] | null;
   selectedCourse: any;
   dynamicProfiles: any[];
+  templateDirectives: string;
+  setTemplateDirectives: (directives: string) => void;
   isGenerating: boolean;
   generationProgress: { current: number, total: number, label: string } | null;
   onGenerate: () => void;
   onStepChange: (step: number) => void;
 }
+
+const MISSIONS = [
+  { id: 'venta', label: 'Venta Directa', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200', desc: 'Urgencia, ROI y escasez.' },
+  { id: 'autoridad', label: 'Autoridad / Branding', icon: UserCheck, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200', desc: 'Confianza y liderazgo.' },
+  { id: 'lanzamiento', label: 'Lanzamiento', icon: Rocket, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200', desc: 'Hype y bonos exclusivos.' },
+  { id: 'leads', label: 'Captación Leads', icon: Target, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200', desc: 'Valor y transformación.' },
+] as const;
 
 export function CampaignGenerator({
   step,
@@ -52,6 +67,8 @@ export function CampaignGenerator({
   setPageTitle,
   targetAudience,
   setTargetAudience,
+  campaignMission,
+  setCampaignMission,
   price,
   setPrice,
   courses,
@@ -59,6 +76,8 @@ export function CampaignGenerator({
   allTags,
   selectedCourse,
   dynamicProfiles,
+  templateDirectives,
+  setTemplateDirectives,
   isGenerating,
   generationProgress,
   onGenerate,
@@ -149,12 +168,54 @@ export function CampaignGenerator({
       )}
 
       {step === 2 && (
-        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden max-w-3xl mx-auto">
+        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden max-w-4xl mx-auto">
           <CardHeader className="bg-primary/5 p-10">
-            <CardTitle className="text-2xl font-bold">Parámetros de la Campaña</CardTitle>
+            <CardTitle className="text-2xl font-bold">Configuración Estratégica de Campaign Brain</CardTitle>
+            <p className="text-sm text-muted-foreground">Define el objetivo y el tono que la IA usará para persuadir a tu audiencia.</p>
           </CardHeader>
-          <CardContent className="p-10 space-y-10">
-            <div className="grid sm:grid-cols-2 gap-8">
+          <CardContent className="p-10 space-y-12">
+            
+            {/* SELECTOR DE MISIÓN */}
+            <div className="space-y-6">
+              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">
+                Selecciona la Misión de esta Campaña
+              </Label>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {MISSIONS.map((m) => {
+                  const Icon = m.icon;
+                  const isActive = campaignMission === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setCampaignMission(m.id as any)}
+                      className={cn(
+                        "flex flex-col items-center text-center p-6 rounded-[2rem] border-2 transition-all duration-300 gap-3 group",
+                        isActive 
+                          ? `${m.bg} ${m.border} shadow-lg scale-[1.02]` 
+                          : "bg-white border-slate-100 hover:border-slate-300"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shadow-inner",
+                        isActive ? "bg-white" : "bg-slate-50 group-hover:bg-slate-100"
+                      )}>
+                        <Icon className={cn("h-6 w-6", m.color)} />
+                      </div>
+                      <div className="space-y-1">
+                        <p className={cn("font-black text-xs uppercase transition-colors", isActive ? "text-slate-900" : "text-slate-500")}>
+                          {m.label}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground font-medium leading-tight">
+                          {m.desc}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-8 pt-6 border-t border-slate-100">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-slate-400">
                   Título del Pack (Interno)
@@ -222,6 +283,28 @@ export function CampaignGenerator({
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-[10px] font-black uppercase text-slate-400">
+                    Directivas Estratégicas (Enfoque de Ventas)
+                  </Label>
+                  <Badge variant="outline" className="text-[8px] font-bold text-primary border-primary/20 h-5 px-2">
+                    Cerebro de Marketing
+                  </Badge>
+                </div>
+                <Textarea 
+                  value={templateDirectives} 
+                  onChange={e => setTemplateDirectives(e.target.value)} 
+                  placeholder="Ej: Enfócate en la autoridad técnica del mentor, resalta el ROI del 300% en la primera campaña..." 
+                  className="min-h-[120px] rounded-[2rem] bg-secondary/10 border-none p-6 text-sm font-medium leading-relaxed" 
+                />
+                <p className="text-[9px] text-muted-foreground px-2">
+                  * Este texto define el estilo de persuasión. Edítalo para corregir o mejorar el enfoque de la IA.
+                </p>
               </div>
             </div>
 

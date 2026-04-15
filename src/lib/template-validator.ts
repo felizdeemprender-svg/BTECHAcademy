@@ -23,6 +23,13 @@ export interface TemplateMetadata {
   preconformed: boolean;
   preconformedAt: string;
   validationResults: PlatformValidationResult;
+  videoConfig?: {
+    presetId: string;
+    resolution: string;
+    fps: number;
+    audioMood: string;
+    sceneCount: number;
+  };
   designTokens: any;
   // Propiedades de templates
   targetLandingIdx?: number;

@@ -123,42 +123,31 @@ export function ImageEditor({
           disabled
           title="Borra la imagen actual con el ícono del basurero si quieres cambiarla."
         />
+        {/* Botón Free IA — siempre visible */}
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 shrink-0 border-violet-200 text-violet-600 hover:bg-violet-50 relative group" 
+          className="h-10 w-10 shrink-0 border-slate-200 text-violet-500 hover:bg-violet-50" 
           onClick={() => handleGenerateAi('free')}
           disabled={isBusy}
-          title="Generar IA Gratis (Pollinations Flux)"
+          title="Regenerar con IA Free (Gemini)"
           type="button"
         >
-          {generatingAi ? <Loader2 className="h-4 w-4 animate-spin text-violet-500" /> : <Sparkles className="h-4 w-4" />}
-          <span className="absolute -top-1 -right-1 text-[8px] bg-slate-100 px-1 rounded-full border">Free</span>
+          {generatingAi ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
         </Button>
+        {/* Botón Pro IA — para usuarios premium */}
         <Button 
           variant="outline" 
           size="icon" 
-          className={cn(
-            "h-10 w-10 shrink-0 border-amber-200 relative group transition-all",
-            profile?.subscription?.hasPremiumAI === true || profile?.roles?.includes('admin')
-              ? "text-amber-600 hover:bg-amber-50"
-              : "opacity-40 grayscale" // Quitamos pointer-events-none para que el onClick pueda avisar por qué no funciona
-          )} 
-          onClick={() => {
-            const hasAccess = profile?.subscription?.hasPremiumAI === true || profile?.roles?.includes('admin');
-            if (!hasAccess) {
-              toast({ variant: 'destructive', title: 'Función Premium Requerida', description: 'Tu Abono actual no incluye el Motor de IA realista. Contacta a soporte para actualizar tu plan.' });
-              return;
-            }
-            handleGenerateAi('premium');
-          }}
+          className="h-10 w-10 shrink-0 border-violet-300 text-violet-600 hover:bg-violet-100" 
+          onClick={() => handleGenerateAi('premium')}
           disabled={isBusy}
-          title="Generar IA Realista PRO (Google Imagen 3)"
+          title="Generar con IA Premium"
           type="button"
         >
-          {generatingAi ? <Loader2 className="h-4 w-4 animate-spin text-amber-500" /> : <Sparkles className="h-4 w-4 fill-amber-500 text-amber-500" />}
-          <span className="absolute -top-1 -right-1 text-[8px] bg-amber-100 text-amber-900 px-1 rounded-full border border-amber-200 font-bold">PRO</span>
+          <Sparkles className="h-4 w-4" />
         </Button>
+        {/* Botón subir imagen local */}
         <Button 
           variant="outline" 
           size="icon" 

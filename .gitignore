@@ -50,3 +50,17 @@ build_log*.txt
 debug-output*.txt
 test-output*.txt
 ts_errors.txt
+deploy_*.txt
+
+# credentials
+service-account.json
+
+# local artifacts
+*.mp4
+*.jpg
+*.txt
+!README.md
+adns/
+scratch/
+tmp/
+fonts-cache/

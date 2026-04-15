@@ -65,6 +65,19 @@ export interface PendingRefinement {
   index: number;
 }
 
+export interface VideoConfig {
+  presetId: '01' | '02' | '03' | '04' | '05';
+  resolution: string;
+  fps: 30 | 60;
+  audioMood: string;
+  sceneCount: number;
+  totalDuration?: number;
+  slideCount?: number;
+  // Estrategia Descentralizada
+  strategyVector?: string;
+  commercialTone?: string;
+}
+
 // Tipos para generación AI
 export interface GenerationProgress {
   current: number;

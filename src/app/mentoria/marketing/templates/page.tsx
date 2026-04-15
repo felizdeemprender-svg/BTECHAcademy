@@ -62,11 +62,7 @@ export default function MarketingTemplatesPage() {
     return collections.find(c => c.id === selectedId);
   }, [selectedId, collections]);
 
-  // Debug: Verificar si profile está disponible
-  console.log('Profile:', profile);
-  console.log('Collections:', collections);
-  console.log('IsLoading:', isLoading);
-  
+
   // Solo ahora podemos hacer early return (después de TODOS los hooks)
   if (!profile) {
     return (

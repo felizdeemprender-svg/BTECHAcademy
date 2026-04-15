@@ -90,6 +90,7 @@ export function AIGenerator({
 }: AIGeneratorProps) {
   const [campaignName, setCampaignName] = useState('');
   const [directives, setDirectives] = useState('');
+
   const [activeTab, setActiveTab] = useState('config');
 
   if (!isOpen) return null;

@@ -38,7 +38,8 @@ export function CollectionManager({
   selectedId,
   setSelectedId
 }: CollectionManagerProps) {
-  
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   const getCollectionIcon = (channel: string) => {
     switch (channel) {
       case 'emails': return <Mail className="h-4 w-4" />;
@@ -205,17 +206,42 @@ export function CollectionManager({
                   <Eye className="h-3 w-3 mr-1" />
                   Ver Planos
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteCollection(collection.id);
-                  }}
-                  className="text-red-600 hover:text-red-700 hover:border-red-300"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+
+                {confirmDeleteId === collection.id ? (
+                  // Panel de confirmación inline (reemplaza confirm() bloqueado por Next.js)
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="text-xs px-2"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        onDeleteCollection(collection.id);
+                        setConfirmDeleteId(null);
+                      }}
+                      className="text-xs px-2 bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Sí, eliminar
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDeleteId(collection.id);
+                    }}
+                    className="text-red-600 hover:text-red-700 hover:border-red-300"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

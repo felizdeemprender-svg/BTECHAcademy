@@ -27,8 +27,19 @@ import {
   Phone
 } from 'lucide-react';
 import Image from 'next/image';
+import { QRCodeSVG } from 'qrcode.react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -74,6 +85,10 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(false);
   const [mentorProfile, setMentorProfile] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [studentEmail, setStudentEmail] = useState('');
+  const [studentName, setStudentName] = useState('');
+  const [paymentInitPoint, setPaymentInitPoint] = useState<string | null>(null);
 
   const pageRef = useMemoFirebase(() => doc(db, 'salesPages', id), [db, id]);
   const { data: page, isLoading: pageLoading } = useDoc(pageRef);
@@ -104,6 +119,15 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   };
 
   const handlePurchase = async () => {
+    setIsPurchaseDialogOpen(true);
+  };
+
+  const executePurchase = async () => {
+    if (!studentEmail) {
+      toast({ variant: 'destructive', title: 'Email requerido', description: 'Por favor ingresa tu email para la inscripción.' });
+      return;
+    }
+
     setLoading(true);
 
     // Attribution Tracking
@@ -111,31 +135,53 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
     const channel = searchParams.get('c') || 'direct';
 
     try {
-      const { setDoc, increment } = await import('firebase/firestore');
-      const pageRef = doc(db, 'salesPages', id);
-      await setDoc(pageRef, {
-        stats: {
-          conversions: increment(1),
-          channelBreakdown: {
-            [channel]: { conversions: increment(1) }
-          },
-          sourceBreakdown: {
-            [source]: { conversions: increment(1) }
-          }
-        }
-      }, { merge: true });
-    } catch (e) {
-      // silent
-    }
+      // 1. Crear preferencia en el backend
+      const response = await fetch('/api/payments/mercadopago/preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pageId: id,
+          studentEmail: studentEmail,
+          studentName: studentName
+        })
+      });
 
-    toast({
-      title: 'Redirigiendo a Pago Seguro',
-      description: 'Conectando con MercadoPago Checkout Pro...'
-    });
-    setTimeout(() => {
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Error al conectar con MercadoPago');
+      }
+
+      // 2. Trackeo de click en comprar (opcional)
+      try {
+        const { setDoc, increment, doc } = await import('firebase/firestore');
+        const pRef = doc(db, 'salesPages', id);
+        await setDoc(pRef, {
+          stats: {
+            conversions: increment(1),
+            channelBreakdown: { [channel]: { conversions: increment(1) } },
+            sourceBreakdown: { [source]: { conversions: increment(1) } }
+          }
+        }, { merge: true });
+      } catch (e) {}
+
+      // 3. Mostrar el QR / Link de Pago
+      setPaymentInitPoint(data.init_point);
+      
+      toast({
+        title: '¡Preferencia generada!',
+        description: 'Escanea el código QR o haz clic en el botón para pagar.'
+      });
+
+    } catch (e: any) {
+      console.error('Detalle completo del error en compra:', e);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Error al iniciar el pago', 
+        description: e.message || 'No pudimos conectar con Mercado Pago. Verifica tu conexión o intenta más tarde.' 
+      });
       setLoading(false);
-      toast({ title: 'En Proceso', description: 'Checkout en configuración. Contacta al mentor directamente.' });
-    }, 2000);
+    }
   };
 
   if (pageLoading) return <div className="flex h-screen items-center justify-center bg-white"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
@@ -283,29 +329,81 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         ))}
       </section>
 
-      {/* Mentor & Dynamic Pricing */}
+      {/* Benefits Section (New) */}
+      {content.benefits && content.benefits.length > 0 && (
+        <section className="py-24 bg-slate-50">
+          <div className="container mx-auto px-6 max-w-5xl">
+            <div className="text-center space-y-4 mb-16">
+              <Badge className="bg-primary/10 text-primary border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">
+                ¿Qué vas a lograr?
+              </Badge>
+              <h2 className="text-4xl lg:text-5xl font-headline font-black tracking-tight" style={{ color: primaryColor }}>
+                Beneficios del Programa
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {content.benefits.map((benefit: string, bIdx: number) => (
+                <div key={bIdx} className="p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl hover:shadow-2xl transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <p className="font-bold text-slate-800 leading-snug">{benefit}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Mentor Section (Redesigned) */}
+      <section className="py-24 bg-white overflow-hidden relative border-t border-slate-100">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+             <div className="relative w-64 h-64 lg:w-80 lg:h-80 shrink-0">
+               <div className="absolute inset-0 bg-primary/5 rounded-[4rem] rotate-6" />
+               <div className="absolute inset-0 bg-slate-100 rounded-[4rem] -rotate-3 overflow-hidden border-[10px] border-white shadow-2xl">
+                 <Image
+                    src={mentorProfile?.photoURL || 'https://placehold.co/400/png'}
+                    alt="Mentor"
+                    fill
+                    className="object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                    unoptimized
+                  />
+               </div>
+             </div>
+             <div className="flex-1 space-y-8 text-center lg:text-left">
+               <div className="space-y-4">
+                 <Badge className="bg-violet-500/10 text-violet-600 border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">
+                   Experticia Garantizada
+                 </Badge>
+                 <h2 className="text-4xl lg:text-5xl font-headline font-black tracking-tight" style={{ color: primaryColor }}>
+                   Sobre tu Mentor
+                 </h2>
+               </div>
+               <p className="text-xl text-slate-600 leading-relaxed font-medium italic">
+                 "{content.aboutMentor || mentorProfile?.profile?.bio || 'Experto dedicado a transformar tu aprendizaje con metodologías prácticas y resultados probados.'}"
+               </p>
+               <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-4">
+                 <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                   <Users className="h-4 w-4 text-primary" />
+                   <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Comunidad Activa</span>
+                 </div>
+                 <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                   <Award className="h-4 w-4 text-emerald-500" />
+                   <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Certificación Oficial</span>
+                 </div>
+               </div>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing & Closure */}
       <section className="py-24 bg-slate-900 text-white overflow-hidden relative">
         <div className="absolute bottom-0 left-0 p-20 opacity-5 pointer-events-none">
-          <Award className="h-96 w-96 text-white" />
+          <Rocket className="h-96 w-96 text-white" />
         </div>
         <div className="container mx-auto px-6 max-w-5xl relative z-10 text-center space-y-12">
-          <div className="inline-block p-1 rounded-full bg-white/5 border border-white/10 mb-4">
-            <Image
-              src={mentorProfile?.photoURL || 'https://placehold.co/200/png'}
-              alt="Mentor"
-              width={120}
-              height={120}
-              className="rounded-full grayscale"
-              unoptimized
-            />
-          </div>
-          <div className="space-y-4">
-            <h2 className="text-3xl font-bold tracking-tight">Tu Mentor: {mentorProfile?.displayName}</h2>
-            <p className="text-slate-400 text-lg italic leading-relaxed max-w-2xl mx-auto">
-              "{content.aboutMentor}"
-            </p>
-          </div>
-
           <Card className="max-w-md mx-auto bg-white text-slate-900 rounded-[3rem] p-12 space-y-8 border-none shadow-3xl transform hover:scale-105 transition-transform">
             <div className="space-y-2">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Inversión Única</p>
@@ -344,6 +442,87 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           <p className="text-xs text-slate-400 font-medium">© {new Date().getFullYear()} {mentorProfile?.displayName}. Todos los derechos reservados.</p>
         </div>
       </footer>
+      {/* Purchase Dialog */}
+      <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
+        <DialogContent className="sm:max-w-md rounded-[2.5rem] p-8 border-none shadow-3xl">
+          <DialogHeader className="space-y-4">
+            <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center mb-2 mx-auto sm:mx-0">
+              <ShoppingCart className="h-8 w-8 text-primary" />
+            </div>
+            <DialogTitle className="text-3xl font-black tracking-tight text-primary">Detalles de Inscripción</DialogTitle>
+            <DialogDescription className="text-slate-500 font-medium">
+              Completa tus datos para recibir el acceso al contenido inmediatamente tras el pago.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-6 text-center">
+            {!paymentInitPoint ? (
+              <>
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="purchase-name" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nombre Completo</Label>
+                  <Input 
+                    id="purchase-name"
+                    placeholder="Juan Pérez"
+                    value={studentName}
+                    onChange={e => setStudentName(e.target.value)}
+                    className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="purchase-email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email de Acceso</Label>
+                  <Input 
+                    id="purchase-email"
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={studentEmail}
+                    onChange={e => setStudentEmail(e.target.value)}
+                    className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
+                  />
+                  <p className="text-[10px] text-slate-400 italic px-1">Este será tu usuario para entrar a la plataforma.</p>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-6 animate-in zoom-in-95 duration-300">
+                <div className="p-4 bg-white rounded-3xl shadow-xl border-8 border-slate-50">
+                  <QRCodeSVG value={paymentInitPoint} size={200} />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-black text-slate-800">Escanea con la App de Mercado Pago</p>
+                  <p className="text-xs text-slate-500 font-medium max-w-[200px] mx-auto">O si estás en tu móvil, pulsa el botón de abajo para ir al sitio seguro.</p>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            {!paymentInitPoint ? (
+              <Button 
+                onClick={executePurchase} 
+                disabled={loading || !studentEmail}
+                className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all hover:scale-[1.02]"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {loading ? <Loader2 className="animate-spin h-6 w-6" /> : `Pagar $${price.toLocaleString('es-AR')}`}
+              </Button>
+            ) : (
+              <div className="flex flex-col gap-3 w-full">
+                <Button 
+                  onClick={() => window.location.href = paymentInitPoint}
+                  className="w-full h-14 text-lg font-bold rounded-2xl shadow-xl bg-primary"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  Continuar al Pago Seguro
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => { setPaymentInitPoint(null); setLoading(false); }}
+                  className="text-slate-400 font-bold hover:bg-transparent"
+                >
+                  Volver / Corregir mis datos
+                </Button>
+              </div>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

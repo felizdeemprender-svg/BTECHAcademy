@@ -3,8 +3,9 @@
 import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, deleteDoc, orderBy } from 'firebase/firestore';
+import { useFirebase, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc, deleteDoc, getDoc, orderBy } from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -52,18 +53,97 @@ export default function SalesPagesDashboardPage() {
     });
   }, [rawPages]);
 
+  const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const { storage } = useFirebase();
+
   const handleCopyLink = (id: string, variant: number) => {
     const url = `${window.location.origin}/v/${id}?v=${variant}`;
     navigator.clipboard.writeText(url);
     toast({ title: 'Enlace Copiado', description: `URL de variante ${variant + 1} lista para compartir.` });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (e: React.BaseSyntheticEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Sistema de confirmación en UI (evita bloqueos de confirm() nativo)
+    if (confirmDeleteId !== id) {
+      setConfirmDeleteId(id);
+      // Auto-cancelar confirmación tras 3 segundos
+      setTimeout(() => setConfirmDeleteId(current => current === id ? null : current), 3000);
+      toast({ title: '¿Confirmar borrado?', description: 'Pulsa de nuevo para eliminar permanentemente.' });
+      return;
+    }
+    
+    setConfirmDeleteId(null);
+    setDeletingIds(prev => ({ ...prev, [id]: true }));
+    
     try {
-      await deleteDoc(doc(db, 'salesPages', id));
-      toast({ title: 'Contenido eliminado' });
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Error al borrar' });
+      toast({ title: 'Borrando...', description: 'Analizando y eliminando activos asociados.' });
+      const pageRef = doc(db, 'salesPages', id);
+      const snap = await getDoc(pageRef);
+      
+      if (snap.exists()) {
+        const data = snap.data();
+        const driveIds: string[] = [];
+        const storageUrls: string[] = [];
+
+        // 1. Escaneo Recursivo de activos
+        const scan = (item: any) => {
+          if (!item) return;
+          if (typeof item === 'string') {
+            if (item.includes('firebasestorage.googleapis.com')) storageUrls.push(item);
+          } else if (Array.isArray(item)) {
+            item.forEach(scan);
+          } else if (typeof item === 'object') {
+            if (item.video_drive_id) driveIds.push(item.video_drive_id);
+            if (item.carousel_drive_ids) driveIds.push(...item.carousel_drive_ids);
+            Object.values(item).forEach(scan);
+          }
+        };
+        scan(data);
+
+        // 2. Borrado de Google Drive
+        const accessToken = localStorage.getItem('google_access_token');
+        if (driveIds.length > 0 && accessToken) {
+          for (const dId of driveIds) {
+            try {
+              await fetch(`https://www.googleapis.com/drive/v3/files/${dId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+              });
+            } catch (e) { console.warn("Fallo al borrar en Drive:", dId); }
+          }
+        }
+
+        // 3. Borrado de Firebase Storage
+        const uniqueUrls = Array.from(new Set(storageUrls));
+        if (uniqueUrls.length > 0) {
+          for (const url of uniqueUrls) {
+            try { await deleteObject(ref(storage, url)); } catch (e) { console.warn("Fallo al borrar en Storage:", url); }
+          }
+        }
+
+        // 4. Limpiar carpeta de exportaciones
+        const exportKeys = ['emailsExportUrl', 'socialExportUrl', 'adsExportUrl'];
+        if (data.exportUrls) {
+          for (const key of exportKeys) {
+            const url = data.exportUrls[key];
+            if (url) {
+              try { await deleteObject(ref(storage, url)); } catch (e) {}
+            }
+          }
+        }
+      }
+
+      await deleteDoc(pageRef);
+      toast({ title: 'Pack eliminado', description: 'Todos los datos han sido borrados con éxito.' });
+    } catch (e: any) {
+      console.error("[Delete Error]", e);
+      toast({ variant: 'destructive', title: 'Error al borrar', description: e.message || "Error de red o permisos." });
+    } finally {
+      setDeletingIds(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -172,7 +252,23 @@ export default function SalesPagesDashboardPage() {
                   </Button>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant={confirmDeleteId === page.id ? "destructive" : "ghost"} 
+                    size="icon" 
+                    disabled={deletingIds[page.id]}
+                    className={cn(
+                      "h-8 w-8 rounded-full transition-all duration-300",
+                      confirmDeleteId === page.id ? "scale-110 shadow-lg" : "text-red-500 hover:bg-red-50"
+                    )}
+                    onClick={(e) => handleDelete(e, page.id)}
+                  >
+                    {deletingIds[page.id] ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className={cn("h-4 w-4", confirmDeleteId === page.id && "animate-pulse")} />
+                    )}
+                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-400">
@@ -180,10 +276,13 @@ export default function SalesPagesDashboardPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="text-xs font-bold">
-                      <DropdownMenuItem onClick={() => router.push(`/mentoria/marketing/pages/build?id=${page.id}`)}>
+                      <DropdownMenuItem onSelect={() => router.push(`/mentoria/marketing/pages/build?id=${page.id}`)}>
                         <FileEdit className="h-3.5 w-3.5 mr-2" /> Editar Pack
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDelete(page.id)} className="text-destructive">
+                      <DropdownMenuItem 
+                        className="text-destructive"
+                        onSelect={(e) => handleDelete(e as any, page.id)}
+                      >
                         <Trash2 className="h-3.5 w-3.5 mr-2" /> Eliminar Pack
                       </DropdownMenuItem>
                     </DropdownMenuContent>

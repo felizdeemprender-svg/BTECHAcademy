@@ -46,10 +46,11 @@ export function useAIGeneration(profile?: any) {
       const res = await checkAiHealth();
       const normalizedStatus = res.status === 'ok' ? 'healthy' : res.status;
       setAiHealth({ ...res, status: normalizedStatus });
-    } catch (e) {
+    } catch (e: any) {
+      console.error("Health Check failed on client:", e);
       setAiHealth({ 
         status: 'error', 
-        message: 'Fallo crítico al conectar con el servidor de IA.' 
+        message: 'Fallo al conectar: ' + (e.message || String(e))
       });
     }
   }, []);

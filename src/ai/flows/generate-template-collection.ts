@@ -41,6 +41,17 @@ const EmailVariantSchema = z.object({
   preheader: z.string(),
 });
 
+const BlueprintConfigSchema = z.object({
+  presetId: z.enum(['01', '02', '03', '04', '05']).describe('ID del preset visual universal (01: Auth, 02: Glass, 03: Kinetic, 04: Dark, 05: Impact)'),
+  resolution: z.string().default('1080x1920').describe('Resolución o aspecto técnico.'),
+  fps: z.union([z.literal(30), z.literal(60)]).default(30),
+  sceneCount: z.number().optional().describe('Cantidad de escenas (video) o bloques principales.'),
+  totalDuration: z.number().optional().describe('Duración total (seg) o tiempo de lectura estimado.'),
+  slideCount: z.number().optional().describe('Cantidad de placas o tweets (para formatos estáticos).'),
+  strategyVector: z.string().optional().describe('Vector psicológico específico para esta pieza.'),
+  commercialTone: z.string().optional().describe('Tono comercial específico para esta pieza.'),
+});
+
 const SocialVariantSchema = z.object({
   platform: z.enum(['instagram', 'linkedin', 'twitter', 'tiktok']),
   type: z.enum(['story', 'carousel', 'single_post', 'thread', 'short_video', 'document']),
@@ -49,13 +60,14 @@ const SocialVariantSchema = z.object({
   caption: z.string().describe('Estructura del cuerpo del post.'),
   hashtags: z.array(z.string()).optional().describe('Array de hashtags opcional.'),
   slideCount: z.number().optional().describe('Cantidad de placas, tweets o fragmentos según plataforma.'),
+  blueprintConfig: BlueprintConfigSchema.optional().describe('Configuración técnica universal del Evo Social Lab.'),
 });
 
 const AdsVariantSchema = z.object({
   type: z.enum(['search', 'visual', 'retargeting']),
   designTokens: DesignTokensSchema,
-  headlines: z.array(z.string()).describe('Slots para titulares.'),
-  descriptions: z.array(z.string()).describe('Slots para descripciones.'),
+  headlines: z.array(z.string()).optional().describe('Slots para titulares. (Opcional)'),
+  descriptions: z.array(z.string()).optional().describe('Slots para descripciones. (Opcional)'),
   keywords: z.array(z.string()).optional(),
 });
 
@@ -131,7 +143,7 @@ IDENTIDAD VISUAL SELECCIONADA (USA ESTOS COLORES OBLIGATORIAMENTE):
 - Fuente Títulos: ${input.designTokens.fontHeading}
 - Fuente Cuerpo: ${input.designTokens.fontBody}
 
-¡IMPORTANTE! DEBES USAR EXACTAMENTE ESTOS COLORES EN TODOS LOS TEMPLATES. NO GENERES COLORES DIFERENTES.
+¡IMPORTANTE! DEBES USAR EXACTAMENTE ESTOS COLORES EN TODOS LOS TEMPLATES.
 
 FILTRO DE GENERACIÓN (Solo genera para estos canales):
 - Landings: ${input.enabledChannels.landings ? 'HABILITADO (3 variantes: Minimal, Balanced, Detailed)' : 'DESACTIVADO'}
@@ -139,57 +151,29 @@ FILTRO DE GENERACIÓN (Solo genera para estos canales):
 - Ads: ${input.enabledChannels.ads ? 'HABILITADO (3 variantes: Search, Visual, Retargeting)' : 'DESACTIVADO'}
 - Redes Sociales: ${input.enabledChannels.socials ? 'HABILITADO' : 'DESACTIVADO'}
 
-SI LAS REDES SOCIALES ESTÁN HABILITADAS, ESTAS SON LAS CUOTAS EXACTAS QUE DEBES GENERAR (¡No te desvíes!):
-- Twitter: ${input.platforms?.twitter?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.twitter.thread || 0} hilos [type="thread"] y ${input.platforms.twitter.single_post || 0} tweets [type="single_post"])` : 'NO'}
-- Instagram: ${input.platforms?.instagram?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.instagram.story || 0} stories [type="story"], ${input.platforms.instagram.carousel || 0} carruseles [type="carousel"] y ${input.platforms.instagram.single_post || 0} fotos de muro [type="single_post"])` : 'NO'}
-- TikTok: ${input.platforms?.tiktok?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.tiktok.short_video || 0} videos cortos [type="short_video"] y ${input.platforms.tiktok.carousel || 0} carruseles fotográficos [type="carousel"]). ¡OBLIGATORIO GENERAR TIKTOK!` : 'NO'}
-- LinkedIn: ${input.platforms?.linkedin?.enabled ? `SÍ -> (Genera EXACTAMENTE ${input.platforms.linkedin.document || 0} posts de documento [type="document"], ${input.platforms.linkedin.single_post || 0} posts de autoridad [type="single_post"], y ${input.platforms.linkedin.carousel || 0} carruseles [type="carousel"]). ¡OBLIGATORIO GENERAR LINKEDIN!` : 'NO'}
+¡REGLA ABSOLUTA DE CANTIDADES MULTIPLICADORAS! (Si "socials" está activado):
+DEBES generar EXACTAMENTE los objetos que se indican a continuación en el array "socials". NO puedes generar menos. Si te pido 5 stories, debes crear 5 objetos INDEPENDIENTES y distitintos tipo "story". 
 
-¡ATENCIÓN CRÍTICA! DEBES GENERAR TEMPLATES PARA TODAS LAS PLATAFORMAS HABILITADAS:
-${input.platforms?.tiktok?.enabled ? `✅ TIKTOK HABILITADO: Genera ${input.platforms.tiktok.short_video || 0} videos cortos con platform: "tiktok" y type: "short_video"` : ''}
-${input.platforms?.linkedin?.enabled ? `✅ LINKEDIN HABILITADO: Genera ${input.platforms.linkedin.document || 0} documentos con platform: "linkedin" y type: "document"` : ''}
+- Twitter: ${input.platforms?.twitter?.enabled ? `Generar EXACTAMENTE -> ${input.platforms.twitter.thread || 0} hilos [type="thread"] y ${input.platforms.twitter.single_post || 0} tweets [type="single_post"]` : 'OMITIR TWITTER'}
+- Instagram: ${input.platforms?.instagram?.enabled ? `Generar EXACTAMENTE -> ${input.platforms.instagram.story || 0} stories [type="story"], ${input.platforms.instagram.carousel || 0} carruseles [type="carousel"] y ${input.platforms.instagram.single_post || 0} fotos de muro [type="single_post"]` : 'OMITIR INSTAGRAM'}
+- TikTok: ${input.platforms?.tiktok?.enabled ? `Generar EXACTAMENTE -> ${input.platforms.tiktok.short_video || 0} videos cortos [type="short_video"] y ${input.platforms.tiktok.carousel || 0} carruseles [type="carousel"]` : 'OMITIR TIKTOK'}
+- LinkedIn: ${input.platforms?.linkedin?.enabled ? `Generar EXACTAMENTE -> ${input.platforms.linkedin.document || 0} posts de documento [type="document"], ${input.platforms.linkedin.single_post || 0} posts de autoridad [type="single_post"], y ${input.platforms.linkedin.carousel || 0} carruseles [type="carousel"]` : 'OMITIR LINKEDIN'}
 
-REGLA DE ORO: Si una plataforma está habilitada, DEBES generar sus templates. NO OMITAS NINGUNA PLATAFORMA HABILITADA.
-
-¡ALERTA ESPECIAL PARA LINKEDIN! 
-${input.platforms?.linkedin?.enabled ? `
-- DEBES generar ${input.platforms.linkedin.document || 0} posts de tipo "document" para LinkedIn
-- Cada post "document" debe tener: platform: "linkedin", type: "document", hook, caption
-- Los posts "document" de LinkedIn son contenido profesional tipo artículo o documento PDF
-- Ejemplo: { "platform": "linkedin", "type": "document", "hook": "Título profesional", "caption": "Contenido del artículo..." }` : ''}
-
-REGLAS ESPECÍFICAS DE COPYWRITING Y DISEÑO:
-1. LANDINGS (Sitios Web): Genera Títulos (Headlines) CORTOS, persuasivos y orientados a conversión (máximo 8 palabras). El subheadline debe ser un subtítulo directo (1-2 líneas). ¡COMPLETAMENTE PROHIBIDO usar saludos de carta o estilo email ("Hola", "Espero que")! ✅ USA LOS COLORES GENERADOS EN designTokens.
-2. EMAILS: Son correos conversacionales. Usa Asuntos intrigantes y Cuerpos de texto (Body) persuasivos que desarrollen una historia o beneficio, con saludo y despedida.
-3. ADS & SOCIALS: Redacta ganchos (hooks) directos y textos asertivos optimizados para capturar atención en segundos.
+CONFIGURACIÓN DE ESCENAS Y BLUEPRINTS (blueprintConfig):
+Mucha atención aquí. En los objetos generados de socials debes incluir el "blueprintConfig" aplicando estas reglas sin falta:
+1. Para formatos de Video (Instagram story, TikTok short_video): DEBES incluir "sceneCount" (ej: generar de 3 a 5 escenas para el blueprint de las historias). Resolution "1080x1920".
+2. Para formatos Múltiples (carruseles y documentos en Instagram, LinkedIn o TikTok): DEBES incluir "slideCount" (ej: de 3 a 7 slides). Resolution "1080x1350".
+3. Para formatos Simples (single_post, thread): "slideCount": 1. Resolution "1080x1080".
 
 REGLAS DE CONTENIDO VACÍO (PARA LLENAR EN SIGUIENTE ETAPA):
-- Para landings: sectionCount es obligatorio, otros campos de contenido pueden quedar vacíos
+- Para landings: sectionCount es obligatorio (ej. 3 a 6)
 - Para emails: subject, body, preheader son obligatorios
-- Para socials: hook y caption son obligatorios, hashtags opcional
-- Para ads: headlines y descriptions son obligatorios, keywords opcional
-- NO generes URLs, imágenes, o contenido multimedia - eso va en la siguiente etapa
+- Para socials: hook y caption son obligatorios. blueprintConfig (con sus escenas y placas) es REQUERIDO y fundamental.
+- NO generes URLs, imágenes, o contenido multimedia.
 
-REGLAS CRÍTICAS DE ESTRUCTURA JSON:
-¡CADA TEMPLATE DEBE INCLUIR TODOS LOS CAMPOS REQUERIDOS SIN EXCEPCIÓN!
-- designTokens: SIEMPRE debe incluir primary, secondary, accent, fontHeading, fontBody
-- socials: SIEMPRE debe incluir hook y caption (OBLIGATORIO)
-- ads: SIEMPRE debe incluir headlines y descriptions (OBLIGATORIO)
-- hashtags: Solo incluir si son relevantes para el contenido
-
-VERIFICACIÓN FINAL OBLIGATORIA:
-${input.platforms?.linkedin?.enabled ? `
-✅ LINKEDIN DEBE ESTAR PRESENTE: Si LinkedIn está habilitado, el array "socials" DEBE contener ${input.platforms.linkedin.document || 0} elementos con platform: "linkedin" y type: "document".
-❌ ERROR SI NO SE GENERA: Si no generas los posts de LinkedIn, el resultado será inválido.` : ''}
-
-TOKENS DE DISEÑO:
-Define tokens de diseño coherentes (primary, secondary, accent, fontHeading, fontBody) para cada estilo. Usa colores hex válidos (#XXXXXX) y fuentes web estándar.
-
-TONO: Basa todo el ADN en las directivas del usuario: "${input.directives}".
-
-IMPORTANTE: Genera datos COMPLETOS. No dejes campos vacíos o undefined. Cada objeto debe tener todos sus campos requeridos según el schema.
-
-Devuelve un objeto JSON estructurado que contenga exclusivamente los arrays de los canales habilitados con DATOS COMPLETOS.`,
+INSTRUCCIÓN FINAL CRÍTICA:
+Asegúrate de que la cantidad de elementos devueltos en los arrays corresponda FIELMENTE a los números exactos requeridos. ¡Crea múltiples ítems si el número es mayor a 1!
+Devuelve un objeto JSON estructurado con DATOS COMPLETOS.`,
       output: { schema: CollectionOutputSchema },
       config: { 
         temperature: 0.7,

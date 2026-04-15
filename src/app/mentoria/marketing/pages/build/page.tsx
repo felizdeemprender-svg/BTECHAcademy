@@ -56,6 +56,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { generateCampaignAssets, GenerateCampaignOutput } from '@/ai/flows/generate-campaign-assets';
+import { generateVariantContent } from '@/ai/flows/generate-variant-content';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -108,7 +109,9 @@ function BuilderContent() {
   
   const [pageTitle, setPageTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
+  const [campaignMission, setCampaignMission] = useState<'venta' | 'autoridad' | 'lanzamiento' | 'leads'>('venta');
   const [price, setPrice] = useState<number>(49990);
+  const [templateDirectives, setTemplateDirectives] = useState('');
   const [generatedAssets, setGeneratedAssets] = useState<GenerateCampaignOutput | null>(null);
   const [blueprintData, setBlueprintData] = useState<any>(null);
 
@@ -116,6 +119,25 @@ function BuilderContent() {
   const [activeEmailIdx, setActiveEmailIdx] = useState(0);
   const [activeSocialIdx, setActiveSocialIdx] = useState(0);
   const [activeAdsIdx, setActiveAdsIdx] = useState(0);
+  const [masterAdns, setMasterAdns] = useState<Record<string, any>>({});
+
+  // Carga centralizada de ADNs (Fuente de verdad dinámica)
+  useEffect(() => {
+    const fetchAdns = async () => {
+      try {
+        const res = await fetch('/api/adns');
+        const data = await res.json();
+        if (data.success) {
+          const map: Record<string, any> = {};
+          data.adns.forEach((a: any) => map[a.id] = a);
+          setMasterAdns(map);
+        }
+      } catch (e) {
+        console.error("Error loading master ADNs:", e);
+      }
+    };
+    fetchAdns();
+  }, []);
 
   // Load existing page for editing
   useEffect(() => {
@@ -132,8 +154,21 @@ function BuilderContent() {
             setPageTitle(data.title);
             setPrice(data.price);
             setTargetAudience(data.targetAudience || '');
-            setGeneratedAssets(data.aiContent);
-            setStep(3); // Jump directly to editing
+            setCampaignMission(data.engineMeta?.mission || 'venta');
+            
+            // Normalizar contenido (Soportar plural/singular heredado)
+            const content = data.aiContent || {};
+            const normalizedAssets = {
+              landings: content.landings || content.landing || [],
+              emails: content.emails || content.email || [],
+              socials: content.socials || content.social || [],
+              ads: content.ads || content.ad || content.adsSet || []
+            };
+            setGeneratedAssets(normalizedAssets);
+
+            
+            setTemplateDirectives(data.templateDirectives || '');
+            setStep(3); // Saltar directamente a la edición
           }
         } catch (err) {
           console.error(err);
@@ -150,7 +185,12 @@ function BuilderContent() {
   useEffect(() => {
     if (selectedCollectionId && db) {
       getDoc(doc(db, 'templateCollections', selectedCollectionId)).then(snap => {
-        if (snap.exists()) setBlueprintData(snap.data());
+        if (snap.exists()) {
+          const data = snap.data();
+          setBlueprintData(data);
+          // Si es una página nueva (no editId), inicializamos las directivas desde la colección
+          if (!editId) setTemplateDirectives(data.directives || '');
+        }
       });
     }
   }, [selectedCollectionId, db]);
@@ -335,13 +375,15 @@ function BuilderContent() {
         const rawResult = await generateCampaignAssets({
           courseTitle: course.title,
           courseDescription: course.description || '',
-          mentorName: profile?.displayName || 'Mentor Experto',
+          mentorName: profile?.profile?.fullName || profile?.profile?.firstName || profile?.displayName || 'Mentor Experto',
+          mission: campaignMission,
           mentorBio: profile?.profile?.bio,
           mentorSocials: profile?.profile?.socials,
           templateDirectives: collection.directives,
           templateStructure: tasks[i].payload,
           targetAudience: targetAudience,
-          courseTags: courseTags
+          courseTags: courseTags,
+          masterAdns: masterAdns // Inyectar ADNs cargados dinámicamente
         });
         
         const result = ensureValidUrls(rawResult, i * 100);
@@ -362,8 +404,8 @@ function BuilderContent() {
         for (let i = 0; i < finalAssets.socials.length; i++) {
           const social = finalAssets.socials[i];
           const validatedDesign = await validateAndAdjustDesignForAPIs(
-            blueprintData?.assets?.socials?.[0]?.designTokens || {},
-            blueprintData?.assets?.socials?.[0]?.designTokens || {},
+            collection.assets?.socials?.[0]?.designTokens || {},
+            collection.assets?.socials?.[0]?.designTokens || {},
             { landings: false, emails: false, socials: true, ads: false }
           );
           
@@ -380,8 +422,8 @@ function BuilderContent() {
         for (let i = 0; i < finalAssets.landings.length; i++) {
           const landing = finalAssets.landings[i];
           const validatedDesign = await validateAndAdjustDesignForAPIs(
-            blueprintData?.assets?.landings?.[0]?.designTokens || {},
-            blueprintData?.assets?.landings?.[0]?.designTokens || {},
+            collection.assets?.landings?.[0]?.designTokens || {},
+            collection.assets?.landings?.[0]?.designTokens || {},
             { landings: true, emails: false, socials: false, ads: false }
           );
           
@@ -398,8 +440,8 @@ function BuilderContent() {
         for (let i = 0; i < finalAssets.emails.length; i++) {
           const email = finalAssets.emails[i];
           const validatedDesign = await validateAndAdjustDesignForAPIs(
-            blueprintData?.assets?.emails?.[0]?.designTokens || {},
-            blueprintData?.assets?.emails?.[0]?.designTokens || {},
+            collection.assets?.emails?.[0]?.designTokens || {},
+            collection.assets?.emails?.[0]?.designTokens || {},
             { landings: false, emails: true, socials: false, ads: false }
           );
           
@@ -416,8 +458,8 @@ function BuilderContent() {
         for (let i = 0; i < finalAssets.ads.length; i++) {
           const ad = finalAssets.ads[i];
           const validatedDesign = await validateAndAdjustDesignForAPIs(
-            blueprintData?.assets?.ads?.[0]?.designTokens || {},
-            blueprintData?.assets?.ads?.[0]?.designTokens || {},
+            collection.assets?.ads?.[0]?.designTokens || {},
+            collection.assets?.ads?.[0]?.designTokens || {},
             { landings: false, emails: false, socials: false, ads: true }
           );
           
@@ -429,7 +471,10 @@ function BuilderContent() {
         }
       }
 
-      if (!validatedAssets.emails && !validatedAssets.landings && !validatedAssets.socials) {
+      if (!validatedAssets.emails && !validatedAssets.landings && !validatedAssets.socials && !validatedAssets.ads) {
+        console.error('[Fusion:Debug] finalAssets vacío. tasks generadas:', tasks.length, 'tasks:', JSON.stringify(tasks.map(t => t.channel)));
+        console.error('[Fusion:Debug] collection.assets keys:', Object.keys(collection.assets || {}));
+        console.error('[Fusion:Debug] finalAssets:', JSON.stringify(finalAssets).substring(0, 500));
         throw new Error('La IA no devolvió un formato de activos válido.');
       }
 
@@ -438,9 +483,123 @@ function BuilderContent() {
         emails: (validatedAssets.emails || []).map((e: any, idx: number) => ({ ...e, targetLandingIdx: idx }))
       };
 
+      // --- INICIO DE PRODUCCIÓN PROFUNDA (AUTOMATIZACIÓN TOTAL) ---
+      console.log("🚀 Iniciando Producción Profunda Automatizada...");
+      
+      const totalProductionSteps = (assetsWithLinks.socials?.length || 0) + 
+                                   (assetsWithLinks.landings?.length || 0) * 3 + 
+                                   (assetsWithLinks.socials?.reduce((acc: number, s: any) => acc + (s.slides?.length || 5), 0) || 0) || 1;
+      
+      let completedSteps = 0;
+      const updateProdProgress = (label: string) => {
+        completedSteps++;
+        setGenerationProgress({ 
+          current: tasks.length + completedSteps, 
+          total: tasks.length + totalProductionSteps, 
+          label 
+        });
+      };
+
+      // 1. Automatización de Guiones Sociales
+      if (assetsWithLinks.socials?.length > 0) {
+        for (let i = 0; i < assetsWithLinks.socials.length; i++) {
+          const social = assetsWithLinks.socials[i];
+          updateProdProgress(`Produciendo Guion Maestro: ${social.platform} [${i+1}/${assetsWithLinks.socials.length}]...`);
+          
+          try {
+            const breakdown = await generateVariantContent(
+              social, 
+              templateDirectives,
+              course.title,
+              course.description,
+              targetAudience,
+              campaignMission
+            );
+            if (breakdown.production_notes) {
+              social.production_notes = {
+                ...breakdown.production_notes,
+                voiceover: breakdown.voiceover || '' // Capturar Guion Maestro
+              };
+            }
+            
+            if (breakdown.slides?.length > 0) {
+              social.slides = breakdown.slides.map((s: any) => ({
+                segment: s.segment_label || 'VALOR',
+                text: s.text || '',
+                voiceover: s.voiceover || '',
+                duration: s.duration || 5,
+                imageUrl: '',
+                aiDescription: s.text
+              }));
+            } else if (breakdown.scenes?.length > 0) {
+              social.slides = breakdown.scenes.map((s: any) => ({
+                segment: s.segment_label || 'VALOR',
+                title: s.title || '',
+                text: s.text || '',
+                voiceover: s.voiceover || '',
+                duration: s.duration || 5,
+                imageUrl: '',
+                aiDescription: s.description || s.text
+              }));
+            }
+          } catch (err) {
+            console.error(`Error en Guion Social ${i}:`, err);
+          }
+        }
+      }
+
+      // 2. Automatización de Imágenes (Landings + Socials)
+      const generateImage = async (keywords: string, context: string, label: string) => {
+        try {
+          const res = await fetch('/api/ai/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: '', keywords, contextHint: context, engine: 'free' }),
+          });
+          const data = await res.json();
+          return data?.imageDataUrl || '';
+        } catch (e) {
+          console.error(`Error generating image for ${label}:`, e);
+          return '';
+        }
+      };
+
+      // Imágenes de Landings
+      if (assetsWithLinks.landings?.length > 0) {
+        for (let lIdx = 0; lIdx < assetsWithLinks.landings.length; lIdx++) {
+          const landing = assetsWithLinks.landings[lIdx];
+          for (let sIdx = 0; sIdx < (landing.sections?.length || 0); sIdx++) {
+            const section = landing.sections[sIdx];
+            updateProdProgress(`Fotografía IA: Landing [${lIdx+1}] - Sec [${sIdx+1}]...`);
+            section.imageUrl = await generateImage(
+              section.title, 
+              `Course: ${selectedCourse?.title}. Section: ${section.paragraph}`,
+              `Landing ${lIdx} Sec ${sIdx}`
+            );
+          }
+        }
+      }
+
+      // Imágenes de Socials
+      if (assetsWithLinks.socials?.length > 0) {
+        for (let sIdx = 0; sIdx < assetsWithLinks.socials.length; sIdx++) {
+          const social = assetsWithLinks.socials[sIdx];
+          for (let slIdx = 0; slIdx < (social.slides?.length || 0); slIdx++) {
+            const slide = social.slides[slIdx];
+            updateProdProgress(`Fotografía IA: ${social.platform} - Placa [${slIdx+1}]...`);
+            slide.imageUrl = await generateImage(
+              social.marketingName || '', 
+              slide.aiDescription || slide.text,
+              `${social.platform} Slide ${slIdx}`
+            );
+          }
+        }
+      }
+      // --- FIN DE PRODUCCIÓN PROFUNDA ---
+
       setGeneratedAssets(assetsWithLinks as any);
       setStep(3);
-      toast({ title: 'Activos Generados', description: 'Revisa las 3 variantes estratégicas antes de guardar.' });
+      toast({ title: 'Pack de Producción Completo', description: 'Todos los guiones e imágenes han sido generados por la IA.' });
     } catch (e: any) {
       console.error("[Fusion Error]", e);
       toast({ 
@@ -456,24 +615,33 @@ function BuilderContent() {
 
   const updateAsset = (channel: 'landings' | 'emails' | 'socials' | 'ads', variantIdx: number, field: string, value: any, subIndex?: number) => {
     if (!generatedAssets) return;
-    const newAssets = { ...generatedAssets };
-    const variant = newAssets[channel][variantIdx];
     
-    if (subIndex !== undefined && Array.isArray((variant as any)[field])) {
-      if (typeof (variant as any)[field][subIndex] === 'object') {
-        (variant as any)[field][subIndex] = { ...(variant as any)[field][subIndex], ...value };
+    setGeneratedAssets(prev => {
+      if (!prev) return prev;
+      
+      const channelData = [...(prev[channel] || [])];
+      const variant = { ...channelData[variantIdx] };
+      
+      if (subIndex !== undefined && Array.isArray((variant as any)[field])) {
+        const fieldArray = [...(variant as any)[field]];
+        if (typeof fieldArray[subIndex] === 'object' && fieldArray[subIndex] !== null) {
+          fieldArray[subIndex] = { ...fieldArray[subIndex], ...value };
+        } else {
+          fieldArray[subIndex] = value;
+        }
+        (variant as any)[field] = fieldArray;
       } else {
-        (variant as any)[field][subIndex] = value;
+        (variant as any)[field] = value;
       }
-    } else {
-      (variant as any)[field] = value;
-    }
-    setGeneratedAssets(newAssets);
+      
+      channelData[variantIdx] = variant as any;
+      return { ...prev, [channel]: channelData };
+    });
   };
 
   const allFonts = useMemo(() => {
     const fonts = new Set(['Inter', 'Outfit']);
-    if (blueprintData?.assets) {
+    if (blueprintData?.assets && typeof blueprintData.assets === 'object') {
       Object.values(blueprintData.assets).forEach((group: any) => {
         if (Array.isArray(group)) {
           group.forEach(asset => {
@@ -486,13 +654,104 @@ function BuilderContent() {
     return Array.from(fonts);
   }, [blueprintData]);
 
-  const handleFinalSave = async () => {
-    if (!profile?.uid || !generatedAssets) return;
-    setLoading(true);
-    
+  const handleFinalSave = async (overrideAssets?: any, silentAutoSave = false) => {
+    const currentAssets = overrideAssets || generatedAssets;
+    if (!profile?.uid || !currentAssets) return;
+    if (!silentAutoSave) setLoading(true);
+
+    // AUTO-SAVE RÁPIDO: Para guardados automáticos (video, PDF), 
+    // guarda directamente sin pipeline de validación para no corromper datos.
+    if (silentAutoSave) {
+      try {
+        const cleanUndefined = (obj: any): any => {
+          if (Array.isArray(obj)) return obj.map(v => v === undefined ? null : cleanUndefined(v));
+          if (obj !== null && typeof obj === 'object') {
+            return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined).map(([k, v]) => [k, cleanUndefined(v)]));
+          }
+          return obj;
+        };
+        const pageId = editId || Math.random().toString(36).substring(2, 15);
+        const pageRef = doc(db, 'salesPages', pageId);
+        await updateDoc(pageRef, cleanUndefined({
+          'aiContent.landings': currentAssets.landings || [],
+          'aiContent.socials':  currentAssets.socials  || [],
+          'aiContent.emails':   currentAssets.emails   || [],
+          'aiContent.ads':      currentAssets.ads      || [],
+          updatedAt: serverTimestamp(),
+        }));
+        
+        // CRITICAL: Actualizar estado local para que los links aparezcan en la UI sin refrescar
+        setGeneratedAssets(currentAssets);
+
+        // Si es un pack nuevo, actualizar la URL para que los siguientes auto-guardados usen el mismo ID
+        if (!editId) {
+          const params = new URLSearchParams(window.location.search);
+          params.set('id', pageId);
+          window.history.replaceState(null, '', `?${params.toString()}`);
+        }
+        
+        console.log('✅ Auto-guardado directo completado, estado sincronizado e ID estabilizado:', pageId);
+      } catch (e) {
+        console.error('[AutoSave Error]', e);
+      }
+      return;
+    }
+
     try {
+      // Función utilitaria para limpiar undefined antes de Firestore
+      const cleanUndefined = (obj: any): any => {
+        if (Array.isArray(obj)) return obj.map(v => v === undefined ? null : cleanUndefined(v));
+        if (obj !== null && typeof obj === 'object') {
+          return Object.fromEntries(
+            Object.entries(obj)
+              .filter(([_, v]) => v !== undefined)
+              .map(([k, v]) => [k, cleanUndefined(v)])
+          );
+        }
+        return obj;
+      };
+
       const pageId = editId || Math.random().toString(36).substring(2, 15);
       const pageRef = doc(db, 'salesPages', pageId);
+
+      // --- 0. LIMPIEZA DE ACTIVOS OBSOLETOS (FIREBASE STORAGE) ---
+      if (editId && !silentAutoSave) {
+        try {
+          const { getDoc } = await import('firebase/firestore');
+          const { ref, deleteObject } = await import('firebase/storage');
+          const oldSnap = await getDoc(pageRef);
+          
+          if (oldSnap.exists()) {
+            const oldData = oldSnap.data();
+            const getAllUrls = (obj: any): string[] => {
+              const urls: string[] = [];
+              const scan = (item: any) => {
+                if (!item) return;
+                if (typeof item === 'string' && item.includes('firebasestorage.googleapis.com')) urls.push(item);
+                else if (Array.isArray(item)) item.forEach(scan);
+                else if (typeof item === 'object') Object.values(item).forEach(scan);
+              };
+              scan(obj);
+              return Array.from(new Set(urls));
+            };
+
+            const oldUrls = getAllUrls(oldData.aiContent || {});
+            const newUrls = getAllUrls(currentAssets);
+            const abandonedUrls = oldUrls.filter(url => !newUrls.includes(url));
+
+            if (abandonedUrls.length > 0) {
+              console.log(`[StorageCleanup] Eliminando ${abandonedUrls.length} activos huérfanos...`);
+              for (const url of abandonedUrls) {
+                try {
+                  const storageRef = ref(storage, url);
+                  await deleteObject(storageRef);
+                } catch (e) { console.warn("Error borrando objeto:", url, e); }
+              }
+            }
+          }
+        } catch (e) { console.error("Error en Storage Cleanup:", e); }
+      }
+
       const course = courses?.find(c => c.id === selectedCourseId);
       
       // Definir variables necesarias
@@ -503,27 +762,29 @@ function BuilderContent() {
       console.log('🚀 Iniciando pre-conformación con protocolos de APIs...');
       
       // Usar los nuevos módulos especializados para validación y pre-conformación
+      const tokens = blueprintData?.assets || {};
+      
       const validatedLandings = await validateAndPreconformTemplates(
-        [generatedAssets.landings || []],
-        [blueprintData?.assets?.landings?.[0]?.designTokens || {}],
+        [currentAssets.landings || []],
+        [tokens.landings?.[0]?.designTokens || {}],
         ['landing']
       );
       
       const validatedSocials = await validateAndPreconformTemplates(
-        [generatedAssets.socials || []],
-        [blueprintData?.assets?.socials?.[0]?.designTokens || {}],
+        [currentAssets.socials || []],
+        [tokens.socials?.[0]?.designTokens || {}],
         ['social']
       );
       
       const validatedEmails = await validateAndPreconformTemplates(
-        [generatedAssets.emails || []],
-        [blueprintData?.assets?.emails?.[0]?.designTokens || {}],
+        [currentAssets.emails || []],
+        [tokens.emails?.[0]?.designTokens || {}],
         ['email']
       );
       
       const validatedAds = await validateAndPreconformTemplates(
-        [generatedAssets.ads || []],
-        [blueprintData?.assets?.ads?.[0]?.designTokens || {}],
+        [currentAssets.ads || []],
+        [tokens.ads?.[0]?.designTokens || {}],
         ['ads']
       );
       
@@ -547,13 +808,14 @@ function BuilderContent() {
       const exportUrls: Record<string, string> = {};
       try {
         for (const pack of packs) {
-          const sRef = ref(storage, `sales_pages/${pageId}/exports/${pack.name}_pack.txt`);
+          const sRef = ref(storage, `campaigns/${pageId}/exports/${pack.name}_pack.txt`);
           await uploadBytes(sRef, new Blob([pack.content], { type: 'text/plain' }));
           exportUrls[`${pack.name}ExportUrl`] = await getDownloadURL(sRef);
         }
       } catch (storageErr: any) {
         console.error("Storage Error:", storageErr);
-        throw new Error(`Error al generar archivos de exportación: ${storageErr.message}`);
+        // En lugar de romper todo el guardado si fallan las reglas de storage, solo informamos
+        toast({ title: 'Aviso', description: 'Los archivos de texto de exportación no pudieron guardarse en la nube, pero tus datos principales están a salvo.', variant: 'destructive' });
       }
       
       // Guardar en Firestore con metadatos de pre-conformación
@@ -567,10 +829,12 @@ function BuilderContent() {
         engineMeta: {
           generationEngine: 'Antigravity-AI-Command',
           blueprintId: selectedCollectionId,
-          sourceApp: 'BTECHAcademy'
+          sourceApp: 'BTECHAcademy',
+          mission: campaignMission
         },
         price: price,
         targetAudience: targetAudience,
+        templateDirectives: templateDirectives,
         templateCollectionId: selectedCollectionId,
         aiContent: {
           landings: validatedLandings.landing || [],
@@ -580,44 +844,51 @@ function BuilderContent() {
         },
         exportUrls: exportUrls,
         slug: (pageTitle || course?.title || 'lanzamiento').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''),
-        branding: course?.brandingOverride || profile.profile?.branding || {},
+        branding: course?.brandingOverride || profile.profile?.branding || { primary: '#8B5CF6' },
         isActive: true,
         updatedAt: serverTimestamp(),
       };
 
       // == RECOLECTOR DE IMÁGENES EFÍMERAS (LAZY UPLOAD) ==
-      // Todas las imágenes generadas por IA que dejamos en Base64 para ahorrar Storage, 
-      // se suben a Firebase Storage AHORA MISMO, justo antes de sellar el documento en Firestore.
       console.log('☁️ Ejecutando Lazy Upload de imágenes seleccionadas en pack multimedia...');
-      const cleanPageData = await uploadPendingImagesInObject(pageData, storage, `campaigns/${pageId}/assets`);
+      let finalData = await uploadPendingImagesInObject(pageData, storage, `campaigns/${pageId}/assets`);
+      
+      // LIMPIEZA FINAL: Firestore no permite 'undefined'
+      finalData = cleanUndefined(finalData);
       
       if (!editId) {
-        cleanPageData.createdAt = serverTimestamp();
+        finalData.createdAt = serverTimestamp();
       }
 
       try {
         if (editId) {
-          const { createdAt, ...updateData } = cleanPageData;
+          const { createdAt, ...updateData } = finalData;
           await updateDoc(pageRef, updateData);
         } else {
-          await setDoc(pageRef, cleanPageData);
+          await setDoc(pageRef, finalData);
         }
       } catch (firestoreErr: any) {
         console.error("Firestore Error:", firestoreErr);
         throw new Error(`Error al guardar en base de datos: ${firestoreErr.message}`);
       }
 
-      toast({ title: 'Pack Multimedia Guardado', description: 'Tus 3 rutas de lanzamiento están activas.' });
-      router.push('/mentoria/marketing/pages');
+      if (!silentAutoSave) {
+        toast({ title: 'Pack Multimedia Guardado', description: 'Tus 3 rutas de lanzamiento están activas.' });
+        router.push('/mentoria/marketing/pages');
+      } else {
+        console.log('✅ Auto-guardado silencioso completado.');
+      }
     } catch (e: any) {
       console.error("[Final Save Error]", e);
-      toast({ 
-        variant: 'destructive', 
-        title: 'Error al guardar el Pack', 
-        description: e.message || 'Ocurrió un error inesperado al procesar el guardado.'
-      });
+      if (!silentAutoSave) {
+        toast({ 
+          variant: 'destructive', 
+          title: 'Error al guardar el Pack', 
+          description: e.message || 'Ocurrió un error inesperado al procesar el guardado.'
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!silentAutoSave) setLoading(false);
     }
   };
 
@@ -637,48 +908,59 @@ function BuilderContent() {
           </div>
         </header>
 
-        <CampaignGenerator
-          step={step}
-          selectedCourseId={selectedCourseId}
-          setSelectedCourseId={setSelectedCourseId}
-          selectedCollectionId={selectedCollectionId}
-          setSelectedCollectionId={setSelectedCollectionId}
-          pageTitle={pageTitle}
-          setPageTitle={setPageTitle}
-          targetAudience={targetAudience}
-          setTargetAudience={setTargetAudience}
-          price={price}
-          setPrice={setPrice}
-          courses={courses}
-          collections={collections}
-          allTags={allTags}
-          selectedCourse={selectedCourse}
-          dynamicProfiles={dynamicProfiles}
-          isGenerating={isGenerating}
-          generationProgress={generationProgress}
-          onGenerate={handleMatchAndGenerate}
-          onStepChange={setStep}
-        />
+        {step <= 2 && (
+          <CampaignGenerator
+            step={step}
+            selectedCourseId={selectedCourseId}
+            setSelectedCourseId={setSelectedCourseId}
+            selectedCollectionId={selectedCollectionId}
+            setSelectedCollectionId={setSelectedCollectionId}
+            pageTitle={pageTitle}
+            setPageTitle={setPageTitle}
+            targetAudience={targetAudience}
+            setTargetAudience={setTargetAudience}
+            campaignMission={campaignMission}
+            setCampaignMission={setCampaignMission}
+            price={price}
+            setPrice={setPrice}
+            courses={courses}
+            collections={collections}
+            allTags={allTags}
+            selectedCourse={selectedCourse}
+            dynamicProfiles={dynamicProfiles}
+            templateDirectives={templateDirectives}
+            setTemplateDirectives={setTemplateDirectives}
+            isGenerating={isGenerating}
+            generationProgress={generationProgress}
+            onGenerate={handleMatchAndGenerate}
+            onStepChange={setStep}
+          />
+        )}
 
-        <TemplateEditor
-          generatedAssets={generatedAssets}
-          blueprintData={blueprintData}
-          activeLandingIdx={activeLandingIdx}
-          setActiveLandingIdx={setActiveLandingIdx}
-          activeEmailIdx={activeEmailIdx}
-          setActiveEmailIdx={setActiveEmailIdx}
-          activeSocialIdx={activeSocialIdx}
-          setActiveSocialIdx={setActiveSocialIdx}
-          activeAdsIdx={activeAdsIdx}
-          setActiveAdsIdx={setActiveAdsIdx}
-          selectedCourseId={selectedCourseId}
-          courses={courses}
-          allTags={allTags}
-          profile={profile}
-          updateAsset={updateAsset}
-          loading={loading}
-          onSave={handleFinalSave}
-        />
+        {step === 3 && (
+          <TemplateEditor
+            generatedAssets={generatedAssets}
+            blueprintData={blueprintData}
+            activeLandingIdx={activeLandingIdx}
+            setActiveLandingIdx={setActiveLandingIdx}
+            activeEmailIdx={activeEmailIdx}
+            setActiveEmailIdx={setActiveEmailIdx}
+            activeSocialIdx={activeSocialIdx}
+            setActiveSocialIdx={setActiveSocialIdx}
+            activeAdsIdx={activeAdsIdx}
+            setActiveAdsIdx={setActiveAdsIdx}
+            selectedCourseId={selectedCourseId}
+            templateDirectives={templateDirectives}
+            courses={courses}
+            allTags={allTags}
+            profile={profile}
+            updateAsset={updateAsset}
+            loading={loading}
+            onSave={handleFinalSave}
+            campaignMission={campaignMission}
+            adns={masterAdns}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

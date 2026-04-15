@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, AlertTriangle, Video } from 'lucide-react';
 
 // Componente para mostrar validaciones de plataforma
 const ValidationBadge = ({ validationResults, platformAdaptations }: { 
@@ -140,9 +140,31 @@ const PlatformIcon = ({ platform, className }: { platform: string, className?: s
   }
 };
 
-// Mockup de Social Media - Exactamente como en la versión 1 del Git
-export const SocialMockup = ({ variant, index }: { variant: any, index: number }) => {
-  const tokens = variant.designTokens;
+// Mockup de Social Media - Sincronizado con Master ADNs
+export const SocialMockup = ({ variant, index, masterAdn }: { variant: any, index: number, masterAdn?: any }) => {
+  // Mapeo legacy por si no se provee el ADN dinámico
+  const LEGACY_PRESET_STYLES: Record<string, any> = {
+    '01': { name: 'GURÚ (Hormozi)', primary: '#000000', secondary: '#FFFFFF', accent: '#FACC15', fontHeading: 'Inter-Black' },
+    '02': { name: 'DOCUMENTAL', primary: '#0F172A', secondary: '#F8FAFC', accent: '#6366F1', fontHeading: 'Inter' },
+    '03': { name: 'CREADOR LIMPIO', primary: '#18181B', secondary: '#FAFAFA', accent: '#F43F5E', fontHeading: 'Inter' },
+    '04': { name: 'LOFI AESTHETIC', primary: '#000000', secondary: '#18181B', accent: '#10B981', fontHeading: 'Inter' },
+    '05': { name: 'NOTICIA VIRAL', primary: '#000000', secondary: '#FFFFFF', accent: '#FACC15', fontHeading: 'Inter' },
+  };
+
+  // Detección de Preset
+  const presetId = variant.blueprintConfig?.presetId || variant.videoConfig?.presetId || '01';
+  
+  // Usar el ADN dinámico si existe, sino caer al legacy
+  const presetStyle = masterAdn || LEGACY_PRESET_STYLES[presetId] || LEGACY_PRESET_STYLES['01'];
+  
+  // Tokens finales priorizando la identidad del ADN Maestro
+  const tokens = {
+    ...variant.designTokens,
+    primary: presetStyle.global_fx?.primary_color || presetStyle.primary || variant.designTokens?.primary,
+    accent: presetStyle.global_fx?.accent_color || presetStyle.accent || variant.designTokens?.accent,
+    fontHeading: presetStyle.scenes_rules?.default?.text_styling?.fontFamily || presetStyle.fontHeading || variant.designTokens?.fontHeading
+  };
+
   const isCarousel = variant.type === 'carousel' || variant.type === 'thread' || variant.type === 'document';
   const isVertical = variant.type === 'story' || variant.type === 'short_video';
   
@@ -158,7 +180,12 @@ export const SocialMockup = ({ variant, index }: { variant: any, index: number }
             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Variante {index + 1} • {variant.type?.replace('_', ' ')}</p>
           </div>
         </div>
-        {isCarousel && <Badge className="bg-emerald-500 text-white border-none text-[8px] font-black uppercase h-5">{variant.slideCount || 5} Slots</Badge>}
+        <div className="flex flex-col items-end gap-1">
+          <Badge className="bg-slate-900 text-white border-none text-[7px] font-black uppercase h-4 px-2">
+            ADN: {presetStyle.name}
+          </Badge>
+          {isCarousel && <Badge className="bg-emerald-500 text-white border-none text-[7px] font-black uppercase h-4 px-2">{variant.slideCount || 5} Slots</Badge>}
+        </div>
       </div>
 
       <div 
@@ -167,6 +194,14 @@ export const SocialMockup = ({ variant, index }: { variant: any, index: number }
           isVertical ? "aspect-[9/16] w-full max-w-[340px]" : "aspect-square w-full"
         )}
       >
+        {/* Visual Signature - Academy Auth Bars */}
+        {presetId === '01' && (
+          <>
+            <div className="absolute top-0 left-0 right-0 h-12 z-20 opacity-90" style={{ backgroundColor: tokens.primary }} />
+            <div className="absolute bottom-0 left-0 right-0 h-20 z-20 opacity-90" style={{ backgroundColor: tokens.primary }} />
+          </>
+        )}
+
         {isCarousel && (
           <>
             <div className="absolute inset-0 translate-x-2 translate-y-2 bg-slate-200 rounded-[2rem] z-0" />
@@ -182,12 +217,19 @@ export const SocialMockup = ({ variant, index }: { variant: any, index: number }
             className="object-cover grayscale-[0.2] opacity-90 group-hover/mockup:scale-105 transition-transform duration-1000" 
             unoptimized 
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
+          {/* Visual Signature - Glass Premium Soft Overlay */}
+          <div className={cn(
+            "absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60",
+            presetId === '02' && "backdrop-blur-[2px] bg-white/5"
+          )} />
         </div>
 
         <div className="absolute inset-0 z-20 p-8 flex flex-col justify-between text-white">
           <div className="flex justify-between items-start">
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+            <div className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center",
+              presetId === '02' ? "bg-white/30 backdrop-blur-xl border border-white/40" : "bg-white/10 backdrop-blur-md border border-white/20"
+            )}>
               <div className="w-2 h-2 rounded-full bg-white/40" />
             </div>
             <div className="flex flex-col items-end gap-1">
@@ -202,13 +244,20 @@ export const SocialMockup = ({ variant, index }: { variant: any, index: number }
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10">
+          <div className="space-y-4 relative z-30">
+            {/* Visual Signature - Impact Block highlight */}
+            <div className={cn(
+              "p-4 rounded-2xl border transition-all",
+              presetId === '02' ? "bg-white/20 backdrop-blur-2xl border-white/30" : "bg-black/40 backdrop-blur-md border-white/10",
+              presetId === '05' && "border-l-4"
+            )} style={{ borderLeftColor: presetId === '05' ? tokens.accent : undefined }}>
               <h4 
                 className="text-xl font-black italic leading-[1.1] text-white drop-shadow-lg" 
                 style={{ fontFamily: tokens?.fontHeading }}
               >
-                "{variant.hook || 'Slot para Gancho de Retención'}"
+                "{variant.contentBreakdown ? 
+                  (variant.contentBreakdown.scenes?.[0]?.title || variant.contentBreakdown.slides?.[0]?.text || variant.hook) : 
+                  (variant.hook || 'Slot para Gancho de Retención')}"
               </h4>
             </div>
             <div className="flex items-center justify-between">
@@ -216,7 +265,7 @@ export const SocialMockup = ({ variant, index }: { variant: any, index: number }
                 <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm" />
                 <span className="text-[8px] font-bold uppercase tracking-widest opacity-60">@entorno_institucional</span>
               </div>
-              <Button size="sm" className="h-7 px-3 rounded-lg text-[8px] font-black uppercase shadow-lg" style={{ backgroundColor: tokens?.accent }}>
+              <Button size="sm" className="h-7 px-4 rounded-lg text-[8px] font-black uppercase shadow-lg transition-transform hover:scale-105" style={{ backgroundColor: tokens?.accent }}>
                 Acceder al Programa
               </Button>
             </div>
@@ -224,11 +273,7 @@ export const SocialMockup = ({ variant, index }: { variant: any, index: number }
         </div>
       </div>
 
-      {/* Validaciones de plataforma */}
-      <ValidationBadge 
-        validationResults={variant.validationResults} 
-        platformAdaptations={variant.platformAdaptations} 
-      />
+      {/* Validaciones de plataforma - No requeridas para Redes Sociales con Presets */}
     </div>
   );
 };

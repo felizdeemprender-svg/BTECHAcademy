@@ -60,6 +60,11 @@ export function formatSocialContent(socials: TemplateMetadata[], options: Export
       `PLACA ${si + 1}:\n[TEXTO EN IMAGEN]: ${slide.text}\n[LINK IMAGEN]: ${slide.imageUrl}`
     ).join('\n\n') || '';
     
+    const audioConfig = social.production_notes?.music_url ? `[CONFIGURACIÓN DE AUDIO]:
+URL: ${social.production_notes.music_url}
+DURACIÓN_ORIGINAL: ${social.production_notes.music_duration}s
+SINCRONIZACIÓN: Al inicio del video (0s)\n\n` : '';
+
     let content = `${social.marketingName?.toUpperCase() || `PACK SOCIAL ${index + 1}`}`;
     content += ` (${social.type?.toUpperCase()})${social.preconformed ? ' - PRE-CONFORMADO' : ''})\n\n`;
     content += `GANCHO: ${social.hook || 'Sin gancho'}\n\n`;
@@ -69,6 +74,7 @@ export function formatSocialContent(socials: TemplateMetadata[], options: Export
     content += `🔗 ${landingLink}\n\n`;
     content += `--------------------------------------------------\n\n`;
     content += `CONTENIDO PARA DISEÑO DE PLACAS:\n${slidesText}\n\n`;
+    content += audioConfig;
     content += `HASHTAGS SUGERIDOS: ${(social.hashtags || []).map((h: string) => h.startsWith('#') ? h : `#${h}`).join(' ')}\n`;
     
     if (options.includeValidationResults && social.validationResults) {

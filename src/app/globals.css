@@ -98,3 +98,9 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   @apply bg-primary/10 rounded-full hover:bg-primary/20 transition-colors;
 }
+@font-face { font-family: 'Inter-Black.ttf'; src: url('/fonts/Inter-Black.ttf') format('truetype'); font-weight: 900; font-style: normal; }
+
+@font-face { font-family: 'georgia.ttf'; src: url('/fonts/georgia.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'calibri.ttf'; src: url('/fonts/calibri.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'trebucbd.ttf'; src: url('/fonts/trebucbd.ttf') format('truetype'); font-weight: bold; font-style: normal; }
+@font-face { font-family: 'impact.ttf'; src: url('/fonts/impact.ttf') format('truetype'); font-weight: normal; font-style: normal; }
