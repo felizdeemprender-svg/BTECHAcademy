@@ -9,8 +9,8 @@ export function getAdminApp() {
     const serviceAccountPath = path.join(process.cwd(), 'service-account.json');
     
     let config: any = {
-      projectId: process.env.FIREBASE_PROJECT_ID || firebaseConfig.projectId,
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || firebaseConfig.storageBucket
+      projectId: process.env.FB_ADMIN_PROJECT_ID || firebaseConfig.projectId,
+      storageBucket: process.env.FB_ADMIN_STORAGE_BUCKET || firebaseConfig.storageBucket
     };
 
     // Si el archivo de cuenta de servicio existe, lo usamos para autenticar localmente
