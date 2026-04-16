@@ -1,7 +1,11 @@
 import fs from 'fs';
 import https from 'https';
 
-const apiKey = "AIzaSyB4t3jjK0ZdydDWjjwxdKMrYkelyLAtp-o"; // La clave actual en tu .env
+const apiKey = process.env.GOOGLE_TTS_API_KEY; 
+if (!apiKey) {
+  console.error("ERROR: No se encontró GOOGLE_TTS_API_KEY en las variables de entorno.");
+  process.exit(1);
+}
 
 const postData = JSON.stringify({
   input: { text: "Prueba técnica" },
