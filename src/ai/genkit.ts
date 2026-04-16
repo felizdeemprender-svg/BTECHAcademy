@@ -38,3 +38,11 @@ export function validateAiConfig() {
 
   return status;
 }
+
+/**
+ * Alias para compatibilidad con flujos existentes.
+ */
+export function validateApiKey(): string {
+  validateAiConfig();
+  return (process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY)!;
+}
