@@ -62,6 +62,31 @@ export async function getOrCreateFolder(token: string, folderName: string, paren
  * Paso 2: PATCH a /upload/drive/v3/files/{fileId}?uploadType=media con el binario crudo.
  * Paso 3: GET para obtener links definitivos (con anti-latencia de indexación).
  */
+
+/**
+ * Concede permiso de lectura pública al archivo ("Anyone with the link can view").
+ */
+export async function shareFilePublicly(fileId: string, token: string) {
+  try {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token.trim()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        role: 'reader',
+        type: 'anyone'
+      })
+    });
+    if (!res.ok) {
+      console.error(`[Drive:Share] Error al compartir archivo ${fileId}:`, await res.text());
+    }
+  } catch (e) {
+    console.error(`[Drive:Share] Fallo crítico al compartir ${fileId}:`, e);
+  }
+}
+
 export async function uploadToDrive(
   filePath: string,
   token: string,
@@ -136,8 +161,11 @@ export async function uploadToDrive(
 
   console.log(`[Drive:Upload] Binario subido. Esperando indexación de Drive...`);
 
-  // PASO 3: Anti-latencia
-  await new Promise(resolve => setTimeout(resolve, 800));
+  // PASO 3: Anti-latencia y Permisos
+  await Promise.all([
+    new Promise(resolve => setTimeout(resolve, 800)),
+    shareFilePublicly(fileId, token)
+  ]);
 
   const metaRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,name,webViewLink,webContentLink,mimeType,size`, {
     headers: { 'Authorization': `Bearer ${token.trim()}` }

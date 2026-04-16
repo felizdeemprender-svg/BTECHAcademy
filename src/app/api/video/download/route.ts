@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
     const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      cache: 'no-store'
     });
 
     if (!driveRes.ok) {
