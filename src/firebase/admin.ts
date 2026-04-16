@@ -29,9 +29,10 @@ export function getAdminApp() {
   }
 
   // 3. Automated Detection (FIREBASE_CONFIG is auto-set by the runtime)
-  if (process.env.FIREBASE_CONFIG) {
+  const envConfig = process.env.FIREBASE_CONFIG;
+  if (envConfig) {
     try {
-      const fbConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+      const fbConfig = JSON.parse(envConfig);
       console.log('[Firebase Admin] Inicializando usando FIREBASE_CONFIG detectado.');
       return initializeApp({
         projectId: fbConfig.projectId,
@@ -42,7 +43,17 @@ export function getAdminApp() {
     }
   }
 
-  // 4. Production Default (Managed Environments)
+  // 4. Standard Google Cloud project detection
+  const gcpProjectId = process.env.GCLOUD_PROJECT || process.env.PROJECT_ID;
+  if (gcpProjectId) {
+    console.log('[Firebase Admin] Inicializando con GCLOUD_PROJECT/PROJECT_ID:', gcpProjectId);
+    return initializeApp({
+      projectId: gcpProjectId,
+      storageBucket: `${gcpProjectId}.appspot.com`
+    });
+  }
+
+  // 5. Production Default (Managed Environments)
   // En Cloud Functions o App Hosting, initializeApp() detecta automáticamente las credenciales.
   console.log('[Firebase Admin] Inicializando con credenciales por defecto del entorno.');
   return initializeApp();

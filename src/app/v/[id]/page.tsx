@@ -178,7 +178,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       toast({ 
         variant: 'destructive', 
         title: 'Error al iniciar el pago', 
-        description: e.message || 'No pudimos conectar con Mercado Pago. Verifica tu conexión o intenta más tarde.' 
+        description: e.message || 'Error interno del servidor. Por favor intenta más tarde.' 
       });
       setLoading(false);
     }
