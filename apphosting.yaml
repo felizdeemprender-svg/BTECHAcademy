@@ -29,3 +29,15 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: G-FE870RV1MM
     availability: [BUILD, RUNTIME]
+  - variable: GOOGLE_GENAI_API_KEY
+    value: AIzaSyB4t3jjK0ZdydDWjjwxdKMrYkelyLAtp-o
+    availability: [BUILD, RUNTIME]
+  - variable: GEMINI_API_KEY
+    value: AIzaSyB4t3jjK0ZdydDWjjwxdKMrYkelyLAtp-o
+    availability: [BUILD, RUNTIME]
+  - variable: GOOGLE_API_KEY
+    value: AIzaSyB4t3jjK0ZdydDWjjwxdKMrYkelyLAtp-o
+    availability: [BUILD, RUNTIME]
+  - variable: GOOGLE_TTS_API_KEY
+    value: AIzaSyC8hI8TG6b2r4BQk7lmL_HUMxQPRs96jo4
+    availability: [BUILD, RUNTIME]

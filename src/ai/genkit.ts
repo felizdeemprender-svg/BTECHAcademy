@@ -16,12 +16,25 @@ export const ai = genkit({
 });
 
 /**
- * Verifica que la API key esté disponible antes de usar IA.
+ * Verifica que las API keys críticas estén disponibles.
  */
-export function validateApiKey(): string {
-  const key = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY;
-  if (!key) {
-    throw new Error('API key de Gemini no configurada. Revisa GOOGLE_GENAI_API_KEY en .env.local');
+export function validateAiConfig() {
+  const genaiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY;
+  const ttsKey = process.env.GOOGLE_TTS_API_KEY;
+  
+  const status = {
+    has_genai: !!genaiKey,
+    has_tts: !!ttsKey
+  };
+
+  if (!genaiKey) {
+    console.error('[Genkit] ERROR: API key de Gemini no configurada.');
+    throw new Error('Servicio de IA no disponible (Falta GOOGLE_GENAI_API_KEY)');
   }
-  return key;
+
+  if (!ttsKey) {
+    console.warn('[Genkit] ADVERTENCIA: GOOGLE_TTS_API_KEY no configurada. Las locuciones podrían fallar.');
+  }
+
+  return status;
 }
