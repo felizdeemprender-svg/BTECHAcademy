@@ -207,7 +207,7 @@ export async function POST(req: NextRequest) {
     await runGarbageCollector(baseRenderPath);
 
     // 1. CARGA DINÁMICA DE ADN (JSON)
-    const adnsDir = path.join(process.cwd(), 'adns');
+    const adnsDir = path.join(process.cwd(), 'public', 'adns');
     const adnFiles = await readdir(adnsDir);
     const targetFile = adnFiles.find(f => f.startsWith(adnId || '01')) || '01_guru_hormozi.json';
     const adnConfig = JSON.parse(await readFile(path.join(adnsDir, targetFile), 'utf-8'));

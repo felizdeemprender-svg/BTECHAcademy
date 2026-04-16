@@ -54,7 +54,7 @@ export async function generateVariantContent(
   validateApiKey();
   
   // CARGA DINÁMICA DE ADN
-  const adnsDir = path.join(process.cwd(), 'adns');
+  const adnsDir = path.join(process.cwd(), 'public', 'adns');
   const adnId = variant.blueprintConfig?.presetId || variant.blueprintConfig?.adn || '01';
   const adnFiles = await fs.readdir(adnsDir);
   const targetFile = adnFiles.find(f => f.startsWith(adnId)) || '01_guru_hormozi.json';
