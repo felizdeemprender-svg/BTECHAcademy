@@ -9,7 +9,7 @@ export function getAdminApp() {
 
   const serviceAccountPath = path.join(process.cwd(), 'service-account.json');
   
-  // 1. Local Development with Service Account
+  // 1. Desarrollo Local con archivo de cuenta de servicio
   if (fs.existsSync(serviceAccountPath)) {
     console.log('[Firebase Admin] Usando archivo service-account.json');
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
@@ -19,43 +19,10 @@ export function getAdminApp() {
     });
   }
 
-  // 2. Custom Environment Variables (Optional)
-  if (process.env.FB_ADMIN_PROJECT_ID) {
-    console.log('[Firebase Admin] Inicializando con variables FB_ADMIN');
-    return initializeApp({
-      projectId: process.env.FB_ADMIN_PROJECT_ID,
-      storageBucket: process.env.FB_ADMIN_STORAGE_BUCKET
-    });
-  }
-
-  // 3. Automated Detection (FIREBASE_CONFIG is auto-set by the runtime)
-  const envConfig = process.env.FIREBASE_CONFIG;
-  if (envConfig) {
-    try {
-      const fbConfig = JSON.parse(envConfig);
-      console.log('[Firebase Admin] Inicializando usando FIREBASE_CONFIG detectado.');
-      return initializeApp({
-        projectId: fbConfig.projectId,
-        storageBucket: fbConfig.storageBucket || `${fbConfig.projectId}.appspot.com`
-      });
-    } catch (e) {
-      console.error('[Firebase Admin] Error parseando FIREBASE_CONFIG:', e);
-    }
-  }
-
-  // 4. Standard Google Cloud project detection
-  const gcpProjectId = process.env.GCLOUD_PROJECT || process.env.PROJECT_ID;
-  if (gcpProjectId) {
-    console.log('[Firebase Admin] Inicializando con GCLOUD_PROJECT/PROJECT_ID:', gcpProjectId);
-    return initializeApp({
-      projectId: gcpProjectId,
-      storageBucket: `${gcpProjectId}.appspot.com`
-    });
-  }
-
-  // 5. Production Default (Managed Environments)
-  // En Cloud Functions o App Hosting, initializeApp() detecta automáticamente las credenciales.
-  console.log('[Firebase Admin] Inicializando con credenciales por defecto del entorno.');
+  // 2. Producción (Google Cloud / Firebase Managed)
+  // En Cloud Functions o App Hosting, initializeApp() sin argumentos usa 
+  // automáticamente las credenciales por defecto del entorno (ADC).
+  console.log('[Firebase Admin] Inicializando con "Default Initialization" (Producción).');
   return initializeApp();
 }
 
