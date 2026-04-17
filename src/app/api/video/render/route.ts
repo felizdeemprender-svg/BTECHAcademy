@@ -49,25 +49,46 @@ async function runGarbageCollector(basePath: string) {
 }
 
 async function runFfmpeg(args: string[], label?: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const exeName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+  const exeName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+  
+  // 1. Intentar obtener el path del módulo importado
+  let ffmpegPath = ffmpegPathFromStatic;
+  
+  // 2. Si no existe o no es válido, buscar en rutas conocidas de Next.js Standalone
+  if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
+    const possiblePaths = [
+      path.join(process.cwd(), 'node_modules', 'ffmpeg-static', exeName),
+      path.join(process.cwd(), '..', '..', 'node_modules', 'ffmpeg-static', exeName),
+      path.join('/workspace', 'node_modules', 'ffmpeg-static', exeName),
+      path.join('/workspace', '.next', 'standalone', 'node_modules', 'ffmpeg-static', exeName)
+    ];
     
-    // Búsqueda robusta del binario de FFmpeg
-    // Priorizar el path provisto por el módulo (esto ayuda a Next.js standalone a incluirlo)
-    let ffmpegPath = ffmpegPathFromStatic;
-    
-    if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
-      ffmpegPath = path.join(process.cwd(), 'node_modules', 'ffmpeg-static', exeName);
-      if (!fs.existsSync(ffmpegPath)) {
-        ffmpegPath = path.join(process.cwd(), '..', '..', 'node_modules', 'ffmpeg-static', exeName);
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        ffmpegPath = p;
+        break;
       }
     }
-    
-    // Si llegamos aquí y sigue siendo null o no existe, intentar un último fallback al PATH del sistema
-    if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
-        ffmpegPath = exeName; // Confiar en que esté en el PATH global
+  }
+
+  // 3. Si sigue sin aparecer, usar el comando global como último recurso
+  if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
+    ffmpegPath = exeName;
+  }
+
+  // LOG DE DIAGNÓSTICO (Solo visible en servidor)
+  console.log(`[FFmpeg:Path] Usando binario en: ${ffmpegPath} (Existe: ${fs.existsSync(ffmpegPath)})`);
+
+  // 4. Asegurar permisos de ejecución en Linux
+  if (process.platform !== 'win32' && ffmpegPath !== exeName && fs.existsSync(ffmpegPath)) {
+    try {
+      fs.chmodSync(ffmpegPath, 0o755);
+    } catch (e) {
+      console.warn(`[FFmpeg:Permissions] No se pudo aplicar chmod a ${ffmpegPath}`);
     }
-    
+  }
+
+  return new Promise((resolve, reject) => {
     // Búsqueda robusta de la carpeta de fuentes
     let fontsDir = path.join(process.cwd(), 'public', 'fonts');
     if (!fs.existsSync(fontsDir)) {
@@ -80,8 +101,10 @@ async function runFfmpeg(args: string[], label?: string): Promise<void> {
       FONTCONFIG_FILE: fontsConfPath,
       FONTCONFIG_PATH: fontsDir,
     };
-    if (label) console.log(`[FFmpeg:${label}] Running with args:`, args.join(' '));
-    const proc = spawn(ffmpegPath, args, { env });
+    
+    if (label) console.log(`[FFmpeg:${label}] Ejecutando con ${args.length} argumentos...`);
+    
+    const proc = spawn(ffmpegPath!, args, { env });
     let stderr = '';
     proc.stderr.on('data', (data: Buffer) => stderr += data.toString());
     proc.on('close', (code: number) => {
