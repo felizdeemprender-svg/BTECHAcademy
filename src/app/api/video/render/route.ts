@@ -50,12 +50,24 @@ async function runGarbageCollector(basePath: string) {
 async function runFfmpeg(args: string[], label?: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const exeName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
-    const ffmpegPath = path.join(process.cwd(), 'node_modules', 'ffmpeg-static', exeName);
-    const fontsConfPath = path.join(process.cwd(), 'public', 'fonts', 'fonts.conf');
+    
+    // Búsqueda robusta del binario de FFmpeg
+    let ffmpegPath = path.join(process.cwd(), 'node_modules', 'ffmpeg-static', exeName);
+    if (!fs.existsSync(ffmpegPath)) {
+      ffmpegPath = path.join(process.cwd(), '..', '..', 'node_modules', 'ffmpeg-static', exeName);
+    }
+    
+    // Búsqueda robusta de la carpeta de fuentes
+    let fontsDir = path.join(process.cwd(), 'public', 'fonts');
+    if (!fs.existsSync(fontsDir)) {
+      fontsDir = path.join(process.cwd(), '..', '..', 'public', 'fonts');
+    }
+    const fontsConfPath = path.join(fontsDir, 'fonts.conf');
+
     const env = {
       ...process.env,
       FONTCONFIG_FILE: fontsConfPath,
-      FONTCONFIG_PATH: path.join(process.cwd(), 'public', 'fonts'),
+      FONTCONFIG_PATH: fontsDir,
     };
     if (label) console.log(`[FFmpeg:${label}] Running with args:`, args.join(' '));
     const proc = spawn(ffmpegPath, args, { env });
@@ -86,8 +98,15 @@ function getDrawtextFilter(adnConfig: any, scene: Scene, brandColor: string, wid
 
   const fontColor = resolveColor(activeRule.fontcolor || 'white');
   const fontFile = activeRule.fontFamily || 'Inter-Black.ttf';
-  const fontAbsPath = path.join(process.cwd(), 'public', 'fonts', fontFile);
-  const fallbackPath = path.join(process.cwd(), 'public', 'fonts', 'Inter-Black.ttf');
+  
+  // Búsqueda robusta de la fuente
+  let fontsDir = path.join(process.cwd(), 'public', 'fonts');
+  if (!fs.existsSync(fontsDir)) {
+    fontsDir = path.join(process.cwd(), '..', '..', 'public', 'fonts');
+  }
+  
+  const fontAbsPath = path.join(fontsDir, fontFile);
+  const fallbackPath = path.join(fontsDir, 'Inter-Black.ttf');
   const resolvedFontPath = fs.existsSync(fontAbsPath) ? fontAbsPath : fallbackPath;
   
   // FIX CRÍTICO WINDOWS 0xC0000005 / "Both text and text file provided":
