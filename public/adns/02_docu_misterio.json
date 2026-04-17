@@ -1,0 +1,47 @@
+{
+  "id": "02",
+  "name": "Docu-Misterio (Cinemático)",
+  "description": "Estilo documental premium (Magnates Media). Fuentes Serif, fundidos lentos de alto valor percibido.",
+  "ai_prompts": {
+    "GANCHO": "VOZ: Frase reveladora y enigmática (12 palabras). PANTALLA: Título del \"Documental\".",
+    "VALOR": "VOZ: Explicación teórica profunda, ritmo pausado. PANTALLA: Un concepto clave.",
+    "CTA": "VOZ: \"Descubre la verdad completa en el link\". PANTALLA: \"Ver Completo\"."
+  },
+  "global_fx": {
+    "voiceId": "diego",
+    "audioMastering_base": "studio",
+    "colorGrade_lut": "noir_mystery.cube",
+    "vignette_intensity": 0.55,
+    "grain_intensity": 30,
+    "safe_area_protection": true,
+    "platform_target": "reels"
+  },
+  "scenes_rules": {
+    "default": {
+      "text_styling": {
+        "fontFamily": "georgia.ttf",
+        "fontsize": 45,
+        "uppercase": false,
+        "x": "center",
+        "y": "h*0.75",
+        "animation": "fade_in",
+        "effects": {
+          "text_stroke": { "color": "black", "width": 1 },
+          "fake_3d_shadows": false,
+          "neon_glow": { "enabled": false }
+        }
+      },
+      "visual_fx": {
+        "camera_movement": "zoom_out",
+        "transition_fade_duration": 1.5
+      },
+      "audio_fx": {
+        "music_mastering": { "ducking_ratio": 6 },
+        "vocal_processing": { "reverb_room_size": 0.3 }
+      }
+    },
+    "GANCHO": {
+      "text_styling": { "y": "center", "fontsize": 60, "uppercase": true }
+    }
+  }
+}

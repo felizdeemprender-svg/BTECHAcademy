@@ -60,7 +60,7 @@ service-account.json
 *.jpg
 *.txt
 !README.md
-adns/
+# adns/ (Removed to allow public/adns and src/app/api/adns)
 scratch/
 tmp/
 fonts-cache/

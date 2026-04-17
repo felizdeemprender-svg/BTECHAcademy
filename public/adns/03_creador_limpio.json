@@ -1,0 +1,42 @@
+{
+  "id": "03",
+  "name": "Creador Limpio (Estilo Ali)",
+  "description": "Estética Minimalista. Muy Apple-esque. Calibri, curvas suaves, texto pulcro en el tercio inferior.",
+  "ai_prompts": {
+    "GANCHO": "VOZ: \"Aquí te explico cómo logré X\". PANTALLA: Título amigable y estructurado.",
+    "VALOR": "VOZ: 3 viñetas claras y educativas. PANTALLA: Textos tipo bullet-point.",
+    "CTA": "VOZ: \"Guarda este video\". PANTALLA: \"GUARDAR PARA LUEGO\"."
+  },
+  "global_fx": {
+    "voiceId": "sofia",
+    "audioMastering_base": "none",
+    "colorGrade_lut": "vibrant_clean.cube",
+    "vignette_intensity": 0.05,
+    "safe_area_protection": true,
+    "platform_target": "reels"
+  },
+  "scenes_rules": {
+    "default": {
+      "text_styling": {
+        "fontFamily": "calibri.ttf",
+        "fontsize": 50,
+        "uppercase": false,
+        "x": "center",
+        "y": "h*0.70",
+        "animation": "slide_in",
+        "effects": {
+          "text_stroke": { "color": "white", "width": 8 },
+          "fake_3d_shadows": false,
+          "neon_glow": { "enabled": false }
+        }
+      },
+      "visual_fx": {
+        "camera_movement": "none",
+        "background_dynamic_blur": true
+      },
+      "audio_fx": {
+        "music_mastering": { "ducking_ratio": 4 }
+      }
+    }
+  }
+}
