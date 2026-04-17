@@ -4,6 +4,7 @@ import fs from 'fs';
 import { writeFile, mkdir, readFile, unlink, readdir, stat } from 'fs/promises';
 import { spawn } from 'child_process';
 import { uploadToDrive, getOrCreateFolder } from '@/lib/drive-utils';
+import ffmpegPathFromStatic from 'ffmpeg-static';
 
 interface Scene {
   imageUrl: string;
@@ -52,9 +53,19 @@ async function runFfmpeg(args: string[], label?: string): Promise<void> {
     const exeName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
     
     // Búsqueda robusta del binario de FFmpeg
-    let ffmpegPath = path.join(process.cwd(), 'node_modules', 'ffmpeg-static', exeName);
-    if (!fs.existsSync(ffmpegPath)) {
-      ffmpegPath = path.join(process.cwd(), '..', '..', 'node_modules', 'ffmpeg-static', exeName);
+    // Priorizar el path provisto por el módulo (esto ayuda a Next.js standalone a incluirlo)
+    let ffmpegPath = ffmpegPathFromStatic;
+    
+    if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
+      ffmpegPath = path.join(process.cwd(), 'node_modules', 'ffmpeg-static', exeName);
+      if (!fs.existsSync(ffmpegPath)) {
+        ffmpegPath = path.join(process.cwd(), '..', '..', 'node_modules', 'ffmpeg-static', exeName);
+      }
+    }
+    
+    // Si llegamos aquí y sigue siendo null o no existe, intentar un último fallback al PATH del sistema
+    if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
+        ffmpegPath = exeName; // Confiar en que esté en el PATH global
     }
     
     // Búsqueda robusta de la carpeta de fuentes

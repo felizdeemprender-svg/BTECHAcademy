@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   // Disable SSG to avoid build errors
   trailingSlash: false,
   // Disable static generation for problematic pages
-  serverExternalPackages: ['@/firebase'],
+  serverExternalPackages: ['@/firebase', 'ffmpeg-static'],
   async headers() {
     return [
       {
