@@ -113,9 +113,11 @@ async function runFfmpeg(args: string[], label?: string): Promise<void> {
     proc.on('close', (code: number) => {
       if (code === 0) resolve();
       else {
-        // Mostrar más líneas de error para diagnóstico
+        // Mostrar más líneas de error para diagnóstico y los argumentos
         const errLines = stderr.split('\n').filter(l => l.trim()).slice(-15).join(' | ');
-        reject(new Error(`FFmpeg error (${code}): ${errLines}`));
+        const argsStr = args.join(' ');
+        const finalErr = `FFmpeg error (${code}) at ${ffmpegPath}: ${errLines} --- COMMAND: ${argsStr}`;
+        reject(new Error(finalErr));
       }
     });
     proc.on('error', (err: Error) => reject(new Error(`Failed to start FFmpeg: ${err.message}`)));
