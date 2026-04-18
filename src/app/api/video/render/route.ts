@@ -410,7 +410,19 @@ export async function POST(req: NextRequest) {
       // PASO CRÍTICO: Convertir JPG a PNG para bypass de MJPEG/yuvj420p que crashea en Windows
       await runFfmpeg(['-i', assembledImg.replace(/\\/g, '/'), '-y', pngImg.replace(/\\/g, '/')], `conv_png_${i}`);
 
-      const drawtext = getDrawtextFilter(adnConfig, scene, adnColor, width, height, textFile);
+      // VERIFICACIÓN DE FUENTE: Si la fuente no existe, omitir drawtext para no crashear el render
+      const fontsCheckDir = fs.existsSync(path.join(process.cwd(), 'public', 'fonts'))
+        ? path.join(process.cwd(), 'public', 'fonts')
+        : path.join(process.cwd(), '..', '..', 'public', 'fonts');
+      const fontAvailable = fs.existsSync(path.join(fontsCheckDir, 'Inter-Black.ttf'));
+      
+      if (!fontAvailable) {
+        console.warn(`[Render:Plate${i}] ⚠️ Fuente NO encontrada en ${fontsCheckDir} — renderizando SIN texto. ¡Verificar que public/fonts esté en el standalone!`);
+      } else {
+        console.log(`[Render:Plate${i}] ✅ Fuente encontrada en ${fontsCheckDir}`);
+      }
+
+      const drawtextFilter = fontAvailable ? getDrawtextFilter(adnConfig, scene, adnColor, width, height, textFile) : null;
       const postFX = getPostProductionFilters(adnConfig, scene.segment_label);
       
       // Movimiento de Cámara: Jerarquía ADN (Segmento -> Default -> Global)
@@ -436,8 +448,8 @@ export async function POST(req: NextRequest) {
 
       const finalFilters = [
         scaleFilter,
-        'format=yuv420p', 
-        drawtext
+        'format=yuv420p',
+        ...(drawtextFilter ? [drawtextFilter] : []), // Omitir si fuente no disponible
       ];
 
       if (fadeDuration > 0) {
