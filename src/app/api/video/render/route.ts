@@ -51,32 +51,45 @@ async function runGarbageCollector(basePath: string) {
 async function runFfmpeg(args: string[], label?: string): Promise<void> {
   const exeName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
   
-  // 1. Intentar obtener el path del módulo importado
-  let ffmpegPath = ffmpegPathFromStatic;
+  // 1. PRIORIDAD MÁXIMA: Usar el binario personalizado con soporte drawtext/libfreetype
+  //    Este binario es descargado en postinstall y copiado al standalone en postbuild.
+  const customBinaryPaths = [
+    path.join(process.cwd(), 'node_modules', 'custom-ffmpeg-build', exeName),
+    path.join(process.cwd(), '..', '..', 'node_modules', 'custom-ffmpeg-build', exeName),
+    path.join('/workspace', '.next', 'standalone', 'node_modules', 'custom-ffmpeg-build', exeName),
+  ];
+
+  let ffmpegPath: string | null = null;
+
+  for (const p of customBinaryPaths) {
+    if (fs.existsSync(p)) {
+      ffmpegPath = p;
+      console.log(`[FFmpeg:Path] ✅ Usando binario PERSONALIZADO (con drawtext): ${p}`);
+      break;
+    }
+  }
   
-  // 2. Si no existe o no es válido, buscar en rutas conocidas de Next.js Standalone
-  if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
-    const possiblePaths = [
-      path.join(process.cwd(), 'node_modules', 'custom-ffmpeg-build', exeName), // Custom binary from postinstall
-      path.join(process.cwd(), '..', '..', 'node_modules', 'custom-ffmpeg-build', exeName), // Custom binary fallback
+  // 2. Fallback: ffmpeg-static (sin drawtext — último recurso)
+  if (!ffmpegPath) {
+    const fallbackPaths = [
+      ffmpegPathFromStatic,
       path.join(process.cwd(), 'node_modules', 'ffmpeg-static', exeName),
       path.join(process.cwd(), '..', '..', 'node_modules', 'ffmpeg-static', exeName),
-      path.join('/workspace', 'public', 'bin', exeName),
       path.join('/workspace', 'node_modules', 'ffmpeg-static', exeName),
-      path.join('/workspace', '.next', 'standalone', 'node_modules', 'ffmpeg-static', exeName)
     ];
-    
-    for (const p of possiblePaths) {
-      if (fs.existsSync(p)) {
+    for (const p of fallbackPaths) {
+      if (p && fs.existsSync(p)) {
         ffmpegPath = p;
+        console.warn(`[FFmpeg:Path] ⚠️ Usando ffmpeg-static (SIN drawtext): ${p}`);
         break;
       }
     }
   }
 
-  // 3. Si sigue sin aparecer, usar el comando global como último recurso
-  if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
+  // 3. Último recurso: comando global
+  if (!ffmpegPath) {
     ffmpegPath = exeName;
+    console.warn(`[FFmpeg:Path] ⚠️ Usando comando global: ${exeName}`);
   }
 
   // LOG DE DIAGNÓSTICO (Solo visible en servidor)
