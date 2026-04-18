@@ -282,8 +282,13 @@ function getPostProductionFilters(adnConfig: any, segmentLabel: string | undefin
   return filters.join(',');
 }
 
+import os from 'os';
+
 export async function POST(req: NextRequest) {
-  const baseRenderPath = path.join(process.cwd(), 'tmp', 'render_jobs');
+  // FIX: En entornos Serverless/Cloud Run (Firebase App Hosting), el único
+  // directorio garantizado para escritura es el temporal del sistema (/tmp).
+  // Escribir dentro de /workspace/.next/standalone crashea FFmpeg.
+  const baseRenderPath = path.join(os.tmpdir(), 'render_jobs');
   
   try {
     const body: RenderRequest = await req.json();
