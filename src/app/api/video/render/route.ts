@@ -126,10 +126,15 @@ async function runFfmpeg(args: string[], label?: string): Promise<void> {
     proc.on('close', (code: number) => {
       if (code === 0) resolve();
       else {
-        // Mostrar más líneas de error para diagnóstico y los argumentos
-        const errLines = stderr.split('\n').filter(l => l.trim()).slice(-15).join(' | ');
-        const argsStr = args.join(' ');
-        const finalErr = `FFmpeg error (${code}) at ${ffmpegPath}: ${errLines} --- COMMAND: ${argsStr}`;
+        // Mostrar más líneas de error para diagnóstico y separar con saltos de línea reales
+        const errLines = stderr.split('\n').filter(l => l.trim()).slice(-25).join('\n');
+        
+        // Loguear el comando completo y el error completo EN EL SERVIDOR para no saturar la pantalla del usuario
+        console.error(`\n[FFmpeg Error Command] ${args.join(' ')}\n`);
+        console.error(`[FFmpeg Error Output]\n${stderr}\n`);
+
+        // Enviar al UI solo el output real de FFmpeg, sin la gigantesca cadena del comando
+        const finalErr = `FFmpeg falló (código ${code}). Detalles:\n${errLines}`;
         reject(new Error(finalErr));
       }
     });
