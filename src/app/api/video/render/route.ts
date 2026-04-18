@@ -159,7 +159,20 @@ function getDrawtextFilter(adnConfig: any, scene: Scene, brandColor: string, wid
   
   const fontAbsPath = path.join(fontsDir, fontFile);
   const fallbackPath = path.join(fontsDir, 'Inter-Black.ttf');
-  const resolvedFontPath = fs.existsSync(fontAbsPath) ? fontAbsPath : fallbackPath;
+  
+  let resolvedFontPath: string | null = null;
+  if (fs.existsSync(fontAbsPath)) {
+    resolvedFontPath = fontAbsPath;
+  } else if (fs.existsSync(fallbackPath)) {
+    console.warn(`[DrawText] ⚠️ Fuente ${fontFile} NO encontrada. Usando fallback Inter-Black.ttf`);
+    resolvedFontPath = fallbackPath;
+  }
+
+  // Si ni la fuente deseada ni el fallback existen, no podemos renderizar texto
+  if (!resolvedFontPath) {
+    console.error(`[DrawText] 🚨 CRÍTICO: Ninguna fuente encontrada en ${fontsDir}. Omitiendo drawtext.`);
+    return null;
+  }
   
   // FIX DUAL-PLATFORM:
   // - Windows: paths absolutos 'C:/...' crashean FFmpeg -> usar RELATIVOS.
@@ -410,19 +423,7 @@ export async function POST(req: NextRequest) {
       // PASO CRÍTICO: Convertir JPG a PNG para bypass de MJPEG/yuvj420p que crashea en Windows
       await runFfmpeg(['-i', assembledImg.replace(/\\/g, '/'), '-y', pngImg.replace(/\\/g, '/')], `conv_png_${i}`);
 
-      // VERIFICACIÓN DE FUENTE: Si la fuente no existe, omitir drawtext para no crashear el render
-      const fontsCheckDir = fs.existsSync(path.join(process.cwd(), 'public', 'fonts'))
-        ? path.join(process.cwd(), 'public', 'fonts')
-        : path.join(process.cwd(), '..', '..', 'public', 'fonts');
-      const fontAvailable = fs.existsSync(path.join(fontsCheckDir, 'Inter-Black.ttf'));
-      
-      if (!fontAvailable) {
-        console.warn(`[Render:Plate${i}] ⚠️ Fuente NO encontrada en ${fontsCheckDir} — renderizando SIN texto. ¡Verificar que public/fonts esté en el standalone!`);
-      } else {
-        console.log(`[Render:Plate${i}] ✅ Fuente encontrada en ${fontsCheckDir}`);
-      }
-
-      const drawtextFilter = fontAvailable ? getDrawtextFilter(adnConfig, scene, adnColor, width, height, textFile) : null;
+      const drawtextFilter = getDrawtextFilter(adnConfig, scene, adnColor, width, height, textFile);
       const postFX = getPostProductionFilters(adnConfig, scene.segment_label);
       
       // Movimiento de Cámara: Jerarquía ADN (Segmento -> Default -> Global)
