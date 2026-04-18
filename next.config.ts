@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  experimental: {
+    outputFileTracingIncludes: {
+      '/api/video/render': ['./node_modules/ffmpeg-static/**/*'],
+    },
+  },
 };
 
 export default nextConfig;
