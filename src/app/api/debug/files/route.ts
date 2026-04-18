@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         const ffmpegPathFromStatic = require('ffmpeg-static');
         
         let ffmpegPath = ffmpegPathFromStatic || exeName;
-        if (fs.existsSync(customPath)) {
+        if (require('fs').existsSync(customPath)) {
           ffmpegPath = customPath;
         }
         
