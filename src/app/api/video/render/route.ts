@@ -161,11 +161,18 @@ function getDrawtextFilter(adnConfig: any, scene: Scene, brandColor: string, wid
   const fallbackPath = path.join(fontsDir, 'Inter-Black.ttf');
   const resolvedFontPath = fs.existsSync(fontAbsPath) ? fontAbsPath : fallbackPath;
   
-  // FIX CRÍTICO WINDOWS 0xC0000005 / "Both text and text file provided":
-  // FFmpeg falla al parsear archivos cuyo path empieza con 'C:/' dentro de textfile='' en Windows.
-  // La solución definitiva es usar RUTAS RELATIVAS (Ej: 'tmp/render_jobs/job/.../text.txt').
-  const fontPath = path.relative(process.cwd(), resolvedFontPath).replace(/\\/g, '/');
-  const safeTextPath = path.relative(process.cwd(), textFilePath).replace(/\\/g, '/');
+  // FIX DUAL-PLATFORM:
+  // - Windows: paths absolutos 'C:/...' crashean FFmpeg -> usar RELATIVOS.
+  // - Linux/Standalone: paths relativos pueden no resolver -> usar ABSOLUTOS.
+  let fontPath: string;
+  let safeTextPath: string;
+  if (process.platform === 'win32') {
+    fontPath = path.relative(process.cwd(), resolvedFontPath).replace(/\\/g, '/');
+    safeTextPath = path.relative(process.cwd(), textFilePath).replace(/\\/g, '/');
+  } else {
+    fontPath = resolvedFontPath.replace(/\\/g, '/');
+    safeTextPath = textFilePath.replace(/\\/g, '/');
+  }
   
   // Traducción de alias semánticos a expresiones matemáticas de FFmpeg
   const sanitizeCoord = (val: string, isX: boolean) => {

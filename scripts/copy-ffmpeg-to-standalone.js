@@ -33,3 +33,27 @@ if (process.platform === 'linux') {
 
 const sizeKb = Math.round(fs.statSync(TARGET_BIN).size / 1024);
 console.log(`[copy-ffmpeg] ✅ FFmpeg personalizado copiado exitosamente a ${TARGET_BIN} (${sizeKb} KB)`);
+
+// Copiar public/ al standalone (Next.js NO lo hace automáticamente)
+const PUBLIC_SRC = path.join(__dirname, '..', 'public');
+const PUBLIC_DEST = path.join(STANDALONE_DIR, 'public');
+
+function copyDirRecursive(src, dest) {
+  if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDirRecursive(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+if (fs.existsSync(PUBLIC_SRC)) {
+  copyDirRecursive(PUBLIC_SRC, PUBLIC_DEST);
+  console.log(`[copy-ffmpeg] ✅ Carpeta public/ copiada al standalone (incluye fuentes y ADNs)`);
+} else {
+  console.warn('[copy-ffmpeg] ⚠️ No se encontró la carpeta public/ en el proyecto.');
+}
