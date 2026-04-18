@@ -17,8 +17,13 @@ export async function GET(req: NextRequest) {
     if (searchParams.get('check_ffmpeg') === 'true') {
       try {
         const exeName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+        const customPath = path.join(process.cwd(), 'node_modules', '.custom-ffmpeg', exeName);
         const ffmpegPathFromStatic = require('ffmpeg-static');
-        const ffmpegPath = ffmpegPathFromStatic || exeName;
+        
+        let ffmpegPath = ffmpegPathFromStatic || exeName;
+        if (fs.existsSync(customPath)) {
+          ffmpegPath = customPath;
+        }
         
         const { execSync } = require('child_process');
         let filterCheckResults = [];

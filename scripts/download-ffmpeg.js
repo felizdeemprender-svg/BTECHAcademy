@@ -3,7 +3,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const FFMPEG_URL = 'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz';
-const TARGET_DIR = path.join(__dirname, '..', 'public', 'bin');
+const TARGET_DIR = path.join(__dirname, '..', 'node_modules', '.custom-ffmpeg');
 
 if (!fs.existsSync(TARGET_DIR)) {
   fs.mkdirSync(TARGET_DIR, { recursive: true });
