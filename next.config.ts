@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     outputFileTracingIncludes: {
-      '/api/video/render': ['./node_modules/ffmpeg-static/**/*'],
+      '/api/video/render': ['./node_modules/ffmpeg-static/**/*', './public/bin/**/*'],
     },
   },
 };

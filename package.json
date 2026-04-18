@@ -14,7 +14,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "deploy:firebase": "npx firebase deploy",
-    "deploy:all": "npx firebase deploy && git add . && git commit -m \"Deploy unificado y sincronizacion de entornos\" && git push origin main"
+    "deploy:all": "npx firebase deploy && git add . && git commit -m \"Deploy unificado y sincronizacion de entornos\" && git push origin main",
+    "postinstall": "node scripts/download-ffmpeg.js"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.28.0",

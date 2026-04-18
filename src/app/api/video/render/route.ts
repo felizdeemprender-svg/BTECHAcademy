@@ -57,8 +57,11 @@ async function runFfmpeg(args: string[], label?: string): Promise<void> {
   // 2. Si no existe o no es válido, buscar en rutas conocidas de Next.js Standalone
   if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
     const possiblePaths = [
+      path.join(process.cwd(), 'public', 'bin', exeName), // Custom binary from postinstall
+      path.join(process.cwd(), '..', '..', 'public', 'bin', exeName), // Custom binary fallback
       path.join(process.cwd(), 'node_modules', 'ffmpeg-static', exeName),
       path.join(process.cwd(), '..', '..', 'node_modules', 'ffmpeg-static', exeName),
+      path.join('/workspace', 'public', 'bin', exeName),
       path.join('/workspace', 'node_modules', 'ffmpeg-static', exeName),
       path.join('/workspace', '.next', 'standalone', 'node_modules', 'ffmpeg-static', exeName)
     ];
