@@ -34,10 +34,8 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  experimental: {
-    outputFileTracingIncludes: {
-      '/api/video/render': ['./node_modules/ffmpeg-static/**/*', './node_modules/custom-ffmpeg-build/**/*'],
-    },
+  outputFileTracingIncludes: {
+    '/api/video/render': ['./node_modules/ffmpeg-static/**/*', './node_modules/custom-ffmpeg-build/**/*'],
   },
 };
 
