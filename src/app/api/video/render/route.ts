@@ -431,7 +431,11 @@ export async function POST(req: NextRequest) {
       // PASO CRÍTICO: Convertir JPG a PNG para bypass de MJPEG/yuvj420p que crashea en Windows
       await runFfmpeg(['-i', assembledImg.replace(/\\/g, '/'), '-y', pngImg.replace(/\\/g, '/')], `conv_png_${i}`);
 
-      const drawtextFilter = getDrawtextFilter(adnConfig, scene, adnColor, width, height, textFile);
+      // Solo agregamos el filtro de texto si realmente hay texto que renderizar.
+      // FFmpeg crashea si le pasamos un textfile vacío.
+      const drawtextFilter = displayText.trim() !== '' 
+        ? getDrawtextFilter(adnConfig, scene, adnColor, width, height, textFile) 
+        : null;
       const postFX = getPostProductionFilters(adnConfig, scene.segment_label);
       
       // Movimiento de Cámara: Jerarquía ADN (Segmento -> Default -> Global)
