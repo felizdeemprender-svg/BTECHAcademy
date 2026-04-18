@@ -229,12 +229,8 @@ function getPostProductionFilters(adnConfig: any, segmentLabel: string | undefin
     filters.push(`noise=alls=${fx.grain_intensity/5}:allf=t+u`);
   }
 
-  if (fx.chromatic_aberration > 0 && process.platform !== 'win32') {
-    filters.push(`chromashift=cbh=${fx.chromatic_aberration}:crv=${fx.chromatic_aberration}`);
-  }
-
   if (fx.vhs_overdrive) {
-    filters.push('noise=alls=20:allf=t+u,hue=s=0.5,curves=preset=vintage');
+    filters.push('noise=alls=20:allf=t+u,hue=s=0.5'); // Removed curves=preset=vintage to maximize compatibility
   }
 
   if (fx.background_dynamic_blur) {
