@@ -13,13 +13,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
-    const files = entries.map(entry => ({
-      name: entry.name,
-      isDirectory: entry.isDirectory(),
-      isSymbolicLink: entry.isSymbolicLink(),
-    }));
-    
     let ffmpegFilters = null;
     if (searchParams.get('check_ffmpeg') === 'true') {
       try {
@@ -43,9 +36,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       currentDir: dir,
-      processCwd: process.cwd(),
-      dirname: __dirname,
-      files,
       ffmpegFilters: ffmpegFilters ? ffmpegFilters.substring(0, 1000) + '...' : null
     });
   } catch (error: any) {
