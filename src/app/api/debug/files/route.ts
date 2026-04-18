@@ -21,13 +21,22 @@ export async function GET(req: NextRequest) {
         const ffmpegPath = ffmpegPathFromStatic || exeName;
         
         const { execSync } = require('child_process');
+        let filterCheckResults = [];
         try {
            const hasDrawtext = execSync(`${ffmpegPath} -filters | grep drawtext`).toString();
-           const hasZoompan = execSync(`${ffmpegPath} -filters | grep zoompan`).toString();
-           ffmpegFilters = 'DRAWTEXT ESTÁ INSTALADO: ' + hasDrawtext + ' | ZOOMPAN ESTÁ INSTALADO: ' + hasZoompan;
-        } catch (e) {
-           ffmpegFilters = 'Filtro(s) NO ENCONTRADO en los filtros.';
+           filterCheckResults.push('DRAWTEXT: SI');
+        } catch(e) {
+           filterCheckResults.push('DRAWTEXT: NO');
         }
+        
+        try {
+           const hasZoompan = execSync(`${ffmpegPath} -filters | grep zoompan`).toString();
+           filterCheckResults.push('ZOOMPAN: SI');
+        } catch(e) {
+           filterCheckResults.push('ZOOMPAN: NO');
+        }
+        
+        ffmpegFilters = filterCheckResults.join(' | ');
       } catch (err: any) {
         ffmpegFilters = 'Error running ffmpeg: ' + err.message;
       }
