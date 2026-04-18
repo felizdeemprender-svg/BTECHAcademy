@@ -217,7 +217,7 @@ function getDrawtextFilter(adnConfig: any, scene: Scene, brandColor: string, wid
   // Escapamos los dos puntos (:) internos por si hay rutas absolutas de Windows.
   const escapedFontPath = fontPath.replace(/:/g, '\\:');
   const escapedTextPath = safeTextPath.replace(/:/g, '\\:');
-  const baseParams = `fontfile='${escapedFontPath}':textfile='${escapedTextPath}':expansion=normal:text_align=C:fontsize=${activeRule.fontsize}`;
+  const baseParams = `fontfile='${escapedFontPath}':textfile='${escapedTextPath}':expansion=normal:fontsize=${activeRule.fontsize}`;
 
   // CONSTRUCCIÓN DE CADENA DE FILTROS (Múltiples capas para efecto Glow/Shadow/Stroke)
   let filter = '';
