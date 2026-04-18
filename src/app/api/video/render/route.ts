@@ -213,12 +213,11 @@ function getDrawtextFilter(adnConfig: any, scene: Scene, brandColor: string, wid
      posX = `if(lte(t\\,0.4)\\, (t/0.4)*(w-text_w)/2\\, (w-text_w)/2)`;
   }
 
-  // Escapamos los dos puntos (:) por si acaso hay rutas absolutas en Windows (C:\)
-  // Eliminamos las comillas simples ('') porque FFmpeg en Linux las estaba interpretando
-  // literalmente como parte del nombre del archivo, causando el crash.
+  // Usamos comillas simples para evitar que FFmpeg malinterprete caracteres en las rutas.
+  // Escapamos los dos puntos (:) internos por si hay rutas absolutas de Windows.
   const escapedFontPath = fontPath.replace(/:/g, '\\:');
   const escapedTextPath = safeTextPath.replace(/:/g, '\\:');
-  const baseParams = `fontfile=${escapedFontPath}:textfile=${escapedTextPath}:expansion=normal:text_align=C:fontsize=${activeRule.fontsize}`;
+  const baseParams = `fontfile='${escapedFontPath}':textfile='${escapedTextPath}':expansion=normal:text_align=C:fontsize=${activeRule.fontsize}`;
 
   // CONSTRUCCIÓN DE CADENA DE FILTROS (Múltiples capas para efecto Glow/Shadow/Stroke)
   let filter = '';
