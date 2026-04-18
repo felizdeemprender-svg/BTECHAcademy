@@ -183,29 +183,51 @@ export function TemplateEditor({
   }, [googleToken]);
 
   const ensureGoogleToken = async () => {
-    if (googleToken && googleToken !== 'null') return googleToken;
+    // 1. Validar token en memoria y su expiración
+    const storedToken = localStorage.getItem('evo_google_token');
+    const storedExpiry = localStorage.getItem('evo_google_token_expiry');
     
-    // Si no hay token en memoria, verificar localStorage
-    const stored = localStorage.getItem('evo_google_token');
-    if (stored && stored !== 'null') {
-      setGoogleToken(stored);
-      return stored;
+    // Los tokens de Google Drive expiran en 1 hora. Validamos con margen de seguridad.
+    const isValid = storedToken && storedToken !== 'null' && storedExpiry && Date.now() < Number(storedExpiry);
+
+    if (isValid && googleToken === storedToken) return googleToken;
+    if (isValid) {
+      setGoogleToken(storedToken);
+      return storedToken;
     }
 
-    // Si sigue sin haber, forzar login popup
+    // 2. Si expiró, renovarlo transparentemente
     const { initializeFirebase } = await import('@/firebase');
     const { auth } = initializeFirebase();
     const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
+    
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/drive.file');
-    const authResult = await signInWithPopup(auth, provider);
-    const accessToken = GoogleAuthProvider.credentialFromResult(authResult)?.accessToken || null;
     
-    if (accessToken) {
-      setGoogleToken(accessToken);
-      localStorage.setItem('evo_google_token', accessToken);
+    // MAGIA: Si el usuario ya está logueado en Firebase con Google, le pasamos su email al provider.
+    // Esto evita que Google le pregunte "¿Con qué cuenta quieres entrar?", haciendo el popup invisible.
+    if (auth.currentUser?.email) {
+      provider.setCustomParameters({ login_hint: auth.currentUser.email });
     }
-    return accessToken;
+
+    try {
+      const authResult = await signInWithPopup(auth, provider);
+      const accessToken = GoogleAuthProvider.credentialFromResult(authResult)?.accessToken || null;
+      
+      if (accessToken) {
+        setGoogleToken(accessToken);
+        localStorage.setItem('evo_google_token', accessToken);
+        // Guardamos expiración a los 55 minutos (3300000 ms)
+        localStorage.setItem('evo_google_token_expiry', String(Date.now() + 3300000));
+      }
+      return accessToken;
+    } catch (error: any) {
+      console.error("[Auth] Error renovando token de Google Drive:", error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error("Proceso cancelado. Se necesita acceso a Drive para guardar el video.");
+      }
+      throw new Error("No se pudo conectar con tu Google Drive de tutor.");
+    }
   };
 
   const handleDeleteVideo = async (sIdx: number) => {
