@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     if (searchParams.get('check_ffmpeg') === 'true') {
       try {
         const exeName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
-        const customPath = path.join(process.cwd(), 'node_modules', '.custom-ffmpeg', exeName);
+        const customPath = path.join(process.cwd(), 'node_modules', 'custom-ffmpeg-build', exeName);
         const ffmpegPathFromStatic = require('ffmpeg-static');
         
         let ffmpegPath = ffmpegPathFromStatic || exeName;
