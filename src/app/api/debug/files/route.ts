@@ -13,19 +13,34 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
+    const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
     const files = entries.map(entry => ({
       name: entry.name,
       isDirectory: entry.isDirectory(),
       isSymbolicLink: entry.isSymbolicLink(),
     }));
+    
+    let ffmpegFilters = null;
+    if (searchParams.get('check_ffmpeg') === 'true') {
+      try {
+        const exeName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+        const ffmpegPathFromStatic = require('ffmpeg-static');
+        const ffmpegPath = ffmpegPathFromStatic || exeName;
+        
+        const { execSync } = require('child_process');
+        ffmpegFilters = execSync(`${ffmpegPath} -filters`).toString();
+      } catch (err: any) {
+        ffmpegFilters = 'Error running ffmpeg: ' + err.message;
+      }
+    }
 
     return NextResponse.json({
       success: true,
       currentDir: dir,
       processCwd: process.cwd(),
       dirname: __dirname,
-      files
+      files,
+      ffmpegFilters: ffmpegFilters ? ffmpegFilters.substring(0, 1000) + '...' : null
     });
   } catch (error: any) {
     return NextResponse.json({ 
