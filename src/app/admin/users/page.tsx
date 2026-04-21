@@ -7,13 +7,8 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useAuth } from '@/components/auth-context';
 import { SubscriptionStatus, TutorSubscription } from '@/types/subscription';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { collection, doc, updateDoc, query, orderBy, setDoc, serverTimestamp, deleteDoc, where, getDocs, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -117,7 +112,7 @@ export default function AdminUsersPage() {
       const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
       return dateB - dateA;
     });
-  }, [usersRaw]);
+  }, [usersRaw, subscriptionPlans]);
 
   const currentUserForPerms = consolidatedUsers.find(u => u.id === userForPermissions?.id);
 
@@ -221,8 +216,13 @@ export default function AdminUsersPage() {
     
     try {
       const userRef = doc(db, 'users', pendingUser.id);
+      const isMentor = pendingUser.roles.includes('mentor');
+      const isEnterprise = pendingUser.subscription?.isEnterprise === true;
+
       await updateDoc(userRef, {
         roles: pendingUser.roles,
+        isMentor: isMentor, // Sincronizar flag isMentor en la raíz
+        isEnterprise: isEnterprise, // Sincronizar flag isEnterprise en la raíz
         mentorPermissions: pendingUser.mentorPermissions || [],
         subscription: pendingUser.subscription || null,
         updatedAt: serverTimestamp()
@@ -293,6 +293,7 @@ export default function AdminUsersPage() {
         email: normalizedEmail,
         displayName: newUserData.displayName || normalizedEmail.split('@')[0],
         roles: newUserData.roles,
+        isMentor: newUserData.roles.includes('mentor'), // Sincronizar flag isMentor al crear
         mentorPermissions: newUserData.roles.includes('mentor') ? newUserData.mentorPermissions : [],
         isActive: true,
         createdAt: serverTimestamp(),
@@ -318,10 +319,12 @@ export default function AdminUsersPage() {
     }
   };
 
-  const filteredUsers = consolidatedUsers.filter(u => 
-    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => {
+    return consolidatedUsers.filter(u => 
+      u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [consolidatedUsers, searchTerm]);
 
   return (
     <DashboardLayout>
@@ -657,6 +660,40 @@ export default function AdminUsersPage() {
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+
+                      {/* Selector de Tipo de Perfil (Tutor vs Empresa) */}
+                      <div className="space-y-2 p-4 bg-white rounded-2xl border border-slate-200">
+                        <Label className="text-[10px] font-bold uppercase text-slate-500">Tipo de Perfil Institucional</Label>
+                        <RadioGroup 
+                          value={pendingUser?.subscription?.isEnterprise ? 'enterprise' : 'tutor'} 
+                          onValueChange={(v) => {
+                            const isEnt = v === 'enterprise';
+                            const currentSub = pendingUser.subscription || { 
+                              status: 'active', 
+                              type: 'free', 
+                              limits: { maxCourses: 0, maxStudents: 0, hasCustomBranding: false, hasAnalytics: false, hasPrioritySupport: false },
+                              publicProfile: { enabled: false, showStats: false, showContact: false, allowPublicCourses: false }
+                            };
+                            setPendingUser({
+                              ...pendingUser,
+                              subscription: { ...currentSub, isEnterprise: isEnt }
+                            });
+                          }}
+                          className="flex gap-6 mt-1"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="tutor" id="user-type-tutor" />
+                            <Label htmlFor="user-type-tutor" className="font-bold text-xs uppercase cursor-pointer">Tutor/Mentor</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="enterprise" id="user-type-enterprise" />
+                            <Label htmlFor="user-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-indigo-600">Empresa</Label>
+                          </div>
+                        </RadioGroup>
+                        <p className="text-[9px] text-slate-400 italic mt-1">
+                          * Los perfiles de Empresa no se muestran en el catálogo público general.
+                        </p>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">

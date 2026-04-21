@@ -49,6 +49,13 @@ import { generateQuizQuestions } from '@/ai/flows/generate-quiz-questions';
 import { extractDocumentText } from '@/ai/flows/extract-document-text-flow';
 import { ImageEditor } from '@/components/courses/ImageEditor';
 import { uploadPendingImagesInObject } from '@/lib/upload-base64';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 
 interface Question {
   id: string;
@@ -128,6 +135,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     description: '',
     thumbnail: '',
     skipAllowed: true,
+    categoryId: '',
+    level: '',
   });
 
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
@@ -147,6 +156,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     types: ['multiple_choice', 'true_false', 'free_response'] as string[],
   });
 
+  const categoriesQuery = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('name', 'asc')), [db]);
+  const { data: categories } = useCollection(categoriesQuery);
+
+  const levelsQuery = useMemoFirebase(() => query(collection(db, 'levels'), orderBy('order', 'asc')), [db]);
+  const { data: levels } = useCollection(levelsQuery);
+
   useEffect(() => {
     if (course) {
       // Bloqueo de seguridad: No se puede editar un curso publicado
@@ -165,6 +180,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         description: course.description || '',
         thumbnail: course.thumbnail || '',
         skipAllowed: course.settings?.skipAllowed !== false,
+        categoryId: course.categoryId || '',
+        level: course.level || '',
       });
     }
   }, [course, router, toast]);
@@ -606,6 +623,46 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </div>
                   </div>
                   <div className="space-y-2"><Label>Descripción General</Label><Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[120px] rounded-xl" /></div>
+
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Categoría Académica</Label>
+                      <Select 
+                        value={formData.categoryId} 
+                        onValueChange={val => setFormData({...formData, categoryId: val})}
+                      >
+                        <SelectTrigger className="h-12 rounded-xl bg-secondary/5 border-none font-bold">
+                          <SelectValue placeholder="Selecciona una categoría" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-xl">
+                          {categories?.map(cat => (
+                            <SelectItem key={cat.id} value={cat.id} className="font-bold">
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Nivel del Curso</Label>
+                      <Select 
+                        value={formData.level} 
+                        onValueChange={val => setFormData({...formData, level: val})}
+                      >
+                        <SelectTrigger className="h-12 rounded-xl bg-secondary/5 border-none font-bold">
+                          <SelectValue placeholder="Selecciona el nivel" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-xl">
+                          {levels?.map(lvl => (
+                            <SelectItem key={lvl.id} value={lvl.name} className="font-bold">
+                              {lvl.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
                 <Button onClick={handleSaveGeneral} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl" disabled={loading}>{loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} Guardar Cambios</Button>
               </CardContent>

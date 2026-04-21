@@ -53,18 +53,7 @@ interface Course {
   };
 }
 
-const categories = [
-  'Todos',
-  'Marketing',
-  'Desarrollo',
-  'Diseño',
-  'Negocios',
-  'Finanzas',
-  'Tecnología',
-  'Educación'
-];
-
-const levels = ['Todos', 'Principiante', 'Intermedio', 'Avanzado'];
+// Se eliminan constantes estáticas para usar colecciones dinámicas de Firestore
 
 export default function CoursesPage() {
   const { toast } = useToast();
@@ -80,8 +69,8 @@ export default function CoursesPage() {
   const coursesQuery = useMemoFirebase(() => {
     return query(
       collection(db, 'courses'),
-      where('isActive', '==', true),
-      where('publicListing', '==', true)
+      where('isActive', '==', true)
+      // Se elimina el filtro de publicListing para mostrar "Todos" los publicados con landing
     );
   }, [db]);
   const { data: rawCourses = [], isLoading: coursesLoading } = useCollection(coursesQuery);
@@ -96,7 +85,8 @@ export default function CoursesPage() {
   const { data: salesPages = [], isLoading: salesLoading } = useCollection(salesPagesQuery);
 
   const mentorsQuery = useMemoFirebase(() => {
-    return query(collection(db, 'users'), where('isMentor', '==', true), limit(40));
+    // Usamos isMentor para una consulta más directa que suele requerir menos índices complejos
+    return query(collection(db, 'users'), where('isMentor', '==', true), limit(100));
   }, [db]);
   const { data: mentors = [], isLoading: mentorsLoading } = useCollection(mentorsQuery);
 
@@ -110,108 +100,144 @@ export default function CoursesPage() {
   }, [db]);
   const { data: subscriptionPlans = [], isLoading: plansLoading } = useCollection(plansQuery);
 
-  // 2. Compute Filtered & Enriched Courses
+  const categoriesCollectionQuery = useMemoFirebase(() => {
+    return query(collection(db, 'categories'), orderBy('name', 'asc'));
+  }, [db]);
+  const { data: categoriesData = [] } = useCollection(categoriesCollectionQuery);
+
+  const levelsCollectionQuery = useMemoFirebase(() => {
+    return query(collection(db, 'levels'), orderBy('order', 'asc'));
+  }, [db]);
+  const { data: levelsData = [] } = useCollection(levelsCollectionQuery);
+
+  const categories = useMemo(() => ['Todos', ...categoriesData.map(c => c.name)], [categoriesData]);
+  const levels = useMemo(() => ['Todos', ...levelsData.map(l => l.name)], [levelsData]);
+
+  // 2. Compute Filtered & Enriched Marketplace Items
   const enrichedCourses = useMemo(() => {
     if (coursesLoading || salesLoading || mentorsLoading || tagsLoading || plansLoading) return [];
 
-    // Create a map of sales pages by courseId
-    const salesMap = new Map();
-    (salesPages || []).forEach(sp => {
-      if (sp.courseId) salesMap.set(sp.courseId, sp.id);
-    });
+    // Create maps for efficient lookup
+    const courseMap = new Map();
+    (rawCourses || []).forEach(c => courseMap.set(c.id, c));
 
-    // Create a map of mentors by id
     const mentorMap = new Map();
     (mentors || []).forEach(m => mentorMap.set(m.id, m));
 
-    // Create a map of tags by id
     const tagMap = new Map();
     (allTags || []).forEach(t => tagMap.set(t.id, t.name));
 
-    // Create a map of plans by name (or id if we have it)
     const planMap = new Map();
     (subscriptionPlans || []).forEach(p => planMap.set(p.name, p));
 
-    return (finalCourses || [])
-      .filter(course => {
-        // Must have an active sales page
-        if (!salesMap.has(course.id)) return false;
+    // Debug logs
+    if ((salesPages || []).length > 0) {
+      console.log(`📦 Marketplace Debug: SalesPages=${(salesPages || []).length}, Courses=${(rawCourses || []).length}, Mentors=${(mentors || []).length}`);
+    }
 
-        const mentor = mentorMap.get(course.mentorId);
-        const isAdminMentor = mentor?.roles?.includes('admin');
+    // PIVOT: The source of truth is now salesPages
+    return (salesPages || [])
+      .map(salesPage => {
+        const course = courseMap.get(salesPage.courseId);
+        if (!course) return null; // No hay curso asociado, no mostramos
+
+        let mentor = mentorMap.get(salesPage.mentorId || course.mentorId);
         
-        // Determinar si es empresa basándonos en el flag o en el plan actual
-        const plan = mentor?.subscription?.name ? planMap.get(mentor.subscription.name) : null;
-        const isEnterprise = mentor?.subscription?.isEnterprise === true || plan?.isEnterprise === true;
-        
-        // If mentor doesn't exist or is enterprise, exclude from general catalog
-        if (!mentor || isEnterprise) return false;
-        
-        // Admin mentors bypass the 'active' subscription check
-        if (!isAdminMentor && mentor.subscription?.status !== 'active') return false;
-
-        // Apply Price Filter
-        if (priceFilter === 'free' && course.price > 0) return false;
-        if (priceFilter === 'paid' && course.price === 0) return false;
-
-        // Apply Level Filter
-        if (selectedLevel !== 'Todos' && course.level?.toLowerCase() !== selectedLevel.toLowerCase()) return false;
-
-        // Apply Search Term
-        if (searchTerm) {
-          const search = searchTerm.toLowerCase();
-          const matchesTitle = course.title?.toLowerCase().includes(search);
-          const matchesDesc = course.description?.toLowerCase().includes(search);
-          const matchesTutor = mentor.displayName?.toLowerCase().includes(search);
-          if (!matchesTitle && !matchesDesc && !matchesTutor) return false;
+        // Fallback for missing mentor metadata
+        if (!mentor) {
+          mentor = {
+            id: salesPage.mentorId || course.mentorId,
+            displayName: 'Tutor BTECH',
+            roles: ['mentor'],
+            subscription: { status: 'active' }
+          };
         }
 
-        return true;
-      })
-      .map(course => {
-        const mentor = mentorMap.get(course.mentorId);
+        // FILTER: Check if mentor is Enterprise
+        const plan = mentor?.subscription?.name ? planMap.get(mentor.subscription.name) : null;
+        const isEnterprise = mentor?.isEnterprise === true || mentor?.subscription?.isEnterprise === true || plan?.isEnterprise === true;
+        if (isEnterprise) return null;
+
+        // FILTER: Only active tutors (or fallback to active)
+        const subStatus = mentor?.subscription?.status || 'active';
+        if (subStatus !== 'active' && !mentor?.roles?.includes('admin')) return null;
+
         const courseTags = (course.tagIds || []).map((id: string) => tagMap.get(id)).filter(Boolean);
 
-        // Apply Category Filter (after tags are resolved)
+        // FILTER: Economic - Price (Source: SalesPage)
+        const finalPrice = salesPage.price !== undefined ? salesPage.price : course.price;
+        if (priceFilter === 'free' && finalPrice > 0) return null;
+        if (priceFilter === 'paid' && (finalPrice === 0 || finalPrice === undefined)) return null;
+
+        // FILTER: Academic - Level (Robust check for Spanish/English)
+        if (selectedLevel !== 'Todos') {
+          const level = (course.level || '').toLowerCase();
+          const target = selectedLevel.toLowerCase();
+          
+          const isMatch = level === target || 
+            (target === 'principiante' && level === 'beginner') ||
+            (target === 'intermedio' && level === 'intermediate') ||
+            (target === 'avanzado' && level === 'advanced');
+            
+          if (!isMatch) return null;
+        }
+
+        // FILTER: Academic - Category (Using the new categoryId field)
         if (selectedCategory !== 'Todos') {
-          if (!courseTags.some((t: string) => t.toLowerCase().includes(selectedCategory.toLowerCase()))) {
-            return null;
+          const category = categoriesData.find(c => c.name === selectedCategory);
+          if (category) {
+            if (course.categoryId !== category.id) return null;
+          } else {
+            // Fallback for search-based filtering if category not found by name
+            const target = selectedCategory.toLowerCase();
+            const hasTagMatch = courseTags.some((tag: string) => tag.toLowerCase().includes(target));
+            const hasTitleMatch = (course.title || '').toLowerCase().includes(target);
+            if (!hasTagMatch && !hasTitleMatch) return null;
           }
+        }
+
+        // SEARCH: General keyword search
+        if (searchTerm) {
+          const search = searchTerm.toLowerCase();
+          const matchesTitle = (course.title || '').toLowerCase().includes(search);
+          const matchesMentor = (mentor.displayName || '').toLowerCase().includes(search);
+          const matchesTags = courseTags.some((tag: string) => tag.toLowerCase().includes(search));
+          if (!matchesTitle && !matchesMentor && !matchesTags) return null;
         }
 
         return {
           id: course.id,
-          slug: course.slug || course.title?.toLowerCase().replace(/\s+/g, '-'),
-          title: course.title || 'Sin título',
-          description: course.description || 'Sin descripción',
-          price: course.price || 0,
-          currency: course.currency || 'USD',
+          salesPageId: salesPage.id,
+          slug: salesPage.slug || course.slug || course.title?.toLowerCase().replace(/\s+/g, '-'),
+          title: course.title || 'Publicación sin título',
+          description: course.description || 'Explora esta mentoría en BTECHAcademy',
+          price: finalPrice,
+          currency: salesPage.currency || course.currency || 'USD',
           duration: course.duration || 0,
-          level: course.level || 'beginner',
+          level: course.level || 'principiante',
           tags: courseTags,
-          thumbnail: course.thumbnail || `https://loremflickr.com/600/400/education,course?lock=${course.id}`,
-          rating: course.rating || 4.5,
+          thumbnail: salesPage.thumbnail || course.thumbnail || `https://loremflickr.com/600/400/education?lock=${course.id}`,
+          rating: course.rating || 4.8,
           students: course.studentsCount || 0,
-          salesPageId: salesMap.get(course.id),
           tutor: {
-            id: course.mentorId,
+            id: mentor.id,
             username: mentor.username || mentor.displayName?.toLowerCase().replace(/\s+/g, '-'),
-            displayName: mentor.displayName || mentor.email?.split('@')[0],
-            photo: mentor.photoURL || `https://loremflickr.com/60/60/person,professional?lock=${course.mentorId}`,
+            displayName: mentor.displayName || 'Tutor BTECH',
+            photo: mentor.photoURL || `https://loremflickr.com/60/60/person?lock=${mentor.id}`,
             subscription: {
-              status: mentor.subscription?.status || 'active',
+              status: subStatus,
               plan: mentor.subscription?.plan || 'free'
             }
           },
           pricing: {
-            type: course.price === 0 ? 'free' : 'paid',
-            amount: course.price || 0,
-            currency: course.currency || 'USD'
+            type: finalPrice === undefined ? 'on_request' : finalPrice === 0 ? 'free' : 'paid',
+            amount: finalPrice || 0,
+            currency: salesPage.currency || 'USD'
           }
         };
       })
       .filter(Boolean) as Course[];
-  }, [rawCourses, salesPages, mentors, allTags, coursesLoading, salesLoading, mentorsLoading, tagsLoading, searchTerm, selectedCategory, selectedLevel, priceFilter]);
+  }, [rawCourses, salesPages, mentors, allTags, subscriptionPlans, coursesLoading, salesLoading, mentorsLoading, tagsLoading, plansLoading, searchTerm, selectedCategory, selectedLevel, priceFilter]);
 
   // Sorting
   const sortedCourses = useMemo(() => {

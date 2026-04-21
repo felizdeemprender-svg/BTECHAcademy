@@ -3,6 +3,7 @@
 
 import { useState, useEffect, use, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useAuth } from '@/components/auth-context';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { Card } from '@/components/ui/card';
@@ -73,6 +74,7 @@ function getSecureVideoUrl(url: string) {
   return url;
 }
 
+
 export default function PublicSalesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const searchParams = useSearchParams();
@@ -80,6 +82,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   const db = useFirestore();
   const { toast } = useToast();
+  const { profile } = useAuth(); // Obtener perfil del usuario logueado
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [loading, setLoading] = useState(false);
@@ -89,6 +92,14 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const [studentEmail, setStudentEmail] = useState('');
   const [studentName, setStudentName] = useState('');
   const [paymentInitPoint, setPaymentInitPoint] = useState<string | null>(null);
+
+  // Auto-completar datos si el usuario está logueado
+  useEffect(() => {
+    if (profile && isPurchaseDialogOpen) {
+      if (!studentName) setStudentName(profile.displayName || '');
+      if (!studentEmail) setStudentEmail(profile.email || '');
+    }
+  }, [profile, isPurchaseDialogOpen, studentName, studentEmail]);
 
   const pageRef = useMemoFirebase(() => doc(db, 'salesPages', id), [db, id]);
   const { data: page, isLoading: pageLoading } = useDoc(pageRef);

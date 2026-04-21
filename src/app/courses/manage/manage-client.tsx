@@ -1133,12 +1133,14 @@ export default function ManageCoursesClient() {
             <div className="bg-primary p-8 text-white relative">
               <Sparkles className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
               <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4"><Tags className="h-6 w-6 text-accent" /></div>
-              <DialogTitle className="text-2xl font-bold">Publicar en Catálogo</DialogTitle>
-              <DialogDescription className="text-primary-foreground/70 mt-1">Confirma las etiquetas institucionales para este programa antes de la auditoría IA.</DialogDescription>
+              <DialogTitle className="text-2xl font-bold">Lanzamiento Comercial</DialogTitle>
+              <DialogDescription className="text-primary-foreground/70 mt-1">
+                Define la estrategia de posicionamiento SEO y etiquetas comerciales para la landing page del curso.
+              </DialogDescription>
             </div>
             <div className="p-8 space-y-8">
               <div className="flex justify-between items-center px-1">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Palabras Clave (SEO)</Label>
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Hashtags Comerciales / SEO (Landing Page)</Label>
                 <Button 
                   variant="outline" 
                   size="sm" 

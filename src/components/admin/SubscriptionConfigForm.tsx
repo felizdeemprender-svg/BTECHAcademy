@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Globe, DollarSign, GraduationCap, Mail, FileText } from 'lucide-react';
@@ -235,20 +236,28 @@ export default function SubscriptionConfigForm({
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="isEnterprise">Plan Empresa</Label>
-              <p className="text-sm text-muted-foreground">
-                Los cursos de este tutor NO aparecerán en el catálogo general
-              </p>
-            </div>
-            <Switch
-              id="isEnterprise"
-              checked={config.isEnterprise}
-              onCheckedChange={(checked) => 
-                setConfig(prev => ({ ...prev, isEnterprise: checked }))
-              }
-            />
+          <div className="flex flex-col gap-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tipo de Perfil</Label>
+            <RadioGroup 
+              value={config.isEnterprise ? 'enterprise' : 'tutor'} 
+              onValueChange={(v) => {
+                const isEnt = v === 'enterprise';
+                setConfig(prev => ({ ...prev, isEnterprise: isEnt }));
+              }}
+              className="flex gap-6 mt-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="tutor" id="config-type-tutor" />
+                <Label htmlFor="config-type-tutor" className="font-bold text-xs uppercase cursor-pointer">Tutor/Mentor</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="enterprise" id="config-type-enterprise" />
+                <Label htmlFor="config-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-indigo-600">Empresa</Label>
+              </div>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground mt-2 italic">
+              * Los perfiles tipo Empresa no aparecen en el catálogo general público.
+            </p>
           </div>
         </CardContent>
       </Card>

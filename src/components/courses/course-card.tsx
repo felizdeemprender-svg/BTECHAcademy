@@ -81,8 +81,12 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
           ))}
         </div>
         <div className="absolute top-4 right-4">
-          <Badge className={course.price === 0 ? "bg-green-500 text-white" : "bg-blue-500 text-white shadow-lg"}>
-            {course.price === 0 ? 'Gratis' : `$${course.price}`}
+          <Badge className={
+            course.price === undefined ? "bg-slate-500 text-white shadow-lg" :
+            course.price === 0 ? "bg-green-500 text-white" : 
+            "bg-blue-500 text-white shadow-lg"
+          }>
+            {course.price === undefined ? 'Precio a consultar' : course.price === 0 ? 'Gratis' : `$${course.price}`}
           </Badge>
         </div>
       </div>
@@ -142,29 +146,12 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
         )}
       </CardContent>
       
-    <CardFooter className="p-6 pt-0 gap-3">
-        <Link href={course.salesPageId ? `/v/${course.salesPageId}?v=2` : `/courses/${course.id}`} className="flex-1">
-          <Button variant="outline" className="w-full rounded-xl border-2 h-12 font-bold transition-all hover:bg-primary/5">
-            {course.salesPageId ? 'Ver Landing de Venta' : 'Ver Detalles'}
+    <CardFooter className="p-6 pt-0">
+        <Link href={course.salesPageId ? `/v/${course.salesPageId}?v=2` : `/courses/${course.id}`} className="w-full">
+          <Button className="w-full rounded-xl h-12 font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
+            {course.salesPageId ? 'Ver Landing y Matricularse' : 'Ver Detalles'}
           </Button>
         </Link>
-        
-        {onAction && (
-          <Button 
-            onClick={handleAction}
-            disabled={loading}
-            className="flex-1 rounded-xl h-12 font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
-          >
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-white" />
-            ) : (
-              <>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Matricular
-              </>
-            )}
-          </Button>
-        )}
       </CardFooter>
     </Card>
   );

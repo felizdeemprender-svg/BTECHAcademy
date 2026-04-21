@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { 
   CreditCard, 
@@ -604,24 +605,30 @@ export default function AdminSubscriptionsPage() {
 
             <div className="p-6 bg-white border-t border-slate-100 shrink-0 flex flex-col md:flex-row gap-4 justify-between items-center rounded-b-[2rem]">
               <div className="flex flex-wrap gap-6 items-center">
-                <div className="flex gap-2 items-center">
-                  <Switch 
-                    id="plan-is-enterprise" 
-                    name="plan-is-enterprise" 
-                    checked={formData.isEnterprise} 
-                    onCheckedChange={(c) => {
+                <div className="flex flex-col gap-2 p-4 bg-slate-50 rounded-xl border border-slate-200 min-w-[240px]">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tipo de Perfil</Label>
+                  <RadioGroup 
+                    value={formData.isEnterprise ? 'enterprise' : 'tutor'} 
+                    onValueChange={(v) => {
+                      const isEnt = v === 'enterprise';
                       setFormData({
                         ...formData, 
-                        isEnterprise: c,
-                        // Si es Empresa (true), forzar a Fijo
-                        type: c ? 'fixed' : formData.type
+                        isEnterprise: isEnt,
+                        // Si es Empresa, el tipo debe ser fixed
+                        type: isEnt ? 'fixed' : formData.type
                       });
-                    }} 
-                    className="data-[state=checked]:bg-indigo-600" 
-                  />
-                  <Label htmlFor="plan-is-enterprise" className="font-bold text-xs uppercase tracking-widest text-slate-500 cursor-pointer">
-                    {formData.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
-                  </Label>
+                    }}
+                    className="flex gap-6"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="tutor" id="plan-type-tutor" />
+                      <Label htmlFor="plan-type-tutor" className="font-bold text-xs uppercase cursor-pointer">Tutor/Mentor</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="enterprise" id="plan-type-enterprise" />
+                      <Label htmlFor="plan-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-indigo-600">Empresa</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
                 
                 <div className="flex gap-2 items-center px-4 py-2 bg-amber-50 rounded-xl border border-amber-200">

@@ -78,6 +78,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -172,10 +179,17 @@ export default function CreateCoursePage() {
   const termsRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
   const { data: termsConfig } = useDoc(termsRef);
 
+  const categoriesQuery = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('name', 'asc')), [db]);
+  const { data: categories } = useCollection(categoriesQuery);
+
+  const levelsQuery = useMemoFirebase(() => query(collection(db, 'levels'), orderBy('order', 'asc')), [db]);
+  const { data: levels } = useCollection(levelsQuery);
+
   const [courseData, setCourseData] = useState({
     title: '',
     description: '',
-    level: 'basico' as const,
+    categoryId: '',
+    level: '',
     skipAllowed: true,
   });
 
@@ -553,6 +567,46 @@ export default function CreateCoursePage() {
                 <div className="grid gap-6">
                   <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Título</Label><Input value={courseData.title} onChange={e => setCourseData({...courseData, title: e.target.value})} placeholder="Ej: Especialización en IA..." className="h-14 font-bold rounded-2xl bg-secondary/10 border-none" /></div>
                   
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Categoría Académica</Label>
+                      <Select 
+                        value={courseData.categoryId} 
+                        onValueChange={val => setCourseData({...courseData, categoryId: val})}
+                      >
+                        <SelectTrigger className="h-14 rounded-2xl bg-secondary/10 border-none font-bold">
+                          <SelectValue placeholder="Selecciona área..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-none shadow-3xl">
+                          {categories?.map(cat => (
+                            <SelectItem key={cat.id} value={cat.id} className="font-bold">
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nivel del Curso</Label>
+                      <Select 
+                        value={courseData.level} 
+                        onValueChange={val => setCourseData({...courseData, level: val})}
+                      >
+                        <SelectTrigger className="h-14 rounded-2xl bg-secondary/10 border-none font-bold">
+                          <SelectValue placeholder="Nivel..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-none shadow-3xl">
+                          {levels?.map(lvl => (
+                            <SelectItem key={lvl.id} value={lvl.name} className="font-bold">
+                              {lvl.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 space-y-6">
                     <h3 className="text-xs font-bold uppercase text-primary flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Reglas de Negocio</h3>
                     <div className="flex items-center justify-between"><div className="space-y-0.5"><Label className="text-sm font-bold">Exigir Correlatividad</Label></div><Switch checked={!courseData.skipAllowed} onCheckedChange={(val) => setCourseData({...courseData, skipAllowed: !val})} /></div>

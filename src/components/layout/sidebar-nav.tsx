@@ -97,6 +97,9 @@ export function SidebarNav() {
       label: 'Administración',
       items: [
         { name: 'Usuarios', href: '/admin/users', roles: ['admin'], icon: Users },
+        { name: 'Categorías Académicas', href: '/admin/categories', roles: ['admin'], icon: Library },
+        { name: 'Niveles Académicos', href: '/admin/levels', roles: ['admin'], icon: Target },
+        { name: 'Tags Comerciales (SEO)', href: '/admin/tags', roles: ['admin'], icon: Rocket },
         { name: 'Moderación IA', href: '/admin/moderation', roles: ['admin'], icon: ShieldAlert },
         { name: 'Términos y Condiciones', href: '/admin/terms', roles: ['admin'], icon: FileText },
         { name: 'Planes de Suscripción', href: '/admin/subscriptions', roles: ['admin'], icon: CreditCard },
