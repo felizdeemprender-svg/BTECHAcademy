@@ -185,7 +185,7 @@ export default function CreateCoursePage() {
   const levelsQuery = useMemoFirebase(() => query(collection(db, 'levels'), orderBy('order', 'asc')), [db]);
   const { data: levels } = useCollection(levelsQuery);
 
-  const [formData, setFormData] = useState({
+  const [courseData, setCourseData] = useState({
     title: '',
     description: '',
     categoryId: '',
@@ -294,29 +294,7 @@ export default function CreateCoursePage() {
       .finally(() => setLoading(false));
   };
 
-  const handleGenerateTags = async () => {
-    if (!courseData.categoryId) return;
-    
-    setIsGeneratingTags(true);
-    try {
-      const category = categories?.find(c => c.id === courseData.categoryId);
-      const { generateTagSuggestions } = await import('@/ai/flows/generate-tag-suggestions');
-      
-      const result = await generateTagSuggestions({
-        branch: category?.name || 'General',
-        existingTags: courseData.tags
-      });
-      
-      if (result?.suggestions) {
-        setSuggestedTags(result.suggestions);
-        toast({ title: 'Sugerencias generadas' });
-      }
-    } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Error IA', description: e.message });
-    } finally {
-      setIsGeneratingTags(false);
-    }
-  };
+
 
   const isCompatibleWithAI = (file: File | undefined) => {
     if (!file) return false;
