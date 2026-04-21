@@ -90,11 +90,6 @@ export default function CoursesPage() {
   }, [db]);
   const { data: mentors = [], isLoading: mentorsLoading } = useCollection(mentorsQuery);
 
-  const tagsQuery = useMemoFirebase(() => {
-    return collection(db, 'tags');
-  }, [db]);
-  const { data: allTags = [], isLoading: tagsLoading } = useCollection(tagsQuery);
-
   const plansQuery = useMemoFirebase(() => {
     return query(collection(db, 'subscriptionPlans'));
   }, [db]);
@@ -110,12 +105,12 @@ export default function CoursesPage() {
   }, [db]);
   const { data: levelsData = [] } = useCollection(levelsCollectionQuery);
 
-  const categories = useMemo(() => ['Todos', ...categoriesData.map(c => c.name)], [categoriesData]);
-  const levels = useMemo(() => ['Todos', ...levelsData.map(l => l.name)], [levelsData]);
+  const categories = useMemo(() => ['Todos', ...Array.from(new Set((categoriesData || []).map(c => c.name)))], [categoriesData]);
+  const levels = useMemo(() => ['Todos', ...Array.from(new Set((levelsData || []).map(l => l.name)))], [levelsData]);
 
   // 2. Compute Filtered & Enriched Marketplace Items
   const enrichedCourses = useMemo(() => {
-    if (coursesLoading || salesLoading || mentorsLoading || tagsLoading || plansLoading) return [];
+    if (coursesLoading || salesLoading || mentorsLoading || plansLoading) return [];
 
     // Create maps for efficient lookup
     const courseMap = new Map();
@@ -123,9 +118,6 @@ export default function CoursesPage() {
 
     const mentorMap = new Map();
     (mentors || []).forEach(m => mentorMap.set(m.id, m));
-
-    const tagMap = new Map();
-    (allTags || []).forEach(t => tagMap.set(t.id, t.name));
 
     const planMap = new Map();
     (subscriptionPlans || []).forEach(p => planMap.set(p.name, p));
@@ -162,7 +154,7 @@ export default function CoursesPage() {
         const subStatus = mentor?.subscription?.status || 'active';
         if (subStatus !== 'active' && !mentor?.roles?.includes('admin')) return null;
 
-        const courseTags = (course.tagIds || []).map((id: string) => tagMap.get(id)).filter(Boolean);
+        const courseTags = course.tags || [];
 
         // FILTER: Economic - Price (Source: SalesPage)
         const finalPrice = salesPage.price !== undefined ? salesPage.price : course.price;
@@ -215,7 +207,7 @@ export default function CoursesPage() {
           currency: salesPage.currency || course.currency || 'USD',
           duration: course.duration || 0,
           level: course.level || 'principiante',
-          tags: courseTags,
+          tags: course.tags || courseTags, // Prefer direct tags if available
           thumbnail: salesPage.thumbnail || course.thumbnail || `https://loremflickr.com/600/400/education?lock=${course.id}`,
           rating: course.rating || 4.8,
           students: course.studentsCount || 0,
@@ -237,7 +229,7 @@ export default function CoursesPage() {
         };
       })
       .filter(Boolean) as Course[];
-  }, [rawCourses, salesPages, mentors, allTags, subscriptionPlans, coursesLoading, salesLoading, mentorsLoading, tagsLoading, plansLoading, searchTerm, selectedCategory, selectedLevel, priceFilter]);
+  }, [rawCourses, salesPages, mentors, subscriptionPlans, coursesLoading, salesLoading, mentorsLoading, plansLoading, searchTerm, selectedCategory, selectedLevel, priceFilter]);
 
   // Sorting
   const sortedCourses = useMemo(() => {
@@ -262,7 +254,7 @@ export default function CoursesPage() {
     return list;
   }, [enrichedCourses, sortBy]);
 
-  const loading = coursesLoading || salesLoading || mentorsLoading || tagsLoading;
+  const loading = coursesLoading || salesLoading || mentorsLoading;
   const courses = sortedCourses;
 
   const handleRequestInvitation = async (courseId: string) => {

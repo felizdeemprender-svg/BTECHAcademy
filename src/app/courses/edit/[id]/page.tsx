@@ -30,7 +30,8 @@ import {
   FileText,
   Check,
   Info,
-  Trash2
+  Trash2,
+  Rocket
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useCollection, useMemoFirebase, useFirebase } from '@/firebase';
@@ -137,7 +138,11 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     skipAllowed: true,
     categoryId: '',
     level: '',
+    tags: [] as string[],
   });
+
+  const [suggestedTags, setSuggestedTags] = useState<{name: string, description: string}[]>([]);
+  const [isGeneratingTags, setIsGeneratingTags] = useState(false);
 
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState<ModuleData | null>(null);

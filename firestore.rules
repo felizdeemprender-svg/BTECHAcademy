@@ -174,6 +174,16 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /levels/{levelId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /roles_admin/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
     match /roles_mentor/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
   }

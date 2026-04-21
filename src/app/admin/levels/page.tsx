@@ -27,7 +27,7 @@ export default function AdminLevelsPage() {
   const [editingLevel, setEditingLevel] = useState<any>(null);
 
   const levelsQuery = useMemoFirebase(() => {
-    if (!profile?.roles.includes('admin') || isAuthLoading) return null;
+    if (!profile?.roles?.includes('admin') || isAuthLoading) return null;
     return query(collection(db, 'levels'), orderBy('order', 'asc'));
   }, [db, profile, isAuthLoading]);
   const { data: levels, isLoading: levelsLoading } = useCollection(levelsQuery);
@@ -72,7 +72,14 @@ export default function AdminLevelsPage() {
         toast({ title: editingLevel ? 'Nivel actualizado' : 'Nivel creado exitosamente' });
         setIsDialogOpen(false);
       })
-      .catch(async (e) => {
+      .catch(async (e: any) => {
+        console.error("[AdminLevels] Error DETALLADO:", e.message || e);
+        console.log("[AdminLevels] Tus roles actuales:", profile?.roles);
+        toast({
+          variant: 'destructive',
+          title: 'Error al Guardar',
+          description: `Detalle: ${e.message || 'Error de permisos o red'}`
+        });
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: levelRef.path,
           operation: editingLevel ? 'update' : 'create',
@@ -89,6 +96,11 @@ export default function AdminLevelsPage() {
     deleteDoc(levelRef)
       .then(() => toast({ title: 'Nivel eliminado' }))
       .catch(async (e) => {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudo eliminar el nivel.'
+        });
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: levelRef.path,
           operation: 'delete'

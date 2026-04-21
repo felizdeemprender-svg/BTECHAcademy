@@ -206,29 +206,6 @@ export default function ManageCoursesClient() {
   const termsConfigRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
   const { data: termsConfig } = { data: null };
 
-  const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags')), [db]);
-  const { data: allTagsSnapshot } = useCollection(tagsQuery);
-
-  const allTags = useMemo(() => {
-    if (!allTagsSnapshot) return [];
-    
-    // Si useCollection ya nos da un arreglo mapeado con la data
-    let docsArray = Array.isArray(allTagsSnapshot) ? allTagsSnapshot : (allTagsSnapshot as any).docs || [];
-    
-    const tags = docsArray.map((doc: any) => {
-      // Si la colección ya viene transformada, el objeto ya tiene 'name'. 
-      // Si viene cruda de Firebase, tiene el método .data()
-      const data = typeof doc.data === 'function' ? doc.data() : doc;
-      return { 
-        id: doc.id || data.id, 
-        ...data 
-      };
-    });
-    
-    console.log('🔍 Etiquetas cargadas (limpias):', tags.map(t => t.name));
-    return tags;
-  }, [allTagsSnapshot]);
-
   // Calcular isAdmin y isMentor antes del return
   const isAdmin = profile?.roles.includes('admin');
   const isMentor = profile?.roles.includes('mentor');
@@ -317,14 +294,13 @@ export default function ManageCoursesClient() {
     setSelectedAiTags([]);
 
     try {
-      const existingNames = (allTags || []).map((t: any) => (t.name || '').toLowerCase()).filter(Boolean);
       const result = await generateTagSuggestions({
         branch: branchInput,
-        existingTags: existingNames
+        existingTags: selectedTags
       });
 
       const uniqueSuggestions = result.suggestions.filter(s => 
-        !existingNames.includes(s.name.toLowerCase())
+        !selectedTags.includes(s.name)
       );
 
       setAiTagSuggestions(uniqueSuggestions);
@@ -339,102 +315,13 @@ export default function ManageCoursesClient() {
   };
 
   const handleLoadAiSelectedTags = async () => {
-    console.log('🔍 handleLoadAiSelectedTags llamado');
-    console.log('🔍 selectedAiTags:', selectedAiTags);
-    console.log('🔍 aiTagSuggestions:', aiTagSuggestions);
+    if (selectedAiTags.length === 0) return;
     
-    if (selectedAiTags.length === 0) {
-      console.log('❌ No hay etiquetas seleccionadas - saliendo');
-      return;
-    }
-    
-    console.log('🔍 Pasó validación de etiquetas seleccionadas');
-    console.log('🔍 Configurando setIsSavingAiTags(true)...');
-    setIsSavingAiTags(true);
-    console.log('🔍 setIsSavingAiTags configurado');
-    
-    try {
-      console.log('🔍 Creando batch...');
-      console.log('🔍 Verificando db:', db);
-      console.log('🔍 db type:', typeof db);
-      
-      if (!db) {
-        console.error('❌ db no está disponible');
-        throw new Error('Firestore no está inicializado');
-      }
-      
-      console.log('🔍 Intentando crear writeBatch...');
-      let batch;
-      try {
-        batch = writeBatch(db);
-        console.log('✅ writeBatch creado exitosamente');
-      } catch (batchError) {
-        console.error('❌ Error al crear writeBatch:', batchError);
-        throw batchError;
-      }
-      
-      console.log('🔍 Batch creado');
-      const newTagIds: string[] = [];
-
-      for (const name of selectedAiTags) {
-        console.log('🔍 Iniciando loop para etiqueta:', name);
-        const suggestion = aiTagSuggestions.find(s => s.name === name);
-        console.log('🔍 Procesando etiqueta:', name, 'suggestion:', suggestion);
-        
-        if (suggestion) {
-          console.log('🔍 Creando referencia para etiqueta:', name);
-          const newTagRef = doc(collection(db, 'tags'));
-          console.log('🔍 Referencia creada:', newTagRef.id);
-          
-          console.log('🔍 Agregando al batch...');
-          const tagData = {
-            ...suggestion,
-            id: newTagRef.id,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          };
-          console.log('🔍 Datos a guardar:', tagData);
-          batch.set(newTagRef, tagData);
-          newTagIds.push(newTagRef.id);
-          console.log('🔍 Etiqueta agregada al batch. newTagIds:', newTagIds);
-        } else {
-          console.log('❌ No se encontró sugerencia para:', name);
-        }
-      }
-      
-      console.log('🔍 Loop completado. Enviando batch con', newTagIds.length, 'etiquetas');
-      
-      try {
-        console.log('🔍 Ejecutando batch.commit()...');
-        await batch.commit();
-        console.log('✅ batch.commit() exitoso');
-        
-        console.log('🔍 Actualizando estado local...');
-        setSelectedTags(prev => [...prev, ...newTagIds]);
-        console.log('✅ Estado actualizado');
-        
-        // NO recargar automáticamente para poder ver los datos
-        console.log('🔍 NO recargando - revisa la consola para depurar');
-        
-        toast({ title: 'Taxonomía SEO Actualizada', description: `Se han incorporado ${newTagIds.length} etiquetas clave.` });
-        setIsAiTagDialogOpen(false);
-        setAiTagSuggestions([]);
-        setBranchInput('');
-        console.log('✅ Diálogo cerrado y estado limpiado');
-        
-      } catch (firestoreError) {
-        console.error('❌ Error en batch.commit():', firestoreError);
-        throw firestoreError;
-      }
-    } catch (e: any) {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: 'tags',
-        operation: 'create',
-        requestResourceData: { tags: selectedAiTags }
-      }));
-    } finally {
-      setIsSavingAiTags(false);
-    }
+    setSelectedTags(prev => [...new Set([...prev, ...selectedAiTags])]);
+    setIsAiTagDialogOpen(false);
+    setAiTagSuggestions([]);
+    setBranchInput('');
+    toast({ title: 'Taxonomía SEO Actualizada', description: `Se han incorporado ${selectedAiTags.length} etiquetas clave al borrador.` });
   };
 
   const sortedInscriptions = [...inscriptions].sort((a, b) => {
@@ -506,7 +393,7 @@ export default function ManageCoursesClient() {
       };
 
       if (currentTags) {
-        updateData.tagIds = currentTags;
+        updateData.tags = currentTags;
       }
 
       await updateDoc(doc(db, 'courses', course.id), updateData);
@@ -548,7 +435,7 @@ export default function ManageCoursesClient() {
     }
 
     setSelectedCourse(course);
-    setSelectedTags(course.tagIds || []);
+    setSelectedTags(course.tags || []);
     setIsPublishDialogOpen(true);
   };
 
@@ -569,7 +456,7 @@ export default function ManageCoursesClient() {
       setIsTermsDialogOpen(false);
       
       // Una vez aceptados, abrimos el diálogo de publicación (SEO)
-      setSelectedTags(selectedCourse.tagIds || []);
+      setSelectedTags(selectedCourse.tags || []);
       setIsPublishDialogOpen(true);
     } catch (e) {
       toast({ variant: 'destructive', title: 'Error al actualizar términos' });
@@ -943,10 +830,9 @@ export default function ManageCoursesClient() {
                           </div>
                           <div><p className="font-bold text-sm text-foreground line-clamp-1">{course.title}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {course.tagIds?.length > 0 ? course.tagIds.map((tid: string) => {
-                                const tag = allTags?.find((t: any) => t.id === tid);
-                                return tag ? <Badge key={tid} variant="outline" className="text-[8px] h-3 px-1 border-primary/20 text-primary/70">{tag.name}</Badge> : null;
-                              }) : <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
+                              {course.tags?.length > 0 ? course.tags.map((tagName: string) => (
+                                <Badge key={tagName} variant="outline" className="text-[8px] h-3 px-1 border-primary/20 text-primary/70">{tagName}</Badge>
+                              )) : <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
                             </div>
                           </div>
                         </div>
@@ -1154,21 +1040,18 @@ export default function ManageCoursesClient() {
               <div className="flex flex-wrap gap-2 p-4 bg-secondary/10 rounded-2xl border border-dashed min-h-[100px]">
                 {selectedTags?.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic flex items-center justify-center w-full">Usa "Sugerencias IA" para generar taxonomía estratégica.</p>
-                ) : selectedTags?.map(tagId => {
-                  const tag = allTags?.find((t: any) => t.id === tagId);
-                  return tag ? (
-                    <Badge 
-                      key={tag.id}
-                      variant='default'
-                      className="cursor-pointer py-1.5 px-3 rounded-lg text-[10px] font-bold transition-all shadow-sm"
-                      onClick={() => {
-                        setSelectedTags(prev => prev.filter(id => id !== tag.id));
-                      }}
-                    >
-                      {tag.name} ✕
-                    </Badge>
-                  ) : null;
-                })}
+                ) : selectedTags?.map(tagName => (
+                  <Badge 
+                    key={tagName}
+                    variant='default'
+                    className="cursor-pointer py-1.5 px-3 rounded-lg text-[10px] font-bold transition-all shadow-sm"
+                    onClick={() => {
+                      setSelectedTags(prev => prev.filter(t => t !== tagName));
+                    }}
+                  >
+                    {tagName} ✕
+                  </Badge>
+                ))}
               </div>
 
               <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex gap-3 items-start">

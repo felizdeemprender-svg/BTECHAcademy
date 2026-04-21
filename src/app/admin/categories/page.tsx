@@ -27,7 +27,7 @@ export default function AdminCategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<any>(null);
 
   const categoriesQuery = useMemoFirebase(() => {
-    if (!profile?.roles.includes('admin') || isAuthLoading) return null;
+    if (!profile?.roles?.includes('admin') || isAuthLoading) return null;
     return query(collection(db, 'categories'), orderBy('name', 'asc'));
   }, [db, profile, isAuthLoading]);
   const { data: categories, isLoading: categoriesLoading } = useCollection(categoriesQuery);
@@ -71,6 +71,12 @@ export default function AdminCategoriesPage() {
         setIsDialogOpen(false);
       })
       .catch(async (e) => {
+        console.error("[AdminCategories] Error al guardar:", e);
+        toast({
+          variant: 'destructive',
+          title: 'Error de Permisos',
+          description: 'No tienes permisos para realizar esta acción o hubo un error de red.'
+        });
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: categoryRef.path,
           operation: editingCategory ? 'update' : 'create',
@@ -87,6 +93,11 @@ export default function AdminCategoriesPage() {
     deleteDoc(categoryRef)
       .then(() => toast({ title: 'Categoría eliminada' }))
       .catch(async (e) => {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudo eliminar la categoría.'
+        });
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: categoryRef.path,
           operation: 'delete'

@@ -185,13 +185,14 @@ export default function CreateCoursePage() {
   const levelsQuery = useMemoFirebase(() => query(collection(db, 'levels'), orderBy('order', 'asc')), [db]);
   const { data: levels } = useCollection(levelsQuery);
 
-  const [courseData, setCourseData] = useState({
-    title: '',
-    description: '',
     categoryId: '',
     level: '',
     skipAllowed: true,
+    tags: [] as string[],
   });
+
+  const [suggestedTags, setSuggestedTags] = useState<{name: string, description: string}[]>([]);
+  const [isGeneratingTags, setIsGeneratingTags] = useState(false);
 
   const [aiPrefs, setAiPrefs] = useState({
     numQuestions: 5,
@@ -292,6 +293,30 @@ export default function CreateCoursePage() {
         toast({ variant: 'destructive', title: 'Error de Creación', description: 'No tienes permisos para crear programas academicos o tu suscripción ha expirado.' });
       })
       .finally(() => setLoading(false));
+  };
+
+  const handleGenerateTags = async () => {
+    if (!courseData.categoryId) return;
+    
+    setIsGeneratingTags(true);
+    try {
+      const category = categories?.find(c => c.id === courseData.categoryId);
+      const { generateTagSuggestions } = await import('@/ai/flows/generate-tag-suggestions');
+      
+      const result = await generateTagSuggestions({
+        branch: category?.name || 'General',
+        existingTags: courseData.tags
+      });
+      
+      if (result?.suggestions) {
+        setSuggestedTags(result.suggestions);
+        toast({ title: 'Sugerencias generadas' });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error IA', description: e.message });
+    } finally {
+      setIsGeneratingTags(false);
+    }
   };
 
   const isCompatibleWithAI = (file: File | undefined) => {
@@ -609,11 +634,63 @@ export default function CreateCoursePage() {
 
                   <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 space-y-6">
                     <h3 className="text-xs font-bold uppercase text-primary flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Reglas de Negocio</h3>
-                    <div className="flex items-center justify-between"><div className="space-y-0.5"><Label className="text-sm font-bold">Exigir Correlatividad</Label></div><Switch checked={!courseData.skipAllowed} onCheckedChange={(val) => setCourseData({...courseData, skipAllowed: !val})} /></div>
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1 flex items-center gap-2">
+                          <Rocket className="h-3 w-3" /> Etiquetas SEO (IA)
+                        </Label>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={handleGenerateTags}
+                          disabled={isGeneratingTags || !courseData.categoryId}
+                          className="text-[9px] font-bold uppercase gap-2 h-7 rounded-lg text-primary hover:bg-primary/5"
+                        >
+                          {isGeneratingTags ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                          Sugerir
+                        </Button>
+                      </div>
+
+                      <div className="bg-secondary/10 p-5 rounded-2xl min-h-[80px] flex flex-wrap gap-2">
+                        {courseData.tags.length === 0 && !isGeneratingTags && (
+                          <p className="text-[10px] text-muted-foreground italic w-full text-center py-4">Haz clic en "Sugerir" para que la IA te proponga tags.</p>
+                        )}
+                        {courseData.tags.map(tag => (
+                          <Badge key={tag} className="pl-3 pr-1 py-1 rounded-lg bg-primary text-white border-none font-bold flex items-center gap-1 group">
+                            {tag}
+                            <button onClick={() => setCourseData({...courseData, tags: courseData.tags.filter(t => t !== tag)})} className="p-0.5 hover:bg-white/20 rounded-md">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+
+                      {suggestedTags.length > 0 && (
+                        <div className="space-y-3 px-1">
+                          <p className="text-[9px] font-bold uppercase text-muted-foreground">Sugerencias:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {suggestedTags.map(suggestion => (
+                              <button
+                                key={suggestion.name}
+                                onClick={() => {
+                                  if (!courseData.tags.includes(suggestion.name)) {
+                                    setCourseData({...courseData, tags: [...courseData.tags, suggestion.name]});
+                                    setSuggestedTags(prev => prev.filter(s => s.name !== suggestion.name));
+                                  }
+                                }}
+                                className="px-3 py-1.5 rounded-xl border border-dashed border-primary/40 text-[10px] font-bold hover:bg-primary hover:text-white transition-all flex flex-col items-start gap-0"
+                              >
+                                <span>{suggestion.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Descripción Académica</Label><Textarea value={courseData.description} onChange={e => setCourseData({...courseData, description: e.target.value})} placeholder="Describe las competencias..." className="min-h-[140px] rounded-2xl bg-secondary/10 border-none p-6" /></div>
                   </div>
-                  <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Descripción Académica</Label><Textarea value={courseData.description} onChange={e => setCourseData({...courseData, description: e.target.value})} placeholder="Describe las competencias..." className="min-h-[140px] rounded-2xl bg-secondary/10 border-none p-6" /></div>
-                </div>
-                <Button onClick={handleStartCourse} disabled={!courseData.title || loading} className="w-full h-16 rounded-[1.5rem] text-lg font-bold shadow-xl">Siguiente: Crear Clases <ArrowRight className="ml-2 h-5 w-5" /></Button>
+                  <Button onClick={handleStartCourse} disabled={!courseData.title || loading} className="w-full h-16 rounded-[1.5rem] text-lg font-bold shadow-xl">Siguiente: Crear Clases <ArrowRight className="ml-2 h-5 w-5" /></Button>
               </CardContent>
             </Card>
           </div>
