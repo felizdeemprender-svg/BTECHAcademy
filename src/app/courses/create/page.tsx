@@ -605,6 +605,9 @@ export default function CreateCoursePage() {
                             </SelectItem>
                           ))}
                         </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 space-y-6">
                       <h3 className="text-xs font-bold uppercase text-primary flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Reglas de Negocio</h3>
                       <div className="space-y-6">
