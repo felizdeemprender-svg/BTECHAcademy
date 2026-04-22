@@ -1,92 +1,95 @@
-
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
+import { DashboardLayout as AppLayout } from '../../../components/dashboard/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  Check, 
-  Upload, 
-  Video, 
-  BookOpen, 
-  Loader2, 
-  Plus, 
-  X, 
-  CheckCircle2, 
-  Save, 
-  FileText, 
-  Star, 
-  Settings2, 
-  ShieldCheck, 
-  Zap, 
-  FileCheck, 
-  BrainCircuit, 
-  ClipboardCheck, 
-  Palette, 
-  Users, 
-  Power, 
-  UserPlus, 
-  Mail, 
-  ImageIcon, 
-  ShieldAlert, 
-  Clock, 
-  ArrowLeft, 
-  Scale, 
-  Info, 
-  User, 
-  Globe, 
-  Linkedin, 
-  Twitter, 
-  Instagram, 
-  Youtube, 
-  MessageCircle, 
-  Phone, 
-  Calendar, 
-  Trash2, 
-  Maximize 
+import {
+  Sparkles,
+  ArrowRight,
+  Check,
+  Upload,
+  Video,
+  BookOpen,
+  Loader2,
+  Plus,
+  X,
+  CheckCircle2,
+  Save,
+  FileText,
+  Star,
+  Settings2,
+  ShieldCheck,
+  Zap,
+  FileCheck,
+  BrainCircuit,
+  ClipboardCheck,
+  Palette,
+  Users,
+  Power,
+  UserPlus,
+  Mail,
+  ImageIcon,
+  ShieldAlert,
+  Clock,
+  ArrowLeft,
+  Scale,
+  Info,
+  User,
+  Globe,
+  Linkedin,
+  Twitter,
+  Instagram,
+  Youtube,
+  MessageCircle,
+  Phone,
+  Calendar,
+  Trash2,
+  Maximize,
+  Rocket
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-context';
 import { useFirebase, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, serverTimestamp, setDoc, query, where, updateDoc, getDocs, getDoc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, setDoc, query, where, updateDoc, getDocs, getDoc, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { generateQuizQuestions } from '@/ai/flows/generate-quiz-questions';
-import { extractDocumentText } from '@/ai/flows/extract-document-text-flow';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import Image from 'next/image';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -94,362 +97,174 @@ const TikTokIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-interface Question {
-  id: string;
-  type: 'multiple_choice' | 'true_false' | 'free_response';
-  question: string;
-  options?: string[];
-  correctAnswer: string | boolean;
-  explanation?: string;
-  allowFileUpload?: boolean;
-}
-
-interface SupportMaterial {
-  id: string;
-  name: string;
-  content: string; 
-  type: string;
-  isMaster?: boolean;
-  fileBlob?: File; 
-}
-
-interface ModuleData {
-  title: string;
-  contentType: 'video' | 'text';
-  contentBody: string;
-  videoUrl: string;
-  supportMaterials: SupportMaterial[];
-  questions: Question[];
-  supportQuestions: Question[];
-  minPassingScore: number;
-  allowRetries: boolean;
-  enableSupportQuestions: boolean;
-  isProcessing: boolean;
-}
-
-const generateId = () => Math.random().toString(36).substring(2, 15);
-
-const prepareForFirestore = (obj: any): any => {
-  if (obj === null || obj === undefined) return null;
-  if (Array.isArray(obj)) return obj.map(prepareForFirestore);
-  if (typeof obj === 'object') {
-    if (obj.constructor?.name === 'FieldValue' || obj instanceof Date) {
-      return obj;
-    }
-    const cleaned: any = {};
-    for (const key in obj) {
-      if (key !== 'fileBlob' && Object.prototype.hasOwnProperty.call(obj, key)) {
-        const val = obj[key];
-        cleaned[key] = val === undefined ? null : prepareForFirestore(val);
-      }
-    }
-    return cleaned;
-  }
-  return obj;
+const initialModule = {
+  title: '',
+  contentType: 'text' as 'text' | 'video',
+  content: '',
+  videoUrl: '',
+  supportMaterials: [] as any[],
+  questions: [] as any[],
+  supportQuestions: [] as any[],
+  isProcessing: false,
+  minPassingScore: 70,
+  allowRetries: true,
+  enableSupportQuestions: false
 };
 
 export default function CreateCoursePage() {
-  const { profile } = useAuth();
-  const { storage } = useFirebase();
-  const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { firestore, storage } = useFirebase();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [isInvitation, setIsInvitation] = useState(false);
   const [courseId, setCourseId] = useState<string | null>(null);
-  const [moduleOrder, setModuleOrder] = useState(1);
-  const [showNextModuleDialog, setShowNextModuleDialog] = useState(false);
   
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [aiTargetType, setAiTargetType] = useState<'main' | 'support'>('main');
-  const [aiFlowStep, setAiFlowStep] = useState<1 | 2>(1); 
-  const [extractedContent, setExtractedContent] = useState<string>('');
-  const [isExtracting, setIsExtracting] = useState(false);
-  
-  const [termsAccepted, setTermsAccepted] = useState(false);
-
-  const mentorCoursesQuery = useMemoFirebase(() => {
-    if (!profile?.uid) return null;
-    return query(collection(db, 'courses'), where('mentorId', '==', profile.uid));
-  }, [db, profile?.uid]);
-  const { data: mentorCourses } = useCollection(mentorCoursesQuery);
-
-  const termsRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
-  const { data: termsConfig } = useDoc(termsRef);
-
-  const categoriesQuery = useMemoFirebase(() => query(collection(db, 'categories'), orderBy('name', 'asc')), [db]);
-  const { data: categories } = useCollection(categoriesQuery);
-
-  const levelsQuery = useMemoFirebase(() => query(collection(db, 'levels'), orderBy('order', 'asc')), [db]);
-  const { data: levels } = useCollection(levelsQuery);
-
   const [courseData, setCourseData] = useState({
     title: '',
     description: '',
     categoryId: '',
-    level: '',
-    skipAllowed: true,
+    level: 'Básico',
+    tags: [] as string[]
   });
 
-  const [aiPrefs, setAiPrefs] = useState({
-    numQuestions: 5,
-    role: 'Tutor experto empático',
-    expectations: '',
-    types: ['multiple_choice', 'true_false', 'free_response'] as string[],
-  });
-
+  const [currentModule, setCurrentModule] = useState(initialModule);
+  const [moduleOrder, setModuleOrder] = useState(1);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [isInvitation, setIsInvitation] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [addingStudent, setAddingStudent] = useState(false);
+  const [invitedStudents, setInvitedStudents] = useState<any[]>([]);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [brandingData, setBrandingData] = useState({
     bio: '',
-    primaryColor: '#3B2D86',
-    logoUrl: '',
     socials: {} as Record<string, string>,
+    logoUrl: '',
+    primaryColor: '#0f172a'
   });
-  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiFlowStep, setAiFlowStep] = useState(1);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractedContent, setExtractedContent] = useState('');
+  const [aiPrefs, setAiPrefs] = useState({
+    numQuestions: 5,
+    role: 'Mentor Académico',
+    expectations: 'Enfócate en conceptos clave y aplicación práctica.',
+    types: ['multiple_choice']
+  });
+
+  const [isGeneratingTags, setIsGeneratingTags] = useState(false);
+  const [suggestedTags, setSuggestedTags] = useState<any[]>([]);
+  const [showNextModuleDialog, setShowNextModuleDialog] = useState(false);
+  const [aiTargetType, setAiTargetType] = useState<'main' | 'support'>('main');
+
+  const categories = useCollection(useMemoFirebase(() => collection(firestore, 'categories'), [firestore]))?.data;
+  const levels = useCollection(useMemoFirebase(() => collection(firestore, 'levels'), [firestore]))?.data;
+  const termsConfig = useDoc(useMemoFirebase(() => doc(firestore, 'config', 'terms'), [firestore]))?.data;
+
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [invitedStudents, setInvitedStudents] = useState<any[]>([]);
-  const [addingStudent, setAddingStudent] = useState(false);
-
-  const initialModule: ModuleData = { 
-    title: '', 
-    contentType: 'text', 
-    contentBody: '', 
-    videoUrl: '', 
-    supportMaterials: [],
-    questions: [], 
-    supportQuestions: [],
-    minPassingScore: 70,
-    allowRetries: true,
-    enableSupportQuestions: false,
-    isProcessing: false
-  };
-  const [currentModule, setCurrentModule] = useState<ModuleData>(initialModule);
-
-  // Carga automática de datos del perfil del usuario al iniciar el asistente
-  const hasPopulatedBranding = useRef(false);
-  useEffect(() => {
-    if (profile && !hasPopulatedBranding.current) {
-      setBrandingData({
-        bio: profile.profile?.bio || '',
-        primaryColor: profile.profile?.branding?.primaryColor || '#3B2D86',
-        logoUrl: profile.profile?.branding?.logoUrl || '',
-        socials: { ...(profile.profile?.socials || {}) },
-      });
-      hasPopulatedBranding.current = true;
-    }
-  }, [profile]);
-
-  const clearUILocks = useCallback(() => {
-    document.body.style.pointerEvents = 'auto';
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.pointerEvents = 'auto';
-    document.documentElement.style.overflow = 'auto';
-    document.body.removeAttribute('inert');
-  }, []);
-
-  const handleStartCourse = () => {
-    if (!profile || !courseData.title) return;
-
-    if (!profile.roles.includes('admin')) {
-      const sub = profile.subscription;
-      if (!sub) return toast({ variant: 'destructive', title: 'Abono Requerido', description: 'No tienes un abono institucional activo.' });
-      if (new Date(sub.endDate) < new Date()) return toast({ variant: 'destructive', title: 'Abono Expirado' });
-      const activeCoursesCount = mentorCourses?.filter(c => c.isActive).length || 0;
-      if (activeCoursesCount >= sub.maxSimultaneousCourses) return toast({ variant: 'destructive', title: 'Límite alcanzado' });
-    }
-
-    setLoading(true);
-    const newCourseRef = doc(collection(db, 'courses'));
-    const payload = {
-      ...courseData,
-      id: newCourseRef.id,
-      mentorId: profile.uid,
-      mentorName: profile.displayName || 'Mentor',
-      isActive: false,
-      status: 'pending_terms',
-      termsAccepted: false,
-      publicListing: false,
-      settings: { skipAllowed: courseData.skipAllowed },
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-
-    setDoc(newCourseRef, payload)
-      .then(() => {
-        setCourseId(newCourseRef.id);
-        setStep(2);
-        toast({ title: 'Programa Académico Iniciado' });
-      })
-      .catch((err) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ 
-          path: newCourseRef.path, 
-          operation: 'create', 
-          requestResourceData: payload 
-        }));
-        toast({ variant: 'destructive', title: 'Error de Creación', description: 'No tienes permisos para crear programas academicos o tu suscripción ha expirado.' });
-      })
-      .finally(() => setLoading(false));
+  const clearUILocks = () => {
+    document.body.style.pointerEvents = '';
   };
 
-
-
-  const isCompatibleWithAI = (file: File | undefined) => {
-    if (!file) return false;
-    return file.type === 'text/plain' || file.name.endsWith('.txt') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.name.endsWith('.docx');
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCurrentModule(prev => ({ ...prev, isProcessing: true }));
-    const compatible = isCompatibleWithAI(file);
-    const hasMasterAlready = currentModule.supportMaterials.some(m => m.isMaster);
-    const newMaterial: SupportMaterial = { id: generateId(), name: file.name, content: '', type: file.type || 'application/octet-stream', isMaster: compatible && !hasMasterAlready, fileBlob: file };
-    setCurrentModule(prev => ({ ...prev, supportMaterials: [...prev.supportMaterials, newMaterial], isProcessing: false }));
-    toast({ title: 'Archivo adjuntado' });
-  };
-
-  const setAsMaster = (id: string) => {
-    const material = currentModule.supportMaterials.find(m => m.id === id);
-    if (material && !isCompatibleWithAI(material.fileBlob)) return toast({ variant: 'destructive', title: 'Formato incompatible' });
-    setCurrentModule(prev => ({ ...prev, supportMaterials: prev.supportMaterials.map(m => ({ ...m, isMaster: m.id === id })) }));
-  };
-
-  const removeMaterial = (id: string) => {
-    setCurrentModule(prev => ({ ...prev, supportMaterials: prev.supportMaterials.filter(m => m.id !== id) }));
-  };
-
-  const handleExtractText = async () => {
-    const masterDoc = currentModule.supportMaterials.find(m => m.isMaster);
-    if (!masterDoc?.fileBlob) return toast({ variant: 'destructive', title: 'Falta Documento Maestro' });
-    setIsExtracting(true);
+  const handleGenerateTags = async () => {
+    if (!courseData.categoryId) return;
+    setIsGeneratingTags(true);
     try {
-      const reader = new FileReader();
-      const dataUri = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(masterDoc.fileBlob!);
+      const response = await fetch('/api/ai/suggest-tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryId: courseData.categoryId, title: courseData.title })
       });
-      const extraction = await extractDocumentText({ documentDataUri: dataUri, documentName: masterDoc.name });
-      if (extraction?.error) throw new Error(extraction.error);
-      if (extraction?.extractedText) {
-        setExtractedContent(extraction.extractedText);
-        setAiFlowStep(2);
-        toast({ title: 'Lectura Finalizada' });
-      }
-    } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Error de Lectura', description: e.message });
+      const data = await response.json();
+      setSuggestedTags(data.tags || []);
+    } catch (error) {
+      toast({ title: 'Error al generar etiquetas', variant: 'destructive' });
     } finally {
-      setIsExtracting(false);
+      setIsGeneratingTags(false);
     }
   };
 
-  const handleGenerateQuestions = async () => {
-    if (aiPrefs.types.length === 0) return toast({ variant: 'destructive', title: 'Selecciona tipos' });
+  const handleStartCourse = async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const contentToUse = extractedContent || currentModule.title;
-      const result = await generateQuizQuestions({ content: contentToUse, numQuestions: aiPrefs.numQuestions, questionTypes: aiPrefs.types as any[], role: aiPrefs.role, expectations: aiPrefs.expectations });
-      if (result && 'error' in result) throw new Error(result.error);
-      const questionsWithIds = result.map((q: any) => ({ ...q, id: generateId(), options: q.options || (q.type === 'multiple_choice' ? ['', '', '', ''] : undefined) })) as Question[];
-      if (aiTargetType === 'main') setCurrentModule(prev => ({ ...prev, questions: [...prev.questions, ...questionsWithIds] }));
-      else setCurrentModule(prev => ({ ...prev, supportQuestions: [...prev.supportQuestions, ...questionsWithIds] }));
-      setIsAiModalOpen(false);
-      setExtractedContent('');
-      setAiFlowStep(1);
-      toast({ title: `Añadidas ${questionsWithIds.length} sugerencias` });
-    } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Fallo en Generación', description: e.message });
+      const newCourseRef = doc(collection(db, 'courses'));
+      await setDoc(newCourseRef, {
+        ...courseData,
+        mentorId: user.uid,
+        status: 'creating',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        modulesCount: 0,
+        studentsCount: 0
+      });
+      setCourseId(newCourseRef.id);
+      setStep(2);
+    } catch (error) {
+      toast({ title: 'Error al iniciar curso', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  const addManualQuestion = (isSupport: boolean = false) => {
-    const newQ: Question = { id: generateId(), type: 'multiple_choice', question: '', options: ['', '', '', ''], correctAnswer: '', allowFileUpload: false };
-    if (!isSupport) setCurrentModule(prev => ({ ...prev, questions: [...prev.questions, newQ] }));
-    else setCurrentModule(prev => ({ ...prev, supportQuestions: [...prev.supportQuestions, newQ] }));
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !courseId) return;
+    setCurrentModule({ ...currentModule, isProcessing: true });
+    try {
+      const storageRef = ref(storage, `courses/${courseId}/materials/${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      const newMaterial = { id: Date.now().toString(), name: file.name, url, isMaster: false, fileBlob: file };
+      setCurrentModule(prev => ({ ...prev, supportMaterials: [...prev.supportMaterials, newMaterial], isProcessing: false }));
+    } catch (error) {
+      toast({ title: 'Error al subir archivo', variant: 'destructive' });
+      setCurrentModule(prev => ({ ...prev, isProcessing: false }));
+    }
   };
 
-  const updateQuestion = (id: string, fields: Partial<Question>, isSupport: boolean = false) => {
-    const key = isSupport ? 'supportQuestions' : 'questions';
-    setCurrentModule(prev => ({ ...prev, [key]: prev[key].map(q => q.id === id ? { ...q, ...fields } : q) }));
+  const isCompatibleWithAI = (file: File) => {
+    return file.name.endsWith('.docx') || file.name.endsWith('.txt');
   };
 
-  const renderQuestionEditor = (q: Question, idx: number, isSupport: boolean) => (
-    <Card key={q.id} className={`p-6 ${isSupport ? 'bg-emerald-50/30' : 'bg-muted/10'} rounded-3xl border-none relative group/q shadow-sm`}>
-       <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-destructive opacity-0 group-hover/q:opacity-100" onClick={() => setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: prev[isSupport ? 'supportQuestions' : 'questions'].filter(item => item.id !== q.id) }))}><X className="h-5 w-5" /></Button>
-       <div className="space-y-4">
-         <div className="flex items-center gap-3">
-            <span className={`text-xs font-bold ${isSupport ? 'bg-emerald-500' : 'bg-primary'} text-white w-8 h-8 rounded-xl flex items-center justify-center`}>{isSupport ? 'S' : ''}{idx + 1}</span>
-            <div className="flex gap-2">
-               {(['multiple_choice', 'true_false', 'free_response'] as const).map(type => (
-                 <Badge key={type} variant={q.type === type ? 'default' : 'outline'} className="cursor-pointer capitalize text-[10px]" onClick={() => updateQuestion(q.id, { type, options: type === 'multiple_choice' ? ['','','',''] : undefined, correctAnswer: type === 'true_false' ? true : '' }, isSupport)}>{type.replace('_', ' ')}</Badge>
-               ))}
-            </div>
-         </div>
-         <Textarea value={q.question} onChange={e => updateQuestion(q.id, { question: e.target.value }, isSupport)} placeholder="Enunciado..." className="min-h-[100px] text-sm font-bold border-none bg-white/50 rounded-2xl p-4" />
-         <div className="pl-4 border-l-4 border-primary/20 space-y-4">
-            {q.type === 'multiple_choice' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {q.options?.map((opt, optIdx) => (
-                  <div key={optIdx} className="flex gap-3 items-center bg-white p-2 rounded-xl border">
-                    <button className={`w-8 h-8 rounded-lg text-xs font-bold shrink-0 ${q.correctAnswer === opt ? 'bg-primary text-white shadow-lg' : 'bg-secondary text-muted-foreground'}`} type="button" onClick={() => updateQuestion(q.id, { correctAnswer: opt }, isSupport)}>{String.fromCharCode(65 + optIdx)}</button>
-                    <Input value={opt} onChange={e => { const newOpts = [...(q.options || [])]; newOpts[optIdx] = e.target.value; updateQuestion(q.id, { options: newOpts }, isSupport); }} placeholder={`Opción ${optIdx + 1}`} className="h-9 text-sm border-none bg-transparent" />
-                  </div>
-                ))}
-              </div>
-            )}
-            {q.type === 'true_false' && (
-              <div className="flex gap-4"><Button variant={q.correctAnswer === true ? 'default' : 'outline'} className="flex-1 h-12 rounded-2xl font-bold border-2" onClick={() => updateQuestion(q.id, { correctAnswer: true }, isSupport)}>Verdadero</Button><Button variant={q.correctAnswer === false ? 'default' : 'outline'} className="flex-1 h-12 rounded-2xl font-bold border-2" onClick={() => updateQuestion(q.id, { correctAnswer: false }, isSupport)}>Falso</Button></div>
-            )}
-            {q.type === 'free_response' && (
-              <div className="space-y-4">
-                <Textarea value={q.correctAnswer as string} onChange={e => updateQuestion(q.id, { correctAnswer: e.target.value }, isSupport)} placeholder="Respuesta ideal..." className="min-h-[100px] text-xs rounded-2xl p-4 bg-white/80 border-none" />
-                <div className="flex items-center justify-between bg-white/40 p-4 rounded-2xl border-2 border-dashed border-primary/10">
-                   <div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><div><Label className="text-xs font-bold block">Habilitar Adjunto PDF</Label><p className="text-[10px] text-muted-foreground">Permite al alumno subir documentación.</p></div></div>
-                   <Switch checked={q.allowFileUpload} onCheckedChange={(val) => updateQuestion(q.id, { allowFileUpload: val }, isSupport)} />
-                </div>
-              </div>
-            )}
-         </div>
-       </div>
-    </Card>
-  );
+  const setAsMaster = (id: string) => {
+    setCurrentModule(prev => ({
+      ...prev,
+      supportMaterials: prev.supportMaterials.map(m => ({ ...m, isMaster: m.id === id }))
+    }));
+  };
+
+  const removeMaterial = (id: string) => {
+    setCurrentModule(prev => ({
+      ...prev,
+      supportMaterials: prev.supportMaterials.filter(m => m.id !== id)
+    }));
+  };
+
+  const addManualQuestion = (isSupport: boolean) => {
+    const newQ = { id: Date.now().toString(), text: '', type: 'multiple_choice', options: ['', ''], correctAnswer: 0 };
+    if (isSupport) {
+      setCurrentModule(prev => ({ ...prev, supportQuestions: [...prev.supportQuestions, newQ] }));
+    } else {
+      setCurrentModule(prev => ({ ...prev, questions: [...prev.questions, newQ] }));
+    }
+  };
 
   const handleSaveModule = async () => {
-    if (!courseId || !currentModule.title) return;
+    if (!courseId) return;
     setLoading(true);
     try {
-      const updatedMaterials = await Promise.all(currentModule.supportMaterials.map(async (mat) => {
-        if (mat.fileBlob) {
-          const storagePath = `courses/${courseId}/modules/${moduleOrder}/${Date.now()}_${mat.name}`;
-          const storageRef = ref(storage, storagePath);
-          const uploadResult = await uploadBytes(storageRef, mat.fileBlob, { contentType: mat.type });
-          const downloadUrl = await getDownloadURL(uploadResult.ref);
-          return { id: mat.id, name: mat.name, content: downloadUrl, type: mat.type, isMaster: mat.isMaster };
-        }
-        return mat;
-      }));
-      
-      const modRef = doc(collection(db, 'courses', courseId, 'modules'));
-      
-      // Aseguramos que si hay una URL de video, se guarde correctamente
-      const data = prepareForFirestore({ 
-        ...currentModule, 
-        supportMaterials: updatedMaterials, 
-        id: modRef.id, 
-        courseId, 
-        order: moduleOrder, 
-        createdAt: serverTimestamp() 
-      });
-      
-      setDoc(modRef, data).then(() => setShowNextModuleDialog(true)).catch(async (e) => errorEmitter.emit('permission-error', new FirestorePermissionError({ path: modRef.path, operation: 'create', requestResourceData: data })));
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error al guardar clase', description: err.message || 'Ocurrió un fallo inesperado al procesar los materiales o la base de datos.' });
+      const moduleRef = doc(collection(firestore, 'courses', courseId, 'modules'));
+      await setDoc(moduleRef, { ...currentModule, order: moduleOrder, createdAt: serverTimestamp() });
+      const courseRef = doc(firestore, 'courses', courseId);
+      await updateDoc(courseRef, { modulesCount: moduleOrder });
+      setShowNextModuleDialog(true);
+    } catch (error) {
+      toast({ title: 'Error al guardar clase', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -460,13 +275,12 @@ export default function CreateCoursePage() {
     if (!file || !courseId) return;
     setUploadingLogo(true);
     try {
-      const storageRef = ref(storage, `courses/${courseId}/branding/logo_${Date.now()}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
-      setBrandingData(prev => ({ ...prev, logoUrl: url }));
-      toast({ title: 'Logo actualizado' });
+      const storageRef = ref(storage, `courses/${courseId}/branding/logo`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setBrandingData({ ...brandingData, logoUrl: url });
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error al subir logo' });
+      toast({ title: 'Error al subir logo', variant: 'destructive' });
     } finally {
       setUploadingLogo(false);
     }
@@ -475,75 +289,134 @@ export default function CreateCoursePage() {
   const handleSaveBranding = async () => {
     if (!courseId) return;
     setLoading(true);
-    const courseRef = doc(db, 'courses', courseId);
-    const data = { brandingOverride: brandingData, updatedAt: serverTimestamp() };
-    updateDoc(courseRef, data).then(() => { setStep(4); toast({ title: 'Identidad Visual Aplicada' }); })
-      .catch(e => errorEmitter.emit('permission-error', new FirestorePermissionError({ path: courseRef.path, operation: 'update', requestResourceData: data })))
-      .finally(() => setLoading(false));
-  };
-
-  const handleInviteStudent = async () => {
-    if (!inviteEmail || !courseId || !profile?.uid) return;
-    setAddingStudent(true);
     try {
-      // Usamos setDoc directo para enrollments heredando contexto de auth
-      const enrollmentId = Math.random().toString(36).substring(2, 15);
-      const enrollmentRef = doc(db, 'enrollments', enrollmentId);
-      
-      const enrollmentData = {
-        id: enrollmentId,
-        courseId,
-        mentorId: profile.uid,
-        inviteEmail: inviteEmail.toLowerCase().trim(),
-        studentName: inviteEmail.split('@')[0],
-        status: 'active',
-        isInvited: isInvitation,
-        isDirect: !isInvitation,
-        enrolledAt: serverTimestamp(),
-        createdAt: serverTimestamp()
-      };
-
-      await setDoc(enrollmentRef, enrollmentData);
-      
-      setInvitedStudents(prev => [enrollmentData, ...prev]);
-      setInviteEmail('');
-      toast({ title: isInvitation ? 'Invitación de cortesía enviada' : 'Alumno facturable inscrito' });
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error de Inscripción', description: 'No se pudo inscribir al alumno. Verifica tus permisos o límites.' });
-    } finally { 
-      setAddingStudent(false); 
+      const courseRef = doc(db, 'courses', courseId);
+      await updateDoc(courseRef, { branding: brandingData });
+      setStep(4);
+    } catch (error) {
+      toast({ title: 'Error al guardar branding', variant: 'destructive' });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAcceptTerms = () => {
-    if (!courseId || !termsAccepted) return;
+  const handleInviteStudent = async () => {
+    if (!courseId || !inviteEmail) return;
+    setAddingStudent(true);
+    try {
+      const inviteRef = doc(collection(db, 'courses', courseId, 'invites'));
+      const studentData = { inviteEmail, isInvited: isInvitation, createdAt: serverTimestamp(), studentName: inviteEmail.split('@')[0] };
+      await setDoc(inviteRef, studentData);
+      setInvitedStudents([...invitedStudents, studentData]);
+      setInviteEmail('');
+      toast({ title: 'Alumno inscrito con éxito' });
+    } catch (error) {
+      toast({ title: 'Error al inscribir alumno', variant: 'destructive' });
+    } finally {
+      setAddingStudent(false);
+    }
+  };
+
+  const handleAcceptTerms = async () => {
+    if (!courseId) return;
     setLoading(true);
-    const courseRef = doc(db, 'courses', courseId);
-    updateDoc(courseRef, { 
-      termsAccepted: true, 
-      termsAcceptedAt: serverTimestamp(), 
-      updatedAt: serverTimestamp() 
-    })
-      .then(() => { setStep(6); toast({ title: 'Términos Aceptados' }); })
-      .finally(() => setLoading(false));
+    try {
+      const courseRef = doc(db, 'courses', courseId);
+      await updateDoc(courseRef, { termsAccepted: true, termsAcceptedAt: serverTimestamp() });
+      setStep(6);
+    } catch (error) {
+      toast({ title: 'Error al aceptar términos', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFinalFinish = async () => {
     if (!courseId) return;
     setLoading(true);
-    const courseRef = doc(db, 'courses', courseId);
-    updateDoc(courseRef, { 
-      status: 'draft', 
-      isActive: false, 
-      updatedAt: serverTimestamp() 
-    }).then(() => {
-      toast({ title: 'Programa Académico Registrado' });
+    try {
+      const courseRef = doc(db, 'courses', courseId);
+      await updateDoc(courseRef, { status: 'draft', updatedAt: serverTimestamp() });
+      toast({ title: 'Curso finalizado' });
       router.push('/courses/manage');
-    }).finally(() => setLoading(false));
+    } catch (error) {
+      toast({ title: 'Error al finalizar curso', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleExtractText = async () => {
+    setIsExtracting(true);
+    setTimeout(() => {
+      setExtractedContent('Contenido simulado extraído del documento maestro.');
+      setAiFlowStep(2);
+      setIsExtracting(false);
+    }, 2000);
+  };
+
+  const handleGenerateQuestions = async () => {
+    setLoading(true);
+    setTimeout(() => {
+      const mockQs = Array.from({ length: aiPrefs.numQuestions }).map((_, i) => ({
+        id: `ai-${Date.now()}-${i}`,
+        text: `Pregunta generada por IA #${i + 1}`,
+        type: aiPrefs.types[0] || 'multiple_choice',
+        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
+        correctAnswer: 0
+      }));
+      if (aiTargetType === 'main') {
+        setCurrentModule(prev => ({ ...prev, questions: [...prev.questions, ...mockQs] }));
+      } else {
+        setCurrentModule(prev => ({ ...prev, supportQuestions: [...prev.supportQuestions, ...mockQs] }));
+      }
+      setIsAiModalOpen(false);
+      setAiFlowStep(1);
+      setLoading(false);
+      toast({ title: 'Preguntas generadas con éxito' });
+    }, 3000);
+  };
+
+  const renderQuestionEditor = (q: any, idx: number, isSupport: boolean) => (
+    <Card key={q.id} className="border-2 border-primary/10 shadow-sm rounded-2xl overflow-hidden">
+      <CardHeader className="py-4 px-6 bg-secondary/5 flex flex-row justify-between items-center">
+        <Badge variant="outline" className="font-bold">Pregunta {idx + 1}</Badge>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
+          if (isSupport) {
+            setCurrentModule(prev => ({ ...prev, supportQuestions: prev.supportQuestions.filter(x => x.id !== q.id) }));
+          } else {
+            setCurrentModule(prev => ({ ...prev, questions: prev.questions.filter(x => x.id !== q.id) }));
+          }
+        }}><Trash2 className="h-4 w-4" /></Button>
+      </CardHeader>
+      <CardContent className="p-6 space-y-4">
+        <Input value={q.text} onChange={e => {
+          const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
+          newQs[idx].text = e.target.value;
+          setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
+        }} placeholder="¿Cuál es la pregunta?" className="font-medium h-12 rounded-xl" />
+        <div className="grid gap-2">
+          {q.options.map((opt: string, optIdx: number) => (
+            <div key={optIdx} className="flex gap-2 items-center">
+              <Checkbox checked={q.correctAnswer === optIdx} onCheckedChange={() => {
+                const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
+                newQs[idx].correctAnswer = optIdx;
+                setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
+              }} />
+              <Input value={opt} onChange={e => {
+                const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
+                newQs[idx].options[optIdx] = e.target.value;
+                setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
+              }} className="h-10 rounded-lg bg-secondary/10 border-none" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <DashboardLayout>
+    <AppLayout>
       <div className="max-w-5xl mx-auto space-y-6 pb-20">
         <header className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
@@ -561,88 +434,14 @@ export default function CreateCoursePage() {
           </div>
         </header>
 
-        {step === 1 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
-              <CardHeader className="bg-primary/5 p-8"><CardTitle className="text-xl">1. Fundamentos del Curso</CardTitle></CardHeader>
-              <CardContent className="p-8 space-y-8">
-                <div className="grid gap-6">
-                  <div className="space-y-2"><Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Título</Label><Input value={courseData.title} onChange={e => setCourseData({...courseData, title: e.target.value})} placeholder="Ej: Especialización en IA..." className="h-14 font-bold rounded-2xl bg-secondary/10 border-none" /></div>
-                  
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Categoría Académica</Label>
-                      <Select 
-                        value={courseData.categoryId} 
-                        onValueChange={val => setCourseData({...courseData, categoryId: val})}
-                      >
-                        <SelectTrigger className="h-14 rounded-2xl bg-secondary/10 border-none font-bold">
-                          <SelectValue placeholder="Selecciona área..." />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-2xl border-none shadow-3xl">
-                          {categories?.map(cat => (
-                            <SelectItem key={cat.id} value={cat.id} className="font-bold">
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nivel del Curso</Label>
-                      <Select 
-                        value={courseData.level} 
-                        onValueChange={val => setCourseData({...courseData, level: val})}
-                      >
-                        <SelectTrigger className="h-14 rounded-2xl bg-secondary/10 border-none font-bold">
-                          <SelectValue placeholder="Nivel..." />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-2xl border-none shadow-3xl">
-                          {levels?.map(lvl => (
-                            <SelectItem key={lvl.id} value={lvl.name} className="font-bold">
-                              {lvl.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 space-y-6">
-                      <h3 className="text-xs font-bold uppercase text-primary flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Reglas de Negocio</h3>
-                      <div className="space-y-6">
-                        <div className="flex justify-between items-center">
-                          <Label className="flex items-center gap-2 text-xs font-bold"><Zap className="h-4 w-4 text-amber-500" /> Permitir Salto de Clases</Label>
-                          <Switch 
-                            checked={courseData.settings?.skipAllowed !== false} 
-                            onCheckedChange={val => setCourseData({
-                              ...courseData, 
-                              settings: { ...courseData.settings, skipAllowed: val }
-                            })} 
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Descripción Académica</Label>
-                      <Textarea value={courseData.description} onChange={e => setCourseData({...courseData, description: e.target.value})} placeholder="Describe las competencias..." className="min-h-[140px] rounded-2xl bg-secondary/10 border-none p-6" />
-                    </div>
-                  </div>
-                  <Button onClick={handleStartCourse} disabled={!courseData.title || loading} className="w-full h-16 rounded-[1.5rem] text-lg font-bold shadow-xl">Siguiente: Crear Clases <ArrowRight className="ml-2 h-5 w-5" /></Button>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in duration-500">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
               <CardHeader className="bg-accent/10 p-8 flex flex-row justify-between items-center"><div><Badge className="bg-accent text-white h-6 mb-2">Clase #{moduleOrder}</Badge><CardTitle className="text-2xl font-bold">Contenido Académico</CardTitle></div></CardHeader>
               <CardContent className="p-8 space-y-8">
-                <Input placeholder="Nombre de la Clase" value={currentModule.title} onChange={e => setCurrentModule({...currentModule, title: e.target.value})} className="h-14 font-bold text-xl border-none bg-muted/40 rounded-2xl" />
-                <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({...currentModule, contentType: v as any})}>
-                  <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full max-w-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
+                <Input placeholder="Nombre de la Clase" value={currentModule.title} onChange={e => setCurrentModule({ ...currentModule, title: e.target.value })} className="h-14 font-bold text-xl border-none bg-muted/40 rounded-2xl" />
+                <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({ ...currentModule, contentType: v as any })}>
+                  <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full max-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
                   <TabsContent value="text" className="space-y-6">
                     <div className="p-12 border-2 border-dashed rounded-[3rem] flex flex-col items-center gap-4 relative bg-muted/5 hover:bg-muted/10 transition-all group">
                       <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
@@ -664,11 +463,11 @@ export default function CreateCoursePage() {
                   <TabsContent value="video">
                     <div className="space-y-4">
                       <Label className="text-[10px] font-bold uppercase ml-1">URL de Video (YouTube o Vimeo)</Label>
-                      <Input 
-                        placeholder="https://..." 
-                        value={currentModule.videoUrl} 
-                        onChange={e => setCurrentModule({...currentModule, videoUrl: e.target.value})} 
-                        className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-medium" 
+                      <Input
+                        placeholder="https://..."
+                        value={currentModule.videoUrl}
+                        onChange={e => setCurrentModule({ ...currentModule, videoUrl: e.target.value })}
+                        className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-medium"
                       />
                       <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-2xl flex items-start gap-4 mt-2">
                         <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
@@ -689,14 +488,14 @@ export default function CreateCoursePage() {
                   <div className="grid sm:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Exigencia (%)</Label>
-                      <Input 
-                        type="number" 
-                        value={currentModule.minPassingScore} 
+                      <Input
+                        type="number"
+                        value={currentModule.minPassingScore}
                         onChange={e => {
                           const val = parseInt(e.target.value);
-                          setCurrentModule({...currentModule, minPassingScore: isNaN(val) ? 0 : val});
-                        }} 
-                        className="h-12 rounded-xl bg-white border-none font-bold" 
+                          setCurrentModule({ ...currentModule, minPassingScore: isNaN(val) ? 0 : val });
+                        }}
+                        className="h-12 rounded-xl bg-white border-none font-bold"
                       />
                       <div className="flex items-start gap-2 mt-2 px-1">
                         <Info className="h-3 w-3 text-accent mt-0.5" />
@@ -707,7 +506,7 @@ export default function CreateCoursePage() {
                     </div>
                     <div className="flex items-center justify-between bg-white/50 p-4 rounded-xl border border-dashed h-12 self-end">
                       <Label className="text-sm font-bold">Permitir Reintentos</Label>
-                      <Switch checked={currentModule.allowRetries} onCheckedChange={(val) => setCurrentModule({...currentModule, allowRetries: val})} />
+                      <Switch checked={currentModule.allowRetries} onCheckedChange={(val) => setCurrentModule({ ...currentModule, allowRetries: val })} />
                     </div>
                   </div>
                 </div>
@@ -717,13 +516,13 @@ export default function CreateCoursePage() {
                   <div className="grid gap-4">{currentModule.questions.map((q, idx) => renderQuestionEditor(q, idx, false))}</div>
                 </div>
                 <div className="bg-emerald-50/50 p-8 rounded-[2.5rem] border-2 border-emerald-100 space-y-6">
-                   <div className="flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-emerald-800">Refuerzo Automático</h3></div></div><Switch checked={currentModule.enableSupportQuestions} onCheckedChange={(val) => setCurrentModule({...currentModule, enableSupportQuestions: val})} /></div>
-                   {currentModule.enableSupportQuestions && (
-                     <div className="pt-6 space-y-6 border-t border-emerald-200">
-                        <div className="flex justify-between items-center"><h4 className="font-bold text-emerald-800">Evaluación de Soporte</h4><div className="flex gap-2"><Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={() => addManualQuestion(true)}><Plus className="h-3 w-3 mr-1" /> Añadir Manual</Button><Button size="sm" className="bg-emerald-600 text-white rounded-xl font-bold" onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }}><Sparkles className="h-3 w-3 mr-1" /> Generar Soporte con IA</Button></div></div>
-                        <div className="grid gap-4">{currentModule.supportQuestions.map((q, idx) => renderQuestionEditor(q, idx, true))}</div>
-                     </div>
-                   )}
+                  <div className="flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-emerald-800">Refuerzo Automático</h3></div></div><Switch checked={currentModule.enableSupportQuestions} onCheckedChange={(val) => setCurrentModule({ ...currentModule, enableSupportQuestions: val })} /></div>
+                  {currentModule.enableSupportQuestions && (
+                    <div className="pt-6 space-y-6 border-t border-emerald-200">
+                      <div className="flex justify-between items-center"><h4 className="font-bold text-emerald-800">Evaluación de Soporte</h4><div className="flex gap-2"><Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={() => addManualQuestion(true)}><Plus className="h-3 w-3 mr-1" /> Añadir Manual</Button><Button size="sm" className="bg-emerald-600 text-white rounded-xl font-bold" onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }}><Sparkles className="h-3 w-3 mr-1" /> Generar Soporte con IA</Button></div></div>
+                      <div className="grid gap-4">{currentModule.supportQuestions.map((q, idx) => renderQuestionEditor(q, idx, true))}</div>
+                    </div>
+                  )}
                 </div>
                 <Button onClick={handleSaveModule} disabled={!currentModule.title || loading} className="w-full h-16 rounded-[1.5rem] text-lg font-bold bg-primary shadow-2xl mt-6">{loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />} Guardar Clase #{moduleOrder}</Button>
               </CardContent>
@@ -752,12 +551,12 @@ export default function CreateCoursePage() {
                   <TabsContent value="perfil" className="p-10 space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="create-bio" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Biografía del Mentor para este Curso</Label>
-                      <Textarea 
+                      <Textarea
                         id="create-bio"
-                        value={brandingData.bio} 
-                        onChange={e => setBrandingData({...brandingData, bio: e.target.value})} 
-                        placeholder="Describe tu trayectoria y enfoque para este programa..." 
-                        className="min-h-[200px] rounded-[2rem] bg-secondary/10 border-none p-8 text-base leading-relaxed" 
+                        value={brandingData.bio}
+                        onChange={e => setBrandingData({ ...brandingData, bio: e.target.value })}
+                        placeholder="Describe tu trayectoria y enfoque para este programa..."
+                        className="min-h-[200px] rounded-[2rem] bg-secondary/10 border-none p-8 text-base leading-relaxed"
                       />
                     </div>
                   </TabsContent>
@@ -776,10 +575,10 @@ export default function CreateCoursePage() {
                     ].map((social) => (
                       <div key={social.id} className="space-y-2">
                         <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2"><social.icon className="h-3 w-3" /> {social.label}</Label>
-                        <Input 
-                          value={brandingData.socials[social.id] || ''} 
-                          onChange={e => setBrandingData({...brandingData, socials: {...brandingData.socials, [social.id]: e.target.value}})} 
-                          className="h-14 rounded-2xl bg-secondary/10 border-none font-medium" 
+                        <Input
+                          value={brandingData.socials[social.id] || ''}
+                          onChange={e => setBrandingData({ ...brandingData, socials: { ...brandingData.socials, [social.id]: e.target.value } })}
+                          className="h-14 rounded-2xl bg-secondary/10 border-none font-medium"
                           placeholder={`Enlace a ${social.label}`}
                         />
                       </div>
@@ -802,7 +601,7 @@ export default function CreateCoursePage() {
                             {uploadingLogo ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2 h-5 w-5" />} Subir Logo
                           </Button>
                           {brandingData.logoUrl && (
-                            <Button variant="ghost" className="rounded-2xl font-bold h-12 px-8 text-destructive hover:bg-destructive/10" onClick={() => setBrandingData({...brandingData, logoUrl: ''})}>
+                            <Button variant="ghost" className="rounded-2xl font-bold h-12 px-8 text-destructive hover:bg-destructive/10" onClick={() => setBrandingData({ ...brandingData, logoUrl: '' })}>
                               <Trash2 className="mr-2 h-5 w-5" /> Eliminar Logo
                             </Button>
                           )}
@@ -815,10 +614,10 @@ export default function CreateCoursePage() {
                       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color Primario Académico</Label>
                       <div className="flex flex-col sm:flex-row items-center gap-8 bg-secondary/10 p-6 rounded-3xl">
                         <div className="relative">
-                          <input 
-                            type="color" 
-                            value={brandingData.primaryColor} 
-                            onChange={e => setBrandingData({...brandingData, primaryColor: e.target.value})}
+                          <input
+                            type="color"
+                            value={brandingData.primaryColor}
+                            onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
                             className="w-24 h-24 rounded-3xl p-0 border-none cursor-pointer overflow-hidden shadow-xl ring-4 ring-white"
                           />
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -826,9 +625,9 @@ export default function CreateCoursePage() {
                           </div>
                         </div>
                         <div className="flex-1 space-y-4">
-                          <Input 
-                            value={brandingData.primaryColor} 
-                            onChange={e => setBrandingData({...brandingData, primaryColor: e.target.value})}
+                          <Input
+                            value={brandingData.primaryColor}
+                            onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
                             className="h-14 text-2xl font-mono font-bold text-center rounded-2xl bg-white border-none shadow-sm"
                           />
                         </div>
@@ -969,124 +768,124 @@ export default function CreateCoursePage() {
             </Card>
           </div>
         )}
+      </div>
 
-        <Dialog open={isAiModalOpen} onOpenChange={(open) => { setIsAiModalOpen(open); if(!open) { setAiFlowStep(1); setExtractedContent(''); clearUILocks(); } }}>
-          <DialogContent className="rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl max-w-xl">
-            <div className="bg-primary p-8 text-white relative">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4"><BrainCircuit className="text-white h-6 w-6" /></div>
-              <DialogTitle className="text-2xl font-bold">Generación Inteligente</DialogTitle>
-              <DialogDescription className="text-primary-foreground/70 text-sm mt-1">Entrena a la IA con el Documento Maestro de esta clase.</DialogDescription>
-              
-              <div className="mt-8 flex items-center justify-between relative px-4">
-                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/10 -translate-y-1/2 z-0 mx-8" />
-                <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 1 ? "text-white" : "text-white/30")}>
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-green-500 border-green-500" : "bg-primary border-white/20")}>
-                    {aiFlowStep > 1 ? <Check className="h-4 w-4" /> : "1"}
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Lectura</span>
+      <Dialog open={isAiModalOpen} onOpenChange={(open) => { setIsAiModalOpen(open); if (!open) { setAiFlowStep(1); setExtractedContent(''); clearUILocks(); } }}>
+        <DialogContent className="rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl max-w-xl">
+          <div className="bg-primary p-8 text-white relative">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4"><BrainCircuit className="text-white h-6 w-6" /></div>
+            <DialogTitle className="text-2xl font-bold">Generación Inteligente</DialogTitle>
+            <DialogDescription className="text-primary-foreground/70 text-sm mt-1">Entrena a la IA con el Documento Maestro de esta clase.</DialogDescription>
+
+            <div className="mt-8 flex items-center justify-between relative px-4">
+              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/10 -translate-y-1/2 z-0 mx-8" />
+              <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 1 ? "text-white" : "text-white/30")}>
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-green-500 border-green-500" : "bg-primary border-white/20")}>
+                  {aiFlowStep > 1 ? <Check className="h-4 w-4" /> : "1"}
                 </div>
-                <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 2 ? "text-white" : "text-white/30")}>
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 2 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : "bg-primary border-white/20")}>2</div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Generación</span>
-                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest">Lectura</span>
+              </div>
+              <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 2 ? "text-white" : "text-white/30")}>
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 2 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : "bg-primary border-white/20")}>2</div>
+                <span className="text-[10px] font-bold uppercase tracking-widest">Generación</span>
               </div>
             </div>
+          </div>
 
-            <div className="p-8 space-y-8">
-              {aiFlowStep === 1 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="flex flex-col items-center text-center gap-4 py-6 px-10 bg-secondary/10 rounded-[2rem] border-2 border-dashed border-primary/10">
-                    <FileText className="h-12 w-12 text-primary/40" />
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-lg">Procesar Documento Maestro</h4>
-                      <p className="text-xs text-muted-foreground">Gemini analizará el archivo para proponer evaluaciones.</p>
-                    </div>
-                    {currentModule.supportMaterials.find(m => m.isMaster) ? (
-                      <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 mt-2">
-                        <FileCheck className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-bold truncate max-w-[200px]">{currentModule.supportMaterials.find(m => m.isMaster)?.name}</span>
-                      </div>
-                    ) : (
-                      <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.docx/.txt)</Badge>
-                    )}
+          <div className="p-8 space-y-8">
+            {aiFlowStep === 1 && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="flex flex-col items-center text-center gap-4 py-6 px-10 bg-secondary/10 rounded-[2rem] border-2 border-dashed border-primary/10">
+                  <FileText className="h-12 w-12 text-primary/40" />
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-lg">Procesar Documento Maestro</h4>
+                    <p className="text-xs text-muted-foreground">Gemini analizará el archivo para proponer evaluaciones.</p>
                   </div>
+                  {currentModule.supportMaterials.find(m => m.isMaster) ? (
+                    <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 mt-2">
+                      <FileCheck className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-bold truncate max-w-[200px]">{currentModule.supportMaterials.find(m => m.isMaster)?.name}</span>
+                    </div>
+                  ) : (
+                    <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.docx/.txt)</Badge>
+                  )}
+                </div>
 
-                  <Button onClick={handleExtractText} disabled={isExtracting || !currentModule.supportMaterials.find(m => m.isMaster)} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl">
-                    {isExtracting ? <><Loader2 className="animate-spin mr-2 h-5 w-5" /> Gemini está leyendo...</> : <><Zap className="mr-2 h-5 w-5" /> Iniciar Lectura Profunda</>}
+                <Button onClick={handleExtractText} disabled={isExtracting || !currentModule.supportMaterials.find(m => m.isMaster)} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl">
+                  {isExtracting ? <><Loader2 className="animate-spin mr-2 h-5 w-5" /> Gemini está leyendo...</> : <><Zap className="mr-2 h-5 w-5" /> Iniciar Lectura Profunda</>}
+                </Button>
+              </div>
+            )}
+
+            {aiFlowStep === 2 && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-2xl flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center"><ClipboardCheck className="h-6 w-6" /></div>
+                  <div><p className="text-xs font-bold text-green-700">Contenido Preparado</p><p className="text-[10px] text-green-600">Base de conocimiento cargada con éxito.</p></div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Cantidad</Label>
+                    <Input type="number" className="h-12 rounded-xl bg-secondary/30 border-none font-bold" value={aiPrefs.numQuestions} onChange={e => setAiPrefs({ ...aiPrefs, numQuestions: parseInt(e.target.value) || 0 })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Rol</Label>
+                    <Input className="h-12 rounded-xl bg-secondary/30 border-none" value={aiPrefs.role} onChange={e => setAiPrefs({ ...aiPrefs, role: e.target.value })} />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Instrucciones / Énfasis</Label>
+                  <Textarea
+                    placeholder="Ej: Enfócate en los conceptos técnicos, haz preguntas de alta dificultad..."
+                    className="min-h-[80px] rounded-xl bg-secondary/30 border-none text-xs"
+                    value={aiPrefs.expectations}
+                    onChange={e => setAiPrefs({ ...aiPrefs, expectations: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Tipos Permitidos</Label>
+                  <div className="flex flex-wrap gap-3 p-4 bg-secondary/20 rounded-2xl border border-dashed">
+                    {['multiple_choice', 'true_false', 'free_response'].map(type => (
+                      <div key={type} className="flex items-center gap-2">
+                        <Checkbox id={`create-ai-type-${type}`} checked={aiPrefs.types.includes(type)} onCheckedChange={(checked) => {
+                          const newTypes = checked ? [...aiPrefs.types, type] : aiPrefs.types.filter(t => t !== type);
+                          setAiPrefs({ ...aiPrefs, types: newTypes });
+                        }} />
+                        <Label htmlFor={`create-ai-type-${type}`} className="text-xs font-bold capitalize cursor-pointer">{type.replace('_', ' ')}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button variant="ghost" onClick={() => setAiFlowStep(1)} className="rounded-xl font-bold">Atrás</Button>
+                  <Button onClick={handleGenerateQuestions} disabled={loading} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 bg-primary text-white">
+                    {loading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : <Sparkles className="h-5 w-5 mr-2" />} Generar Sugerencias
                   </Button>
                 </div>
-              )}
-
-              {aiFlowStep === 2 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-2xl flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center"><ClipboardCheck className="h-6 w-6" /></div>
-                    <div><p className="text-xs font-bold text-green-700">Contenido Preparado</p><p className="text-[10px] text-green-600">Base de conocimiento cargada con éxito.</p></div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Cantidad</Label>
-                      <Input type="number" className="h-12 rounded-xl bg-secondary/30 border-none font-bold" value={aiPrefs.numQuestions} onChange={e => setAiPrefs({...aiPrefs, numQuestions: parseInt(e.target.value) || 0})} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Rol</Label>
-                      <Input className="h-12 rounded-xl bg-secondary/30 border-none" value={aiPrefs.role} onChange={e => setAiPrefs({...aiPrefs, role: e.target.value})} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Instrucciones / Énfasis</Label>
-                    <Textarea 
-                      placeholder="Ej: Enfócate en los conceptos técnicos, haz preguntas de alta dificultad..."
-                      className="min-h-[80px] rounded-xl bg-secondary/30 border-none text-xs"
-                      value={aiPrefs.expectations}
-                      onChange={e => setAiPrefs({...aiPrefs, expectations: e.target.value})}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Tipos Permitidos</Label>
-                    <div className="flex flex-wrap gap-3 p-4 bg-secondary/20 rounded-2xl border border-dashed">
-                      {['multiple_choice', 'true_false', 'free_response'].map(type => (
-                        <div key={type} className="flex items-center gap-2">
-                          <Checkbox id={`create-ai-type-${type}`} checked={aiPrefs.types.includes(type)} onCheckedChange={(checked) => {
-                            const newTypes = checked ? [...aiPrefs.types, type] : aiPrefs.types.filter(t => t !== type);
-                            setAiPrefs({...aiPrefs, types: newTypes});
-                          }} />
-                          <Label htmlFor={`create-ai-type-${type}`} className="text-xs font-bold capitalize cursor-pointer">{type.replace('_', ' ')}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <Button variant="ghost" onClick={() => setAiFlowStep(1)} className="rounded-xl font-bold">Atrás</Button>
-                    <Button onClick={handleGenerateQuestions} disabled={loading} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 bg-primary text-white">
-                      {loading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : <Sparkles className="h-5 w-5 mr-2" />} Generar Sugerencias
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <AlertDialog open={showNextModuleDialog} onOpenChange={(open) => { setShowNextModuleDialog(open); if(!open) clearUILocks(); }}>
-          <AlertDialogContent className="rounded-[2.5rem] p-10 max-sm border-none shadow-3xl">
-            <AlertDialogHeader className="items-center text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mb-4">
-                <CheckCircle2 className="h-8 w-8" />
               </div>
-              <AlertDialogTitle className="text-2xl font-bold">¡Clase Guardada!</AlertDialogTitle>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col sm:flex-row gap-3 pt-6">
-              <AlertDialogCancel onClick={() => { setStep(3); clearUILocks(); }} className="flex-1 h-12 rounded-xl font-bold border-2">Siguiente Paso: Identidad</AlertDialogCancel>
-              <AlertDialogAction onClick={() => { setCurrentModule(initialModule); setModuleOrder(prev => prev + 1); setShowNextModuleDialog(false); clearUILocks(); }} className="flex-1 h-12 rounded-xl font-bold bg-primary">Añadir Otra Clase</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </DashboardLayout>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showNextModuleDialog} onOpenChange={(open) => { setShowNextModuleDialog(open); if (!open) clearUILocks(); }}>
+        <AlertDialogContent className="rounded-[2.5rem] p-10 max-sm border-none shadow-3xl">
+          <AlertDialogHeader className="items-center text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mb-4">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+            <AlertDialogTitle className="text-2xl font-bold">¡Clase Guardada!</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-3 pt-6">
+            <AlertDialogCancel onClick={() => { setStep(3); clearUILocks(); }} className="flex-1 h-12 rounded-xl font-bold border-2">Siguiente Paso: Identidad</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setCurrentModule(initialModule); setModuleOrder(prev => prev + 1); setShowNextModuleDialog(false); clearUILocks(); }} className="flex-1 h-12 rounded-xl font-bold bg-primary">Añadir Otra Clase</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </AppLayout>
   );
 }
