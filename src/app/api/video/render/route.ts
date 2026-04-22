@@ -365,17 +365,16 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. RENDERIZADO DE PLACAS INDIVIDUALES
-    const sceneClips: string[] = [];
-    for (let i = 0; i < scenes.length; i++) {
-      const scene = scenes[i];
+    // 3. RENDERIZADO DE PLACAS (En Paralelo para máximo rendimiento)
+    const sceneClips = await Promise.all(scenes.map(async (scene, i) => {
       const sceneDuration = scene.duration || 5;
       const outputClip = path.join(tmpDir, `plate_${i}.mp4`);
-      sceneClips.push(outputClip);
       
       const assembledImg = path.join(tmpDir, `img_${i}.jpg`);
       const pngImg = path.join(tmpDir, `img_${i}.png`);
       const textFile = path.join(tmpDir, `text_${i}.txt`);
       const safeUrl = scene.imageUrl || `https://placehold.co/${width}x${height}/1e293b/ffffff.jpg?text=Escena+${i+1}`;
+      
       let imgData: Buffer;
       try {
         const urlToFetch = safeUrl.startsWith('/') ? `http://127.0.0.1:9002${safeUrl}` : safeUrl;
@@ -395,24 +394,17 @@ export async function POST(req: NextRequest) {
       let rawText = (scene.text || '');
       if (activeRule.uppercase) rawText = rawText.toUpperCase();
       
-      // LÓGICA RESPONSIVA MEJORADA: Escalar texto al ancho y prever auto-achique
       let responsiveFontsize = Math.floor(activeRule.fontsize * (width / 1080));
       const charWidthFactor = activeRule.uppercase ? 0.65 : 0.52;
-      
       const words = rawText.split(' ');
       const longestWordLen = Math.max(1, ...words.map(w => w.length));
-      
-      // Auto-escalado hacia abajo si la palabra más larga rompería la pantalla
       const maxAllowedFont = (width * 0.9) / (longestWordLen * charWidthFactor);
       if (responsiveFontsize > maxAllowedFont) {
          responsiveFontsize = Math.floor(maxAllowedFont);
       }
-      
-      activeRule.fontsize = responsiveFontsize; // Para que getDrawtextFilter use el tamaño redimensionado
+      activeRule.fontsize = responsiveFontsize;
 
-      // Calcular maxChars dinámicamente sin mínimos fijos que causan desbordamiento
       let maxChars = Math.floor((width * 0.9) / (responsiveFontsize * charWidthFactor));
-      
       let lines = [];
       let currentLine = '';
       for (const w of words) {
@@ -425,32 +417,22 @@ export async function POST(req: NextRequest) {
       }
       if (currentLine) lines.push(currentLine.trim());
       const displayText = lines.join('\n');
+      await writeFile(textFile, displayText, 'utf8');
 
-      // Escribimos el texto preparado en el archivo.
-      // NOTA: El efecto typewriter no está soportado nativamente por textfile+expansion 
-      // en formato %{eif} ya que genera errores o imprime caracteres no válidos.
-      // En el futuro requerirá subtítulos .ass. Por ahora, forzamos texto completo.
-      let fileContent = displayText;
-      await writeFile(textFile, fileContent, 'utf8');
-
-      // PASO CRÍTICO: Convertir JPG a PNG para bypass de MJPEG/yuvj420p que crashea en Windows
+      // PASO CRÍTICO: Convertir JPG a PNG
       await runFfmpeg(['-i', assembledImg.replace(/\\/g, '/'), '-y', pngImg.replace(/\\/g, '/')], `conv_png_${i}`);
 
-      // Solo agregamos el filtro de texto si realmente hay texto que renderizar.
-      // FFmpeg crashea si le pasamos un textfile vacío.
       const drawtextFilter = displayText.trim() !== '' 
         ? getDrawtextFilter(adnConfig, scene, adnColor, width, height, textFile) 
         : null;
       const postFX = getPostProductionFilters(adnConfig, scene.segment_label);
       
-      // Movimiento de Cámara: Jerarquía ADN (Segmento -> Default -> Global)
       const sceneRule = adnConfig.scenes_rules[scene.segment_label || ''] || {};
       const defaultRule = adnConfig.scenes_rules.default || {};
       const cameraName = (sceneRule.visual_fx?.camera_movement || defaultRule.visual_fx?.camera_movement || adnConfig.global_fx?.camera_movement || 'none').toLowerCase();
       
       let scaleFilter = `scale=${width*2}:${height*2}:force_original_aspect_ratio=increase,crop=${width*2}:${height*2},scale=${width}:${height},format=yuv420p`;
       
-      // Mapeo de movimientos usando 'on' (output frame number) para estabilidad total con -loop 1
       if (cameraName === 'zoom_in') {
         scaleFilter += `,zoompan=z='1+(0.0007*on)':d=1:fps=30:x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':s=${width}x${height}`;
       } else if (cameraName === 'rapid_zoom_in') {
@@ -461,13 +443,11 @@ export async function POST(req: NextRequest) {
         scaleFilter += `,zoompan=z=1.15:x='min(iw-iw/zoom, (on*0.8))':y='ih/2-(iw/zoom)/2':d=1:fps=30:s=${width}x${height}`;
       }
 
-      // Dip to Black (Fade in / out)
       const fadeDuration = adnConfig.global_fx?.fade_duration !== undefined ? Number(adnConfig.global_fx.fade_duration) : 0.5;
-
       const finalFilters = [
         scaleFilter,
         'format=yuv420p',
-        ...(drawtextFilter ? [drawtextFilter] : []), // Omitir si fuente no disponible
+        ...(drawtextFilter ? [drawtextFilter] : []),
       ];
 
       if (fadeDuration > 0) {
@@ -477,17 +457,19 @@ export async function POST(req: NextRequest) {
       }
       if (postFX) finalFilters.push(postFX);
 
-      console.log(`[Render:Plate${i}] text='${(scene.text||'').substring(0,40)}' segment='${scene.segment_label}' cam='${cameraName}'`);
+      console.log(`[Render:Plate${i}] Iniciando... text='${(scene.text||'').substring(0,40)}'`);
       
       const inputArgs = ['-loop', '1', '-framerate', '30', '-i', pngImg.replace(/\\/g, '/')];
-
       await runFfmpeg([
         ...inputArgs,
         '-t', String(sceneDuration.toFixed(2)),
         '-vf', finalFilters.join(','),
-        '-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', '-an', '-y', outputClip.replace(/\\/g, '/')
+        '-c:v', 'libx264', '-preset', 'ultrafast', '-threads', '1', '-pix_fmt', 'yuv420p', '-an', '-y', outputClip.replace(/\\/g, '/')
       ], `plate_${i}`);
-    }
+
+      return outputClip;
+    }));
+
 
     let audioPath = null;
     if (audioUrl) {
