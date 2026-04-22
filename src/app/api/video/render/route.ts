@@ -365,110 +365,124 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. RENDERIZADO DE PLACAS INDIVIDUALES
-    // 3. RENDERIZADO DE PLACAS (En Paralelo para máximo rendimiento)
-    const sceneClips = await Promise.all(scenes.map(async (scene, i) => {
-      const sceneDuration = scene.duration || 5;
-      const outputClip = path.join(tmpDir, `plate_${i}.mp4`);
-      
-      const assembledImg = path.join(tmpDir, `img_${i}.jpg`);
-      const pngImg = path.join(tmpDir, `img_${i}.png`);
-      const textFile = path.join(tmpDir, `text_${i}.txt`);
-      const safeUrl = scene.imageUrl || `https://placehold.co/${width}x${height}/1e293b/ffffff.jpg?text=Escena+${i+1}`;
-      
-      let imgData: Buffer;
-      try {
-        const urlToFetch = safeUrl.startsWith('/') ? `http://127.0.0.1:9002${safeUrl}` : safeUrl;
-        const res = await fetch(urlToFetch, { signal: AbortSignal.timeout(8000) });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        imgData = Buffer.from(await res.arrayBuffer());
-      } catch (err: any) {
-        console.warn(`[Render] Failed to fetch image ${safeUrl}, using fallback. Error: ${err.message}`);
-        imgData = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
-      }
-      await writeFile(assembledImg, imgData);
-      
-      // LÓGICA DE PROCESAMIENTO DE TEXTO (Wrap y Animación)
-      const segment = scene.segment_label || 'default';
-      const activeRule = { ...adnConfig.scenes_rules.default.text_styling, ...(adnConfig.scenes_rules[segment]?.text_styling || {}) };
-      
-      let rawText = (scene.text || '');
-      if (activeRule.uppercase) rawText = rawText.toUpperCase();
-      
-      let responsiveFontsize = Math.floor(activeRule.fontsize * (width / 1080));
-      const charWidthFactor = activeRule.uppercase ? 0.65 : 0.52;
-      const words = rawText.split(' ');
-      const longestWordLen = Math.max(1, ...words.map(w => w.length));
-      const maxAllowedFont = (width * 0.9) / (longestWordLen * charWidthFactor);
-      if (responsiveFontsize > maxAllowedFont) {
-         responsiveFontsize = Math.floor(maxAllowedFont);
-      }
-      activeRule.fontsize = responsiveFontsize;
-
-      let maxChars = Math.floor((width * 0.9) / (responsiveFontsize * charWidthFactor));
-      let lines = [];
-      let currentLine = '';
-      for (const w of words) {
-        if ((currentLine + w).trim().length > maxChars && currentLine.length > 0) {
-          lines.push(currentLine.trim());
-          currentLine = w + ' ';
-        } else {
-          currentLine += w + ' ';
+    // 3. RENDERIZADO DE PLACAS (Con concurrencia limitada para evitar saturar las 2 CPUs)
+    const sceneClips: string[] = [];
+    const concurrencyLimit = 2; // Máximo 2 procesos de FFmpeg a la vez
+    
+    for (let i = 0; i < scenes.length; i += concurrencyLimit) {
+      const batch = scenes.slice(i, i + concurrencyLimit);
+      const batchPromises = batch.map(async (scene, batchIdx) => {
+        const idx = i + batchIdx;
+        const sceneDuration = scene.duration || 5;
+        const outputClip = path.join(tmpDir, `plate_${idx}.mp4`);
+        
+        const assembledImg = path.join(tmpDir, `img_${idx}.jpg`);
+        const pngImg = path.join(tmpDir, `img_${idx}.png`);
+        const textFile = path.join(tmpDir, `text_${idx}.txt`);
+        const safeUrl = scene.imageUrl || `https://placehold.co/${width}x${height}/1e293b/ffffff.jpg?text=Escena+${idx+1}`;
+        
+        let imgData: Buffer;
+        try {
+          // Resolución dinámica de la URL interna para evitar errores de puerto
+          const origin = req.nextUrl.origin;
+          const urlToFetch = safeUrl.startsWith('/') ? `${origin}${safeUrl}` : safeUrl;
+          
+          const res = await fetch(urlToFetch, { signal: AbortSignal.timeout(8000) });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          imgData = Buffer.from(await res.arrayBuffer());
+        } catch (err: any) {
+          console.warn(`[Render] Failed to fetch image ${safeUrl}, using fallback. Error: ${err.message}`);
+          imgData = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
         }
-      }
-      if (currentLine) lines.push(currentLine.trim());
-      const displayText = lines.join('\n');
-      await writeFile(textFile, displayText, 'utf8');
+        await writeFile(assembledImg, imgData);
+        
+        // LÓGICA DE PROCESAMIENTO DE TEXTO (Wrap y Animación)
+        const segment = scene.segment_label || 'default';
+        const activeRule = { ...adnConfig.scenes_rules.default.text_styling, ...(adnConfig.scenes_rules[segment]?.text_styling || {}) };
+        
+        let rawText = (scene.text || '');
+        if (activeRule.uppercase) rawText = rawText.toUpperCase();
+        
+        let responsiveFontsize = Math.floor(activeRule.fontsize * (width / 1080));
+        const charWidthFactor = activeRule.uppercase ? 0.65 : 0.52;
+        const words = rawText.split(' ');
+        const longestWordLen = Math.max(1, ...words.map(w => w.length));
+        const maxAllowedFont = (width * 0.9) / (longestWordLen * charWidthFactor);
+        if (responsiveFontsize > maxAllowedFont) {
+           responsiveFontsize = Math.floor(maxAllowedFont);
+        }
+        activeRule.fontsize = responsiveFontsize;
 
-      // PASO CRÍTICO: Convertir JPG a PNG
-      await runFfmpeg(['-i', assembledImg.replace(/\\/g, '/'), '-y', pngImg.replace(/\\/g, '/')], `conv_png_${i}`);
+        let maxChars = Math.floor((width * 0.9) / (responsiveFontsize * charWidthFactor));
+        let lines = [];
+        let currentLine = '';
+        for (const w of words) {
+          if ((currentLine + w).trim().length > maxChars && currentLine.length > 0) {
+            lines.push(currentLine.trim());
+            currentLine = w + ' ';
+          } else {
+            currentLine += w + ' ';
+          }
+        }
+        if (currentLine) lines.push(currentLine.trim());
+        const displayText = lines.join('\n');
+        await writeFile(textFile, displayText, 'utf8');
 
-      const drawtextFilter = displayText.trim() !== '' 
-        ? getDrawtextFilter(adnConfig, scene, adnColor, width, height, textFile) 
-        : null;
-      const postFX = getPostProductionFilters(adnConfig, scene.segment_label);
+        // PASO CRÍTICO: Convertir JPG a PNG
+        await runFfmpeg(['-i', assembledImg.replace(/\\/g, '/'), '-y', pngImg.replace(/\\/g, '/')], `conv_png_${idx}`);
+
+        const drawtextFilter = displayText.trim() !== '' 
+          ? getDrawtextFilter(adnConfig, scene, adnColor, width, height, textFile) 
+          : null;
+        const postFX = getPostProductionFilters(adnConfig, scene.segment_label);
+        
+        const sceneRule = adnConfig.scenes_rules[scene.segment_label || ''] || {};
+        const defaultRule = adnConfig.scenes_rules.default || {};
+        const cameraName = (sceneRule.visual_fx?.camera_movement || defaultRule.visual_fx?.camera_movement || adnConfig.global_fx?.camera_movement || 'none').toLowerCase();
+        
+        let scaleFilter = `scale=${width*2}:${height*2}:force_original_aspect_ratio=increase,crop=${width*2}:${height*2},scale=${width}:${height},format=yuv420p`;
+        
+        if (cameraName === 'zoom_in') {
+          scaleFilter += `,zoompan=z='1+(0.0007*on)':d=1:fps=30:x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':s=${width}x${height}`;
+        } else if (cameraName === 'rapid_zoom_in') {
+          scaleFilter += `,zoompan=z='1+(0.002*on)':d=1:fps=30:x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':s=${width}x${height}`;
+        } else if (cameraName === 'zoom_out') {
+          scaleFilter += `,zoompan=z='max(1.0, 1.1-(0.0007*on))':d=1:fps=30:x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':s=${width}x${height}`;
+        } else if (cameraName === 'pan_right') {
+          scaleFilter += `,zoompan=z=1.15:x='min(iw-iw/zoom, (on*0.8))':y='ih/2-(iw/zoom)/2':d=1:fps=30:s=${width}x${height}`;
+        }
+
+        const fadeDuration = adnConfig.global_fx?.fade_duration !== undefined ? Number(adnConfig.global_fx.fade_duration) : 0.5;
+        const finalFilters = [
+          scaleFilter,
+          'format=yuv420p',
+          ...(drawtextFilter ? [drawtextFilter] : []),
+        ];
+
+        if (fadeDuration > 0) {
+          const fadeOutStart = Math.max(0, sceneDuration - fadeDuration);
+          finalFilters.push(`fade=t=in:st=0:d=${fadeDuration}`);
+          finalFilters.push(`fade=t=out:st=${fadeOutStart}:d=${fadeDuration}`);
+        }
+        if (postFX) finalFilters.push(postFX);
+
+        console.log(`[Render:Plate${idx}] Iniciando batch... text='${(scene.text||'').substring(0,40)}'`);
+        
+        const inputArgs = ['-loop', '1', '-framerate', '30', '-i', pngImg.replace(/\\/g, '/')];
+        await runFfmpeg([
+          ...inputArgs,
+          '-t', String(sceneDuration.toFixed(2)),
+          '-vf', finalFilters.join(','),
+          '-c:v', 'libx264', '-preset', 'ultrafast', '-threads', '1', '-pix_fmt', 'yuv420p', '-an', '-y', outputClip.replace(/\\/g, '/')
+        ], `plate_${idx}`);
+
+        return outputClip;
+      });
       
-      const sceneRule = adnConfig.scenes_rules[scene.segment_label || ''] || {};
-      const defaultRule = adnConfig.scenes_rules.default || {};
-      const cameraName = (sceneRule.visual_fx?.camera_movement || defaultRule.visual_fx?.camera_movement || adnConfig.global_fx?.camera_movement || 'none').toLowerCase();
-      
-      let scaleFilter = `scale=${width*2}:${height*2}:force_original_aspect_ratio=increase,crop=${width*2}:${height*2},scale=${width}:${height},format=yuv420p`;
-      
-      if (cameraName === 'zoom_in') {
-        scaleFilter += `,zoompan=z='1+(0.0007*on)':d=1:fps=30:x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':s=${width}x${height}`;
-      } else if (cameraName === 'rapid_zoom_in') {
-        scaleFilter += `,zoompan=z='1+(0.002*on)':d=1:fps=30:x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':s=${width}x${height}`;
-      } else if (cameraName === 'zoom_out') {
-        scaleFilter += `,zoompan=z='max(1.0, 1.1-(0.0007*on))':d=1:fps=30:x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':s=${width}x${height}`;
-      } else if (cameraName === 'pan_right') {
-        scaleFilter += `,zoompan=z=1.15:x='min(iw-iw/zoom, (on*0.8))':y='ih/2-(iw/zoom)/2':d=1:fps=30:s=${width}x${height}`;
-      }
+      const batchResults = await Promise.all(batchPromises);
+      sceneClips.push(...batchResults);
+    }
 
-      const fadeDuration = adnConfig.global_fx?.fade_duration !== undefined ? Number(adnConfig.global_fx.fade_duration) : 0.5;
-      const finalFilters = [
-        scaleFilter,
-        'format=yuv420p',
-        ...(drawtextFilter ? [drawtextFilter] : []),
-      ];
-
-      if (fadeDuration > 0) {
-        const fadeOutStart = Math.max(0, sceneDuration - fadeDuration);
-        finalFilters.push(`fade=t=in:st=0:d=${fadeDuration}`);
-        finalFilters.push(`fade=t=out:st=${fadeOutStart}:d=${fadeDuration}`);
-      }
-      if (postFX) finalFilters.push(postFX);
-
-      console.log(`[Render:Plate${i}] Iniciando... text='${(scene.text||'').substring(0,40)}'`);
-      
-      const inputArgs = ['-loop', '1', '-framerate', '30', '-i', pngImg.replace(/\\/g, '/')];
-      await runFfmpeg([
-        ...inputArgs,
-        '-t', String(sceneDuration.toFixed(2)),
-        '-vf', finalFilters.join(','),
-        '-c:v', 'libx264', '-preset', 'ultrafast', '-threads', '1', '-pix_fmt', 'yuv420p', '-an', '-y', outputClip.replace(/\\/g, '/')
-      ], `plate_${i}`);
-
-      return outputClip;
-    }));
 
 
     let audioPath = null;
