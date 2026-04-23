@@ -471,14 +471,14 @@ export function TemplateEditor({
       const breakdown = await (await import('@/ai/flows/generate-variant-content')).generateVariantContent(variant, realDirectives, selectedCourse?.title || '', selectedCourse?.description || '', selectedCourse?.targetAudience || '', (campaignMission as any) || 'venta');
       if (channel === 'socials') {
         const sourceArray = breakdown.scenes || breakdown.slides || [];
-        const mappedScenes = sourceArray.map((s: any) => ({ 
+        const mappedScenes = sourceArray.map((s: any, i: number) => ({ 
           segment: s.segment_label || 'VALOR', 
           title: s.title || '',
           text: s.text || '', 
           voiceover: s.voiceover || '', 
           description: s.description || s.imageUrl || '',
           duration: s.duration || 5, 
-          imageUrl: s.imageUrl?.startsWith('http') ? s.imageUrl : '' 
+          imageUrl: variant.slides?.[i]?.imageUrl || (s.imageUrl?.startsWith('http') ? s.imageUrl : '') 
         }));
         const newSocials = [...generatedAssets.socials];
         newSocials[index] = { ...newSocials[index], slides: mappedScenes, hook: breakdown.hook, caption: breakdown.caption };
