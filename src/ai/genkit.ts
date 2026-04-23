@@ -8,7 +8,7 @@ import { googleAI } from '@genkit-ai/google-genai';
  */
 export const ai = genkit({
   plugins: [
-    googleAI({ 
+    googleAI({
       apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY
     }),
   ],
@@ -29,7 +29,7 @@ export const ai = genkit({
 export function validateAiConfig() {
   const genaiKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY;
   const ttsKey = process.env.GOOGLE_TTS_API_KEY;
-  
+
   const status = {
     has_genai: !!genaiKey,
     has_tts: !!ttsKey

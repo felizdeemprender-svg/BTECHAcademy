@@ -54,7 +54,20 @@ export async function generateVariantContent(
   validateApiKey();
   
   // CARGA DINÁMICA DE ADN
-  const adnsDir = path.join(process.cwd(), 'public', 'adns');
+  let adnsDir = path.join(process.cwd(), 'public', 'adns');
+  try {
+    await fs.stat(adnsDir);
+  } catch {
+    // Fallback para entorno standalone (App Hosting / Cloud Run)
+    const fallback = path.join(process.cwd(), '..', '..', 'public', 'adns');
+    try {
+      await fs.stat(fallback);
+      adnsDir = fallback;
+    } catch {
+      console.warn(`[AI:Flow] No se encontró el directorio de ADNs en ${adnsDir} ni en ${fallback}`);
+    }
+  }
+
   const adnId = variant.blueprintConfig?.presetId || variant.blueprintConfig?.adn || '01';
   const adnFiles = await fs.readdir(adnsDir);
   const targetFile = adnFiles.find(f => f.startsWith(adnId)) || '01_guru_hormozi.json';
