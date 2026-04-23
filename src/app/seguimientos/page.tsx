@@ -174,8 +174,7 @@ export default function FollowUpsPage() {
       or(
         where('studentId', '==', profile.uid),
         where('studentEmail', '==', profile.email?.toLowerCase().trim())
-      ),
-      orderBy('createdAt', 'desc')
+      )
     );
   }, [db, profile?.uid, profile?.email, isAdmin, isMentor]);
 
@@ -455,7 +454,11 @@ export default function FollowUpsPage() {
   const filteredFollowUps = followUps?.filter(f => 
     f.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     f.studentName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).sort((a: any, b: any) => {
+    const timeA = a.createdAt?.seconds || a.createdAt?._seconds || 0;
+    const timeB = b.createdAt?.seconds || b.createdAt?._seconds || 0;
+    return timeB - timeA;
+  });
 
   return (
     <DashboardLayout>
@@ -595,11 +598,11 @@ export default function FollowUpsPage() {
         {/* Dialog: Create */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-            <div className="bg-primary p-8 text-white">
+            <DialogHeader className="bg-primary p-8 text-white">
               <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><ClipboardList className="h-6 w-6" /></div>
               <DialogTitle className="text-2xl font-bold">Nuevo Seguimiento Académico</DialogTitle>
               <DialogDescription className="text-primary-foreground/70">Define el alcance del acompañamiento para el alumno.</DialogDescription>
-            </div>
+            </DialogHeader>
             <div className="p-8 space-y-6">
               <div className="space-y-6">
                 <div className="space-y-2">
@@ -720,11 +723,11 @@ export default function FollowUpsPage() {
         {/* Dialog: Edit */}
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-            <div className="bg-primary p-8 text-white">
+            <DialogHeader className="bg-primary p-8 text-white">
               <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><Pencil className="h-6 w-6" /></div>
               <DialogTitle className="text-2xl font-bold">Editar Seguimiento</DialogTitle>
               <DialogDescription className="text-primary-foreground/70">Ajusta los parámetros del programa académico.</DialogDescription>
-            </div>
+            </DialogHeader>
             <div className="p-8 space-y-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nombre del Seguimiento</Label>
@@ -789,14 +792,16 @@ export default function FollowUpsPage() {
         {/* Dialog: Delete Confirm */}
         <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
           <DialogContent className="max-w-md rounded-[2rem] p-8 overflow-hidden border-none shadow-3xl text-center">
-            <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mx-auto mb-6">
-              <AlertTriangle className="h-8 w-8" />
-            </div>
-            <DialogTitle className="text-2xl font-bold mb-2">¿Eliminar Seguimiento?</DialogTitle>
-            <DialogDescription className="text-sm text-slate-500 leading-relaxed mb-8">
-              Esta acción borrará el programa y todas sus sesiones asociadas. 
-              <br/><strong>Nota:</strong> Solo se permite borrar si no existen tareas o compromisos registrados.
-            </DialogDescription>
+            <DialogHeader>
+              <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mx-auto mb-6">
+                <AlertTriangle className="h-8 w-8" />
+              </div>
+              <DialogTitle className="text-2xl font-bold mb-2">¿Eliminar Seguimiento?</DialogTitle>
+              <DialogDescription className="text-sm text-slate-500 leading-relaxed mb-8">
+                Esta acción borrará el programa y todas sus sesiones asociadas. 
+                <br/><strong>Nota:</strong> Solo se permite borrar si no existen tareas o compromisos registrados.
+              </DialogDescription>
+            </DialogHeader>
             <DialogFooter className="flex flex-col sm:flex-row gap-3">
               <Button variant="outline" onClick={() => setIsDeleteOpen(false)} className="flex-1 h-12 rounded-xl font-bold">Cancelar</Button>
               <Button 

@@ -51,7 +51,7 @@ export function TermsUsageModal() {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl pointer-events-auto">
-        <div className="bg-primary p-8 text-white relative">
+        <DialogHeader className="bg-primary p-8 text-white relative">
           <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
             <ShieldCheck className="text-white h-6 w-6" />
           </div>
@@ -59,7 +59,7 @@ export function TermsUsageModal() {
           <DialogDescription className="text-primary-foreground/70 text-sm mt-1">
             Para continuar, debes aceptar las normas de la plataforma Evolución Académica.
           </DialogDescription>
-        </div>
+        </DialogHeader>
 
         <div className="p-8 space-y-6">
           <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6">

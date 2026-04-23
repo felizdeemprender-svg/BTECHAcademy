@@ -72,6 +72,7 @@ export function SidebarNav() {
         { name: 'Catálogo', href: '/courses', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: BookOpen },
         { name: 'Mis Cursos', href: '/my-courses', roles: ['alumno'], icon: Library },
         { name: 'Mis Desafíos', href: '/tasks', roles: ['alumno'], icon: Zap },
+        { name: 'Seguimientos', href: '/seguimientos', roles: ['alumno', 'mentor', 'admin'], subPermission: 'followups_management', icon: ClipboardList },
       ]
     },
     {
@@ -80,7 +81,6 @@ export function SidebarNav() {
         { name: 'Gestión Académica', href: '/courses/manage', roles: ['mentor', 'admin'], subPermission: 'academic_management', icon: GraduationCap },
         { name: 'Desafíos (Mentor)', href: '/mentoria/desafios', roles: ['mentor', 'admin'], subPermission: 'mentor_challenges', icon: Target },
         { name: 'Alumnos', href: '/alumnos', roles: ['mentor', 'admin'], subPermission: 'students_view', icon: Users },
-        { name: 'Seguimientos', href: '/seguimientos', roles: ['alumno', 'mentor', 'admin'], subPermission: 'followups_management', icon: ClipboardList },
       ]
     },
     {
@@ -141,8 +141,8 @@ export function SidebarNav() {
 
       const isSuperAdmin = profile.email === 'felizdeemprender@gmail.com';
       
-      // Check sub-permission if exists
-      if (item.subPermission) {
+      // Check sub-permission if exists (only for non-students)
+      if (item.subPermission && !profile.roles.includes('alumno')) {
         return isSuperAdmin || profile.mentorPermissions?.includes(item.subPermission);
       }
       
