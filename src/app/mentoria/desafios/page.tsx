@@ -33,6 +33,137 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
+import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { differenceInDays } from 'date-fns';
+import { 
+  Table, TableHeader, TableRow, TableHead, TableBody, TableCell 
+} from '@/components/ui/table';
+
+// Subcomponente de Tabla (Fuera para mayor claridad)
+const ChallengeTable = ({ list, setSelectedGroup }: { list: any[], setSelectedGroup: (g: any) => void }) => (
+  <div className="space-y-4">
+    {/* Vista Desktop: Tabla */}
+    <Card className="hidden md:block border rounded-[2rem] overflow-hidden bg-white shadow-xl">
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader className="bg-secondary/50 border-b">
+            <TableRow className="border-none hover:bg-transparent">
+              <TableHead className="font-bold py-4 px-6 text-foreground text-[11px] uppercase tracking-wider">Desafío Asignado</TableHead>
+              <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Fecha</TableHead>
+              <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Alumnos</TableHead>
+              <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Cumplimiento</TableHead>
+              <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Promedio</TableHead>
+              <TableHead className="text-right py-4 px-6 text-foreground text-[11px] uppercase tracking-wider">Acción</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {list.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-20 italic text-muted-foreground">
+                  No se encontraron desafíos en esta categoría.
+                </TableCell>
+              </TableRow>
+            ) : list.map((group, idx) => {
+              const percent = Math.round((group.completed / group.total) * 100);
+              const avg = group.scores.length > 0 
+                ? Math.round(group.scores.reduce((a: number, b: number) => a + b, 0) / group.scores.length)
+                : 0;
+              
+              return (
+                <TableRow key={idx} className="hover:bg-secondary/20 border-b transition-colors">
+                  <TableCell className="px-6 py-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center border border-primary/10 shadow-sm">
+                        <Target className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm text-foreground line-clamp-1">{group.title}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-1 italic">"{group.description}"</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center font-bold text-slate-500 text-[11px]">
+                    {group.createdAt?.toDate ? format(group.createdAt.toDate(), 'dd/MM/yyyy') : '-'}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="outline" className="font-bold text-[10px] bg-slate-50">{group.total} Alumnos</Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex flex-col items-center gap-1.5">
+                      <span className="text-[10px] font-black text-primary">{percent}%</span>
+                      <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary" style={{ width: `${percent}%` }} />
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="inline-flex flex-col items-center">
+                      <span className="text-lg font-black text-emerald-600 leading-none">{avg}%</span>
+                      <span className="text-[8px] font-bold uppercase text-muted-foreground tracking-widest mt-1">Media</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right px-6">
+                    <Button 
+                      onClick={() => setSelectedGroup(group)}
+                      size="sm" 
+                      variant="ghost" 
+                      className="rounded-xl h-9 px-4 font-bold text-primary hover:bg-primary/10 transition-colors"
+                    >
+                      Analizar <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+
+    {/* Vista Mobile: Lista de Tarjetas */}
+    <div className="md:hidden space-y-4">
+      {list.length === 0 ? (
+        <div className="p-10 text-center italic text-muted-foreground bg-white rounded-3xl border">
+          No hay desafíos aquí.
+        </div>
+      ) : list.map((group, idx) => {
+        const percent = Math.round((group.completed / group.total) * 100);
+        return (
+          <Card key={idx} className="rounded-3xl border-none shadow-md overflow-hidden">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center border">
+                    <Target className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm line-clamp-1">{group.title}</p>
+                    <p className="text-[10px] text-muted-foreground">{group.createdAt?.toDate ? format(group.createdAt.toDate(), 'dd/MM/yyyy') : '-'}</p>
+                  </div>
+                </div>
+                <Badge className="bg-primary/10 text-primary border-none text-[10px]">{group.total} Alum.</Badge>
+              </div>
+              <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[9px] font-black uppercase text-muted-foreground">Cumplimiento</span>
+                  <span className="text-sm font-black text-primary">{percent}%</span>
+                </div>
+                <Button 
+                  onClick={() => setSelectedGroup(group)}
+                  size="sm" 
+                  className="rounded-xl font-bold gap-1"
+                >
+                  Detalle <ChevronRight className="h-3 w-3" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  </div>
+);
 
 export default function MentorChallengesPage() {
   const { profile } = useAuth();
@@ -104,6 +235,29 @@ export default function MentorChallengesPage() {
       (b.createdAt?.toDate?.()?.getTime() || 0) - (a.createdAt?.toDate?.()?.getTime() || 0)
     );
   }, [allTasks]);
+
+  // Filtrado y división por antigüedad
+  const filteredAndCategorized = useMemo(() => {
+    const filtered = groupedChallenges.filter(g => 
+      g.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      g.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const now = new Date();
+    const recent: any[] = [];
+    const old: any[] = [];
+
+    filtered.forEach(g => {
+      const date = g.createdAt?.toDate?.() || now;
+      if (differenceInDays(now, date) <= 30) {
+        recent.push(g);
+      } else {
+        old.push(g);
+      }
+    });
+
+    return { recent, old };
+  }, [groupedChallenges, searchTerm]);
 
   const clearUILocks = useCallback(() => {
     document.body.style.pointerEvents = 'auto';
@@ -212,7 +366,6 @@ export default function MentorChallengesPage() {
     const ref = doc(db, 'users', studentId, 'individualTasks', taskId);
     deleteDoc(ref).then(() => {
       toast({ title: 'Desafío eliminado' });
-      // Update local state if needed or relying on real-time collection
     }).catch(e => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: ref.path,
@@ -261,7 +414,7 @@ export default function MentorChallengesPage() {
   return (
     <DashboardLayout>
       <div className="space-y-8 pb-20">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Gestión de Desafíos</h1>
             <p className="text-muted-foreground text-lg font-medium">Asigna consignas de alto impacto y analiza el desempeño con IA.</p>
@@ -269,79 +422,45 @@ export default function MentorChallengesPage() {
           <div className="flex gap-3">
             {allTasks && allTasks.length > 0 && (
               <Button variant="outline" onClick={() => setIsPurgeOpen(true)} className="h-12 px-6 rounded-xl font-bold border-rose-200 text-rose-600 hover:bg-rose-50 gap-2">
-                <Trash2 className="h-4 w-4" /> Limpiar Historial
+                <Trash2 className="h-4 w-4" /> Limpiar
               </Button>
             )}
             <Button onClick={() => setIsCreateOpen(true)} className="h-12 px-8 rounded-xl font-bold shadow-xl flex items-center gap-2">
-              <Plus className="h-5 w-5" /> Nuevo Desafío Global
+              <Plus className="h-5 w-5" /> Nuevo Desafío
             </Button>
           </div>
         </header>
 
-        <div className="space-y-8">
-          <div className="flex items-center gap-2 px-1 text-muted-foreground">
-            <BarChart3 className="h-5 w-5" />
-            <h2 className="text-xl font-bold">Resumen de Actividad Institucional</h2>
-          </div>
+        <SmartFilterBar 
+          placeholder="Filtrar desafíos por nombre..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
 
-          {tasksLoading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => <div key={i} className="h-60 bg-muted animate-pulse rounded-[2.5rem]" />)}
-            </div>
-          ) : groupedChallenges.length === 0 ? (
-            <Card className="border-2 border-dashed border-slate-200 p-20 text-center rounded-[3rem] bg-slate-50/50">
-              <Target className="h-16 w-16 text-slate-300 mx-auto mb-6" />
-              <p className="text-slate-500 font-bold text-xl">Aún no has asignado desafíos globales.</p>
-              <Button onClick={() => setIsCreateOpen(true)} className="mt-6 h-12 px-8 rounded-xl font-bold shadow-lg">Lanzar primer desafío</Button>
-            </Card>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {groupedChallenges.map((group, idx) => {
-                const percent = Math.round((group.completed / group.total) * 100);
-                const avg = group.scores.length > 0 
-                  ? Math.round(group.scores.reduce((a: number, b: number) => a + b, 0) / group.scores.length)
-                  : 0;
+        <Tabs defaultValue="recent" className="space-y-6">
+          <TabsList className="bg-secondary/20 p-1 rounded-2xl h-14">
+            <TabsTrigger value="recent" className="rounded-xl font-bold text-sm px-8 data-[state=active]:shadow-lg">
+              🔥 Desafíos Recientes
+              <Badge className="ml-2 bg-primary/10 text-primary border-none shadow-none text-[10px]">{filteredAndCategorized.recent.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="old" className="rounded-xl font-bold text-sm px-8 data-[state=active]:shadow-lg">
+              📦 Archivo Histórico
+              <Badge className="ml-2 bg-slate-100 text-slate-500 border-none shadow-none text-[10px]">{filteredAndCategorized.old.length}</Badge>
+            </TabsTrigger>
+          </TabsList>
 
-                return (
-                  <Card key={idx} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col">
-                    <div className="p-8 space-y-6 flex-1">
-                      <div className="flex justify-between items-start">
-                        <Badge variant="secondary" className="bg-primary/5 text-primary border-none px-3 py-1 font-bold text-[10px] uppercase tracking-widest">
-                          {group.total} Alumnos
-                        </Badge>
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{group.createdAt?.toDate ? format(group.createdAt.toDate(), 'dd/MM/yyyy') : '-'}</span>
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-primary line-clamp-2 leading-tight group-hover:text-accent transition-colors">{group.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 italic">"{group.description}"</p>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 pt-4">
-                        <div className="bg-secondary/10 p-4 rounded-2xl border border-black/5">
-                          <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Entregas</p>
-                          <p className="text-2xl font-black text-primary">{percent}%</p>
-                        </div>
-                        <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-                          <p className="text-[10px] font-bold uppercase text-emerald-600 mb-1">Promedio</p>
-                          <p className="text-2xl font-black text-emerald-700">{avg}%</p>
-                        </div>
-                      </div>
-                    </div>
-                    <CardFooter className="p-4 bg-slate-50 border-t">
-                      <Button 
-                        onClick={() => setSelectedGroup(group)}
-                        variant="ghost" 
-                        className="w-full rounded-xl font-bold text-primary gap-2 hover:bg-white hover:shadow-md"
-                      >
-                        Ver Detalle de Respuestas <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          <TabsContent value="recent" className="animate-in fade-in duration-500">
+            {tasksLoading ? (
+              <div className="h-60 bg-muted animate-pulse rounded-[2.5rem]" />
+            ) : (
+              <ChallengeTable list={filteredAndCategorized.recent} setSelectedGroup={setSelectedGroup} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="old" className="animate-in fade-in duration-500">
+            <ChallengeTable list={filteredAndCategorized.old} setSelectedGroup={setSelectedGroup} />
+          </TabsContent>
+        </Tabs>
 
         {/* Dialog: Challenge Details (Student List) */}
         <Dialog open={!!selectedGroup} onOpenChange={open => !open && setSelectedGroup(null)}>

@@ -6,6 +6,7 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
+import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
 import { 
   BarChart, 
   Bar, 
@@ -262,21 +263,18 @@ export default function CampaignTrackingPage() {
           </Card>
         </div>
 
-        {/* Campaign Table */}
+        {/* Campaign Table Search */}
+        <SmartFilterBar 
+          placeholder="Buscar campañas por nombre..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+
         <Card className="border-none shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <div>
               <CardTitle className="text-lg font-bold">Listado de Campañas</CardTitle>
               <CardDescription>Gestión y resultados individuales por lanzamiento.</CardDescription>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="Buscar campaña..." 
-                className="pl-9 h-9 border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-primary/20 transition-all"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
             </div>
           </CardHeader>
           <CardContent className="p-0">

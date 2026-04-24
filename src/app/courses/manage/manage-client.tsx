@@ -61,7 +61,8 @@ import { extractDocumentText } from '@/ai/flows/extract-document-text-flow';
 import { generateTagSuggestions } from '@/ai/flows/generate-tag-suggestions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
+import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
 
 function CourseStatsCells({ courseId }: { courseId: string }) {
   const db = useFirestore();
@@ -832,15 +833,18 @@ export default function ManageCoursesClient() {
       <div className="space-y-8">
         <header className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div><h1 className="text-2xl font-bold text-foreground">Gestión Académica</h1><p className="text-sm text-muted-foreground">Administración central de programas.</p></div>
-          <div className="flex gap-3 items-center">
-            <div className="relative w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-10 rounded-md bg-white" /></div>
-            {isMentor && (
-              <Button onClick={handleNewCourse} className="h-10 px-5 rounded-md font-bold text-sm gap-2">
-                <Plus className="h-4 w-4" /> Nuevo Curso
-              </Button>
-            )}
-          </div>
+          {isMentor && (
+            <Button onClick={handleNewCourse} className="h-12 px-8 rounded-xl font-bold shadow-xl flex items-center gap-2">
+              <Plus className="h-5 w-5" /> Nuevo Curso
+            </Button>
+          )}
         </header>
+
+        <SmartFilterBar 
+          placeholder="Buscar programas o alumnos..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
 
         <Card className="border rounded-md overflow-hidden bg-white shadow-none">
           <CardContent className="p-0">

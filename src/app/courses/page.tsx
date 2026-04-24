@@ -18,6 +18,7 @@ import { LandingFooter } from '@/components/layout/LandingFooter';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
 
 interface Course {
   id: string;
@@ -284,36 +285,31 @@ export default function CoursesPage() {
       <LandingHeader />
       
       {/* Search & Filter Bar */}
-      <div className="bg-white/80 backdrop-blur-md border-b sticky top-[84px] z-40">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-            <div className="flex-1 max-w-2xl w-full">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                  placeholder="Buscar cursos, tutores..." 
-                  className="pl-12 h-12 rounded-xl border-2"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
+      <div className="bg-white/80 backdrop-blur-md border-b sticky top-[84px] z-40 py-4">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col lg:flex-row gap-6 items-center">
+            <div className="flex-1 w-full">
+              <SmartFilterBar 
+                placeholder="Buscar cursos, tutores, especialidades..."
+                value={searchTerm}
+                onChange={setSearchTerm}
+                className="bg-white shadow-sm border-solid" // Ajuste para el catálogo público
+              />
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Ordenar por:</span>
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 rounded-lg border text-sm"
-                >
-                  <option value="newest">Más nuevos</option>
-                  <option value="rating">Mejor calificados</option>
-                  <option value="students">Más populares</option>
-                  <option value="price_low">Precio: Menor a mayor</option>
-                  <option value="price_high">Precio: Mayor a menor</option>
-                </select>
-              </div>
+            <div className="flex items-center gap-4 bg-secondary/10 px-6 h-14 rounded-[2rem] border border-dashed border-primary/20 shrink-0">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Ordenar:</span>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent font-bold text-sm focus:outline-none text-primary cursor-pointer"
+              >
+                <option value="newest">Más nuevos</option>
+                <option value="rating">Mejor calificados</option>
+                <option value="students">Más populares</option>
+                <option value="price_low">Precio: Menor a mayor</option>
+                <option value="price_high">Precio: Mayor a menor</option>
+              </select>
             </div>
           </div>
         </div>

@@ -27,6 +27,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
+import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
 
 const SUPER_ADMIN_EMAIL = 'felizdeemprender@gmail.com';
 
@@ -334,23 +335,16 @@ export default function AdminUsersPage() {
             <h1 className="text-2xl font-bold text-slate-900">Gestión de Usuarios</h1>
             <p className="text-slate-500 font-medium">Control institucional de accesos y permisos.</p>
           </div>
-          <div className="flex gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input 
-                id="user-search"
-                name="search"
-                placeholder="Buscar por nombre o email..." 
-                className="pl-10 h-11 rounded-xl bg-white border-slate-200"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button onClick={() => setIsAddUserOpen(true)} className="h-11 px-6 rounded-xl font-bold gap-2 bg-primary text-white shadow-sm">
-              <UserPlus className="h-4 w-4" /> Alta Usuario
-            </Button>
-          </div>
+          <Button onClick={() => setIsAddUserOpen(true)} className="h-12 px-8 rounded-xl font-bold gap-2 bg-primary text-white shadow-xl">
+            <UserPlus className="h-5 w-5" /> Alta Usuario
+          </Button>
         </header>
+
+        <SmartFilterBar 
+          placeholder="Buscar usuarios por nombre, email o rol..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
 
         <Card className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
           <CardContent className="p-0">

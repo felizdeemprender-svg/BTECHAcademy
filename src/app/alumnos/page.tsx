@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
 
 export default function AlumnosPage() {
   const { profile } = useAuth();
@@ -122,16 +123,13 @@ export default function AlumnosPage() {
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Comunidad de Alumnos</h1>
             <p className="text-muted-foreground text-lg font-medium">Listado consolidado de estudiantes bajo tu tutela.</p>
           </div>
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Buscar por nombre o email..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-12 rounded-xl bg-white border-2"
-            />
-          </div>
         </header>
+
+        <SmartFilterBar 
+          placeholder="Buscar por nombre o email de alumno..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
 
         <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white/50 backdrop-blur-xl">
           <CardContent className="p-0">

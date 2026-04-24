@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
 
 // Hooks & Components
 import { useFollowUps } from '@/hooks/useFollowUps';
@@ -252,15 +253,11 @@ export default function FollowUpsPage() {
           )}
         </header>
 
-        <div className="relative max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Buscar por programa o alumno..." 
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="pl-12 h-12 rounded-xl bg-white border-2"
-          />
-        </div>
+        <SmartFilterBar 
+          placeholder="Buscar por programa o alumno..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
 
         <Card className="border rounded-xl overflow-hidden bg-white shadow-sm">
           <CardContent className="p-0">
