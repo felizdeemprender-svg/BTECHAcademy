@@ -78,7 +78,7 @@ export default function AuthPage() {
       await loginWithGoogle();
       toast({ title: 'Bienvenido', description: 'Has iniciado sesión con Google Workspace.' });
     } catch (error: any) {
-      console.error("[Login Error]", error);
+      console.warn("[Login Error]", error);
       
       // En Cloud Workstations, el popup es bloqueado casi siempre
       if (error.code === 'auth/popup-blocked' || error.message?.includes('popup-blocked')) {
@@ -106,7 +106,7 @@ export default function AuthPage() {
     try {
       await loginWithGoogleRedirect();
     } catch (error: any) {
-      console.error("[Redirect Login Error]", error);
+      console.warn("[Redirect Login Error]", error);
       if (error.code === 'auth/unauthorized-domain') {
         setUnauthorizedDomain(window.location.hostname);
       } else if (error.message?.includes('missing initial state')) {
