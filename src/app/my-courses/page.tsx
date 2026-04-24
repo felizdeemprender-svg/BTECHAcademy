@@ -49,7 +49,7 @@ export default function MyCoursesPage() {
               const course = enroll.courseData;
               const completedModulesCount = enroll.progress?.completedModules?.length || 0;
               const totalModules = course?.modulesCount || 1;
-              const progressPercent = Math.min(100, Math.round((completedModulesCount / totalModules) * 100));
+              const progressPercent = enroll.progressPercent ?? Math.min(100, Math.round((completedModulesCount / totalModules) * 100));
               const isApproved = course?.status === 'approved' || course?.status === 'published';
 
               return (

@@ -1,4 +1,13 @@
 
+export interface EvaluationData {
+  score: number;
+  feedback: string;
+  submittedAt: string;
+  isSupport?: boolean;
+  answers?: Record<string, any>;
+  questions?: any[];
+}
+
 export interface StudentEnrollment {
   id: string;
   courseId: string;
@@ -6,12 +15,27 @@ export interface StudentEnrollment {
   status: 'active' | 'pending' | 'suspended' | string;
   inviteEmail?: string;
   studentId: string;
+  progressPercent?: number;
   progress?: {
     completedModules: string[];
+    evaluations?: Record<string, EvaluationData>;
     lastAccessed?: any;
   };
   createdAt?: any;
   updatedAt?: any;
+}
+
+export interface Module {
+  id: string;
+  title: string;
+  description?: string;
+  videoUrl?: string;
+  questions?: any[];
+  supportQuestions?: any[];
+  hasSupportEnabled?: boolean;
+  minPassingScore?: number;
+  allowRetries?: boolean;
+  supportMaterials?: any[];
 }
 
 export interface CourseDetails {
@@ -23,10 +47,7 @@ export interface CourseDetails {
   status?: string;
   category?: string;
   mentorId?: string;
-}
-
-export interface EnrolledCourseWithData extends StudentEnrollment {
-  courseData?: CourseDetails;
+  modules?: Module[];
 }
 
 export interface StudentTask {

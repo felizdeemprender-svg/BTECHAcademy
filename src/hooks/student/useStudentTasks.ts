@@ -21,7 +21,11 @@ export function useStudentTasks(limitCount: number = 50) {
     );
   }, [db, profile?.uid, profile?.email, isAuthLoading]);
 
-  const { data: tasks, isLoading } = useCollection(tasksQuery);
+  const { data: tasks, isLoading, error } = useCollection(tasksQuery);
+
+  if (error) {
+    console.warn("⚠️ useStudentTasks: Error de permisos o consulta capturado.", error);
+  }
 
   const pendingTasks = tasks?.filter((t: any) => t.status === 'pending') as StudentTask[] || [];
   const completedTasks = tasks?.filter((t: any) => t.status === 'completed') as StudentTask[] || [];

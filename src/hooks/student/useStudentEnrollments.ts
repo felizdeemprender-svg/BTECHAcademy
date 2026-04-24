@@ -22,7 +22,11 @@ export function useStudentEnrollments() {
     );
   }, [db, profile?.uid, profile?.email, isAuthLoading]);
 
-  const { data: enrollments, isLoading: loadingEnrollments } = useCollection(enrollmentsQuery);
+  const { data: enrollments, isLoading: loadingEnrollments, error } = useCollection(enrollmentsQuery);
+
+  if (error) {
+    console.warn("⚠️ useStudentEnrollments: Error de permisos o consulta capturado.", error);
+  }
 
   useEffect(() => {
     const fetchCourseDetails = async () => {

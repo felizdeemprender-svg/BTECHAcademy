@@ -28,7 +28,11 @@ export function useStudentFollowUps() {
     );
   }, [db, profile?.uid, profile?.email, isAuthLoading]);
 
-  const { data: followUps, isLoading: loadingFollowUps } = useCollection(followUpsQuery);
+  const { data: followUps, isLoading: loadingFollowUps, error } = useCollection(followUpsQuery);
+
+  if (error) {
+    console.warn("⚠️ useStudentFollowUps: Error de permisos capturado.", error);
+  }
 
   useEffect(() => {
     if (followUps && followUps.length > 0) {
