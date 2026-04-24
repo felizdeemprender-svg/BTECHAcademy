@@ -75,10 +75,27 @@ function CourseStatsCells({ courseId }: { courseId: string }) {
           getDocs(query(collection(db, 'enrollments'), where('courseId', '==', courseId)))
         ]);
         const enrolls = enrollSnap.docs.map(d => d.data());
+        const totalModules = modSnap.size;
+        
+        const totalProgress = enrolls.reduce((acc, curr) => {
+          // 1. Si está marcado como completado, es 100%
+          if (curr.status === 'completed') return acc + 100;
+          
+          // 2. Si tiene el nuevo campo progressPercent
+          if (curr.progressPercent !== undefined) return acc + curr.progressPercent;
+          
+          // 3. Fallback: Buscar módulos completados en varias estructuras posibles
+          const completedList = curr.progress?.completedModules || curr.completedModules || [];
+          const completedCount = Array.isArray(completedList) ? completedList.length : 0;
+          
+          const calculatedPercent = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
+          return acc + calculatedPercent;
+        }, 0);
+        
         setStats({
-          modules: modSnap.size,
+          modules: totalModules,
           enrolled: enrolls.length,
-          completed: enrolls.filter(e => e.status === 'completed').length
+          completed: Math.round(enrolls.length > 0 ? totalProgress / enrolls.length : 0)
         });
       } catch (e) {}
     };
@@ -91,21 +108,38 @@ function CourseStatsCells({ courseId }: { courseId: string }) {
       <TableCell className="text-center font-semibold text-foreground/80">{stats.enrolled}</TableCell>
       <TableCell className="text-center">
         <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] h-5 px-1.5">
-          {stats.enrolled > 0 ? Math.round((stats.completed / stats.enrolled) * 100) : 0}%
+          {stats.completed}%
         </Badge>
       </TableCell>
     </>
   );
 }
 
-function EnrollmentRow({ enrollment, onApprove, onToggleStatus, onDelete }: { 
+function EnrollmentRow({ enrollment, totalModules, onApprove, onToggleStatus, onDelete }: { 
   enrollment: any, 
+  totalModules: number,
   onApprove: (id: string) => void, 
   onToggleStatus: (id: string, current: string) => void,
   onDelete: (id: string) => void
 }) {
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const db = useFirestore();
+
+  const getCalculatedProgress = () => {
+    // 1. Si está marcado como completado, es 100%
+    if (enrollment.status === 'completed') return 100;
+
+    // 2. Si tiene el nuevo campo progressPercent
+    if (enrollment.progressPercent !== undefined) return enrollment.progressPercent;
+
+    // 3. Fallback: Buscar módulos completados en varias estructuras posibles
+    const completedList = enrollment.progress?.completedModules || enrollment.completedModules || [];
+    const completedCount = Array.isArray(completedList) ? completedList.length : 0;
+
+    return totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
+  };
+
+  const currentProgress = getCalculatedProgress();
 
   useEffect(() => {
     if (enrollment.studentId) {
@@ -136,6 +170,15 @@ function EnrollmentRow({ enrollment, onApprove, onToggleStatus, onDelete }: {
               )}
             </div>
             <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">{enrollment.inviteEmail}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden w-20">
+                <div 
+                  className="h-full bg-emerald-500 transition-all" 
+                  style={{ width: `${currentProgress}%` }} 
+                />
+              </div>
+              <span className="text-[8px] font-bold text-emerald-600">{currentProgress}%</span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -551,9 +594,13 @@ export default function ManageCoursesClient() {
     setIsEnrollmentsDialogOpen(true);
     setLoadingInscriptions(true);
     try {
-      const q = query(collection(db, 'enrollments'), where('courseId', '==', course.id));
-      const snap = await getDocs(q);
-      setInscriptions(snap.docs.map(d => ({ ...d.data(), id: d.id })));
+      const [enrollSnap, modSnap] = await Promise.all([
+        getDocs(query(collection(db, 'enrollments'), where('courseId', '==', course.id))),
+        getDocs(collection(db, 'courses', course.id, 'modules'))
+      ]);
+      
+      setSelectedCourse({ ...course, modulesCount: modSnap.size });
+      setInscriptions(enrollSnap.docs.map(d => ({ ...d.data(), id: d.id })));
     } finally { setLoadingInscriptions(false); }
   };
 
@@ -1214,6 +1261,7 @@ export default function ManageCoursesClient() {
                       <EnrollmentRow 
                         key={ins.id} 
                         enrollment={ins} 
+                        totalModules={selectedCourse?.modulesCount || 0}
                         onApprove={handleApproveEnrollment} 
                         onToggleStatus={handleToggleEnrollmentStatus} 
                         onDelete={handleDeleteEnrollment} 
