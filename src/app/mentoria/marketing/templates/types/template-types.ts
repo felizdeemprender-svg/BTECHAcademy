@@ -11,7 +11,7 @@ export interface TemplateCollection {
     socials?: any[];
     ads?: any[];
   };
-  status: 'generating' | 'completed' | 'error';
+  status: "generating" | "completed" | "error";
   generationProgress?: {
     current: number;
     total: number;
@@ -46,7 +46,7 @@ export interface GenerationOptions {
 }
 
 export interface AIHealthState {
-  status: 'checking' | 'healthy' | 'error' | 'unavailable';
+  status: "checking" | "healthy" | "error" | "unavailable";
   message?: string;
   details?: string;
 }
@@ -66,7 +66,7 @@ export interface PendingRefinement {
 }
 
 export interface VideoConfig {
-  presetId: '01' | '02' | '03' | '04' | '05';
+  presetId: "01" | "02" | "03" | "04" | "05";
   resolution: string;
   fps: 30 | 60;
   audioMood: string;

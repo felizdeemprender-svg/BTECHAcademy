@@ -1,28 +1,30 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
-import { useAuth } from '@/components/auth-context';
-import { CollectionManager } from './components/collection-manager';
-import { AIGenerator } from './components/ai-generator';
-import { TemplateViewerProduction } from './components/template-viewer-production';
-import { useCollections } from './hooks/use-collections';
-import { useAIGeneration } from './hooks/use-ai-generation';
-import { useIdentityDesign } from './hooks/use-identity-design';
-import { TemplateCollection } from './types/template-types';
+import { useState, useMemo } from "react";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
+import { useAuth } from "@/components/auth-context";
+import { CollectionManager } from "./components/collection-manager";
+import { AIGenerator } from "./components/ai-generator";
+import { TemplateViewerProduction } from "./components/template-viewer-production";
+import { useCollections } from "./hooks/use-collections";
+import { useAIGeneration } from "./hooks/use-ai-generation";
+import { useIdentityDesign } from "./hooks/use-identity-design";
+import { TemplateCollection } from "./types/template-types";
+import { BrainCircuit } from "lucide-react";
 
 export default function MarketingTemplatesPage() {
   const { profile } = useAuth();
-  
+  const isAdmin = profile?.roles?.includes('admin');
+
   // TODOS los hooks primero - sin condicionales
-  const { 
-    collections, 
-    isLoading, 
-    createCollection, 
-    deleteCollection, 
-    updateCollection 
+  const {
+    collections,
+    isLoading,
+    createCollection,
+    deleteCollection,
+    updateCollection,
   } = useCollections(profile || null);
-  
+
   const {
     isGenerating,
     generationProgress,
@@ -32,7 +34,7 @@ export default function MarketingTemplatesPage() {
     performHealthCheck,
     generateTemplates,
     updateEnabledChannels,
-    updateSocialTargets
+    updateSocialTargets,
   } = useAIGeneration(profile);
 
   const {
@@ -48,20 +50,19 @@ export default function MarketingTemplatesPage() {
     resetDesign,
     navigateDesign,
     hasNextDesign,
-    hasPrevDesign
+    hasPrevDesign,
   } = useIdentityDesign();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [campaignDirectives, setCampaignDirectives] = useState('');
+  const [campaignDirectives, setCampaignDirectives] = useState("");
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   // Colección seleccionada - siempre después de todos los hooks
   const selectedCollection = useMemo(() => {
     if (!selectedId || !collections) return null;
-    return collections.find(c => c.id === selectedId);
+    return collections.find((c) => c.id === selectedId);
   }, [selectedId, collections]);
-
 
   // Solo ahora podemos hacer early return (después de TODOS los hooks)
   if (!profile) {
@@ -71,7 +72,9 @@ export default function MarketingTemplatesPage() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Cargando información de usuario...</p>
-            <p className="text-sm text-gray-500 mt-2">Si persiste, inicia sesión nuevamente</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Si persiste, inicia sesión nuevamente
+            </p>
           </div>
         </div>
       </DashboardLayout>
@@ -98,10 +101,10 @@ export default function MarketingTemplatesPage() {
 
   const handleGenerate = async (name: string, directives: string) => {
     const success = await generateTemplates(
-      'new-collection', // collectionId
-      name, 
-      directives, 
-      identityDesign?.designTokens
+      "new-collection", // collectionId
+      name,
+      directives,
+      identityDesign?.designTokens,
     );
     if (success) {
       resetDesign(); // Resetear para próxima campaña
@@ -122,12 +125,12 @@ export default function MarketingTemplatesPage() {
   };
 
   const handleEditTemplate = (template: any, type: string) => {
-    console.log('Edit template:', template, type);
+    console.log("Edit template:", template, type);
     // TODO: Implementar edición de templates
   };
 
   const handleRefineTemplate = (template: any, type: string) => {
-    console.log('Refine template:', template, type);
+    console.log("Refine template:", template, type);
     // TODO: Implementar refinamiento con IA
   };
 
@@ -140,11 +143,14 @@ export default function MarketingTemplatesPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Arquitecto de Identidad IA</h1>
-          <p className="text-gray-600 mt-2">
-            Crea identidades visuales con IA y genera planos omnicanal para tus campañas de marketing
+        <div className="flex flex-col gap-2 border-b pb-6">
+          <h1 className="text-4xl font-headline font-bold text-primary tracking-tight flex items-center gap-3">
+            <BrainCircuit className="h-8 w-8 text-emerald-500" /> Arquitecto de
+            Identidad IA
+          </h1>
+          <p className="text-muted-foreground font-medium text-lg">
+            Crea identidades visuales con IA y genera planos omnicanal para tus
+            campañas de marketing
           </p>
         </div>
 
@@ -157,15 +163,17 @@ export default function MarketingTemplatesPage() {
           onDeleteCollection={handleDeleteCollection}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
+          isAdmin={isAdmin}
         />
 
         {/* Vista Individual de Colección Seleccionada */}
         {selectedCollection && (
-          <TemplateViewerProduction 
+          <TemplateViewerProduction
             collection={selectedCollection}
             isOpen={isViewerOpen}
             onClose={() => setIsViewerOpen(false)}
             onUpdateCollection={handleUpdateCollection}
+            isAdmin={isAdmin}
           />
         )}
 

@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Palette, 
-  Type, 
-  Loader2, 
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import {
+  Palette,
+  Type,
+  Loader2,
   CheckCircle2,
   RefreshCw,
   Eye,
   Edit3,
   Sparkles,
-  Info
-} from 'lucide-react';
-import { IdentityDesign, DesignTokens } from '../hooks/use-identity-design';
-import { cn } from '@/lib/utils';
+  Info,
+} from "lucide-react";
+import { IdentityDesign, DesignTokens } from "../hooks/use-identity-design";
+import { cn } from "@/lib/utils";
 
 interface IdentityDesignerProps {
   isOpen: boolean;
@@ -31,7 +31,9 @@ interface IdentityDesignerProps {
   designProgress: { current: number; total: number; label: string } | null;
   isDesignApproved: boolean;
   onGenerateDesign: (directives: string) => Promise<IdentityDesign | null>;
-  onUpdateDesign: (updates: Partial<IdentityDesign>) => Promise<IdentityDesign | null>;
+  onUpdateDesign: (
+    updates: Partial<IdentityDesign>,
+  ) => Promise<IdentityDesign | null>;
   onApproveDesign: () => void;
 }
 
@@ -45,7 +47,7 @@ export function IdentityDesigner({
   isDesignApproved,
   onGenerateDesign,
   onUpdateDesign,
-  onApproveDesign
+  onApproveDesign,
 }: IdentityDesignerProps) {
   const [editingMode, setEditingMode] = useState(false);
   const [editedTokens, setEditedTokens] = useState<DesignTokens | null>(null);
@@ -71,21 +73,21 @@ export function IdentityDesigner({
           ...identityDesign.colorPalette,
           primary: editedTokens.primary,
           secondary: editedTokens.secondary,
-          accent: editedTokens.accent
+          accent: editedTokens.accent,
         },
         typography: {
           ...identityDesign.typography,
           heading: {
             ...identityDesign.typography.heading,
-            font: editedTokens.fontHeading
+            font: editedTokens.fontHeading,
           },
           body: {
             ...identityDesign.typography.body,
-            font: editedTokens.fontBody
-          }
-        }
+            font: editedTokens.fontBody,
+          },
+        },
       };
-      
+
       await onUpdateDesign(updates);
       setEditingMode(false);
       setEditedTokens(null);
@@ -108,10 +110,14 @@ export function IdentityDesigner({
             </CardTitle>
             <div className="flex items-center gap-2">
               {identityDesign && (
-                <Badge className={cn(
-                  "flex items-center gap-1",
-                  isDesignApproved ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                )}>
+                <Badge
+                  className={cn(
+                    "flex items-center gap-1",
+                    isDesignApproved
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800",
+                  )}
+                >
                   {isDesignApproved ? (
                     <>
                       <CheckCircle2 className="h-3 w-3" />
@@ -132,7 +138,9 @@ export function IdentityDesigner({
         <CardContent className="space-y-6">
           {/* Directivas */}
           <div>
-            <Label className="text-base font-medium">Directivas de Diseño</Label>
+            <Label className="text-base font-medium">
+              Directivas de Diseño
+            </Label>
             <div className="mt-2 p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-700">{directives}</p>
             </div>
@@ -150,7 +158,8 @@ export function IdentityDesigner({
                 Generar Identidad Visual
               </h3>
               <p className="text-gray-600 mb-6">
-                Basado en tus directivas, la IA creará una propuesta de colores y tipografías
+                Basado en tus directivas, la IA creará una propuesta de colores
+                y tipografías
               </p>
               <Button
                 onClick={handleGenerateDesign}
@@ -176,14 +185,16 @@ export function IdentityDesigner({
           {isDesigning && designProgress && (
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">{designProgress.label}</span>
+                <span className="text-sm font-medium">
+                  {designProgress.label}
+                </span>
                 <span className="text-sm text-gray-600">
                   {designProgress.current} / {designProgress.total}
                 </span>
               </div>
-              <Progress 
-                value={(designProgress.current / designProgress.total) * 100} 
-                className="w-full" 
+              <Progress
+                value={(designProgress.current / designProgress.total) * 100}
+                className="w-full"
               />
             </div>
           )}
@@ -199,31 +210,43 @@ export function IdentityDesigner({
                 </Label>
                 <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
-                    <div 
+                    <div
                       className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
-                      style={{ backgroundColor: identityDesign.colorPalette.primary }}
+                      style={{
+                        backgroundColor: identityDesign.colorPalette.primary,
+                      }}
                     />
                     <p className="text-sm font-medium">Primario</p>
-                    <p className="text-xs text-gray-600">{identityDesign.colorPalette.primary}</p>
+                    <p className="text-xs text-gray-600">
+                      {identityDesign.colorPalette.primary}
+                    </p>
                   </div>
                   <div className="text-center">
-                    <div 
+                    <div
                       className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
-                      style={{ backgroundColor: identityDesign.colorPalette.secondary }}
+                      style={{
+                        backgroundColor: identityDesign.colorPalette.secondary,
+                      }}
                     />
                     <p className="text-sm font-medium">Secundario</p>
-                    <p className="text-xs text-gray-600">{identityDesign.colorPalette.secondary}</p>
+                    <p className="text-xs text-gray-600">
+                      {identityDesign.colorPalette.secondary}
+                    </p>
                   </div>
                   <div className="text-center">
-                    <div 
+                    <div
                       className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
-                      style={{ backgroundColor: identityDesign.colorPalette.accent }}
+                      style={{
+                        backgroundColor: identityDesign.colorPalette.accent,
+                      }}
                     />
                     <p className="text-sm font-medium">Acento</p>
-                    <p className="text-xs text-gray-600">{identityDesign.colorPalette.accent}</p>
+                    <p className="text-xs text-gray-600">
+                      {identityDesign.colorPalette.accent}
+                    </p>
                   </div>
                   <div className="text-center">
-                    <div className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2 bg-gradient-to-r from-gray-100 to-gray-300"/>
+                    <div className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2 bg-gradient-to-r from-gray-100 to-gray-300" />
                     <p className="text-sm font-medium">Neutros</p>
                     <p className="text-xs text-gray-600">4 tonos</p>
                   </div>
@@ -240,23 +263,49 @@ export function IdentityDesigner({
                   <div>
                     <h4 className="font-medium mb-2">Titulares</h4>
                     <div className="space-y-2">
-                      <div style={{ fontFamily: identityDesign.typography.heading.font, fontWeight: '700' }}>
+                      <div
+                        style={{
+                          fontFamily: identityDesign.typography.heading.font,
+                          fontWeight: "700",
+                        }}
+                      >
                         <p className="text-2xl">Título Principal</p>
                       </div>
-                      <div style={{ fontFamily: identityDesign.typography.heading.font, fontWeight: '600' }}>
+                      <div
+                        style={{
+                          fontFamily: identityDesign.typography.heading.font,
+                          fontWeight: "600",
+                        }}
+                      >
                         <p className="text-xl">Subtítulo Importante</p>
                       </div>
-                      <div style={{ fontFamily: identityDesign.typography.heading.font, fontWeight: '500' }}>
+                      <div
+                        style={{
+                          fontFamily: identityDesign.typography.heading.font,
+                          fontWeight: "500",
+                        }}
+                      >
                         <p className="text-lg">Título Secundario</p>
                       </div>
                     </div>
                   </div>
                   <div>
                     <h4 className="font-medium mb-2">Cuerpo de Texto</h4>
-                    <div className="space-y-2" style={{ fontFamily: identityDesign.typography.body.font }}>
-                      <p className="text-base font-normal">Texto normal para párrafos y contenido general.</p>
-                      <p className="text-sm font-medium">Texto medio para énfasis ligero.</p>
-                      <p className="text-sm font-semibold">Texto destacado para importancia.</p>
+                    <div
+                      className="space-y-2"
+                      style={{
+                        fontFamily: identityDesign.typography.body.font,
+                      }}
+                    >
+                      <p className="text-base font-normal">
+                        Texto normal para párrafos y contenido general.
+                      </p>
+                      <p className="text-sm font-medium">
+                        Texto medio para énfasis ligero.
+                      </p>
+                      <p className="text-sm font-semibold">
+                        Texto destacado para importancia.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -271,15 +320,23 @@ export function IdentityDesigner({
                 <div className="mt-3 space-y-4">
                   <div>
                     <h4 className="font-medium text-sm mb-1">Colores</h4>
-                    <p className="text-sm text-gray-600">{identityDesign.rationale.colors}</p>
+                    <p className="text-sm text-gray-600">
+                      {identityDesign.rationale.colors}
+                    </p>
                   </div>
                   <div>
                     <h4 className="font-medium text-sm mb-1">Tipografía</h4>
-                    <p className="text-sm text-gray-600">{identityDesign.rationale.typography}</p>
+                    <p className="text-sm text-gray-600">
+                      {identityDesign.rationale.typography}
+                    </p>
                   </div>
                   <div>
-                    <h4 className="font-medium text-sm mb-1">Concepto General</h4>
-                    <p className="text-sm text-gray-600">{identityDesign.rationale.overall}</p>
+                    <h4 className="font-medium text-sm mb-1">
+                      Concepto General
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {identityDesign.rationale.overall}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -320,7 +377,9 @@ export function IdentityDesigner({
           {editingMode && editedTokens && (
             <div className="space-y-6">
               <div>
-                <Label className="text-base font-medium">Ajustar Tokens de Diseño</Label>
+                <Label className="text-base font-medium">
+                  Ajustar Tokens de Diseño
+                </Label>
                 <div className="mt-4 grid md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="primary-color">Color Primario</Label>
@@ -329,12 +388,22 @@ export function IdentityDesigner({
                         id="primary-color"
                         type="color"
                         value={editedTokens.primary}
-                        onChange={(e) => setEditedTokens({ ...editedTokens, primary: e.target.value })}
+                        onChange={(e) =>
+                          setEditedTokens({
+                            ...editedTokens,
+                            primary: e.target.value,
+                          })
+                        }
                         className="w-16 h-10"
                       />
                       <Input
                         value={editedTokens.primary}
-                        onChange={(e) => setEditedTokens({ ...editedTokens, primary: e.target.value })}
+                        onChange={(e) =>
+                          setEditedTokens({
+                            ...editedTokens,
+                            primary: e.target.value,
+                          })
+                        }
                         placeholder="#3B82F6"
                       />
                     </div>
@@ -346,12 +415,22 @@ export function IdentityDesigner({
                         id="secondary-color"
                         type="color"
                         value={editedTokens.secondary}
-                        onChange={(e) => setEditedTokens({ ...editedTokens, secondary: e.target.value })}
+                        onChange={(e) =>
+                          setEditedTokens({
+                            ...editedTokens,
+                            secondary: e.target.value,
+                          })
+                        }
                         className="w-16 h-10"
                       />
                       <Input
                         value={editedTokens.secondary}
-                        onChange={(e) => setEditedTokens({ ...editedTokens, secondary: e.target.value })}
+                        onChange={(e) =>
+                          setEditedTokens({
+                            ...editedTokens,
+                            secondary: e.target.value,
+                          })
+                        }
                         placeholder="#F3F4F6"
                       />
                     </div>
@@ -363,12 +442,22 @@ export function IdentityDesigner({
                         id="accent-color"
                         type="color"
                         value={editedTokens.accent}
-                        onChange={(e) => setEditedTokens({ ...editedTokens, accent: e.target.value })}
+                        onChange={(e) =>
+                          setEditedTokens({
+                            ...editedTokens,
+                            accent: e.target.value,
+                          })
+                        }
                         className="w-16 h-10"
                       />
                       <Input
                         value={editedTokens.accent}
-                        onChange={(e) => setEditedTokens({ ...editedTokens, accent: e.target.value })}
+                        onChange={(e) =>
+                          setEditedTokens({
+                            ...editedTokens,
+                            accent: e.target.value,
+                          })
+                        }
                         placeholder="#10B981"
                       />
                     </div>
@@ -378,7 +467,12 @@ export function IdentityDesigner({
                     <Input
                       id="heading-font"
                       value={editedTokens.fontHeading}
-                      onChange={(e) => setEditedTokens({ ...editedTokens, fontHeading: e.target.value })}
+                      onChange={(e) =>
+                        setEditedTokens({
+                          ...editedTokens,
+                          fontHeading: e.target.value,
+                        })
+                      }
                       placeholder="Inter"
                     />
                   </div>
@@ -387,7 +481,12 @@ export function IdentityDesigner({
                     <Input
                       id="body-font"
                       value={editedTokens.fontBody}
-                      onChange={(e) => setEditedTokens({ ...editedTokens, fontBody: e.target.value })}
+                      onChange={(e) =>
+                        setEditedTokens({
+                          ...editedTokens,
+                          fontBody: e.target.value,
+                        })
+                      }
                       placeholder="Inter"
                     />
                   </div>

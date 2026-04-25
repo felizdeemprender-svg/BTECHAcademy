@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
-import { useAuth } from '@/components/auth-context';
-import { CollectionManager } from './components/collection-manager';
-import { AIGenerator } from './components/ai-generator';
-import { IdentityDesigner } from './components/identity-designer';
-import { useCollections } from './hooks/use-collections';
-import { useAIGeneration } from './hooks/use-ai-generation';
-import { useIdentityDesign } from './hooks/use-identity-design';
+import { useState, useMemo } from "react";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
+import { useAuth } from "@/components/auth-context";
+import { CollectionManager } from "./components/collection-manager";
+import { AIGenerator } from "./components/ai-generator";
+import { IdentityDesigner } from "./components/identity-designer";
+import { useCollections } from "./hooks/use-collections";
+import { useAIGeneration } from "./hooks/use-ai-generation";
+import { useIdentityDesign } from "./hooks/use-identity-design";
 
 export default function MarketingTemplatesPage() {
   const { profile } = useAuth();
-  
+
   // Hooks personalizados
-  const { 
-    collections, 
-    isLoading, 
-    createCollection, 
-    deleteCollection, 
-    updateCollection 
+  const {
+    collections,
+    isLoading,
+    createCollection,
+    deleteCollection,
+    updateCollection,
   } = useCollections(profile);
-  
+
   const {
     isGenerating,
     generationProgress,
@@ -31,7 +31,7 @@ export default function MarketingTemplatesPage() {
     performHealthCheck,
     generateTemplates,
     updateEnabledChannels,
-    updateSocialTargets
+    updateSocialTargets,
   } = useAIGeneration();
 
   const {
@@ -42,19 +42,19 @@ export default function MarketingTemplatesPage() {
     generateIdentityDesign,
     updateIdentityDesign,
     approveDesign,
-    resetDesign
+    resetDesign,
   } = useIdentityDesign();
 
   // Estados de UI
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isIdentityDesignerOpen, setIsIdentityDesignerOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [campaignDirectives, setCampaignDirectives] = useState('');
+  const [campaignDirectives, setCampaignDirectives] = useState("");
 
   // Colección seleccionada
   const selectedCollection = useMemo(() => {
     if (!selectedId || !collections) return null;
-    return collections.find(c => c.id === selectedId);
+    return collections.find((c) => c.id === selectedId);
   }, [selectedId, collections]);
 
   // Handlers
@@ -81,10 +81,10 @@ export default function MarketingTemplatesPage() {
     const collectionId = await createCollection(name, directives);
     if (collectionId) {
       const success = await generateTemplates(
-        collectionId, 
-        name, 
-        directives, 
-        identityDesign?.designTokens
+        collectionId,
+        name,
+        directives,
+        identityDesign?.designTokens,
       );
       if (success) {
         setSelectedId(collectionId);
@@ -101,7 +101,9 @@ export default function MarketingTemplatesPage() {
   };
 
   const handleDeleteCollection = async (id: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta colección?')) {
+    if (
+      window.confirm("¿Estás seguro de que quieres eliminar esta colección?")
+    ) {
       await deleteCollection(id);
       if (selectedId === id) {
         setSelectedId(null);
@@ -114,9 +116,12 @@ export default function MarketingTemplatesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Arquitecto de Identidad IA</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Arquitecto de Identidad IA
+          </h1>
           <p className="text-gray-600 mt-2">
-            Crea identidades visuales con IA y genera planos omnicanal para tus campañas de marketing
+            Crea identidades visuales con IA y genera planos omnicanal para tus
+            campañas de marketing
           </p>
         </div>
 
@@ -140,8 +145,8 @@ export default function MarketingTemplatesPage() {
             {/* Aquí podríamos agregar un componente de vista previa */}
             <div className="bg-gray-50 p-6 rounded-lg">
               <p className="text-gray-600">
-                Vista previa de la colección seleccionada. 
-                Los templates se mostrarían aquí con opciones de edición y refinamiento.
+                Vista previa de la colección seleccionada. Los templates se
+                mostrarían aquí con opciones de edición y refinamiento.
               </p>
             </div>
           </div>

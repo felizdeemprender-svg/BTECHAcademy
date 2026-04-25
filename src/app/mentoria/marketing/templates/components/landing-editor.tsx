@@ -1,13 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   X,
   Palette,
@@ -15,8 +20,8 @@ import {
   Save,
   RefreshCw,
   Eye,
-  LayoutTemplate
-} from 'lucide-react';
+  LayoutTemplate,
+} from "lucide-react";
 
 interface LandingEditorProps {
   isOpen: boolean;
@@ -31,11 +36,11 @@ export function LandingEditor({
   onClose,
   template,
   onSave,
-  designTokens
+  designTokens,
 }: LandingEditorProps) {
   const [editedTemplate, setEditedTemplate] = useState(template || {});
   const [editedTokens, setEditedTokens] = useState(designTokens || {});
-  const [activeTab, setActiveTab] = useState<'content' | 'design'>('content');
+  const [activeTab, setActiveTab] = useState<"content" | "design">("content");
 
   // Inicializar cuando cambia el template
   useState(() => {
@@ -50,7 +55,7 @@ export function LandingEditor({
   const handleSave = () => {
     onSave({
       ...editedTemplate,
-      designTokens: editedTokens
+      designTokens: editedTokens,
     });
     onClose();
   };
@@ -58,26 +63,40 @@ export function LandingEditor({
   const updateTemplateField = (field: string, value: any) => {
     setEditedTemplate((prev: any) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const updateDesignToken = (token: string, value: string) => {
     setEditedTokens((prev: any) => ({
       ...prev,
-      [token]: value
+      [token]: value,
     }));
   };
 
   const presetColors = {
-    primary: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'],
-    secondary: ['#F3F4F6', '#FEF3C7', '#DBEAFE', '#F3E8FF', '#FEE2E2', '#D1FAE5'],
-    accent: ['#1E40AF', '#DC2626', '#059669', '#D97706', '#7C3AED', '#BE185D']
+    primary: ["#3B82F6", "#EF4444", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899"],
+    secondary: [
+      "#F3F4F6",
+      "#FEF3C7",
+      "#DBEAFE",
+      "#F3E8FF",
+      "#FEE2E2",
+      "#D1FAE5",
+    ],
+    accent: ["#1E40AF", "#DC2626", "#059669", "#D97706", "#7C3AED", "#BE185D"],
   };
 
   const fonts = {
-    heading: ['Inter', 'Lexend', 'Roboto', 'Poppins', 'Montserrat', 'Playfair Display'],
-    body: ['Inter', 'Roboto', 'Open Sans', 'Lato', 'Source Sans Pro', 'Nunito']
+    heading: [
+      "Inter",
+      "Lexend",
+      "Roboto",
+      "Poppins",
+      "Montserrat",
+      "Playfair Display",
+    ],
+    body: ["Inter", "Roboto", "Open Sans", "Lato", "Source Sans Pro", "Nunito"],
   };
 
   return (
@@ -90,8 +109,12 @@ export function LandingEditor({
                 <LayoutTemplate className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold">Editor de Landing Page</DialogTitle>
-                <p className="text-sm text-gray-600">Personaliza contenido y diseño visual</p>
+                <DialogTitle className="text-xl font-bold">
+                  Editor de Landing Page
+                </DialogTitle>
+                <p className="text-sm text-gray-600">
+                  Personaliza contenido y diseño visual
+                </p>
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -103,21 +126,23 @@ export function LandingEditor({
         {/* Tabs */}
         <div className="flex border-b">
           <button
-            onClick={() => setActiveTab('content')}
-            className={`px-4 py-2 font-medium border-b-2 transition-colors ${activeTab === 'content'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
+            onClick={() => setActiveTab("content")}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+              activeTab === "content"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
           >
             <Type className="h-4 w-4 mr-2 inline" />
             Contenido
           </button>
           <button
-            onClick={() => setActiveTab('design')}
-            className={`px-4 py-2 font-medium border-b-2 transition-colors ${activeTab === 'design'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
+            onClick={() => setActiveTab("design")}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+              activeTab === "design"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
           >
             <Palette className="h-4 w-4 mr-2 inline" />
             Diseño
@@ -126,7 +151,7 @@ export function LandingEditor({
 
         <div className="flex-1 overflow-y-auto p-6">
           {/* Tab de Contenido */}
-          {activeTab === 'content' && (
+          {activeTab === "content" && (
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -137,8 +162,10 @@ export function LandingEditor({
                     <Label htmlFor="headline">Headline Principal</Label>
                     <Input
                       id="headline"
-                      value={editedTemplate.headline || ''}
-                      onChange={(e) => updateTemplateField('headline', e.target.value)}
+                      value={editedTemplate.headline || ""}
+                      onChange={(e) =>
+                        updateTemplateField("headline", e.target.value)
+                      }
                       placeholder="Ej: Transforma tu negocio con IA"
                       className="text-lg font-semibold"
                     />
@@ -148,8 +175,10 @@ export function LandingEditor({
                     <Label htmlFor="subheadline">Subheadline</Label>
                     <Textarea
                       id="subheadline"
-                      value={editedTemplate.subheadline || ''}
-                      onChange={(e) => updateTemplateField('subheadline', e.target.value)}
+                      value={editedTemplate.subheadline || ""}
+                      onChange={(e) =>
+                        updateTemplateField("subheadline", e.target.value)
+                      }
                       placeholder="Ej: La plataforma definitiva para mentores que quieren escalar"
                       rows={3}
                     />
@@ -159,8 +188,10 @@ export function LandingEditor({
                     <Label htmlFor="cta">Texto del CTA</Label>
                     <Input
                       id="cta"
-                      value={editedTemplate.ctaText || ''}
-                      onChange={(e) => updateTemplateField('ctaText', e.target.value)}
+                      value={editedTemplate.ctaText || ""}
+                      onChange={(e) =>
+                        updateTemplateField("ctaText", e.target.value)
+                      }
                       placeholder="Ej: Comenzar Gratis"
                     />
                   </div>
@@ -171,7 +202,12 @@ export function LandingEditor({
                       id="sections"
                       type="number"
                       value={editedTemplate.sectionCount || 5}
-                      onChange={(e) => updateTemplateField('sectionCount', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        updateTemplateField(
+                          "sectionCount",
+                          parseInt(e.target.value),
+                        )
+                      }
                       min="1"
                       max="10"
                     />
@@ -193,16 +229,17 @@ export function LandingEditor({
                       className="text-3xl font-bold mb-3"
                       style={{ color: editedTokens.primary }}
                     >
-                      {editedTemplate.headline || 'Tu Headline Aquí'}
+                      {editedTemplate.headline || "Tu Headline Aquí"}
                     </h1>
                     <p className="text-lg text-gray-600 mb-6">
-                      {editedTemplate.subheadline || 'Tu subheadline descriptiva aquí...'}
+                      {editedTemplate.subheadline ||
+                        "Tu subheadline descriptiva aquí..."}
                     </p>
                     <button
                       className="px-6 py-3 rounded-lg font-semibold text-white"
                       style={{ backgroundColor: editedTokens.accent }}
                     >
-                      {editedTemplate.ctaText || 'Call to Action'}
+                      {editedTemplate.ctaText || "Call to Action"}
                     </button>
                   </div>
                 </CardContent>
@@ -211,7 +248,7 @@ export function LandingEditor({
           )}
 
           {/* Tab de Diseño */}
-          {activeTab === 'design' && (
+          {activeTab === "design" && (
             <div className="space-y-6">
               {/* Colores */}
               <Card>
@@ -224,26 +261,32 @@ export function LandingEditor({
                 <CardContent className="space-y-6">
                   {/* Color Primary */}
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Color Primario</Label>
+                    <Label className="text-sm font-medium mb-2 block">
+                      Color Primario
+                    </Label>
                     <div className="flex items-center gap-3">
                       <Input
                         type="color"
-                        value={editedTokens.primary || '#3B82F6'}
-                        onChange={(e) => updateDesignToken('primary', e.target.value)}
+                        value={editedTokens.primary || "#3B82F6"}
+                        onChange={(e) =>
+                          updateDesignToken("primary", e.target.value)
+                        }
                         className="w-16 h-10 p-1 border rounded"
                       />
                       <Input
-                        value={editedTokens.primary || '#3B82F6'}
-                        onChange={(e) => updateDesignToken('primary', e.target.value)}
+                        value={editedTokens.primary || "#3B82F6"}
+                        onChange={(e) =>
+                          updateDesignToken("primary", e.target.value)
+                        }
                         placeholder="#3B82F6"
                         className="flex-1"
                       />
                     </div>
                     <div className="flex gap-2 mt-2">
-                      {presetColors.primary.map(color => (
+                      {presetColors.primary.map((color) => (
                         <button
                           key={color}
-                          onClick={() => updateDesignToken('primary', color)}
+                          onClick={() => updateDesignToken("primary", color)}
                           className="w-8 h-8 rounded border-2 border-gray-200 hover:border-gray-400"
                           style={{ backgroundColor: color }}
                         />
@@ -253,26 +296,32 @@ export function LandingEditor({
 
                   {/* Color Secondary */}
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Color Secundario</Label>
+                    <Label className="text-sm font-medium mb-2 block">
+                      Color Secundario
+                    </Label>
                     <div className="flex items-center gap-3">
                       <Input
                         type="color"
-                        value={editedTokens.secondary || '#F3F4F6'}
-                        onChange={(e) => updateDesignToken('secondary', e.target.value)}
+                        value={editedTokens.secondary || "#F3F4F6"}
+                        onChange={(e) =>
+                          updateDesignToken("secondary", e.target.value)
+                        }
                         className="w-16 h-10 p-1 border rounded"
                       />
                       <Input
-                        value={editedTokens.secondary || '#F3F4F6'}
-                        onChange={(e) => updateDesignToken('secondary', e.target.value)}
+                        value={editedTokens.secondary || "#F3F4F6"}
+                        onChange={(e) =>
+                          updateDesignToken("secondary", e.target.value)
+                        }
                         placeholder="#F3F4F6"
                         className="flex-1"
                       />
                     </div>
                     <div className="flex gap-2 mt-2">
-                      {presetColors.secondary.map(color => (
+                      {presetColors.secondary.map((color) => (
                         <button
                           key={color}
-                          onClick={() => updateDesignToken('secondary', color)}
+                          onClick={() => updateDesignToken("secondary", color)}
                           className="w-8 h-8 rounded border-2 border-gray-200 hover:border-gray-400"
                           style={{ backgroundColor: color }}
                         />
@@ -282,26 +331,32 @@ export function LandingEditor({
 
                   {/* Color Accent */}
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Color de Acento</Label>
+                    <Label className="text-sm font-medium mb-2 block">
+                      Color de Acento
+                    </Label>
                     <div className="flex items-center gap-3">
                       <Input
                         type="color"
-                        value={editedTokens.accent || '#10B981'}
-                        onChange={(e) => updateDesignToken('accent', e.target.value)}
+                        value={editedTokens.accent || "#10B981"}
+                        onChange={(e) =>
+                          updateDesignToken("accent", e.target.value)
+                        }
                         className="w-16 h-10 p-1 border rounded"
                       />
                       <Input
-                        value={editedTokens.accent || '#10B981'}
-                        onChange={(e) => updateDesignToken('accent', e.target.value)}
+                        value={editedTokens.accent || "#10B981"}
+                        onChange={(e) =>
+                          updateDesignToken("accent", e.target.value)
+                        }
                         placeholder="#10B981"
                         className="flex-1"
                       />
                     </div>
                     <div className="flex gap-2 mt-2">
-                      {presetColors.accent.map(color => (
+                      {presetColors.accent.map((color) => (
                         <button
                           key={color}
-                          onClick={() => updateDesignToken('accent', color)}
+                          onClick={() => updateDesignToken("accent", color)}
                           className="w-8 h-8 rounded border-2 border-gray-200 hover:border-gray-400"
                           style={{ backgroundColor: color }}
                         />
@@ -324,12 +379,16 @@ export function LandingEditor({
                     <Label htmlFor="fontHeading">Fuente para Títulos</Label>
                     <select
                       id="fontHeading"
-                      value={editedTokens.fontHeading || 'Inter'}
-                      onChange={(e) => updateDesignToken('fontHeading', e.target.value)}
+                      value={editedTokens.fontHeading || "Inter"}
+                      onChange={(e) =>
+                        updateDesignToken("fontHeading", e.target.value)
+                      }
                       className="w-full p-2 border rounded-md"
                     >
-                      {fonts.heading.map(font => (
-                        <option key={font} value={font}>{font}</option>
+                      {fonts.heading.map((font) => (
+                        <option key={font} value={font}>
+                          {font}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -338,12 +397,16 @@ export function LandingEditor({
                     <Label htmlFor="fontBody">Fuente para Cuerpo</Label>
                     <select
                       id="fontBody"
-                      value={editedTokens.fontBody || 'Inter'}
-                      onChange={(e) => updateDesignToken('fontBody', e.target.value)}
+                      value={editedTokens.fontBody || "Inter"}
+                      onChange={(e) =>
+                        updateDesignToken("fontBody", e.target.value)
+                      }
                       className="w-full p-2 border rounded-md"
                     >
-                      {fonts.body.map(font => (
-                        <option key={font} value={font}>{font}</option>
+                      {fonts.body.map((font) => (
+                        <option key={font} value={font}>
+                          {font}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -363,7 +426,9 @@ export function LandingEditor({
                         style={{ backgroundColor: editedTokens.primary }}
                       />
                       <p className="text-xs font-medium">Primary</p>
-                      <p className="text-xs text-gray-500">{editedTokens.primary}</p>
+                      <p className="text-xs text-gray-500">
+                        {editedTokens.primary}
+                      </p>
                     </div>
                     <div className="text-center">
                       <div
@@ -371,7 +436,9 @@ export function LandingEditor({
                         style={{ backgroundColor: editedTokens.secondary }}
                       />
                       <p className="text-xs font-medium">Secondary</p>
-                      <p className="text-xs text-gray-500">{editedTokens.secondary}</p>
+                      <p className="text-xs text-gray-500">
+                        {editedTokens.secondary}
+                      </p>
                     </div>
                     <div className="text-center">
                       <div
@@ -379,13 +446,18 @@ export function LandingEditor({
                         style={{ backgroundColor: editedTokens.accent }}
                       />
                       <p className="text-xs font-medium">Accent</p>
-                      <p className="text-xs text-gray-500">{editedTokens.accent}</p>
+                      <p className="text-xs text-gray-500">
+                        {editedTokens.accent}
+                      </p>
                     </div>
                   </div>
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                     <h3
                       className="text-xl font-bold mb-2"
-                      style={{ fontFamily: editedTokens.fontHeading, color: editedTokens.primary }}
+                      style={{
+                        fontFamily: editedTokens.fontHeading,
+                        color: editedTokens.primary,
+                      }}
                     >
                       Título de Ejemplo
                     </h3>
@@ -393,7 +465,8 @@ export function LandingEditor({
                       className="text-sm"
                       style={{ fontFamily: editedTokens.fontBody }}
                     >
-                      Texto de ejemplo con la tipografía seleccionada para el cuerpo del contenido.
+                      Texto de ejemplo con la tipografía seleccionada para el
+                      cuerpo del contenido.
                     </p>
                   </div>
                 </CardContent>
@@ -405,10 +478,13 @@ export function LandingEditor({
         {/* Footer con Acciones */}
         <div className="flex justify-between items-center p-6 border-t bg-gray-50">
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => {
-              setEditedTemplate(template || {});
-              setEditedTokens(designTokens || {});
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditedTemplate(template || {});
+                setEditedTokens(designTokens || {});
+              }}
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               Resetear
             </Button>
@@ -417,7 +493,10 @@ export function LandingEditor({
             <Button variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              onClick={handleSave}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               <Save className="h-4 w-4 mr-2" />
               Guardar Cambios
             </Button>

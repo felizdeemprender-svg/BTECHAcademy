@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Eye, 
-  Edit3, 
-  Download, 
-  Mail, 
-  Instagram, 
-  Twitter, 
-  Linkedin, 
-  LayoutTemplate, 
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Eye,
+  Edit3,
+  Download,
+  Mail,
+  Instagram,
+  Twitter,
+  Linkedin,
+  LayoutTemplate,
   Megaphone,
   ChevronRight,
   Copy,
-  RefreshCw
-} from 'lucide-react';
-import { TemplateCollection } from '../types/template-types';
-import { cn } from '@/lib/utils';
+  RefreshCw,
+} from "lucide-react";
+import { TemplateCollection } from "../types/template-types";
+import { cn } from "@/lib/utils";
 
 interface TemplateViewerProps {
   collection: TemplateCollection;
@@ -28,9 +28,15 @@ interface TemplateViewerProps {
   onRefine?: (template: any, type: string) => void;
 }
 
-export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerProps) {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [expandedTemplates, setExpandedTemplates] = useState<Set<string>>(new Set());
+export function TemplateViewer({
+  collection,
+  onEdit,
+  onRefine,
+}: TemplateViewerProps) {
+  const [activeTab, setActiveTab] = useState("overview");
+  const [expandedTemplates, setExpandedTemplates] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Contar templates por tipo
   const templateCounts = useMemo(() => {
@@ -39,7 +45,7 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
       emails: 0,
       socials: 0,
       ads: 0,
-      total: 0
+      total: 0,
     };
 
     if (collection.assets) {
@@ -47,7 +53,8 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
       counts.emails = collection.assets.emails?.length || 0;
       counts.socials = collection.assets.socials?.length || 0;
       counts.ads = collection.assets.ads?.length || 0;
-      counts.total = counts.landings + counts.emails + counts.socials + counts.ads;
+      counts.total =
+        counts.landings + counts.emails + counts.socials + counts.ads;
     }
 
     return counts;
@@ -55,21 +62,31 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
 
   const getChannelIcon = (channel: string) => {
     switch (channel) {
-      case 'emails': return <Mail className="h-4 w-4" />;
-      case 'socials': return <Instagram className="h-4 w-4" />;
-      case 'ads': return <Megaphone className="h-4 w-4" />;
-      case 'landings': return <LayoutTemplate className="h-4 w-4" />;
-      default: return <LayoutTemplate className="h-4 w-4" />;
+      case "emails":
+        return <Mail className="h-4 w-4" />;
+      case "socials":
+        return <Instagram className="h-4 w-4" />;
+      case "ads":
+        return <Megaphone className="h-4 w-4" />;
+      case "landings":
+        return <LayoutTemplate className="h-4 w-4" />;
+      default:
+        return <LayoutTemplate className="h-4 w-4" />;
     }
   };
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
-      case 'instagram': return <Instagram className="h-4 w-4 text-pink-600" />;
-      case 'twitter': return <Twitter className="h-4 w-4 text-blue-400" />;
-      case 'linkedin': return <Linkedin className="h-4 w-4 text-blue-700" />;
-      case 'tiktok': return <Megaphone className="h-4 w-4 text-black" />;
-      default: return <Instagram className="h-4 w-4" />;
+      case "instagram":
+        return <Instagram className="h-4 w-4 text-pink-600" />;
+      case "twitter":
+        return <Twitter className="h-4 w-4 text-blue-400" />;
+      case "linkedin":
+        return <Linkedin className="h-4 w-4 text-blue-700" />;
+      case "tiktok":
+        return <Megaphone className="h-4 w-4 text-black" />;
+      default:
+        return <Instagram className="h-4 w-4" />;
     }
   };
 
@@ -110,7 +127,7 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
                 onClick={() => toggleTemplateExpansion(templateId)}
               >
                 <Eye className="h-3 w-3 mr-1" />
-                {isExpanded ? 'Ocultar' : 'Ver'}
+                {isExpanded ? "Ocultar" : "Ver"}
               </Button>
               {onEdit && (
                 <Button
@@ -135,11 +152,11 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
             </div>
           </div>
         </CardHeader>
-        
+
         {isExpanded && (
           <CardContent className="space-y-4">
             {/* Landing Pages */}
-            {type === 'landings' && (
+            {type === "landings" && (
               <div className="space-y-3">
                 <div>
                   <h4 className="font-medium text-gray-700">Headline:</h4>
@@ -155,25 +172,35 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-700">Secciones:</h4>
-                  <Badge variant="outline">{template.sectionCount} secciones</Badge>
+                  <Badge variant="outline">
+                    {template.sectionCount} secciones
+                  </Badge>
                 </div>
                 {template.designTokens && (
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-2">Design Tokens:</h4>
+                    <h4 className="font-medium text-gray-700 mb-2">
+                      Design Tokens:
+                    </h4>
                     <div className="flex gap-2">
-                      <div 
+                      <div
                         className="w-8 h-8 rounded border"
-                        style={{ backgroundColor: template.designTokens.primary }}
+                        style={{
+                          backgroundColor: template.designTokens.primary,
+                        }}
                         title="Primary"
                       />
-                      <div 
+                      <div
                         className="w-8 h-8 rounded border"
-                        style={{ backgroundColor: template.designTokens.secondary }}
+                        style={{
+                          backgroundColor: template.designTokens.secondary,
+                        }}
                         title="Secondary"
                       />
-                      <div 
+                      <div
                         className="w-8 h-8 rounded border"
-                        style={{ backgroundColor: template.designTokens.accent }}
+                        style={{
+                          backgroundColor: template.designTokens.accent,
+                        }}
                         title="Accent"
                       />
                     </div>
@@ -183,7 +210,7 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
             )}
 
             {/* Emails */}
-            {type === 'emails' && (
+            {type === "emails" && (
               <div className="space-y-3">
                 <div>
                   <h4 className="font-medium text-gray-700">Asunto:</h4>
@@ -191,7 +218,9 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-700">Preheader:</h4>
-                  <p className="text-sm text-gray-600 italic">{template.preheader}</p>
+                  <p className="text-sm text-gray-600 italic">
+                    {template.preheader}
+                  </p>
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-700">Cuerpo:</h4>
@@ -203,7 +232,7 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
             )}
 
             {/* Social Media */}
-            {type === 'socials' && (
+            {type === "socials" && (
               <div className="space-y-3">
                 <div>
                   <h4 className="font-medium text-gray-700">Hook/Gancho:</h4>
@@ -229,15 +258,19 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
                 )}
                 {template.slides && (
                   <div>
-                    <h4 className="font-medium text-gray-700">Slides/Fragmentos:</h4>
-                    <Badge variant="outline">{template.slides.length} slides</Badge>
+                    <h4 className="font-medium text-gray-700">
+                      Slides/Fragmentos:
+                    </h4>
+                    <Badge variant="outline">
+                      {template.slides.length} slides
+                    </Badge>
                   </div>
                 )}
               </div>
             )}
 
             {/* Ads */}
-            {type === 'ads' && (
+            {type === "ads" && (
               <div className="space-y-3">
                 <div>
                   <h4 className="font-medium text-gray-700">Headlines:</h4>
@@ -311,12 +344,18 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
         </div>
         <div className="flex gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{templateCounts.total}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {templateCounts.total}
+            </div>
             <div className="text-sm text-gray-600">Templates</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
-              {Object.entries(templateCounts).filter(([key, count]) => key !== 'total' && count > 0).length}
+              {
+                Object.entries(templateCounts).filter(
+                  ([key, count]) => key !== "total" && count > 0,
+                ).length
+              }
             </div>
             <div className="text-sm text-gray-600">Canales</div>
           </div>
@@ -347,48 +386,63 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
         {/* Tab Overview */}
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(templateCounts).filter(([key]) => key !== 'total').map(([channel, count]) => (
-              count > 0 && (
-                <Card key={channel} className="text-center">
-                  <CardContent className="pt-6">
-                    <div className="flex justify-center mb-2">
-                      {getChannelIcon(channel)}
-                    </div>
-                    <div className="text-2xl font-bold">{count}</div>
-                    <div className="text-sm text-gray-600 capitalize">{channel}</div>
-                  </CardContent>
-                </Card>
-              )
-            ))}
+            {Object.entries(templateCounts)
+              .filter(([key]) => key !== "total")
+              .map(
+                ([channel, count]) =>
+                  count > 0 && (
+                    <Card key={channel} className="text-center">
+                      <CardContent className="pt-6">
+                        <div className="flex justify-center mb-2">
+                          {getChannelIcon(channel)}
+                        </div>
+                        <div className="text-2xl font-bold">{count}</div>
+                        <div className="text-sm text-gray-600 capitalize">
+                          {channel}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ),
+              )}
           </div>
-          
+
           {collection.designTokens && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Identidad Visual Aplicada</CardTitle>
+                <CardTitle className="text-lg">
+                  Identidad Visual Aplicada
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-4">
                   <div className="flex gap-2">
-                    <div 
+                    <div
                       className="w-12 h-12 rounded-lg border-2"
-                      style={{ backgroundColor: collection.designTokens.primary }}
+                      style={{
+                        backgroundColor: collection.designTokens.primary,
+                      }}
                       title="Primary"
                     />
-                    <div 
+                    <div
                       className="w-12 h-12 rounded-lg border-2"
-                      style={{ backgroundColor: collection.designTokens.secondary }}
+                      style={{
+                        backgroundColor: collection.designTokens.secondary,
+                      }}
                       title="Secondary"
                     />
-                    <div 
+                    <div
                       className="w-12 h-12 rounded-lg border-2"
-                      style={{ backgroundColor: collection.designTokens.accent }}
+                      style={{
+                        backgroundColor: collection.designTokens.accent,
+                      }}
                       title="Accent"
                     />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">
-                      <strong>Tipografía:</strong> {collection.designTokens.fontHeading} / {collection.designTokens.fontBody}
+                      <strong>Tipografía:</strong>{" "}
+                      {collection.designTokens.fontHeading} /{" "}
+                      {collection.designTokens.fontBody}
                     </p>
                   </div>
                 </div>
@@ -399,9 +453,10 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
 
         {/* Tab Landings */}
         <TabsContent value="landings">
-          {collection.assets.landings && collection.assets.landings.length > 0 ? (
-            collection.assets.landings.map((template: any, index: number) => 
-              renderTemplateCard(template, 'landings', index)
+          {collection.assets.landings &&
+          collection.assets.landings.length > 0 ? (
+            collection.assets.landings.map((template: any, index: number) =>
+              renderTemplateCard(template, "landings", index),
             )
           ) : (
             <div className="text-center text-gray-500 py-8">
@@ -413,8 +468,8 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
         {/* Tab Emails */}
         <TabsContent value="emails">
           {collection.assets.emails && collection.assets.emails.length > 0 ? (
-            collection.assets.emails.map((template: any, index: number) => 
-              renderTemplateCard(template, 'emails', index)
+            collection.assets.emails.map((template: any, index: number) =>
+              renderTemplateCard(template, "emails", index),
             )
           ) : (
             <div className="text-center text-gray-500 py-8">
@@ -426,17 +481,18 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
         {/* Tab Social & Ads */}
         <TabsContent value="content" className="space-y-6">
           {/* Social Media */}
-          {collection.assets.socials && collection.assets.socials.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Instagram className="h-5 w-5" />
-                Social Media ({collection.assets.socials.length})
-              </h3>
-              {collection.assets.socials.map((template: any, index: number) => 
-                renderTemplateCard(template, 'socials', index)
-              )}
-            </div>
-          )}
+          {collection.assets.socials &&
+            collection.assets.socials.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Instagram className="h-5 w-5" />
+                  Social Media ({collection.assets.socials.length})
+                </h3>
+                {collection.assets.socials.map((template: any, index: number) =>
+                  renderTemplateCard(template, "socials", index),
+                )}
+              </div>
+            )}
 
           {/* Ads */}
           {collection.assets.ads && collection.assets.ads.length > 0 && (
@@ -445,17 +501,18 @@ export function TemplateViewer({ collection, onEdit, onRefine }: TemplateViewerP
                 <Megaphone className="h-5 w-5" />
                 Anuncios ({collection.assets.ads.length})
               </h3>
-              {collection.assets.ads.map((template: any, index: number) => 
-                renderTemplateCard(template, 'ads', index)
+              {collection.assets.ads.map((template: any, index: number) =>
+                renderTemplateCard(template, "ads", index),
               )}
             </div>
           )}
 
-          {!collection.assets.socials?.length && !collection.assets.ads?.length && (
-            <div className="text-center text-gray-500 py-8">
-              No hay contenido de social media o anuncios generados
-            </div>
-          )}
+          {!collection.assets.socials?.length &&
+            !collection.assets.ads?.length && (
+              <div className="text-center text-gray-500 py-8">
+                No hay contenido de social media o anuncios generados
+              </div>
+            )}
         </TabsContent>
       </Tabs>
     </div>

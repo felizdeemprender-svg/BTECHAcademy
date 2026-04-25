@@ -1,31 +1,36 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { 
-  Eye, 
-  Edit3, 
-  Download, 
-  Mail, 
-  Instagram, 
-  Twitter, 
-  Linkedin, 
-  LayoutTemplate, 
+import { useState, useMemo } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import {
+  Eye,
+  Edit3,
+  Download,
+  Mail,
+  Instagram,
+  Twitter,
+  Linkedin,
+  LayoutTemplate,
   Megaphone,
   Copy,
   RefreshCw,
   X,
   Search,
   Grid,
-  List
-} from 'lucide-react';
-import { TemplateCollection } from '../types/template-types';
-import { cn } from '@/lib/utils';
+  List,
+} from "lucide-react";
+import { TemplateCollection } from "../types/template-types";
+import { cn } from "@/lib/utils";
 
 interface TemplateViewerModalProps {
   collection: TemplateCollection | null;
@@ -35,31 +40,33 @@ interface TemplateViewerModalProps {
   onRefine?: (template: any, type: string) => void;
 }
 
-export function TemplateViewerModal({ 
-  collection, 
-  isOpen, 
-  onClose, 
-  onEdit, 
-  onRefine 
+export function TemplateViewerModal({
+  collection,
+  isOpen,
+  onClose,
+  onEdit,
+  onRefine,
 }: TemplateViewerModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Contar templates por tipo
   const templateCounts = useMemo(() => {
-    if (!collection?.assets) return { landings: 0, emails: 0, socials: 0, ads: 0, total: 0 };
+    if (!collection?.assets)
+      return { landings: 0, emails: 0, socials: 0, ads: 0, total: 0 };
 
     const counts = {
       landings: collection.assets.landings?.length || 0,
       emails: collection.assets.emails?.length || 0,
       socials: collection.assets.socials?.length || 0,
       ads: collection.assets.ads?.length || 0,
-      total: 0
+      total: 0,
     };
 
-    counts.total = counts.landings + counts.emails + counts.socials + counts.ads;
+    counts.total =
+      counts.landings + counts.emails + counts.socials + counts.ads;
     return counts;
   }, [collection]);
 
@@ -71,25 +78,25 @@ export function TemplateViewerModal({
 
     if (collection.assets.landings) {
       collection.assets.landings.forEach((template: any, index: number) => {
-        templates.push({ template, type: 'landings', index });
+        templates.push({ template, type: "landings", index });
       });
     }
 
     if (collection.assets.emails) {
       collection.assets.emails.forEach((template: any, index: number) => {
-        templates.push({ template, type: 'emails', index });
+        templates.push({ template, type: "emails", index });
       });
     }
 
     if (collection.assets.socials) {
       collection.assets.socials.forEach((template: any, index: number) => {
-        templates.push({ template, type: 'socials', index });
+        templates.push({ template, type: "socials", index });
       });
     }
 
     if (collection.assets.ads) {
       collection.assets.ads.forEach((template: any, index: number) => {
-        templates.push({ template, type: 'ads', index });
+        templates.push({ template, type: "ads", index });
       });
     }
 
@@ -101,23 +108,29 @@ export function TemplateViewerModal({
     let filtered = allTemplates;
 
     // Filtrar por tipo
-    if (selectedType !== 'all') {
-      filtered = filtered.filter(t => t.type === selectedType);
+    if (selectedType !== "all") {
+      filtered = filtered.filter((t) => t.type === selectedType);
     }
 
     // Filtrar por búsqueda
     if (searchTerm) {
-      filtered = filtered.filter(t => {
+      filtered = filtered.filter((t) => {
         const template = t.template;
         const searchLower = searchTerm.toLowerCase();
-        
+
         return (
-          (template.headline && template.headline.toLowerCase().includes(searchLower)) ||
-          (template.subject && template.subject.toLowerCase().includes(searchLower)) ||
-          (template.caption && template.caption.toLowerCase().includes(searchLower)) ||
-          (template.hook && template.hook.toLowerCase().includes(searchLower)) ||
-          (template.type && template.type.toLowerCase().includes(searchLower)) ||
-          (template.platform && template.platform.toLowerCase().includes(searchLower))
+          (template.headline &&
+            template.headline.toLowerCase().includes(searchLower)) ||
+          (template.subject &&
+            template.subject.toLowerCase().includes(searchLower)) ||
+          (template.caption &&
+            template.caption.toLowerCase().includes(searchLower)) ||
+          (template.hook &&
+            template.hook.toLowerCase().includes(searchLower)) ||
+          (template.type &&
+            template.type.toLowerCase().includes(searchLower)) ||
+          (template.platform &&
+            template.platform.toLowerCase().includes(searchLower))
         );
       });
     }
@@ -127,27 +140,37 @@ export function TemplateViewerModal({
 
   const getChannelIcon = (channel: string) => {
     switch (channel) {
-      case 'emails': return <Mail className="h-4 w-4" />;
-      case 'socials': return <Instagram className="h-4 w-4" />;
-      case 'ads': return <Megaphone className="h-4 w-4" />;
-      case 'landings': return <LayoutTemplate className="h-4 w-4" />;
-      default: return <LayoutTemplate className="h-4 w-4" />;
+      case "emails":
+        return <Mail className="h-4 w-4" />;
+      case "socials":
+        return <Instagram className="h-4 w-4" />;
+      case "ads":
+        return <Megaphone className="h-4 w-4" />;
+      case "landings":
+        return <LayoutTemplate className="h-4 w-4" />;
+      default:
+        return <LayoutTemplate className="h-4 w-4" />;
     }
   };
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
-      case 'instagram': return <Instagram className="h-4 w-4 text-pink-600" />;
-      case 'twitter': return <Twitter className="h-4 w-4 text-blue-400" />;
-      case 'linkedin': return <Linkedin className="h-4 w-4 text-blue-700" />;
-      case 'tiktok': return <Megaphone className="h-4 w-4 text-black" />;
-      default: return <Instagram className="h-4 w-4" />;
+      case "instagram":
+        return <Instagram className="h-4 w-4 text-pink-600" />;
+      case "twitter":
+        return <Twitter className="h-4 w-4 text-blue-400" />;
+      case "linkedin":
+        return <Linkedin className="h-4 w-4 text-blue-700" />;
+      case "tiktok":
+        return <Megaphone className="h-4 w-4 text-black" />;
+      default:
+        return <Instagram className="h-4 w-4" />;
     }
   };
 
   const renderTemplateContent = (template: any, type: string) => {
     switch (type) {
-      case 'landings':
+      case "landings":
         return (
           <div className="space-y-4">
             <div>
@@ -160,17 +183,17 @@ export function TemplateViewerModal({
             </div>
             {template.designTokens && (
               <div className="flex gap-2">
-                <div 
+                <div
                   className="w-8 h-8 rounded border"
                   style={{ backgroundColor: template.designTokens.primary }}
                   title="Primary"
                 />
-                <div 
+                <div
                   className="w-8 h-8 rounded border"
                   style={{ backgroundColor: template.designTokens.secondary }}
                   title="Secondary"
                 />
-                <div 
+                <div
                   className="w-8 h-8 rounded border"
                   style={{ backgroundColor: template.designTokens.accent }}
                   title="Accent"
@@ -180,12 +203,14 @@ export function TemplateViewerModal({
           </div>
         );
 
-      case 'emails':
+      case "emails":
         return (
           <div className="space-y-3">
             <div>
               <h4 className="font-semibold">{template.subject}</h4>
-              <p className="text-sm text-gray-600 italic">{template.preheader}</p>
+              <p className="text-sm text-gray-600 italic">
+                {template.preheader}
+              </p>
             </div>
             <div className="bg-gray-50 p-3 rounded text-sm max-h-32 overflow-y-auto">
               {template.body}
@@ -193,7 +218,7 @@ export function TemplateViewerModal({
           </div>
         );
 
-      case 'socials':
+      case "socials":
         return (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -221,27 +246,31 @@ export function TemplateViewerModal({
           </div>
         );
 
-      case 'ads':
+      case "ads":
         return (
           <div className="space-y-3">
             <div>
               <h4 className="font-semibold">Headlines:</h4>
               <div className="space-y-1">
-                {template.headlines.slice(0, 2).map((headline: string, i: number) => (
-                  <p key={i} className="text-sm bg-gray-50 p-2 rounded">
-                    {headline}
-                  </p>
-                ))}
+                {template.headlines
+                  .slice(0, 2)
+                  .map((headline: string, i: number) => (
+                    <p key={i} className="text-sm bg-gray-50 p-2 rounded">
+                      {headline}
+                    </p>
+                  ))}
               </div>
             </div>
             <div>
               <h4 className="font-semibold">Descriptions:</h4>
               <div className="space-y-1">
-                {template.descriptions.slice(0, 2).map((desc: string, i: number) => (
-                  <p key={i} className="text-sm bg-gray-50 p-2 rounded">
-                    {desc}
-                  </p>
-                ))}
+                {template.descriptions
+                  .slice(0, 2)
+                  .map((desc: string, i: number) => (
+                    <p key={i} className="text-sm bg-gray-50 p-2 rounded">
+                      {desc}
+                    </p>
+                  ))}
               </div>
             </div>
           </div>
@@ -252,21 +281,36 @@ export function TemplateViewerModal({
     }
   };
 
-  const renderTemplateCard = ({ template, type, index }: { template: any; type: string; index: number }) => {
-    const isSelected = selectedTemplate?.template === template && selectedTemplate?.type === type;
-    
+  const renderTemplateCard = ({
+    template,
+    type,
+    index,
+  }: {
+    template: any;
+    type: string;
+    index: number;
+  }) => {
+    const isSelected =
+      selectedTemplate?.template === template &&
+      selectedTemplate?.type === type;
+
     return (
-      <Card 
+      <Card
         key={`${type}-${index}`}
         className={cn(
           "cursor-pointer transition-all hover:shadow-md",
           isSelected && "ring-2 ring-blue-500 bg-blue-50",
-          viewMode === 'grid' ? "" : "flex items-center gap-4"
+          viewMode === "grid" ? "" : "flex items-center gap-4",
         )}
         onClick={() => setSelectedTemplate({ template, type, index })}
       >
-        <CardContent className={cn("p-4", viewMode === 'grid' ? "" : "flex-1")}>
-          <div className={cn("flex items-start gap-3", viewMode === 'grid' ? "flex-col" : "")}>
+        <CardContent className={cn("p-4", viewMode === "grid" ? "" : "flex-1")}>
+          <div
+            className={cn(
+              "flex items-start gap-3",
+              viewMode === "grid" ? "flex-col" : "",
+            )}
+          >
             <div className="flex items-center gap-2">
               {getChannelIcon(type)}
               <span className="font-medium capitalize">{type}</span>
@@ -276,8 +320,8 @@ export function TemplateViewerModal({
                 </Badge>
               )}
             </div>
-            
-            <div className={cn("flex-1", viewMode === 'grid' ? "mt-2" : "")}>
+
+            <div className={cn("flex-1", viewMode === "grid" ? "mt-2" : "")}>
               {renderTemplateContent(template, type)}
             </div>
           </div>
@@ -294,7 +338,9 @@ export function TemplateViewerModal({
         <DialogHeader className="p-6 pb-0">
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle className="text-2xl font-bold">{collection.name}</DialogTitle>
+              <DialogTitle className="text-2xl font-bold">
+                {collection.name}
+              </DialogTitle>
               <p className="text-gray-600 mt-1">{collection.directives}</p>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -310,12 +356,18 @@ export function TemplateViewerModal({
               {/* Estadísticas */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-white p-3 rounded text-center">
-                  <div className="text-lg font-bold text-blue-600">{templateCounts.total}</div>
+                  <div className="text-lg font-bold text-blue-600">
+                    {templateCounts.total}
+                  </div>
                   <div className="text-xs text-gray-600">Templates</div>
                 </div>
                 <div className="bg-white p-3 rounded text-center">
                   <div className="text-lg font-bold text-green-600">
-                    {Object.entries(templateCounts).filter(([key, count]) => key !== 'total' && count > 0).length}
+                    {
+                      Object.entries(templateCounts).filter(
+                        ([key, count]) => key !== "total" && count > 0,
+                      ).length
+                    }
                   </div>
                   <div className="text-xs text-gray-600">Canales</div>
                 </div>
@@ -340,27 +392,46 @@ export function TemplateViewerModal({
                     className="flex-1 text-sm border rounded-md px-2 py-1"
                   >
                     <option value="all">Todos</option>
-                    <option value="landings">Landings ({templateCounts.landings})</option>
-                    <option value="emails">Emails ({templateCounts.emails})</option>
-                    <option value="socials">Social ({templateCounts.socials})</option>
+                    <option value="landings">
+                      Landings ({templateCounts.landings})
+                    </option>
+                    <option value="emails">
+                      Emails ({templateCounts.emails})
+                    </option>
+                    <option value="socials">
+                      Social ({templateCounts.socials})
+                    </option>
                     <option value="ads">Ads ({templateCounts.ads})</option>
                   </select>
 
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                    onClick={() =>
+                      setViewMode(viewMode === "grid" ? "list" : "grid")
+                    }
                   >
-                    {viewMode === 'grid' ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
+                    {viewMode === "grid" ? (
+                      <List className="h-4 w-4" />
+                    ) : (
+                      <Grid className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
 
               {/* Lista de Templates */}
               <ScrollArea className="h-[calc(100%-12rem)]">
-                <div className={cn("space-y-2", viewMode === 'grid' ? "grid grid-cols-1 gap-2" : "space-y-2")}>
-                  {filteredTemplates.map(({ template, type, index }) => 
-                    renderTemplateCard({ template, type, index })
+                <div
+                  className={cn(
+                    "space-y-2",
+                    viewMode === "grid"
+                      ? "grid grid-cols-1 gap-2"
+                      : "space-y-2",
+                  )}
+                >
+                  {filteredTemplates.map(({ template, type, index }) =>
+                    renderTemplateCard({ template, type, index }),
                   )}
                 </div>
               </ScrollArea>
@@ -378,22 +449,43 @@ export function TemplateViewerModal({
                       {selectedTemplate.type} {selectedTemplate.index + 1}
                     </h2>
                     {selectedTemplate.template.platform && (
-                      <Badge variant="outline" className="flex items-center gap-1">
+                      <Badge
+                        variant="outline"
+                        className="flex items-center gap-1"
+                      >
                         {getPlatformIcon(selectedTemplate.template.platform)}
                         {selectedTemplate.template.platform}
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex gap-2">
                     {onEdit && (
-                      <Button size="sm" variant="outline" onClick={() => onEdit(selectedTemplate.template, selectedTemplate.type)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          onEdit(
+                            selectedTemplate.template,
+                            selectedTemplate.type,
+                          )
+                        }
+                      >
                         <Edit3 className="h-3 w-3 mr-1" />
                         Editar
                       </Button>
                     )}
                     {onRefine && (
-                      <Button size="sm" variant="outline" onClick={() => onRefine(selectedTemplate.template, selectedTemplate.type)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          onRefine(
+                            selectedTemplate.template,
+                            selectedTemplate.type,
+                          )
+                        }
+                      >
                         <RefreshCw className="h-3 w-3 mr-1" />
                         Refinar
                       </Button>
@@ -410,7 +502,10 @@ export function TemplateViewerModal({
                 </div>
 
                 <div className="bg-white rounded-lg border p-6">
-                  {renderTemplateContent(selectedTemplate.template, selectedTemplate.type)}
+                  {renderTemplateContent(
+                    selectedTemplate.template,
+                    selectedTemplate.type,
+                  )}
                 </div>
               </div>
             ) : (
