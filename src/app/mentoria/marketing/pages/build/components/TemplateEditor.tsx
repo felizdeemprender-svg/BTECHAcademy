@@ -203,6 +203,7 @@ export function TemplateEditor({
     
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/drive.file');
+    provider.addScope('https://www.googleapis.com/auth/drive.readonly');
     
     // MAGIA: Si el usuario ya está logueado en Firebase con Google, le pasamos su email al provider.
     // Esto evita que Google le pregunte "¿Con qué cuenta quieres entrar?", haciendo el popup invisible.
@@ -849,6 +850,7 @@ export function TemplateEditor({
                                       onDeleteVideo={handleDeleteVideo} 
                                       renderedVideos={renderedVideos} 
                                       googleToken={googleToken}
+                                      onRefreshGoogleToken={ensureGoogleToken}
                                     />
                                   )}
                                 </div>

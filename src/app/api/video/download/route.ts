@@ -28,6 +28,18 @@ export async function GET(req: NextRequest) {
     if (!driveRes.ok) {
       const err = await driveRes.text();
       console.error(`[DownloadProxy:Error] Google Drive falló (${driveRes.status}): ${err}`);
+      
+      if (driveRes.status === 404) {
+        return NextResponse.json({ 
+          error: `Video no encontrado en Drive (404). Es posible que haya sido eliminado o que estés usando una cuenta de Google diferente a la que creó el video.` 
+        }, { status: 404 });
+      }
+      if (driveRes.status === 403 || driveRes.status === 401) {
+        return NextResponse.json({ 
+          error: `Error de permisos (403/401). Tu sesión de Google ha expirado o no tienes acceso a este archivo. Intenta refrescar la página.` 
+        }, { status: driveRes.status });
+      }
+
       return NextResponse.json({ error: `Drive error: ${driveRes.status}` }, { status: driveRes.status });
     }
 

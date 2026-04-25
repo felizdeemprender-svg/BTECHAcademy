@@ -34,6 +34,7 @@ interface VideoProductionPanelProps {
   onGenerateVideo: (s: any, sIdx: number) => void;
   onDeleteVideo: (sIdx: number) => void;
   googleToken?: string | null;
+  onRefreshGoogleToken?: () => Promise<string | null>;
 }
 
 /**
@@ -49,12 +50,28 @@ export function VideoProductionPanel({
   updateAsset,
   onGenerateVideo,
   onDeleteVideo,
-  googleToken
+  googleToken,
+  onRefreshGoogleToken
 }: VideoProductionPanelProps) {
   
   const [showConfirm, setShowConfirm] = useState(false);
   const isCurrentlyRendering = isRenderingVideo === `${sIdx}`;
   const videoUrl = renderedVideos[sIdx] || s.production_notes?.video_url;
+
+  // Handler robusto para descarga con refresco de token
+  const handleDownload = async (id: string, fileName: string) => {
+    try {
+      const freshToken = onRefreshGoogleToken ? await onRefreshGoogleToken() : (googleToken || localStorage.getItem('evo_google_token'));
+      if (!freshToken) {
+        alert("No se pudo obtener el acceso a Google Drive. Por favor, intenta de nuevo.");
+        return;
+      }
+      const proxyUrl = `/api/video/download?id=${id}&name=${encodeURIComponent(fileName)}&token=${freshToken}`;
+      window.open(proxyUrl, '_blank');
+    } catch (err: any) {
+      alert("Error de autenticación: " + err.message);
+    }
+  };
 
   // Detectar si es un archivo ZIP
   const isZip = videoUrl?.toLowerCase().includes('.zip');
@@ -71,7 +88,7 @@ export function VideoProductionPanel({
           <Badge className="bg-white/20 text-[8px] border-none text-white">RECOMENDADO</Badge>
         </div>
         <Textarea 
-          value={s.production_notes?.voiceover || ''}
+          value={s.production_notes?.voiceover || s.voiceover || ''}
           readOnly={s.type === 'carousel'}
           onChange={(e) => {
             updateAsset('socials', sIdx, 'production_notes', {
@@ -191,8 +208,7 @@ export function VideoProductionPanel({
                         className="h-12 rounded-xl bg-violet-600/20 hover:bg-violet-600 text-white border-white/10 text-[9px] font-black uppercase transition-all shadow-lg"
                         onClick={() => {
                           const fileName = `Placa_${uIdx + 1}_${s.marketingName || 'Asset'}.mp4`;
-                          const proxyUrl = `/api/video/download?id=${id}&name=${encodeURIComponent(fileName)}&token=${googleToken || localStorage.getItem('evo_google_token')}`;
-                          window.open(proxyUrl, '_blank');
+                          handleDownload(id, fileName);
                         }}
                       >
                         <Download className="h-3 w-3 mr-1" /> Placa {uIdx + 1}
@@ -208,15 +224,14 @@ export function VideoProductionPanel({
                     const ids = (s.production_notes?.video_drive_id || '').split(',');
                     const id = ids[0]?.trim();
                     const fileName = `${s.marketingName || 'Video'}.mp4`;
-                    const proxyUrl = `/api/video/download?id=${id}&name=${encodeURIComponent(fileName)}&token=${googleToken || localStorage.getItem('evo_google_token')}`;
-                    window.open(proxyUrl, '_blank');
+                    handleDownload(id, fileName);
                   }}
                 >
                   <Download className="h-5 w-5" /> Descargar MP4 Final
                 </Button>
              )}
           </div>
-                    <div className="flex gap-2">
+          <div className="flex gap-2">
             <Button 
                className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
                onClick={() => {
