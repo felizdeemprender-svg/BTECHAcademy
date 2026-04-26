@@ -344,9 +344,9 @@ export function TemplateEditor({
           platform: s.platform,
           audioUrl: pNotes.audio_url,
           audioDuration: pNotes.audio_duration,
-          enable_tts: pNotes.enable_tts,
+          enable_tts: pNotes.enable_tts ?? true, // Activar TTS por defecto si la IA generó guion
           voice_id: pNotes.voice_id || 'mateo',
-          voiceover: pNotes.voiceover,
+          voiceover: pNotes.voiceover || s.voiceover || '', // Prioridad a notas, fallback a IA
           audioEffect: pNotes.audio_effect || 'auto',
           adnId: pNotes.adnId || '01',
           isCarousel: s.type === 'carousel',
