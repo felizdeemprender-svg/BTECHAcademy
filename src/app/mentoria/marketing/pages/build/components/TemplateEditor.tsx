@@ -374,7 +374,11 @@ export function TemplateEditor({
 
       setRenderedVideos(prev => ({ ...prev, [sIdx]: data.webViewLink }));
       const newSocials = [...generatedAssets.socials];
-      newSocials[sIdx] = { ...newSocials[sIdx], production_notes: updatedNotes };
+      newSocials[sIdx] = { 
+        ...newSocials[sIdx], 
+        production_notes: updatedNotes,
+        slides: resolvedScenes // Persistir las imágenes subidas a Firebase en los slides originales
+      };
       const newAssets = { ...generatedAssets, socials: newSocials };
       await onSave(newAssets, true);
       toast({ title: 'Procesamiento Exitoso', description: 'El video ya está disponible en tu panel.' });
