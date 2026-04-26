@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
   Select, 
@@ -19,7 +20,9 @@ import {
   MonitorPlay, 
   Loader2, 
   Trash2,
-  Download
+  Download,
+  Type,
+  Mic2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AudioUploader } from './AudioUploader';
@@ -93,29 +96,56 @@ export function VideoProductionPanel({
   return (
     <div className="p-6 rounded-3xl border-2 border-dashed space-y-6 bg-slate-800/50 backdrop-blur-sm" style={{ borderColor: isCurrentlyRendering ? '#8b5cf6' : 'rgba(255,255,255,0.05)' }}>
 
-      {/* Guion Maestro (Relato Continuo) */}
-      <div className="space-y-2 p-4 bg-violet-600 rounded-2xl shadow-inner border border-violet-500/20">
-        <div className="flex items-center justify-between">
-          <Label className="text-[9px] font-black uppercase text-violet-200 flex items-center gap-1.5">
-            <Scroll className="h-3 w-3" /> Guion Maestro de Locución (Continuo)
-          </Label>
-          <Badge className="bg-white/20 text-[8px] border-none text-white">RECOMENDADO</Badge>
-        </div>
-        <Textarea 
-          value={s.production_notes?.voiceover || s.voiceover || ''}
-          readOnly={s.type === 'carousel'}
-          onChange={(e) => {
-            updateAsset('socials', sIdx, 'production_notes', {
-              ...(s.production_notes || {}),
-              voiceover: e.target.value
-            });
-          }}
-          placeholder={s.type === 'carousel' ? "Resumen narrativo (Referencia)" : "Escribe el relato completo aquí..."}
-          className={`border-none ${s.type === 'carousel' ? 'bg-white/5 opacity-60 cursor-not-allowed' : 'bg-white/10'} text-white placeholder:text-violet-300 min-h-[100px] text-xs font-medium focus-visible:ring-1 focus-visible:ring-white/30 rounded-xl`}
-        />
-        <p className="text-[10px] text-violet-200/80 italic font-medium leading-tight">
-          * Nota: Este texto será el relato principal. Las escenas visuales se sincronizarán para reforzar estas palabras.
-        </p>
+      {/* Grid de Escenas */}
+      <div className="grid grid-cols-1 gap-6">
+        {s.slides?.map((slide: any, idx: number) => (
+          <div key={idx} className="group relative bg-slate-900/40 rounded-2xl border border-white/5 p-4 transition-all hover:border-violet-500/30">
+            <div className="flex gap-4">
+              {/* Miniatura y Número */}
+              <div className="relative h-24 w-24 flex-shrink-0 rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+                <img src={slide.imageUrl} alt="" className="h-full w-full object-cover" />
+                <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[8px] font-black text-white border border-white/10">
+                  #{idx + 1}
+                </div>
+              </div>
+
+              {/* Editores de Texto y Voz */}
+              <div className="flex-1 space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase text-slate-400 flex items-center gap-1.5">
+                    <Type className="h-3 w-3" /> Texto Visual (En Pantalla)
+                  </Label>
+                  <Input 
+                    value={slide.text || ''}
+                    onChange={(e) => {
+                      const newSlides = [...(s.slides || [])];
+                      newSlides[idx] = { ...newSlides[idx], text: e.target.value };
+                      updateAsset('socials', sIdx, 'slides', newSlides);
+                    }}
+                    className="h-9 bg-slate-950/50 border-white/5 text-xs rounded-xl focus:ring-violet-500/50"
+                    placeholder="Lo que se leerá en el video..."
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[9px] font-black uppercase text-violet-300/70 flex items-center gap-1.5">
+                    <Mic2 className="h-3 w-3" /> Locución (Lo que dice la Voz)
+                  </Label>
+                  <Textarea 
+                    value={slide.voiceover || ''}
+                    onChange={(e) => {
+                      const newSlides = [...(s.slides || [])];
+                      newSlides[idx] = { ...newSlides[idx], voiceover: e.target.value };
+                      updateAsset('socials', sIdx, 'slides', newSlides);
+                    }}
+                    className="min-h-[60px] bg-violet-950/20 border-violet-500/10 text-xs rounded-xl focus:ring-violet-500/50 py-2"
+                    placeholder="Escribe lo que la voz debe decir en esta escena..."
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Subida de MP3 (Música de fondo) */}
