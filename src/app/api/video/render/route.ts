@@ -1,3 +1,11 @@
+/**
+ * CRITICAL: VIDEO ENGINE STABLE VERSION (RESTORED APR 2026)
+ * ---------------------------------------------------------
+ * ESTE ARCHIVO NO DEBE SER MODIFICADO SIN APROBACIÓN EXPRESA.
+ * Contiene la lógica de renderizado FFmpeg balanceada para producción.
+ * Cualquier cambio puede romper la sincronización de audio, las transiciones o el consumo de memoria.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';

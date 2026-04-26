@@ -148,27 +148,23 @@ TAREAS DE DIRECCIÓN DUAL:
 ${injectedAdnRule}
 
 1. COORDINACIÓN VISUAL Y ESTRUCTURA:
-   - Genera un GUION MAESTRO ('voiceover' a nivel raíz) que sea un relato FLUIDO, natural y experto especializado en la temática del curso.
-   - Genera un desglose detallado en el array correspondiente ('scenes' para videos, 'slides' para carruseles).
-   - **REGLA DE CANTIDAD (INNEGOCIABLE)**: DEBES GENERAR EXACTAMENTE ${expectedCount} ELEMENTOS (escenas o placas). Ni uno más, ni uno menos.
-   - Para LinkedIn: Cada placa debe tener un ${isLinkedinDoc ? 'párrafo descriptivo potente' : 'título de impacto'}.
+   - Genera un GUION MAESTRO ('voiceover' a nivel raíz) que sea un relato FLUIDO y experto.
+   - Genera un desglose detallado en 'scenes' o 'slides'.
+   - **REGLA DE CANTIDAD (INNEGOCIABLE)**: DEBES GENERAR EXACTAMENTE ${expectedCount} ELEMENTOS.
+   - **REGLA DE SINCRONIZACIÓN**: Debes REPARTIR el Guion Maestro dentro de cada escena/placa en el campo 'voiceover'. Cada escena DEBE tener su propio fragmento de voz.
    - Para cada elemento:
-     * Divide el Guion Maestro en 'voiceover' que use lenguaje específico del nicho.
-     * Crea un 'text' que sea ${isLinkedinDoc ? 'un párrafo educativo de 20-30 palabras' : 'un subtitulado estratégico de 3-5 palabras'}.
-     * Crea una 'description' visual que sea ${isLinkedinDoc ? 'PROFESIONAL, de AUTORIDAD, impecable y corporativa (Business style)' : 'dinámica, visual y de alto impacto'}.
+     * El 'voiceover' de la escena debe durar aproximadamente lo que indica 'duration'.
+     * El 'text' de pantalla debe ser un resumen potente de lo que se oye en esa placa (Narrativa Dual).
+     * La 'description' visual debe ser dinámica y de alto impacto.
      * Sigue la estructura: GANCHO (Problema), VALOR (Solución), CTA (Acción).
 
-3. TEXTOS DE ACOMPAÑAMIENTO (OBLIGATORIO - MÁXIMO RIGOR ESTRATÉGICO):
-   - Genera un 'hook' (gancho inicial corto) relevante al curso. DEBE aplicar las DIRECTIVAS y la MISIÓN ${mission.toUpperCase()} con la misma intensidad que el guion principal. 
-   - Genera un 'caption' (cuerpo de publicación) persuasivo y adaptado a la plataforma. No uses relleno genérico. Usa el lenguaje técnico del curso ("Nicho-Persona").
-   - Genera un array de 'hashtags' temáticos del curso.
-   - Si es para Email o Landing, genera correspondientemente 'subject', 'body' o 'sections'.
-
-4. NOTAS DE PRODUCCIÓN:
-   - Determina qué voz (Sofía, Mateo, Ximena, Diego) y música encajan con la autoridad del tema.
+3. TEXTOS DE ACOMPAÑAMIENTO:
+   - Genera un 'hook' relevante al curso. 
+   - Genera un 'caption' persuasivo y adaptado a la plataforma ("Nicho-Persona").
+   - Genera un array de 'hashtags'.
 
 REGLAS FINALES:
-- ALTA RETENCIÓN. Idioma: Español. No inventar datos falsos, basarse en la descripción provista.
+- ALTA RETENCIÓN. Idioma: Español. No inventar datos falsos.
 
 Devuelve un objeto JSON que siga el ContentBreakdown Schema.`,
     output: { schema: VariantContentSchema },
@@ -179,7 +175,32 @@ Devuelve un objeto JSON que siga el ContentBreakdown Schema.`,
       throw new Error("La IA no devolvió un desglose válido.");
     }
 
-    // Post-procesado para asegurar estructura robusta
+    // --- SEGURIDAD DE NARRATIVA DUAL (Post-procesado) ---
+    // Si la IA generó un guion maestro pero dejó las escenas vacías, lo repartimos nosotros.
+    let finalScenes = (parsed.scenes || []).map((s: any) => ({ ...s, overlays: s.overlays || [] }));
+    let finalSlides = (parsed.slides || []);
+
+    if (parsed.voiceover && (finalScenes.length > 0 || finalSlides.length > 0)) {
+        const targetArray = finalScenes.length > 0 ? finalScenes : finalSlides;
+        const allEmpty = targetArray.every((s: any) => !s.voiceover);
+        
+        if (allEmpty) {
+            console.log("[AI:Flow] Detectado guion maestro sin reparto. Iniciando auto-distribución...");
+            // Dividir por oraciones o párrafos (mejor por puntos)
+            const sentences = parsed.voiceover.match(/[^.!?]+[.!?]+/g) || [parsed.voiceover];
+            const avgSentencesPerScene = Math.max(1, Math.ceil(sentences.length / targetArray.length));
+            
+            targetArray.forEach((scene: any, i: number) => {
+                const start = i * avgSentencesPerScene;
+                const end = (i === targetArray.length - 1) ? sentences.length : (i + 1) * avgSentencesPerScene;
+                const slice = sentences.slice(start, end);
+                if (slice.length > 0) {
+                    scene.voiceover = slice.join(' ').trim();
+                }
+            });
+        }
+    }
+
     const result = {
       ...parsed,
       production_notes: {
@@ -188,11 +209,8 @@ Devuelve un objeto JSON que siga el ContentBreakdown Schema.`,
         watermark_text: 'Mentor',
         ...parsed.production_notes
       },
-      scenes: (parsed.scenes || []).map((s: any) => ({
-        ...s,
-        overlays: s.overlays || []
-      })),
-      slides: (parsed.slides || [])
+      scenes: finalScenes,
+      slides: finalSlides
     };
 
     return result;

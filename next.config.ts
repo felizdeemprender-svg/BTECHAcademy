@@ -20,7 +20,16 @@ const nextConfig: NextConfig = {
   // Disable SSG to avoid build errors
   trailingSlash: false,
   // Disable static generation for problematic pages
-  serverExternalPackages: ['@/firebase', 'ffmpeg-static'],
+  serverExternalPackages: [
+    '@/firebase', 
+    'ffmpeg-static', 
+    'genkit', 
+    '@genkit-ai/google-genai', 
+    '@genkit-ai/core', 
+    '@genkit-ai/ai',
+    '@opentelemetry/api',
+    '@opentelemetry/sdk-node'
+  ],
   async headers() {
     return [
       {

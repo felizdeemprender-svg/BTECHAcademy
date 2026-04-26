@@ -95,6 +95,19 @@ export default function SettingsPage() {
     mpAccessToken: '',
     mpPublicKey: '',
     username: '',
+    websiteConfig: {
+      headline: '',
+      subheadline: '',
+      mission: '',
+      pilares: [
+        { titulo: '', descripcion: '' },
+        { titulo: '', descripcion: '' },
+        { titulo: '', descripcion: '' }
+      ],
+      badges: [],
+      showStats: true,
+      theme: 'professional-light'
+    }
   });
   const [origin, setOrigin] = useState('');
 
@@ -106,6 +119,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (profile && !hasLoadedProfile.current) {
+      const config = profile.profile?.websiteConfig;
       setFormData({
         displayName: profile.displayName || '',
         photoURL: profile.photoURL || '',
@@ -125,10 +139,98 @@ export default function SettingsPage() {
         mpAccessToken: profile.profile?.mercadopago?.accessToken || '',
         mpPublicKey: profile.profile?.mercadopago?.publicKey || '',
         username: profile.username || '',
+        websiteConfig: {
+          headline: config?.headline || '',
+          subheadline: config?.subheadline || '',
+          mission: config?.mission || '',
+          pilares: (config?.pilares || []).map((p: any) => ({
+            titulo: p.titulo || '',
+            descripcion: p.descripcion || ''
+          })).concat([
+            { titulo: '', descripcion: '' },
+            { titulo: '', descripcion: '' },
+            { titulo: '', descripcion: '' }
+          ]).slice(0, 3),
+          badges: (config?.badges || []).map((b: any) => ({
+            label: b.label || '',
+            description: b.description || ''
+          })),
+          showStats: config?.showStats ?? true,
+          theme: config?.theme || 'professional-light'
+        }
       });
       hasLoadedProfile.current = true;
     }
   }, [profile]);
+  
+  const [isGeneratingWeb, setIsGeneratingWeb] = useState(false);
+
+  const handleGenerateWeb = async () => {
+    const hasEnoughBio = formData.bio && formData.bio.length > 20;
+    const hasExternalWeb = formData.website && formData.website.startsWith('http');
+    const hasLinkedin = formData.linkedin && formData.linkedin.includes('linkedin.com');
+
+    if (!hasEnoughBio && !hasExternalWeb && !hasLinkedin) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Falta información', 
+        description: 'Escribe un poco más sobre ti o añade tu LinkedIn/Sitio Web en la pestaña Contacto para que la IA tenga material de análisis.' 
+      });
+      return;
+    }
+
+    setIsGeneratingWeb(true);
+    try {
+      const res = await fetch('/api/ai/tutor-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.displayName,
+          bio: formData.bio,
+          socials: {
+            linkedin: formData.linkedin,
+            website: formData.website,
+            instagram: formData.instagram
+          }
+        })
+      });
+
+      if (!res.ok) throw new Error('Error al generar la propuesta');
+      const data = await res.json();
+
+      setFormData(prev => ({
+        ...prev,
+        websiteConfig: {
+          headline: data.headline || '',
+          subheadline: data.subheadline || '',
+          mission: data.mission || '',
+          pilares: (data.pilares || []).map((p: any) => ({
+            titulo: p.titulo || '',
+            descripcion: p.descripcion || ''
+          })).concat([
+            { titulo: '', descripcion: '' },
+            { titulo: '', descripcion: '' },
+            { titulo: '', descripcion: '' }
+          ]).slice(0, 3),
+          badges: (data.badges || []).map((b: any) => ({
+            label: b.label || '',
+            description: b.description || ''
+          })),
+          showStats: data.showStats ?? true,
+          theme: data.suggested_theme || prev.websiteConfig.theme
+        }
+      }));
+
+      toast({ 
+        title: 'Propuesta Generada ✨', 
+        description: 'He analizado tu biografía y creado una estructura de marca personal premium. ¡Revísala en la pestaña Web Personal!' 
+      });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error de IA', description: error.message });
+    } finally {
+      setIsGeneratingWeb(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -194,7 +296,8 @@ export default function SettingsPage() {
         mercadopago: {
           accessToken: formData.mpAccessToken,
           publicKey: formData.mpPublicKey,
-        }
+        },
+        websiteConfig: formData.websiteConfig
       },
       username: formData.username || formData.displayName.toLowerCase().replace(/[^a-z0-9]/g, '-') || user.uid.substring(0, 8)
     };
@@ -350,6 +453,7 @@ export default function SettingsPage() {
           <Tabs defaultValue="perfil" className="w-full">
             <TabsList className="bg-secondary/10 p-1.5 rounded-none border-b h-16 w-full justify-start gap-2 px-10">
               <TabsTrigger value="perfil" className="rounded-xl gap-2 font-bold px-6 h-11"><User className="h-4 w-4" /> Perfil</TabsTrigger>
+              <TabsTrigger value="web" className="rounded-xl gap-2 font-bold px-6 h-11 text-amber-600 bg-amber-50/50 border-amber-100"><Sparkles className="h-4 w-4" /> Web Personal</TabsTrigger>
               <TabsTrigger value="contacto" className="rounded-xl gap-2 font-bold px-6 h-11"><Globe className="h-4 w-4" /> Contacto</TabsTrigger>
               {isMentorOrAdmin && (
                 <>
@@ -368,7 +472,7 @@ export default function SettingsPage() {
                     <Input 
                       id="settings-displayName"
                       name="displayName"
-                      value={formData.displayName} 
+                      value={formData.displayName || ''} 
                       onChange={e => setFormData({...formData, displayName: e.target.value})} 
                       className="h-14 rounded-2xl bg-secondary/10 border-none font-bold text-lg px-6" 
                     />
@@ -378,7 +482,7 @@ export default function SettingsPage() {
                     <Textarea 
                       id="settings-bio"
                       name="bio"
-                      value={formData.bio} 
+                      value={formData.bio || ''} 
                       onChange={e => setFormData({...formData, bio: e.target.value})} 
                       className="min-h-[200px] rounded-[2rem] bg-secondary/10 border-none p-8 text-base leading-relaxed" 
                     />
@@ -389,7 +493,7 @@ export default function SettingsPage() {
                       <Input 
                         id="settings-username"
                         name="username"
-                        value={formData.username} 
+                        value={formData.username || ''} 
                         onChange={e => setFormData({...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} 
                         placeholder="tu-nombre-de-usuario"
                         className="h-14 rounded-2xl bg-secondary/10 border-none font-mono text-sm px-6" 
@@ -400,6 +504,226 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="web" className="m-0 space-y-10">
+                {/* Cabecera de Generación IA */}
+                <div className="relative overflow-hidden p-8 rounded-[2rem] bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-2xl">
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="space-y-2 text-center md:text-left">
+                      <h3 className="text-2xl font-black flex items-center justify-center md:justify-start gap-2">
+                        <Sparkles className="h-6 w-6 text-amber-300" /> Tu Vitrina de Marca Personal
+                      </h3>
+                      <p className="text-sm text-indigo-100 max-w-md">
+                        Convierte tu biografía en una web premium de autoridad. La IA analizará tu perfil y creará una estructura persuasiva automáticamente.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={handleGenerateWeb}
+                      disabled={isGeneratingWeb}
+                      className="h-16 px-10 rounded-2xl bg-white text-indigo-600 hover:bg-indigo-50 font-black text-lg shadow-xl transition-all hover:scale-105 active:scale-95 group"
+                    >
+                      {isGeneratingWeb ? (
+                        <Loader2 className="animate-spin mr-2 h-6 w-6" />
+                      ) : (
+                        <Zap className="mr-2 h-6 w-6 fill-amber-400 text-amber-400 group-hover:animate-pulse" />
+                      )}
+                      {formData.websiteConfig.headline ? 'Regenerar con IA' : 'Magia IA: Crear mi Web'}
+                    </Button>
+                  </div>
+                  {/* Decoración visual */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-400/20 rounded-full -ml-10 -mb-10 blur-2xl" />
+                </div>
+
+                {formData.websiteConfig.headline && (
+                  <div className="grid gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {/* Hero Section Edit */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                          <Layout className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-slate-800 uppercase tracking-tighter">Sección Principal (Hero)</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Lo primero que verán tus alumnos</p>
+                        </div>
+                      </div>
+                      <div className="grid gap-4 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-slate-400 ml-1">Titular de Impacto</Label>
+                          <Input 
+                            value={formData.websiteConfig.headline || ''}
+                            onChange={e => setFormData({
+                              ...formData, 
+                              websiteConfig: { ...formData.websiteConfig, headline: e.target.value }
+                            })}
+                            className="h-12 rounded-xl bg-white border-none shadow-sm font-bold text-slate-800"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-slate-400 ml-1">Propuesta de Valor (Bajada)</Label>
+                          <Textarea 
+                            value={formData.websiteConfig.subheadline || ''}
+                            onChange={e => setFormData({
+                              ...formData, 
+                              websiteConfig: { ...formData.websiteConfig, subheadline: e.target.value }
+                            })}
+                            className="min-h-[80px] rounded-xl bg-white border-none shadow-sm py-3"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pillars Edit */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                          <Layers className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-slate-800 uppercase tracking-tighter">Tus 3 Pilares Metodológicos</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Tu propuesta diferencial de enseñanza</p>
+                        </div>
+                      </div>
+                      <div className="grid md:grid-cols-3 gap-6">
+                        {formData.websiteConfig.pilares.map((pilar, idx) => (
+                          <div key={idx} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
+                            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-xs">
+                              {idx + 1}
+                            </div>
+                            <div className="space-y-2">
+                              <Input 
+                                value={pilar.titulo || ''}
+                                onChange={e => {
+                                  const newPilares = [...formData.websiteConfig.pilares];
+                                  newPilares[idx] = { ...newPilares[idx], titulo: e.target.value };
+                                  setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
+                                }}
+                                className="font-bold border-none bg-slate-50 rounded-xl h-10"
+                                placeholder="Título del Pilar"
+                              />
+                              <Textarea 
+                                value={pilar.descripcion || ''}
+                                onChange={e => {
+                                  const newPilares = [...formData.websiteConfig.pilares];
+                                  newPilares[idx] = { ...newPilares[idx], descripcion: e.target.value };
+                                  setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
+                                }}
+                                className="text-xs border-none bg-slate-50 rounded-xl min-h-[100px]"
+                                placeholder="Descripción corta..."
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Authority Badges */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                          <ShieldCheck className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-slate-800 uppercase tracking-tighter">Medallas de Autoridad</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Lo que garantiza tu excelencia</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-4 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                        <div>
+                          <h4 className="font-bold text-slate-800">Mostrar Estadísticas</h4>
+                          <p className="text-xs text-muted-foreground">Si eres un tutor nuevo o prefieres un perfil exclusivo, puedes ocultar los números de alumnos y horas.</p>
+                        </div>
+                        <Button 
+                          variant={formData.websiteConfig.showStats ? "default" : "outline"}
+                          onClick={() => setFormData({
+                            ...formData,
+                            websiteConfig: { ...formData.websiteConfig, showStats: !formData.websiteConfig.showStats }
+                          })}
+                          className="rounded-xl font-bold"
+                        >
+                          {formData.websiteConfig.showStats ? "Visible" : "Oculto"}
+                        </Button>
+                      </div>
+
+                      <div className="grid gap-6 p-6 bg-emerald-50/30 rounded-3xl border border-emerald-100">
+                        {formData.websiteConfig.badges.map((badge: any, idx) => (
+                          <div key={idx} className="relative group bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm space-y-3">
+                            <div className="flex gap-4">
+                              <div className="flex-1 space-y-3">
+                                <div className="space-y-1">
+                                  <Label className="text-[9px] font-black uppercase text-slate-400">Título de la Medalla</Label>
+                                  <Input 
+                                    value={badge.label || ''}
+                                    onChange={e => {
+                                      const newBadges = [...formData.websiteConfig.badges];
+                                      newBadges[idx] = { ...newBadges[idx], label: e.target.value };
+                                      setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, badges: newBadges } });
+                                    }}
+                                    className="h-10 bg-slate-50 border-none rounded-xl font-bold text-emerald-800"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[9px] font-black uppercase text-slate-400">Argumento de Respaldo</Label>
+                                  <Textarea 
+                                    value={badge.description || ''}
+                                    onChange={e => {
+                                      const newBadges = [...formData.websiteConfig.badges];
+                                      newBadges[idx] = { ...newBadges[idx], description: e.target.value };
+                                      setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, badges: newBadges } });
+                                    }}
+                                    className="text-xs bg-slate-50 border-none rounded-xl min-h-[60px]"
+                                    placeholder="Explica por qué esto te da autoridad..."
+                                  />
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  const newBadges = formData.websiteConfig.badges.filter((_, i) => i !== idx);
+                                  setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, badges: newBadges } });
+                                }}
+                                className="h-8 w-8 bg-slate-100 text-slate-400 rounded-lg hover:bg-red-100 hover:text-red-500 transition-colors flex items-center justify-center"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="rounded-full border-2 border-dashed border-emerald-200 text-emerald-600 font-bold hover:bg-emerald-100 h-12"
+                          onClick={() => {
+                            setFormData({ 
+                              ...formData, 
+                              websiteConfig: { 
+                                ...formData.websiteConfig, 
+                                badges: [...formData.websiteConfig.badges, { label: 'Nuevo Valor', description: 'Justifica este valor aquí...' }] 
+                              } 
+                            });
+                          }}
+                        >
+                          + Añadir Argumento de Autoridad
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!formData.websiteConfig.headline && (
+                  <div className="py-20 text-center space-y-6">
+                    <div className="w-24 h-24 rounded-[2.5rem] bg-slate-100 flex items-center justify-center mx-auto text-slate-300">
+                      <LayoutDashboard className="h-12 w-12" />
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-xl font-bold text-slate-400">Tu web personal está en blanco</h4>
+                      <p className="text-sm text-slate-400 max-w-xs mx-auto">
+                        Usa el botón de Magia IA de arriba para generar tu propuesta de marca personal basada en tu biografía actual.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="contacto" className="m-0 grid sm:grid-cols-2 gap-8">
@@ -421,7 +745,7 @@ export default function SettingsPage() {
                     <Input 
                       id={`settings-${social.id}`}
                       name={social.id}
-                      value={(formData as any)[social.id]} 
+                      value={(formData as any)[social.id] || ''} 
                       onChange={e => setFormData({...formData, [social.id]: e.target.value})} 
                       placeholder={social.placeholder} 
                       className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-medium"
@@ -489,7 +813,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="flex-1 space-y-4">
                           <Input 
-                            value={formData.primaryColor} 
+                            value={formData.primaryColor || ''} 
                             onChange={e => setFormData({...formData, primaryColor: e.target.value})}
                             className="h-14 text-2xl font-mono font-bold text-center rounded-2xl bg-white border-none shadow-sm"
                           />
@@ -689,7 +1013,7 @@ export default function SettingsPage() {
                           <Input 
                             id="mp-access-token"
                             type="password" 
-                            value={formData.mpAccessToken}
+                            value={formData.mpAccessToken || ''}
                             onChange={e => setFormData({...formData, mpAccessToken: e.target.value})}
                             placeholder="APP_USR-..." 
                             className="h-14 rounded-2xl bg-white border-none font-mono text-sm px-6 shadow-inner" 
@@ -703,7 +1027,7 @@ export default function SettingsPage() {
                           </Label>
                           <Input 
                             id="mp-public-key"
-                            value={formData.mpPublicKey}
+                            value={formData.mpPublicKey || ''}
                             onChange={e => setFormData({...formData, mpPublicKey: e.target.value})}
                             placeholder="APP_USR-..." 
                             className="h-14 rounded-2xl bg-white border-none font-mono text-sm px-6 shadow-inner" 

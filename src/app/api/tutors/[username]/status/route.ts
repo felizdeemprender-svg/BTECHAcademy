@@ -117,7 +117,8 @@ export async function GET(
           primaryColor: tutor.profile?.branding?.primaryColor || '#3B2D86',
           logoUrl: tutor.profile?.branding?.logoUrl || '',
           layoutMode: tutor.profile?.branding?.layoutMode || 'light'
-        }
+        },
+        websiteConfig: tutor.profile?.websiteConfig || null
       }
     });
 
