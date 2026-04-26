@@ -345,7 +345,9 @@ export function TemplateEditor({
           audioDuration: pNotes.audio_duration,
           enable_tts: pNotes.enable_tts ?? true, // Activar TTS por defecto si la IA generó guion
           voice_id: pNotes.voice_id || 'mateo',
-          voiceover: pNotes.voiceover || s.voiceover || '', // Prioridad a notas, fallback a IA
+          // Si hay locuciones en las placas, NO enviamos el guion maestro global
+          // Esto fuerza al motor a concatenar los audios de cada escena (Narrativa Dual)
+          voiceover: (s.slides?.some((sl: any) => sl.voiceover)) ? '' : (pNotes.voiceover || s.voiceover || ''),
           audioEffect: pNotes.audio_effect || 'auto',
           adnId: pNotes.adnId || '01',
           isCarousel: s.type === 'carousel',

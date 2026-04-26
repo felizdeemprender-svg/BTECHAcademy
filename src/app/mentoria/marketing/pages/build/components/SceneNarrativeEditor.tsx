@@ -92,24 +92,27 @@ export function SceneNarrativeEditor({
             {/* 2. SECCIÓN NARRATIVA (GUION) */}
             <div className="md:col-span-8 space-y-4 pt-2">
               <div className={`grid ${s.type === 'carousel' ? 'md:grid-cols-2' : 'grid-cols-1'} gap-4`}>
-                {/* Solo mostrar Voiceover Individual en Carruseles. En Single/Story manda el Maestro. */}
-                {s.type === 'carousel' && (
-                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-violet-300 flex items-center gap-2 mb-1">
-                      <Mic2 className="h-3 w-3" /> Guion Narrativo (Voz de IA)
-                    </Label>
-                    <Textarea 
-                      value={sl.voiceover || ''}
-                      onChange={(e) => {
-                        const newItems = [...items];
-                        newItems[i] = { ...newItems[i], voiceover: e.target.value };
-                        updateAsset('socials', sIdx, 'slides', newItems);
-                      }}
-                      placeholder="Escribe lo que la voz de IA dirá en esta escena..."
-                      className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[100px] text-sm font-medium focus-visible:ring-1 focus-visible:ring-violet-500/50 rounded-2xl p-4"
-                    />
-                  </div>
-                )}
+                {/* Mostrar Voiceover Individual en todos los formatos para Narrativa Dual */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-violet-300 flex items-center gap-2 mb-1">
+                    <Mic2 className="h-3 w-3" /> Guion Narrativo (Voz de IA)
+                  </Label>
+                  <Textarea 
+                    value={sl.voiceover || (i === 0 && !sl.voiceover ? (s.production_notes?.voiceover || s.voiceover || '') : '')}
+                    onChange={(e) => {
+                      const newItems = [...items];
+                      newItems[i] = { ...newItems[i], voiceover: e.target.value };
+                      updateAsset('socials', sIdx, 'slides', newItems);
+                    }}
+                    placeholder="Escribe lo que la voz de IA dirá en esta escena..."
+                    className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[100px] text-sm font-medium focus-visible:ring-1 focus-visible:ring-violet-500/50 rounded-2xl p-4"
+                  />
+                  {i === 0 && !sl.voiceover && (s.production_notes?.voiceover || s.voiceover) && (
+                    <p className="text-[9px] text-amber-400/80 italic font-medium">
+                      * Usando guion maestro como base.
+                    </p>
+                  )}
+                </div>
 
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-cyan-300 flex items-center gap-2 mb-1">

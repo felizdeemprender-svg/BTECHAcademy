@@ -96,56 +96,15 @@ export function VideoProductionPanel({
   return (
     <div className="p-6 rounded-3xl border-2 border-dashed space-y-6 bg-slate-800/50 backdrop-blur-sm" style={{ borderColor: isCurrentlyRendering ? '#8b5cf6' : 'rgba(255,255,255,0.05)' }}>
 
-      {/* Grid de Escenas */}
-      <div className="grid grid-cols-1 gap-6">
-        {s.slides?.map((slide: any, idx: number) => (
-          <div key={idx} className="group relative bg-slate-900/40 rounded-2xl border border-white/5 p-4 transition-all hover:border-violet-500/30">
-            <div className="flex gap-4">
-              {/* Miniatura y Número */}
-              <div className="relative h-24 w-24 flex-shrink-0 rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-                <img src={slide.imageUrl} alt="" className="h-full w-full object-cover" />
-                <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[8px] font-black text-white border border-white/10">
-                  #{idx + 1}
-                </div>
-              </div>
-
-              {/* Editores de Texto y Voz */}
-              <div className="flex-1 space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase text-slate-400 flex items-center gap-1.5">
-                    <Type className="h-3 w-3" /> Texto Visual (En Pantalla)
-                  </Label>
-                  <Input 
-                    value={slide.text || ''}
-                    onChange={(e) => {
-                      const newSlides = [...(s.slides || [])];
-                      newSlides[idx] = { ...newSlides[idx], text: e.target.value };
-                      updateAsset('socials', sIdx, 'slides', newSlides);
-                    }}
-                    className="h-9 bg-slate-950/50 border-white/5 text-xs rounded-xl focus:ring-violet-500/50"
-                    placeholder="Lo que se leerá en el video..."
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase text-violet-300/70 flex items-center gap-1.5">
-                    <Mic2 className="h-3 w-3" /> Locución (Lo que dice la Voz)
-                  </Label>
-                  <Textarea 
-                    value={slide.voiceover || ''}
-                    onChange={(e) => {
-                      const newSlides = [...(s.slides || [])];
-                      newSlides[idx] = { ...newSlides[idx], voiceover: e.target.value };
-                      updateAsset('socials', sIdx, 'slides', newSlides);
-                    }}
-                    className="min-h-[60px] bg-violet-950/20 border-violet-500/10 text-xs rounded-xl focus:ring-violet-500/50 py-2"
-                    placeholder="Escribe lo que la voz debe decir en esta escena..."
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Configuración Global de Video */}
+      <div className="flex items-center gap-4 mb-2">
+        <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center border border-violet-500/20">
+          <Clapperboard className="h-5 w-5" />
+        </div>
+        <div>
+          <h4 className="text-sm font-black text-white uppercase tracking-tighter">Motor de Producción de Video</h4>
+          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Configura el ADN y la Post-Producción</p>
+        </div>
       </div>
 
       {/* Subida de MP3 (Música de fondo) */}
