@@ -18,12 +18,24 @@ export async function GET(req: NextRequest) {
     console.log(`[DownloadProxy:Start] Solicitud para: "${fileName}" (ID: ${fileId})`);
     console.log(`[DownloadProxy:Debug] Token recibido (fragmento): ${token.substring(0, 10)}...`);
 
-    const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    let driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
       headers: {
         'Authorization': `Bearer ${token}`
       },
       cache: 'no-store'
     });
+
+    // FALLBACK: Si falla por permisos (403/404) y tenemos API KEY, intentamos descarga pública
+    // Esto es útil porque compartimos los archivos como "Anyone with link" al subirlos.
+    if (!driveRes.ok && (driveRes.status === 404 || driveRes.status === 403)) {
+      const apiKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_TTS_API_KEY;
+      if (apiKey) {
+        console.log(`[DownloadProxy:Fallback] Intentando descarga pública con API KEY para ID: ${fileId}`);
+        driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`, {
+          cache: 'no-store'
+        });
+      }
+    }
 
     if (!driveRes.ok) {
       const err = await driveRes.text();
@@ -31,12 +43,12 @@ export async function GET(req: NextRequest) {
       
       if (driveRes.status === 404) {
         return NextResponse.json({ 
-          error: `Video no encontrado en Drive (404). Es posible que haya sido eliminado o que estés usando una cuenta de Google diferente a la que creó el video.` 
+          error: `Video no encontrado en Drive (404). Es posible que haya sido eliminado o que la sesión de Google no tenga acceso a este archivo antiguo.` 
         }, { status: 404 });
       }
       if (driveRes.status === 403 || driveRes.status === 401) {
         return NextResponse.json({ 
-          error: `Error de permisos (403/401). Tu sesión de Google ha expirado o no tienes acceso a este archivo. Intenta refrescar la página.` 
+          error: `Error de permisos (403/401). El archivo es privado o tu sesión ha expirado. Intenta regenerar el video.` 
         }, { status: driveRes.status });
       }
 
