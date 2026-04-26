@@ -61,12 +61,26 @@ export function VideoProductionPanel({
   // Handler robusto para descarga con refresco de token
   const handleDownload = async (id: string, fileName: string) => {
     try {
+      let finalId = id;
+
+      // Si el ID viene vacío, intentar extraerlo de la URL del video como emergencia
+      if (!finalId && videoUrl) {
+        const driveIdMatch = videoUrl.match(/\/d\/(.+?)\//) || videoUrl.match(/id=(.+?)(&|$)/);
+        if (driveIdMatch) finalId = driveIdMatch[1];
+      }
+
+      if (!finalId) {
+        alert("El ID del video aún no se ha registrado. Por favor, espera un segundo a que se guarde o regenera el video.");
+        return;
+      }
+
       const freshToken = onRefreshGoogleToken ? await onRefreshGoogleToken() : (googleToken || localStorage.getItem('evo_google_token'));
-      if (!freshToken) {
+      if (!freshToken || freshToken === 'null') {
         alert("No se pudo obtener el acceso a Google Drive. Por favor, intenta de nuevo.");
         return;
       }
-      const proxyUrl = `/api/video/download?id=${id}&name=${encodeURIComponent(fileName)}&token=${freshToken}`;
+
+      const proxyUrl = `/api/video/download?id=${finalId}&name=${encodeURIComponent(fileName)}&token=${freshToken}`;
       window.open(proxyUrl, '_blank');
     } catch (err: any) {
       alert("Error de autenticación: " + err.message);
