@@ -65,7 +65,12 @@ service cloud.firestore {
     }
 
     match /followups/{followUpId} {
-      allow list, get: if true; // Temporalmente permisivo para debugging - v2
+      allow list, get: if isSignedIn() && (
+        isAdmin() || 
+        resource.data.mentorId == request.auth.uid || 
+        resource.data.studentId == request.auth.uid || 
+        resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower()
+      );
       allow create: if isSignedIn() && (isMentor() || isAdmin());
       allow update, delete: if isSignedIn() && (
         isAdmin() || 
@@ -121,8 +126,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow get: if true;
-      allow list: if isSignedIn() || request.query.limit <= 40; 
+      allow get: if true; // Mantener para perfiles públicos (bio, photo, etc)
+      allow list: if isAdmin() || isMentor(); // Solo staff puede listar usuarios masivamente
       allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin() || isMentor()); 
       allow update: if isSignedIn() && (
         request.auth.uid == userId || 
@@ -144,7 +149,12 @@ service cloud.firestore {
       match /individualTasks/{taskId} {
         allow read, list: if isSignedIn();
         allow create: if isSignedIn() && (isMentor() || isAdmin());
-        allow update: if isSignedIn();
+        allow update: if isSignedIn() && (
+          isAdmin() || 
+          resource.data.mentorId == request.auth.uid || 
+          resource.data.studentId == request.auth.uid || 
+          resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower()
+        );
         allow delete: if isAdmin() || (isSignedIn() && (
           resource.data.mentorId == request.auth.uid || 
           resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower() ||
