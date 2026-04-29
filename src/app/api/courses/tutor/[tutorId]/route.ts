@@ -1,101 +1,96 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseServer } from '@/firebase/server';
-import { collection, query, where, orderBy, getDocs, limit, documentId } from 'firebase/firestore';
+import { getAdminFirestore } from '@/firebase/admin';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ tutorId: string }> }
 ) {
   try {
-    const { firestore } = getFirebaseServer();
+    const firestore = getAdminFirestore();
     const tutorId = (await params).tutorId;
 
-    // Obtener TODOS los cursos del tutor (filtramos visibilidad en memoria)
-    const coursesQuery = query(
-      collection(firestore, 'courses'),
-      where('mentorId', '==', tutorId),
-      limit(50)
-    );
+    // 1. Obtener todas las SalesPages ACTIVAS del tutor
+    const salesPagesSnapshot = await firestore.collection('salesPages')
+      .where('mentorId', '==', tutorId)
+      .where('isActive', '==', true)
+      .get();
 
-    const coursesSnapshot = await getDocs(coursesQuery);
+    if (salesPagesSnapshot.empty) {
+      return NextResponse.json({ courses: [], total: 0 });
+    }
+
+    // 2. Obtener IDs de cursos únicos para buscarlos de una vez
+    const courseIds = Array.from(new Set(salesPagesSnapshot.docs.map(doc => doc.data().courseId).filter(Boolean)));
     
-    // Obtener SalesPages asociadas a este tutor para vincularlas con los cursos
-    const salesPagesQuery = query(
-      collection(firestore, 'salesPages'),
-      where('mentorId', '==', tutorId)
-    );
-    const salesPagesSnapshot = await getDocs(salesPagesQuery);
-    const salesPagesMap: Record<string, { id: string, price?: number }> = {};
-    salesPagesSnapshot.docs.forEach(doc => {
-      const data = doc.data();
-      if (data.courseId && data.isActive) { // Filter isActive here
-        salesPagesMap[data.courseId] = { 
-          id: doc.id, 
-          price: data.price 
-        };
-      }
-    });
+    const coursesMap: Record<string, any> = {};
+    if (courseIds.length > 0) {
+      // Firebase limita 'in' a 10-30 elementos, pero para un tutor suele estar bien.
+      // Si son muchos, haríamos múltiples consultas.
+      const coursesSnapshot = await firestore.collection('courses')
+        .where('__name__', 'in', courseIds.slice(0, 30))
+        .get();
+      
+      coursesSnapshot.docs.forEach(doc => {
+        coursesMap[doc.id] = { id: doc.id, ...doc.data() };
+      });
+    }
 
-    // Filtrar por visibilidad: mostrar cursos que tengan landing y no estén rechazados.
-    // isActive=false puede indicar que no pasó por auditoría aún, pero si tiene landing activa debe mostrarse.
-    const validCourses = coursesSnapshot.docs.filter(doc => {
-      const c = doc.data();
-      const hasLanding = !!salesPagesMap[doc.id];
-      const isNotRejected = c.status !== 'rejected';
-      const isExplicitlyHidden = c.isActive === false && !salesPagesMap[doc.id];
-      const isPublic = c.publicListing !== false;
-      return hasLanding && isNotRejected && !isExplicitlyHidden && isPublic;
-    }).sort((a, b) => {
-      const dateA = a.data().createdAt?.toDate?.() || new Date(0);
-      const dateB = b.data().createdAt?.toDate?.() || new Date(0);
-      return (dateB as any) - (dateA as any);
-    });
+    // 3. Obtener todos los tags necesarios
+    const allTagIds = Array.from(new Set(
+      Object.values(coursesMap).flatMap(c => c.tagIds || [])
+    ));
+    const tagsMap: Record<string, string> = {};
+    if (allTagIds.length > 0) {
+      const tagsSnapshot = await firestore.collection('tags')
+        .where('__name__', 'in', allTagIds.slice(0, 30))
+        .get();
+      tagsSnapshot.docs.forEach(doc => {
+        tagsMap[doc.id] = doc.data().name;
+      });
+    }
 
-    // Enriquecer cursos con tags
-    const enrichedCourses = await Promise.all(
-      validCourses.map(async (courseDoc) => {
-        const course = courseDoc.data();
-        
-        // Obtener tags del curso usando Web SDK
-        let tags = [];
-        if (course.tagIds && course.tagIds.length > 0) {
-          const tagsQuery = query(
-            collection(firestore, 'tags'),
-            where(documentId(), 'in', course.tagIds)
-          );
-          const tagsSnapshot = await getDocs(tagsQuery);
-          tags = tagsSnapshot.docs.map(tagDoc => tagDoc.data().name);
-        }
+    // 4. Construir la respuesta basada en LANDINGS (SalesPages)
+    const enrichedLandings = salesPagesSnapshot.docs.map(spDoc => {
+      const spData = spDoc.data();
+      const course = coursesMap[spData.courseId];
+      
+      // Si el curso no existe o no se cargó, no mostramos la landing
+      if (!course) return null;
 
-        const salesPage = salesPagesMap[courseDoc.id] || null;
+      // Filtrar visibilidad del curso: solo publicados o aprobados
+      const isPublished = course.status === 'published' || course.status === 'approved';
+      const isPublic = course.publicListing !== false;
+      
+      if (!isPublished || !isPublic) return null;
 
-        return {
-          id: courseDoc.id,
-          salesPageId: salesPage?.id || null,
-          slug: course.slug || course.title?.toLowerCase().replace(/\s+/g, '-'),
-          title: course.title || 'Sin título',
-          description: course.description || 'Sin descripción',
-          price: salesPage?.price !== undefined ? salesPage.price : (course.price || 0),
-          duration: course.duration || 0,
-          level: course.level || 'beginner',
-          students: course.studentsCount || 0,
-          rating: course.rating || 4.5,
-          thumbnail: course.thumbnail || `https://loremflickr.com/600/400/education,course?lock=${courseDoc.id}`,
-          tags,
-          createdAt: course.createdAt?.toDate?.() || new Date()
-        };
-      })
-    );
+      const tags = (course.tagIds || []).map((id: string) => tagsMap[id]).filter(Boolean);
+
+      return {
+        id: course.id || spData.courseId,
+        salesPageId: spDoc.id,
+        slug: spData.slug || course.slug || course.title?.toLowerCase().replace(/\s+/g, '-'),
+        title: spData.title || course.title || 'Sin título',
+        description: spData.description || course.description || 'Sin descripción',
+        price: spData.price !== undefined ? spData.price : (course.price || 0),
+        duration: course.duration || 0,
+        level: course.level || 'beginner',
+        students: course.studentsCount || 0,
+        rating: course.rating || 4.5,
+        thumbnail: spData.thumbnail || course.thumbnail || `https://loremflickr.com/600/400/education,course?lock=${spDoc.id}`,
+        tags,
+        createdAt: spData.createdAt?.toDate?.() || course.createdAt?.toDate?.() || new Date()
+      };
+    }).filter(Boolean).sort((a: any, b: any) => b.createdAt - a.createdAt);
 
     return NextResponse.json({
-      courses: enrichedCourses,
-      total: enrichedCourses.length
+      courses: enrichedLandings,
+      total: enrichedLandings.length
     });
 
-  } catch (error) {
-    console.error('Error fetching tutor courses:', error);
+  } catch (error: any) {
+    console.error('Error fetching tutor landings:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch tutor courses' },
+      { error: 'Failed to fetch tutor landings', details: error.message },
       { status: 500 }
     );
   }

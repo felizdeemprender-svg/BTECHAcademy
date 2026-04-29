@@ -106,11 +106,16 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     if (page?.mentorId) {
-      getDocs(query(collection(db, 'users'), where('uid', '==', page.mentorId), limit(1))).then(snap => {
-        if (!snap.empty) setMentorProfile(snap.docs[0].data());
-      }).catch(err => console.error('Error fetching mentor profile:', err));
+      fetch(`/api/tutors/by-id/${page.mentorId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && !data.error) {
+            setMentorProfile(data);
+          }
+        })
+        .catch(err => console.error('Error fetching mentor profile:', err));
     }
-  }, [db, page?.mentorId]);
+  }, [page?.mentorId]);
 
   const togglePlayback = () => {
     if (!iframeRef.current || !content?.videoUrl) return;

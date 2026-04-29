@@ -495,7 +495,7 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {filteredCourses.map((course) => (
-                    <div key={course.id} className={cn("transition-all", isDark && "[&>div]:bg-slate-900 [&>div]:border-slate-800 [&_h3]:text-slate-100 [&_p]:text-slate-400 [&_.text-primary]:!text-brand")}>
+                    <div key={course.salesPageId || course.id} className={cn("transition-all", isDark && "[&>div]:bg-slate-900 [&>div]:border-slate-800 [&_h3]:text-slate-100 [&_p]:text-slate-400 [&_.text-primary]:!text-brand")}>
                       <CourseCard course={course} showTutor={false} />
                     </div>
                   ))}

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseServer } from '@/firebase/server';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { getAdminFirestore } from '@/firebase/admin';
 import { 
   SubscriptionStatus, 
 } from '@/types/subscription';
@@ -10,17 +9,14 @@ export async function GET(
   { params }: { params: Promise<{ username: string }> }
 ) {
   try {
-    const { firestore } = getFirebaseServer();
+    const firestore = getAdminFirestore();
     const username = (await params).username;
     
-    // Buscar tutor por username usando Web SDK
-    const tutorsQuery = query(
-      collection(firestore, 'users'),
-      where('username', '==', username),
-      limit(1)
-    );
-
-    const tutorsSnapshot = await getDocs(tutorsQuery);
+    // Buscar tutor por username usando Admin SDK
+    const tutorsSnapshot = await firestore.collection('users')
+      .where('username', '==', username)
+      .limit(1)
+      .get();
 
     if (tutorsSnapshot.empty) {
       return NextResponse.json(
@@ -38,7 +34,7 @@ export async function GET(
 
     // Verificar si la suscripción está activa (admins omiten esto para su propio perfil)
     const isAdmin = tutor.roles?.includes('admin');
-    if (!isAdmin && tutor.subscription?.status !== SubscriptionStatus.ACTIVE) {
+    if (!isAdmin && tutor.subscription?.status !== SubscriptionStatus.ACTIVE && tutor.subscription?.status !== 'active') {
       return NextResponse.json(
         { 
           error: 'Tutor subscription is not active',
@@ -61,15 +57,14 @@ export async function GET(
       );
     }
 
-    // Contar cursos del tutor usando Web SDK
+    // Contar cursos del tutor usando Admin SDK
     let coursesCount = 0;
     try {
-      const coursesQuery = query(
-        collection(firestore, 'courses'),
-        where('mentorId', '==', tutorDoc.id),
-        where('isActive', '==', true)
-      );
-      const coursesSnapshot = await getDocs(coursesQuery);
+      const coursesSnapshot = await firestore.collection('courses')
+        .where('mentorId', '==', tutorDoc.id)
+        .where('isActive', '==', true)
+        .get();
+        
       coursesCount = coursesSnapshot.docs.filter(doc => {
         const c = doc.data();
         return (c.status === 'published' || c.status === 'approved') && c.publicListing !== false;

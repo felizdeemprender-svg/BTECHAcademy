@@ -439,7 +439,7 @@ export default function CoursesPage() {
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {courses.map((course) => (
                     <CourseCard 
-                      key={course.id} 
+                      key={course.salesPageId} 
                       course={course} 
                       onAction={async (id) => {
                         handleRequestInvitation(id);

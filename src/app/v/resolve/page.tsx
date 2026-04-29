@@ -30,49 +30,16 @@ function ResolverContent() {
       }
 
       try {
-        // Encontrar al mentor por username
-        const tutorsQuery = query(
-          collection(db, 'users'),
-          where('username', '==', username),
-          limit(1)
-        );
-        const tutorsSnapshot = await getDocs(tutorsQuery);
+        const response = await fetch(`/api/v/resolve?u=${username}&s=${slug}`);
+        const data = await response.json();
 
-        if (tutorsSnapshot.empty) {
-          setError('Tutor no encontrado');
+        if (!response.ok) {
+          setError(data.error === 'Tutor not found' ? 'Tutor no encontrado' : 'Página de ventas no encontrada');
           setLoading(false);
           return;
         }
 
-        const mentorId = tutorsSnapshot.docs[0].id;
-
-        // Encontrar la landing por mentorId y slug
-        const salesQuery = query(
-          collection(db, 'salesPages'),
-          where('mentorId', '==', mentorId),
-          where('slug', '==', slug),
-          limit(1)
-        );
-        const salesSnapshot = await getDocs(salesQuery);
-
-        if (salesSnapshot.empty) {
-          // Fallback
-          const fallbackQuery = query(
-            collection(db, 'salesPages'),
-            where('slug', '==', slug),
-            limit(1)
-          );
-          const fallbackSnapshot = await getDocs(fallbackQuery);
-          
-          if (fallbackSnapshot.empty) {
-            setError('Página de ventas no encontrada');
-            setLoading(false);
-            return;
-          }
-          setLandingId(fallbackSnapshot.docs[0].id);
-        } else {
-          setLandingId(salesSnapshot.docs[0].id);
-        }
+        setLandingId(data.id);
       } catch (err) {
         console.error('Resolution error:', err);
         setError('Error al resolver la página');

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseServer } from '@/firebase/server';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { getAdminFirestore } from '@/firebase/admin';
 import { SubscriptionStatus } from '@/types/subscription';
 
 export interface TutorBillingRow {
@@ -46,7 +45,7 @@ export interface BillingReport {
 
 export async function GET(request: NextRequest) {
   try {
-    const { firestore } = getFirebaseServer();
+    const firestore = getAdminFirestore();
     const { searchParams } = new URL(request.url);
     
     // Rango de fechas (default: mes actual)
@@ -57,13 +56,12 @@ export async function GET(request: NextRequest) {
     const toDate = new Date(toStr);
 
     // 1. Obtener TODOS los tutores (roles mentor)
-    const usersSnap = await getDocs(query(
-      collection(firestore, 'users'),
-      where('roles', 'array-contains', 'mentor')
-    ));
+    const usersSnap = await firestore.collection('users')
+      .where('roles', 'array-contains', 'mentor')
+      .get();
 
     // 2. Obtener TODAS las salesPages para mapear precios por curso
-    const salesPagesSnap = await getDocs(collection(firestore, 'salesPages'));
+    const salesPagesSnap = await firestore.collection('salesPages').get();
     const salesPagesByMentor: Record<string, { conversions: number; revenue: number }> = {};
     const priceByCourse: Record<string, number> = {};
     const mentorByCourse: Record<string, string> = {};
@@ -95,14 +93,19 @@ export async function GET(request: NextRequest) {
     }
 
     // 2.5. Sumar Cargas Directas (isDirect) a la facturación
-    const directEnrollSnap = await getDocs(query(
-      collection(firestore, 'enrollments'),
-      where('isDirect', '==', true)
-    ));
+    const directEnrollSnap = await firestore.collection('enrollments')
+      .where('isDirect', '==', true)
+      .get();
 
     for (const enrollDoc of directEnrollSnap.docs) {
       const data = enrollDoc.data();
-      const enrolledAt = data.enrolledAt?.toDate();
+      let enrolledAt: Date | null = null;
+      
+      if (data.enrolledAt?.toDate) {
+        enrolledAt = data.enrolledAt.toDate();
+      } else if (data.enrolledAt) {
+        enrolledAt = new Date(data.enrolledAt);
+      }
       
       // Filtrar por periodo
       if (enrolledAt && (enrolledAt < fromDate || enrolledAt > toDate)) continue;
@@ -121,10 +124,10 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Obtener conteo de cursos activos por mentor
-    const coursesSnap = await getDocs(query(
-      collection(firestore, 'courses'),
-      where('isActive', '==', true)
-    ));
+    const coursesSnap = await firestore.collection('courses')
+      .where('isActive', '==', true)
+      .get();
+
     const coursesByMentor: Record<string, number> = {};
     for (const c of coursesSnap.docs) {
       const mentorId = c.data().mentorId as string;
