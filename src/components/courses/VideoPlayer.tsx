@@ -2,8 +2,15 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { Play, ShieldCheck, Loader2, Maximize, Minimize } from 'lucide-react';
+import { Play, ShieldCheck, Loader2, Maximize, Minimize, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+declare global {
+  interface Window {
+    onYouTubeIframeAPIReady: () => void;
+    YT: any;
+  }
+}
 
 interface VideoPlayerProps {
   url: string;
@@ -16,7 +23,10 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
   const [isLoading, setIsLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [showEndScreen, setShowEndScreen] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const getSecureUrl = (rawUrl: string) => {
     if (!rawUrl) return '';
@@ -70,6 +80,80 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
 
     setIsPlaying(!isPlaying);
   };
+
+  const handleReplay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (playerRef.current && playerRef.current.seekTo) {
+      playerRef.current.seekTo(0);
+      playerRef.current.playVideo();
+      setShowEndScreen(false);
+      setIsPlaying(true);
+    } else {
+      // Fallback si la API no está lista
+      window.location.reload();
+    }
+  };
+
+  // Inicializar YouTube API
+  useEffect(() => {
+    const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+    if (!isYouTube) return;
+
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    }
+
+    const initPlayer = () => {
+      if (window.YT && window.YT.Player && iframeRef.current && !playerRef.current) {
+        playerRef.current = new window.YT.Player(iframeRef.current, {
+          events: {
+            'onStateChange': (event: any) => {
+              // 1 = PLAYING, 2 = PAUSED, 0 = ENDED
+              if (event.data === 1) {
+                setIsPlaying(true);
+                setShowEndScreen(false);
+                setHasStarted(true);
+              } else if (event.data === 2) {
+                setIsPlaying(false);
+              } else if (event.data === 0) {
+                setShowEndScreen(true);
+                setIsPlaying(false);
+              }
+            }
+          }
+        });
+      }
+    };
+
+    if (window.YT && window.YT.Player) {
+      initPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = initPlayer;
+    }
+  }, [isLoading, url]);
+
+  // Monitor de tiempo para los 3 segundos finales
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPlaying && playerRef.current && playerRef.current.getCurrentTime) {
+      interval = setInterval(() => {
+        try {
+          const currentTime = playerRef.current.getCurrentTime();
+          const duration = playerRef.current.getDuration();
+          if (duration > 0 && (duration - currentTime) <= 3) {
+            setShowEndScreen(true);
+            clearInterval(interval);
+          }
+        } catch (e) {
+          console.error("Error tracking time:", e);
+        }
+      }, 500);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   useEffect(() => {
       const handleFsChange = () => setIsFullScreen(!!document.fullscreenElement);
@@ -140,6 +224,32 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
                 <ShieldCheck className="h-3 w-3 text-emerald-400" />
                 <span className="text-[8px] font-black uppercase text-white tracking-widest">Contenido Protegido • {title || 'BTECH'}</span>
             </div>
+        </div>
+      )}
+
+      {/* End Screen Overlay */}
+      {showEndScreen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-500">
+          <div className="text-center p-8 max-w-md">
+            <div className="mb-6 flex justify-center">
+              <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                <Play className="h-8 w-8 text-white fill-white ml-1 opacity-50" />
+              </div>
+            </div>
+            <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">
+              ¡Gracias por ver!
+            </h3>
+            <p className="text-slate-300 text-sm md:text-base mb-8">
+              Esperamos que este contenido sea de gran utilidad para ti.
+            </p>
+            <button
+              onClick={handleReplay}
+              className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-950 font-bold rounded-2xl hover:scale-105 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+            >
+              <RotateCcw className="h-5 w-5 group-hover:rotate-[-45deg] transition-transform" />
+              Ver de nuevo
+            </button>
+          </div>
         </div>
       )}
     </div>
