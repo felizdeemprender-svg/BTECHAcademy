@@ -54,8 +54,8 @@ import { useStudentFollowUps } from '@/hooks/student/useStudentFollowUps';
 export default function DashboardPage() {
   return (
     <Suspense fallback={
-      <div className=\"flex h-screen items-center justify-center bg-[#f8fafc]\">
-        <Loader2 className=\"h-10 w-10 animate-spin text-accent/20\" />
+      <div className="flex h-screen items-center justify-center bg-[#f8fafc]">
+        <Loader2 className="h-10 w-10 animate-spin text-accent/20" />
       </div>
     }>
       <DashboardInner />
