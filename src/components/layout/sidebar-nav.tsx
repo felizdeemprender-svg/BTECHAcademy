@@ -22,7 +22,8 @@ import {
   Layout as LayoutIcon,
   ChevronDown,
   ChevronRight,
-  ReceiptText
+  ReceiptText,
+  Wallet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-context';
@@ -108,9 +109,11 @@ export function SidebarNav() {
       ]
     },
     {
-      label: 'Preferencias',
+      label: 'Gestión de Cuenta',
       items: [
         { name: 'Mi Perfil', href: '/settings', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Settings },
+        { name: 'Métodos de Cobro', href: '/dashboard/payment-methods', roles: ['mentor', 'admin'], icon: Wallet },
+        { name: 'Mi Plan', href: '/dashboard/plan', roles: ['mentor', 'admin'], icon: CreditCard },
       ]
     }
   ];

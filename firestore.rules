@@ -103,6 +103,10 @@ service cloud.firestore {
         allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       }
 
+      match /paymentMethods/{methodId} {
+        allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      }
+
       match /studentNotes/{noteId} {
         allow read, list: if isSignedIn() && (request.auth.uid == userId || isAdmin() || isMentor());
         allow create: if isSignedIn() && (isMentor() || isAdmin());

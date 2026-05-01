@@ -104,7 +104,11 @@ export async function processSuccessfulSubscription(
       nextBillingDate: nextBillingDate, // Nueva fecha extendida
       durationMonths: plan?.durationMonths || 12,
       remainingMonthsFromPrevious: remainingMonths,
-      totalValidityMonths: newDurationMonths
+      totalValidityMonths: newDurationMonths,
+      // Inyectar límites y capacidades para que la UI los detecte
+      limits: plan?.limits || {},
+      invitationsPerCourse: plan?.invitationsPerCourse || 0,
+      hasPremiumAI: plan?.hasPremiumAI || false
     };
 
     // 5. Actualizar Perfil

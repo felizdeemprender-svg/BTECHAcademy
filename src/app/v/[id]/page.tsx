@@ -144,6 +144,12 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(studentEmail.trim())) {
+      toast({ variant: 'destructive', title: 'Email inválido', description: 'Por favor ingresa un correo electrónico válido (ej: nombre@correo.com).' });
+      return;
+    }
+
     setLoading(true);
 
     // Attribution Tracking

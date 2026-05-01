@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from 'react';
-import { collection, query, where, doc, getDoc, getDocs, or } from 'firebase/firestore';
+import { useState, useEffect, useMemo } from 'react';
+import { collection, query, where, doc, getDoc, getDocs } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useAuth } from '@/components/auth-context';
 import { EnrolledCourseWithData, StudentEnrollment } from '@/types/student';
@@ -11,25 +11,28 @@ export function useStudentEnrollments() {
   const [coursesWithData, setCoursesWithData] = useState<EnrolledCourseWithData[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  const enrollmentsQuery = useMemoFirebase(() => {
+  const idQuery = useMemoFirebase(() => {
     if (!profile?.uid || isAuthLoading) return null;
-    const ref = collection(db, 'enrollments');
-    const userEmail = profile.email?.toLowerCase().trim();
+    return query(collection(db, 'enrollments'), where('studentId', '==', profile.uid));
+  }, [db, profile?.uid, isAuthLoading]);
 
-    if (userEmail) {
-      return query(
-        ref, 
-        or(
-          where('studentId', '==', profile.uid),
-          where('inviteEmail', '==', userEmail)
-        )
-      );
-    } else {
-      return query(ref, where('studentId', '==', profile.uid));
-    }
-  }, [db, profile?.uid, profile?.email, isAuthLoading]);
+  const emailQuery = useMemoFirebase(() => {
+    if (!profile?.email || isAuthLoading) return null;
+    return query(collection(db, 'enrollments'), where('inviteEmail', '==', profile.email.toLowerCase().trim()));
+  }, [db, profile?.email, isAuthLoading]);
 
-  const { data: enrollments, isLoading: loadingEnrollments, error } = useCollection(enrollmentsQuery);
+  const { data: enrollmentsById, isLoading: loadingId, error: errorId } = useCollection(idQuery);
+  const { data: enrollmentsByEmail, isLoading: loadingEmail, error: errorEmail } = useCollection(emailQuery);
+
+  const enrollments = useMemo(() => {
+    const combined = [...(enrollmentsById || []), ...(enrollmentsByEmail || [])];
+    // Eliminar duplicados por ID de documento
+    const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+    return unique;
+  }, [enrollmentsById, enrollmentsByEmail]);
+
+  const loadingEnrollments = loadingId || loadingEmail;
+  const error = errorId || errorEmail;
 
   if (error) {
     console.warn("⚠️ useStudentEnrollments: Error de permisos o consulta capturado.", error);
@@ -46,29 +49,54 @@ export function useStudentEnrollments() {
       try {
         const joinedData = await Promise.all(
           enrollments.map(async (enroll: any) => {
-            const courseRef = doc(db, 'courses', enroll.courseId);
-            const courseSnap = await getDoc(courseRef);
-            
-            if (!courseSnap.exists()) return null;
-            
-            const courseData = courseSnap.data();
-            
-            let modulesCount = courseData.modulesCount;
-            if (!modulesCount) {
-              const modulesSnap = await getDocs(collection(db, 'courses', enroll.courseId, 'modules'));
-              modulesCount = modulesSnap.size;
+            if (!enroll || typeof enroll !== 'object' || !enroll.courseId) {
+              console.warn("⚠️ useStudentEnrollments: Inscripción inválida:", enroll);
+              return null;
             }
 
-            return {
-              ...enroll,
-              courseData: { ...courseData, id: courseSnap.id, modulesCount }
-            } as EnrolledCourseWithData;
+            try {
+              const courseRef = doc(db, 'courses', enroll.courseId);
+              const courseSnap = await getDoc(courseRef);
+              
+              if (!courseSnap.exists()) {
+                console.warn(`⚠️ useStudentEnrollments: Curso ${enroll.courseId} no existe.`);
+                return null;
+              }
+              
+              const courseData = courseSnap.data() || {};
+              
+              let modulesCount = courseData.modulesCount || 0;
+              
+              // Solo buscar módulos si no tenemos el contador y el ID es válido
+              if (!modulesCount && enroll.courseId) {
+                try {
+                  const modulesSnap = await getDocs(collection(db, 'courses', enroll.courseId, 'modules'));
+                  modulesCount = modulesSnap.size;
+                } catch (mErr) {
+                  console.warn(`⚠️ No se pudieron cargar módulos para ${enroll.courseId}:`, mErr);
+                  modulesCount = 0; 
+                }
+              }
+
+              return {
+                ...enroll,
+                courseData: { 
+                  ...courseData, 
+                  id: courseSnap.id, 
+                  modulesCount 
+                }
+              } as EnrolledCourseWithData;
+            } catch (err) {
+              console.error(`❌ Error procesando inscripción ${enroll.id}:`, err);
+              return null;
+            }
           })
         );
         
-        setCoursesWithData(joinedData.filter((d): d is EnrolledCourseWithData => d !== null));
+        const filtered = joinedData.filter((d): d is EnrolledCourseWithData => d !== null);
+        setCoursesWithData(filtered);
       } catch (error) {
-        console.error("Error al cargar detalles de cursos:", error);
+        console.error("❌ Error crítico en fetchCourseDetails:", error);
       } finally {
         setLoadingDetails(false);
       }

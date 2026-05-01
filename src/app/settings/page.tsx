@@ -92,9 +92,8 @@ export default function SettingsPage() {
     primaryColor: '#3B2D86',
     logoUrl: '',
     layoutMode: 'light',
-    mpAccessToken: '',
-    mpPublicKey: '',
     username: '',
+    publicProfileEnabled: true,
     websiteConfig: {
       headline: '',
       subheadline: '',
@@ -136,9 +135,8 @@ export default function SettingsPage() {
         primaryColor: profile.profile?.branding?.primaryColor || '#3B2D86',
         logoUrl: profile.profile?.branding?.logoUrl || '',
         layoutMode: profile.profile?.branding?.layoutMode || 'light',
-        mpAccessToken: profile.profile?.mercadopago?.accessToken || '',
-        mpPublicKey: profile.profile?.mercadopago?.publicKey || '',
         username: profile.username || '',
+        publicProfileEnabled: profile.profile?.publicProfile?.enabled !== false,
         websiteConfig: {
           headline: config?.headline || '',
           subheadline: config?.subheadline || '',
@@ -293,9 +291,8 @@ export default function SettingsPage() {
           logoUrl: formData.logoUrl,
           layoutMode: formData.layoutMode,
         },
-        mercadopago: {
-          accessToken: formData.mpAccessToken,
-          publicKey: formData.mpPublicKey,
+        publicProfile: {
+          enabled: formData.publicProfileEnabled
         },
         websiteConfig: formData.websiteConfig
       },
@@ -398,7 +395,6 @@ export default function SettingsPage() {
   };
 
   const tutorProfileUrl = getSubdomainUrl();
-  const isPublic = (profile?.profile as any)?.publicProfile?.enabled ?? true;
 
   return (
     <DashboardLayout>
@@ -456,11 +452,7 @@ export default function SettingsPage() {
               <TabsTrigger value="web" className="rounded-xl gap-2 font-bold px-6 h-11 text-amber-600 bg-amber-50/50 border-amber-100"><Sparkles className="h-4 w-4" /> Web Personal</TabsTrigger>
               <TabsTrigger value="contacto" className="rounded-xl gap-2 font-bold px-6 h-11"><Globe className="h-4 w-4" /> Contacto</TabsTrigger>
               {isMentorOrAdmin && (
-                <>
-                  <TabsTrigger value="marca" className="rounded-xl gap-2 font-bold px-6 h-11"><Palette className="h-4 w-4" /> Marca</TabsTrigger>
-                  <TabsTrigger value="abono" className="rounded-xl gap-2 font-bold px-6 h-11"><CreditCard className="h-4 w-4" /> Abono</TabsTrigger>
-                  <TabsTrigger value="mercadopago" className="rounded-xl gap-2 font-bold px-6 h-11"><Wallet className="h-4 w-4" /> MercadoPago</TabsTrigger>
-                </>
+                <TabsTrigger value="marca" className="rounded-xl gap-2 font-bold px-6 h-11"><Palette className="h-4 w-4" /> Marca</TabsTrigger>
               )}
             </TabsList>
 
@@ -487,6 +479,22 @@ export default function SettingsPage() {
                       className="min-h-[200px] rounded-[2rem] bg-secondary/10 border-none p-8 text-base leading-relaxed" 
                     />
                   </div>
+                  <div className="flex items-center justify-between p-6 bg-secondary/5 rounded-3xl border border-primary/5 shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner">
+                        <ShieldCheck className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-800">Visibilidad del Perfil</p>
+                        <p className="text-xs text-slate-400 font-medium">Habilita o deshabilita tu página pública</p>
+                      </div>
+                    </div>
+                    <Switch 
+                      checked={formData.publicProfileEnabled}
+                      onCheckedChange={(checked: boolean) => setFormData({...formData, publicProfileEnabled: checked})}
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="settings-username" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nombre de usuario (URL Pública)</Label>
                     <div className="relative">
@@ -502,6 +510,49 @@ export default function SettingsPage() {
                         /tutor/{formData.username || '...'}
                       </div>
                     </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-primary/5">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-3">Tu Puerta al Mundo</p>
+                    {formData.username ? (
+                      <div className="p-6 bg-white rounded-3xl border border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
+                            <Globe className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <p className="font-black text-slate-800 text-lg">Página Pública</p>
+                            <p className="text-xs text-slate-400 font-medium">Link para compartir con tus alumnos</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                          <Input 
+                            readOnly 
+                            value={tutorProfileUrl || ''} 
+                            className="h-12 rounded-xl bg-slate-50 border-slate-100 font-mono text-[10px] min-w-[200px]"
+                          />
+                          <Button 
+                            onClick={() => {
+                              if (tutorProfileUrl) {
+                                navigator.clipboard.writeText(tutorProfileUrl);
+                                toast({ title: 'Copiado', description: 'Enlace copiado al portapapeles' });
+                              }
+                            }}
+                            className="rounded-xl h-12 font-bold bg-primary text-white px-6 shadow-lg shadow-primary/20"
+                          >
+                            Copiar
+                          </Button>
+                          <a href={tutorProfileUrl || '#'} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="rounded-xl h-12 font-bold px-6 border-2">Visitar</Button>
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-8 bg-amber-50 rounded-3xl border border-amber-100 flex items-center gap-4 text-amber-800">
+                        <Info className="h-5 w-5" />
+                        <p className="text-sm font-medium">Define un <strong>Nombre de Usuario</strong> arriba para habilitar tu página pública.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </TabsContent>
@@ -855,226 +906,6 @@ export default function SettingsPage() {
                             <div className="w-1/2 h-3 bg-slate-700 rounded mt-auto" />
                           </div>
                           <p className="font-bold text-center text-slate-800">Modo Oscuro</p>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="abono" className="m-0 space-y-10">
-                    <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10">
-                      {sub ? (
-                        <div className="space-y-8">
-                          <div className="grid sm:grid-cols-3 gap-8">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col gap-1">
-                              <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2"><Zap className="h-3 w-3 text-primary" /> Plan Asignado</span>
-                              <p className="text-2xl font-bold text-primary">{sub.name || sub.planName || 'Plan Personalizado'}</p>
-                            </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col gap-1">
-                              <span className="text-[10px] font-bold uppercase text-primary tracking-widest flex items-center gap-2"><Layers className="h-3 w-3 text-primary" /> Cursos Activos</span>
-                              <p className="text-2xl font-bold text-primary">{sub.limits?.maxCourses === -1 ? 'Ilimitados' : `${sub.limits?.maxCourses ?? sub.maxSimultaneousCourses ?? 0} Máx.`}</p>
-                            </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col gap-1">
-                              <span className="text-[10px] font-bold uppercase text-primary tracking-widest flex items-center gap-2"><Users className="h-3 w-3 text-primary" /> Estudiantes</span>
-                              <p className="text-2xl font-bold text-primary">{sub.limits?.maxStudents === -1 ? 'Ilimitados' : sub.limits?.maxStudents ?? 0}</p>
-                            </div>
-                          </div>
-
-                          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex flex-col">
-                              <span className="text-[8px] font-black uppercase text-amber-600 tracking-tighter flex items-center gap-1"><Sparkles className="h-3 w-3" /> IA PREMIUM</span>
-                              <p className="text-lg font-black text-amber-700">{sub.hasPremiumAI ? 'HABILITADA' : 'NO'}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col">
-                              <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">Invitaciones/Curso</span>
-                              <p className="text-lg font-black text-slate-800">{sub.invitationsPerCourse || 0}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col">
-                              <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">Branding Propio</span>
-                              <p className="text-lg font-black text-slate-800">{sub.limits?.hasCustomBranding ? 'SÍ' : 'NO'}</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col">
-                              <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">Analíticas Avanzadas</span>
-                              <p className="text-lg font-black text-slate-800">{sub.limits?.hasAnalytics ? 'SÍ' : 'NO'}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between p-6 bg-white rounded-3xl border border-primary/10 shadow-sm">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner">
-                                <ShieldCheck className="h-6 w-6" />
-                              </div>
-                              <div>
-                                <p className="font-black text-slate-800">Visibilidad del Perfil</p>
-                                <p className="text-xs text-slate-400 font-medium">Habilita o deshabilita tu página pública</p>
-                              </div>
-                            </div>
-                            <Switch 
-                              checked={(profile?.profile as any)?.publicProfile?.enabled !== false}
-                              onCheckedChange={(checked: boolean) => {
-                                const userRef = doc(db, 'users', user!.uid);
-                                updateDoc(userRef, {
-                                  'profile.publicProfile.enabled': checked
-                                }).then(() => toast({ title: checked ? 'Perfil Público' : 'Perfil Privado' }));
-                              }}
-                            />
-                          </div>
-
-                          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-                            <div className="space-y-1.5">
-                              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Inicio del Abono</Label>
-                              <div className="h-14 rounded-xl bg-white border px-6 flex items-center font-bold text-sm text-foreground/70">
-                                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" /> {startD ? format(startD, 'dd / MM / yyyy') : 'No registrada'}
-                              </div>
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Fin del Abono</Label>
-                              <div className="h-14 rounded-xl bg-white border px-6 flex items-center font-bold text-sm text-foreground/70">
-                                <Clock className="h-4 w-4 mr-2 text-muted-foreground" /> {endD ? format(endD, 'dd / MM / yyyy') : 'No registrada'}
-                              </div>
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Vigencia Restante</Label>
-                              <div className={cn("h-14 rounded-xl px-6 flex items-center font-bold text-sm border", daysLeft > 0 ? "bg-primary/5 text-primary border-primary/10" : "bg-destructive/10 text-destructive border-destructive/10")}>
-                                <Sparkles className="h-4 w-4 mr-2" /> {daysLeft > 0 ? `${daysLeft} Días de Acceso` : 'Abono Expirado'}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="pt-6 border-t border-primary/10">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Tu Página Personal de Tutor</Label>
-                            {tutorProfileUrl ? (
-                              <div className="mt-2 p-6 bg-white rounded-3xl border border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-2xl bg-accent/10 text-accent flex items-center justify-center shadow-inner">
-                                    <Globe className="h-6 w-6" />
-                                  </div>
-                                  <div>
-                                    <p className="font-black text-slate-800 text-lg">Página Pública</p>
-                                    <p className="text-xs text-slate-400 font-medium">Link para compartir con tus alumnos</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-3 w-full sm:w-auto">
-                                  <Input 
-                                    readOnly 
-                                    value={tutorProfileUrl || ''} 
-                                    className="h-12 rounded-xl bg-slate-50 border-slate-100 font-mono text-[10px] min-w-[200px]"
-                                  />
-                                  <Button 
-                                    onClick={() => {
-                                      if (tutorProfileUrl) {
-                                        navigator.clipboard.writeText(tutorProfileUrl);
-                                        toast({ title: 'Copiado', description: 'Enlace copiado al portapapeles' });
-                                      }
-                                    }}
-                                    className="rounded-xl h-12 font-bold bg-accent text-accent-foreground px-6"
-                                  >
-                                    Copiar
-                                  </Button>
-                                  <Link href={tutorProfileUrl || '#'} target="_blank">
-                                    <Button variant="outline" className="rounded-xl h-12 font-bold px-6 border-2">Visitar</Button>
-                                  </Link>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="mt-2 p-8 bg-amber-50 rounded-3xl border border-amber-100 flex items-center gap-4 text-amber-800">
-                                <Info className="h-5 w-5" />
-                                <p className="text-sm font-medium">Define un <strong>Nombre de Usuario</strong> en la pestaña Perfil para habilitar tu página pública.</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <CreditCard className="h-16 w-16 text-muted-foreground opacity-20 mx-auto mb-4" />
-                          <p className="font-bold text-xl text-muted-foreground">Sin Abono Institucional Activo</p>
-                          <p className="text-sm text-muted-foreground/60 max-w-xs mx-auto mt-2">Contacta al administrador para habilitar tus capacidades académicas.</p>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="mercadopago" className="m-0 space-y-8">
-                    <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 space-y-8">
-                      <div className="flex items-center gap-4 border-b border-primary/10 pb-6">
-                        <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg">
-                          <Wallet className="h-7 w-7" />
-                        </div>
-                        <div>
-                          <h3 className="text-2xl font-bold text-primary">Configuración de MercadoPago</h3>
-                          <p className="text-sm text-muted-foreground">Vincula tu cuenta para recibir pagos de tus programas académicos.</p>
-                        </div>
-                      </div>
-
-                      <div className="grid gap-8">
-                        <div className="space-y-3">
-                          <Label htmlFor="mp-access-token" className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">
-                            <KeyRound className="h-3 w-3" /> Access Token (Producción)
-                          </Label>
-                          <Input 
-                            id="mp-access-token"
-                            type="password" 
-                            value={formData.mpAccessToken || ''}
-                            onChange={e => setFormData({...formData, mpAccessToken: e.target.value})}
-                            placeholder="APP_USR-..." 
-                            className="h-14 rounded-2xl bg-white border-none font-mono text-sm px-6 shadow-inner" 
-                          />
-                          <p className="text-[10px] text-muted-foreground italic px-1">Este token es privado y se utiliza para crear preferencias de pago de forma segura.</p>
-                        </div>
-
-                        <div className="space-y-3">
-                          <Label htmlFor="mp-public-key" className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">
-                            <ShieldCheck className="h-3 w-3" /> Public Key
-                          </Label>
-                          <Input 
-                            id="mp-public-key"
-                            value={formData.mpPublicKey || ''}
-                            onChange={e => setFormData({...formData, mpPublicKey: e.target.value})}
-                            placeholder="APP_USR-..." 
-                            className="h-14 rounded-2xl bg-white border-none font-mono text-sm px-6 shadow-inner" 
-                          />
-                          <p className="text-[10px] text-muted-foreground italic px-1">La clave pública permite inicializar el SDK de MercadoPago en el frontend de tus páginas de venta.</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-6">
-                        <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
-                          <h4 className="flex items-center gap-2 text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider">
-                            <Info className="h-4 w-4" /> ¿Cómo Funciona la Integración?
-                          </h4>
-                          <div className="grid sm:grid-cols-2 gap-6">
-                            <div className="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm space-y-2">
-                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold mb-3">1</div>
-                              <p className="text-sm font-bold text-slate-800">Cobro 100% Directo</p>
-                              <p className="text-xs text-slate-500 leading-relaxed">Al conectar tus credenciales, el alumno paga y el dinero va <strong>directo a tu cuenta de MercadoPago</strong>. BTECHAcademy no retiene comisiones ni intermedia en la transacción.</p>
-                            </div>
-                            <div className="bg-white p-5 rounded-2xl border border-blue-100 shadow-sm space-y-2">
-                              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold mb-3">2</div>
-                              <p className="text-sm font-bold text-slate-800">Solo el valor del curso</p>
-                              <p className="text-xs text-slate-500 leading-relaxed">El sistema generará el link de pago automáticamente por el <strong>valor exacto</strong> que le configures a tu curso en el panel de ventas. Nada más, nada menos.</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
-                          <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">Instrucciones para obtener tus Credenciales</h4>
-                          <ol className="relative border-l-2 border-slate-200 ml-3 space-y-6 text-sm text-slate-600">
-                            <li className="pl-6 relative">
-                              <span className="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700 border-4 border-slate-50">A</span>
-                              <p>Inicia sesión en tu cuenta de <a href="https://www.mercadopago.com.ar/developers/panel/credentials" target="_blank" className="font-bold text-primary hover:underline">Mercado Pago Developers</a>.</p>
-                            </li>
-                            <li className="pl-6 relative">
-                              <span className="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700 border-4 border-slate-50">B</span>
-                              <p>Crea una nueva <strong>Aplicación</strong> y selecciónala.</p>
-                            </li>
-                            <li className="pl-6 relative">
-                              <span className="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700 border-4 border-slate-50">C</span>
-                              <p>En el menú lateral, ve a la sección <strong>Credenciales de Producción</strong>.</p>
-                            </li>
-                            <li className="pl-6 relative">
-                              <span className="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700 border-4 border-slate-50">D</span>
-                              <p>Copia el <strong>Access Token</strong> y la <strong>Public Key</strong> y pégalos en los campos de arriba.</p>
-                            </li>
-                          </ol>
                         </div>
                       </div>
                     </div>

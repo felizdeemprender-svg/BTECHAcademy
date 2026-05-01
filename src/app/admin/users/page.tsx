@@ -171,10 +171,12 @@ export default function AdminUsersPage() {
     const durationMonths = plan.durationMonths || 12;
     const endDate = new Date(Date.now() + durationMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const subscription: TutorSubscription = {
+    const subscription = {
       status: SubscriptionStatus.ACTIVE,
       type: plan.type,
-      name: plan.name,
+      planId: plan.id, // CRITICAL: Para identificar el plan en upgrades
+      planName: plan.name, // Sincronizado con el sistema de facturación
+      name: plan.name, // Mantener por compatibilidad con el Select local
       isEnterprise: plan.isEnterprise || false,
       hasPremiumAI: plan.hasPremiumAI === true,
       startDate,
@@ -185,6 +187,11 @@ export default function AdminUsersPage() {
       requiresFreeCourses: plan.requiresFreeCourses || false,
       freeCoursesCount: plan.freeCoursesCount || 0,
       invitationsPerCourse: plan.invitationsPerCourse || 0,
+      aiQuotas: {
+        totalCredits: plan.aiQuotas?.totalCredits || 0,
+        usedCredits: 0 // Reset de uso al asignar nuevo plan manual si es necesario, o mantener previo
+      },
+      rechargeOptions: plan.rechargeOptions || [],
       observations: `Plan ${plan.name} asignado manualmente por admin`,
       autoRenew: true,
       limits: {
@@ -204,10 +211,7 @@ export default function AdminUsersPage() {
 
     setPendingUser({
       ...pendingUser,
-      subscription: {
-        ...subscription,
-        name: plan.name // Guardamos el nombre para el Select
-      }
+      subscription
     });
   };
 
@@ -737,7 +741,7 @@ export default function AdminUsersPage() {
                             <p className="text-[7px] text-slate-400 font-bold uppercase mt-1">Cursos Activos</p>
                           </div>
                           
-                          <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                            <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                             <Label htmlFor="limit-students" className="text-[9px] font-black uppercase text-slate-400">Máx. Estudiantes</Label>
                             <Input 
                               id="limit-students"
@@ -757,6 +761,31 @@ export default function AdminUsersPage() {
                               className="h-9 font-black text-primary border-none bg-slate-50/50 focus-visible:ring-1"
                             />
                             <p className="text-[7px] text-slate-400 font-bold uppercase mt-1">Límite de alumnos</p>
+                          </div>
+
+                          <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                            <Label htmlFor="limit-credits" className="text-[9px] font-black uppercase text-slate-400">Créditos IA</Label>
+                            <Input 
+                              id="limit-credits"
+                              name="limit-credits"
+                              type="number" 
+                              value={pendingUser.subscription.aiQuotas?.totalCredits ?? 0}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                setPendingUser({
+                                  ...pendingUser,
+                                  subscription: {
+                                    ...pendingUser.subscription,
+                                    aiQuotas: { 
+                                      ...pendingUser.subscription.aiQuotas, 
+                                      totalCredits: isNaN(val) ? 0 : val 
+                                    }
+                                  }
+                                });
+                              }}
+                              className="h-9 font-black text-primary border-none bg-slate-50/50 focus-visible:ring-1"
+                            />
+                            <p className="text-[7px] text-slate-400 font-bold uppercase mt-1">Saldo del abono</p>
                           </div>
 
                           <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">

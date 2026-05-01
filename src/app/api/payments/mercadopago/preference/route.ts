@@ -35,12 +35,28 @@ export async function POST(req: NextRequest) {
     }
 
     const mentorData = mentorSnap.data() || {};
-    const mpAccessToken = mentorData.profile?.mercadopago?.accessToken;
+    
+    // 2.1 Intentar obtener de la nueva arquitectura (Colección paymentMethods)
+    const methodsSnap = await db.collection('users').doc(mentorId).collection('paymentMethods')
+      .where('type', '==', 'mercadopago')
+      .where('isActive', '==', true)
+      .limit(1)
+      .get();
+
+    let mpAccessToken = null;
+    if (!methodsSnap.empty) {
+      mpAccessToken = methodsSnap.docs[0].data().config?.accessToken;
+    }
+
+    // 2.2 Fallback: arquitectura antigua (Legacy)
+    if (!mpAccessToken) {
+      mpAccessToken = mentorData.profile?.mercadopago?.accessToken;
+    }
 
     if (!mpAccessToken) {
       return NextResponse.json({ 
         error: 'El mentor no ha configurado MercadoPago',
-        message: 'El tutor no ha cargado sus credenciales de cobro en su perfil.'
+        message: 'El tutor no ha cargado sus credenciales de cobro en su central de pagos.'
       }, { status: 412 });
     }
 

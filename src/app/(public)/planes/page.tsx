@@ -95,7 +95,8 @@ export default function PricingPage() {
   // UPGRADE LOGIC: Get current active plan
   const currentPlan = useMemo(() => {
     if (!profile?.subscription || profile.subscription.status !== 'active') return null;
-    return plans.find(p => p.id === profile.subscription.planId);
+    return plans.find(p => p.id === profile.subscription.planId) || 
+           plans.find(p => p.name === (profile.subscription.planName || profile.subscription.name));
   }, [profile, plans]);
 
   const upgradeInfo = useMemo(() => {
