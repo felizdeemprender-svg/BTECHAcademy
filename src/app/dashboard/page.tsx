@@ -35,7 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -52,6 +52,18 @@ import { useStudentTasks } from '@/hooks/student/useStudentTasks';
 import { useStudentFollowUps } from '@/hooks/student/useStudentFollowUps';
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className=\"flex h-screen items-center justify-center bg-[#f8fafc]\">
+        <Loader2 className=\"h-10 w-10 animate-spin text-accent/20\" />
+      </div>
+    }>
+      <DashboardInner />
+    </Suspense>
+  );
+}
+
+function DashboardInner() {
   const { profile, isLoading: isAuthLoading, refreshProfile } = useAuth();
   const db = useFirestore();
   const searchParams = useSearchParams();
