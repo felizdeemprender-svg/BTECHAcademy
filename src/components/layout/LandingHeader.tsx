@@ -41,6 +41,15 @@ export function LandingHeader() {
           Catálogo
         </Link>
         <Link 
+          href="/planes" 
+          className={cn(
+            "text-sm font-bold transition-colors",
+            pathname === '/planes' ? "text-primary" : "text-slate-500 hover:text-primary"
+          )}
+        >
+          Planes
+        </Link>
+        <Link 
           href="/about" 
           className={cn(
             "text-sm font-bold transition-colors",

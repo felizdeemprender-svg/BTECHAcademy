@@ -36,12 +36,16 @@ import {
   Layout as LayoutIcon,
   Palette,
   Search,
-  MoreHorizontal
+  MoreHorizontal,
+  Sparkles,
+  BookOpen,
+  Zap
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { 
@@ -87,6 +91,13 @@ interface SubscriptionPlan {
   requiresFreeCourses?: boolean;
   freeCoursesCount?: number;
   invitationsPerCourse?: number;
+  aiQuotas?: {
+    totalCredits: number;
+  };
+  rechargeOptions?: {
+    price: number;
+    credits: number;
+  }[];
   createdAt: any;
   updatedAt: any;
 }
@@ -262,7 +273,11 @@ export default function AdminSubscriptionsPage() {
       hasPrioritySupport: false
     },
     invitationsPerCourse: 5,
-    isEnterprise: false
+    isEnterprise: false,
+    aiQuotas: {
+      totalCredits: 1000
+    },
+    rechargeOptions: Array(5).fill({ price: 0, credits: 0 })
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -304,6 +319,14 @@ export default function AdminSubscriptionsPage() {
         hasPremiumAI: formData.hasPremiumAI === true,
         // Asegurar que invitationsPerCourse se guarde
         invitationsPerCourse: formData.invitationsPerCourse || 5,
+        // Persistir Freno de Mano
+        aiQuotas: {
+          totalCredits: Number(formData.aiQuotas?.totalCredits || 0)
+        },
+        rechargeOptions: (formData.rechargeOptions || Array(5).fill({ price: 0, credits: 0 })).map(opt => ({
+          price: Number(opt.price || 0),
+          credits: Number(opt.credits || 0)
+        })),
         updatedAt: serverTimestamp(),
       };
 
@@ -507,148 +530,265 @@ export default function AdminSubscriptionsPage() {
               <DialogDescription className="text-indigo-100 font-medium text-base">Especifica permisos, topes y regalías del nivel de suscripción.</DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto p-8">
-              <form id="plan-form" onSubmit={handleSubmit} className="space-y-8 max-w-3xl mx-auto pb-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="planName" className="text-xs font-bold uppercase tracking-widest text-slate-500">Nombre del Nivel</Label>
-                    <Input id="planName" name="planName" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Plan Profesional" className="h-12 rounded-xl border-slate-200" required />
+            <div className="flex-1 overflow-y-auto p-0">
+              <form id="plan-form" onSubmit={handleSubmit}>
+                <Tabs defaultValue="comercial" className="w-full">
+                  <div className="px-8 pt-4 pb-2 bg-white border-b border-slate-100 sticky top-0 z-10">
+                    <TabsList className="bg-slate-100/50 p-1 rounded-xl w-full justify-start h-12 gap-2">
+                      <TabsTrigger value="comercial" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">🏷️ Comercial</TabsTrigger>
+                      <TabsTrigger value="permisos" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">🛡️ Límites y Permisos</TabsTrigger>
+                      <TabsTrigger value="freno" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">⚡ Freno de Mano (IA)</TabsTrigger>
+                    </TabsList>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="planType" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tipo de Contrato</Label>
-                      <Select 
-                        value={formData.type} 
-                        onValueChange={(value) => setFormData({...formData, type: value as 'free' | 'fixed' | 'percentage'})}
-                        disabled={formData.isActive}
+
+                  <TabsContent value="comercial" className="p-8 space-y-8 max-w-3xl mx-auto m-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <Label htmlFor="planName" className="text-xs font-bold uppercase tracking-widest text-slate-500">Nombre del Nivel</Label>
+                        <Input id="planName" name="planName" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Plan Profesional" className="h-12 rounded-xl border-slate-200" required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="planType" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tipo de Contrato</Label>
+                          <Select 
+                            value={formData.type} 
+                            onValueChange={(value) => {
+                              const newType = value as 'free' | 'fixed' | 'percentage';
+                              if (editingPlan && editingPlan.type !== newType) {
+                                const typeNames: Record<string, string> = {
+                                  free: 'Gratuito',
+                                  fixed: 'Abono Fijo',
+                                  percentage: 'Regalías'
+                                };
+                                if (!confirm(`Este plan es de tipo "${typeNames[editingPlan.type]}". \n\n¿Estás seguro de que quieres transformarlo a "${typeNames[newType]}"? \n\nEsto podría afectar la facturación de los tutores que ya están suscritos.`)) {
+                                  return;
+                                }
+                              }
+                              setFormData({...formData, type: newType});
+                            }}
+                          >
+                            <SelectTrigger className="h-12 rounded-xl border-slate-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="font-sans">
+                              <SelectItem value="free" className="font-bold">Gratuito</SelectItem>
+                              <SelectItem value="fixed" className="font-bold">Abono Fijo</SelectItem>
+                              <SelectItem value="percentage" className="font-bold">Regalías / Revenue Share</SelectItem>
+                            </SelectContent>
+                          </Select>
+                      </div>
+                    </div>
+
+                    <div className={cn(
+                      "grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm",
+                      formData.type === 'free' && "opacity-50 pointer-events-none"
+                    )}>
+                      {formData.type !== 'percentage' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="planPrice" className="text-xs font-bold uppercase tracking-widest text-slate-500">Fijo (USD/mes)</Label>
+                          <Input id="planPrice" name="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free'} className="h-12 rounded-xl bg-slate-50" />
+                        </div>
+                      )}
+                      {formData.type === 'percentage' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="planPercentage" className="text-xs font-bold uppercase tracking-widest text-slate-500">Regalía (%)</Label>
+                          <Input id="planPercentage" name="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <Label htmlFor="planDuration" className="text-xs font-bold uppercase tracking-widest text-slate-500">Duración mínima (m)</Label>
+                        <Input id="planDuration" name="planDuration" type="number" min="1" value={formData.durationMonths} onChange={(e) => setFormData({...formData, durationMonths: parseInt(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="planFeatures" className="text-xs font-bold uppercase tracking-widest text-slate-500">Propuesta de Valor (1 línea = 1 viñeta)</Label>
+                      <Textarea id="planFeatures" name="planFeatures" rows={4} value={formData.features?.join('\n') || ''} onChange={(e) => setFormData({...formData, features: e.target.value.split('\n')})} placeholder="Perfil premium&#10;Analytics avanzadas&#10;API" className="rounded-xl border-slate-200" required />
+                    </div>
+
+                    <div className="flex flex-col gap-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tipo de Perfil</Label>
+                      <RadioGroup 
+                        value={formData.isEnterprise ? 'enterprise' : 'tutor'} 
+                        onValueChange={(v) => {
+                          const isEnt = v === 'enterprise';
+                          setFormData({
+                            ...formData, 
+                            isEnterprise: isEnt,
+                            type: isEnt ? 'fixed' : formData.type
+                          });
+                        }}
+                        className="flex gap-6"
                       >
-                        <SelectTrigger className="h-12 rounded-xl border-slate-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="font-sans">
-                          <SelectItem value="free" className="font-bold" disabled={formData.isActive}>Gratuito</SelectItem>
-                          <SelectItem value="fixed" className="font-bold">Abono Fijo</SelectItem>
-                          <SelectItem value="percentage" className="font-bold" disabled={formData.isActive}>Regalías / Revenue Share</SelectItem>
-                        </SelectContent>
-                      </Select>
-                  </div>
-                </div>
-
-                <div className={cn(
-                  "grid grid-cols-1 md:grid-cols-3 gap-8 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm",
-                  formData.type === 'free' && "opacity-50 pointer-events-none"
-                )}>
-                  {formData.type !== 'percentage' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="planPrice" className="text-xs font-bold uppercase tracking-widest text-slate-500">Fijo (USD/mes)</Label>
-                      <Input id="planPrice" name="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free'} className="h-12 rounded-xl bg-slate-50" />
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="tutor" id="plan-type-tutor" />
+                          <Label htmlFor="plan-type-tutor" className="font-bold text-xs uppercase cursor-pointer">Tutor/Mentor</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="enterprise" id="plan-type-enterprise" />
+                          <Label htmlFor="plan-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-indigo-600">Empresa</Label>
+                        </div>
+                      </RadioGroup>
                     </div>
-                  )}
-                  {formData.type === 'percentage' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="planPercentage" className="text-xs font-bold uppercase tracking-widest text-slate-500">Regalía (%)</Label>
-                      <Input id="planPercentage" name="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
+                  </TabsContent>
+
+                  <TabsContent value="permisos" className="p-8 space-y-8 max-w-3xl mx-auto m-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      <div className="space-y-2">
+                        <Label htmlFor="planMaxCourses" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Cursos Publicados</Label>
+                        <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val, limits: { ...formData.limits, maxCourses: isNaN(val) ? 0 : val } as any}); }} placeholder="10 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Alumnos (Base)</Label>
+                        <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, limits: { ...formData.limits, maxStudents: isNaN(val) ? 0 : val } as any}); }} placeholder="200 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="planInvitationsPerCourse" className="text-xs font-bold uppercase tracking-widest text-slate-500">Alumnos Invitados por Curso</Label>
+                        <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, invitationsPerCourse: isNaN(val) ? 0 : val}); }} placeholder="5" className="h-12 rounded-xl border-slate-200" />
+                      </div>
                     </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="planDuration" className="text-xs font-bold uppercase tracking-widest text-slate-500">Duración mínima (m)</Label>
-                    <Input id="planDuration" name="planDuration" type="number" min="1" value={formData.durationMonths} onChange={(e) => setFormData({...formData, durationMonths: parseInt(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="space-y-2">
-                    <Label htmlFor="planMaxCourses" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Cursos Publicados</Label>
-                    <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val, limits: { ...formData.limits, maxCourses: isNaN(val) ? 0 : val } as any}); }} placeholder="10 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Alumnos (Base)</Label>
-                    <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, limits: { ...formData.limits, maxStudents: isNaN(val) ? 0 : val } as any}); }} placeholder="200 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="planInvitationsPerCourse" className="text-xs font-bold uppercase tracking-widest text-slate-500">Alumnos Invitados por Curso</Label>
-                    <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, invitationsPerCourse: isNaN(val) ? 0 : val}); }} placeholder="5" className="h-12 rounded-xl border-slate-200" />
-                  </div>
-                </div>
+                    <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-6">
+                      <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-4">Derechos Administrativos (RBAC)</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium text-slate-700">
+                        {[
+                          { k: 'academic_management', l: 'Gestión de Cursos Ppios', i: GraduationCap },
+                          { k: 'students_view', l: 'Exportar Lead Alumnos', i: Users },
+                          { k: 'marketing_access', l: 'Campañas de Lanzamiento AI', i: Rocket },
+                          { k: 'followups_management', l: 'Tickets de Seguimiento', i: ClipboardList },
+                          { k: 'mentor_challenges', l: 'Emitir Desafíos', i: Target }
+                        ].map(perm => (
+                          <div key={perm.k} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <perm.i className="h-4 w-4 text-indigo-500" />
+                              <Label htmlFor={`perm-${perm.k}`} className="cursor-pointer">{perm.l}</Label>
+                            </div>
+                            <Switch 
+                              id={`perm-${perm.k}`}
+                              checked={(formData.permissions as any)?.[perm.k] || false} 
+                              onCheckedChange={(c) => setFormData({...formData, permissions: {...formData.permissions, [perm.k]: c} as any})} 
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </TabsContent>
 
-                <div className="space-y-2">
-                  <Label htmlFor="planFeatures" className="text-xs font-bold uppercase tracking-widest text-slate-500">Propuesta de Valor (1 línea = 1 viñeta)</Label>
-                  <Textarea id="planFeatures" name="planFeatures" rows={4} value={formData.features?.join('\n') || ''} onChange={(e) => setFormData({...formData, features: e.target.value.split('\n')})} placeholder="Perfil premium&#10;Analytics avanzadas&#10;API" className="rounded-xl border-slate-200" required />
-                </div>
+                  <TabsContent value="freno" className="p-8 space-y-8 max-w-3xl mx-auto m-0 pb-12">
+                    <div className="p-6 bg-amber-50/50 rounded-[2.5rem] border border-amber-100 space-y-8">
+                      <div className="flex items-center gap-4 border-b border-amber-100 pb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
+                          <Cpu className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-amber-900">Cuotas de Consumo Mensual</h3>
+                          <p className="text-xs text-amber-700/60 font-medium">Define el límite de recursos IA incluidos en el abono.</p>
+                        </div>
+                      </div>
 
-                <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-6">
-                  <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-4">Derechos Administrativos (RBAC)</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium text-slate-700">
-                    {[
-                      { k: 'academic_management', l: 'Gestión de Cursos Ppios', i: GraduationCap },
-                      { k: 'students_view', l: 'Exportar Lead Alumnos', i: Users },
-                      { k: 'marketing_access', l: 'Campañas de Lanzamiento AI', i: Rocket },
-                      { k: 'followups_management', l: 'Tickets de Seguimiento', i: ClipboardList },
-                      { k: 'mentor_challenges', l: 'Emitir Desafíos', i: Target }
-                    ].map(perm => (
-                      <div key={perm.k} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-amber-800/50 ml-1">BTECH Credits / mes (Abono)</Label>
+                          <div className="relative">
+                            <Input 
+                              type="number" 
+                              value={formData.aiQuotas?.totalCredits || 0} 
+                              onChange={(e) => setFormData({...formData, aiQuotas: { totalCredits: parseInt(e.target.value) }})}
+                              className="h-14 rounded-2xl bg-white border-amber-100 font-black text-amber-900 text-xl pl-12"
+                            />
+                            <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-500" />
+                          </div>
+                        </div>
+                        <div className="p-4 bg-white/40 rounded-2xl border border-amber-100/50">
+                          <p className="text-[10px] text-amber-700/60 font-medium leading-relaxed">
+                            Estos créditos se consumen por cada imagen, video o análisis generado. 1 video puede equivaler a N créditos.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Regla de Negocio de Créditos */}
+                      <div className="p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 flex gap-4 items-start">
+                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
+                          <ShieldCheck className="h-5 w-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-black uppercase tracking-widest text-indigo-900">Regla de Negocio de Créditos</h4>
+                          <p className="text-[10px] text-indigo-700/70 font-medium leading-relaxed">
+                            Los créditos del **abono mensual** expiran al final de cada ciclo (no son acumulativos). 
+                            Los créditos de **recarga (packs)** no expiran. El orden de consumo es: primero el cupo del abono y luego las recargas compradas.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 pt-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <TrendingUp className="h-4 w-4 text-amber-600" />
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800/50">Opciones de Recarga (Reposición de Cuota)</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                          {[0, 1, 2, 3, 4].map((idx) => (
+                            <div key={idx} className="space-y-3 p-4 bg-white rounded-2xl border border-amber-100 shadow-sm">
+                              <p className="text-[9px] font-black text-amber-800/40 text-center uppercase tracking-widest">Pack {idx + 1}</p>
+                              <div className="space-y-1">
+                                <Label className="text-[8px] font-bold text-slate-400 ml-1">Precio (USD)</Label>
+                                <Input 
+                                  type="number"
+                                  placeholder="0.00"
+                                  value={formData.rechargeOptions?.[idx]?.price || 0}
+                                  onChange={(e) => {
+                                    const newOptions = [...(formData.rechargeOptions || Array(5).fill({ price: 0, credits: 0 }))];
+                                    newOptions[idx] = { ...newOptions[idx], price: parseFloat(e.target.value) };
+                                    setFormData({...formData, rechargeOptions: newOptions});
+                                  }}
+                                  className="h-9 rounded-lg bg-slate-50 border-none text-center font-bold text-xs"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[8px] font-bold text-slate-400 ml-1">Créditos</Label>
+                                <Input 
+                                  type="number"
+                                  placeholder="0"
+                                  value={formData.rechargeOptions?.[idx]?.credits || 0}
+                                  onChange={(e) => {
+                                    const newOptions = [...(formData.rechargeOptions || Array(5).fill({ price: 0, credits: 0 }))];
+                                    newOptions[idx] = { ...newOptions[idx], credits: parseInt(e.target.value) };
+                                    setFormData({...formData, rechargeOptions: newOptions});
+                                  }}
+                                  className="h-9 rounded-lg bg-amber-50 border-none text-center font-bold text-xs text-amber-700"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20">
                         <div className="flex items-center gap-3">
-                          <perm.i className="h-4 w-4 text-indigo-500" />
-                          <Label htmlFor={`perm-${perm.k}`} className="cursor-pointer">{perm.l}</Label>
+                          <Sparkles className="h-5 w-5 text-amber-600" />
+                          <div className="space-y-0.5">
+                            <Label htmlFor="plan-has-ai-tab" className="font-bold text-sm text-amber-900">✨ IA Premium (Imagen 3)</Label>
+                            <p className="text-[10px] text-amber-800/60 font-medium">Habilita el motor de generación de alta fidelidad.</p>
+                          </div>
                         </div>
                         <Switch 
-                          id={`perm-${perm.k}`}
-                          name={`perm-${perm.k}`}
-                          checked={(formData.permissions as any)?.[perm.k] || false} 
-                          onCheckedChange={(c) => setFormData({...formData, permissions: {...formData.permissions, [perm.k]: c} as any})} 
+                          id="plan-has-ai-tab" 
+                          checked={formData.hasPremiumAI} 
+                          onCheckedChange={(c) => setFormData({...formData, hasPremiumAI: c})} 
+                          className="data-[state=checked]:bg-amber-600" 
                         />
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </form>
             </div>
 
             <div className="p-6 bg-white border-t border-slate-100 shrink-0 flex flex-col md:flex-row gap-4 justify-between items-center rounded-b-[2rem]">
-              <div className="flex flex-wrap gap-6 items-center">
-                <div className="flex flex-col gap-2 p-4 bg-slate-50 rounded-xl border border-slate-200 min-w-[240px]">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tipo de Perfil</Label>
-                  <RadioGroup 
-                    value={formData.isEnterprise ? 'enterprise' : 'tutor'} 
-                    onValueChange={(v) => {
-                      const isEnt = v === 'enterprise';
-                      setFormData({
-                        ...formData, 
-                        isEnterprise: isEnt,
-                        // Si es Empresa, el tipo debe ser fixed
-                        type: isEnt ? 'fixed' : formData.type
-                      });
-                    }}
-                    className="flex gap-6"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="tutor" id="plan-type-tutor" />
-                      <Label htmlFor="plan-type-tutor" className="font-bold text-xs uppercase cursor-pointer">Tutor/Mentor</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="enterprise" id="plan-type-enterprise" />
-                      <Label htmlFor="plan-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-indigo-600">Empresa</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                
-                <div className="flex gap-2 items-center px-4 py-2 bg-amber-50 rounded-xl border border-amber-200">
-                  <Switch 
-                    id="plan-has-ai" 
-                    name="plan-has-ai" 
-                    checked={formData.hasPremiumAI} 
-                    onCheckedChange={(c) => setFormData({...formData, hasPremiumAI: c})} 
-                    className="data-[state=checked]:bg-amber-500" 
-                  />
-                  <Label htmlFor="plan-has-ai" className="font-bold text-[10px] uppercase tracking-widest text-amber-900 cursor-pointer">✨ IA Premium (Imagen 3)</Label>
-                </div>
-
-                <div className="flex gap-2 items-center">
-                  <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-emerald-500" />
-                  <Label htmlFor="plan-is-active" className="font-bold text-[10px] uppercase tracking-widest text-slate-500 cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>
-                </div>
+              <div className="flex gap-2 items-center">
+                <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-emerald-500" />
+                <Label htmlFor="plan-is-active" className="font-bold text-[10px] uppercase tracking-widest text-slate-500 cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>
               </div>
               <div className="flex gap-3 mt-4 md:mt-0 w-full md:w-auto">
-                <Button type="button" variant="outline" className="flex-1 md:flex-auto rounded-xl h-12 px-6" onClick={() => setShowCreateForm(false)}>
+                <Button type="button" variant="outline" className="flex-1 md:flex-auto rounded-xl h-12 px-6 font-bold" onClick={() => setShowCreateForm(false)}>
                   Cancelar
                 </Button>
                 <Button type="submit" form="plan-form" className="flex-1 md:flex-auto rounded-xl h-12 px-8 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 font-bold text-white">

@@ -12,14 +12,21 @@ export function useStudentEnrollments() {
   const [loadingDetails, setLoadingDetails] = useState(false);
 
   const enrollmentsQuery = useMemoFirebase(() => {
-    if (!profile?.uid || !profile?.email || isAuthLoading) return null;
-    return query(
-      collection(db, 'enrollments'), 
-      or(
-        where('studentId', '==', profile.uid),
-        where('inviteEmail', '==', profile.email.toLowerCase().trim())
-      )
-    );
+    if (!profile?.uid || isAuthLoading) return null;
+    const ref = collection(db, 'enrollments');
+    const userEmail = profile.email?.toLowerCase().trim();
+
+    if (userEmail) {
+      return query(
+        ref, 
+        or(
+          where('studentId', '==', profile.uid),
+          where('inviteEmail', '==', userEmail)
+        )
+      );
+    } else {
+      return query(ref, where('studentId', '==', profile.uid));
+    }
   }, [db, profile?.uid, profile?.email, isAuthLoading]);
 
   const { data: enrollments, isLoading: loadingEnrollments, error } = useCollection(enrollmentsQuery);

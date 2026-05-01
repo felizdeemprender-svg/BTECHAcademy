@@ -304,11 +304,11 @@ export default function AuthPage() {
                 </div>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase text-slate-500">Correo Invitado</Label>
+                    <Label htmlFor="activate-email" className="text-xs font-bold uppercase text-slate-500">Correo Invitado</Label>
                     <Input id="activate-email" name="email" type="email" placeholder="usuario@institucion.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase text-slate-500">Crear Contraseña</Label>
+                    <Label htmlFor="activate-password" title="Crear Contraseña" className="text-xs font-bold uppercase text-slate-500">Crear Contraseña</Label>
                     <div className="relative">
                       <Input 
                         id="activate-password"
@@ -337,7 +337,7 @@ export default function AuthPage() {
             ) : view === 'reset' ? (
               <div className="space-y-4 animate-in slide-in-from-top-2">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Correo institucional</Label>
+                  <Label htmlFor="reset-email" className="text-xs font-bold uppercase tracking-wider text-slate-500">Correo institucional</Label>
                   <Input 
                     id="reset-email"
                     name="email"

@@ -33,7 +33,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 // Shared Student Components
 import { StudentPageHeader } from '@/components/student/PageHeader';
@@ -48,18 +50,34 @@ import { useStudentTasks } from '@/hooks/student/useStudentTasks';
 import { useStudentFollowUps } from '@/hooks/student/useStudentFollowUps';
 
 export default function DashboardPage() {
-  const { profile, isLoading: isAuthLoading } = useAuth();
+  const { profile, isLoading: isAuthLoading, refreshProfile } = useAuth();
   const db = useFirestore();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toast } = useToast();
 
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    if (paymentStatus === 'success') {
+      // Forzar actualización del perfil para ver el nuevo rol de mentor
+      if (refreshProfile) refreshProfile();
+      
+      toast({
+        title: "¡Bienvenido, Mentor! 🚀",
+        description: "Tu suscripción ha sido activada con éxito. Ya tienes acceso a todas las herramientas de IA.",
+        className: "bg-indigo-600 text-white border-none shadow-2xl",
+      });
+      
+      // Limpiar la URL
+      router.replace('/dashboard');
+    }
+  }, [searchParams, refreshProfile, toast, router]);
+
+  // Roles y flags
   const roles = profile?.roles || [];
   const isAdmin = roles.includes('admin');
   const isMentor = roles.includes('mentor');
   const isStudent = roles.includes('alumno');
-
-  // Student Data Hooks
-  const { enrollments: studentEnrollments, isLoading: loadingEnrollments } = useStudentEnrollments();
-  const { tasks: sortedTasks, pendingTasks, completedTasks, isLoading: loadingTasks } = useStudentTasks(20);
-  const { followUps: recentFollowUps, sessionStats: followUpSessionStats, isLoading: loadingFollowUps } = useStudentFollowUps();
 
   // --- QUERIES PARA MENTOR / ADMIN ---
   const mentorCoursesQuery = useMemoFirebase(() => {
@@ -122,21 +140,6 @@ export default function DashboardPage() {
     }), { clicks: 0, conversions: 0, impacts: 0 });
   }, [rawMarketingPages]);
 
-  const groupedDashboardChallenges = useMemoFirebase(() => {
-    if (!sortedTasks || (!isMentor && !isAdmin)) return [];
-    const groups: Record<string, any> = {};
-    sortedTasks.forEach(task => {
-      const key = task.title + task.description;
-      if (!groups[key]) {
-        groups[key] = { id: task.id, title: task.title, description: task.description, createdAt: task.createdAt, total: 0, completed: 0, tasks: [] as any[] };
-      }
-      groups[key].total++;
-      if (task.status === 'completed') groups[key].completed++;
-      groups[key].tasks.push(task);
-    });
-    return Object.values(groups).slice(0, 5);
-  }, [sortedTasks, isMentor, isAdmin]);
-
   const allUsersQuery = useMemoFirebase(() => {
     if (!profile?.uid || !isAdmin || isAuthLoading) return null;
     return collection(db, 'users');
@@ -148,23 +151,6 @@ export default function DashboardPage() {
     return collection(db, 'courses');
   }, [db, isAdmin, isAuthLoading, profile?.uid]);
   const { data: globalCourses } = useCollection(globalCoursesQuery);
-
-  const [mentorInscriptions, setMentorInscriptions] = useState<any[]>([]);
-  useMemoFirebase(async () => {
-    if (isMentor && mentorCourses && mentorCourses.length > 0) {
-      try {
-        const courseIds = mentorCourses.map((c: any) => c.id);
-        const allEnrollments: any[] = [];
-        for (let i = 0; i < courseIds.length; i += 30) {
-          const chunk = courseIds.slice(i, i + 30);
-          const q = query(collection(db, 'enrollments'), where('courseId', 'in', chunk));
-          const snap = await getDocs(q);
-          snap.forEach(doc => allEnrollments.push({ ...doc.data(), id: doc.id }));
-        }
-        setMentorInscriptions(allEnrollments);
-      } catch (e) {}
-    }
-  }, [isMentor, mentorCourses, db]);
 
   if (isAuthLoading || !profile) {
     return (
@@ -185,17 +171,9 @@ export default function DashboardPage() {
         allUsers={allUsers}
         globalCourses={globalCourses}
         mentorCourses={mentorCourses}
-        mentorInscriptions={mentorInscriptions}
         aggregateMarketingStats={aggregateMarketingStats}
-        studentEnrollments={studentEnrollments}
-        sortedTasks={sortedTasks}
-        pendingTasks={pendingTasks}
-        completedTasks={completedTasks}
-        recentFollowUps={recentFollowUps}
-        followUpSessionStats={followUpSessionStats}
         todayAutomationActions={todayAutomationActions}
-        groupedDashboardChallenges={groupedDashboardChallenges}
-        isLoading={loadingEnrollments || loadingTasks || loadingFollowUps}
+        isAuthLoading={isAuthLoading}
       />
     </DashboardLayout>
   );
@@ -209,18 +187,57 @@ const DashboardContent = ({
   allUsers,
   globalCourses,
   mentorCourses,
-  mentorInscriptions,
   aggregateMarketingStats,
-  studentEnrollments,
-  sortedTasks,
-  pendingTasks,
-  completedTasks,
-  recentFollowUps,
-  followUpSessionStats,
   todayAutomationActions,
-  groupedDashboardChallenges,
-  isLoading
+  isAuthLoading
 }: any) => {
+  const db = useFirestore();
+
+  // 1. Hooks de datos (Solo se activan cuando DashboardContent se monta)
+  const { enrollments: studentEnrollments, isLoading: loadingEnrollments } = useStudentEnrollments();
+  const { tasks: sortedTasks, pendingTasks, completedTasks, isLoading: loadingTasks } = useStudentTasks(20);
+  const { followUps: recentFollowUps, sessionStats: followUpSessionStats, isLoading: loadingFollowUps } = useStudentFollowUps();
+
+  // 2. Query de Inscripciones de Mentor
+  const [mentorInscriptions, setMentorInscriptions] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchInscriptions = async () => {
+      if (isMentor && mentorCourses && mentorCourses.length > 0) {
+        try {
+          const courseIds = mentorCourses.map((c: any) => c.id);
+          const allEnrollments: any[] = [];
+          for (let i = 0; i < courseIds.length; i += 30) {
+            const chunk = courseIds.slice(i, i + 30);
+            const q = query(collection(db, 'enrollments'), where('courseId', 'in', chunk));
+            const snap = await getDocs(q);
+            snap.forEach(doc => allEnrollments.push({ ...doc.data(), id: doc.id }));
+          }
+          setMentorInscriptions(allEnrollments);
+        } catch (e) {
+          console.error("[Dashboard] Error fetching inscriptions:", e);
+        }
+      }
+    };
+    fetchInscriptions();
+  }, [isMentor, mentorCourses, db]);
+
+  // 3. Procesamiento de datos (Challenges agrupados)
+  const groupedDashboardChallenges = useMemo(() => {
+    if (!sortedTasks || (!isMentor && !isAdmin)) return [];
+    const groups: Record<string, any> = {};
+    sortedTasks.forEach(task => {
+      const key = task.title + task.description;
+      if (!groups[key]) {
+        groups[key] = { id: task.id, title: task.title, description: task.description, createdAt: task.createdAt, total: 0, completed: 0, tasks: [] as any[] };
+      }
+      groups[key].total++;
+      if (task.status === 'completed') groups[key].completed++;
+      groups[key].tasks.push(task);
+    });
+    return Object.values(groups).slice(0, 5);
+  }, [sortedTasks, isMentor, isAdmin]);
+
+  const isLoading = loadingEnrollments || loadingTasks || loadingFollowUps;
   return (
     <div className="space-y-10 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
       <StudentPageHeader 

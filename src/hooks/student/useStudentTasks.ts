@@ -9,16 +9,26 @@ export function useStudentTasks(limitCount: number = 50) {
   const db = useFirestore();
 
   const tasksQuery = useMemoFirebase(() => {
-    if (!profile?.uid || !profile?.email || isAuthLoading) return null;
-    
-    return query(
-      collectionGroup(db, 'individualTasks'),
-      or(
+    if (!profile?.uid || isAuthLoading) return null;
+    const ref = collectionGroup(db, 'individualTasks');
+    const userEmail = profile.email?.toLowerCase().trim();
+
+    if (userEmail) {
+      return query(
+        ref,
+        or(
+          where('studentId', '==', profile.uid),
+          where('studentEmail', '==', userEmail)
+        ),
+        orderBy('createdAt', 'desc')
+      );
+    } else {
+      return query(
+        ref,
         where('studentId', '==', profile.uid),
-        where('studentEmail', '==', profile.email.toLowerCase().trim())
-      ),
-      orderBy('createdAt', 'desc')
-    );
+        orderBy('createdAt', 'desc')
+      );
+    }
   }, [db, profile?.uid, profile?.email, isAuthLoading]);
 
   const { data: tasks, isLoading, error } = useCollection(tasksQuery);

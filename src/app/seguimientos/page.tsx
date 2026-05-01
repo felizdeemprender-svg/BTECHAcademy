@@ -32,7 +32,7 @@ import { FollowUpTable } from '@/components/followups/FollowUpTable';
 import { FollowUpModals } from '@/components/followups/FollowUpModals';
 
 export default function FollowUpsPage() {
-  const { profile } = useAuth();
+  const { profile, isLoading: isAuthLoading } = useAuth();
   const db = useFirestore();
   const { storage } = useFirebase();
   const router = useRouter();
@@ -45,6 +45,17 @@ export default function FollowUpsPage() {
     isAdmin, 
     isMentor 
   } = useFollowUps();
+
+  if (isAuthLoading || !profile) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#f8fafc]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full border-4 border-accent/20 border-t-accent animate-spin" />
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Sincronizando Accesos...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Estados de UI
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -77,9 +88,31 @@ export default function FollowUpsPage() {
     if (!profile?.uid || (!isMentor && !isAdmin)) return;
     const fetchStudents = async () => {
       try {
-        const enrollmentsSnap = await getDocs(collection(db, 'enrollments'));
+        let enrollmentDocs: any[] = [];
+
+        if (isAdmin) {
+          const snap = await getDocs(collection(db, 'enrollments'));
+          enrollmentDocs = snap.docs;
+        } else {
+          // 1. Obtener mis cursos
+          const coursesQuery = query(collection(db, 'courses'), where('mentorId', '==', profile.uid));
+          const coursesSnap = await getDocs(coursesQuery);
+          const myCourseIds = coursesSnap.docs.map(d => d.id);
+
+          if (myCourseIds.length > 0) {
+            // 2. Obtener inscripciones de esos cursos (en lotes de 10 para 'in' query si fuera necesario, pero simplificado aquí)
+            // Nota: El operador 'in' soporta hasta 30 elementos.
+            const enrollQuery = query(
+              collection(db, 'enrollments'), 
+              where('courseId', 'in', myCourseIds.slice(0, 30))
+            );
+            const enrollSnap = await getDocs(enrollQuery);
+            enrollmentDocs = enrollSnap.docs;
+          }
+        }
+        
         const studentMap = new Map();
-        enrollmentsSnap.docs.forEach(d => {
+        enrollmentDocs.forEach(d => {
           const data = d.data();
           if (data.studentEmail) {
             studentMap.set(data.studentEmail, {

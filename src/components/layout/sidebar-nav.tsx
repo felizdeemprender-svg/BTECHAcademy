@@ -102,6 +102,7 @@ export function SidebarNav() {
         { name: 'Moderación IA', href: '/admin/moderation', roles: ['admin'], icon: ShieldAlert },
         { name: 'Términos y Condiciones', href: '/admin/terms', roles: ['admin'], icon: FileText },
         { name: 'Planes de Suscripción', href: '/admin/subscriptions', roles: ['admin'], icon: CreditCard },
+        { name: 'Métodos de Pago', href: '/admin/payment-methods', roles: ['admin'], icon: Zap },
         { name: 'Facturación', href: '/admin/billing', roles: ['admin'], icon: ReceiptText },
         { name: 'Tema del Sistema', href: '/admin/theme', roles: ['admin'], icon: Palette },
       ]

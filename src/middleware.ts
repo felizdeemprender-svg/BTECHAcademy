@@ -5,7 +5,7 @@ const RESERVED_PATHS = [
   'my-courses', 'seguimientos', 'settings', 'tasks', 'v', 
   'about', 'services', 'privacy', 'terms', 'favicon.ico', 
   'globals.css', 'tutor-access-denied', 'upgrade-required', 'abonos', 'ai-assistant', 'alumnos',
-  'tutor' // Ruta reservada para perfiles de tutor /tutor/[username]
+  'tutor', 'planes' // Rutas reservadas oficiales
 ];
 
 export async function middleware(request: NextRequest) {

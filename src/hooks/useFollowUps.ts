@@ -17,45 +17,58 @@ export function useFollowUps() {
   const isMentor = profile?.roles.includes('mentor');
 
   useEffect(() => {
-    if (isAuthLoading || !profile?.uid) return;
+    // No iniciar si el auth está cargando o no hay perfil con roles
+    if (isAuthLoading || !profile?.uid || !profile?.roles) return;
 
     setIsLoading(true);
     const ref = collection(db, 'followups');
     let q;
 
-    if (isAdmin) {
-      q = query(ref);
-    } else if (isMentor) {
-      q = query(ref, where('mentorId', '==', profile.uid));
-    } else {
-      q = query(
-        ref, 
-        or(
-          where('studentId', '==', profile.uid),
-          where('studentEmail', '==', profile.email?.toLowerCase().trim() || '')
-        )
-      );
-    }
+    try {
+      if (isAdmin) {
+        q = query(ref);
+      } else if (isMentor) {
+        q = query(ref, where('mentorId', '==', profile.uid));
+      } else {
+        const userEmail = profile.email?.toLowerCase().trim();
+        if (userEmail) {
+          q = query(
+            ref, 
+            or(
+              where('studentId', '==', profile.uid),
+              where('studentEmail', '==', userEmail)
+            )
+          );
+        } else {
+          // Si no hay email, solo buscamos por ID para evitar consultas inválidas
+          q = query(ref, where('studentId', '==', profile.uid));
+        }
+      }
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      let data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as StudentFollowUp));
-      
-      // Manual sorting to ensure consistent results without requiring complex Firestore indexes
-      data.sort((a, b) => {
-        const timeA = a.createdAt?.seconds || a.createdAt?._seconds || 0;
-        const timeB = b.createdAt?.seconds || b.createdAt?._seconds || 0;
-        return timeB - timeA;
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        let data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as StudentFollowUp));
+        
+        data.sort((a, b) => {
+          const timeA = a.createdAt?.seconds || a.createdAt?._seconds || 0;
+          const timeB = b.createdAt?.seconds || b.createdAt?._seconds || 0;
+          return timeB - timeA;
+        });
+
+        setFollowUps(data);
+        setIsLoading(false);
+        setError(null);
+      }, (err) => {
+        console.error("[useFollowUps] Snapshot error:", err);
+        setError(err.message);
+        setIsLoading(false);
       });
 
-      setFollowUps(data);
-      setIsLoading(false);
-    }, (err) => {
-      console.error("Error fetching follow-ups:", err);
+      return () => unsubscribe();
+    } catch (err: any) {
+      console.error("[useFollowUps] Setup error:", err);
       setError(err.message);
       setIsLoading(false);
-    });
-
-    return () => unsubscribe();
+    }
   }, [db, profile?.uid, profile?.email, profile?.roles, isAuthLoading, isAdmin, isMentor]);
 
   // Fetch session stats

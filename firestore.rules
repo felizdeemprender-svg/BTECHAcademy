@@ -7,16 +7,23 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    // FUNCIÓN SEGURA: Solo intenta leer si el documento existe
+    function getUserRoles() {
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(userPath) ? get(userPath).data.get('roles', []) : [];
     }
 
-    function getUserRoles() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('roles', []);
+    function isSuperAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'felizdeemprender@gmail.com' ||
+        request.auth.token.email == 'btouchacademy@gmail.com' ||
+        request.auth.token.email == 'btechacademy.ai@gmail.com'
+      );
     }
 
     function isAdmin() {
       return isSignedIn() && (
+        isSuperAdmin() ||
         exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
         'admin' in getUserRoles()
       );
@@ -48,72 +55,29 @@ service cloud.firestore {
 
     match /salesPages/{pageId} {
       allow read: if true;
-      allow update: if (isAdmin() || isMarketing() || isMentor()) || 
-                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats']));
-      allow create, delete: if isAdmin() || isMarketing() || isMentor();
-    }
-
-    match /campaigns/{campaignId} {
-      allow read: if true;
-      allow write: if isAdmin() || isMarketing() || isMentor();
-    }
-
-    match /templateCollections/{collectionId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && (isAdmin() || isMarketing() || isMentor() || request.resource.data.ownerId == request.auth.uid);
-      allow update, delete: if isSignedIn() && (isAdmin() || isMarketing() || isMentor() || resource.data.ownerId == request.auth.uid);
-    }
-
-    match /followups/{followUpId} {
-      allow list, get: if isSignedIn() && (
-        isAdmin() || 
-        resource.data.mentorId == request.auth.uid || 
-        resource.data.studentId == request.auth.uid || 
-        resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower()
-      );
-      allow create: if isSignedIn() && (isMentor() || isAdmin());
-      allow update, delete: if isSignedIn() && (
-        isAdmin() || 
-        resource.data.mentorId == request.auth.uid || 
-        resource.data.studentId == request.auth.uid || 
-        resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower()
-      );
-    }
-
-    match /followups/{followUpId}/sessions/{sessionId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin() || isMentor();
-    }
-
-    match /followups/{followUpId}/tasks/{taskId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin() || isMentor() || (isSignedIn() && (get(/databases/$(database)/documents/followups/$(followUpId)).data.studentId == request.auth.uid || get(/databases/$(database)/documents/followups/$(followUpId)).data.get('studentEmail', '').lower() == request.auth.token.email.lower()));
-    }
-
-    match /config/{configId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /tags/{tagId} {
-      allow read: if true;
-      allow write: if isAdmin() || isMentor() || isMarketing();
+      allow write: if isAdmin() || isMarketing();
     }
 
     match /courses/{courseId} {
-      allow read, list: if true;
-      allow create: if isMentor() || isAdmin();
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.mentorId == request.auth.uid);
+      allow read: if true;
+      allow create: if isAdmin() || isMentor();
+      allow update: if isAdmin() || (isMentor() && resource.data.mentorId == request.auth.uid);
+      allow delete: if isAdmin();
 
-      match /modules/{moduleId} {
-        allow read, list: if true;
-        allow write: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/courses/$(courseId)).data.mentorId == request.auth.uid);
+      match /lessons/{lessonId} {
+        allow read: if true;
+        allow write: if isAdmin() || (isMentor() && get(/databases/$(database)/documents/courses/$(courseId)).data.mentorId == request.auth.uid);
       }
     }
 
     match /enrollments/{enrollmentId} {
-      allow list: if isSignedIn();
-      allow get: if isSignedIn();
+      allow read, list: if isSignedIn() && (
+        request.auth.uid == resource.data.studentId || 
+        isAdmin() || 
+        isMentor() ||
+        (exists(/databases/$(database)/documents/courses/$(resource.data.courseId)) && 
+         get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.mentorId == request.auth.uid)
+      );
       allow create: if isSignedIn();
       allow update: if isSignedIn() && (
         resource.data.studentId == request.auth.uid || 
@@ -126,18 +90,17 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow get: if true; // Mantener para perfiles públicos (bio, photo, etc)
-      allow list: if isAdmin() || isMentor(); // Solo staff puede listar usuarios masivamente
-      allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin() || isMentor()); 
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin()); 
       allow update: if isSignedIn() && (
         request.auth.uid == userId || 
         isAdmin() || 
-        (exists(resource.data) && resource.data.get('email', '').lower() == request.auth.token.email.lower())
+        (resource.data.get('email', '').lower() == request.auth.token.email.lower())
       );
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.get('email', '').lower() == request.auth.token.email.lower());
 
       match /private/config {
-        allow read, write: if isSignedIn() && request.auth.uid == userId;
+        allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       }
 
       match /studentNotes/{noteId} {
@@ -148,53 +111,22 @@ service cloud.firestore {
 
       match /individualTasks/{taskId} {
         allow read, list: if isSignedIn();
-        allow create: if isSignedIn() && (isMentor() || isAdmin());
-        allow update: if isSignedIn() && (
-          isAdmin() || 
-          resource.data.mentorId == request.auth.uid || 
-          resource.data.studentId == request.auth.uid || 
-          resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower()
-        );
-        allow delete: if isAdmin() || (isSignedIn() && (
-          resource.data.mentorId == request.auth.uid || 
-          resource.data.get('studentEmail', '').lower() == request.auth.token.email.lower() ||
-          resource.data.studentId == request.auth.uid
-        ));
       }
     }
 
-
-    match /quiz_attempts/{attemptId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn();
-    }
-
-    match /moderation-logs/{logId} {
-      allow read: if isSignedIn() && (isAdmin() || isMentor());
-      allow create: if isSignedIn() && (isAdmin() || isMentor());
+    match /followups/{followUpId} {
+      allow read, list: if isSignedIn() && (isAdmin() || isMentor() || resource.data.studentId == request.auth.uid);
+      allow write: if isSignedIn() && (isAdmin() || isMentor());
     }
 
     match /subscriptionPlans/{planId} {
       allow read: if true;
-      allow write: if isAdmin(); 
-    }
-
-    match /mentor-subscriptions/{id} {
-      allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    match /categories/{categoryId} {
-      allow read: if true;
+    match /ai_quotas/{quotaId} {
+      allow read: if isSignedIn() && (request.auth.uid == quotaId || isAdmin());
       allow write: if isAdmin();
     }
-
-    match /levels/{levelId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /roles_admin/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
-    match /roles_mentor/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
   }
 }

@@ -28,11 +28,23 @@ export function getAdminApp() {
 
 export function getAdminFirestore() {
   const app = getAdminApp();
-  return getFirestore(app);
+  const db = getFirestore(app);
+  
+  // Soporte para Emulador en servidor
+  if (process.env.NODE_ENV === 'development' && !process.env.FIREBASE_FIRESTORE_EMULATOR_HOST) {
+    // Si no está la variable de entorno pero estamos en dev, intentamos conectar al puerto por defecto
+    // Nota: Esto es opcional si ya tienes la variable de entorno configurada en tu terminal
+  }
+
+  return db;
 }
+
+export const adminDb = getAdminFirestore();
 
 export function getAdminStorage() {
   const app = getAdminApp();
   const { getStorage } = require('firebase-admin/storage');
   return getStorage(app);
 }
+
+export const adminStorage = getAdminStorage();
