@@ -3,7 +3,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, doc, getDoc, getDocs } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useAuth } from '@/components/auth-context';
-import { EnrolledCourseWithData, StudentEnrollment } from '@/types/student';
+import { StudentEnrollment, CourseDetails } from '@/types/student';
+
+export interface EnrolledCourseWithData extends StudentEnrollment {
+  courseData: CourseDetails;
+}
 
 export function useStudentEnrollments() {
   const { profile, isLoading: isAuthLoading } = useAuth();
@@ -93,7 +97,7 @@ export function useStudentEnrollments() {
           })
         );
         
-        const filtered = joinedData.filter((d): d is EnrolledCourseWithData => d !== null);
+        const filtered = joinedData.filter((d: any): d is EnrolledCourseWithData => d !== null);
         setCoursesWithData(filtered);
       } catch (error) {
         console.error("❌ Error crítico en fetchCourseDetails:", error);

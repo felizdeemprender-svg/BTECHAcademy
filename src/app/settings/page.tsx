@@ -102,8 +102,8 @@ export default function SettingsPage() {
         { titulo: '', descripcion: '' },
         { titulo: '', descripcion: '' },
         { titulo: '', descripcion: '' }
-      ],
-      badges: [],
+      ] as { titulo: string; descripcion: string }[],
+      badges: [] as { label: string; description: string }[],
       showStats: true,
       theme: 'professional-light'
     }
@@ -258,16 +258,6 @@ export default function SettingsPage() {
       }
     }
 
-    if (formData.mpAccessToken && formData.mpPublicKey && formData.mpAccessToken === formData.mpPublicKey) {
-      toast({
-        variant: 'destructive',
-        title: 'Error de Seguridad',
-        description: 'El Access Token no puede ser igual a la Public Key. Por favor verifica tus credenciales en Mercado Pago.'
-      });
-      setLoading(false);
-      return;
-    }
-
     const userRef = doc(db, 'users', user.uid);
     const updateData = {
       displayName: formData.displayName,
@@ -360,7 +350,7 @@ export default function SettingsPage() {
   const endD = safeDate(sub?.endDate);
   const daysLeft = endD ? differenceInDays(endD, new Date()) : 0;
   
-  const isMentorOrAdmin = profile?.roles?.some(role => role === 'mentor' || role === 'admin');
+  const isMentorOrAdmin = profile?.roles?.some((role: string) => role === 'mentor' || role === 'admin');
   const previewUsername = formData.username || profile?.username;
   const RESERVED_PATHS = [
     'admin', 'api', 'auth', 'courses', 'dashboard', 'mentoria', 
@@ -437,7 +427,7 @@ export default function SettingsPage() {
               <h2 className="text-3xl font-bold text-primary">{formData.displayName || 'Usuario'}</h2>
               <p className="text-sm font-bold text-muted-foreground uppercase tracking-[0.2em]">{profile?.email}</p>
               <div className="flex flex-wrap gap-2 justify-center md:justify-start pt-2">
-                {profile?.roles.map(role => (
+                {profile?.roles.map((role: string) => (
                   <Badge key={role} className="bg-primary/10 text-primary border-none text-[10px] uppercase font-bold px-3">
                     {role}
                   </Badge>
