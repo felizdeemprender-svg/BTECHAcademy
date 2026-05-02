@@ -20,6 +20,7 @@ import {
   Library,
   Cpu,
   Rocket,
+  Sparkles,
   ArrowRight,
   MousePointer2,
   CheckCircle2,
@@ -303,11 +304,17 @@ const DashboardContent = ({
           {isAdmin && (
             <div className="space-y-4">
               <h2 className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em] px-1">Infraestructura Global</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
                 <StudentStatCard icon={GraduationCap} label="Mentores" value={new Set(allUsers?.filter((u: any) => u.roles?.includes('mentor')).map((u: any) => u.email)).size} color="accent" />
                 <StudentStatCard icon={Users} label="Alumnos" value={new Set(allUsers?.filter((u: any) => u.roles?.includes('alumno')).map((u: any) => u.email)).size} color="blue" />
                 <StudentStatCard icon={BookOpen} label="Programas" value={globalCourses?.length || 0} color="slate" />
                 <StudentStatCard icon={UserCheck} label="Activos" value={allUsers?.filter((u: any) => u.isActive !== false).length || 0} color="emerald" />
+                <StudentStatCard 
+                  icon={Sparkles} 
+                  label="Créditos IA" 
+                  value={(((profile?.subscription?.aiQuotas?.totalCredits || 0) - (profile?.subscription?.aiQuotas?.usedCredits || 0)) + (profile?.credits?.balance || 0)).toFixed(5)} 
+                  color="amber" 
+                />
               </div>
             </div>
           )}
@@ -315,11 +322,17 @@ const DashboardContent = ({
           {isMentor && !isAdmin && (
             <div className="space-y-4">
               <h2 className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em] px-1">Métricas de Enseñanza y Alcance</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <StudentStatCard icon={BookOpen} label="Mis Programas" value={mentorCourses?.length || 0} color="slate" />
                 <StudentStatCard icon={Users} label="Estudiantes" value={new Set(mentorInscriptions.map((e: any) => e.inviteEmail)).size} color="blue" />
                 <StudentStatCard icon={MousePointer2} label="Clicks Totales" value={aggregateMarketingStats.clicks} color="purple" />
                 <StudentStatCard icon={Target} label="Conversiones" value={aggregateMarketingStats.conversions} color="emerald" />
+                <StudentStatCard 
+                  icon={Sparkles} 
+                  label="Créditos IA" 
+                  value={(((profile?.subscription?.aiQuotas?.totalCredits || 0) - (profile?.subscription?.aiQuotas?.usedCredits || 0)) + (profile?.credits?.balance || 0)).toFixed(5)} 
+                  color="amber" 
+                />
               </div>
             </div>
           )}

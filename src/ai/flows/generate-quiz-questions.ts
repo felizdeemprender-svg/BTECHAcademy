@@ -74,12 +74,28 @@ const generateQuizQuestionsFlow = ai.defineFlow(
     // Truncamos contenido para evitar timeouts
     const contentToUse = input.content.length > 15000 ? input.content.substring(0, 15000) : input.content;
     
-    const { output } = await generateQuizQuestionsPrompt({
-      ...input,
-      content: contentToUse
-    }, {
+    const { generateWithAuditing } = await import('../genkit');
+
+    const result = await generateWithAuditing({
+      actionName: 'generate_quiz_questions',
+      prompt: `Actúa como ${input.role || 'un experto educador institucional'} especializado en diseño de evaluaciones de alto nivel.
+
+Tu tarea es generar exactamente ${input.numQuestions} preguntas basadas EXCLUSIVAMENTE en el contenido proporcionado. Los tipos de preguntas permitidos son: ${input.questionTypes.join(', ')}.
+
+${input.expectations ? `INSTRUCCIONES CRÍTICAS DEL MENTOR:\n${input.expectations}` : ''}
+
+Guías por tipo:
+- Opción Múltiple: 4 opciones claras, solo una correcta. El campo 'correctAnswer' debe ser el texto exacto de la opción correcta.
+- Verdadero/Falso: Declaraciones factuales del texto. El campo 'correctAnswer' debe ser un booleano true o false.
+- Respuesta Libre: Preguntas que requieran síntesis. En 'correctAnswer' detalla los puntos clave.
+
+Contenido a evaluar:
+${contentToUse}`,
+      output: { schema: z.array(QuestionSchema) },
       config: { temperature: 0.4 }
     });
+
+    const output = result.output;
 
     if (!output || !Array.isArray(output)) {
       throw new Error('La respuesta de la IA no tiene el formato esperado.');

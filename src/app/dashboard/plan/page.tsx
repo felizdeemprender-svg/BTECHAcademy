@@ -326,7 +326,7 @@ function PlanContentInner() {
                   <div className="text-center space-y-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Disponible</p>
                     <p className="text-5xl font-black text-slate-900">
-                      {(sub?.aiQuotas?.totalCredits || 0) - (sub?.aiQuotas?.usedCredits || 0)}
+                      {(((sub?.aiQuotas?.totalCredits || 0) - (sub?.aiQuotas?.usedCredits || 0)) + (profile?.credits?.balance || 0)).toFixed(5)}
                     </p>
                   </div>
                   <div className="h-16 w-px bg-slate-100 hidden md:block" />

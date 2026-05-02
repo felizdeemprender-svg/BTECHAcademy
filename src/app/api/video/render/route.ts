@@ -564,6 +564,29 @@ export async function POST(req: NextRequest) {
           downloadUrls.push(mainFile.webContentLink);
         }
       }
+      // COBRO POR CARRUSEL
+      try {
+        const { calculateVideoCost, deductCredits } = await import('@/lib/payments/credits');
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        const uid = cookieStore.get('btech_uid')?.value;
+        const role = cookieStore.get('btech_role')?.value || 'alumno';
+
+        if (uid) {
+          const totalCarouselDuration = scenes.reduce((acc: number, s: Scene) => acc + (s.duration || 5), 0);
+          const cost = await calculateVideoCost(totalCarouselDuration);
+          console.log("--- [DEBUG CAROUSEL] COBRO POR RENDERIZADO ---");
+          console.log(`> Usuario: ${uid} (${role})`);
+          console.log(`> Duración Total: ${totalCarouselDuration.toFixed(2)}s`);
+          console.log(`> Costo: ${cost} créditos`);
+          console.log("----------------------------------------------");
+          
+          await deductCredits(uid, cost, 'video_carousel', role);
+        }
+      } catch (e) {
+        console.error("[Billing Carousel] Error al procesar cobro:", e);
+      }
+
       return NextResponse.json({ success: true, webViewLink: driveLinks.join(','), driveId: driveIds.join(','), downloadUrl: downloadUrls.join(',') });
 
     } else {
@@ -620,6 +643,28 @@ export async function POST(req: NextRequest) {
         const campaignFolderId = await getOrCreateFolder(googleToken, `Pack_${safeBaseName}`, rootFolderId);
         const mainFile = await uploadToDrive(finalVideoPath, googleToken, finalVideoName, 'video/mp4', campaignFolderId);
         driveLink = mainFile.webViewLink; driveId = mainFile.id; downloadUrl = mainFile.webContentLink;
+      }
+
+      // 6. COBRO AUTOMÁTICO POR RENDERIZADO
+      try {
+        const { calculateVideoCost, deductCredits } = await import('@/lib/payments/credits');
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        const uid = cookieStore.get('btech_uid')?.value;
+        const role = cookieStore.get('btech_role')?.value || 'alumno';
+
+        if (uid) {
+          const cost = await calculateVideoCost(totalDuration);
+          console.log("--- [DEBUG VIDEO] COBRO POR RENDERIZADO ---");
+          console.log(`> Usuario: ${uid} (${role})`);
+          console.log(`> Duración: ${totalDuration.toFixed(2)}s`);
+          console.log(`> Costo: ${cost} créditos`);
+          console.log("-------------------------------------------");
+          
+          await deductCredits(uid, cost, 'video_render', role);
+        }
+      } catch (e) {
+        console.error("[Billing Video] Error al procesar cobro:", e);
       }
 
       return NextResponse.json({ success: true, webViewLink: driveLink, driveId, downloadUrl });

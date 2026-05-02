@@ -101,6 +101,7 @@ export function SidebarNav() {
         { name: 'Categorías Académicas', href: '/admin/categories', roles: ['admin'], icon: Library },
         { name: 'Niveles Académicos', href: '/admin/levels', roles: ['admin'], icon: Target },
         { name: 'Moderación IA', href: '/admin/moderation', roles: ['admin'], icon: ShieldAlert },
+        { name: 'Ecosistema Económico IA', href: '/admin/ai-pricing', roles: ['admin'], icon: Cpu },
         { name: 'Términos y Condiciones', href: '/admin/terms', roles: ['admin'], icon: FileText },
         { name: 'Planes de Suscripción', href: '/admin/subscriptions', roles: ['admin'], icon: CreditCard },
         { name: 'Métodos de Pago', href: '/admin/payment-methods', roles: ['admin'], icon: Zap },

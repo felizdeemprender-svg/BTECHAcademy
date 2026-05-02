@@ -60,7 +60,29 @@ const generateCourseStructureFlow = ai.defineFlow(
     outputSchema: GenerateCourseStructureOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { generateWithAuditing } = await import('../genkit');
+
+    const result = await generateWithAuditing({
+      actionName: 'generate_course_structure',
+      prompt: `Actúa como un diseñador instruccional experto. Analiza el siguiente contenido y propón una estructura de curso e-learning coherente.
+
+Contenido del documento:
+${input.content.substring(0, 15000)}
+
+Nivel preferido: ${input.preferredLevel || 'auto'}
+
+Debes devolver un JSON con:
+- Un título atractivo.
+- Una descripción detallada.
+- Una categoría sugerida.
+- El nivel de dificultad.
+- Duración total estimada en horas.
+- Una lista de módulos (mínimo 3) con sus respectivos títulos, descripciones y objetivos de aprendizaje.`,
+      output: { schema: GenerateCourseStructureOutputSchema },
+      config: { temperature: 0.5 }
+    });
+
+    const output = result.output;
     if (!output) throw new Error('No se pudo generar la estructura del curso.');
     return output;
   }

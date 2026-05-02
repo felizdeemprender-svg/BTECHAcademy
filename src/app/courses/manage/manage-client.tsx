@@ -386,6 +386,7 @@ export default function ManageCoursesClient() {
   };
 
   const handleManualAudit = async (course: any, currentTags?: string[]) => {
+    console.log("[PASO 0] Función handleManualAudit despertada");
     setIsAuditing(course.id);
     try {
       const modulesSnap = await getDocs(query(collection(db, 'courses', course.id, 'modules')));
@@ -405,13 +406,15 @@ export default function ManageCoursesClient() {
         }
       }
 
+      console.log("[PASO 1] Iniciando recolección de datos...");
       const modResult = await moderateCourseContent({
         courseTitle: course.title,
         courseDescription: course.description || '',
         moduleTitles: modules.map(m => m.title),
         masterContent: masterContents.join('\n\n---\n\n'),
         questions: allQuestions,
-        sensitiveTopics: modConfig?.sensitiveTopics || []
+        sensitiveTopics: modConfig?.sensitiveTopics || [],
+        ownerUid: course.mentorId
       });
 
       const logRef = doc(collection(db, 'moderation-logs'));
@@ -447,8 +450,15 @@ export default function ManageCoursesClient() {
         description: modResult.isSensitive ? 'Se detectaron temas sensibles. Consulta el historial.' : 'El contenido es apto para el catálogo.'
       });
       return finalStatus;
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Error en Auditoría' });
+    } catch (e: any) {
+      console.error("[AUDIT ERROR FULL]:", e);
+      const errorMsg = e.message || 'Error desconocido';
+      const errorCode = e.code || 'no-code';
+      toast({ 
+        variant: 'destructive', 
+        title: 'Fallo en Auditoría', 
+        description: `Detalle: ${errorMsg} (${errorCode}). Revisa la terminal del servidor.` 
+      });
       return null;
     } finally {
       setIsAuditing(null);

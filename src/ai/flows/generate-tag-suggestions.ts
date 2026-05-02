@@ -47,7 +47,10 @@ const generateTagSuggestionsFlow = ai.defineFlow(
       existingTagsStr = input.existingTags.map(t => `"${t}"`).join(', ');
     }
 
-    const { output } = await ai.generate({
+    const { generateWithAuditing } = await import('../genkit');
+
+    const result = await generateWithAuditing({
+      actionName: 'generate_seo_tags',
       prompt: `Actúa como un experto en SEO (Search Engine Optimization) y taxonomía educativa.
 Tu tarea es proponer una lista de 5 a 8 etiquetas técnicas y profesionales para clasificar cursos dentro del área de: "${input.branch}".
 
@@ -64,6 +67,8 @@ Formato de salida: Un objeto JSON con un array 'suggestions' que contenga objeto
         temperature: 0.7,
       }
     });
+
+    const output = result.output;
 
     if (!output) throw new Error('No se pudieron generar sugerencias SEO para esta rama.');
     return output;

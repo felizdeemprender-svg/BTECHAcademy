@@ -119,6 +119,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           unsubscribeProfile = onSnapshot(userRef, (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.data();
+              
+              // Conector Automático de Identidad: Guardamos en cookies para que el servidor lo vea
+              if (typeof document !== 'undefined') {
+                const primaryRole = data.roles?.[0] || 'none';
+                document.cookie = `btech_uid=${firebaseUser.uid}; path=/; max-age=36000; SameSite=Lax`;
+                document.cookie = `btech_role=${primaryRole}; path=/; max-age=36000; SameSite=Lax`;
+              }
+
               // Solo actualizamos si los datos son distintos para evitar bucles de render
               setProfile(data);
               setIsLoading(false);
@@ -133,6 +141,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setIsLoading(false);
         }
       } else {
+        // Limpiar rastro de identidad
+        if (typeof document !== 'undefined') {
+          document.cookie = "btech_uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+          document.cookie = "btech_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }
         setUser(null);
         setProfile(null);
         setIsLoading(false);
