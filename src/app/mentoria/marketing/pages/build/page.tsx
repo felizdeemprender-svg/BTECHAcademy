@@ -212,7 +212,7 @@ function BuilderContent() {
 
   const collectionsQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
-    return query(collection(db, 'templateCollections'), where('ownerId', '==', profile.uid));
+    return query(collection(db, 'templateCollections'));
   }, [db, profile?.uid]);
   const { data: rawCollections, isLoading: collectionsLoading } = useCollection(collectionsQuery);
 
@@ -252,6 +252,14 @@ function BuilderContent() {
 
     return courseTags.length > 0 ? courseTags : STRATEGIC_SEGMENTS;
   }, [selectedCourse, allTags]);
+
+  // Auto-completar contexto del curso cuando se selecciona
+  useEffect(() => {
+    if (selectedCourse && !editId) {
+      if (!pageTitle) setPageTitle(`Campaña ${selectedCourse.title}`);
+      if (!targetAudience) setTargetAudience(`Público interesado en aprender ${selectedCourse.title}. ${selectedCourse.description || ''}`);
+    }
+  }, [selectedCourse, editId]);
 
   const handleMatchAndGenerate = async () => {
     if (!selectedCourseId || !selectedCollectionId) return;

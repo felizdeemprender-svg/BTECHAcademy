@@ -130,6 +130,10 @@ ${missionDirectives[input.mission || 'venta']}
 CONTEXTO DE ADNs MAESTROS (REGLAS DE ESTILO):
 ${adnContext}
 
+CONSTRUCCIÓN BASADA EN EL CURSO (REGLA DE ORO):
+El EJE CENTRAL de todo el contenido es el CURSO ("${input.courseTitle}"). 
+Si las directivas del ADN, del Blueprint o del Público Objetivo mencionan temáticas de otra industria (ej. si el blueprint dice "salud" pero el curso es de "peluquería"), DEBES IGNORAR la industria del blueprint y usar únicamente su ESTRUCTURA DE MARKETING o TONO, aplicándolo 100% a la realidad y temática del CURSO. ¡El contenido jamás debe mezclar industrias que no tengan que ver con el curso!
+
 REGLAS CRÍTICAS DE CONSTRUCCIÓN:
 1. **Landings**: Para cada landing, observa el campo 'sectionCount'. Debes generar EXACTAMENTE esa cantidad de objetos dentro del array 'sections'. 
    - RECUERDA: La landing tiene un campo raíz 'videoUrl'. DEBES poner allí una URL de marcador de posición (ej: YouTube) para el video de ventas principal.

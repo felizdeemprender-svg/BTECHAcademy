@@ -377,7 +377,13 @@ const DashboardContent = ({
                     <Card key={course.id} className="border-none shadow-lg overflow-hidden rounded-2xl md:rounded-3xl bg-white group hover:shadow-xl transition-all duration-500">
                       <div className="flex flex-col lg:flex-row items-stretch">
                         <div className="relative w-full lg:w-32 h-24 lg:h-auto bg-slate-100 overflow-hidden shrink-0">
-                          <Image src={`https://loremflickr.com/600/400/education,course?lock=${course.id}`} alt={course.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
+                          <Image 
+                            src={course.thumbnail || `https://loremflickr.com/600/400/education,course?lock=${course.id}`} 
+                            alt={course.title} 
+                            fill 
+                            className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                            unoptimized 
+                          />
                         </div>
                         <div className="py-4 md:py-2.5 px-6 md:px-8 flex-1 flex flex-col lg:flex-row justify-between items-center gap-6">
                           <div className="text-center lg:text-left flex-1 min-w-0">

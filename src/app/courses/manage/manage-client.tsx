@@ -882,7 +882,7 @@ export default function ManageCoursesClient() {
                         <div className="flex items-center gap-4">
                           <div className="relative w-10 h-10 rounded bg-muted overflow-hidden border shrink-0">
                             <Image 
-                              src={course.thumbnail || `https://loremflickr.com/100/100/education,course?lock=${course.id}`} 
+                              src={course.thumbnail || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop`} 
                               alt="Cover" 
                               fill 
                               className="object-cover" 
@@ -1046,7 +1046,7 @@ export default function ManageCoursesClient() {
                       )}>
                         <div className="flex items-center gap-3">
                           <div className="relative w-10 h-10 rounded-lg overflow-hidden border shrink-0">
-                            <Image src={`https://loremflickr.com/100/100/education,course?lock=${c.id}`} alt="Thumb" fill className="object-cover" unoptimized />
+                            <Image src={`https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop`} alt="Thumb" fill className="object-cover" unoptimized />
                           </div>
                           <span className="text-sm font-bold text-foreground line-clamp-1">{c.title}</span>
                         </div>

@@ -122,13 +122,14 @@ Tu tarea es realizar "MAQUETADO DE CONTENIDO DUAL" fusionando estrategia comerci
 === MISIÓN ESTRATÉGICA ===
 ${missionTones[mission]}
 
-=== REGLA DE ORO: FUSIÓN DE NICHO Y PERSONA ===
-1. IDENTIFICA EL NICHO: El curso trata sobre "${courseTitle}".
-2. HABLA EL LENGUAJE DEL EXPERTO: Utiliza terminología específica basada en la descripción: "${courseDescription}". 
-3. APLICA EL MARKETING AL NICHO: Usa ganchos comerciales (ROI, éxito, escala, transformación) pero SIEMPRE aplicados al tema.
+=== REGLA DE ORO: EL CURSO ES EL REY (FUSIÓN DE NICHO) ===
+1. EJE CENTRAL: El curso trata sobre "${courseTitle}". La descripción es: "${courseDescription}". 
+2. Si las directivas del ADN, del Blueprint o del Público Objetivo mencionan temáticas de otra industria (ej. si el blueprint dice "salud" pero el curso es de "peluquería"), DEBES IGNORAR la industria del blueprint y usar únicamente su ESTRUCTURA DE MARKETING o TONO, aplicándolo 100% a la realidad y temática del CURSO. ¡El contenido jamás debe mezclar industrias que no tengan que ver con el curso!
+3. HABLA EL LENGUAJE DEL EXPERTO: Utiliza terminología específica basada en la descripción.
+4. APLICA EL MARKETING AL NICHO: Usa ganchos comerciales (ROI, éxito, escala, transformación) pero SIEMPRE aplicados al tema.
    - Mal: "Alcanza el éxito digital".
    - Bien: "Alcanza el éxito en tu cosecha maximizando el rendimiento por árbol".
-4. PROHIBIDO: Ignorar el tema técnico para usar relleno de marketing genérico. Cada escena/placa DEBE mencionar al menos un elemento físico o técnico del curso.
+5. PROHIBIDO: Ignorar el tema técnico para usar relleno de marketing genérico. Cada escena/placa DEBE mencionar al menos un elemento físico o técnico del curso.
 
 === CONTEXTO DEL PÚBLICO OBJETIVO ===
 Dirígete a: ${targetAudience || 'General'} (Usa el tono y nivel de sofisticación que ellos esperan).
