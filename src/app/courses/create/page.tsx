@@ -64,7 +64,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
+import { extractDocumentText } from '@/ai/flows/extract-document-text-flow';
+import { generateQuizQuestions } from '@/ai/flows/generate-quiz-questions';
+import { 
   Select,
   SelectContent,
   SelectItem,
@@ -115,17 +117,17 @@ export default function CreateCoursePage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { firestore, storage } = useFirebase();
+  const { firestore: db, storage } = useFirebase();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [courseId, setCourseId] = useState<string | null>(null);
-  
+
   const [courseData, setCourseData] = useState({
     title: '',
     description: '',
     categoryId: '',
-    level: 'Básico',
+    level: '',
     tags: [] as string[]
   });
 
@@ -160,9 +162,13 @@ export default function CreateCoursePage() {
   const [showNextModuleDialog, setShowNextModuleDialog] = useState(false);
   const [aiTargetType, setAiTargetType] = useState<'main' | 'support'>('main');
 
-  const categories = useCollection(useMemoFirebase(() => collection(firestore, 'categories'), [firestore]))?.data;
-  const levels = useCollection(useMemoFirebase(() => collection(firestore, 'levels'), [firestore]))?.data;
-  const termsConfig = useDoc(useMemoFirebase(() => doc(firestore, 'config', 'terms'), [firestore]))?.data;
+  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
+  const levelsQuery = useMemoFirebase(() => db ? query(collection(db, 'levels'), orderBy('order', 'asc')) : null, [db]);
+
+  const { data: categories } = useCollection(categoriesQuery);
+  const { data: levels } = useCollection(levelsQuery);
+  const { data: termsConfig } = useDoc(useMemoFirebase(() => db ? doc(db, 'config', 'terms') : null, [db]));
+
 
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -227,8 +233,10 @@ export default function CreateCoursePage() {
     }
   };
 
-  const isCompatibleWithAI = (file: File) => {
-    return file.name.endsWith('.docx') || file.name.endsWith('.txt');
+  const isCompatibleWithAI = (file: File | any) => {
+    const fileName = file?.name || file?.fileName || '';
+    const name = fileName.toLowerCase();
+    return name.endsWith('.docx') || name.endsWith('.txt') || name.endsWith('.pdf');
   };
 
   const setAsMaster = (id: string) => {
@@ -257,14 +265,46 @@ export default function CreateCoursePage() {
   const handleSaveModule = async () => {
     if (!courseId) return;
     setLoading(true);
+
     try {
-      const moduleRef = doc(collection(firestore, 'courses', courseId, 'modules'));
-      await setDoc(moduleRef, { ...currentModule, order: moduleOrder, createdAt: serverTimestamp() });
-      const courseRef = doc(firestore, 'courses', courseId);
-      await updateDoc(courseRef, { modulesCount: moduleOrder });
+      // Función para limpiar profundamente el objeto antes de enviarlo a Firestore
+      const cleanForFirestore = (obj: any): any => {
+        if (Array.isArray(obj)) return obj.map(cleanForFirestore);
+        if (obj !== null && typeof obj === 'object') {
+          return Object.fromEntries(
+            Object.entries(obj)
+              .filter(([key, value]) => key !== 'fileBlob' && key !== 'isProcessing' && value !== undefined)
+              .map(([key, value]) => [key, cleanForFirestore(value)])
+          );
+        }
+        return obj;
+      };
+
+      const moduleData = cleanForFirestore({
+        ...currentModule,
+        order: moduleOrder,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      const moduleRef = doc(collection(db, 'courses', courseId, 'modules'));
+      await setDoc(moduleRef, moduleData);
+      
+      const courseRef = doc(db, 'courses', courseId);
+      await updateDoc(courseRef, { 
+        modulesCount: moduleOrder,
+        updatedAt: serverTimestamp() 
+      });
+      
+      toast({ title: 'Clase guardada correctamente' });
       setShowNextModuleDialog(true);
-    } catch (error) {
-      toast({ title: 'Error al guardar clase', variant: 'destructive' });
+    } catch (error: any) {
+      console.error("Critical Save Error:", error);
+      toast({ 
+        title: 'Error al guardar clase', 
+        description: error.message || 'Error de comunicación con la base de datos.',
+        variant: 'destructive' 
+      });
     } finally {
       setLoading(false);
     }
@@ -346,41 +386,87 @@ export default function CreateCoursePage() {
     }
   };
 
+  const generateId = () => Math.random().toString(36).substring(2, 11);
+
   const handleExtractText = async () => {
+    const master = currentModule.supportMaterials.find(m => m.isMaster);
+    if (!master?.url) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No hay un documento maestro configurado o la URL no es válida.' });
+      return;
+    }
+
     setIsExtracting(true);
-    setTimeout(() => {
-      setExtractedContent('Contenido simulado extraído del documento maestro.');
-      setAiFlowStep(2);
+    try {
+      const extraction = await extractDocumentText({ 
+        documentUrl: master.url, 
+        documentName: master.name 
+      });
+      
+      if (extraction.error) throw new Error(extraction.error);
+      
+      if (extraction.extractedText) {
+        setExtractedContent(extraction.extractedText);
+        setAiFlowStep(2);
+        toast({ title: 'Lectura Finalizada' });
+      }
+    } catch (e: any) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Error de Lectura', 
+        description: e.message || "Ocurrió un error al contactar con el motor de extracción." 
+      });
+    } finally {
       setIsExtracting(false);
-    }, 2000);
+    }
   };
 
   const handleGenerateQuestions = async () => {
+    if (aiPrefs.types.length === 0) return;
     setLoading(true);
-    setTimeout(() => {
-      const mockQs = Array.from({ length: aiPrefs.numQuestions }).map((_, i) => ({
-        id: `ai-${Date.now()}-${i}`,
-        text: `Pregunta generada por IA #${i + 1}`,
-        type: aiPrefs.types[0] || 'multiple_choice',
-        options: ['Opción A', 'Opción B', 'Opción C', 'Opción D'],
-        correctAnswer: 0
+    try {
+      const contentToUse = extractedContent || currentModule.title;
+      const result = await generateQuizQuestions({
+        content: contentToUse,
+        numQuestions: aiPrefs.numQuestions,
+        questionTypes: aiPrefs.types as any[],
+        role: aiPrefs.role,
+        expectations: aiPrefs.expectations
+      });
+      
+      if (result && 'error' in result) throw new Error(result.error);
+
+      const questionsWithIds = result.map(q => ({
+        ...q,
+        id: generateId(),
+        options: q.options || (q.type === 'multiple_choice' ? ['', '', '', ''] : null)
       }));
+      
       if (aiTargetType === 'main') {
-        setCurrentModule(prev => ({ ...prev, questions: [...prev.questions, ...mockQs] }));
+        setCurrentModule(prev => ({ ...prev, questions: [...prev.questions, ...questionsWithIds] }));
       } else {
-        setCurrentModule(prev => ({ ...prev, supportQuestions: [...prev.supportQuestions, ...mockQs] }));
+        setCurrentModule(prev => ({ ...prev, supportQuestions: [...prev.supportQuestions, ...questionsWithIds] }));
       }
+      
       setIsAiModalOpen(false);
+      setExtractedContent('');
       setAiFlowStep(1);
+      toast({ title: `Se han añadido ${questionsWithIds.length} sugerencias` });
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Fallo en Generación', description: e.message });
+    } finally {
       setLoading(false);
-      toast({ title: 'Preguntas generadas con éxito' });
-    }, 3000);
+    }
   };
 
   const renderQuestionEditor = (q: any, idx: number, isSupport: boolean) => (
     <Card key={q.id} className="border-2 border-primary/10 shadow-sm rounded-2xl overflow-hidden">
       <CardHeader className="py-4 px-6 bg-secondary/5 flex flex-row justify-between items-center">
-        <Badge variant="outline" className="font-bold">Pregunta {idx + 1}</Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="font-bold">Pregunta {idx + 1}</Badge>
+          <Badge className="bg-primary/10 text-primary border-none text-[10px] uppercase font-bold">
+            {q.type === 'multiple_choice' ? 'Opción Múltiple' : q.type === 'true_false' ? 'V/F' : 'Abierta'}
+          </Badge>
+        </div>
         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
           if (isSupport) {
             setCurrentModule(prev => ({ ...prev, supportQuestions: prev.supportQuestions.filter(x => x.id !== q.id) }));
@@ -390,27 +476,53 @@ export default function CreateCoursePage() {
         }}><Trash2 className="h-4 w-4" /></Button>
       </CardHeader>
       <CardContent className="p-6 space-y-4">
-        <Input value={q.text} onChange={e => {
-          const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
-          newQs[idx].text = e.target.value;
-          setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
-        }} placeholder="¿Cuál es la pregunta?" className="font-medium h-12 rounded-xl" />
-        <div className="grid gap-2">
-          {q.options.map((opt: string, optIdx: number) => (
-            <div key={optIdx} className="flex gap-2 items-center">
-              <Checkbox checked={q.correctAnswer === optIdx} onCheckedChange={() => {
-                const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
-                newQs[idx].correctAnswer = optIdx;
-                setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
-              }} />
-              <Input value={opt} onChange={e => {
-                const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
-                newQs[idx].options[optIdx] = e.target.value;
-                setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
-              }} className="h-10 rounded-lg bg-secondary/10 border-none" />
-            </div>
-          ))}
+        <div className="space-y-2">
+          <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Enunciado</Label>
+          <Input value={q.text || q.question || ''} onChange={e => {
+            const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
+            newQs[idx].text = e.target.value;
+            setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
+          }} placeholder="¿Cuál es la pregunta?" className="font-medium h-12 rounded-xl" />
         </div>
+
+        {q.type === 'multiple_choice' && q.options && (
+          <div className="grid gap-2 pt-2">
+            <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Opciones de Respuesta</Label>
+            {q.options.map((opt: string, optIdx: number) => (
+              <div key={optIdx} className="flex gap-2 items-center">
+                <Checkbox 
+                  checked={q.correctAnswer === optIdx || q.correctAnswer === opt} 
+                  onCheckedChange={() => {
+                    const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
+                    newQs[idx].correctAnswer = optIdx;
+                    setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
+                  }} 
+                />
+                <Input value={opt} onChange={e => {
+                  const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
+                  if (!newQs[idx].options) newQs[idx].options = ['', '', '', ''];
+                  newQs[idx].options[optIdx] = e.target.value;
+                  setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
+                }} className="h-10 rounded-lg bg-secondary/10 border-none text-sm" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {(q.type === 'true_false' || q.type === 'free_response') && (
+          <div className="space-y-2 bg-secondary/5 p-4 rounded-xl border border-dashed">
+            <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Respuesta Esperada / Puntos Clave</Label>
+            <Textarea 
+              value={typeof q.correctAnswer === 'boolean' ? (q.correctAnswer ? 'Verdadero' : 'Falso') : q.correctAnswer}
+              onChange={e => {
+                const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
+                newQs[idx].correctAnswer = e.target.value;
+                setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
+              }}
+              className="min-h-[60px] bg-white rounded-lg text-sm"
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -433,6 +545,86 @@ export default function CreateCoursePage() {
             <Progress value={(step / 6) * 100} className="w-40 h-1.5" />
           </div>
         </header>
+
+        {step === 1 && (
+          <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
+              <div className="bg-primary/5 p-10 border-b">
+                <Badge className="bg-primary/10 text-primary border-none mb-2 px-3 py-1 rounded-full uppercase tracking-tighter font-black text-[9px]">Paso 01</Badge>
+                <h2 className="text-2xl font-bold text-primary">Información Institucional</h2>
+                <p className="text-muted-foreground text-sm">Define las bases y el alcance de tu nuevo programa educativo.</p>
+              </div>
+              <CardContent className="p-10 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="course-title" className="text-sm font-bold ml-1">Título del Programa</Label>
+                      <Input 
+                        id="course-title"
+                        name="title"
+                        placeholder="Ej: Master en ADN Modeling" 
+                        value={courseData.title}
+                        onChange={e => setCourseData({ ...courseData, title: e.target.value })}
+                        className="h-12 rounded-xl bg-secondary/5 border-none px-4 font-bold"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="course-description" className="text-sm font-bold ml-1">Descripción Breve</Label>
+                      <Textarea 
+                        id="course-description"
+                        name="description"
+                        placeholder="Explica de qué trata este programa..."
+                        value={courseData.description}
+                        onChange={e => setCourseData({ ...courseData, description: e.target.value })}
+                        className="min-h-[120px] rounded-xl bg-secondary/5 border-none p-4 text-sm resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="bg-secondary/5 p-8 rounded-3xl border border-dashed space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="course-category" className="text-sm font-bold ml-1">Categoría Académica</Label>
+                        <Select value={courseData.categoryId} onValueChange={v => setCourseData({ ...courseData, categoryId: v })}>
+                          <SelectTrigger id="course-category" className="h-12 rounded-xl bg-white border-none shadow-sm px-4 font-bold">
+                            <SelectValue placeholder="Selecciona una categoría" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl border-none shadow-2xl">
+                            {categories?.map((cat: any) => (
+                              <SelectItem key={cat.id} value={cat.id} className="font-bold">{cat.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="course-level" className="text-sm font-bold ml-1">Nivel del Programa</Label>
+                        <Select value={courseData.level} onValueChange={v => setCourseData({ ...courseData, level: v })}>
+                          <SelectTrigger id="course-level" className="h-12 rounded-xl bg-white border-none shadow-sm px-4 font-bold">
+                            <SelectValue placeholder="Selecciona el nivel" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl border-none shadow-2xl">
+                            {levels?.map((lvl: any) => (
+                              <SelectItem key={lvl.id} value={lvl.name} className="font-bold">{lvl.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={handleStartCourse} 
+                      disabled={!courseData.title || !courseData.categoryId || loading}
+                      className="w-full h-14 rounded-2xl text-lg font-bold bg-primary shadow-xl hover:scale-[1.01] transition-transform"
+                    >
+                      {loading ? <Loader2 className="animate-spin mr-2" /> : <ArrowRight className="mr-2 h-5 w-5" />} INICIAR CREACIÓN
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in duration-500">
@@ -775,7 +967,9 @@ export default function CreateCoursePage() {
           <div className="bg-primary p-8 text-white relative">
             <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4"><BrainCircuit className="text-white h-6 w-6" /></div>
             <DialogTitle className="text-2xl font-bold">Generación Inteligente</DialogTitle>
-            <DialogDescription className="text-primary-foreground/70 text-sm mt-1">Entrena a la IA con el Documento Maestro de esta clase.</DialogDescription>
+            <DialogDescription className="text-primary-foreground/70 text-sm mt-1">
+              Gemini analizará tu documento maestro para proponer una estructura pedagógica y evaluaciones automáticas.
+            </DialogDescription>
 
             <div className="mt-8 flex items-center justify-between relative px-4">
               <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/10 -translate-y-1/2 z-0 mx-8" />
@@ -879,6 +1073,9 @@ export default function CreateCoursePage() {
               <CheckCircle2 className="h-8 w-8" />
             </div>
             <AlertDialogTitle className="text-2xl font-bold">¡Clase Guardada!</AlertDialogTitle>
+            <AlertDialogDescription className="sr-only">
+              La clase se ha guardado correctamente. Puedes elegir añadir otra clase o proceder al siguiente paso de identidad visual.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-3 pt-6">
             <AlertDialogCancel onClick={() => { setStep(3); clearUILocks(); }} className="flex-1 h-12 rounded-xl font-bold border-2">Siguiente Paso: Identidad</AlertDialogCancel>

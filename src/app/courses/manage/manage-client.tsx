@@ -1367,7 +1367,21 @@ export default function ManageCoursesClient() {
         {/* AlertDialog: Delete Course */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => { setIsDeleteDialogOpen(open); if(!open) clearUILocks(); }}>
           <AlertDialogContent className="rounded-md p-8 max-sm border-none shadow-2xl pointer-events-auto">
-            <AlertDialogHeader className="items-center text-center"><div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center text-destructive mb-4"><Trash2 className="h-6 w-6" /></div><AlertDialogTitle className="text-lg font-bold">¿Eliminar Programa?</AlertDialogTitle></AlertDialogHeader><AlertDialogFooter className="pt-4"><AlertDialogCancel className="flex-1">Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDeleteConfirm} className="flex-1 bg-destructive">Eliminar Definitivamente</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+            <AlertDialogHeader className="items-center text-center">
+              <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center text-destructive mb-4">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <AlertDialogTitle className="text-lg font-bold">¿Eliminar Programa?</AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-sm text-muted-foreground">
+                Esta acción es permanente. Se eliminarán todas las clases, materiales y registros asociados a este programa.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="pt-4">
+              <AlertDialogCancel className="flex-1">Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteConfirm} className="flex-1 bg-destructive">Eliminar Definitivamente</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

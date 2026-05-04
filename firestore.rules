@@ -73,7 +73,7 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isAdmin() || isMentor();
       allow update: if isAdmin() || (isMentor() && resource.data.mentorId == request.auth.uid);
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (isMentor() && resource.data.mentorId == request.auth.uid);
 
       match /lessons/{lessonId} {
         allow read: if true;
@@ -142,6 +142,16 @@ service cloud.firestore {
     match /followups/{followUpId} {
       allow read, list: if isSignedIn() && (isAdmin() || isMentor() || resource.data.studentId == request.auth.uid);
       allow write: if isSignedIn() && (isAdmin() || isMentor());
+
+      match /sessions/{sessionId} {
+        allow read, list: if isSignedIn() && (isAdmin() || isMentor() || get(/databases/$(database)/documents/followups/$(followUpId)).data.studentId == request.auth.uid);
+        allow write: if isSignedIn() && (isAdmin() || isMentor());
+      }
+
+      match /tasks/{taskId} {
+        allow read, list: if isSignedIn() && (isAdmin() || isMentor() || get(/databases/$(database)/documents/followups/$(followUpId)).data.studentId == request.auth.uid);
+        allow write: if isSignedIn() && (isAdmin() || isMentor());
+      }
     }
 
     match /subscriptionPlans/{planId} {
@@ -169,5 +179,18 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /levels/{levelId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /roles_admin/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
+    match /roles_mentor/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
   }
 }
