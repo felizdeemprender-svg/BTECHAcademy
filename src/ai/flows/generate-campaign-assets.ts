@@ -8,24 +8,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const LandingFilledSchema = z.object({
-  type: z.string(),
-  marketingName: z.string().describe('Nombre comercial pegadizo (ej: "Masterclass VIP", "Oferta Relámpago").'),
-  headline: z.string().describe('Titular persuasivo final.'),
-  subheadline: z.string().describe('Bajada estratégica final.'),
-  ctaText: z.string(),
-  videoUrl: z.string().optional().describe('URL de vídeo de ventas relevante.'),
-  sections: z.array(z.object({
-    title: z.string(),
-    paragraph: z.string(),
-    imageUrl: z.string().optional(),
-    videoUrl: z.string().optional().describe('URL de video si la sección es de tipo video (común en la sección 1).'),
-    microBullets: z.array(z.string()).min(1).max(5).describe('Genera entre 2 y 4 viñetas persuasivas por sección.'),
-  })).describe('Genera exactamente el número de secciones indicadas en el blueprint (sectionCount).'),
-  benefits: z.array(z.string()).optional().default([]),
-  aboutMentor: z.string().optional().default(''),
-});
-
 const EmailFilledSchema = z.object({
   type: z.string(),
   marketingName: z.string().describe('Nombre interno/comercial del email.'),
@@ -83,7 +65,6 @@ const GenerateCampaignInputSchema = z.object({
 export type GenerateCampaignInput = z.infer<typeof GenerateCampaignInputSchema>;
 
 const GenerateCampaignOutputSchema = z.object({
-  landings: z.array(LandingFilledSchema).optional().default([]),
   emails: z.array(EmailFilledSchema).optional().default([]),
   socials: z.array(SocialFilledSchema).optional().default([]),
   ads: z.array(AdsFilledSchema).optional().default([]),
@@ -135,14 +116,7 @@ El EJE CENTRAL de todo el contenido es el CURSO ("${input.courseTitle}").
 Si las directivas del ADN, del Blueprint o del Público Objetivo mencionan temáticas de otra industria (ej. si el blueprint dice "salud" pero el curso es de "peluquería"), DEBES IGNORAR la industria del blueprint y usar únicamente su ESTRUCTURA DE MARKETING o TONO, aplicándolo 100% a la realidad y temática del CURSO. ¡El contenido jamás debe mezclar industrias que no tengan que ver con el curso!
 
 REGLAS CRÍTICAS DE CONSTRUCCIÓN:
-1. **Landings**: Para cada landing, observa el campo 'sectionCount'. Debes generar EXACTAMENTE esa cantidad de objetos dentro del array 'sections'. 
-   - RECUERDA: La landing tiene un campo raíz 'videoUrl'. DEBES poner allí una URL de marcador de posición (ej: YouTube) para el video de ventas principal.
-   - Las secciones del array 'sections' (incluyendo la index 0) deben ser ahora todas de CONTENIDO (Título, Párrafo, Imagen y Bullets). Ya no son contenedores de video.
-   - Cada sección debe tener entre 2 y 4 viñetas (microBullets) potentes.
-   - DEBES incluir el campo 'benefits' con un listado de 3-5 beneficios del curso.
-   - **Sobre el Mentor**: DEBES incluir el campo 'aboutMentor'. Si la 'Bio del Mentor' provista es genérica o corta, sintetiza una descripción autoritaria basándote en los 'Tags/Temáticas' del curso. (Ej: Si el curso es de Citricultura, describe al mentor como un experto con años de experiencia optimizando cultivos cítricos y negocios agrícolas). Nunca digas "No provista".
-   - La narrativa debe ser educativa y persuasiva.
-2. **Social Media**: 
+1. **Social Media**: 
    - Observa el campo 'blueprintConfig' en cada ítem.
    - REGLA DE CANTIDAD: Si es un formato de video (Story, TikTok, Reels), busca 'sceneCount'. Si es un carrusel o estático, busca 'slideCount'.
    - DEBES generar EXACTAMENTE esa cantidad de objetos dentro del array 'slides'. (Ej: si sceneCount es 5, el array 'slides' debe tener 5 objetos independientes).

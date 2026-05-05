@@ -41,7 +41,9 @@ export default function SalesLandingsDashboardPage() {
 
   const pages = useMemo(() => {
     if (!rawPages) return null;
-    return [...rawPages].sort((a, b) => {
+    return [...rawPages]
+      .filter(p => p.type === 'landing_only')
+      .sort((a, b) => {
       const dateA = a.createdAt?.toDate?.() || new Date(0);
       const dateB = b.createdAt?.toDate?.() || new Date(0);
       return dateB.getTime() - dateA.getTime();

@@ -56,8 +56,6 @@ import {
 interface TemplateEditorProps {
   generatedAssets: any;
   blueprintData: any;
-  activeLandingIdx: number;
-  setActiveLandingIdx: (idx: number) => void;
   activeEmailIdx: number;
   setActiveEmailIdx: (idx: number) => void;
   activeSocialIdx: number;
@@ -68,12 +66,13 @@ interface TemplateEditorProps {
   courses: any[] | null;
   allTags: any[] | null;
   profile: any;
-  updateAsset: (channel: 'landings' | 'emails' | 'socials' | 'ads', variantIdx: number, field: string, value: any, subIndex?: number) => void;
+  updateAsset: (channel: 'emails' | 'socials' | 'ads', variantIdx: number, field: string, value: any, subIndex?: number) => void;
   loading: boolean;
   onSave: (overrideAssets?: any, silentAutoSave?: boolean) => void;
   templateDirectives?: string;
   campaignMission?: string;
   adns?: Record<string, any>;
+  availableLandings?: any[] | null;
 }
 
 const OptimizedValidationReport = ({ generatedAssets }: { generatedAssets: any }) => {
@@ -81,7 +80,7 @@ const OptimizedValidationReport = ({ generatedAssets }: { generatedAssets: any }
   const allErrors: any[] = [];
   const allWarnings: any[] = [];
   
-  ['socials', 'landings', 'emails', 'ads'].forEach(channel => {
+  ['socials', 'emails', 'ads'].forEach(channel => {
     const assets = generatedAssets?.[channel] || [];
     assets.forEach((asset: any) => {
       const validation = asset?.validationResults;
@@ -142,7 +141,6 @@ const OptimizedValidationReport = ({ generatedAssets }: { generatedAssets: any }
 export function TemplateEditor({
   generatedAssets,
   blueprintData,
-  activeLandingIdx, setActiveLandingIdx,
   activeEmailIdx, setActiveEmailIdx,
   activeSocialIdx, setActiveSocialIdx,
   activeAdsIdx, setActiveAdsIdx,
@@ -153,9 +151,9 @@ export function TemplateEditor({
   updateAsset,
   loading,
   onSave,
-  templateDirectives,
   campaignMission,
   adns = {},
+  availableLandings = [],
 }: TemplateEditorProps) {
   // ADNs cargados desde el componente padre (page.tsx) para evitar ReferenceError
   const dynamicAdns = adns;
@@ -469,7 +467,7 @@ export function TemplateEditor({
     toast({ title: 'PDF Eliminado', description: 'Referencia de archivo borrada.' });
   };
 
-  const handleGenerateBreakdown = async (variant: any, index: number, channel: 'landings' | 'emails' | 'socials' | 'ads') => {
+  const handleGenerateBreakdown = async (variant: any, index: number, channel: 'emails' | 'socials' | 'ads') => {
     setIsGeneratingBreakdown(`${channel}-${index}`);
     try {
       const selectedCourse = courses?.find(c => c.id === selectedCourseId);
@@ -537,181 +535,12 @@ export function TemplateEditor({
         </div>
       </header>
 
-      <Tabs defaultValue="landing" className="w-full">
+      <Tabs defaultValue="email" className="w-full">
         <TabsList className="bg-slate-950 p-1.5 h-14 w-full justify-start gap-2 px-6 rounded-2xl border border-white/10 shadow-2xl mb-8">
-          <TabsTrigger value="landing" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:text-slate-950 text-white/40 hover:text-white/80 transition-all"><Layout className="h-4 w-4" /> Landings</TabsTrigger>
           <TabsTrigger value="email" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-violet-600 data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Mail className="h-4 w-4" /> Emails</TabsTrigger>
           <TabsTrigger value="social" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Instagram className="h-4 w-4" /> Redes Sociales</TabsTrigger>
           <TabsTrigger value="ads" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Megaphone className="h-4 w-4" /> Ads</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="landing">
-          <Tabs value={activeLandingIdx.toString()} onValueChange={v => setActiveLandingIdx(parseInt(v))}>
-            <TabsList className="bg-slate-100 p-1 h-12 justify-start gap-1 rounded-xl mb-8 border border-slate-200 shadow-sm flex-wrap w-fit">
-              {generatedAssets?.landings?.map((l: any, i: number) => (
-                <TabsTrigger key={i} value={i.toString()} className="rounded-lg px-6 h-10 text-[10px] font-black uppercase tracking-tight data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-slate-900 text-slate-400">{l.marketingName || `Ruta ${i + 1}`}</TabsTrigger>
-              ))}
-            </TabsList>
-            {generatedAssets?.landings?.map((l: any, lIdx: number) => (
-              <TabsContent key={lIdx} value={lIdx.toString()} className="space-y-8">
-                <Card className="p-10 rounded-[2.5rem] bg-slate-900 border border-white/10 shadow-xl">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Nombre Comercial</Label>
-                       <Input value={l.marketingName} onChange={e => updateAsset('landings', lIdx, 'marketingName', e.target.value)} className="h-14 rounded-2xl bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-emerald-500/50" />
-                    </div>
-                    <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Titular Principal (Hero)</Label>
-                       <Textarea value={l.headline} onChange={e => updateAsset('landings', lIdx, 'headline', e.target.value)} className="text-3xl font-black text-white border-none bg-white/5 rounded-3xl p-8 min-h-[120px] focus-visible:ring-emerald-500/50" />
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Nueva Sección Audiovisual (Debajo del Hero) */}
-                <Card className="p-10 rounded-[2.5rem] bg-slate-900 border border-white/10 shadow-xl">
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 shadow-[0_0_30px_-10px_rgba(16,185,129,0.3)]">
-                      <Video className="h-8 w-8" />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Video de Venta / Introducción</Label>
-                       <Input 
-                        placeholder="https://www.youtube.com/watch?v=..." 
-                        value={l.videoUrl || ''} 
-                        onChange={e => updateAsset('landings', lIdx, 'videoUrl', e.target.value)} 
-                        className="h-14 rounded-2xl bg-white/5 border-white/5 px-8 font-mono text-xs text-emerald-400 focus-visible:ring-emerald-500/50" 
-                       />
-                    </div>
-                  </div>
-                </Card>
-
-                <div className="space-y-8">
-                  {l.sections?.map((section: any, sIdx: number) => (
-                    <Card key={sIdx} className="p-12 rounded-[3.5rem] bg-slate-900 border border-white/10 shadow-2xl">
-                      <div className="grid lg:grid-cols-2 gap-12">
-                        <div className="space-y-8">
-                          <div className="space-y-2">
-                            <Label className="text-[9px] font-black text-slate-500 ml-4 tracking-[0.3em]">TÍTULO DE SECCIÓN</Label>
-                            <Input value={section.title} onChange={e => { const s = [...l.sections]; s[sIdx].title = e.target.value; updateAsset('landings', lIdx, 'sections', s); }} className="font-black text-xl border-none bg-white/5 text-white rounded-2xl h-14 px-8" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[9px] font-black text-slate-500 ml-4 tracking-[0.3em]">CUERPO DE TEXTO</Label>
-                            <Textarea value={section.paragraph} onChange={e => { const s = [...l.sections]; s[sIdx].paragraph = e.target.value; updateAsset('landings', lIdx, 'sections', s); }} className="min-h-[180px] border-none bg-white/5 text-slate-300 rounded-[2rem] p-8 text-base font-medium leading-relaxed" />
-                          </div>
-                        </div>
-                        <ImageEditor label={`Imagen ${sIdx + 1}`} url={section.imageUrl} onUpdate={u => { const s = [...l.sections]; s[sIdx].imageUrl = u; updateAsset('landings', lIdx, 'sections', s); }} courseId={selectedCourseId || ''} channel="landing" keywords={section.title} description={section.paragraph} />
-                      </div>
-
-                      {/* Restauración de Viñetas (MicroBullets) */}
-                      <div className="mt-10 pt-10 border-t border-white/5 space-y-4">
-                        <div className="flex items-center gap-2 ml-4">
-                          <Sparkles className="h-3 w-3 text-emerald-500" />
-                          <Label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Viñetas Potentes por Sección</Label>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {section.microBullets?.map((bullet: string, bIdx: number) => (
-                            <div key={bIdx} className="group relative">
-                              <Input 
-                                value={bullet} 
-                                onChange={e => { 
-                                  const s = [...l.sections]; 
-                                  s[sIdx].microBullets[bIdx] = e.target.value; 
-                                  updateAsset('landings', lIdx, 'sections', s); 
-                                }} 
-                                className="h-12 bg-white/5 border-none rounded-xl pl-6 pr-4 text-sm text-slate-300 focus-visible:ring-emerald-500/30 transition-all group-hover:bg-white/[0.07]"
-                                placeholder="Escribe un beneficio clave..."
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-
-                {/* Nuevos Campos: Beneficios Globales y Mentor */}
-                <Card className="p-12 rounded-[4rem] bg-slate-900 border border-white/5 shadow-2xl space-y-12">
-                  <div className="grid lg:grid-cols-2 gap-16">
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between ml-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                          </div>
-                          <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Resumen de Beneficios</Label>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => {
-                            const b = [...(l.benefits || [])];
-                            b.push("Nuevo Beneficio Clave...");
-                            updateAsset('landings', lIdx, 'benefits', b);
-                          }}
-                          className="h-8 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-[10px] font-bold px-3"
-                        >
-                          <Plus className="h-3 w-3 mr-1" /> AGREGAR
-                        </Button>
-                      </div>
-                      <div className="space-y-3">
-                        {l.benefits && l.benefits.length > 0 ? l.benefits.map((benefit: string, bIdx: number) => (
-                          <div key={bIdx} className="group relative flex items-center gap-2">
-                            <Input 
-                              value={benefit} 
-                              onChange={e => { 
-                                const b = [...(l.benefits || [])]; 
-                                b[bIdx] = e.target.value; 
-                                updateAsset('landings', lIdx, 'benefits', b); 
-                              }} 
-                              className="h-14 bg-white/5 border-white/5 rounded-2xl px-6 font-medium text-slate-300 focus-visible:ring-emerald-500/50 flex-1"
-                            />
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => {
-                                const b = (l.benefits || []).filter((_: any, i: number) => i !== bIdx);
-                                updateAsset('landings', lIdx, 'benefits', b);
-                              }}
-                              className="h-10 w-10 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 hover:bg-red-500/10 transition-all rounded-xl"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )) : (
-                          <div className="p-8 border-2 border-dashed border-white/5 rounded-3xl text-center">
-                            <p className="text-sm text-slate-500 mb-4">No se han definido beneficios específicos aún.</p>
-                            <Button 
-                              variant="outline" 
-                              onClick={() => updateAsset('landings', lIdx, 'benefits', ["Incrementa tu producción en...", "Reduce pérdidas por...", "Optimiza el proceso de..."])}
-                              className="text-[10px] font-bold uppercase rounded-xl border-white/10 text-slate-400"
-                            >
-                              Inicializar con Placeholders
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3 ml-4">
-                        <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                          <Mic2 className="h-4 w-4 text-violet-400" />
-                        </div>
-                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Sobre el Mentor</Label>
-                      </div>
-                      <Textarea 
-                        value={l.aboutMentor || ''} 
-                        onChange={e => updateAsset('landings', lIdx, 'aboutMentor', e.target.value)} 
-                        className="min-h-[200px] bg-white/5 border-white/5 rounded-[2.5rem] p-8 text-base font-medium leading-relaxed text-slate-300 focus-visible:ring-violet-500/50" 
-                        placeholder="Describe la autoridad del mentor basándote en su experiencia técnica..."
-                      />
-                    </div>
-                  </div>
-                </Card>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </TabsContent>
 
         <TabsContent value="email">
           <Tabs value={activeEmailIdx.toString()} onValueChange={v => setActiveEmailIdx(parseInt(v))}>
@@ -732,6 +561,31 @@ export function TemplateEditor({
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-[0.2em]">Cuerpo Narrativo</Label>
                     <Textarea value={e.body} onChange={v => updateAsset('emails', eIdx, 'body', v.target.value)} className="min-h-[500px] rounded-[2.5rem] border-white/5 bg-white/5 p-12 leading-relaxed text-lg font-medium text-slate-200 shadow-inner focus-visible:ring-violet-500/50" />
+                  </div>
+
+                  <div className="pt-6 border-t border-white/5">
+                    <Label className="text-[10px] font-black uppercase text-violet-400 ml-4 tracking-widest mb-4 block">Destino del CTA (Botón)</Label>
+                    <Select
+                      value={e.landingId || 'mentor'}
+                      onValueChange={(val) => updateAsset('emails', eIdx, 'landingId', val)}
+                    >
+                      <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/5 text-xs font-bold text-white px-8 shadow-2xl">
+                        <div className="flex items-center gap-3">
+                          <Link2 className="h-4 w-4 text-violet-500" />
+                          <span>Vincular con: <SelectValue placeholder="Seleccionar Landing" /></span>
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-white/10 text-white">
+                        <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-white/10">URL del Mentor</SelectItem>
+                        {availableLandings?.map((pack: any) => (
+                          pack.aiContent?.landings?.map((l: any, vIdx: number) => (
+                            <SelectItem key={`${pack.id}-${vIdx}`} value={`${pack.id}-${vIdx}`} className="text-[10px] uppercase font-bold hover:bg-white/10">
+                              🎯 {pack.title || 'Pack'}: {l.marketingName || `Variante ${vIdx + 1}`}
+                            </SelectItem>
+                          ))
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </Card>
               </TabsContent>
@@ -798,20 +652,23 @@ export function TemplateEditor({
 
                                       <div className="flex-1 max-w-[240px]">
                                         <Select
-                                          value={(s.landingIdx ?? globalIdx % (generatedAssets?.landings?.length || 1)).toString()}
-                                          onValueChange={(val) => updateAsset('socials', globalIdx, 'landingIdx', parseInt(val))}
+                                          value={s.landingId || 'mentor'}
+                                          onValueChange={(val) => updateAsset('socials', globalIdx, 'landingId', val)}
                                         >
                                           <SelectTrigger className="h-11 rounded-2xl bg-slate-900 border-white/10 text-[9px] font-black uppercase text-emerald-400 tracking-widest shadow-2xl">
                                             <div className="flex items-center gap-2">
                                               <Link2 className="h-3.5 w-3.5" />
-                                              <span>Link a: <SelectValue placeholder="Destino" /></span>
+                                              <span>Link Externo <SelectValue placeholder="Destino" /></span>
                                             </div>
                                           </SelectTrigger>
                                           <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                            {generatedAssets?.landings?.map((l: any, lIdx: number) => (
-                                              <SelectItem key={lIdx} value={lIdx.toString()} className="text-[10px] uppercase font-bold hover:bg-white/10">
-                                                🎯 {l.marketingName || `Landing Ruta ${lIdx + 1}`}
-                                              </SelectItem>
+                                            <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-white/10">URL del Mentor</SelectItem>
+                                            {availableLandings?.map((pack: any) => (
+                                              pack.aiContent?.landings?.map((l: any, vIdx: number) => (
+                                                <SelectItem key={`${pack.id}-${vIdx}`} value={`${pack.id}-${vIdx}`} className="text-[10px] uppercase font-bold hover:bg-white/10">
+                                                  🎯 {pack.title || 'Pack'}: {l.marketingName || `Variante ${vIdx + 1}`}
+                                                </SelectItem>
+                                              ))
                                             ))}
                                           </SelectContent>
                                         </Select>
@@ -897,7 +754,32 @@ export function TemplateEditor({
                     </div>
                  </Card>
                  <Card className="p-12 rounded-[3.5rem] bg-slate-900 border border-white/10 shadow-2xl space-y-10">
-                    <h3 className="font-black text-2xl text-white uppercase tracking-tighter">Descripciones</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-black text-2xl text-white uppercase tracking-tighter">Descripciones</h3>
+                      <div className="w-64">
+                        <Select
+                          value={a.landingId || 'mentor'}
+                          onValueChange={(val) => updateAsset('ads', aIdx, 'landingId', val)}
+                        >
+                          <SelectTrigger className="h-10 rounded-xl bg-white/5 border-white/5 text-[9px] font-black uppercase text-cyan-400 tracking-widest shadow-2xl">
+                            <div className="flex items-center gap-2">
+                              <Link2 className="h-3.5 w-3.5" />
+                              <span>Link: <SelectValue placeholder="Destino" /></span>
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-900 border-white/10 text-white">
+                            <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-white/10">URL del Mentor</SelectItem>
+                            {availableLandings?.map((pack: any) => (
+                              pack.aiContent?.landings?.map((l: any, vIdx: number) => (
+                                <SelectItem key={`${pack.id}-${vIdx}`} value={`${pack.id}-${vIdx}`} className="text-[10px] uppercase font-bold hover:bg-white/10">
+                                  🎯 {pack.title || 'Pack'}: {l.marketingName || `Variante ${vIdx + 1}`}
+                                </SelectItem>
+                              ))
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                     <div className="space-y-8">
                       {a.descriptions?.map((d: string, i: number) => (
                         <Textarea key={i} value={d} onChange={e => updateAsset('ads', aIdx, 'descriptions', e.target.value, i)} className="min-h-[140px] bg-white/5 border-white/5 text-slate-200 rounded-xl p-8" />

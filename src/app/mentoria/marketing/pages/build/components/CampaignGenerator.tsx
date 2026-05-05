@@ -15,7 +15,6 @@ import {
   Layout, 
   Loader2, 
   Lightbulb,
-  DollarSign,
   Zap,
   UserCheck,
   Rocket,
@@ -35,8 +34,6 @@ interface CampaignGeneratorProps {
   setTargetAudience: (audience: string) => void;
   campaignMission: 'venta' | 'autoridad' | 'lanzamiento' | 'leads';
   setCampaignMission: (mission: 'venta' | 'autoridad' | 'lanzamiento' | 'leads') => void;
-  price: number;
-  setPrice: (price: number) => void;
   courses: any[] | null;
   collections: any[] | null;
   allTags: any[] | null;
@@ -215,7 +212,7 @@ export function CampaignGenerator({
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-8 pt-6 border-t border-slate-100">
+            <div className="grid grid-cols-1 gap-6 pt-6 border-t border-slate-100">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-slate-400">
                   Título del Pack (Interno)
@@ -224,22 +221,8 @@ export function CampaignGenerator({
                   value={pageTitle} 
                   onChange={e => setPageTitle(e.target.value)} 
                   placeholder="Ej: Lanzamiento Masterclass IA" 
-                  className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-bold" 
+                  className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-bold w-full" 
                 />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-accent">
-                  Precio del Programa
-                </Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-accent" />
-                  <Input 
-                    type="number" 
-                    value={price} 
-                    onChange={e => setPrice(parseFloat(e.target.value) || 0)} 
-                    className="h-14 rounded-2xl bg-accent/5 border-none pl-12 font-black text-xl text-accent" 
-                  />
-                </div>
               </div>
             </div>
 

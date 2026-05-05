@@ -46,7 +46,9 @@ export default function SalesPagesDashboardPage() {
 
   const pages = useMemo(() => {
     if (!rawPages) return null;
-    return [...rawPages].sort((a, b) => {
+    return [...rawPages]
+      .filter(p => p.type !== 'landing_only')
+      .sort((a, b) => {
       const dateA = a.createdAt?.toDate?.() || new Date(0);
       const dateB = b.createdAt?.toDate?.() || new Date(0);
       return dateB.getTime() - dateA.getTime();
@@ -187,42 +189,13 @@ export default function SalesPagesDashboardPage() {
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors line-clamp-1">{page.title}</h3>
                   <div className="flex items-center gap-3 mt-3">
-                    <Layout className="h-3.5 w-3.5 text-blue-500" />
                     <Mail className="h-3.5 w-3.5 text-emerald-500" />
                     <Instagram className="h-3.5 w-3.5 text-rose-500" />
                     <Megaphone className="h-3.5 w-3.5 text-amber-500" />
                   </div>
                 </div>
                 
-                <div className="space-y-2 pt-4 border-t">
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Landings de Lanzamiento:</p>
-                  <div className="grid grid-cols-1 gap-2">
-                    {[0, 1, 2].map(v => {
-                      const landing = (page.aiContent as any)?.landings?.[v];
-                      const label = landing?.marketingName || `Variante ${v + 1}`;
-                      return (
-                        <div key={v} className="flex gap-2">
-                          <Button 
-                            onClick={() => window.open(`/v/${page.id}?v=${v}`, '_blank')} 
-                            variant="outline" 
-                            className="flex-1 h-9 rounded-xl font-bold text-[10px] uppercase gap-2 border-slate-200 bg-white hover:bg-slate-50"
-                          >
-                            <ExternalLink className="h-3 w-3" /> {label}
-                          </Button>
-                          <Button 
-                            onClick={() => handleCopyLink(page.id, v)} 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-9 w-9 rounded-xl border"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
                 </div>
-              </div>
 
               <div className="p-4 bg-slate-50 border-t space-y-3">
                 <div className="grid grid-cols-3 gap-2">

@@ -17,6 +17,7 @@ export interface ExportOptions {
   includeValidationResults?: boolean;
   includeTimestamps?: boolean;
   includeProtocolDetails?: boolean;
+  baseUrl?: string;
 }
 
 /**
@@ -26,7 +27,14 @@ export function formatEmailContent(emails: TemplateMetadata[], options: ExportOp
   return emails.map((email, index) => {
     const target = email.targetLandingIdx ?? index;
     const customUrl = email.customCtaUrl;
-    const link = customUrl || `https://tu-dominio.com/api/track?pageId=PAGE_ID&v=${target}&source=email&channel=email`;
+    let link = customUrl || `https://tu-dominio.com/api/track?pageId=PAGE_ID&v=${target}&source=email&channel=email`;
+    
+    if (email.landingId && email.landingId !== 'mentor') {
+      const [packId, vIdx] = email.landingId.split('-');
+      link = `${options.baseUrl || 'https://btechacademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
+    } else if (email.landingId === 'mentor') {
+      link = 'URL_DEL_MENTOR_AQUÍ';
+    }
     
     let content = `VARIANTE ${index + 1}${email.preconformed ? ' (PRE-CONFORMADA)' : ''}\n`;
     content += `ASUNTO: ${email.subject || 'Sin asunto'}\n`;
@@ -55,7 +63,14 @@ export function formatEmailContent(emails: TemplateMetadata[], options: ExportOp
  */
 export function formatSocialContent(socials: TemplateMetadata[], options: ExportOptions = {}): string {
   return socials.map((social, index) => {
-    const landingLink = social.finalLandingUrl || 'https://tu-dominio.com/v/PAGE_ID';
+    let landingLink = social.finalLandingUrl || 'https://tu-dominio.com/v/PAGE_ID';
+    
+    if (social.landingId && social.landingId !== 'mentor') {
+      const [packId, vIdx] = social.landingId.split('-');
+      landingLink = `${options.baseUrl || 'https://btechacademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
+    } else if (social.landingId === 'mentor') {
+      landingLink = 'URL_DEL_MENTOR_AQUÍ';
+    }
     const slidesText = social.slides?.map((slide: any, si: number) => 
       `PLACA ${si + 1}:\n[TEXTO EN IMAGEN]: ${slide.text}\n[LINK IMAGEN]: ${slide.imageUrl}`
     ).join('\n\n') || '';
@@ -96,7 +111,17 @@ SINCRONIZACIÓN: Al inicio del video (0s)\n\n` : '';
  */
 export function formatAdsContent(ads: TemplateMetadata[], options: ExportOptions = {}): string {
   return ads.map((ad, index) => {
+    let landingLink = 'https://tu-dominio.com/v/PAGE_ID';
+    
+    if (ad.landingId && ad.landingId !== 'mentor') {
+      const [packId, vIdx] = ad.landingId.split('-');
+      landingLink = `${options.baseUrl || 'https://btechacademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
+    } else if (ad.landingId === 'mentor') {
+      landingLink = 'URL_DEL_MENTOR_AQUÍ';
+    }
+
     let content = `CONJUNTO DE ANUNCIOS ${index + 1}${ad.preconformed ? ' - PRE-CONFORMADO' : ''}\n\n`;
+    content += `LINK DE DESTINO: ${landingLink}\n\n`;
     content += `TITULARES SUGERIDOS:\n`;
     content += `${(ad.headlines || []).map((h, hi) => `${hi + 1}. ${h}`).join('\n')}\n\n`;
     content += `DESCRIPCIONES:\n`;

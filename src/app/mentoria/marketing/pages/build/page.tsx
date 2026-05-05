@@ -110,7 +110,6 @@ function BuilderContent() {
   const [pageTitle, setPageTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [campaignMission, setCampaignMission] = useState<'venta' | 'autoridad' | 'lanzamiento' | 'leads'>('venta');
-  const [price, setPrice] = useState<number>(49990);
   const [templateDirectives, setTemplateDirectives] = useState('');
   const [generatedAssets, setGeneratedAssets] = useState<GenerateCampaignOutput | null>(null);
   const [blueprintData, setBlueprintData] = useState<any>(null);
@@ -152,14 +151,12 @@ function BuilderContent() {
             setSelectedCourseId(data.courseId);
             setSelectedCollectionId(data.templateCollectionId);
             setPageTitle(data.title);
-            setPrice(data.price);
             setTargetAudience(data.targetAudience || '');
             setCampaignMission(data.engineMeta?.mission || 'venta');
             
             // Normalizar contenido (Soportar plural/singular heredado)
             const content = data.aiContent || {};
             const normalizedAssets = {
-              landings: content.landings || content.landing || [],
               emails: content.emails || content.email || [],
               socials: content.socials || content.social || [],
               ads: content.ads || content.ad || content.adsSet || []
@@ -225,6 +222,18 @@ function BuilderContent() {
     });
   }, [rawCollections]);
 
+  const availableLandingsQuery = useMemoFirebase(() => {
+    if (!profile?.uid || !selectedCourseId) return null;
+    return query(
+      collection(db, 'salesPages'), 
+      where('mentorId', '==', profile.uid),
+      where('courseId', '==', selectedCourseId),
+      where('type', '==', 'landing_only'),
+      where('isActive', '==', true)
+    );
+  }, [db, profile?.uid, selectedCourseId]);
+  const { data: availableLandings } = useCollection(availableLandingsQuery);
+
   const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags')), [db]);
   const { data: rawTags } = useCollection(tagsQuery);
 
@@ -278,11 +287,6 @@ function BuilderContent() {
       const chunkArray = (arr: any[], size: number) => 
         Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, i * size + size));
 
-      if (assets?.landings?.length) {
-        chunkArray(assets.landings, 2).forEach((chunk, i) => 
-          tasks.push({ channel: 'landings', label: `Landings ${i>0?`(${i+1})`:''}...`, payload: { landings: chunk } })
-        );
-      }
       if (assets?.emails?.length) {
         chunkArray(assets.emails, 3).forEach((chunk, i) => 
           tasks.push({ channel: 'emails', label: `Emails ${i>0?`(${i+1})`:''}...`, payload: { emails: chunk } })
@@ -802,7 +806,8 @@ function BuilderContent() {
       const exportOptions: ExportOptions = {
         includeValidationResults: true,
         includeTimestamps: true,
-        includeProtocolDetails: true
+        includeProtocolDetails: true,
+        baseUrl: window.location.origin
       };
       
       const packs = generateExportPacks(
@@ -840,12 +845,11 @@ function BuilderContent() {
           sourceApp: 'BTECHAcademy',
           mission: campaignMission
         },
-        price: price,
+        type: 'campaign_pack',
         targetAudience: targetAudience,
         templateDirectives: templateDirectives,
         templateCollectionId: selectedCollectionId,
         aiContent: {
-          landings: validatedLandings.landing || [],
           socials: validatedSocials.social || [],
           emails: validatedEmails.email || [],
           ads: validatedAds.ads || []
@@ -929,8 +933,6 @@ function BuilderContent() {
             setTargetAudience={setTargetAudience}
             campaignMission={campaignMission}
             setCampaignMission={setCampaignMission}
-            price={price}
-            setPrice={setPrice}
             courses={courses}
             collections={collections}
             allTags={allTags}
@@ -949,8 +951,7 @@ function BuilderContent() {
           <TemplateEditor
             generatedAssets={generatedAssets}
             blueprintData={blueprintData}
-            activeLandingIdx={activeLandingIdx}
-            setActiveLandingIdx={setActiveLandingIdx}
+            activeEmailIdx={activeEmailIdx}
             activeEmailIdx={activeEmailIdx}
             setActiveEmailIdx={setActiveEmailIdx}
             activeSocialIdx={activeSocialIdx}
@@ -967,6 +968,7 @@ function BuilderContent() {
             onSave={handleFinalSave}
             campaignMission={campaignMission}
             adns={masterAdns}
+            availableLandings={availableLandings}
           />
         )}
       </div>
