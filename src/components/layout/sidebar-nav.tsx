@@ -88,6 +88,7 @@ export function SidebarNav() {
       label: 'Comercialización',
       items: filterMarketingItems([
         { name: 'Mis Campañas', href: '/mentoria/marketing', roles: ['admin', 'marketing', 'mentor'], icon: Rocket },
+        { name: 'Landings de Venta', href: '/mentoria/marketing/landings', roles: ['admin', 'marketing', 'mentor'], icon: LayoutIcon },
         { name: 'Centro de Mando', href: '/mentoria/marketing/execution', roles: ['admin', 'marketing', 'mentor'], icon: Cpu },
         { name: 'Track de Campañas', href: '/mentoria/marketing/track', roles: ['admin', 'marketing', 'mentor'], icon: Activity },
         { name: 'Generación de Contenido', href: '/mentoria/marketing/pages', roles: ['admin', 'marketing', 'mentor'], icon: FileBox },
