@@ -148,6 +148,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   const [currentModule, setCurrentModule] = useState<ModuleData | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
 
+  const classNameInputRef = useRef<HTMLInputElement>(null);
+
   // AI Generation State
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiTargetType, setAiTargetType] = useState<'main' | 'support'>('main');
@@ -256,15 +258,18 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       enableSupportQuestions: false
     });
     setIsModuleModalOpen(true);
+    setTimeout(() => classNameInputRef.current?.focus(), 300);
   };
 
   const isCompatibleWithAI = (file: File | undefined, filename: string) => {
+    const name = filename.toLowerCase();
     if (file) {
-      const isText = file.type === 'text/plain' || file.name.endsWith('.txt');
-      const isWord = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.name.endsWith('.docx');
-      return isText || isWord;
+      const isText = file.type === 'text/plain' || name.endsWith('.txt');
+      const isWord = file.type.includes('wordprocessingml.document') || file.type.includes('msword') || name.endsWith('.docx') || name.endsWith('.doc');
+      const isPdf = file.type === 'application/pdf' || name.endsWith('.pdf');
+      return isText || isWord || isPdf;
     }
-    return filename.endsWith('.txt') || filename.endsWith('.docx');
+    return name.endsWith('.txt') || name.endsWith('.docx') || name.endsWith('.doc') || name.endsWith('.pdf');
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -381,7 +386,26 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   };
 
   const handleSaveModule = async () => {
-    if (!id || !currentModule || !currentModule.title) return;
+    if (!currentModule?.title?.trim()) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Faltan datos', 
+        description: 'Por favor, introduce un nombre para la clase antes de continuar.' 
+      });
+      classNameInputRef.current?.focus();
+      return;
+    }
+
+    if (currentModule.contentType === 'video' && !currentModule.videoUrl?.trim()) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Falta el video', 
+        description: 'Has seleccionado tipo Video pero no has proporcionado una URL válida.' 
+      });
+      return;
+    }
+
+    if (!id || !currentModule) return;
     setLoading(true);
     
     try {
@@ -727,6 +751,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     <div className="space-y-2">
                       <Label>Nombre de la Clase</Label>
                       <Input 
+                        ref={classNameInputRef}
                         value={currentModule.title} 
                         onChange={e => setCurrentModule({...currentModule!, title: e.target.value})} 
                         className="h-14 font-bold rounded-xl text-xl" 
@@ -941,7 +966,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         <span className="text-sm font-bold truncate max-w-[200px]">{currentModule?.supportMaterials.find(m => m.isMaster)?.name}</span>
                       </div>
                     ) : (
-                      <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.docx/.txt)</Badge>
+                      <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.pdf/.docx/.txt)</Badge>
                     )}
                   </div>
 

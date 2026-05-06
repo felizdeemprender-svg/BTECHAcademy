@@ -10,35 +10,29 @@ import path from 'path';
 import fs from 'fs/promises';
 
 const SceneContentSchema = z.object({
-  segment_label: z.string().describe('Categoría narrativa: "GANCHO", "VALOR", "CTA", etc.'),
-  title: z.string().describe('Título o concepto de la escena.'),
-  text: z.string().describe('Texto corto de impacto para aparecer en pantalla (3-5 palabras).'),
-  voiceover: z.string().describe('Fracción del guion de voz continuo que corresponde a esta escena.'),
-  description: z.string().describe('Descripción detallada de lo que sucede visualmente.'),
-  duration: z.number().describe('Duración sugerida en segundos.'),
-  overlays: z.array(z.string()).describe('Palabras clave extra.'),
+  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CTA', 'CIERRE']).describe('Etiqueta lógica para el motor ADN 2.0: GANCHO (atención), VALOR (contenido), CTA (llamado acción), CIERRE (despedida).'),
+  text: z.string().describe('Texto de impacto visual ultra-corto (2-4 palabras).'),
+  voiceover: z.string().describe('Guion narrativo para el locutor (TTS).'),
+  media_hint: z.string().describe('Keywords precisas para buscar el fondo visual (ej: "minimalist luxury office", "dark cyber technology abstract").'),
+  duration: z.number().describe('Duración exacta en segundos (3-8s).'),
+  production_notes: z.string().optional().describe('Notas sobre el estilo de animación o tono específico para esta escena.'),
 });
 
 const SocialSlideSchema = z.object({
-  segment_label: z.string().describe('Categoría narrativa.'),
-  text: z.string().describe('Texto visual corto.'),
-  voiceover: z.string().describe('Guion de voz para esta placa.'),
-  description: z.string().describe('Descripción visual de la placa (Authority/LinkedIn style).'),
+  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CTA', 'CIERRE']),
+  text: z.string().describe('Texto visual para la placa.'),
+  voiceover: z.string().describe('Guion de voz.'),
+  media_hint: z.string().describe('Keywords para el fondo de la placa.'),
   duration: z.number().describe('Duración en segundos.'),
 });
 
 const VariantContentSchema = z.object({
-  voiceover: z.string().describe('Guion maestro continuo para todo el contenido.'),
-  scenes: z.array(SceneContentSchema).optional().describe('Para formatos de video.'),
-  slides: z.array(SocialSlideSchema).optional().describe('Para formatos de carrusel.'),
-  hook: z.string().optional().describe('Gancho inicial para el copy.'),
-  caption: z.string().optional().describe('Cuerpo de la publicación.'),
-  hashtags: z.array(z.string()).optional().describe('Hashtags relevantes.'),
-  production_notes: z.object({
-    voice_id: z.string().optional(),
-    music_vibe: z.string().optional(),
-    visual_style: z.string().optional(),
-  }).optional(),
+  voiceover: z.string().describe('Guion maestro continuo.'),
+  scenes: z.array(SceneContentSchema).optional().describe('Desglose para VIDEO (Reels/TikTok).'),
+  slides: z.array(SocialSlideSchema).optional().describe('Desglose para CARRUSEL.'),
+  hook: z.string().optional().describe('Copy inicial.'),
+  caption: z.string().optional().describe('Cuerpo del copy.'),
+  hashtags: z.array(z.string()).optional(),
 });
 
 export async function generateVariantContent(
@@ -116,20 +110,22 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
 - LA PANTALLA (text) reafirma con frases de PODER (3-5 palabras) que subrayan el beneficio técnico.`;
 
   const { output: parsed } = await ai.generate({
-    prompt: `Actúa como un Estratega de Marketing Especializado en el Nicho del Curso y Guionista Senior. 
-Tu tarea es realizar "MAQUETADO DE CONTENIDO DUAL" fusionando estrategia comercial con rigor técnico.
+    prompt: `Actúa como un Director Creativo y Guionista Senior especializado en Marketing Cinético.
+Tu tarea es realizar un "MAQUETADO DE CONTENIDO ADN 2.0" fusionando estrategia comercial con precisión de renderizado.
 
 === MISIÓN ESTRATÉGICA ===
 ${missionTones[mission]}
 
 === REGLA DE ORO: EL CURSO ES EL REY (FUSIÓN DE NICHO) ===
-1. EJE CENTRAL: El curso trata sobre "${courseTitle}". La descripción es: "${courseDescription}". 
-2. Si las directivas del ADN, del Blueprint o del Público Objetivo mencionan temáticas de otra industria (ej. si el blueprint dice "salud" pero el curso es de "peluquería"), DEBES IGNORAR la industria del blueprint y usar únicamente su ESTRUCTURA DE MARKETING o TONO, aplicándolo 100% a la realidad y temática del CURSO. ¡El contenido jamás debe mezclar industrias que no tengan que ver con el curso!
-3. HABLA EL LENGUAJE DEL EXPERTO: Utiliza terminología específica basada en la descripción.
-4. APLICA EL MARKETING AL NICHO: Usa ganchos comerciales (ROI, éxito, escala, transformación) pero SIEMPRE aplicados al tema.
-   - Mal: "Alcanza el éxito digital".
-   - Bien: "Alcanza el éxito en tu cosecha maximizando el rendimiento por árbol".
-5. PROHIBIDO: Ignorar el tema técnico para usar relleno de marketing genérico. Cada escena/placa DEBE mencionar al menos un elemento físico o técnico del curso.
+1. EJE CENTRAL: El curso trata sobre "${courseTitle}". Descripción: "${courseDescription}". 
+2. IGNORA INDUSTRIAS AJENAS: Si el blueprint menciona una industria distinta, usa solo su estructura técnica y aplícala 100% al nicho del curso.
+3. HABLA EL LENGUAJE DEL EXPERTO: Usa terminología técnica específica. Prohibido el relleno genérico.
+
+=== DIRECTRICES ADN 2.0 (CALIDAD CINEMATOGRÁFICA) ===
+1. ESTRUCTURA LÓGICA: Sigue estrictamente la secuencia GANCHO (Atención), VALOR (Cuerpo), CTA (Conversión), CIERRE (Marca).
+2. PANTALLA (text): Frases de PODER de 2 a 4 palabras máximo. El diseño visual lo pone el ADN, tú pon el impacto emocional.
+3. BACKGROUNDS (media_hint): Escribe keywords descriptivas para el buscador de imágenes (ej: "modern industrial machinery macro", "premium workspace lighting sunset").
+4. VOZ (voiceover): Relato fluido, persuasivo y experto.
 
 === CONTEXTO DEL PÚBLICO OBJETIVO ===
 Dirígete a: ${targetAudience || 'General'} (Usa el tono y nivel de sofisticación que ellos esperan).
@@ -139,25 +135,21 @@ Dirígete a: ${targetAudience || 'General'} (Usa el tono y nivel de sofisticaci�
 
 ${dualNarrativeInstruction}
 
-CONTEXTO TÉCNICO (OBLIGATORIO RESPETAR):
-- Plataforma: ${variant.platform || 'General'}
-- Tipo de Contenido: ${variant.type}
-- Blueprint (Límites): ${JSON.stringify(variant.blueprintConfig || {})}
-- ADN: ${adnDef.name}
+CONTEXTO TÉCNICO:
+- Plataforma: ${variant.platform || 'General'} | Tipo: ${variant.type}
+- ADN Modelo: ${adnDef.name}
 
-TAREAS DE DIRECCIÓN DUAL:
+TAREAS DE DIRECCIÓN:
 ${injectedAdnRule}
 
 1. COORDINACIÓN VISUAL Y ESTRUCTURA:
-   - Genera un GUION MAESTRO ('voiceover' a nivel raíz) que sea un relato FLUIDO y experto.
-   - Genera un desglose detallado en 'scenes' o 'slides'.
-   - **REGLA DE CANTIDAD (INNEGOCIABLE)**: DEBES GENERAR EXACTAMENTE ${expectedCount} ELEMENTOS.
-   - **REGLA DE SINCRONIZACIÓN**: Debes REPARTIR el Guion Maestro dentro de cada escena/placa en el campo 'voiceover'. Cada escena DEBE tener su propio fragmento de voz.
+   - Genera un GUION MAESTRO ('voiceover' raíz) fluido.
+   - Genera el desglose en 'scenes' o 'slides'.
+   - REGLA DE CANTIDAD: Genera EXACTAMENTE ${expectedCount} elementos.
    - Para cada elemento:
-     * El 'voiceover' de la escena debe durar aproximadamente lo que indica 'duration'.
-     * El 'text' de pantalla debe ser un resumen potente de lo que se oye en esa placa (Narrativa Dual).
-     * La 'description' visual debe ser dinámica y de alto impacto.
-     * Sigue la estructura: GANCHO (Problema), VALOR (Solución), CTA (Acción).
+     * El 'text' visual debe ser minimalista y potente.
+     * El 'media_hint' debe ser cinematográfico y coherente con el curso.
+     * El 'voiceover' debe estar perfectamente sincronizado con la 'duration'.
 
 3. TEXTOS DE ACOMPAÑAMIENTO:
    - Genera un 'hook' relevante al curso. 

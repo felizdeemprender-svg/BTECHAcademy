@@ -134,10 +134,12 @@ export default function CreateCoursePage() {
   const [currentModule, setCurrentModule] = useState(initialModule);
   const [moduleOrder, setModuleOrder] = useState(1);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [isInvitation, setIsInvitation] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [addingStudent, setAddingStudent] = useState(false);
   const [invitedStudents, setInvitedStudents] = useState<any[]>([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [isInvitation, setIsInvitation] = useState(false);
+  const [addingStudent, setAddingStudent] = useState(false);
+
+  const classNameInputRef = useRef<HTMLInputElement>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [brandingData, setBrandingData] = useState({
     bio: '',
@@ -236,7 +238,16 @@ export default function CreateCoursePage() {
   const isCompatibleWithAI = (file: File | any) => {
     const fileName = file?.name || file?.fileName || '';
     const name = fileName.toLowerCase();
-    return name.endsWith('.docx') || name.endsWith('.txt') || name.endsWith('.pdf');
+    const type = file?.type || '';
+    return (
+      name.endsWith('.docx') || 
+      name.endsWith('.doc') || 
+      name.endsWith('.txt') || 
+      name.endsWith('.pdf') ||
+      type === 'application/pdf' ||
+      type.includes('wordprocessingml.document') ||
+      type.includes('msword')
+    );
   };
 
   const setAsMaster = (id: string) => {
@@ -263,6 +274,25 @@ export default function CreateCoursePage() {
   };
 
   const handleSaveModule = async () => {
+    if (!currentModule.title.trim()) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Faltan datos', 
+        description: 'Por favor, introduce un nombre para la clase antes de continuar.' 
+      });
+      classNameInputRef.current?.focus();
+      return;
+    }
+
+    if (currentModule.contentType === 'video' && !currentModule.videoUrl.trim()) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Falta el video', 
+        description: 'Has seleccionado tipo Video pero no has proporcionado una URL válida.' 
+      });
+      return;
+    }
+
     if (!courseId) return;
     setLoading(true);
 
@@ -631,7 +661,13 @@ export default function CreateCoursePage() {
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
               <CardHeader className="bg-accent/10 p-8 flex flex-row justify-between items-center"><div><Badge className="bg-accent text-white h-6 mb-2">Clase #{moduleOrder}</Badge><CardTitle className="text-2xl font-bold">Contenido Académico</CardTitle></div></CardHeader>
               <CardContent className="p-8 space-y-8">
-                <Input placeholder="Nombre de la Clase" value={currentModule.title} onChange={e => setCurrentModule({ ...currentModule, title: e.target.value })} className="h-14 font-bold text-xl border-none bg-muted/40 rounded-2xl" />
+                <Input 
+                  ref={classNameInputRef}
+                  placeholder="Nombre de la Clase" 
+                  value={currentModule.title} 
+                  onChange={e => setCurrentModule({ ...currentModule, title: e.target.value })} 
+                  className="h-14 font-bold text-xl border-none bg-muted/40 rounded-2xl" 
+                />
                 <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({ ...currentModule, contentType: v as any })}>
                   <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full max-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
                   <TabsContent value="text" className="space-y-6">
@@ -716,7 +752,7 @@ export default function CreateCoursePage() {
                     </div>
                   )}
                 </div>
-                <Button onClick={handleSaveModule} disabled={!currentModule.title || loading} className="w-full h-16 rounded-[1.5rem] text-lg font-bold bg-primary shadow-2xl mt-6">{loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />} Guardar Clase #{moduleOrder}</Button>
+                <Button onClick={handleSaveModule} disabled={loading} className="w-full h-16 rounded-[1.5rem] text-lg font-bold bg-primary shadow-2xl mt-6">{loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />} Guardar Clase #{moduleOrder}</Button>
               </CardContent>
             </Card>
           </div>
@@ -1001,7 +1037,7 @@ export default function CreateCoursePage() {
                       <span className="text-sm font-bold truncate max-w-[200px]">{currentModule.supportMaterials.find(m => m.isMaster)?.name}</span>
                     </div>
                   ) : (
-                    <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.docx/.txt)</Badge>
+                    <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.pdf/.docx/.txt)</Badge>
                   )}
                 </div>
 
@@ -1079,7 +1115,14 @@ export default function CreateCoursePage() {
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-3 pt-6">
             <AlertDialogCancel onClick={() => { setStep(3); clearUILocks(); }} className="flex-1 h-12 rounded-xl font-bold border-2">Siguiente Paso: Identidad</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { setCurrentModule(initialModule); setModuleOrder(prev => prev + 1); setShowNextModuleDialog(false); clearUILocks(); }} className="flex-1 h-12 rounded-xl font-bold bg-primary">Añadir Otra Clase</AlertDialogAction>
+            <AlertDialogAction onClick={() => { 
+              setCurrentModule(initialModule); 
+              setModuleOrder(prev => prev + 1); 
+              setShowNextModuleDialog(false); 
+              clearUILocks();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setTimeout(() => classNameInputRef.current?.focus(), 500);
+            }} className="flex-1 h-12 rounded-xl font-bold bg-primary">Añadir Otra Clase</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

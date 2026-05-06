@@ -8,9 +8,10 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import mammoth from 'mammoth';
 
 const ExtractDocumentTextInputSchema = z.object({
-  documentDataUri: z.string().optional().describe("Data URI del documento (DOCX o Texto)."),
+  documentDataUri: z.string().optional().describe("Data URI del documento (PDF, DOCX o Texto)."),
   documentUrl: z.string().optional().describe("URL del documento (opcional, si ya está en Storage)."),
   documentName: z.string().describe("Nombre original del archivo."),
 });
@@ -84,25 +85,57 @@ const extractDocumentTextFlow = ai.defineFlow(
     }
 
     // 2. Manejo de Word (.docx)
-    if (currentDataUri.includes('wordprocessingml.document') || input.documentName.toLowerCase().endsWith('.docx')) {
+    if (
+      currentDataUri.includes('wordprocessingml.document') || 
+      currentDataUri.includes('application/msword') ||
+      input.documentName.toLowerCase().endsWith('.docx') ||
+      input.documentName.toLowerCase().endsWith('.doc')
+    ) {
+      try {
+        const base64Part = currentDataUri.split(',')[1];
+        if (!base64Part) throw new Error("Archivo de Word vacío.");
+        const buffer = Buffer.from(base64Part, 'base64');
+
+        // Extracción de texto usando mammoth (Compatible con Firebase)
+        const result = await mammoth.extractRawText({ buffer });
+        const fullText = result.value;
+        
+        if (!fullText || fullText.trim().length < 10) {
+          throw new Error('No se pudo extraer suficiente texto del documento Word.');
+        }
+
+        // Enviamos el texto extraído a Gemini para limpieza y estructuración
+        const { text } = await ai.generate({
+          prompt: `Actúa como un transcriptor experto. Aquí tienes el contenido extraído de un documento Word. Limpia el texto, mantén la jerarquía educativa y omite cualquier ruido o metadatos:\n\n${fullText.substring(0, 50000)}`,
+          config: { temperature: 0.1 },
+        });
+
+        return { extractedText: text || fullText.trim() };
+      } catch (error: any) {
+        return { error: `Error al procesar el Word (Mammoth/IA): ${error.message}` };
+      }
+    }
+
+    // 3. Manejo de PDF (.pdf)
+    if (currentDataUri.includes('application/pdf') || input.documentName.toLowerCase().endsWith('.pdf')) {
       try {
         const { text, finishReason } = await ai.generate({
           prompt: [
-            { text: `Actúa como un transcriptor experto. Extrae EXCLUSIVAMENTE el texto educativo legible de este Word. Omite imágenes y logotipos.` },
-            { media: { url: currentDataUri, contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' } },
+            { text: `Actúa como un transcriptor académico de alta precisión. Extrae TODO el contenido textual educativo de este PDF. Ignora pies de página repetitivos, números de página y elementos puramente decorativos.` },
+            { media: { url: currentDataUri, contentType: 'application/pdf' } },
           ],
           config: { temperature: 0.1 },
         });
 
-        if (finishReason !== 'stop') return { error: `Procesamiento incompleto: ${finishReason}` };
-        if (!text || text.trim().length < 10) return { error: 'No se detectó suficiente texto en el Word.' };
+        if (finishReason !== 'stop') return { error: `Procesamiento de PDF incompleto: ${finishReason}` };
+        if (!text || text.trim().length < 10) return { error: 'No se detectó texto extraíble en el PDF.' };
 
         return { extractedText: text.trim() };
       } catch (error: any) {
-        return { error: `Gemini falló al procesar el Word: ${error.message}` };
+        return { error: `Gemini falló al procesar el PDF: ${error.message}` };
       }
     }
 
-    return { error: 'Formato no soportado. Usa Word (.docx) o Texto (.txt).' };
+    return { error: 'Formato no soportado. Usa PDF (.pdf), Word (.docx) o Texto (.txt).' };
   }
 );
