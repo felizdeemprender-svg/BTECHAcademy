@@ -135,9 +135,18 @@ Dirígete a: ${targetAudience || 'General'} (Usa el tono y nivel de sofisticaci�
 
 ${dualNarrativeInstruction}
 
-CONTEXTO TÉCNICO:
+CONTEXTO TÉCNICO Y VISUAL (ADN 2.0):
 - Plataforma: ${variant.platform || 'General'} | Tipo: ${variant.type}
 - ADN Modelo: ${adnDef.name}
+- Versión: ${adnDef.version || '1.0'}
+
+${adnDef.version === '2.0' ? `
+== REGLAS DE DIRECCIÓN ARTÍSTICA 2.0 ==
+El motor aplicará automáticamente estos estilos según la etiqueta que elijas:
+${Object.entries(adnDef.logic_segments || {}).map(([key, val]: [string, any]) => `- ${key}: Usará estilo "${val.style}" y cámara "${val.camera}".`).join('\n')}
+
+Instrucción de diseño: Asegúrate de que el 'text' sea coherente con el estilo visual y que el 'media_hint' potencie el movimiento de cámara asignado.
+` : ''}
 
 TAREAS DE DIRECCIÓN:
 ${injectedAdnRule}
