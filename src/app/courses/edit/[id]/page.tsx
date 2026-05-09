@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, useEffect, useCallback, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { Button } from '@/components/ui/button';
@@ -189,6 +189,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         skipAllowed: course.settings?.skipAllowed !== false,
         categoryId: course.categoryId || '',
         level: course.level || '',
+        tags: course.tags || [],
       });
     }
   }, [course, router, toast]);
