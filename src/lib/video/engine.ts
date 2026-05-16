@@ -167,14 +167,21 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       postFX = `unsharp=5:5:${(gFx.sharpen_intensity || 0)}:5:5:0.0,vignette=PI*${(gFx.vignette_intensity || 0)},noise=alls=${Math.floor((gFx.grain_intensity || 0) * 30)}:allf=t+u`;
     }
 
-    const relImgPath = path.relative(process.cwd(), slice.imagePath).replace(/\\/g, '/');
-    // On Linux (Cloud Run) we must use the absolute path for the libass subtitles filter.
-    // Windows uses relative paths; Linux requires absolute paths with escaped colons.
-    const absAssPath = assPath.replace(/\\/g, '/');
-    // Escape colons and backslashes for libass filter (required on Linux)
-    const safeAssPath = process.platform === 'win32'
-      ? path.relative(process.cwd(), assPath).replace(/\\/g, '/')
-      : absAssPath.replace(/:/g, '\\:');
+    // Use absolute paths for both image and ASS file — required on Cloud Run Linux.
+    // process.cwd() is not reliable in the standalone Next.js server, so we resolve explicitly.
+    const absImgPath = path.resolve(slice.imagePath).replace(/\\/g, '/');
+
+    // On Linux: absolute path for .ass, escape colons, add fontsdir pointing to bundled fonts.
+    // On Windows: relative path works fine.
+    const fontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/');
+    let safeAssPath: string;
+    if (process.platform === 'win32') {
+      safeAssPath = path.relative(process.cwd(), assPath).replace(/\\/g, '/');
+    } else {
+      const absAss = path.resolve(assPath).replace(/\\/g, '/');
+      // libass filter syntax: subtitles=filename='path':fontsdir='path'
+      safeAssPath = `${absAss}':fontsdir='${fontsDir}`;
+    }
 
     const filters = [
       `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}`,
@@ -188,7 +195,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     const ffmpegArgs = [
       '-loop', '1',
       '-framerate', '30',
-      '-i', relImgPath,
+      '-i', absImgPath,
       '-vf', filters,
       '-c:v', 'libx264',
       '-preset', 'ultrafast',
