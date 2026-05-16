@@ -173,24 +173,77 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     const absImgPath = path.resolve(slice.imagePath).replace(/\\/g, '/');
     const fontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/');
     
-    // Construct the subtitles filter string carefully for cross-platform compatibility.
-    // On Linux (Cloud Run), we need absolute paths and the fontsdir parameter.
-    let subtitlesFilter: string;
-    const absAss = path.resolve(assPath).replace(/\\/g, '/');
-    if (process.platform === 'win32') {
-      const relAss = path.relative(process.cwd(), assPath).replace(/\\/g, '/');
-      subtitlesFilter = `subtitles='${relAss}'`;
-    } else {
-      // libass filter syntax: subtitles=filename='path':fontsdir='path'
-      // We escape the path if it contains special characters, but usually /tmp is safe.
-      subtitlesFilter = `subtitles=filename='${absAss}':fontsdir='${fontsDir}'`;
-    }
+    // Construct the drawtext filter string for cross-platform reliability.
+    // drawtext uses FreeType directly and doesn't require complex FontConfig setup.
+    const buildDrawtext = (text: string, style: any, type: 'title' | 'sub' | 'mark') => {
+      if (!text) return '';
+      const safeText = text
+        .replace(/'/g, "")
+        .replace(/:/g, '\\:')
+        .replace(/,/g, '\\,')
+        .replace(/\\/g, '/');
+      if (!safeText.trim()) return '';
+
+      const fontFile = path.join(fontsDir, style.fontName || 'arialbd.ttf').replace(/\\/g, '/');
+      const fontSize = style.fontSize || (type === 'sub' ? 45 : type === 'mark' ? 28 : 80);
+
+      // Parse primaryColor: '#RRGGBB@alpha' → FFmpeg hex 0xRRGGBBAA
+      let fontcolor = '0xFFFFFFFF';
+      if (style.primaryColor) {
+        const [hexPart, alphaPart] = style.primaryColor.split('@');
+        const alpha = alphaPart !== undefined ? Math.round(parseFloat(alphaPart) * 255) : 255;
+        const alphaHex = alpha.toString(16).padStart(2, '0').toUpperCase();
+        const clean = hexPart.replace('#', '');
+        fontcolor = `0x${clean}${alphaHex}`;
+      }
+
+      const hasOutline = style.outline && (style.outline.width || 0) > 0;
+      const outlineWidth = hasOutline ? Math.round(style.outline.width || 2) : 0;
+      let bordercolor = '0x000000FF';
+      if (hasOutline && style.outline.color) {
+        const oc = style.outline.color.replace('#', '');
+        const oa = Math.round(((style.outline.alpha || 1) * 255));
+        bordercolor = `0x${oc}${oa.toString(16).padStart(2, '0').toUpperCase()}`;
+      }
+
+      const marginV = style.marginV || (type === 'sub' ? 120 : type === 'mark' ? 50 : 280);
+      const marginH = style.marginH || 50;
+      const align = (style.alignment || (type === 'mark' ? 'bottom-right' : 'center')).toLowerCase();
+
+      let x = '(w-tw)/2';
+      let y = `h-th-${marginV}`;
+      if (align.includes('top')) y = `${marginV}`;
+      if (align.includes('left')) x = `${marginH}`;
+      else if (align.includes('right')) x = `w-tw-${marginH}`;
+
+      const upper = style.uppercase === true ? text.toUpperCase() : text;
+      const safeUpper = upper.replace(/'/g, "").replace(/:/g, '\\:').replace(/,/g, '\\,');
+
+      return [
+        `drawtext=fontfile='${fontFile}'`,
+        `text='${safeUpper}'`,
+        `fontsize=${fontSize}`,
+        `fontcolor=${fontcolor}`,
+        outlineWidth > 0 ? `borderw=${outlineWidth}` : '',
+        outlineWidth > 0 ? `bordercolor=${bordercolor}` : '',
+        `x=${x}`,
+        `y=${y}`
+      ].filter(Boolean).join(':');
+    };
+
+    // Load styles for this segment
+    const tEngine = (adn.typography_engine || {}) as any;
+    const styles = tEngine.segment_styles?.[segment] || tEngine.segment_styles?.VALOR || {};
+    const tDraw = buildDrawtext(slice.text || '', styles.text || {}, 'title');
+    const sDraw = buildDrawtext(slice.subtitle || '', styles.subtitle || {}, 'sub');
+    const wDraw = buildDrawtext(slice.watermark || '', styles.watermark || {}, 'mark');
+    const drawtextChain = [tDraw, sDraw, wDraw].filter(Boolean).join(',');
 
     const filters = [
       `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}`,
       zoomFilter,
       postFX,
-      subtitlesFilter,
+      drawtextChain,
       `format=yuv420p`
     ].filter(Boolean).join(',');
 
