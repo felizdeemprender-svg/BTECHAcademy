@@ -1,0 +1,18 @@
+{
+  "id": "06_FASTCUT",
+  "version": "2.0",
+  "name": "06_FastCut",
+  "description": "Master basado en template Social Fast Cut",
+  "target_format": "vertical",
+  "isModular": true,
+  "engine_requirements": {
+    "ffmpeg_build": "ffmpeg-static-6.1",
+    "features": [
+      "unsharp",
+      "vignette",
+      "noise",
+      "zoompan"
+    ],
+    "adn_version": "2.0"
+  }
+}

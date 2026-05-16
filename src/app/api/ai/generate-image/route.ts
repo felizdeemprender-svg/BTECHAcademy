@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       const apiKey = process.env.GOOGLE_GENAI_API_KEY;
       if (!apiKey) throw new Error('No se ha configurado la API Key de Google para Imagen 3.');
 
-      const promptPremium = `${finalPrompt.trim()}. 4k resolution, hyperrealistic, award winning photography, professional corporate style, no text, no words.`;
+      const promptPremium = `${finalPrompt.trim()}. Professional photography, cinematic lighting, no text, no words.`;
 
       // Endpoint para Imagen 4 en Google AI Studio (Beta)
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         instances: [{ prompt: promptPremium }],
         parameters: {
           sampleCount: 1,
-          aspectRatio: "16:9",
+          aspectRatio: "9:16",
           outputOptions: { mimeType: "image/jpeg" }
         }
       };
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     const uniquePrompt = `${finalPrompt.trim()} - variation ${seed}`;
     const encodedPrompt = encodeURIComponent(uniquePrompt);
     // Utilizamos el modelo FLUX estricto que demora < 5 segundos en lugar del default que puede saturarse
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&seed=${seed}&nologo=true&cb=${cb}&model=flux`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=608&height=1080&seed=${seed}&nologo=true&cb=${cb}&model=flux`;
 
     let imageRes;
     let usedFallback = false;
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
                  lowercaseKw.includes('data') || lowercaseKw.includes('tech') ? 'technology,data' : 
                  'business,office';
       
-      imageRes = await fetch(`https://loremflickr.com/800/600/${kw}?lock=${seed}`);
+      imageRes = await fetch(`https://loremflickr.com/608/1080/${kw}?lock=${seed}`);
     }
 
     const arrayBuffer = await imageRes.arrayBuffer();

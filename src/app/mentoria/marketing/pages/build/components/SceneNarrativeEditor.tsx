@@ -17,6 +17,7 @@ interface SceneNarrativeEditorProps {
   asset: any;
   sIdx: number;
   selectedCourseId: string | null;
+  courseTitle?: string;
   updateAsset: (channel: 'socials', variantIdx: number, field: string, value: any, subIndex?: number) => void;
   isGeneratingBreakdown: string | null;
   onGenerateBreakdown: (variant: any, index: number, channel: 'socials') => void;
@@ -30,6 +31,7 @@ export function SceneNarrativeEditor({
   asset: s,
   sIdx,
   selectedCourseId,
+  courseTitle,
   updateAsset,
   isGeneratingBreakdown,
   onGenerateBreakdown
@@ -83,8 +85,10 @@ export function SceneNarrativeEditor({
                   label={`Visual ${i + 1}`}
                   channel="social"
                   courseId={selectedCourseId || 'draft'}
-                  keywords={sl.text}
-                  description={sl.voiceover}
+                  courseTitle={courseTitle}
+                  keywords={sl.voiceover || sl.text}
+                  description={sl.text}
+                  aiPromptHint={`Imagen para un video del curso "${courseTitle || ''}". La escena trata sobre: ${sl.voiceover || sl.text || 'contenido educativo'}`}
                 />
               </div>
             </div>
@@ -114,21 +118,38 @@ export function SceneNarrativeEditor({
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-cyan-300 flex items-center gap-2 mb-1">
-                    <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
-                  </Label>
-                  <Textarea 
-                    value={sl.text || ''}
-                    onChange={(e) => {
-                      const newItems = [...items];
-                      newItems[i] = { ...newItems[i], text: e.target.value };
-                      updateAsset('socials', sIdx, 'slides', newItems);
-                    }}
-                    placeholder="Frase corta para resaltar en video..."
-                    className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[100px] text-sm font-medium focus-visible:ring-1 focus-visible:ring-cyan-500/50 rounded-2xl p-4"
-                  />
-                </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-cyan-300 flex items-center gap-2 mb-1">
+                        <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
+                      </Label>
+                      <Textarea 
+                        value={sl.text || ''}
+                        onChange={(e) => {
+                          const newItems = [...items];
+                          newItems[i] = { ...newItems[i], text: e.target.value };
+                          updateAsset('socials', sIdx, 'slides', newItems);
+                        }}
+                        placeholder="Frase corta para resaltar..."
+                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[60px] text-sm font-black uppercase focus-visible:ring-1 focus-visible:ring-cyan-500/50 rounded-2xl p-4 shadow-inner"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-2 mb-1 opacity-60">
+                        <Sparkles className="h-3 w-3" /> Subtítulo / Apoyo
+                      </Label>
+                      <Input 
+                        value={sl.subtitle || ''}
+                        onChange={(e) => {
+                          const newItems = [...items];
+                          newItems[i] = { ...newItems[i], subtitle: e.target.value };
+                          updateAsset('socials', sIdx, 'slides', newItems);
+                        }}
+                        placeholder="Texto secundario opcional..."
+                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 h-12 text-xs font-medium focus-visible:ring-1 focus-visible:ring-slate-500/50 rounded-xl px-4"
+                      />
+                    </div>
+                  </div>
               </div>
 
               {/* Ajustes tácticos rápidos */}
@@ -147,10 +168,23 @@ export function SceneNarrativeEditor({
                        className="w-20 h-8 bg-slate-900 text-xs font-black border-white/10 text-white rounded-xl shadow-lg"
                     />
                  </div>
+                 <div className="flex flex-col gap-1.5 flex-1 max-w-[200px]">
+                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Marca de Agua / Crédito</span>
+                    <Input 
+                       value={sl.watermark || ''}
+                       onChange={(e) => {
+                          const newItems = [...items];
+                          newItems[i] = { ...newItems[i], watermark: e.target.value };
+                          updateAsset('socials', sIdx, 'slides', newItems);
+                       }}
+                       placeholder="@cuenta"
+                       className="h-8 bg-slate-900 text-xs font-bold border-white/10 text-emerald-400 rounded-xl px-3 shadow-lg"
+                    />
+                 </div>
                  <div className="flex flex-col gap-1.5">
-                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Segmento Narrativo</span>
+                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Segmento</span>
                     <Badge variant="secondary" className="text-[9px] h-8 px-4 bg-violet-500/20 border border-violet-500/30 text-violet-300 font-bold uppercase">
-                      {sl.segment || 'CONTENIDO'}
+                      {sl.segment || 'VALOR'}
                     </Badge>
                  </div>
               </div>

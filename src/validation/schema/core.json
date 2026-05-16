@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ADN Master Schema (Full Modular)",
+  "type": "object",
+  "required": [
+    "id", "version", "name", "typography_engine", 
+    "logic_segments", "camera", "transitions", "audio_engine", 
+    "engine_requirements", "global_fx"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "version": { "type": "string", "enum": ["1.0", "2.0"] },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "target_format": { "type": "string" },
+    "engine_requirements": { "$ref": "engine-requirements.json#" },
+    "global_fx": { "$ref": "global-fx.json#" },
+    "typography_engine": { "$ref": "typography.json#" },
+    "audio_engine": { "$ref": "audio.json#" },
+    "camera": { "$ref": "motion.json#/properties/camera" },
+    "transitions": { "$ref": "motion.json#/properties/transitions" },
+    "composition": { "$ref": "composition.json#/properties/composition" },
+    "logic_segments": { "$ref": "composition.json#/properties/logic_segments" },
+    "default_blueprint": {
+      "allOf": [
+        { "$ref": "blueprint-info.json#" },
+        { "$ref": "blueprint.json#" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "required": ["audio_engine", "engine_requirements"],
+  "properties": {
+    "audio_engine": {
+      "type": "object",
+      "required": ["voice_id", "mastering"],
+      "properties": {
+        "voice_id": { "type": "string" },
+        "mastering": { "type": "string", "enum": ["studio", "broadcast", "cinema", "social"] },
+        "sidechain": {
+          "type": ["object", "null"],
+          "properties": {
+            "threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+            "ratio": { "type": "number", "minimum": 1, "maximum": 50 },
+            "attack": { "type": "number", "minimum": 0 },
+            "release": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "engine_requirements": {
+      "type": "object",
+      "required": ["ffmpeg_build", "features"],
+      "properties": {
+        "ffmpeg_build": { "type": "string" },
+        "features": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

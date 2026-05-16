@@ -1,0 +1,286 @@
+{
+  "master_styles": {},
+  "renderer": "libass",
+  "segment_styles": {
+    "GANCHO": {
+      "text": {
+        "fontName": "Inter-Black.ttf",
+        "fontSize": 98,
+        "primaryColor": "#FF6B6B@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "italic": false,
+        "letterSpacing": 2.5,
+        "animation": "viral_bounce",
+        "marginV": 180,
+        "outline": {
+          "width": 3,
+          "color": "#4ECDC4",
+          "alpha": 0.9,
+          "blur": 1.2
+        },
+        "shadow": {
+          "depth": 8,
+          "color": "#FF6B6B",
+          "alpha": 0.6,
+          "blur": 3
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "Inter-Bold.ttf",
+        "fontSize": 48,
+        "primaryColor": "#FFE66D@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1.2,
+        "animation": "tiktok_slide",
+        "marginV": 300,
+        "outline": {
+          "width": 1.5,
+          "color": "#FF6B6B",
+          "alpha": 0.7,
+          "blur": 0.8
+        },
+        "shadow": {
+          "depth": 4,
+          "color": "#FF6B6B",
+          "alpha": 0.4,
+          "blur": 1.5
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "Inter-SemiBold.ttf",
+        "fontSize": 24,
+        "primaryColor": "#4ECDC4@0.8",
+        "alignment": "bottom-right",
+        "marginV": 40,
+        "marginH": 40,
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "social_pulse",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    },
+    "VALOR": {
+      "text": {
+        "fontName": "Inter-ExtraBold.ttf",
+        "fontSize": 92,
+        "primaryColor": "#4ECDC4@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 2,
+        "animation": "instagram_zoom",
+        "marginV": 220,
+        "outline": {
+          "width": 2.5,
+          "color": "#FF6B6B",
+          "alpha": 0.8,
+          "blur": 1
+        },
+        "shadow": {
+          "depth": 6,
+          "color": "#4ECDC4",
+          "alpha": 0.5,
+          "blur": 2
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "Inter-Medium.ttf",
+        "fontSize": 44,
+        "primaryColor": "#FFE66D@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0.8,
+        "animation": "reel_fade",
+        "marginV": 340,
+        "outline": {
+          "width": 1,
+          "color": "#4ECDC4",
+          "alpha": 0.6,
+          "blur": 0.5
+        },
+        "shadow": {
+          "depth": 3,
+          "color": "#4ECDC4",
+          "alpha": 0.3,
+          "blur": 1
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "Inter-SemiBold.ttf",
+        "fontSize": 24,
+        "primaryColor": "#FF6B6B@0.8",
+        "alignment": "bottom-right",
+        "marginV": 40,
+        "marginH": 40,
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "social_pulse",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    },
+    "CTA": {
+      "text": {
+        "fontName": "Inter-Black.ttf",
+        "fontSize": 110,
+        "primaryColor": "#FFFFFF@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "italic": false,
+        "letterSpacing": 3.5,
+        "animation": "viral_explosion",
+        "marginV": 160,
+        "outline": {
+          "width": 4,
+          "color": "#FF6B6B",
+          "alpha": 1,
+          "blur": 1.5
+        },
+        "shadow": {
+          "depth": 12,
+          "color": "#FF6B6B",
+          "alpha": 0.7,
+          "blur": 4
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "Inter-Bold.ttf",
+        "fontSize": 54,
+        "primaryColor": "#FFE66D@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1.5,
+        "animation": "snap_pop",
+        "marginV": 290,
+        "outline": {
+          "width": 2,
+          "color": "#FF6B6B",
+          "alpha": 0.8,
+          "blur": 1
+        },
+        "shadow": {
+          "depth": 6,
+          "color": "#FF6B6B",
+          "alpha": 0.5,
+          "blur": 2
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "Inter-SemiBold.ttf",
+        "fontSize": 24,
+        "primaryColor": "#4ECDC4@0.8",
+        "alignment": "bottom-right",
+        "marginV": 40,
+        "marginH": 40,
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "social_pulse",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    },
+    "CIERRE": {
+      "text": {
+        "fontName": "Inter-Bold.ttf",
+        "fontSize": 88,
+        "primaryColor": "#FFE66D@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1.5,
+        "animation": "viral_fade",
+        "marginV": 480,
+        "outline": {
+          "width": 2,
+          "color": "#4ECDC4",
+          "alpha": 0.7,
+          "blur": 0.8
+        },
+        "shadow": {
+          "depth": 5,
+          "color": "#4ECDC4",
+          "alpha": 0.4,
+          "blur": 1.5
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "Inter-Regular.ttf",
+        "fontSize": 40,
+        "primaryColor": "#FF6B6B@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "italic": true,
+        "letterSpacing": 0.6,
+        "animation": "story_end",
+        "marginV": 580,
+        "outline": {
+          "width": 1,
+          "color": "#FFE66D",
+          "alpha": 0.5,
+          "blur": 0.4
+        },
+        "shadow": {
+          "depth": 2,
+          "color": "#FFE66D",
+          "alpha": 0.3,
+          "blur": 0.8
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "Inter-SemiBold.ttf",
+        "fontSize": 24,
+        "primaryColor": "#FFE66D@0.8",
+        "alignment": "bottom-right",
+        "marginV": 40,
+        "marginH": 40,
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "social_pulse",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    }
+  }
+}

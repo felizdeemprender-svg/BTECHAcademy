@@ -108,6 +108,7 @@ export function SidebarNav() {
         { name: 'Métodos de Pago', href: '/admin/payment-methods', roles: ['admin'], icon: Zap },
         { name: 'Facturación', href: '/admin/billing', roles: ['admin'], icon: ReceiptText },
         { name: 'Tema del Sistema', href: '/admin/theme', roles: ['admin'], icon: Palette },
+        { name: 'Gestión de ADNs', href: '/admin/adns', roles: ['admin'], icon: FileBox },
       ]
     },
     {

@@ -1,0 +1,22 @@
+{
+  "audio_engine": {
+    "voice_id": "mateo",
+    "mastering": "social",
+    "sidechain": {
+      "threshold": 0.05,
+      "ratio": 2,
+      "attack": 10,
+      "release": 200
+    }
+  },
+  "engine_requirements": {
+    "ffmpeg_build": "ffmpeg-static-6.1",
+    "features": [
+      "unsharp",
+      "vignette",
+      "noise",
+      "zoompan"
+    ],
+    "adn_version": "2.0"
+  }
+}

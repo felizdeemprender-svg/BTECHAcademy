@@ -38,6 +38,8 @@ interface VideoProductionPanelProps {
   onDeleteVideo: (sIdx: number) => void;
   googleToken?: string | null;
   onRefreshGoogleToken?: () => Promise<string | null>;
+  adns?: Record<string, any>;
+  jobProgress?: { progress: number; stage: string } | null;
 }
 
 /**
@@ -54,7 +56,9 @@ export function VideoProductionPanel({
   onGenerateVideo,
   onDeleteVideo,
   googleToken,
-  onRefreshGoogleToken
+  onRefreshGoogleToken,
+  adns = {},
+  jobProgress
 }: VideoProductionPanelProps) {
   
   const [showConfirm, setShowConfirm] = useState(false);
@@ -105,6 +109,28 @@ export function VideoProductionPanel({
           <h4 className="text-sm font-black text-white uppercase tracking-tighter">Motor de Producción de Video</h4>
           <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Configura el ADN y la Post-Producción</p>
         </div>
+        <div className="ml-auto">
+          <Select
+            value={s.production_notes?.adnId || '01'}
+            onValueChange={(val) => {
+              updateAsset('socials', sIdx, 'production_notes', {
+                ...(s.production_notes || {}),
+                adnId: val
+              });
+            }}
+          >
+            <SelectTrigger className="h-9 rounded-xl bg-emerald-600 border-none text-[9px] font-black uppercase text-white px-4 shadow-lg">
+              <SelectValue placeholder="ADN" />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-white/10 text-white">
+              {Object.values(adns).map((adn: any) => (
+                <SelectItem key={adn.id} value={adn.id} className="text-[10px] uppercase font-bold">
+                  🎬 {adn.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Subida de MP3 (Música de fondo) */}
@@ -148,11 +174,12 @@ export function VideoProductionPanel({
               <SelectValue placeholder="Elegir Voz" />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-white/10 text-white">
-              <SelectItem value="off" className="text-xs hover:bg-white/10 focus:bg-white/10">🚫 Desactivada</SelectItem>
-              <SelectItem value="sofia" className="text-xs hover:bg-white/10 focus:bg-white/10">👩‍💼 Sofía (ES)</SelectItem>
-              <SelectItem value="mateo" className="text-xs hover:bg-white/10 focus:bg-white/10">👨‍💼 Mateo (ES)</SelectItem>
-              <SelectItem value="ximena" className="text-xs hover:bg-white/10 focus:bg-white/10">👩‍🎨 Ximena (MX)</SelectItem>
-              <SelectItem value="diego" className="text-xs hover:bg-white/10 focus:bg-white/10">👨‍🚀 Diego (MX)</SelectItem>
+              <SelectItem value="off" className="text-xs hover:bg-white/10 focus:bg-white/10">Desactivada</SelectItem>
+              <SelectItem value="dalia" className="text-xs hover:bg-white/10 focus:bg-white/10">Dalia (Soft ES)</SelectItem>
+              <SelectItem value="jorge" className="text-xs hover:bg-white/10 focus:bg-white/10">Jorge (Pro ES)</SelectItem>
+              <SelectItem value="mateo" className="text-xs hover:bg-white/10 focus:bg-white/10">Alvaro (Mateo)</SelectItem>
+              <SelectItem value="elena" className="text-xs hover:bg-white/10 focus:bg-white/10">Elena (Soft MX)</SelectItem>
+              <SelectItem value="gerardo" className="text-xs hover:bg-white/10 focus:bg-white/10">Gerardo (Pro MX)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -185,17 +212,33 @@ export function VideoProductionPanel({
 
       {/* Botón Generar / Reemplazar */}
       {!(videoUrl) ? (
-        <Button 
-          className="w-full h-14 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-violet-200 transition-all active:scale-95 disabled:opacity-50"
-          onClick={() => onGenerateVideo(s, sIdx)}
-          disabled={isCurrentlyRendering}
-        >
-          {isCurrentlyRendering ? (
-            <><Loader2 className="h-5 w-5 animate-spin" /> Renderizando {s.type === 'carousel' ? 'Carrusel' : 'Video'}...</>
-          ) : (
-            <><MonitorPlay className="h-5 w-5" /> Generar Pack Multimedia</>
+        <>
+          <Button 
+            className="w-full h-14 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-violet-200 transition-all active:scale-95 disabled:opacity-50"
+            onClick={() => onGenerateVideo(s, sIdx)}
+            disabled={isCurrentlyRendering}
+          >
+            {isCurrentlyRendering ? (
+              <><Loader2 className="h-5 w-5 animate-spin" /> Encolando render...</>
+            ) : (
+              <><MonitorPlay className="h-5 w-5" /> Generar Pack Multimedia</>
+            )}
+          </Button>
+          {isCurrentlyRendering && jobProgress && (
+            <div className="space-y-2 mt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-violet-300 uppercase tracking-widest">{jobProgress.stage}</span>
+                <span className="text-[10px] font-black text-white">{jobProgress.progress}%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-emerald-400 transition-all duration-700"
+                  style={{ width: `${jobProgress.progress}%` }}
+                />
+              </div>
+            </div>
           )}
-        </Button>
+        </>
       ) : (
         <div className="space-y-4">
           <div className="flex flex-col gap-3">

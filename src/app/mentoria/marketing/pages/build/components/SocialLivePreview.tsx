@@ -29,6 +29,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
   const [currentSlideIdx, setCurrentSlideIdx] = useState(0);
   const isCarousel = social.type === 'carousel' || social.type === 'thread' || social.type === 'document';
   const isVertical = social.type === 'story' || social.type === 'short_video';
+  const isPortrait = social.type === 'portrait_post' || (isCarousel && social.platform === 'instagram');
   const slides = social.slides?.length > 0 ? social.slides : [{ text: social.hook || '', imageUrl: '', segment_label: 'GANCHO' }];
   const slide = slides[currentSlideIdx] || slides[0] || { text: social.hook || '', segment_label: 'GANCHO' };
   
@@ -111,7 +112,8 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
 
       <div className={cn(
           "relative mx-auto rounded-[3.5rem] overflow-hidden shadow-2xl border-[12px] border-white bg-slate-100 transition-all duration-500 group/mockup",
-          isVertical ? "aspect-[9/16] w-full max-w-[320px]" : "aspect-square w-full"
+          isVertical ? "aspect-[9/16] w-full max-w-[320px]" : 
+          isPortrait ? "aspect-[4/5] w-full max-w-[360px]" : "aspect-square w-full"
         )}
       >
         {isCarousel && (

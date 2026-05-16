@@ -1,0 +1,25 @@
+{
+  "audio_engine": {
+    "voice_id": "mateo",
+    "mastering": "cinema",
+    "sidechain": {
+      "threshold": 0.1,
+      "ratio": 1.25,
+      "attack": 20,
+      "release": 350
+    }
+  },
+  "engine_requirements": {
+    "ffmpeg_build": "BtbN-GPL-Master-v6.1",
+    "features": [
+      "libass",
+      "xfade",
+      "acrossfade",
+      "sidechaincompress",
+      "curves",
+      "vignette",
+      "unsharp"
+    ],
+    "adn_version": "2.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "global_fx": {
+    "curves_preset": "vintage",
+    "vignette_intensity": 0.2,
+    "sharpen": true,
+    "sharpen_intensity": 0.3,
+    "grain_intensity": 0.1,
+    "zoom_intensity": 1.2,
+    "platform_target": "social",
+    "zoom_speed": 0.3,
+    "zoom_direction": "center"
+  }
+}

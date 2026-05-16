@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ADN Typography Module (Studio Grade)",
+  "type": "object",
+  "required": ["renderer", "segment_styles"],
+  "properties": {
+    "renderer": { "type": "string", "enum": ["drawtext", "libass"] },
+    "segment_styles": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Z_]+$": {
+          "type": "object",
+          "required": ["text", "subtitle", "watermark"],
+          "properties": {
+            "text": { "$ref": "#/definitions/TextStyle" },
+            "subtitle": { "$ref": "#/definitions/TextStyle" },
+            "watermark": { "$ref": "#/definitions/TextStyle" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "TextStyle": {
+      "type": "object",
+      "required": ["fontName", "fontSize", "primaryColor", "alignment", "marginV"],
+      "properties": {
+        "fontName": { 
+          "type": "string",
+          "enum": [
+            "Inter-Black.ttf",
+            "Inter-ExtraBold.ttf",
+            "Inter-Bold.ttf",
+            "Inter-SemiBold.ttf",
+            "Inter-Medium.ttf",
+            "Inter-Regular.ttf",
+            "Inter-Light.ttf",
+            "arialbd.ttf",
+            "calibri.ttf",
+            "georgia.ttf",
+            "impact.ttf",
+            "trebucbd.ttf"
+          ]
+        },
+        "fontSize": { "type": "number" },
+        "primaryColor": { "type": "string", "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})(@([01](\\.\\d+)?))?$" },
+        "alignment": { "type": "string", "enum": ["left", "center", "right", "top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"] },
+        "bold": { "type": "boolean" },
+        "italic": { "type": "boolean" },
+        "uppercase": { "type": "boolean" },
+        "letterSpacing": { "type": "number" },
+        "scaleX": { "type": "number", "minimum": 50, "maximum": 200 },
+        "scaleY": { "type": "number", "minimum": 50, "maximum": 200 },
+        "animation": { "type": "string" },
+        "marginV": { "type": "number" },
+        "marginH": { "type": "number" },
+        "outline": {
+          "type": ["object", "null"],
+          "properties": {
+            "width": { "type": "number" },
+            "color": { "type": "string" },
+            "alpha": { "type": "number" },
+            "blur": { "type": "number" }
+          }
+        },
+        "shadow": {
+          "type": ["object", "null"],
+          "properties": {
+            "depth": { "type": "number" },
+            "color": { "type": "string" },
+            "alpha": { "type": "number" },
+            "blur": { "type": "number" }
+          }
+        },
+        "overlay": {
+          "type": ["object", "null"],
+          "properties": {
+            "type": { "type": "string", "enum": ["none", "solid", "pill"] },
+            "intensity": { "type": "number" },
+            "color": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

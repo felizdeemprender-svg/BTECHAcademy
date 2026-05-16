@@ -64,3 +64,8 @@ service-account.json
 scratch/
 tmp/
 fonts-cache/
+
+public/tts_cache/
+scripts/check-tutor.ts
+scripts/delete-ghost.ts
+test_tts_v2.mp3

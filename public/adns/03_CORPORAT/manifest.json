@@ -1,0 +1,20 @@
+{
+  "id": "03_CORPORAT",
+  "version": "2.0",
+  "name": "Corporate Pro",
+  "description": "Estilo elegante y confiable. Colores sobrios y movimientos estables.",
+  "target_format": "vertical",
+  "isModular": true,
+  "engine_requirements": {
+    "ffmpeg_build": "BtbN-GPL-Master-v6.1",
+    "features": [
+      "libass",
+      "xfade",
+      "acrossfade",
+      "sidechaincompress",
+      "curves",
+      "vignette",
+      "unsharp"
+    ]
+  }
+}

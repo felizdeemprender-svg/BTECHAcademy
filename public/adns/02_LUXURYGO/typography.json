@@ -1,0 +1,286 @@
+{
+  "master_styles": {},
+  "renderer": "libass",
+  "segment_styles": {
+    "GANCHO": {
+      "text": {
+        "fontName": "Inter-Black.ttf",
+        "fontSize": 88,
+        "primaryColor": "#FFD700@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "italic": false,
+        "letterSpacing": 1.5,
+        "animation": "luxury_elegant",
+        "marginV": 240,
+        "outline": {
+          "width": 2,
+          "color": "#B8860B",
+          "alpha": 0.9,
+          "blur": 0.8
+        },
+        "shadow": {
+          "depth": 6,
+          "color": "#B8860B",
+          "alpha": 0.7,
+          "blur": 2.5
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "arialbd.ttf",
+        "fontSize": 44,
+        "primaryColor": "#FFF8DC@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "italic": true,
+        "letterSpacing": 0.8,
+        "animation": "golden_fade",
+        "marginV": 340,
+        "outline": {
+          "width": 0.5,
+          "color": "#DAA520",
+          "alpha": 0.6,
+          "blur": 0.4
+        },
+        "shadow": {
+          "depth": 3,
+          "color": "#B8860B",
+          "alpha": 0.5,
+          "blur": 1.2
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "arialbd.ttf",
+        "fontSize": 22,
+        "primaryColor": "#FFD700@0.7",
+        "alignment": "bottom-right",
+        "marginV": 50,
+        "marginH": 50,
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "golden_shimmer",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    },
+    "VALOR": {
+      "text": {
+        "fontName": "Inter-Black.ttf",
+        "fontSize": 82,
+        "primaryColor": "#FFA500@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "italic": false,
+        "letterSpacing": 1.2,
+        "animation": "prestige_slide",
+        "marginV": 260,
+        "outline": {
+          "width": 1.5,
+          "color": "#FF8C00",
+          "alpha": 0.8,
+          "blur": 0.6
+        },
+        "shadow": {
+          "depth": 5,
+          "color": "#FF8C00",
+          "alpha": 0.6,
+          "blur": 2
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "arialbd.ttf",
+        "fontSize": 40,
+        "primaryColor": "#FFEFD5@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0.6,
+        "animation": "elegant_rise",
+        "marginV": 360,
+        "outline": {
+          "width": 0.3,
+          "color": "#FFA500",
+          "alpha": 0.5,
+          "blur": 0.3
+        },
+        "shadow": {
+          "depth": 2,
+          "color": "#FFA500",
+          "alpha": 0.4,
+          "blur": 1
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "arialbd.ttf",
+        "fontSize": 22,
+        "primaryColor": "#FFA500@0.7",
+        "alignment": "bottom-right",
+        "marginV": 50,
+        "marginH": 50,
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "golden_shimmer",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    },
+    "CTA": {
+      "text": {
+        "fontName": "Inter-Black.ttf",
+        "fontSize": 96,
+        "primaryColor": "#FFFFFF@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "italic": false,
+        "letterSpacing": 2.5,
+        "animation": "golden_spotlight",
+        "marginV": 200,
+        "outline": {
+          "width": 3,
+          "color": "#FFD700",
+          "alpha": 1,
+          "blur": 1.2
+        },
+        "shadow": {
+          "depth": 10,
+          "color": "#FFD700",
+          "alpha": 0.8,
+          "blur": 3.5
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "arialbd.ttf",
+        "fontSize": 48,
+        "primaryColor": "#FFD700@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "italic": false,
+        "letterSpacing": 1.2,
+        "animation": "luxury_bounce",
+        "marginV": 310,
+        "outline": {
+          "width": 1.5,
+          "color": "#FFA500",
+          "alpha": 0.8,
+          "blur": 0.8
+        },
+        "shadow": {
+          "depth": 5,
+          "color": "#FFA500",
+          "alpha": 0.6,
+          "blur": 2
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "arialbd.ttf",
+        "fontSize": 22,
+        "primaryColor": "#FFD700@0.7",
+        "alignment": "bottom-right",
+        "marginV": 50,
+        "marginH": 50,
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "golden_shimmer",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    },
+    "CIERRE": {
+      "text": {
+        "fontName": "Inter-Black.ttf",
+        "fontSize": 86,
+        "primaryColor": "#F0E68C@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "golden_finale",
+        "marginV": 500,
+        "outline": {
+          "width": 1.5,
+          "color": "#DAA520",
+          "alpha": 0.7,
+          "blur": 0.7
+        },
+        "shadow": {
+          "depth": 4,
+          "color": "#DAA520",
+          "alpha": 0.5,
+          "blur": 1.8
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "arialbd.ttf",
+        "fontSize": 38,
+        "primaryColor": "#FFDEAD@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0.5,
+        "animation": "elegant_dissolve",
+        "marginV": 600,
+        "outline": {
+          "width": 0.5,
+          "color": "#F0E68C",
+          "alpha": 0.4,
+          "blur": 0.3
+        },
+        "shadow": {
+          "depth": 2,
+          "color": "#F0E68C",
+          "alpha": 0.3,
+          "blur": 0.8
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "arialbd.ttf",
+        "fontSize": 22,
+        "primaryColor": "#F0E68C@0.7",
+        "alignment": "bottom-right",
+        "marginV": 50,
+        "marginH": 50,
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "golden_shimmer",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    }
+  }
+}

@@ -15,24 +15,31 @@ export const generateImagePromptFlow = ai.defineFlow({
   const { keywords = '', contextHint = '', courseTitle = '' } = input;
 
   const prompt = `
-    You are an expert art director and expert prompt engineer for AI image generation models like Stable Diffusion and Midjourney.
-    Your task is to take the user's intent (which might be in Spanish) and translate it into a HIGH-QUALITY, highly descriptive image generation prompt in perfect ENGLISH.
+    You are an expert art director for video marketing of online courses.
+    Your task is to create a HIGH-QUALITY image generation prompt in ENGLISH.
 
-    Context about the project:
-    - Course Title: ${courseTitle || 'N/A'}
-    - Keywords / Tags: ${keywords || 'N/A'}
-    - Specific Context or Hint: ${contextHint || 'An engaging marketing image for an online tech/business course'}
+    PRIORITY ORDER FOR THE IMAGE CONCEPT:
+    1. FIRST PRIORITY — The course topic must be the dominant visual theme:
+       - Course Title: "${courseTitle || 'Professional online course'}"
+       - The image MUST visually represent this course's subject matter.
+    
+    2. SECOND PRIORITY — The narrator's script adds emotional context:
+       - Voiceover/Script: "${keywords || 'N/A'}"
+       - Use this to set the mood, tone, and emotional direction of the image.
+    
+    3. ADDITIONAL CONTEXT: ${contextHint || 'Marketing visual for social media video'}
 
-    Rules for your prompt:
+    STRICT RULES:
     1. Write ONLY the final English prompt. No greetings, no explanations, no quotation marks.
-    2. Focus on a photorealistic, professional, corporate, and modern aesthetic. 
-    3. Make the subject highly concrete and visually obvious. Avoid abstract concepts; instead, describe real people, offices, screens, or tangible objects representing the theme.
-    4. Include lighting details (e.g., 'cinematic lighting', 'soft studio lighting').
-    5. Include camera angle or composition instructions (e.g., 'wide shot', 'centered', '4k resolution').
-    6. NO text overlays, NO words written on the image. (Adding "no text, no words" at the end helps).
-    7. Keep it under 60 words.
+    2. The image must clearly relate to the COURSE TOPIC above all else.
+    3. Photorealistic, professional, modern aesthetic. Think premium stock photography.
+    4. Show real people, workspaces, tools, or tangible objects that represent the course theme.
+    5. Include: cinematic lighting, shallow depth of field, professional composition.
+    6. The image will be used as a background for video at 1080px max resolution.
+    7. ABSOLUTELY NO text, no words, no letters, no watermarks in the image.
+    8. Keep it under 50 words.
 
-    Based on the context provided, generate the best possible image prompt now:
+    Generate the prompt now:
   `;
 
   const { text } = await ai.generate({

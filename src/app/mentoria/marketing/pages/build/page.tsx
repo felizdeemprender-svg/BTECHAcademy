@@ -16,14 +16,14 @@ import { validateAndPreconformTemplates, TemplateMetadata } from '@/lib/template
 import { validateAndAdjustDesignForAPIs } from '@/lib/platform-protocols';
 import { generateExportPacks, ExportOptions } from '@/lib/content-exporter';
 import { uploadPendingImagesInObject } from '@/lib/upload-base64';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  ArrowLeft, 
-  Layout, 
-  BookOpen, 
-  Loader2, 
-  BrainCircuit, 
+import {
+  Sparkles,
+  ArrowRight,
+  ArrowLeft,
+  Layout,
+  BookOpen,
+  Loader2,
+  BrainCircuit,
   Target,
   CheckCircle2,
   Rocket,
@@ -106,7 +106,7 @@ function BuilderContent() {
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
-  
+
   const [pageTitle, setPageTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [campaignMission, setCampaignMission] = useState<'venta' | 'autoridad' | 'lanzamiento' | 'leads'>('venta');
@@ -153,7 +153,7 @@ function BuilderContent() {
             setPageTitle(data.title);
             setTargetAudience(data.targetAudience || '');
             setCampaignMission(data.engineMeta?.mission || 'venta');
-            
+
             // Normalizar contenido (Soportar plural/singular heredado)
             const content = data.aiContent || {};
             const normalizedAssets = {
@@ -163,7 +163,7 @@ function BuilderContent() {
             };
             setGeneratedAssets(normalizedAssets);
 
-            
+
             setTemplateDirectives(data.templateDirectives || '');
             setStep(3); // Saltar directamente a la edición
           }
@@ -225,7 +225,7 @@ function BuilderContent() {
   const availableLandingsQuery = useMemoFirebase(() => {
     if (!profile?.uid || !selectedCourseId) return null;
     return query(
-      collection(db, 'salesPages'), 
+      collection(db, 'salesPages'),
       where('mentorId', '==', profile.uid),
       where('courseId', '==', selectedCourseId),
       where('type', '==', 'landing_only'),
@@ -248,7 +248,7 @@ function BuilderContent() {
 
   const dynamicProfiles = useMemo(() => {
     if (!selectedCourse || !allTags) return STRATEGIC_SEGMENTS;
-    
+
     const courseTags = (selectedCourse.tagIds || []).map((tid: string) => {
       const tag = allTags.find(t => t.id === tid);
       if (!tag) return null;
@@ -276,49 +276,52 @@ function BuilderContent() {
     try {
       const course = courses?.find(c => c.id === selectedCourseId);
       const collection = collections?.find(c => c.id === selectedCollectionId);
-      
+
       if (!course || !collection) throw new Error('No se pudo localizar el programa o la colección seleccionada.');
 
       setBlueprintData(collection);
 
       const tasks: { channel: string, label: string, payload: any }[] = [];
       const { assets } = collection;
-      
-      const chunkArray = (arr: any[], size: number) => 
+
+      const chunkArray = (arr: any[], size: number) =>
         Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, i * size + size));
 
       if (assets?.emails?.length) {
-        chunkArray(assets.emails, 3).forEach((chunk, i) => 
-          tasks.push({ channel: 'emails', label: `Emails ${i>0?`(${i+1})`:''}...`, payload: { emails: chunk } })
+        chunkArray(assets.emails, 3).forEach((chunk, i) =>
+          tasks.push({ channel: 'emails', label: `Emails ${i > 0 ? `(${i + 1})` : ''}...`, payload: { emails: chunk } })
         );
       }
       if (assets?.ads?.length) {
-        chunkArray(assets.ads, 2).forEach((chunk, i) => 
-          tasks.push({ channel: 'ads', label: `Anuncios ${i>0?`(${i+1})`:''}...`, payload: { ads: chunk } })
+        chunkArray(assets.ads, 2).forEach((chunk, i) =>
+          tasks.push({ channel: 'ads', label: `Anuncios ${i > 0 ? `(${i + 1})` : ''}...`, payload: { ads: chunk } })
         );
       }
-      if (assets?.socials?.length) {
-        const platforms = ['instagram', 'tiktok', 'linkedin', 'twitter'];
-        platforms.forEach(plat => {
-          const platSocials = assets.socials.filter((s: any) => s.platform === plat);
-          if (platSocials.length > 0) {
-            chunkArray(platSocials, 2).forEach((chunk, i) => 
-              tasks.push({ 
-                channel: 'socials', 
-                label: `Creando ${plat.charAt(0).toUpperCase() + plat.slice(1)} ${platSocials.length > 2 ? `(${i+1})` : ''}...`, 
-                payload: { socials: chunk } 
-              })
+      /* 
+        // DESACTIVADO: La generación de sociales ahora es a demanda
+        if (assets?.socials?.length) {
+          const platforms = ['instagram', 'tiktok', 'linkedin', 'twitter'];
+          platforms.forEach(plat => {
+            const platSocials = assets.socials.filter((s: any) => s.platform === plat);
+            if (platSocials.length > 0) {
+              chunkArray(platSocials, 2).forEach((chunk, i) => 
+                tasks.push({ 
+                  channel: 'socials', 
+                  label: `Creando ${plat.charAt(0).toUpperCase() + plat.slice(1)} ${platSocials.length > 2 ? `(${i+1})` : ''}...`, 
+                  payload: { socials: chunk } 
+                })
+              );
+            }
+          });
+          
+          const otherSocials = assets.socials.filter((s: any) => !platforms.includes(s.platform));
+          if (otherSocials.length > 0) {
+            chunkArray(otherSocials, 2).forEach((chunk, i) => 
+              tasks.push({ channel: 'socials', label: `Otros Posts ${i>0?`(${i+1})`:''}...`, payload: { socials: chunk } })
             );
           }
-        });
-        
-        const otherSocials = assets.socials.filter((s: any) => !platforms.includes(s.platform));
-        if (otherSocials.length > 0) {
-          chunkArray(otherSocials, 2).forEach((chunk, i) => 
-            tasks.push({ channel: 'socials', label: `Otros Posts ${i>0?`(${i+1})`:''}...`, payload: { socials: chunk } })
-          );
         }
-      }
+      */
 
       setGenerationProgress({ current: 0, total: tasks.length || 1, label: 'Iniciando conexión interactiva...' });
 
@@ -341,7 +344,7 @@ function BuilderContent() {
       const ensureValidUrls = (obj: any, baseSeed: number) => {
         const course = courses?.find(c => c.id === selectedCourseId);
         const courseTags = allTags?.filter(t => course?.tagIds?.includes(t.id)).map(t => t.name) || [];
-        
+
         const globalKeywords = sanitizeKeywords([
           ...courseTags.slice(0, 3),
           course?.title?.split(' ').slice(0, 3).join('-') || ''
@@ -354,7 +357,7 @@ function BuilderContent() {
             if (key === 'imageUrl' && typeof o[key] === 'string' && o[key]) {
               const val = o[key].toLowerCase();
               const isInvalid = !val.startsWith('http');
-              
+
               if (isInvalid) {
                 const uniqueSeed = baseSeed + counter + Math.floor(Math.random() * 1000);
 
@@ -383,7 +386,7 @@ function BuilderContent() {
       for (let i = 0; i < tasks.length; i++) {
         setGenerationProgress({ current: i, total: tasks.length, label: tasks[i].label });
         const courseTags = allTags?.filter(t => course?.tagIds?.includes(t.id)).map(t => t.name) || [];
-        
+
         const rawResult = await generateCampaignAssets({
           courseTitle: course.title,
           courseDescription: course.description || '',
@@ -397,7 +400,7 @@ function BuilderContent() {
           courseTags: courseTags,
           masterAdns: masterAdns // Inyectar ADNs cargados dinámicamente
         });
-        
+
         const result = ensureValidUrls(rawResult, i * 100);
 
         if (result.landings?.length) finalAssets.landings = [...(finalAssets.landings || []), ...result.landings];
@@ -410,7 +413,7 @@ function BuilderContent() {
 
       // Validar y ajustar diseños para compatibilidad con APIs
       const validatedAssets = { ...finalAssets };
-      
+
       // Validar redes sociales
       if (finalAssets.socials?.length > 0) {
         for (let i = 0; i < finalAssets.socials.length; i++) {
@@ -420,7 +423,7 @@ function BuilderContent() {
             collection.assets?.socials?.[0]?.designTokens || {},
             { landings: false, emails: false, socials: true, ads: false }
           );
-          
+
           validatedAssets.socials[i] = {
             ...social,
             validationResults: validatedDesign,
@@ -428,7 +431,7 @@ function BuilderContent() {
           };
         }
       }
-      
+
       // Validar landings
       if (finalAssets.landings?.length > 0) {
         for (let i = 0; i < finalAssets.landings.length; i++) {
@@ -438,7 +441,7 @@ function BuilderContent() {
             collection.assets?.landings?.[0]?.designTokens || {},
             { landings: true, emails: false, socials: false, ads: false }
           );
-          
+
           validatedAssets.landings[i] = {
             ...landing,
             validationResults: validatedDesign,
@@ -446,7 +449,7 @@ function BuilderContent() {
           };
         }
       }
-      
+
       // Validar emails
       if (finalAssets.emails?.length > 0) {
         for (let i = 0; i < finalAssets.emails.length; i++) {
@@ -456,7 +459,7 @@ function BuilderContent() {
             collection.assets?.emails?.[0]?.designTokens || {},
             { landings: false, emails: true, socials: false, ads: false }
           );
-          
+
           validatedAssets.emails[i] = {
             ...email,
             validationResults: validatedDesign,
@@ -464,7 +467,7 @@ function BuilderContent() {
           };
         }
       }
-      
+
       // Validar ads
       if (finalAssets.ads?.length > 0) {
         for (let i = 0; i < finalAssets.ads.length; i++) {
@@ -474,7 +477,7 @@ function BuilderContent() {
             collection.assets?.ads?.[0]?.designTokens || {},
             { landings: false, emails: false, socials: false, ads: true }
           );
-          
+
           validatedAssets.ads[i] = {
             ...ad,
             validationResults: validatedDesign,
@@ -497,22 +500,23 @@ function BuilderContent() {
 
       // --- INICIO DE PRODUCCIÓN PROFUNDA (AUTOMATIZACIÓN TOTAL) ---
       console.log("🚀 Iniciando Producción Profunda Automatizada...");
-      
-      const totalProductionSteps = (assetsWithLinks.socials?.length || 0) + 
-                                   (assetsWithLinks.landings?.length || 0) * 3 + 
-                                   (assetsWithLinks.socials?.reduce((acc: number, s: any) => acc + (s.slides?.length || 5), 0) || 0) || 1;
-      
+
+      const totalProductionSteps = (assetsWithLinks.socials?.length || 0) +
+        (assetsWithLinks.landings?.length || 0) * 3 +
+        (assetsWithLinks.socials?.reduce((acc: number, s: any) => acc + (s.slides?.length || 5), 0) || 0) || 1;
+
       let completedSteps = 0;
       const updateProdProgress = (label: string) => {
         completedSteps++;
-        setGenerationProgress({ 
-          current: tasks.length + completedSteps, 
-          total: tasks.length + totalProductionSteps, 
-          label 
+        setGenerationProgress({
+          current: tasks.length + completedSteps,
+          total: tasks.length + totalProductionSteps,
+          label
         });
       };
 
-      // 1. Automatización de Guiones Sociales
+      // 1. Automatización de Guiones Sociales (DESACTIVADO: Ahora es a demanda)
+      /*
       if (assetsWithLinks.socials?.length > 0) {
         for (let i = 0; i < assetsWithLinks.socials.length; i++) {
           const social = assetsWithLinks.socials[i];
@@ -559,6 +563,7 @@ function BuilderContent() {
           }
         }
       }
+      */
 
       // 2. Automatización de Imágenes (Landings + Socials)
       const generateImage = async (keywords: string, context: string, label: string) => {
@@ -582,9 +587,9 @@ function BuilderContent() {
           const landing = assetsWithLinks.landings[lIdx];
           for (let sIdx = 0; sIdx < (landing.sections?.length || 0); sIdx++) {
             const section = landing.sections[sIdx];
-            updateProdProgress(`Fotografía IA: Landing [${lIdx+1}] - Sec [${sIdx+1}]...`);
+            updateProdProgress(`Fotografía IA: Landing [${lIdx + 1}] - Sec [${sIdx + 1}]...`);
             section.imageUrl = await generateImage(
-              section.title, 
+              section.title,
               `Course: ${selectedCourse?.title}. Section: ${section.paragraph}`,
               `Landing ${lIdx} Sec ${sIdx}`
             );
@@ -592,7 +597,8 @@ function BuilderContent() {
         }
       }
 
-      // Imágenes de Socials
+      // Imágenes de Socials (DESACTIVADO: Ahora es a demanda)
+      /*
       if (assetsWithLinks.socials?.length > 0) {
         for (let sIdx = 0; sIdx < assetsWithLinks.socials.length; sIdx++) {
           const social = assetsWithLinks.socials[sIdx];
@@ -607,6 +613,7 @@ function BuilderContent() {
           }
         }
       }
+      */
       // --- FIN DE PRODUCCIÓN PROFUNDA ---
 
       setGeneratedAssets(assetsWithLinks as any);
@@ -614,10 +621,10 @@ function BuilderContent() {
       toast({ title: 'Pack de Producción Completo', description: 'Todos los guiones e imágenes han sido generados por la IA.' });
     } catch (e: any) {
       console.error("[Fusion Error]", e);
-      toast({ 
-        variant: 'destructive', 
-        title: 'Error de Fusión', 
-        description: e.message || 'No se pudo sincronizar el contenido con el blueprint.' 
+      toast({
+        variant: 'destructive',
+        title: 'Error de Fusión',
+        description: e.message || 'No se pudo sincronizar el contenido con el blueprint.'
       });
     } finally {
       setIsGenerating(false);
@@ -627,13 +634,25 @@ function BuilderContent() {
 
   const updateAsset = (channel: 'landings' | 'emails' | 'socials' | 'ads', variantIdx: number, field: string, value: any, subIndex?: number) => {
     if (!generatedAssets) return;
-    
+
     setGeneratedAssets(prev => {
       if (!prev) return prev;
-      
+
       const channelData = [...(prev[channel] || [])];
+
+      // SOPORTE PARA NUEVOS ACTIVOS (ON-DEMAND)
+      if (field === 'new') {
+        channelData.push(value);
+        return { ...prev, [channel]: channelData };
+      }
+
+      // SOPORTE PARA REEMPLAZAR TODA LA LISTA (EJ. AL BORRAR)
+      if (field === 'replace_all') {
+        return { ...prev, [channel]: value };
+      }
+
       const variant = { ...channelData[variantIdx] };
-      
+
       if (subIndex !== undefined && Array.isArray((variant as any)[field])) {
         const fieldArray = [...(variant as any)[field]];
         if (typeof fieldArray[subIndex] === 'object' && fieldArray[subIndex] !== null) {
@@ -645,7 +664,7 @@ function BuilderContent() {
       } else {
         (variant as any)[field] = value;
       }
-      
+
       channelData[variantIdx] = variant as any;
       return { ...prev, [channel]: channelData };
     });
@@ -686,12 +705,12 @@ function BuilderContent() {
         const pageRef = doc(db, 'salesPages', pageId);
         await updateDoc(pageRef, cleanUndefined({
           'aiContent.landings': currentAssets.landings || [],
-          'aiContent.socials':  currentAssets.socials  || [],
-          'aiContent.emails':   currentAssets.emails   || [],
-          'aiContent.ads':      currentAssets.ads      || [],
+          'aiContent.socials': currentAssets.socials || [],
+          'aiContent.emails': currentAssets.emails || [],
+          'aiContent.ads': currentAssets.ads || [],
           updatedAt: serverTimestamp(),
         }));
-        
+
         // CRITICAL: Actualizar estado local para que los links aparezcan en la UI sin refrescar
         setGeneratedAssets(currentAssets);
 
@@ -701,7 +720,7 @@ function BuilderContent() {
           params.set('id', pageId);
           window.history.replaceState(null, '', `?${params.toString()}`);
         }
-        
+
         console.log('✅ Auto-guardado directo completado, estado sincronizado e ID estabilizado:', pageId);
       } catch (e) {
         console.error('[AutoSave Error]', e);
@@ -732,7 +751,7 @@ function BuilderContent() {
           const { getDoc } = await import('firebase/firestore');
           const { ref, deleteObject } = await import('firebase/storage');
           const oldSnap = await getDoc(pageRef);
-          
+
           if (oldSnap.exists()) {
             const oldData = oldSnap.data();
             const getAllUrls = (obj: any): string[] => {
@@ -765,43 +784,43 @@ function BuilderContent() {
       }
 
       const course = courses?.find(c => c.id === selectedCourseId);
-      
+
       // Definir variables necesarias
-      const courseTags = allTags?.filter(t => course?.tagIds?.includes(t.id)).map(t => 
+      const courseTags = allTags?.filter(t => course?.tagIds?.includes(t.id)).map(t =>
         t.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
       ).filter(Boolean) || [];
-      
+
       console.log('🚀 Iniciando pre-conformación con protocolos de APIs...');
-      
+
       // Usar los nuevos módulos especializados para validación y pre-conformación
       const tokens = blueprintData?.assets || {};
-      
+
       const validatedLandings = await validateAndPreconformTemplates(
         [currentAssets.landings || []],
         [tokens.landings?.[0]?.designTokens || {}],
         ['landing']
       );
-      
+
       const validatedSocials = await validateAndPreconformTemplates(
         [currentAssets.socials || []],
         [tokens.socials?.[0]?.designTokens || {}],
         ['social']
       );
-      
+
       const validatedEmails = await validateAndPreconformTemplates(
         [currentAssets.emails || []],
         [tokens.emails?.[0]?.designTokens || {}],
         ['email']
       );
-      
+
       const validatedAds = await validateAndPreconformTemplates(
         [currentAssets.ads || []],
         [tokens.ads?.[0]?.designTokens || {}],
         ['ads']
       );
-      
+
       console.log('🎯 Pre-conformación completada. Templates listos para guardar.');
-      
+
       // Generar packs de exportación usando el módulo especializado
       const exportOptions: ExportOptions = {
         includeValidationResults: true,
@@ -809,28 +828,32 @@ function BuilderContent() {
         includeProtocolDetails: true,
         baseUrl: window.location.origin
       };
-      
+
       const packs = generateExportPacks(
         validatedEmails.email || [],
         validatedSocials.social || [],
         validatedAds.ads || [],
         exportOptions
       );
-      
+
       // Subir archivos de exportación a Firebase Storage
       const exportUrls: Record<string, string> = {};
-      try {
-        for (const pack of packs) {
-          const sRef = ref(storage, `campaigns/${pageId}/exports/${pack.name}_pack.txt`);
-          await uploadBytes(sRef, new Blob([pack.content], { type: 'text/plain' }));
-          exportUrls[`${pack.name}ExportUrl`] = await getDownloadURL(sRef);
+      if (storage) {
+        try {
+          for (const pack of packs) {
+            const sRef = ref(storage, `campaigns/${pageId}/exports/${pack.name}_pack.txt`);
+            await uploadBytes(sRef, new Blob([pack.content], { type: 'text/plain' }));
+            exportUrls[`${pack.name}ExportUrl`] = await getDownloadURL(sRef);
+          }
+        } catch (storageErr: any) {
+          console.warn("Storage Error (bypassed):", storageErr);
+          // En lugar de romper todo el guardado si fallan las reglas de storage, solo informamos
+          toast({ title: 'Aviso', description: 'Los archivos de texto de exportación no pudieron guardarse en la nube, pero tus datos principales están a salvo.', variant: 'destructive' });
         }
-      } catch (storageErr: any) {
-        console.error("Storage Error:", storageErr);
-        // En lugar de romper todo el guardado si fallan las reglas de storage, solo informamos
-        toast({ title: 'Aviso', description: 'Los archivos de texto de exportación no pudieron guardarse en la nube, pero tus datos principales están a salvo.', variant: 'destructive' });
+      } else {
+        console.warn("Storage no está disponible. Saltando exportación.");
       }
-      
+
       // Guardar en Firestore con metadatos de pre-conformación
       const pageData: any = {
         id: pageId,
@@ -863,11 +886,16 @@ function BuilderContent() {
 
       // == RECOLECTOR DE IMÁGENES EFÍMERAS (LAZY UPLOAD) ==
       console.log('☁️ Ejecutando Lazy Upload de imágenes seleccionadas en pack multimedia...');
-      let finalData = await uploadPendingImagesInObject(pageData, storage, `campaigns/${pageId}/assets`);
-      
+      let finalData = pageData;
+      if (storage) {
+        finalData = await uploadPendingImagesInObject(pageData, storage, `campaigns/${pageId}/assets`);
+      } else {
+        console.warn("Storage no disponible. Las imágenes base64 no se subirán.");
+      }
+
       // LIMPIEZA FINAL: Firestore no permite 'undefined'
       finalData = cleanUndefined(finalData);
-      
+
       if (!editId) {
         finalData.createdAt = serverTimestamp();
       }
@@ -893,9 +921,9 @@ function BuilderContent() {
     } catch (e: any) {
       console.error("[Final Save Error]", e);
       if (!silentAutoSave) {
-        toast({ 
-          variant: 'destructive', 
-          title: 'Error al guardar el Pack', 
+        toast({
+          variant: 'destructive',
+          title: 'Error al guardar el Pack',
           description: e.message || 'Ocurrió un error inesperado al procesar el guardado.'
         });
       }

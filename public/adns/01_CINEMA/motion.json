@@ -1,0 +1,62 @@
+{
+  "camera": {
+    "modes": {
+      "zoom": {
+        "description": "Zoom suave",
+        "default_intensity": 1.2,
+        "default_speed": 1,
+        "direction": "center"
+      },
+      "pan": {
+        "description": "Paneo lento",
+        "default_intensity": 1.05,
+        "default_speed": 0.5,
+        "direction": "right"
+      },
+      "static": {
+        "description": "Sin movimiento",
+        "default_intensity": 1,
+        "default_speed": 0,
+        "direction": "center"
+      }
+    },
+    "segment_rules": {
+      "GANCHO": {
+        "mode": "zoom",
+        "intensity": 1.3,
+        "speed": 2,
+        "direction": "center",
+        "transition": "xfade:dissolve",
+        "transition_duration": 0.8
+      },
+      "VALOR": {
+        "mode": "pan",
+        "intensity": 1.05,
+        "speed": 0.4,
+        "direction": "right",
+        "transition": "xfade:wipeleft",
+        "transition_duration": 0.4
+      },
+      "CTA": {
+        "mode": "zoom",
+        "intensity": 1.8,
+        "speed": 3.5,
+        "direction": "center",
+        "transition": "xfade:circleopen",
+        "transition_duration": 0.6
+      },
+      "CIERRE": {
+        "mode": "static",
+        "intensity": 1,
+        "speed": 0,
+        "direction": "center",
+        "transition": "xfade:fade",
+        "transition_duration": 1
+      }
+    }
+  },
+  "transitions": {
+    "default": "xfade:fade",
+    "duration": 0.5
+  }
+}

@@ -13,7 +13,8 @@ import {
   Upload, 
   Trash2, 
   RefreshCw,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Download
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth-context';
@@ -28,6 +29,7 @@ interface ImageEditorProps {
   keywords?: string;
   description?: string;
   aiPromptHint?: string;
+  courseTitle?: string;
 }
 
 export function ImageEditor({ 
@@ -38,7 +40,8 @@ export function ImageEditor({
   channel,
   keywords,
   description,
-  aiPromptHint
+  aiPromptHint,
+  courseTitle
 }: ImageEditorProps) {
   const { profile } = useAuth();
   const { storage } = useFirebase();
@@ -79,9 +82,10 @@ export function ImageEditor({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          prompt: '', // Fallback vacio, backend usará Gemini
+          prompt: '',
           keywords: keywords || '',
-          contextHint: (description ? `Course description: ${description}. ` : '') + (aiPromptHint || label || ''),
+          courseTitle: courseTitle || '',
+          contextHint: aiPromptHint || (description ? `Course description: ${description}. ` : '') + (label || ''),
           engine
         }),
       });
@@ -115,14 +119,29 @@ export function ImageEditor({
     <div className="space-y-3">
       <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{label}</Label>
       <div className="flex gap-2">
-        <Input 
-          value={url} 
-          onChange={() => {}}
-          className="h-10 text-[10px] font-mono bg-slate-50 text-slate-900 border-none px-4 flex-1 opacity-60"
-          placeholder="Sin imagen configurada"
-          disabled
-          title="Borra la imagen actual con el ícono del basurero si quieres cambiarla."
-        />
+        <div className="flex-1 flex items-center">
+          {url && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 border-emerald-300 text-emerald-600 hover:bg-emerald-50 gap-2 font-bold text-[10px] uppercase tracking-widest"
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `imagen_generada_${Date.now()}.jpg`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+              title="Descargar imagen a tu computadora"
+              type="button"
+            >
+              <Download className="h-4 w-4" />
+              Descargar
+            </Button>
+          )}
+        </div>
         {/* Botón Free IA — siempre visible */}
         <Button 
           variant="outline" 

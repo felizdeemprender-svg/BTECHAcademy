@@ -10,18 +10,22 @@ import path from 'path';
 import fs from 'fs/promises';
 
 const SceneContentSchema = z.object({
-  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CTA', 'CIERRE']).describe('Etiqueta lógica para el motor ADN 2.0: GANCHO (atención), VALOR (contenido), CTA (llamado acción), CIERRE (despedida).'),
+  segment_label: z.string().describe('CRÍTICO: Copia exactamente el nombre de la etiqueta solicitada en la secuencia (ej: GANCHO, VALOR, CTA). No repitas la misma si la secuencia pide distintas.'),
   text: z.string().describe('Texto de impacto visual ultra-corto (2-4 palabras).'),
-  voiceover: z.string().describe('Guion narrativo para el locutor (TTS).'),
+  subtitle: z.string().describe('Texto secundario o de apoyo (6-8 palabras). Obligatorio generar.'),
+  watermark: z.string().describe('El @usuario (handle) de la red social.'),
+  voiceover: z.string().describe('Guion narrativo. ¡CRÍTICO!: SU TIEMPO DE LECTURA HABLADA NO DEBE SUPERAR LA DURACIÓN DE LA ESCENA.'),
   media_hint: z.string().describe('Keywords precisas para buscar el fondo visual (ej: "minimalist luxury office", "dark cyber technology abstract").'),
   duration: z.number().describe('Duración exacta en segundos (3-8s).'),
   production_notes: z.string().optional().describe('Notas sobre el estilo de animación o tono específico para esta escena.'),
 });
 
 const SocialSlideSchema = z.object({
-  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CTA', 'CIERRE']),
+  segment_label: z.string().describe('CRÍTICO: Copia exactamente el nombre de la etiqueta solicitada en la secuencia (ej: GANCHO, VALOR, CTA). No repitas la misma si la secuencia pide distintas.'),
   text: z.string().describe('Texto visual para la placa.'),
-  voiceover: z.string().describe('Guion de voz.'),
+  subtitle: z.string().describe('Subtítulo de apoyo. Obligatorio generar.'),
+  watermark: z.string().describe('El @usuario (handle) de la red social.'),
+  voiceover: z.string().describe('Guion de voz. ¡CRÍTICO!: SU TIEMPO DE LECTURA NO DEBE SUPERAR LA DURACIÓN DE LA ESCENA.'),
   media_hint: z.string().describe('Keywords para el fondo de la placa.'),
   duration: z.number().describe('Duración en segundos.'),
 });
@@ -48,24 +52,20 @@ export async function generateVariantContent(
   validateApiKey();
   
   // CARGA DINÁMICA DE ADN
-  let adnsDir = path.join(process.cwd(), 'public', 'adns');
+  const adnId = variant.blueprintConfig?.presetId || variant.blueprintConfig?.adn || variant.production_notes?.adnId || '01';
+  console.log(`[AI:Flow] Buscando ADN con ID: ${adnId}`);
+  
+  const { loadAdnConfig } = await import('@/lib/adn-utils');
+  let adnDef: any = {};
   try {
-    await fs.stat(adnsDir);
-  } catch {
-    // Fallback para entorno standalone (App Hosting / Cloud Run)
-    const fallback = path.join(process.cwd(), '..', '..', 'public', 'adns');
-    try {
-      await fs.stat(fallback);
-      adnsDir = fallback;
-    } catch {
-      console.warn(`[AI:Flow] No se encontró el directorio de ADNs en ${adnsDir} ni en ${fallback}`);
-    }
+    adnDef = await loadAdnConfig(adnId);
+  } catch (err: any) {
+    console.warn(`[AI:Flow] Falló la carga del ADN ${adnId}: ${err.message}. Usando estructura default.`);
   }
 
-  const adnId = variant.blueprintConfig?.presetId || variant.blueprintConfig?.adn || '01';
-  const adnFiles = await fs.readdir(adnsDir);
-  const targetFile = adnFiles.find(f => f.startsWith(adnId)) || '01_guru_hormozi.json';
-  const adnDef = JSON.parse(await fs.readFile(path.join(adnsDir, targetFile), 'utf-8'));
+  // Extraer conteo de escenas real del ADN
+  const adnSceneCount = adnDef.slices?.length || adnDef.scenes?.length || (adnDef.logic_segments ? Object.keys(adnDef.logic_segments).length : 0);
+  console.log(`[AI:Flow] Estructura detectada: ${adnSceneCount} escenas.`);
   
   // Extraer Estrategia Individual del Blueprint si existe
   const bConfig = variant.blueprintConfig || {};
@@ -94,7 +94,17 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
   };
 
   // --- CALCULAR LÍMITES ESTRICTOS DEL BLUEPRINT ---
-  const expectedCount = bConfig.sceneCount || bConfig.slideCount || 5;
+  // Prioridad: ADN Real > Config del Blueprint > Default 5
+  const slices = adnDef.slices || adnDef.scenes || [];
+  let sequenceList = '';
+  if (slices.length > 0) {
+     sequenceList = slices.map((s: any, i: number) => `${i + 1}. ${s.segment_label || 'VALOR'} (Duración max: ${s.duration || 5}s)`).join('\n');
+  } else if (adnDef.logic_segments) {
+     sequenceList = Object.keys(adnDef.logic_segments).map((k, i) => `${i + 1}. ${k} (Duración max: 5s)`).join('\n');
+  } else {
+     sequenceList = "1. GANCHO (3s)\n2. VALOR (5s)\n3. CTA (4s)\n4. CIERRE (3s)";
+  }
+  const expectedCount = adnSceneCount || bConfig.sceneCount || bConfig.slideCount || 5;
 
   try {
   const isLinkedinDoc = (variant.platform?.toLowerCase() === 'linkedin') && (variant.type === 'document' || variant.type === 'carousel');
@@ -122,10 +132,16 @@ ${missionTones[mission]}
 3. HABLA EL LENGUAJE DEL EXPERTO: Usa terminología técnica específica. Prohibido el relleno genérico.
 
 === DIRECTRICES ADN 2.0 (CALIDAD CINEMATOGRÁFICA) ===
-1. ESTRUCTURA LÓGICA: Sigue estrictamente la secuencia GANCHO (Atención), VALOR (Cuerpo), CTA (Conversión), CIERRE (Marca).
-2. PANTALLA (text): Frases de PODER de 2 a 4 palabras máximo. El diseño visual lo pone el ADN, tú pon el impacto emocional.
+1. ESTRUCTURA LÓGICA REQUERIDA (SECUENCIA NARRATIVA):
+Debes generar exactamente ${expectedCount} escenas con los siguientes segment_label EXACTOS en este orden:
+${sequenceList}
+
+2. PANTALLA (text): Frases 
+    - TEXTO IMPACTO: 2-4 palabras máximo, estilo Punchy.
+    - SUBTÍTULO: Una frase corta de apoyo que dé contexto al texto de impacto. ¡OBLIGATORIO!.
+    - MARCA DE AGUA (watermark): Inserta el handle exacto "${variant.handle ? (variant.handle.startsWith('@') ? variant.handle : '@'+variant.handle) : '@usuario'}" en cada escena.
 3. BACKGROUNDS (media_hint): Escribe keywords descriptivas para el buscador de imágenes (ej: "modern industrial machinery macro", "premium workspace lighting sunset").
-4. VOZ (voiceover): Relato fluido, persuasivo y experto.
+4. VOZ (voiceover): Relato fluido, persuasivo y experto. ¡LÍMITE ESTRICTO DE TIEMPO!: El texto generado no debe requerir más segundos al ser hablado que la duración máxima asignada a la escena. Sé muy conciso.
 
 === CONTEXTO DEL PÚBLICO OBJETIVO ===
 Dirígete a: ${targetAudience || 'General'} (Usa el tono y nivel de sofisticación que ellos esperan).
@@ -218,6 +234,7 @@ Devuelve un objeto JSON que siga el ContentBreakdown Schema.`,
     return result;
   } catch (error: any) {
     console.error("[Content Gen Error]", error);
-    throw new Error("Error al generar el desglose de contenido: " + error.message);
+    const stage = error.message.includes('ADN') ? 'CARGA_ADN' : (error.message.includes('genkit') ? 'IA_GENKIT' : 'MAPPING');
+    throw new Error(`Error en ${stage}: ${error.message}`);
   }
 }

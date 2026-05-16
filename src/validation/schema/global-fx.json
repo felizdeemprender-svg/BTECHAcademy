@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ADN Global FX Module",
+  "type": "object",
+  "properties": {
+    "voiceId": { "type": "string" },
+    "audioMastering_base": { "type": "string" },
+    "lut3d": { "type": ["string", "null"] },
+    "curves_preset": { "type": ["string", "null"] },
+    "vignette_intensity": { "type": "number" },
+    "zoom_intensity": { "type": "number" },
+    "zoom_speed": { "type": "number" },
+    "zoom_direction": { "type": ["string", "null"] }
+  }
+}

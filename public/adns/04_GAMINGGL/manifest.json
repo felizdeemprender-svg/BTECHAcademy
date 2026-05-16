@@ -1,0 +1,20 @@
+{
+  "id": "04_GAMINGGL",
+  "version": "2.0",
+  "name": "04_Gaming_Glitch",
+  "description": "Master basado en template Gaming Glitch",
+  "target_format": "vertical",
+  "isModular": true,
+  "engine_requirements": {
+    "ffmpeg_build": "BtbN-GPL-Master-v6.1",
+    "features": [
+      "libass",
+      "xfade",
+      "acrossfade",
+      "sidechaincompress",
+      "curves",
+      "vignette",
+      "unsharp"
+    ]
+  }
+}

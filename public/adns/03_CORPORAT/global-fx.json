@@ -1,0 +1,12 @@
+{
+  "global_fx": {
+    "curves_preset": "neutral",
+    "vignette_intensity": 0.15,
+    "sharpen": true,
+    "sharpen_intensity": 0.2,
+    "grain_intensity": 0.05,
+    "zoom_intensity": 1,
+    "zoom_speed": 0.2,
+    "zoom_direction": "center"
+  }
+}

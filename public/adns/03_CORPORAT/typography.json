@@ -1,0 +1,271 @@
+{
+  "master_styles": {},
+  "renderer": "libass",
+  "segment_styles": {
+    "GANCHO": {
+      "text": {
+        "fontName": "Inter-Black.ttf",
+        "fontSize": 85,
+        "primaryColor": "#FFFFFF@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "elegant_slide",
+        "marginV": 250,
+        "outline": {
+          "width": 1.5,
+          "color": "#1E3A8A",
+          "alpha": 0.8,
+          "blur": 0.5
+        },
+        "shadow": {
+          "depth": 4,
+          "color": "#000000",
+          "alpha": 0.3,
+          "blur": 2
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "Inter-Regular.ttf",
+        "fontSize": 42,
+        "primaryColor": "#E2E8F0@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0.5,
+        "animation": "fade",
+        "marginV": 350,
+        "outline": null,
+        "shadow": {
+          "depth": 2,
+          "color": "#000000",
+          "alpha": 0.2,
+          "blur": 1
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "Inter-Light.ttf",
+        "fontSize": 20,
+        "primaryColor": "#94A3B8@0.6",
+        "alignment": "bottom-right",
+        "marginV": 60,
+        "marginH": 60,
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0,
+        "animation": "static",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    },
+    "VALOR": {
+      "text": {
+        "fontName": "Inter-SemiBold.ttf",
+        "fontSize": 78,
+        "primaryColor": "#F8FAFC@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0.8,
+        "animation": "professional_zoom",
+        "marginV": 280,
+        "outline": {
+          "width": 1,
+          "color": "#3B82F6",
+          "alpha": 0.6,
+          "blur": 0.3
+        },
+        "shadow": {
+          "depth": 3,
+          "color": "#1E293B",
+          "alpha": 0.25,
+          "blur": 1.5
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "Inter-Regular.ttf",
+        "fontSize": 38,
+        "primaryColor": "#CBD5E1@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0.3,
+        "animation": "slide_up",
+        "marginV": 380,
+        "outline": null,
+        "shadow": {
+          "depth": 1,
+          "color": "#000000",
+          "alpha": 0.15,
+          "blur": 0.8
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "Inter-Light.ttf",
+        "fontSize": 20,
+        "primaryColor": "#94A3B8@0.6",
+        "alignment": "bottom-right",
+        "marginV": 60,
+        "marginH": 60,
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0,
+        "animation": "static",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    },
+    "CTA": {
+      "text": {
+        "fontName": "Inter-Black.ttf",
+        "fontSize": 92,
+        "primaryColor": "#FFFFFF@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "italic": false,
+        "letterSpacing": 2,
+        "animation": "corporate_pulse",
+        "marginV": 240,
+        "outline": {
+          "width": 2.5,
+          "color": "#0EA5E9",
+          "alpha": 1,
+          "blur": 0.8
+        },
+        "shadow": {
+          "depth": 6,
+          "color": "#0F172A",
+          "alpha": 0.4,
+          "blur": 3
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "Inter-SemiBold.ttf",
+        "fontSize": 46,
+        "primaryColor": "#F1F5F9@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 1,
+        "animation": "bounce_in",
+        "marginV": 350,
+        "outline": {
+          "width": 0.5,
+          "color": "#0EA5E9",
+          "alpha": 0.4,
+          "blur": 0.2
+        },
+        "shadow": {
+          "depth": 3,
+          "color": "#0F172A",
+          "alpha": 0.3,
+          "blur": 1.5
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "Inter-Light.ttf",
+        "fontSize": 20,
+        "primaryColor": "#94A3B8@0.6",
+        "alignment": "bottom-right",
+        "marginV": 60,
+        "marginH": 60,
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0,
+        "animation": "static",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    },
+    "CIERRE": {
+      "text": {
+        "fontName": "Inter-Medium.ttf",
+        "fontSize": 82,
+        "primaryColor": "#E2E8F0@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0.5,
+        "animation": "elegant_fade",
+        "marginV": 520,
+        "outline": {
+          "width": 1,
+          "color": "#64748B",
+          "alpha": 0.5,
+          "blur": 0.3
+        },
+        "shadow": {
+          "depth": 2,
+          "color": "#1E293B",
+          "alpha": 0.2,
+          "blur": 1
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "subtitle": {
+        "fontName": "Inter-Light.ttf",
+        "fontSize": 36,
+        "primaryColor": "#94A3B8@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "italic": true,
+        "letterSpacing": 0.2,
+        "animation": "fade",
+        "marginV": 620,
+        "outline": null,
+        "shadow": {
+          "depth": 1,
+          "color": "#1E293B",
+          "alpha": 0.15,
+          "blur": 0.5
+        },
+        "overlay": null,
+        "marginH": 0
+      },
+      "watermark": {
+        "fontName": "Inter-Light.ttf",
+        "fontSize": 20,
+        "primaryColor": "#94A3B8@0.6",
+        "alignment": "bottom-right",
+        "marginV": 60,
+        "marginH": 60,
+        "uppercase": false,
+        "bold": false,
+        "italic": false,
+        "letterSpacing": 0,
+        "animation": "static",
+        "outline": null,
+        "shadow": null,
+        "overlay": null
+      }
+    }
+  }
+}

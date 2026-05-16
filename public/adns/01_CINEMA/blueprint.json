@@ -1,0 +1,48 @@
+{
+  "id": "01_CINEMA",
+  "name": "Cinema Master Default Blueprint",
+  "adnId": "01_CINEMA",
+  "background_music_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  "concatenate_slices": true,
+  "slices": [
+    {
+      "id": "slice_1",
+      "segment_label": "GANCHO",
+      "text": "¿Y si no estás cansado… sino desconectado de vos?",
+      "subtitle": "",
+      "voiceover": "Hay personas que no necesitan cambiar de trabajo.\nNecesitan volver a sentir algo por lo que hacen.",
+      "imageUrl": "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1080&q=80",
+      "watermark": "@felizdeemprender",
+      "duration": 5
+    },
+    {
+      "id": "slice_2",
+      "segment_label": "VALOR",
+      "text": "El problema no es la edad. Es seguir postergándote.",
+      "subtitle": "",
+      "voiceover": "No estás grande para empezar de nuevo.\nEstás en el momento exacto para dejar de vivir en automático.",
+      "imageUrl": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1080&q=80",
+      "watermark": "@felizdeemprender",
+      "duration": 7
+    },
+    {
+      "id": "slice_5",
+      "segment_label": "CTA",
+      "text": "Tu pasión no aparece por magia. Se devela.",
+      "voiceover": "Con ejercicios, preguntas correctas y claridad.\nPorque cuando entendés quién sos, cambia lo que construís.",
+      "duration": 5,
+      "subtitle": "",
+      "imageUrl": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1080&q=80",
+      "watermark": "@felizdeemprender"
+    },
+    {
+      "id": "slice_4",
+      "segment_label": "CIERRE",
+      "text": "Develando la Pasión",
+      "voiceover": "Un proceso corto y profundo para descubrir qué querés de verdad\ny cómo transformarlo en un proyecto posible.",
+      "duration": 5,
+      "imageUrl": "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1080&q=80",
+      "watermark": "@felizdeemprender"
+    }
+  ]
+}

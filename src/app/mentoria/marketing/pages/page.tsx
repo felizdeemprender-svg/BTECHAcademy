@@ -7,12 +7,13 @@ import { useFirebase, useFirestore, useCollection, useMemoFirebase } from '@/fir
 import { collection, query, where, doc, deleteDoc, getDoc, orderBy } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { 
-  Plus, 
-  Trash2, 
-  Copy, 
-  Loader2, 
+import {
+  Plus,
+  Trash2,
+  Copy,
+  Loader2,
   ExternalLink,
   FileBox,
   Layout,
@@ -49,10 +50,10 @@ export default function SalesPagesDashboardPage() {
     return [...rawPages]
       .filter(p => p.type !== 'landing_only')
       .sort((a, b) => {
-      const dateA = a.createdAt?.toDate?.() || new Date(0);
-      const dateB = b.createdAt?.toDate?.() || new Date(0);
-      return dateB.getTime() - dateA.getTime();
-    });
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
   }, [rawPages]);
 
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
@@ -77,15 +78,15 @@ export default function SalesPagesDashboardPage() {
       toast({ title: '¿Confirmar borrado?', description: 'Pulsa de nuevo para eliminar permanentemente.' });
       return;
     }
-    
+
     setConfirmDeleteId(null);
     setDeletingIds(prev => ({ ...prev, [id]: true }));
-    
+
     try {
       toast({ title: 'Borrando...', description: 'Analizando y eliminando activos asociados.' });
       const pageRef = doc(db, 'salesPages', id);
       const snap = await getDoc(pageRef);
-      
+
       if (snap.exists()) {
         const data = snap.data();
         const driveIds: string[] = [];
@@ -133,7 +134,7 @@ export default function SalesPagesDashboardPage() {
           for (const key of exportKeys) {
             const url = data.exportUrls[key];
             if (url) {
-              try { await deleteObject(ref(storage, url)); } catch (e) {}
+              try { await deleteObject(ref(storage, url)); } catch (e) { }
             }
           }
         }
@@ -152,119 +153,114 @@ export default function SalesPagesDashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-10 pb-20">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div>
-            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Generación de Contenido</h1>
-            <p className="text-muted-foreground text-lg font-medium">Accede a las 3 rutas estratégicas generadas para cada lanzamiento.</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-6">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight flex items-center gap-3">
+              <Megaphone className="h-8 w-8 text-emerald-500" /> Productor de Campañas ADN
+            </h1>
+            <p className="text-muted-foreground font-medium text-lg">
+              Gestiona el contenido omnicanal, guiones y videos generados con el Motor V2
+            </p>
           </div>
           <Button 
             onClick={() => router.push('/mentoria/marketing/pages/build')} 
-            className="h-14 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2 bg-accent hover:bg-accent/90 transition-all hover:scale-105 active:scale-95"
+            className="h-14 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white transition-all hover:scale-105 active:scale-95"
           >
-            <Plus className="h-5 w-5" /> Nueva Generación Unificada
+            <Plus className="h-5 w-5" /> Crear Nueva Campaña
           </Button>
-        </header>
-
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            [1, 2, 3].map(i => <div key={i} className="h-72 bg-muted animate-pulse rounded-[2.5rem]" />)
-          ) : pages?.length === 0 ? (
-            <div className="col-span-full py-24 text-center bg-secondary/10 rounded-[3rem] border-2 border-dashed">
-              <FileBox className="h-16 w-16 text-muted-foreground/30 mx-auto mb-6" />
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-slate-600">Sin contenido generado</h3>
-                <p className="text-muted-foreground max-w-sm mx-auto">Fusiona un programa con un blueprint para generar tus 3 rutas de lanzamiento.</p>
-              </div>
-              <Button onClick={() => router.push('/mentoria/marketing/build')} variant="link" className="font-bold text-accent mt-4">Comenzar ahora</Button>
-            </div>
-          ) : pages?.map((page) => (
-            <Card key={page.id} className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white group hover:shadow-2xl transition-all duration-500 flex flex-col">
-              <div className="p-8 space-y-6 flex-1">
-                <div className="flex justify-between items-start">
-                  <Badge variant="secondary" className="bg-primary/5 text-primary border-none px-3 py-1 font-bold text-[10px] uppercase tracking-widest">
-                    Pack Multicanal (x3)
-                  </Badge>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{page.createdAt?.toDate ? format(page.createdAt.toDate(), 'dd/MM/yyyy') : '-'}</span>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors line-clamp-1">{page.title}</h3>
-                  <div className="flex items-center gap-3 mt-3">
-                    <Mail className="h-3.5 w-3.5 text-emerald-500" />
-                    <Instagram className="h-3.5 w-3.5 text-rose-500" />
-                    <Megaphone className="h-3.5 w-3.5 text-amber-500" />
-                  </div>
-                </div>
-                
-                </div>
-
-              <div className="p-4 bg-slate-50 border-t space-y-3">
-                <div className="grid grid-cols-3 gap-2">
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    className="h-9 text-[9px] font-bold uppercase rounded-lg shadow-sm" 
-                    onClick={() => window.open(page.exportUrls?.emailsExportUrl, '_blank')}
-                  >
-                    <Mail className="h-3 w-3 mr-1" /> Emails
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    className="h-9 text-[9px] font-bold uppercase rounded-lg shadow-sm" 
-                    onClick={() => window.open(page.exportUrls?.socialExportUrl, '_blank')}
-                  >
-                    <Instagram className="h-3 w-3 mr-1" /> Social
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    className="h-9 text-[9px] font-bold uppercase rounded-lg shadow-sm" 
-                    onClick={() => window.open(page.exportUrls?.adsExportUrl, '_blank')}
-                  >
-                    <Megaphone className="h-3 w-3 mr-1" /> Ads
-                  </Button>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    variant={confirmDeleteId === page.id ? "destructive" : "ghost"} 
-                    size="icon" 
-                    disabled={deletingIds[page.id]}
-                    className={cn(
-                      "h-8 w-8 rounded-full transition-all duration-300",
-                      confirmDeleteId === page.id ? "scale-110 shadow-lg" : "text-red-500 hover:bg-red-50"
-                    )}
-                    onClick={(e) => handleDelete(e, page.id)}
-                  >
-                    {deletingIds[page.id] ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className={cn("h-4 w-4", confirmDeleteId === page.id && "animate-pulse")} />
-                    )}
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-400">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="text-xs font-bold">
-                      <DropdownMenuItem onSelect={() => router.push(`/mentoria/marketing/pages/build?id=${page.id}`)}>
-                        <FileEdit className="h-3.5 w-3.5 mr-2" /> Editar Pack
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="text-destructive"
-                        onSelect={(e) => handleDelete(e as any, page.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 mr-2" /> Eliminar Pack
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            </Card>
-          ))}
         </div>
+
+        <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white/50 backdrop-blur-xl">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-primary/5">
+                <TableRow className="border-none">
+                  <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold">
+                    Campaña Generada
+                  </TableHead>
+                  <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">
+                    Canales
+                  </TableHead>
+                  <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">
+                    Exportación Rápida
+                  </TableHead>
+                  <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-right">
+                    Acción
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={4} className="h-32 text-center text-muted-foreground"><Loader2 className="h-8 w-8 animate-spin mx-auto opacity-50" /></TableCell></TableRow>
+                ) : pages?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-64 text-center border-b-0">
+                      <div className="flex flex-col items-center justify-center space-y-4 py-12">
+                        <FileBox className="h-16 w-16 text-muted-foreground/30" />
+                        <h3 className="text-xl font-bold text-slate-600">Sin contenido generado</h3>
+                        <p className="text-muted-foreground max-w-sm mx-auto">Comienza tu primera campaña omnicanal.</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : pages?.map((page) => (
+                  <TableRow key={page.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
+                    <TableCell className="px-10 py-6">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-foreground text-sm">{page.title}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase mt-1 flex items-center gap-2">
+                          {page.createdAt?.toDate ? format(page.createdAt.toDate(), 'dd MMM yyyy') : '-'}
+                          <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                          <span className="truncate max-w-[300px]">Pack Multicanal</span>
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center gap-2">
+                        <div className="flex items-center gap-1 text-[9px] bg-secondary/10 text-secondary-foreground px-1.5 py-0.5 rounded font-bold" title="Emails"><Mail className="h-3.5 w-3.5" /></div>
+                        <div className="flex items-center gap-1 text-[9px] bg-secondary/10 text-secondary-foreground px-1.5 py-0.5 rounded font-bold" title="Socials"><Instagram className="h-3.5 w-3.5" /></div>
+                        <div className="flex items-center gap-1 text-[9px] bg-secondary/10 text-secondary-foreground px-1.5 py-0.5 rounded font-bold" title="Ads"><Megaphone className="h-3.5 w-3.5" /></div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center gap-1">
+                        <Button variant="secondary" size="sm" className="h-8 w-8 p-0 rounded-lg shadow-sm" onClick={() => window.open(page.exportUrls?.emailsExportUrl, '_blank')} title="Ver exportación de Emails">
+                          <Mail className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="secondary" size="sm" className="h-8 w-8 p-0 rounded-lg shadow-sm" onClick={() => window.open(page.exportUrls?.socialExportUrl, '_blank')} title="Ver exportación de Redes Sociales">
+                          <Instagram className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="secondary" size="sm" className="h-8 w-8 p-0 rounded-lg shadow-sm" onClick={() => window.open(page.exportUrls?.adsExportUrl, '_blank')} title="Ver exportación de Ads">
+                          <Megaphone className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-10 py-6 text-right">
+                      <div className="flex justify-end gap-3 items-center">
+                        <Button size="sm" variant="ghost" onClick={() => router.push(`/mentoria/marketing/pages/build?id=${page.id}`)} className="rounded-xl font-bold text-primary hover:bg-primary/10 gap-2">
+                          <FileEdit className="h-4 w-4" /> Editar Pack
+                        </Button>
+                        {confirmDeleteId === page.id ? (
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" onClick={() => setConfirmDeleteId(null)} className="text-[10px] h-8 px-3 hover:bg-slate-100 rounded-lg font-bold">
+                              Cancelar
+                            </Button>
+                            <Button size="sm" onClick={(e) => handleDelete(e, page.id)} className="text-[10px] h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold">
+                              Confirmar
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button size="icon" variant="ghost" onClick={(e) => handleDelete(e, page.id)} className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg" disabled={deletingIds[page.id]}>
+                            {deletingIds[page.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );

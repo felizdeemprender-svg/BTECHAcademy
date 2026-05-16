@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "required": ["composition", "logic_segments"],
+  "properties": {
+    "composition": {
+      "type": "object",
+      "required": ["safe_areas"],
+      "properties": {
+        "safe_areas": {
+          "type": "object",
+          "properties": {
+            "top": { "type": "number", "minimum": 0, "maximum": 0.5 },
+            "bottom": { "type": "number", "minimum": 0, "maximum": 0.5 },
+            "sides": { "type": "number", "minimum": 0, "maximum": 0.5 }
+          }
+        },
+        "global_filters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "params": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "logic_segments": {
+      "type": "object",
+      "required": ["GANCHO", "VALOR", "CTA", "CIERRE"],
+      "patternProperties": {
+        "^[A-Z_]+$": {
+          "type": "object",
+          "required": ["camera", "style", "duration_multiplier"],
+          "properties": {
+            "camera": { "type": "string" },
+            "style": { "type": "string" },
+            "overlay": { "type": ["string", "null"] },
+            "duration_multiplier": { "type": "number", "minimum": 0.1, "maximum": 10 }
+          }
+        }
+      }
+    },
+    "watermark_config": {
+      "type": ["object", "null"],
+      "properties": {
+        "position": { "type": "string" },
+        "fontSize": { "type": "number" },
+        "marginV": { "type": "number" },
+        "marginH": { "type": "number" },
+        "opacity": { "type": "number" },
+        "color": { "type": "string" },
+        "fontName": { "type": "string" },
+        "animation": { "type": "string" }
+      }
+    }
+  }
+}
