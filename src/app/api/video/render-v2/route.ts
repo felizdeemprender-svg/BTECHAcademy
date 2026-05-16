@@ -89,8 +89,10 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
       scenes, audioUrl, resolution, adnId,
       enable_tts, voice_id, voiceover, audioEffect,
       googleToken, isCarousel, marketingName, platform,
-      isSmokeTest, uid, role
+      isSmokeTest: rawSmokeTest, uid, role
     } = body;
+
+    const isSmokeTest = rawSmokeTest === true && role === 'admin';
 
     // ── PASO 1: Cargar configuración del ADN ────────────────────────────────
     await updateJob(jobId, { status: 'processing', progress: 5, stage: 'Cargando configuración ADN...' });
@@ -261,7 +263,7 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
     // ── PASO 6: Facturación ─────────────────────────────────────────────────
     try {
       const { calculateVideoCost, deductCredits } = await import('@/lib/payments/credits');
-      const isAdmin = role === 'admin' || role === 'tutor';
+      const isAdmin = role === 'admin';
       if (uid && !isSmokeTest && !isAdmin) {
         const totalDuration = engineSlices.reduce((acc, s) => acc + s.duration, 0);
         const cost = await calculateVideoCost(totalDuration);
