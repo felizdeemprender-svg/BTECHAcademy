@@ -129,8 +129,15 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
         getJson('blueprint.json')
       ]);
       adnConfig = {
-        ...manifest, ...engine, ...motion, ...composition, ...globalFx,
-        typography_engine: typography, default_blueprint: blueprint
+        ...manifest,
+        ...engine,
+        ...composition,
+        ...globalFx,
+        motion_engine: motion,
+        typography_engine: typography,
+        default_blueprint: blueprint,
+        camera: motion.camera, // Direct access for convenience
+        transitions: motion.transitions
       };
     } else {
       adnConfig = JSON.parse(await fsPromises.readFile(targetPath, 'utf-8'));

@@ -167,119 +167,25 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       postFX = `unsharp=5:5:${(gFx.sharpen_intensity || 0)}:5:5:0.0,vignette=PI*${(gFx.vignette_intensity || 0)},noise=alls=${Math.floor((gFx.grain_intensity || 0) * 30)}:allf=t+u`;
     }
 
-    // Use absolute path for the input image - required on Cloud Run Linux.
+    // On Linux (Cloud Run) we must use the absolute path for the libass subtitles filter.
     const absImgPath = path.resolve(slice.imagePath).replace(/\\/g, '/');
-    const fontsDir = path.join(process.cwd(), 'public', 'fonts');
-
-    // ── TEXT OVERLAYS VIA drawtext (FreeType, no libass needed) ──────────────
-    // drawtext is compiled into virtually every FFmpeg build, including ffmpeg-static.
-    // It directly references the .ttf font file, bypassing all libass font resolution issues.
-    const buildDrawtext = (text: string, style: any, type: 'title' | 'sub' | 'mark') => {
-      if (!text) return '';
-      const safeText = text
-        .replace(/'/g, "")
-        .replace(/:/g, '\\:')
-        .replace(/,/g, '\\,')
-        .replace(/\\/g, '/');
-      if (!safeText.trim()) return '';
-
-      const fontNameMap: Record<string, string> = {
-        'Inter-Black.ttf': 'Inter-Black.ttf',
-        'arialbd.ttf': 'arialbd.ttf',
-        'calibri.ttf': 'calibri.ttf',
-        'georgia.ttf': 'georgia.ttf',
-        'impact.ttf': 'impact.ttf',
-        'trebucbd.ttf': 'trebucbd.ttf',
-      };
-      const fontFile = path.join(fontsDir, fontNameMap[style.fontName] || 'arialbd.ttf').replace(/\\/g, '/');
-      const fontSize = style.fontSize || (type === 'sub' ? 45 : type === 'mark' ? 28 : 80);
-
-      // Parse primaryColor: '#RRGGBB@alpha' → FFmpeg hex 0xAARRGGBB
-      let fontcolor = '0xFFFFFFFF';
-      if (style.primaryColor) {
-        const [hexPart, alphaPart] = style.primaryColor.split('@');
-        const alpha = alphaPart !== undefined ? Math.round(parseFloat(alphaPart) * 255) : 255;
-        const alphaHex = alpha.toString(16).padStart(2, '0').toUpperCase();
-        const clean = hexPart.replace('#', '');
-        fontcolor = `0x${clean}${alphaHex}`;
-      }
-
-      // Outline/shadow
-      const hasOutline = style.outline && (style.outline.width || 0) > 0;
-      const outlineWidth = hasOutline ? Math.round(style.outline.width || 2) : 0;
-      let bordercolor = '0x000000FF';
-      if (hasOutline && style.outline.color) {
-        const oc = style.outline.color.replace('#', '');
-        const oa = Math.round(((style.outline.alpha || 1) * 255));
-        bordercolor = `0x${oc}${oa.toString(16).padStart(2, '0').toUpperCase()}`;
-      }
-
-      // Position: compute x/y based on alignment and margins
-      const marginV = style.marginV || (type === 'sub' ? 120 : type === 'mark' ? 50 : 280);
-      const marginH = style.marginH || 50;
-      const align = (style.alignment || (type === 'mark' ? 'bottom-right' : 'center')).toLowerCase();
-
-      let x = '(w-tw)/2'; // center
-      let y = `h-th-${marginV}`; // bottom by default
-
-      if (align.includes('top')) {
-        y = `${marginV}`;
-      }
-      if (align.includes('left')) {
-        x = `${marginH}`;
-      } else if (align.includes('right')) {
-        x = `w-tw-${marginH}`;
-      }
-
-      const upper = style.uppercase === true ? text.toUpperCase() : text;
-      const safeUpper = upper
-        .replace(/'/g, "")
-        .replace(/:/g, '\\:')
-        .replace(/,/g, '\\,')
-        .replace(/\\/g, '/');
-
-      return [
-        `drawtext=fontfile='${fontFile}'`,
-        `text='${safeUpper}'`,
-        `fontsize=${fontSize}`,
-        `fontcolor=${fontcolor}`,
-        outlineWidth > 0 ? `borderw=${outlineWidth}` : '',
-        outlineWidth > 0 ? `bordercolor=${bordercolor}` : '',
-        `x=${x}`,
-        `y=${y}`,
-        `line_spacing=4`,
-      ].filter(Boolean).join(':');
-    };
-
-    // Read typography styles from ADN
-    const isV2local = adn.version === '2.0' || Number(adn.version) === 2.0 || !!adn.motion_engine || !!adn.global_fx;
-    let titleStyle: any = {};
-    let subStyle: any = {};
-    let markStyle: any = {};
-    if (isV2local) {
-      const tEngine = (adn.typography_engine || {}) as any;
-      const seg = slice.segment_label || 'VALOR';
-      const styles = tEngine.segment_styles?.[seg] || tEngine.segment_styles?.VALOR || {};
-      titleStyle = styles.text || {};
-      subStyle = styles.subtitle || {};
-      markStyle = styles.watermark || {};
+    const fontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/');
+    
+    // On Linux: absolute path for .ass, escape colons, add fontsdir pointing to bundled fonts.
+    let safeAssPath: string;
+    if (process.platform === 'win32') {
+      safeAssPath = path.relative(process.cwd(), assPath).replace(/\\/g, '/');
     } else {
-      const rules = (adn as any).scenes_rules || {};
-      titleStyle = { ...(rules.default?.text_styling || {}), ...(rules[slice.segment_label || 'default']?.text_styling || {}) };
-      subStyle = { fontSize: (titleStyle.fontSize || 80) * 0.6, primaryColor: '#FFFFFF@1.0', alignment: 'center', marginV: 120 };
-      markStyle = { fontSize: 24, primaryColor: '#FFFFFF@0.5', alignment: 'bottom-right', marginV: 50, fontName: 'arialbd.ttf' };
+      const absAss = path.resolve(assPath).replace(/\\/g, '/');
+      // libass filter syntax: subtitles=filename='path':fontsdir='path'
+      safeAssPath = `${absAss}':fontsdir='${fontsDir}`;
     }
-
-    const titleDrawtext = buildDrawtext(slice.text || '', titleStyle, 'title');
-    const subtitleDrawtext = buildDrawtext(slice.subtitle || '', subStyle, 'sub');
-    const watermarkDrawtext = buildDrawtext(slice.watermark || '', markStyle, 'mark');
-    const drawtextChain = [titleDrawtext, subtitleDrawtext, watermarkDrawtext].filter(Boolean).join(',');
 
     const filters = [
       `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}`,
       zoomFilter,
       postFX,
-      drawtextChain,
+      `subtitles='${safeAssPath}'`,
       `format=yuv420p`
     ].filter(Boolean).join(',');
 
