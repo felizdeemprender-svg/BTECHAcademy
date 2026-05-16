@@ -39,5 +39,12 @@ export async function GET(req: NextRequest) {
     files: fs.existsSync(fontsDir) ? fs.readdirSync(fontsDir) : []
   };
 
+  // Check ADN structure (just keys)
+  const adnsDir = path.join(process.cwd(), 'public', 'adns');
+  if (fs.existsSync(adnsDir)) {
+    const adnFolders = fs.readdirSync(adnsDir);
+    results.adns = adnFolders;
+  }
+
   return NextResponse.json(results);
 }

@@ -169,81 +169,35 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       postFX = `unsharp=5:5:${(gFx.sharpen_intensity || 0)}:5:5:0.0,vignette=PI*${(gFx.vignette_intensity || 0)},noise=alls=${Math.floor((gFx.grain_intensity || 0) * 30)}:allf=t+u`;
     }
 
-    // On Linux (Cloud Run) we must use the absolute path for the libass subtitles filter.
-    const absImgPath = path.resolve(slice.imagePath).replace(/\\/g, '/');
+    // ── TEXT OVERLAYS VIA libass (subtitles filter) ────────────────────────
+    // We use .ass files for high-fidelity text rendering (styling, shadows, etc.)
+    // On Linux (Cloud Run), libass requires a correctly configured FontConfig.
+    // We generate a dynamic fonts.conf that points to our absolute fonts directory.
     const fontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/');
+    const fontsConfPath = path.join(workDir, 'fonts.conf');
+    const fontsConfContent = `<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <dir>${fontsDir}</dir>
+  <cachedir>${path.join(workDir, 'fontscache').replace(/\\/g, '/')}</cachedir>
+  <config></config>
+</fontconfig>`;
+    fs.writeFileSync(fontsConfPath, fontsConfContent);
+
+    const absImgPath = path.resolve(slice.imagePath).replace(/\\/g, '/');
+    const absAss = path.resolve(assPath).replace(/\\/g, '/');
     
-    // Construct the drawtext filter string for cross-platform reliability.
-    // drawtext uses FreeType directly and doesn't require complex FontConfig setup.
-    const buildDrawtext = (text: string, style: any, type: 'title' | 'sub' | 'mark') => {
-      if (!text) return '';
-      const safeText = text
-        .replace(/'/g, "")
-        .replace(/:/g, '\\:')
-        .replace(/,/g, '\\,')
-        .replace(/\\/g, '/');
-      if (!safeText.trim()) return '';
-
-      const fontFile = path.join(fontsDir, style.fontName || 'arialbd.ttf').replace(/\\/g, '/');
-      const fontSize = style.fontSize || (type === 'sub' ? 45 : type === 'mark' ? 28 : 80);
-
-      // Parse primaryColor: '#RRGGBB@alpha' → FFmpeg hex 0xRRGGBBAA
-      let fontcolor = '0xFFFFFFFF';
-      if (style.primaryColor) {
-        const [hexPart, alphaPart] = style.primaryColor.split('@');
-        const alpha = alphaPart !== undefined ? Math.round(parseFloat(alphaPart) * 255) : 255;
-        const alphaHex = alpha.toString(16).padStart(2, '0').toUpperCase();
-        const clean = hexPart.replace('#', '');
-        fontcolor = `0x${clean}${alphaHex}`;
-      }
-
-      const hasOutline = style.outline && (style.outline.width || 0) > 0;
-      const outlineWidth = hasOutline ? Math.round(style.outline.width || 2) : 0;
-      let bordercolor = '0x000000FF';
-      if (hasOutline && style.outline.color) {
-        const oc = style.outline.color.replace('#', '');
-        const oa = Math.round(((style.outline.alpha || 1) * 255));
-        bordercolor = `0x${oc}${oa.toString(16).padStart(2, '0').toUpperCase()}`;
-      }
-
-      const marginV = style.marginV || (type === 'sub' ? 120 : type === 'mark' ? 50 : 280);
-      const marginH = style.marginH || 50;
-      const align = (style.alignment || (type === 'mark' ? 'bottom-right' : 'center')).toLowerCase();
-
-      let x = '(w-tw)/2';
-      let y = `h-th-${marginV}`;
-      if (align.includes('top')) y = `${marginV}`;
-      if (align.includes('left')) x = `${marginH}`;
-      else if (align.includes('right')) x = `w-tw-${marginH}`;
-
-      const upper = style.uppercase === true ? text.toUpperCase() : text;
-      const safeUpper = upper.replace(/'/g, "").replace(/:/g, '\\:').replace(/,/g, '\\,');
-
-      return [
-        `drawtext=fontfile='${fontFile}'`,
-        `text='${safeUpper}'`,
-        `fontsize=${fontSize}`,
-        `fontcolor=${fontcolor}`,
-        outlineWidth > 0 ? `borderw=${outlineWidth}` : '',
-        outlineWidth > 0 ? `bordercolor=${bordercolor}` : '',
-        `x=${x}`,
-        `y=${y}`
-      ].filter(Boolean).join(':');
-    };
-
-    // Load styles for this segment
-    const tEngine = (adn.typography_engine || {}) as any;
-    const styles = tEngine.segment_styles?.[segment] || tEngine.segment_styles?.VALOR || {};
-    const tDraw = buildDrawtext(slice.text || '', styles.text || {}, 'title');
-    const sDraw = buildDrawtext(slice.subtitle || '', styles.subtitle || {}, 'sub');
-    const wDraw = buildDrawtext(slice.watermark || '', styles.watermark || {}, 'mark');
-    const drawtextChain = [tDraw, sDraw, wDraw].filter(Boolean).join(',');
+    // Construct the subtitles filter string. 
+    // We pass fontsdir as an extra safety measure, though FONTCONFIG_FILE is more robust.
+    const subtitlesFilter = process.platform === 'win32' 
+      ? `subtitles='${path.relative(process.cwd(), assPath).replace(/\\/g, '/')}'`
+      : `subtitles=filename='${absAss}':fontsdir='${fontsDir}'`;
 
     const filters = [
       `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}`,
       zoomFilter,
       postFX,
-      drawtextChain,
+      subtitlesFilter,
       `format=yuv420p`
     ].filter(Boolean).join(',');
 
@@ -263,14 +217,19 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       platePath
     ];
 
+    // Environment variables for FFmpeg to find the custom fonts.conf
+    const ffmpegEnv = { 
+      ...process.env, 
+      FONTCONFIG_FILE: fontsConfPath 
+    };
+
     // Borrar archivo previo si existe para asegurar que se genera uno nuevo
     if (fs.existsSync(platePath)) {
       try { fs.unlinkSync(platePath); } catch (e) {}
     }
 
     console.log(`🎬 [Engine V2] Rendering Slice ${i} (${totalFrames} frames) | FX: ${postFX.substring(0, 30)}...`);
-    console.log(`[FFmpeg:Command] ${ffmpegArgs.join(' ')}`);
-    await runFfmpeg(ffmpegArgs);
+    await runFfmpeg(ffmpegArgs, ffmpegEnv);
 
     if (blueprint.concatenate_slices === false) {
       const sliceWithAudioPath = path.join(workDir, `final_slice_${i}.mp4`);
@@ -437,7 +396,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
   return finalPath;
 }
 
-function runFfmpeg(args: string[]): Promise<void> {
+function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
   return new Promise((resolve, reject) => {
     // Prefer the GPL binary (with libass for subtitles) downloaded at build time.
     // Falls back to ffmpeg-static if the custom binary is missing.
@@ -450,8 +409,8 @@ function runFfmpeg(args: string[]): Promise<void> {
     } else if (!resolvedFfmpeg || !fs.existsSync(resolvedFfmpeg)) {
       resolvedFfmpeg = staticBin;
     }
-    console.log(`[FFmpeg Binary] Using: ${resolvedFfmpeg}`);
-    const proc = spawn(resolvedFfmpeg!, args);
+    
+    const proc = spawn(resolvedFfmpeg!, args, { env: { ...process.env, ...envOverrides } });
     let lastLog = Date.now();
 
     proc.stderr.on('data', (data: any) => {
