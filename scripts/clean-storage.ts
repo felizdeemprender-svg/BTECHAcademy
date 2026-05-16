@@ -31,7 +31,7 @@ async function cleanOrphanedStorage() {
         isOrphan = true;
       } else if (rootFolder === 'campaigns' && parts.length > 1) {
         const id = parts[1];
-        if (!courseIds.has(id) && !campaignIds.has(id)) isOrphan = true;
+        if (!courseIds.has(id) && !campaignIds.has(id) && !salesPageIds.has(id)) isOrphan = true;
       } else if (rootFolder === 'courses' && parts.length > 1) {
         const id = parts[1];
         if (!courseIds.has(id)) isOrphan = true;
