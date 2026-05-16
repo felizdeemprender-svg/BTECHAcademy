@@ -171,21 +171,24 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     const absImgPath = path.resolve(slice.imagePath).replace(/\\/g, '/');
     const fontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/');
     
-    // On Linux: absolute path for .ass, escape colons, add fontsdir pointing to bundled fonts.
-    let safeAssPath: string;
+    // Construct the subtitles filter string carefully for cross-platform compatibility.
+    // On Linux (Cloud Run), we need absolute paths and the fontsdir parameter.
+    let subtitlesFilter: string;
+    const absAss = path.resolve(assPath).replace(/\\/g, '/');
     if (process.platform === 'win32') {
-      safeAssPath = path.relative(process.cwd(), assPath).replace(/\\/g, '/');
+      const relAss = path.relative(process.cwd(), assPath).replace(/\\/g, '/');
+      subtitlesFilter = `subtitles='${relAss}'`;
     } else {
-      const absAss = path.resolve(assPath).replace(/\\/g, '/');
       // libass filter syntax: subtitles=filename='path':fontsdir='path'
-      safeAssPath = `${absAss}':fontsdir='${fontsDir}`;
+      // We escape the path if it contains special characters, but usually /tmp is safe.
+      subtitlesFilter = `subtitles=filename='${absAss}':fontsdir='${fontsDir}'`;
     }
 
     const filters = [
       `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}`,
       zoomFilter,
       postFX,
-      `subtitles='${safeAssPath}'`,
+      subtitlesFilter,
       `format=yuv420p`
     ].filter(Boolean).join(',');
 
@@ -270,8 +273,13 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     await runFfmpeg(['-i', sceneClips[0], '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-y', videoOnlyPath]);
   } else {
     console.log(`[Engine V2] Orchestrating ${sceneClips.length} clips with xfade transitions...`);
+    // Prepare inputs with consistent timebase and PTS for xfade
     let filterComplex = '';
-    let lastLabel = '0:v';
+    for (let i = 0; i < sceneClips.length; i++) {
+      filterComplex += `[${i}:v]settb=AVTB,setpts=PTS-STARTPTS[v_pts${i}]; `;
+    }
+
+    let lastLabel = 'v_pts0';
     let cumulativeOffset = 0;
 
     for (let i = 1; i < sceneClips.length; i++) {
@@ -284,9 +292,8 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       const prevDuration = sceneDurations[i-1];
       cumulativeOffset += prevDuration - currentTransDuration;
       
-      const outLabel = `v${i}`;
-      const xfadeCommand = `[${lastLabel}][${i}:v]xfade=transition=${transType}:duration=${currentTransDuration}:offset=${cumulativeOffset.toFixed(3)}[${outLabel}]`;
-      filterComplex += xfadeCommand;
+      const outLabel = `v_xfade${i}`;
+      filterComplex += `[${lastLabel}][v_pts${i}]xfade=transition=${transType}:duration=${currentTransDuration}:offset=${cumulativeOffset.toFixed(3)}[${outLabel}]`;
       
       if (i < sceneClips.length - 1) {
         filterComplex += '; ';
