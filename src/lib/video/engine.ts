@@ -168,13 +168,19 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     }
 
     const relImgPath = path.relative(process.cwd(), slice.imagePath).replace(/\\/g, '/');
-    const relAssPath = path.relative(process.cwd(), assPath).replace(/\\/g, '/');
+    // On Linux (Cloud Run) we must use the absolute path for the libass subtitles filter.
+    // Windows uses relative paths; Linux requires absolute paths with escaped colons.
+    const absAssPath = assPath.replace(/\\/g, '/');
+    // Escape colons and backslashes for libass filter (required on Linux)
+    const safeAssPath = process.platform === 'win32'
+      ? path.relative(process.cwd(), assPath).replace(/\\/g, '/')
+      : absAssPath.replace(/:/g, '\\:');
 
     const filters = [
       `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}`,
       zoomFilter,
       postFX,
-      `subtitles=filename='${relAssPath}'`,
+      `subtitles='${safeAssPath}'`,
       `format=yuv420p`
     ].filter(Boolean).join(',');
 
@@ -366,11 +372,18 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
 
 function runFfmpeg(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
-    let resolvedFfmpeg = ffmpegPath;
-    if (!resolvedFfmpeg || !fs.existsSync(resolvedFfmpeg)) {
-      const ext = process.platform === 'win32' ? '.exe' : '';
-      resolvedFfmpeg = path.join(process.cwd(), 'node_modules', 'ffmpeg-static', `ffmpeg${ext}`);
+    // Prefer the GPL binary (with libass for subtitles) downloaded at build time.
+    // Falls back to ffmpeg-static if the custom binary is missing.
+    const customBin = path.join(process.cwd(), 'node_modules', 'custom-ffmpeg-build', 'ffmpeg');
+    const staticExt = process.platform === 'win32' ? '.exe' : '';
+    const staticBin = path.join(process.cwd(), 'node_modules', 'ffmpeg-static', `ffmpeg${staticExt}`);
+    let resolvedFfmpeg: string | null = ffmpegPath;
+    if (fs.existsSync(customBin)) {
+      resolvedFfmpeg = customBin;
+    } else if (!resolvedFfmpeg || !fs.existsSync(resolvedFfmpeg)) {
+      resolvedFfmpeg = staticBin;
     }
+    console.log(`[FFmpeg Binary] Using: ${resolvedFfmpeg}`);
     const proc = spawn(resolvedFfmpeg!, args);
     let lastLog = Date.now();
 

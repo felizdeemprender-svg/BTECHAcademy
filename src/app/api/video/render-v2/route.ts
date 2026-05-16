@@ -57,7 +57,7 @@ async function runGarbageCollector(basePath: string) {
         fs.rmSync(folderPath, { recursive: true, force: true });
       }
     }
-  } catch (err) {}
+  } catch (err) { }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,14 +85,19 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
     await fsPromises.mkdir(workDir, { recursive: true });
     await runGarbageCollector(baseRenderPath);
 
+    // ── DIAGNÓSTICO DE BINARIO ──────────────────────────────────────────────
+    const customBin = path.join(process.cwd(), 'node_modules', 'custom-ffmpeg-build', 'ffmpeg');
+    const staticBin = path.join(process.cwd(), 'node_modules', 'ffmpeg-static', 'ffmpeg');
+    console.log(`[FFmpeg Diagnostic] Custom GPL binary exists: ${fs.existsSync(customBin)} (${customBin})`);
+    console.log(`[FFmpeg Diagnostic] Static binary exists: ${fs.existsSync(staticBin)} (${staticBin})`);
+    // ─────────────────────────────────────────────────────────────────────────
+
     const {
       scenes, audioUrl, resolution, adnId,
       enable_tts, voice_id, voiceover, audioEffect,
       googleToken, isCarousel, marketingName, platform,
-      isSmokeTest: rawSmokeTest, uid, role
+      isSmokeTest, uid, role
     } = body;
-
-    const isSmokeTest = rawSmokeTest === true && role === 'admin';
 
     // ── PASO 1: Cargar configuración del ADN ────────────────────────────────
     await updateJob(jobId, { status: 'processing', progress: 5, stage: 'Cargando configuración ADN...' });
@@ -105,7 +110,7 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
       try {
         await fsPromises.stat(standaloneFallback);
         adnsDir = standaloneFallback;
-      } catch {}
+      } catch { }
     }
 
     const targetPath = path.join(adnsDir, adnId || '01_CINEMA');
@@ -123,8 +128,10 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
         getJson('composition.json'), getJson('global-fx.json'), getJson('typography.json'),
         getJson('blueprint.json')
       ]);
-      adnConfig = { ...manifest, ...engine, ...motion, ...composition, ...globalFx,
-        typography_engine: typography, default_blueprint: blueprint };
+      adnConfig = {
+        ...manifest, ...engine, ...motion, ...composition, ...globalFx,
+        typography_engine: typography, default_blueprint: blueprint
+      };
     } else {
       adnConfig = JSON.parse(await fsPromises.readFile(targetPath, 'utf-8'));
     }
@@ -263,7 +270,7 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
     // ── PASO 6: Facturación ─────────────────────────────────────────────────
     try {
       const { calculateVideoCost, deductCredits } = await import('@/lib/payments/credits');
-      const isAdmin = role === 'admin';
+      const isAdmin = role === 'admin' || role === 'tutor';
       if (uid && !isSmokeTest && !isAdmin) {
         const totalDuration = engineSlices.reduce((acc, s) => acc + s.duration, 0);
         const cost = await calculateVideoCost(totalDuration);
