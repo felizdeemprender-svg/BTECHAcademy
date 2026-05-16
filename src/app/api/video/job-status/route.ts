@@ -21,6 +21,14 @@ export async function GET(req: NextRequest) {
 
     const data = docSnap.data()!;
 
+    // HACK: Firebase App Hosting (Cloud Run) asfixia el CPU a 0 cuando no hay peticiones activas.
+    // Como el renderizado ocurre en segundo plano (Fire & Forget), necesitamos mantener el contenedor "despierto".
+    // Al hacer que este endpoint de polling demore 3 segundos en responder, le obligamos al servidor
+    // a mantener el CPU asignado al 100%, permitiendo que FFmpeg trabaje a máxima velocidad.
+    if (data.status === 'processing' || data.status === 'pending') {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+
     return NextResponse.json({
       success: true,
       jobId,
