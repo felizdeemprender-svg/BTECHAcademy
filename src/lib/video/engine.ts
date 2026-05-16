@@ -472,7 +472,16 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
 
     const fontSize = s.fontSize || (type === 'sub' ? 45 : type === 'mark' ? 30 : 80);
     const rawFont = s.fontName || 'Arial';
-    const fontName = rawFont.replace('.ttf', '').replace(/-/g, ' ');
+    // Map TTF filenames to their internal font family names (as libass expects them)
+    const fontNameMap: Record<string, string> = {
+      'Inter-Black.ttf': 'Inter',
+      'arialbd.ttf': 'Arial Bold',
+      'calibri.ttf': 'Calibri',
+      'georgia.ttf': 'Georgia',
+      'impact.ttf': 'Impact',
+      'trebucbd.ttf': 'Trebuchet MS Bold',
+    };
+    const fontName = fontNameMap[rawFont] || rawFont.replace('.ttf', '').replace(/-/g, ' ');
 
     let assAlignment = 2;
     const align = (s.alignment || (type === 'mark' ? 'right' : 'center')).toLowerCase();
