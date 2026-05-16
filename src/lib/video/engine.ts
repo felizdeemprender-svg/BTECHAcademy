@@ -57,6 +57,8 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
   console.log(`\n🚀 [Engine V2] STARTING RENDER JOB: ${jobId}`);
   console.log(`📦 Strategy: ${blueprint.concatenate_slices !== false ? 'Master Video' : 'Individual Clips'}`);
   console.log(`🧬 ADN: ${adn?.name} (${adn?.id}) | Version: ${adn?.version} | Format: ${req.format}`);
+  console.log(`📋 ADN Components: motion=${!!adn.motion_engine}, typo=${!!adn.typography_engine}, camera=${!!adn.camera}, trans=${!!adn.transitions}`);
+  console.log(`🎵 BG Music: ${req.backgroundMusicUrl || blueprint.background_music_url}`);
   
   if (!fs.existsSync(workDir)) fs.mkdirSync(workDir, { recursive: true });
 
