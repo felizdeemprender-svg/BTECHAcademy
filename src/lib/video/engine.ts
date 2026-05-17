@@ -196,7 +196,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       : `subtitles=filename='${absAss}':fontsdir='${fontsDir}'`;
 
     const filters = [
-      `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}`,
+      `scale=${width * 2}:${height * 2}:force_original_aspect_ratio=increase,crop=${width * 2}:${height * 2}`,
       zoomFilter,
       postFX,
       subtitlesFilter,
