@@ -104,16 +104,18 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       const speed = motionRule.speed || adn.global_fx?.zoom_speed || 1;
       const direction = motionRule.direction || adn.global_fx?.zoom_direction || 'center';
       
+      console.log(`🎥 [DEBUG] Segment: ${segment} | cameraMode: ${cameraMode} | intensity: ${intensity} | speed: ${speed} | direction: ${direction}`);
+
       if (cameraMode === 'static' || intensity <= 1 || speed <= 0) {
-        zoomFilter = `zoompan=z=1:x=0:y=0:d=1:s=${width}x${height}`;
+        zoomFilter = `zoompan=z=1:x=0:y=0:d=1:s=${width}x${height}:fps=30`;
       } else {
         const zoomStep = `(${intensity}-1)*on/(${duration}*30*${1/speed})`;
         if (direction === 'top') {
-          zoomFilter = `zoompan=z='1+${zoomStep}':x='0':y='0':d=1:s=${width}x${height}`;
+          zoomFilter = `zoompan=z='1+${zoomStep}':x='0':y='0':d=1:s=${width}x${height}:fps=30`;
         } else if (direction === 'bottom') {
-          zoomFilter = `zoompan=z='1+${zoomStep}':x='iw-iw/zoom':y='ih-ih/zoom':d=1:s=${width}x${height}`;
+          zoomFilter = `zoompan=z='1+${zoomStep}':x='iw-iw/zoom':y='ih-ih/zoom':d=1:s=${width}x${height}:fps=30`;
         } else {
-          zoomFilter = `zoompan=z='1+${zoomStep}':x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}`;
+          zoomFilter = `zoompan=z='1+${zoomStep}':x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}:fps=30`;
         }
       }
     } else {
@@ -121,9 +123,9 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       const zoom = gFx.zoom_intensity || 1.1;
       const direction = gFx.zoom_direction || 'center';
       const zStep = `(${zoom}-1)*on/(${duration}*30)`;
-      if (direction === 'top') zoomFilter = `zoompan=z='1+${zStep}':x='0':y='0':d=1:s=${width}x${height}`;
-      else if (direction === 'bottom') zoomFilter = `zoompan=z='1+${zStep}':x='iw-iw/zoom':y='ih-ih/zoom':d=1:s=${width}x${height}`;
-      else zoomFilter = `zoompan=z='1+${zStep}':x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}`;
+      if (direction === 'top') zoomFilter = `zoompan=z='1+${zStep}':x='0':y='0':d=1:s=${width}x${height}:fps=30`;
+      else if (direction === 'bottom') zoomFilter = `zoompan=z='1+${zStep}':x='iw-iw/zoom':y='ih-ih/zoom':d=1:s=${width}x${height}:fps=30`;
+      else zoomFilter = `zoompan=z='1+${zStep}':x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}:fps=30`;
     }
 
     let postFX = '';
@@ -228,7 +230,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       try { fs.unlinkSync(platePath); } catch (e) {}
     }
 
-    console.log(`🎬 [Engine V2] Rendering Slice ${i} (${totalFrames} frames) | FX: ${postFX.substring(0, 30)}...`);
+    console.log(`🎬 [Engine V2] Rendering Slice ${i} (${totalFrames} frames) | FX: ${postFX.substring(0, 30)}... | Zoom: ${zoomFilter}`);
     await runFfmpeg(ffmpegArgs, ffmpegEnv);
 
     if (blueprint.concatenate_slices === false) {
