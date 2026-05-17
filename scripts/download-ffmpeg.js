@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const FFMPEG_URL = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/n6.1.1/ffmpeg-n6.1.1-linux64-gpl.tar.xz';
+const FFMPEG_URL = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2025-02-28-13-02/ffmpeg-n6.1.2-25-g39cac587c4-linux64-gpl-6.1.tar.xz';
 const TARGET_DIR = path.join(__dirname, '..', 'node_modules', 'custom-ffmpeg-build');
 
 if (!fs.existsSync(TARGET_DIR)) {
@@ -58,13 +58,22 @@ if (process.platform === 'linux') {
     // Eliminar la carpeta bin residual si existe
     if (fs.existsSync(path.join(TARGET_DIR, 'bin'))) fs.rmSync(path.join(TARGET_DIR, 'bin'), { recursive: true, force: true });
     
-    console.log('[download-ffmpeg] Asignando permisos de ejecución...');
-    execSync(`chmod +x ${ffmpegBin}`);
+    // Asignar permisos de ejecución en Linux
+    if (process.platform === 'linux') {
+      execSync(`chmod +x ${ffmpegBin}`);
+    }
     
-    console.log('[download-ffmpeg] FFmpeg personalizado listo en node_modules/custom-ffmpeg-build/ffmpeg');
+    console.log(`[download-ffmpeg] FFmpeg personalizado listo en ${ffmpegBin}`);
+    // Verificar versión para el log
+    try {
+      const version = execSync(`${ffmpegBin} -version`).toString().split('\n')[0];
+      console.log(`[download-ffmpeg] Versión detectada: ${version}`);
+    } catch (vErr) {
+      console.warn(`[download-ffmpeg] No se pudo verificar la versión: ${vErr.message}`);
+    }
   } catch (err) {
     console.error('[download-ffmpeg] Error durante la descarga/extracción:', err.message);
-    process.exit(1); // Fail the build to prevent silent fallback
+    process.exit(1);
   }
 } else {
   console.log('[download-ffmpeg] Plataforma local (' + process.platform + '), se usará ffmpeg-static por defecto.');
