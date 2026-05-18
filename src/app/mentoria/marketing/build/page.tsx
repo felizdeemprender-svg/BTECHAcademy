@@ -646,7 +646,7 @@ export default function CampaignOrchestratorPage() {
                                                     <SelectValue placeholder="Seleccionar Video..." />
                                                   </SelectTrigger>
                                                   <SelectContent>
-                                                    {platformSocials.map((s: any, sIdx) => {
+                                                    {platformSocials.map((s: any, sIdx: number) => {
                                                       const name = s.marketingName || s.name || `Video ${sIdx + 1}`;
                                                       return (
                                                         <SelectItem key={sIdx} value={name} className="font-bold text-xs">
