@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  GraduationCap, 
-  Settings, 
-  Users, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  GraduationCap,
+  Settings,
+  Users,
   Library,
   CreditCard,
   UserPlus,
@@ -50,10 +50,10 @@ export function SidebarNav() {
 
   // Filtrar items de marketing basados en permisos
   const filterMarketingItems = (items: NavItem[]) => {
-    if (profile && 
-        !profile?.roles.includes('admin') && 
-        !profile?.roles.includes('marketing') && 
-        !canAccessMarketingTools(profile?.mentorPermissions || [])) {
+    if (profile &&
+      !profile?.roles.includes('admin') &&
+      !profile?.roles.includes('marketing') &&
+      !canAccessMarketingTools(profile?.mentorPermissions || [])) {
       return items.filter(item => !item.href.startsWith('/mentoria/marketing'));
     }
     return items;
@@ -122,7 +122,7 @@ export function SidebarNav() {
   ];
 
   const toggleSection = (label: string) => {
-    setOpenSections(prev => 
+    setOpenSections(prev =>
       prev.includes(label) ? prev.filter(s => s !== label) : [...prev, label]
     );
   };
@@ -142,24 +142,24 @@ export function SidebarNav() {
     ...section,
     items: section.items.filter(item => {
       if (!profile) return false;
-      
+
       const hasBaseRole = item.roles.some(role => profile.roles.includes(role as any));
       if (!hasBaseRole) return false;
 
       const isSuperAdmin = profile.email === 'felizdeemprender@gmail.com';
-      
+
       // Check sub-permission if exists (only for non-students)
       if (item.subPermission && !profile.roles.includes('alumno')) {
         return isSuperAdmin || profile.mentorPermissions?.includes(item.subPermission);
       }
-      
+
       // Check marketing access
       if (item.href.startsWith('/mentoria/marketing')) {
-        return isSuperAdmin || 
-               profile.roles.includes('marketing') || 
-               canAccessMarketingTools(profile.mentorPermissions || []);
+        return isSuperAdmin ||
+          profile.roles.includes('marketing') ||
+          canAccessMarketingTools(profile.mentorPermissions || []);
       }
-      
+
       return true;
     })
   })).filter(section => section.items.length > 0);
@@ -179,7 +179,7 @@ export function SidebarNav() {
               </div>
               {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
             </button>
-            
+
             <div className={cn(
               "space-y-1 transition-all duration-300 overflow-hidden",
               isOpen ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
@@ -191,8 +191,8 @@ export function SidebarNav() {
                     onClick={() => handleNavigation(item.href)}
                     className={cn(
                       "group flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ml-1 w-full text-left",
-                      pathname === item.href 
-                        ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10" 
+                      pathname === item.href
+                        ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
                         : "text-[hsl(var(--sidebar-foreground)/0.6)] hover:bg-white/5 hover:text-white"
                     )}
                   >
