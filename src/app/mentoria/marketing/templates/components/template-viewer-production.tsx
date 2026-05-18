@@ -229,13 +229,6 @@ export const TemplateViewerProduction = ({
                       variant="outline"
                       className="bg-secondary/10 text-muted-foreground border-none font-bold gap-1.5 px-3 py-1"
                     >
-                      <Instagram className="h-3 w-3" />
-                      {collection.assets?.socials?.length || 0} Social
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className="bg-secondary/10 text-muted-foreground border-none font-bold gap-1.5 px-3 py-1"
-                    >
                       <Megaphone className="h-3 w-3" />
                       {collection.assets?.ads?.length || 0} Ads
                     </Badge>
@@ -274,14 +267,7 @@ export const TemplateViewerProduction = ({
                       <Mail className="h-4 w-4" /> Emails
                     </TabsTrigger>
                   )}
-                  {collection?.assets?.socials && (
-                    <TabsTrigger
-                      value="social"
-                      className="rounded-xl px-6 font-bold gap-2 shrink-0"
-                    >
-                      <Instagram className="h-4 w-4" /> Social
-                    </TabsTrigger>
-                  )}
+
                   {collection?.assets?.ads && (
                     <TabsTrigger
                       value="ads"
@@ -434,96 +420,7 @@ export const TemplateViewerProduction = ({
                       </Tabs>
                     </TabsContent>
 
-                    {/* Social Tab */}
-                    <TabsContent value="social" className="m-0 space-y-6">
-                      <Tabs defaultValue="instagram" className="w-full">
-                        <TabsList className="bg-transparent p-0 flex-wrap h-auto gap-2">
-                          <TabsTrigger
-                            value="instagram"
-                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
-                          >
-                            Instagram
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="twitter"
-                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
-                          >
-                            Twitter
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="linkedin"
-                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
-                          >
-                            LinkedIn
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="tiktok"
-                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
-                          >
-                            TikTok
-                          </TabsTrigger>
-                        </TabsList>
 
-                        {["instagram", "twitter", "linkedin", "tiktok"].map(
-                          (plat) => (
-                            <TabsContent
-                              key={plat}
-                              value={plat}
-                              className="mt-6"
-                            >
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                {collection?.assets?.socials
-                                  ?.map((s: any, globalIdx: number) => ({
-                                    ...s,
-                                    globalIdx,
-                                  }))
-                                  .filter((s: any) => s.platform === plat)
-                                  .map((s: any) => (
-                                    <Card
-                                      key={s.globalIdx}
-                                      className="overflow-hidden border-none shadow-2xl rounded-3xl bg-white transition-all hover:scale-[1.02]"
-                                    >
-                                      <CardContent className="p-0">
-                                        <SocialMockup
-                                          variant={s}
-                                          index={s.globalIdx}
-                                          masterAdn={
-                                            masterAdns[
-                                              s.blueprintConfig?.presetId ||
-                                                s.videoConfig?.presetId ||
-                                                "01"
-                                            ]
-                                          }
-                                        />
-                                      </CardContent>
-
-                                      {isAdmin && (
-                                        <div className="p-3 border-t border-slate-100 flex justify-end gap-2 bg-white">
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() =>
-                                              handleOpenEditVariant(
-                                                s,
-                                                "social",
-                                                s.globalIdx,
-                                              )
-                                            }
-                                            className="rounded-xl font-bold h-8 px-4 text-xs text-primary hover:bg-primary/10"
-                                          >
-                                            <Settings2 className="h-3 w-3 mr-1" />{" "}
-                                            Editar
-                                          </Button>
-                                        </div>
-                                      )}
-                                    </Card>
-                                  ))}
-                              </div>
-                            </TabsContent>
-                          ),
-                        )}
-                      </Tabs>
-                    </TabsContent>
 
                     {/* Ads Tab */}
                     <TabsContent value="ads" className="m-0 space-y-6">

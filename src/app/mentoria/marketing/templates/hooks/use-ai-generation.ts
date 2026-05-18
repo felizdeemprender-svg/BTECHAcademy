@@ -31,7 +31,7 @@ export function useAIGeneration(profile?: any) {
   const [enabledChannels, setEnabledChannels] = useState<GenerationOptions>({
     landings: true,
     emails: true,
-    socials: true,
+    socials: false,
     ads: true,
   });
 
