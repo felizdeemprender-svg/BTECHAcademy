@@ -53,17 +53,17 @@ function getFormatDimensions(adn: any, format: string, isV2: boolean): { width: 
 
 export async function renderFullVideo(req: EngineRequest): Promise<string | { success: boolean, slices: any[], message: string }> {
   const { adn, blueprint, jobId, workDir, slices } = req;
-  
+
   console.log(`\n🚀 [Engine V2] STARTING RENDER JOB: ${jobId}`);
   console.log(`📦 Strategy: ${blueprint.concatenate_slices !== false ? 'Master Video' : 'Individual Clips'}`);
   console.log(`🧬 ADN: ${adn?.name} (${adn?.id}) | Version: ${adn?.version} | Format: ${req.format}`);
   console.log(`📋 ADN Components: motion=${!!adn.motion_engine}, typo=${!!adn.typography_engine}, camera=${!!adn.camera}, trans=${!!adn.transitions}`);
   console.log(`🎵 BG Music: ${req.backgroundMusicUrl || blueprint.background_music_url}`);
-  
+
   if (!fs.existsSync(workDir)) fs.mkdirSync(workDir, { recursive: true });
 
   const isV2 = adn.version === '2.0' || Number(adn.version) === 2.0 || !!adn.motion_engine || !!adn.global_fx;
-  const format = req.format || 'vertical'; 
+  const format = req.format || 'vertical';
   const { width, height } = getFormatDimensions(adn, format, isV2);
 
   const sceneClips: string[] = [];
@@ -76,9 +76,9 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     const slice = slices[i];
     const platePath = path.join(workDir, `plate_${i}.mp4`);
     const duration = slice.duration;
-    
-    console.log(`\n🎬 [Slice ${i+1}/${slices.length}] Processing: "${slice.text.substring(0, 30)}..." | Dur: ${duration}s`);
-    
+
+    console.log(`\n🎬 [Slice ${i + 1}/${slices.length}] Processing: "${slice.text.substring(0, 30)}..." | Dur: ${duration}s`);
+
     if (slice.voicePath) {
       voiceClips.push(slice.voicePath);
     } else {
@@ -90,7 +90,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
 
     const segment = slice.segment_label || 'default';
     const assPath = path.join(workDir, `subs_${i}.ass`);
-    
+
     const assContent = generateAssFile(adn, segment, slice.text || '', slice.subtitle || '', slice.watermark || '', duration, width, height);
     fs.writeFileSync(assPath, assContent, 'utf-8');
 
@@ -98,24 +98,51 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     if (isV2) {
       const logic = adn.logic_segments?.[segment] || adn.logic_segments?.VALOR || {};
       const motionRule = adn.camera?.segment_rules?.[segment] || {};
-      
+
       const cameraMode = motionRule.mode || logic.camera || 'cinematic_zoom';
       const intensity = motionRule.intensity || adn.global_fx?.zoom_intensity || 1.1;
       const speed = motionRule.speed || adn.global_fx?.zoom_speed || 1;
       const direction = motionRule.direction || adn.global_fx?.zoom_direction || 'center';
-      
+
       console.log(`🎥 [DEBUG] Segment: ${segment} | cameraMode: ${cameraMode} | intensity: ${intensity} | speed: ${speed} | direction: ${direction}`);
 
       if (cameraMode === 'static' || intensity <= 1 || speed <= 0) {
         zoomFilter = `zoompan=z=1:x=0:y=0:d=1:s=${width}x${height}:fps=30`;
       } else {
-        const zoomStep = `(${intensity}-1)*on/(${duration}*30*${1/speed})`;
-        if (direction === 'top') {
-          zoomFilter = `zoompan=z='1+${zoomStep}':x='0':y='0':d=1:s=${width}x${height}:fps=30`;
-        } else if (direction === 'bottom') {
-          zoomFilter = `zoompan=z='1+${zoomStep}':x='iw-iw/zoom':y='ih-ih/zoom':d=1:s=${width}x${height}:fps=30`;
+        // The zoom step should allow it to reach the target intensity over the duration.
+        // We use speed as a direct multiplier to the time progress.
+        const effectiveZoom = (intensity - 1) * speed;
+        const zoomStep = `(${effectiveZoom})*on/(${duration}*30)`;
+        
+        if (cameraMode === 'pan') {
+          // For pan, we zoom in slightly and move the x/y coordinates over time.
+          // We use intensity to determine how much we zoom in to allow panning room.
+          const staticZ = Math.max(intensity, 1.1);
+          const maxPanX = `(iw-iw/zoom)`;
+          const maxPanY = `(ih-ih/zoom)`;
+          const progress = `(on/(${duration}*30))`;
+          
+          if (direction === 'left') {
+            zoomFilter = `zoompan=z='${staticZ}':x='${maxPanX} - ${maxPanX}*${progress}':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}:fps=30`;
+          } else if (direction === 'right') {
+            zoomFilter = `zoompan=z='${staticZ}':x='${maxPanX}*${progress}':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}:fps=30`;
+          } else if (direction === 'top') {
+            zoomFilter = `zoompan=z='${staticZ}':x='iw/2-(iw/zoom)/2':y='${maxPanY} - ${maxPanY}*${progress}':d=1:s=${width}x${height}:fps=30`;
+          } else if (direction === 'bottom') {
+            zoomFilter = `zoompan=z='${staticZ}':x='iw/2-(iw/zoom)/2':y='${maxPanY}*${progress}':d=1:s=${width}x${height}:fps=30`;
+          } else {
+            // Default center pan doesn't move, so it just stays zoomed
+            zoomFilter = `zoompan=z='${staticZ}':x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}:fps=30`;
+          }
         } else {
-          zoomFilter = `zoompan=z='1+${zoomStep}':x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}:fps=30`;
+          // Normal Zoom (in or out)
+          if (direction === 'top') {
+            zoomFilter = `zoompan=z='1+${zoomStep}':x='0':y='0':d=1:s=${width}x${height}:fps=30`;
+          } else if (direction === 'bottom') {
+            zoomFilter = `zoompan=z='1+${zoomStep}':x='iw-iw/zoom':y='ih-ih/zoom':d=1:s=${width}x${height}:fps=30`;
+          } else {
+            zoomFilter = `zoompan=z='1+${zoomStep}':x='iw/2-(iw/zoom)/2':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}:fps=30`;
+          }
         }
       }
     } else {
@@ -133,10 +160,10 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       const globalFilters = adn.composition?.global_filters || [];
       const segmentLogic = (adn.logic_segments?.[segment] || {}) as any;
       const segmentFilters = segmentLogic.visual_filters || [];
-      
+
       const gFx = (adn.global_fx || {}) as any;
       const autoFilters = [];
-      
+
       const curvesPresetMap: Record<string, string> = {
         'neutral': 'linear_contrast',
         'none': 'none',
@@ -149,7 +176,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
         'cool': 'color_negative',
         'warm': 'vintage'
       };
-      
+
       if (gFx.curves_preset && gFx.curves_preset !== 'none') {
         const ffmpegPreset = curvesPresetMap[gFx.curves_preset] || 'linear_contrast';
         autoFilters.push({ name: 'curves', params: `preset=${ffmpegPreset}` });
@@ -188,15 +215,15 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
 
     const absImgPath = path.resolve(slice.imagePath).replace(/\\/g, '/');
     const absAss = path.resolve(assPath).replace(/\\/g, '/');
-    
+
     // Construct the subtitles filter string. 
     // We pass fontsdir as an extra safety measure, though FONTCONFIG_FILE is more robust.
-    const subtitlesFilter = process.platform === 'win32' 
+    const subtitlesFilter = process.platform === 'win32'
       ? `subtitles='${path.relative(process.cwd(), assPath).replace(/\\/g, '/')}'`
       : `subtitles=filename='${absAss}':fontsdir='${fontsDir}'`;
 
     const filters = [
-      `scale=${width * 2}:${height * 2}:force_original_aspect_ratio=increase,crop=${width * 2}:${height * 2}`,
+      `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}`,
       zoomFilter,
       postFX,
       subtitlesFilter,
@@ -220,14 +247,14 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     ];
 
     // Environment variables for FFmpeg to find the custom fonts.conf
-    const ffmpegEnv = { 
-      ...process.env, 
-      FONTCONFIG_FILE: fontsConfPath 
+    const ffmpegEnv = {
+      ...process.env,
+      FONTCONFIG_FILE: fontsConfPath
     };
 
     // Borrar archivo previo si existe para asegurar que se genera uno nuevo
     if (fs.existsSync(platePath)) {
-      try { fs.unlinkSync(platePath); } catch (e) {}
+      try { fs.unlinkSync(platePath); } catch (e) { }
     }
 
     console.log(`🎬 [Engine V2] Rendering Slice ${i} (${totalFrames} frames) | FX: ${postFX.substring(0, 30)}... | Zoom: ${zoomFilter}`);
@@ -237,7 +264,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       const sliceWithAudioPath = path.join(workDir, `final_slice_${i}.mp4`);
       const isSmoke = req.jobId.includes('smoke');
       let bgMusic = req.backgroundMusicUrl || blueprint.background_music_url || (adn as any).audio_settings?.background_music_url;
-      
+
       // Si es smoke test o no hay URL, usamos un silencio local para no depender de la red
       if (isSmoke || !bgMusic || bgMusic.startsWith('http')) {
         const silentPath = path.join(workDir, `silent_${i}.mp3`);
@@ -246,7 +273,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
         }
         bgMusic = silentPath;
       }
-      
+
       const aEngine = (adn.audio_engine || {}) as any;
       const sChain = aEngine.sidechain || { threshold: 0.1, ratio: 1.25, attack: 20, release: 350 };
       const musicVol = adn.audio_engine?.music_volume || (adn as any).audio_settings?.music_volume || 0.3;
@@ -284,7 +311,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
 
   // 2. Concatenate Video Clips with XFADE Transitions
   const videoOnlyPath = path.join(workDir, 'video_only.mp4');
-  
+
   if (sceneClips.length === 1) {
     await runFfmpeg(['-i', sceneClips[0], '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-y', videoOnlyPath]);
   } else {
@@ -299,18 +326,18 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     let cumulativeOffset = 0;
 
     for (let i = 1; i < sceneClips.length; i++) {
-      const prevSegment = sceneLabels[i-1];
+      const prevSegment = sceneLabels[i - 1];
       const prevRule = ((adn as any).motion_engine?.camera?.segment_rules?.[prevSegment] || {}) as any;
       const transTypeFull = prevRule.transition || (adn as any).motion_engine?.transitions?.default || 'xfade:fade';
       const transType = transTypeFull.replace('xfade:', '');
       const currentTransDuration = prevRule.transition_duration !== undefined ? prevRule.transition_duration : (adn.motion_engine?.transitions?.duration || 0.5);
-      
-      const prevDuration = sceneDurations[i-1];
+
+      const prevDuration = sceneDurations[i - 1];
       cumulativeOffset += prevDuration - currentTransDuration;
-      
+
       const outLabel = `v_xfade${i}`;
       filterComplex += `[${lastLabel}][v_pts${i}]xfade=transition=${transType}:duration=${currentTransDuration}:offset=${cumulativeOffset.toFixed(3)}[${outLabel}]`;
-      
+
       if (i < sceneClips.length - 1) {
         filterComplex += '; ';
       }
@@ -328,20 +355,20 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
 
   // 3. Concatenate Audio Clips with ACROSSFADE
   const voiceOnlyPath = path.join(workDir, 'voice_only.mp3');
-  
+
   if (voiceClips.length === 1) {
     fs.copyFileSync(voiceClips[0], voiceOnlyPath);
   } else {
     let audioFilter = '';
     let lastAudioLabel = '0:a';
     for (let i = 1; i < voiceClips.length; i++) {
-      const prevSegment = sceneLabels[i-1];
+      const prevSegment = sceneLabels[i - 1];
       const prevRule = ((adn as any).motion_engine?.camera?.segment_rules?.[prevSegment] || {}) as any;
       const currentTransDuration = prevRule.transition_duration !== undefined ? prevRule.transition_duration : (adn.motion_engine?.transitions?.duration || 0.5);
-      
+
       const outLabel = `a${i}`;
       audioFilter += `[${lastAudioLabel}][${i}:a]acrossfade=d=${currentTransDuration}:curve1=exp:curve2=exp[${outLabel}]`;
-      
+
       if (i < voiceClips.length - 1) audioFilter += '; ';
       lastAudioLabel = outLabel;
     }
@@ -357,27 +384,27 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
 
   // 4. Final Mix with Soundtrack and Ducking
   const finalPath = path.join(workDir, 'final_render.mp4');
-  
+
   if (fs.existsSync(finalPath)) {
-    try { fs.unlinkSync(finalPath); } catch (e) {}
+    try { fs.unlinkSync(finalPath); } catch (e) { }
   }
 
   const isSmokeFinal = req.jobId.includes('smoke');
   let bgMusic = req.backgroundMusicUrl || blueprint.background_music_url || (adn as any).audio_settings?.background_music_url;
 
   if (!bgMusic || bgMusic.startsWith('http')) {
-      const silentPath = path.join(workDir, `silent_final.mp3`);
-      const totalDur = slices.reduce((acc, s) => acc + s.duration, 0);
-      if (!fs.existsSync(silentPath)) {
-        await runFfmpeg(['-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono', '-t', totalDur.toString(), '-q:a', '9', '-acodec', 'libmp3lame', '-y', silentPath]);
-      }
-      bgMusic = silentPath;
+    const silentPath = path.join(workDir, `silent_final.mp3`);
+    const totalDur = slices.reduce((acc, s) => acc + s.duration, 0);
+    if (!fs.existsSync(silentPath)) {
+      await runFfmpeg(['-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono', '-t', totalDur.toString(), '-q:a', '9', '-acodec', 'libmp3lame', '-y', silentPath]);
+    }
+    bgMusic = silentPath;
   }
   const aEngine = (adn.audio_engine || {}) as any;
   const sChain = aEngine.sidechain || { threshold: 0.1, ratio: 1.25, attack: 20, release: 350 };
   const musicVol = adn.audio_engine?.music_volume || (adn as any).audio_settings?.music_volume || 0.3;
   const voiceVol = adn.audio_engine?.voice_volume || (adn as any).audio_settings?.voice_volume || 1.0;
-  
+
   const voiceFx = aEngine.voice_fx || `volume=${voiceVol}`;
   const musicFx = aEngine.music_fx || `volume=${musicVol}`;
 
@@ -411,7 +438,7 @@ function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
     } else if (!resolvedFfmpeg || !fs.existsSync(resolvedFfmpeg)) {
       resolvedFfmpeg = staticBin;
     }
-    
+
     const proc = spawn(resolvedFfmpeg!, args, { env: { ...process.env, ...envOverrides } });
     let lastLog = Date.now();
 
@@ -442,7 +469,7 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
   let titleStyle: any = {};
   let subStyle: any = {};
   let markStyle: any = {};
-  
+
   if (isV2) {
     const tEngine = (adn.typography_engine || {}) as any;
     const styles = tEngine.segment_styles?.[segment] || tEngine.segment_styles?.VALOR || {};
@@ -459,7 +486,7 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
   const resolveAssColor = (col: string) => {
     if (!col) return '&H00FFFFFF';
     if (col.startsWith('&H')) return col;
-    let opacity = 0; 
+    let opacity = 0;
     let cleanHex = col;
     if (col.includes('@')) {
       const parts = col.split('@');
@@ -493,11 +520,20 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
 
     const fontSize = s.fontSize || (type === 'sub' ? 45 : type === 'mark' ? 30 : 80);
     const rawFont = s.fontName || 'Arial';
-    const fontName = rawFont.replace('.ttf', '').replace(/-/g, ' ');
+    // Map TTF filenames to their internal font family names (as libass expects them)
+    const fontNameMap: Record<string, string> = {
+      'Inter-Black.ttf': 'Inter',
+      'arialbd.ttf': 'Arial Bold',
+      'calibri.ttf': 'Calibri',
+      'georgia.ttf': 'Georgia',
+      'impact.ttf': 'Impact',
+      'trebucbd.ttf': 'Trebuchet MS Bold',
+    };
+    const fontName = fontNameMap[rawFont] || rawFont.replace('.ttf', '').replace(/-/g, ' ');
 
     let assAlignment = 2;
     const align = (s.alignment || (type === 'mark' ? 'right' : 'center')).toLowerCase();
-    
+
     if (align.includes('top')) {
       if (align.includes('left')) assAlignment = 7;
       else if (align.includes('right')) assAlignment = 9;
@@ -512,7 +548,7 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
     const marginL = s.marginH || s.marginL || 50;
     const marginR = s.marginH || s.marginR || 50;
 
-    let borderStyle = 1; 
+    let borderStyle = 1;
     let outlineWidth = 0;
     let outlineColor = '&H00000000';
     let outlineBlur = 0;
@@ -529,7 +565,7 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
       const outlineAlpha = s.outline.alpha !== undefined ? s.outline.alpha : 1.0;
       outlineColor = resolveAssColor(`${baseOutlineCol}@${outlineAlpha}`);
     }
-    
+
     return {
       fontName, fontSize, primaryColor, outlineColor, shadowColor, assAlignment, marginV, marginL, marginR,
       outlineWidth, borderStyle, shadowDepth, shadowBlur, outlineBlur,
