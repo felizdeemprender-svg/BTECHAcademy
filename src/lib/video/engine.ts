@@ -595,20 +595,55 @@ Style: Watermark,${mark.fontName},${mark.fontSize},${mark.primaryColor},&H0000FF
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 `;
 
+  const getAssAnimationTags = (animationName: string, durationSec: number): string => {
+    if (!animationName) return '';
+    const durMs = Math.round(durationSec * 1000);
+    
+    switch (animationName.toLowerCase()) {
+      case 'cinema_fade':
+      case 'fade':
+        return '\\fad(400,400)';
+      case 'cinema_fade_out':
+        return '\\fad(0,600)';
+      case 'cinema_zoom':
+        return `\\fscx90\\fscy90\\t(0,${durMs},\\fscx110\\fscy110)`;
+      case 'kinetic_pop':
+      case 'cinema_bounce':
+      case 'cinema_pulse':
+      case 'pop':
+        return '\\fscx0\\fscy0\\t(0,250,\\fscx115\\fscy115)\\t(250,400,\\fscx100\\fscy100)';
+      case 'cinema_glow':
+        return '\\fad(300,300)\\blur2';
+      case 'cinema_slide':
+        return '\\fad(450,450)';
+      case 'cinema_end':
+        return '\\fad(0,800)';
+      default:
+        return '';
+    }
+  };
+
   const finalTitle = t.uppercase ? text.toUpperCase() : text;
-  const titleBlur = t.shadowBlur > 0 ? `{\\blur${t.shadowBlur}}` : '';
-  ass += `Dialogue: 0,0:00:00.00,${formatDuration(duration)},Title,,0,0,0,,${titleBlur}${finalTitle}\n`;
+  const titleAnim = getAssAnimationTags(titleStyle.animation, duration);
+  const titleOverrides = (t.shadowBlur > 0 || titleAnim)
+    ? `{${t.shadowBlur > 0 ? `\\blur${t.shadowBlur}` : ''}${titleAnim}}`
+    : '';
+  ass += `Dialogue: 0,0:00:00.00,${formatDuration(duration)},Title,,0,0,0,,${titleOverrides}${finalTitle}\n`;
 
   const finalSub = sub.uppercase ? subtitle.toUpperCase() : subtitle;
-  const subBlur = sub.shadowBlur > 0 ? `{\\blur${sub.shadowBlur}}` : '';
-  const subOutlineBlur = sub.outlineBlur > 0 ? `{\\be${sub.outlineBlur}}` : '';
+  const subAnim = getAssAnimationTags(subStyle.animation, duration);
+  const subOverrides = (sub.shadowBlur > 0 || sub.outlineBlur > 0 || subAnim)
+    ? `{${sub.shadowBlur > 0 ? `\\blur${sub.shadowBlur}` : ''}${sub.outlineBlur > 0 ? `\\be${sub.outlineBlur}` : ''}${subAnim}}`
+    : '';
   if (finalSub) {
-    ass += `Dialogue: 1,0:00:00.00,${formatDuration(duration)},Subtitle,,0,0,0,,${subBlur}${subOutlineBlur}${finalSub}\n`;
+    ass += `Dialogue: 1,0:00:00.00,${formatDuration(duration)},Subtitle,,0,0,0,,${subOverrides}${finalSub}\n`;
   }
 
   const finalMark = mark.uppercase ? watermarkText.toUpperCase() : watermarkText;
+  const markAnim = getAssAnimationTags(markStyle.animation, duration);
+  const markOverrides = markAnim ? `{${markAnim}}` : '';
   if (finalMark) {
-    ass += `Dialogue: 0,0:00:00.00,${formatDuration(duration)},Watermark,,0,0,0,,${finalMark}\n`;
+    ass += `Dialogue: 0,0:00:00.00,${formatDuration(duration)},Watermark,,0,0,0,,${markOverrides}${finalMark}\n`;
   }
 
   return ass;
