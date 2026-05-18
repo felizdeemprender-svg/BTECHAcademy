@@ -451,8 +451,13 @@ function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
           process.stdout.write(`\r⏳ Progress: Frame ${match[1]} | FPS: ${match[2]} | Time: ${match[3]}`);
           lastLog = Date.now();
         }
-      } else if (line.toLowerCase().includes('error')) {
-        console.log(`\n❌ [FFmpeg Error] ${line.trim()}`);
+      } else {
+        if (line.toLowerCase().includes('error')) {
+          console.log(`\n❌ [FFmpeg Error] ${line.trim()}`);
+        }
+        if (line.includes('fontselect') || line.toLowerCase().includes('subtitle')) {
+          console.log(`\n🔍 [FFmpeg FontLog] ${line.trim()}`);
+        }
       }
     });
 
@@ -530,7 +535,10 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
         console.warn(`⚠️ [Engine] Font file "${rawFont}" not found at "${fontPath}". Falling back to high-fidelity "Inter-Black.ttf".`);
       }
     }
-    const fontName = targetFont.replace('.ttf', '').replace(/-/g, ' ');
+    let fontName = targetFont.replace('.ttf', '').replace(/-/g, ' ');
+    if (targetFont.startsWith('Inter-')) {
+      fontName = 'Inter';
+    }
 
     let assAlignment = 2;
     const align = (s.alignment || (type === 'mark' ? 'right' : 'center')).toLowerCase();
