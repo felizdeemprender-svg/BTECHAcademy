@@ -93,10 +93,9 @@ export function CollectionManager({
 
   const getTotalTemplates = (collection: TemplateCollection) => {
     if (!collection.assets) return 0;
-    return Object.entries(collection.assets).reduce(
-      (total: number, [channel, items]: [string, any]) => {
-        if (channel === "socials") return total;
-        return total + (Array.isArray(items) ? items.length : 0);
+    return Object.values(collection.assets).reduce(
+      (total: number, channel: any) => {
+        return total + (Array.isArray(channel) ? channel.length : 0);
       },
       0,
     );
@@ -107,7 +106,6 @@ export function CollectionManager({
 
     const breakdown: Record<string, number> = {};
     Object.entries(collection.assets).forEach(([channel, templates]) => {
-      if (channel === "socials") return;
       if (Array.isArray(templates)) {
         breakdown[channel] = templates.length;
       }

@@ -31,7 +31,7 @@ export function useAIGeneration(profile?: any) {
   const [enabledChannels, setEnabledChannels] = useState<GenerationOptions>({
     landings: true,
     emails: true,
-    socials: false,
+    socials: true,
     ads: true,
   });
 
@@ -94,33 +94,33 @@ export function useAIGeneration(profile?: any) {
         const platforms = {
           twitter: socialTargets.twitter.enabled
             ? {
-                enabled: true,
-                thread: socialTargets.twitter.thread || 3,
-                single_post: socialTargets.twitter.single_post || 2,
-              }
+              enabled: true,
+              thread: socialTargets.twitter.thread || 3,
+              single_post: socialTargets.twitter.single_post || 2,
+            }
             : undefined,
           instagram: socialTargets.instagram.enabled
             ? {
-                enabled: true,
-                story: socialTargets.instagram.story || 5,
-                carousel: socialTargets.instagram.carousel || 3,
-                single_post: socialTargets.instagram.single_post || 2,
-              }
+              enabled: true,
+              story: socialTargets.instagram.story || 5,
+              carousel: socialTargets.instagram.carousel || 3,
+              single_post: socialTargets.instagram.single_post || 2,
+            }
             : undefined,
           tiktok: socialTargets.tiktok.enabled
             ? {
-                enabled: true,
-                short_video: socialTargets.tiktok.short_video || 3,
-                carousel: socialTargets.tiktok.carousel || 3,
-              }
+              enabled: true,
+              short_video: socialTargets.tiktok.short_video || 3,
+              carousel: socialTargets.tiktok.carousel || 3,
+            }
             : undefined,
           linkedin: socialTargets.linkedin.enabled
             ? {
-                enabled: true,
-                document: socialTargets.linkedin.document || 2,
-                single_post: socialTargets.linkedin.single_post || 2,
-                carousel: socialTargets.linkedin.carousel || 2,
-              }
+              enabled: true,
+              document: socialTargets.linkedin.document || 2,
+              single_post: socialTargets.linkedin.single_post || 2,
+              carousel: socialTargets.linkedin.carousel || 2,
+            }
             : undefined,
         };
 

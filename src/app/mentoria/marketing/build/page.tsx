@@ -76,6 +76,29 @@ export default function CampaignOrchestratorPage() {
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [coordinationPlan, setCoordinationPlan] = useState<CoordinationOutput | null>(null);
 
+  const handlePageSelect = (pageId: string) => {
+    setSelectedPageId(pageId);
+    const page = salesPages?.find(p => p.id === pageId);
+    if (page) {
+      const content = page.aiContent || {};
+      const socials = content.socials || content.social || [];
+      const totalVideos = socials.length;
+      
+      setCampaignTitle(`Lanzamiento ${page.title}`);
+      
+      if (totalVideos <= 1) {
+        setDuration(3);
+        setStrategy('flash_sale');
+      } else if (totalVideos === 2) {
+        setDuration(5);
+        setStrategy('flash_sale');
+      } else {
+        setDuration(7);
+        setStrategy('classic_launch');
+      }
+    }
+  };
+
   // Pack Multimedia Query
   const salesPagesQuery = useMemoFirebase(() => {
     if (!db || !profile?.uid) return null;
@@ -89,11 +112,13 @@ export default function CampaignOrchestratorPage() {
 
   const salesPages = useMemo(() => {
     if (!rawSalesPages) return null;
-    return [...rawSalesPages].sort((a, b) => {
-      const dateA = a.createdAt?.toDate?.() || new Date(0);
-      const dateB = b.createdAt?.toDate?.() || new Date(0);
-      return dateB.getTime() - dateA.getTime();
-    });
+    return [...rawSalesPages]
+      .filter(p => p.type !== 'landing_only')
+      .sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
   }, [rawSalesPages]);
 
   const handleGeneratePlan = async () => {
@@ -212,7 +237,7 @@ export default function CampaignOrchestratorPage() {
                     ) : salesPages?.map(p => (
                       <div 
                         key={p.id} 
-                        onClick={() => setSelectedPageId(p.id)}
+                        onClick={() => handlePageSelect(p.id)}
                         className={cn(
                           "p-4 rounded-2xl border-2 transition-all cursor-pointer",
                           selectedPageId === p.id ? "bg-primary/5 border-primary shadow-sm" : "bg-white border-border/50 hover:border-primary/20"
@@ -251,6 +276,74 @@ export default function CampaignOrchestratorPage() {
                     className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
                   />
                 </div>
+
+                {selectedPageId && (() => {
+                  const page = salesPages?.find(p => p.id === selectedPageId);
+                  if (!page) return null;
+                  
+                  const content = page.aiContent || {};
+                  const socials = content.socials || content.social || [];
+                  const emails = content.emails || content.email || [];
+                  const ads = content.ads || content.ad || content.adsSet || [];
+                  
+                  const instagramCount = socials.filter((s: any) => s.platform?.toLowerCase() === 'instagram').length;
+                  const tiktokCount = socials.filter((s: any) => s.platform?.toLowerCase() === 'tiktok').length;
+                  const linkedinCount = socials.filter((s: any) => s.platform?.toLowerCase() === 'linkedin').length;
+                  const twitterCount = socials.filter((s: any) => s.platform?.toLowerCase() === 'twitter' || s.platform?.toLowerCase() === 'x').length;
+                  const otherCount = socials.length - (instagramCount + tiktokCount + linkedinCount + twitterCount);
+                  
+                  return (
+                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-4 animate-in fade-in zoom-in-95">
+                      <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Activos del Pack Seleccionado</h4>
+                      
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100/50">
+                          <p className="text-xl font-black text-slate-800">{emails.length}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Emails</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100/50">
+                          <p className="text-xl font-black text-slate-800">{ads.length}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Ads (Anuncios)</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100/50">
+                          <p className="text-xl font-black text-slate-800">{socials.length}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Videos/Posts</p>
+                        </div>
+                      </div>
+                      
+                      {socials.length > 0 && (
+                        <div className="space-y-1.5 pt-2 border-t border-slate-200/60">
+                          <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Distribución por Redes</p>
+                          <div className="flex flex-wrap gap-2">
+                            {instagramCount > 0 && <Badge variant="outline" className="bg-pink-50/50 border-pink-100 text-pink-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">Instagram: {instagramCount}</Badge>}
+                            {tiktokCount > 0 && <Badge variant="outline" className="bg-slate-50/50 border-slate-200 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">TikTok: {tiktokCount}</Badge>}
+                            {linkedinCount > 0 && <Badge variant="outline" className="bg-blue-50/50 border-blue-100 text-blue-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">LinkedIn: {linkedinCount}</Badge>}
+                            {twitterCount > 0 && <Badge variant="outline" className="bg-sky-50/50 border-sky-100 text-sky-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">Twitter/X: {twitterCount}</Badge>}
+                            {otherCount > 0 && <Badge variant="outline" className="bg-slate-50/50 border-slate-200 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">Otros: {otherCount}</Badge>}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="bg-amber-50/80 border border-amber-100/60 rounded-xl p-3 text-[11px] font-medium text-amber-800 space-y-1">
+                        <p className="font-bold flex items-center gap-1.5">
+                          <Lightbulb className="h-3.5 w-3.5 text-amber-600 shrink-0" /> Recomendación del Planificador:
+                        </p>
+                        <p className="leading-normal text-amber-900">
+                          {socials.length === 0 ? (
+                            "Este pack no tiene videos generados. Te sugerimos generar videos en el Productor antes de orquestar la emisión."
+                          ) : socials.length === 1 ? (
+                            "Se sugiere una campaña corta de 3 días. Hacer una campaña larga (7 días o más) con un solo video fatigará a tu audiencia."
+                          ) : socials.length === 2 ? (
+                            "Se sugiere una campaña de 5 días. Con 2 videos puedes alternar contenidos en tus canales sin saturar."
+                          ) : (
+                            `¡Excelente! Tienes ${socials.length} videos listos. Recomendamos una campaña de 7 a 14 días (Lanzamiento Clásico) para máximo impacto.`
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <Button 
                   onClick={() => setStep(2)} 
                   disabled={!selectedPageId || !campaignTitle} 
@@ -296,7 +389,22 @@ export default function CampaignOrchestratorPage() {
                           onChange={e => setDuration(parseInt(e.target.value) || 1)} 
                           className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-black text-xl w-32" 
                         />
-                        <p className="text-xs font-medium text-muted-foreground">Ciclo total.</p>
+                        <div>
+                          <p className="text-xs font-bold text-slate-700">Duración sugerida</p>
+                          {(() => {
+                            const page = salesPages?.find(p => p.id === selectedPageId);
+                            const socials = page?.aiContent?.socials || page?.aiContent?.social || [];
+                            const recommended = socials.length <= 1 ? 3 : socials.length === 2 ? 5 : 7;
+                            return (
+                              <p className={cn(
+                                "text-[10px] font-bold uppercase tracking-tighter mt-0.5",
+                                duration === recommended ? "text-emerald-600 animate-pulse" : "text-amber-600"
+                              )}>
+                                {duration === recommended ? "✓ Óptima para tus videos" : `Sugerida: ${recommended} días`}
+                              </p>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -406,43 +514,206 @@ export default function CampaignOrchestratorPage() {
                               </div>
                               <Textarea 
                                 value={event.action} 
-                                onChange={e => handleUpdateEvent(i, 'action', e.target.value)}
-                                className="font-bold text-lg text-slate-900 border-none bg-slate-50 rounded-xl p-4 min-h-[80px]"
+                                onChange={e => handleUpdateEvent(i, 'action', e.target.value)} 
+                                className="font-bold text-lg text-slate-900 border-none bg-slate-50 rounded-xl p-4 min-h-[80px]" 
                               />
+
+                              {event.channels.includes('Social') && (() => {
+                                const page = salesPages?.find(p => p.id === selectedPageId);
+                                const socials = page?.aiContent?.socials || page?.aiContent?.social || [];
+                                if (socials.length === 0) return null;
+
+                                // Group socials by platform
+                                const platforms = Array.from(new Set(socials.map((s: any) => s.platform).filter(Boolean)));
+
+                                return (
+                                  <div className="mt-4 p-5 rounded-2xl bg-slate-50/80 border border-slate-200/60 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                                        <Instagram className="h-3.5 w-3.5 text-primary" /> Distribución y Horarios de Video
+                                      </p>
+                                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[8px] font-bold">
+                                        Horario Recomendado
+                                      </Badge>
+                                    </div>
+
+                                    <div className="grid gap-3">
+                                      {platforms.map((plat: string) => {
+                                        const platformSocials = socials.filter((s: any) => s.platform === plat);
+                                        if (platformSocials.length === 0) return null;
+
+                                        const defaultVideoIdx = event.variantIndex % platformSocials.length;
+                                        const currentSched = (event as any).socialSchedule?.[plat] || {};
+                                        const activeVideoName = currentSched.videoName || platformSocials[defaultVideoIdx]?.marketingName || platformSocials[defaultVideoIdx]?.name || `Video ${plat.toUpperCase()}`;
+                                        
+                                        const timeRationales: { 
+                                          [key: string]: { 
+                                            primary: { time: string, desc: string },
+                                            secondaries: Array<{ time: string, desc: string }>
+                                          } 
+                                        } = {
+                                          instagram: {
+                                            primary: { time: '18:00', desc: 'Salida Laboral: Alto Impacto (Reels/Ocio)' },
+                                            secondaries: [
+                                              { time: '08:30', desc: 'Despertar: Tránsito Mediano (Scroll Rápido)' },
+                                              { time: '13:00', desc: 'Almuerzo: Tránsito Mediano (Conexión Media)' }
+                                            ]
+                                          },
+                                          tiktok: {
+                                            primary: { time: '19:30', desc: 'Relax Nocturno: Alto Impacto (Vídeos Cortos)' },
+                                            secondaries: [
+                                              { time: '12:30', desc: 'Almuerzo: Tránsito Mediano (Entretenimiento)' },
+                                              { time: '16:30', desc: 'Tarde/Merienda: Tránsito Mediano (Público Joven)' }
+                                            ]
+                                          },
+                                          linkedin: {
+                                            primary: { time: '08:30', desc: 'Café Matutino: Alto Impacto (Noticias B2B)' },
+                                            secondaries: [
+                                              { time: '12:00', desc: 'Almuerzo B2B: Tránsito Mediano (Pausa Profesional)' },
+                                              { time: '17:30', desc: 'Cierre Oficina: Tránsito Mediano (Networking)' }
+                                            ]
+                                          },
+                                          twitter: {
+                                            primary: { time: '13:00', desc: 'Almuerzo: Alto Impacto (Tendencias/Noticias)' },
+                                            secondaries: [
+                                              { time: '08:00', desc: 'Camino al Trabajo: Tránsito Mediano (Noticias Rápidas)' },
+                                              { time: '18:30', desc: 'Vuelta a Casa: Tránsito Mediano (Cierre del Día)' }
+                                            ]
+                                          },
+                                          x: {
+                                            primary: { time: '13:00', desc: 'Almuerzo: Alto Impacto (Tendencias/Noticias)' },
+                                            secondaries: [
+                                              { time: '08:00', desc: 'Camino al Trabajo: Tránsito Mediano (Noticias Rápidas)' },
+                                              { time: '18:30', desc: 'Vuelta a Casa: Tránsito Mediano (Cierre del Día)' }
+                                            ]
+                                          }
+                                        };
+                                         
+                                        const platKey = plat.toLowerCase();
+                                        const config = timeRationales[platKey] || {
+                                          primary: { time: '15:00', desc: 'Break Tarde: Alto Impacto (Dispersión)' },
+                                          secondaries: [
+                                            { time: '10:00', desc: 'Break Mañana: Tránsito Mediano (Pausa Activa)' },
+                                            { time: '20:00', desc: 'Cena: Tránsito Mediano (Relax Nocturno)' }
+                                          ]
+                                        };
+
+                                        const getMin = (t: string) => {
+                                          const [h, m] = t.split(':').map(Number);
+                                          return (h || 0) * 60 + (m || 0);
+                                        };
+
+                                        const checkTol = (t1: string, t2: string) => {
+                                          const diff = Math.abs(getMin(t1) - getMin(t2));
+                                          return Math.min(diff, 1440 - diff) <= 40;
+                                        };
+
+                                        const activeTime = currentSched.time || config.primary.time;
+
+                                        let statusType: 'primary' | 'secondary' | 'none' = 'none';
+                                        let statusDesc = '';
+
+                                        if (checkTol(activeTime, config.primary.time)) {
+                                          statusType = 'primary';
+                                          statusDesc = config.primary.desc;
+                                        } else {
+                                          const matchedSec = config.secondaries.find(sec => checkTol(activeTime, sec.time));
+                                          if (matchedSec) {
+                                            statusType = 'secondary';
+                                            statusDesc = matchedSec.desc;
+                                          }
+                                        }
+
+                                        return (
+                                          <div key={plat} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                              <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-bold text-xs uppercase">
+                                                {plat.substring(0, 2)}
+                                              </div>
+                                              <div>
+                                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">{plat}</p>
+                                                <Select
+                                                  value={activeVideoName}
+                                                  onValueChange={(val) => {
+                                                    const updatedSchedule = {
+                                                      ...((event as any).socialSchedule || {}),
+                                                      [plat]: { ...currentSched, videoName: val, time: activeTime }
+                                                    };
+                                                    handleUpdateEvent(i, 'socialSchedule', updatedSchedule);
+                                                  }}
+                                                >
+                                                  <SelectTrigger className="h-7 px-2 bg-slate-50 border-none font-bold text-[10px] rounded-lg mt-0.5 max-w-[200px] truncate">
+                                                    <SelectValue placeholder="Seleccionar Video..." />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    {platformSocials.map((s: any, sIdx) => {
+                                                      const name = s.marketingName || s.name || `Video ${sIdx + 1}`;
+                                                      return (
+                                                        <SelectItem key={sIdx} value={name} className="font-bold text-xs">
+                                                          {name}
+                                                        </SelectItem>
+                                                      );
+                                                    })}
+                                                  </SelectContent>
+                                                </Select>
+                                              </div>
+                                            </div>
+
+                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                              <div className="flex items-center gap-2">
+                                                <Label className="text-[9px] font-black uppercase text-slate-400">Publicar:</Label>
+                                                <input
+                                                  type="time"
+                                                  value={activeTime}
+                                                  onChange={(e) => {
+                                                    const updatedSchedule = {
+                                                      ...((event as any).socialSchedule || {}),
+                                                      [plat]: { ...currentSched, videoName: activeVideoName, time: e.target.value }
+                                                    };
+                                                    handleUpdateEvent(i, 'socialSchedule', updatedSchedule);
+                                                  }}
+                                                  className="h-8 px-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-black text-slate-700 outline-none w-24 focus:border-primary/20 transition-all text-center"
+                                                />
+                                              </div>
+                                              <span className={cn(
+                                                "text-[8px] text-right font-black tracking-tight max-w-[210px] leading-tight block transition-all",
+                                                statusType === 'primary' && "text-emerald-600/90",
+                                                statusType === 'secondary' && "text-sky-600/90",
+                                                statusType === 'none' && "text-rose-500 animate-pulse"
+                                              )}>
+                                                {statusType === 'primary' && `🌟 ¡Pico Óptimo!: ${statusDesc}`}
+                                                {statusType === 'secondary' && `⚡ Tránsito Moderado: ${statusDesc}`}
+                                                {statusType === 'none' && `⚠️ Tránsito Bajo (Horario no recomendado)`}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
                             <div className="space-y-4 flex flex-col justify-end">
-                              <div className="space-y-2">
-                                <Label className="text-[9px] font-black uppercase text-slate-400 ml-1">Variante Multimedia</Label>
-                                <Select 
-                                  value={event.variantIndex.toString()} 
-                                  onValueChange={v => handleUpdateEvent(i, 'variantIndex', parseInt(v))}
-                                >
-                                  <SelectTrigger className="h-10 rounded-xl bg-emerald-50 border-none font-bold text-xs">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="0">Variante 1 (Mínima)</SelectItem>
-                                    <SelectItem value="1">Variante 2 (Equilibrada)</SelectItem>
-                                    <SelectItem value="2">Variante 3 (Detallada)</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex gap-1 flex-wrap">
-                                {['Email', 'Social', 'Ads'].map(ch => (
-                                  <Badge 
-                                    key={ch} 
-                                    variant={event.channels.includes(ch) ? 'default' : 'outline'}
-                                    className="cursor-pointer text-[7px] uppercase font-bold"
-                                    onClick={() => {
-                                      const newChans = event.channels.includes(ch) 
-                                        ? event.channels.filter(c => c !== ch) 
-                                        : [...event.channels, ch];
-                                      handleUpdateEvent(i, 'channels', newChans);
-                                    }}
-                                  >
-                                    {ch}
-                                  </Badge>
-                                ))}
+                              <div className="space-y-1">
+                                <Label className="text-[9px] font-black uppercase text-slate-400 ml-1">Canales Activos</Label>
+                                <div className="flex gap-1.5 flex-wrap">
+                                  {['Email', 'Social', 'Ads'].map(ch => (
+                                    <Badge 
+                                      key={ch} 
+                                      variant={event.channels.includes(ch) ? 'default' : 'outline'}
+                                      className="cursor-pointer text-[8px] uppercase font-black px-2.5 py-1 rounded-lg"
+                                      onClick={() => {
+                                        const newChans = event.channels.includes(ch) 
+                                          ? event.channels.filter(c => c !== ch) 
+                                          : [...event.channels, ch];
+                                        handleUpdateEvent(i, 'channels', newChans);
+                                      }}
+                                    >
+                                      {ch}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
                             </div>
                           </div>

@@ -229,6 +229,13 @@ export const TemplateViewerProduction = ({
                       variant="outline"
                       className="bg-secondary/10 text-muted-foreground border-none font-bold gap-1.5 px-3 py-1"
                     >
+                      <Instagram className="h-3 w-3" />
+                      {collection.assets?.socials?.length || 0} Social
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="bg-secondary/10 text-muted-foreground border-none font-bold gap-1.5 px-3 py-1"
+                    >
                       <Megaphone className="h-3 w-3" />
                       {collection.assets?.ads?.length || 0} Ads
                     </Badge>
@@ -267,7 +274,14 @@ export const TemplateViewerProduction = ({
                       <Mail className="h-4 w-4" /> Emails
                     </TabsTrigger>
                   )}
-
+                  {collection?.assets?.socials && (
+                    <TabsTrigger
+                      value="social"
+                      className="rounded-xl px-6 font-bold gap-2 shrink-0"
+                    >
+                      <Instagram className="h-4 w-4" /> Social
+                    </TabsTrigger>
+                  )}
                   {collection?.assets?.ads && (
                     <TabsTrigger
                       value="ads"
@@ -420,7 +434,96 @@ export const TemplateViewerProduction = ({
                       </Tabs>
                     </TabsContent>
 
+                    {/* Social Tab */}
+                    <TabsContent value="social" className="m-0 space-y-6">
+                      <Tabs defaultValue="instagram" className="w-full">
+                        <TabsList className="bg-transparent p-0 flex-wrap h-auto gap-2">
+                          <TabsTrigger
+                            value="instagram"
+                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
+                          >
+                            Instagram
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="twitter"
+                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
+                          >
+                            Twitter
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="linkedin"
+                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
+                          >
+                            LinkedIn
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="tiktok"
+                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
+                          >
+                            TikTok
+                          </TabsTrigger>
+                        </TabsList>
 
+                        {["instagram", "twitter", "linkedin", "tiktok"].map(
+                          (plat) => (
+                            <TabsContent
+                              key={plat}
+                              value={plat}
+                              className="mt-6"
+                            >
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                {collection?.assets?.socials
+                                  ?.map((s: any, globalIdx: number) => ({
+                                    ...s,
+                                    globalIdx,
+                                  }))
+                                  .filter((s: any) => s.platform === plat)
+                                  .map((s: any) => (
+                                    <Card
+                                      key={s.globalIdx}
+                                      className="overflow-hidden border-none shadow-2xl rounded-3xl bg-white transition-all hover:scale-[1.02]"
+                                    >
+                                      <CardContent className="p-0">
+                                        <SocialMockup
+                                          variant={s}
+                                          index={s.globalIdx}
+                                          masterAdn={
+                                            masterAdns[
+                                            s.blueprintConfig?.presetId ||
+                                            s.videoConfig?.presetId ||
+                                            "01"
+                                            ]
+                                          }
+                                        />
+                                      </CardContent>
+
+                                      {isAdmin && (
+                                        <div className="p-3 border-t border-slate-100 flex justify-end gap-2 bg-white">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleOpenEditVariant(
+                                                s,
+                                                "social",
+                                                s.globalIdx,
+                                              )
+                                            }
+                                            className="rounded-xl font-bold h-8 px-4 text-xs text-primary hover:bg-primary/10"
+                                          >
+                                            <Settings2 className="h-3 w-3 mr-1" />{" "}
+                                            Editar
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </Card>
+                                  ))}
+                              </div>
+                            </TabsContent>
+                          ),
+                        )}
+                      </Tabs>
+                    </TabsContent>
 
                     {/* Ads Tab */}
                     <TabsContent value="ads" className="m-0 space-y-6">
@@ -640,10 +743,10 @@ export const TemplateViewerProduction = ({
                                 preset.id ||
                                 (!editingVariant?.blueprintConfig?.presetId &&
                                   preset.id === "01")) && (
-                                <Badge className="absolute top-4 right-4 bg-primary text-white text-[10px] font-bold px-3 py-1 shadow-md z-20">
-                                  ADN ACTIVO
-                                </Badge>
-                              )}
+                                  <Badge className="absolute top-4 right-4 bg-primary text-white text-[10px] font-bold px-3 py-1 shadow-md z-20">
+                                    ADN ACTIVO
+                                  </Badge>
+                                )}
                             </div>
                           ))
                         ) : (
@@ -726,17 +829,89 @@ export const TemplateViewerProduction = ({
                       {/* 1. Para Videos y Stories */}
                       {(editingVariant?.type === "short_video" ||
                         editingVariant?.type === "story") && (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 gap-4">
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-1 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
+                                  <MonitorPlay className="h-3 w-3" /> Escenas
+                                </Label>
+                                <Input
+                                  type="number"
+                                  className="h-12 font-black text-center bg-white border-none shadow-sm"
+                                  value={
+                                    editingVariant?.blueprintConfig?.sceneCount ||
+                                    5
+                                  }
+                                  onChange={(e) =>
+                                    setEditingVariant({
+                                      ...editingVariant,
+                                      blueprintConfig: {
+                                        ...(editingVariant.blueprintConfig || {
+                                          presetId: "01",
+                                          resolution: "1080x1920",
+                                          fps: 30,
+                                          totalDuration: 30,
+                                        }),
+                                        sceneCount: parseInt(e.target.value) || 0,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
+                                  <Video className="h-3 w-3" /> Duración Total
+                                  (seg)
+                                </Label>
+                                <Input
+                                  type="number"
+                                  className="h-12 font-black text-center bg-white border-none shadow-sm"
+                                  value={
+                                    editingVariant?.blueprintConfig
+                                      ?.totalDuration || 30
+                                  }
+                                  onChange={(e) =>
+                                    setEditingVariant({
+                                      ...editingVariant,
+                                      blueprintConfig: {
+                                        ...(editingVariant.blueprintConfig || {
+                                          presetId: "01",
+                                          resolution: "1080x1920",
+                                          fps: 30,
+                                          audioMood: "inspiring",
+                                          sceneCount: 5,
+                                        }),
+                                        totalDuration:
+                                          parseInt(e.target.value) || 0,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                      {/* 2. Para Carruseles, Documentos e Hilos */}
+                      {(editingVariant?.type === "carousel" ||
+                        editingVariant?.type === "document" ||
+                        editingVariant?.type === "thread") && (
+                          <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
-                                <MonitorPlay className="h-3 w-3" /> Escenas
+                                <LayoutTemplate className="h-3 w-3" />
+                                {editingVariant?.type === "thread"
+                                  ? "Cantidad de Tweets"
+                                  : "Cantidad de Placas"}
                               </Label>
                               <Input
                                 type="number"
                                 className="h-12 font-black text-center bg-white border-none shadow-sm"
                                 value={
-                                  editingVariant?.blueprintConfig?.sceneCount ||
+                                  editingVariant?.blueprintConfig?.slideCount ||
+                                  editingVariant?.slideCount ||
                                   5
                                 }
                                 onChange={(e) =>
@@ -745,21 +920,18 @@ export const TemplateViewerProduction = ({
                                     blueprintConfig: {
                                       ...(editingVariant.blueprintConfig || {
                                         presetId: "01",
-                                        resolution: "1080x1920",
-                                        fps: 30,
-                                        totalDuration: 30,
+                                        resolution: "1080x1080",
+                                        totalDuration: 45,
                                       }),
-                                      sceneCount: parseInt(e.target.value) || 0,
+                                      slideCount: parseInt(e.target.value) || 0,
                                     },
                                   })
                                 }
                               />
                             </div>
-                          </div>
-                          <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-2">
                               <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
-                                <Video className="h-3 w-3" /> Duración Total
+                                <Sparkles className="h-3 w-3" /> Tiempo de Lectura
                                 (seg)
                               </Label>
                               <Input
@@ -767,7 +939,7 @@ export const TemplateViewerProduction = ({
                                 className="h-12 font-black text-center bg-white border-none shadow-sm"
                                 value={
                                   editingVariant?.blueprintConfig
-                                    ?.totalDuration || 30
+                                    ?.totalDuration || 45
                                 }
                                 onChange={(e) =>
                                   setEditingVariant({
@@ -775,10 +947,8 @@ export const TemplateViewerProduction = ({
                                     blueprintConfig: {
                                       ...(editingVariant.blueprintConfig || {
                                         presetId: "01",
-                                        resolution: "1080x1920",
-                                        fps: 30,
-                                        audioMood: "inspiring",
-                                        sceneCount: 5,
+                                        resolution: "1080x1080",
+                                        slideCount: 5,
                                       }),
                                       totalDuration:
                                         parseInt(e.target.value) || 0,
@@ -788,74 +958,7 @@ export const TemplateViewerProduction = ({
                               />
                             </div>
                           </div>
-                        </div>
-                      )}
-
-                      {/* 2. Para Carruseles, Documentos e Hilos */}
-                      {(editingVariant?.type === "carousel" ||
-                        editingVariant?.type === "document" ||
-                        editingVariant?.type === "thread") && (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
-                              <LayoutTemplate className="h-3 w-3" />
-                              {editingVariant?.type === "thread"
-                                ? "Cantidad de Tweets"
-                                : "Cantidad de Placas"}
-                            </Label>
-                            <Input
-                              type="number"
-                              className="h-12 font-black text-center bg-white border-none shadow-sm"
-                              value={
-                                editingVariant?.blueprintConfig?.slideCount ||
-                                editingVariant?.slideCount ||
-                                5
-                              }
-                              onChange={(e) =>
-                                setEditingVariant({
-                                  ...editingVariant,
-                                  blueprintConfig: {
-                                    ...(editingVariant.blueprintConfig || {
-                                      presetId: "01",
-                                      resolution: "1080x1080",
-                                      totalDuration: 45,
-                                    }),
-                                    slideCount: parseInt(e.target.value) || 0,
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
-                              <Sparkles className="h-3 w-3" /> Tiempo de Lectura
-                              (seg)
-                            </Label>
-                            <Input
-                              type="number"
-                              className="h-12 font-black text-center bg-white border-none shadow-sm"
-                              value={
-                                editingVariant?.blueprintConfig
-                                  ?.totalDuration || 45
-                              }
-                              onChange={(e) =>
-                                setEditingVariant({
-                                  ...editingVariant,
-                                  blueprintConfig: {
-                                    ...(editingVariant.blueprintConfig || {
-                                      presetId: "01",
-                                      resolution: "1080x1080",
-                                      slideCount: 5,
-                                    }),
-                                    totalDuration:
-                                      parseInt(e.target.value) || 0,
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-                        </div>
-                      )}
+                        )}
 
                       {/* 3. Para Single Posts */}
                       {editingVariant?.type === "single_post" && (

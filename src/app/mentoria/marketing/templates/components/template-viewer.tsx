@@ -43,6 +43,7 @@ export function TemplateViewer({
     const counts = {
       landings: 0,
       emails: 0,
+      socials: 0,
       ads: 0,
       total: 0,
     };
@@ -50,9 +51,10 @@ export function TemplateViewer({
     if (collection.assets) {
       counts.landings = collection.assets.landings?.length || 0;
       counts.emails = collection.assets.emails?.length || 0;
+      counts.socials = collection.assets.socials?.length || 0;
       counts.ads = collection.assets.ads?.length || 0;
       counts.total =
-        counts.landings + counts.emails + counts.ads;
+        counts.landings + counts.emails + counts.socials + counts.ads;
     }
 
     return counts;
@@ -377,7 +379,7 @@ export function TemplateViewer({
           </TabsTrigger>
           <TabsTrigger value="content" className="flex items-center gap-2">
             <Megaphone className="h-4 w-4" />
-            Anuncios ({templateCounts.ads})
+            Social & Ads ({templateCounts.socials + templateCounts.ads})
           </TabsTrigger>
         </TabsList>
 
@@ -452,7 +454,7 @@ export function TemplateViewer({
         {/* Tab Landings */}
         <TabsContent value="landings">
           {collection.assets.landings &&
-          collection.assets.landings.length > 0 ? (
+            collection.assets.landings.length > 0 ? (
             collection.assets.landings.map((template: any, index: number) =>
               renderTemplateCard(template, "landings", index),
             )
@@ -478,6 +480,20 @@ export function TemplateViewer({
 
         {/* Tab Social & Ads */}
         <TabsContent value="content" className="space-y-6">
+          {/* Social Media */}
+          {collection.assets.socials &&
+            collection.assets.socials.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Instagram className="h-5 w-5" />
+                  Social Media ({collection.assets.socials.length})
+                </h3>
+                {collection.assets.socials.map((template: any, index: number) =>
+                  renderTemplateCard(template, "socials", index),
+                )}
+              </div>
+            )}
+
           {/* Ads */}
           {collection.assets.ads && collection.assets.ads.length > 0 && (
             <div>
@@ -491,11 +507,12 @@ export function TemplateViewer({
             </div>
           )}
 
-          {!collection.assets.ads?.length && (
-            <div className="text-center text-gray-500 py-8">
-              No hay anuncios generados
-            </div>
-          )}
+          {!collection.assets.socials?.length &&
+            !collection.assets.ads?.length && (
+              <div className="text-center text-gray-500 py-8">
+                No hay contenido de social media o anuncios generados
+              </div>
+            )}
         </TabsContent>
       </Tabs>
     </div>
