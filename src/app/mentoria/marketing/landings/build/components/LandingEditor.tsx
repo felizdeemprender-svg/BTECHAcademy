@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { 
   Layout, 
   Save, 
@@ -58,6 +59,24 @@ export function LandingEditor({
 }: LandingEditorProps) {
   const { toast } = useToast();
   const [isRegenerating, setIsRegenerating] = useState<number | null>(null);
+
+  const handleSaveIntercept = () => {
+    // Validar que si la variante de landing tiene habilitado el video, se haya ingresado una URL de video
+    for (let i = 0; i < (generatedAssets?.landings?.length || 0); i++) {
+      const l = generatedAssets.landings[i];
+      const hasVideo = l.showVideo !== undefined ? l.showVideo : !!l.videoUrl?.trim();
+      if (hasVideo && !l.videoUrl?.trim()) {
+        toast({
+          variant: 'destructive',
+          title: `Video Requerido`,
+          description: `Has habilitado la opción de incluir video en la variante "${l.marketingName || `Ruta ${i + 1}`}", por lo que debes ingresar una URL de video de venta.`
+        });
+        setActiveLandingIdx(i);
+        return;
+      }
+    }
+    onSave();
+  };
 
   const handleRegenerate = async (lIdx: number) => {
     const l = generatedAssets?.landings?.[lIdx];
@@ -111,7 +130,7 @@ export function LandingEditor({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button onClick={() => onSave()} disabled={loading} className="h-16 px-12 rounded-2xl font-bold text-xl shadow-2xl bg-primary gap-3">
+          <Button onClick={handleSaveIntercept} disabled={loading} className="h-16 px-12 rounded-2xl font-bold text-xl shadow-2xl bg-primary gap-3">
             {loading ? <Loader2 className="animate-spin" /> : <Save className="h-6 w-6" />} Guardar Landings
           </Button>
         </div>
@@ -159,21 +178,54 @@ export function LandingEditor({
                 </div>
               </Card>
 
-              <Card className="p-10 rounded-[2.5rem] bg-slate-900 border border-white/10 shadow-xl">
-                <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 shadow-[0_0_30px_-10px_rgba(16,185,129,0.3)]">
-                    <Video className="h-8 w-8" />
+              <Card className="p-10 rounded-[2.5rem] bg-slate-900 border border-white/10 shadow-xl space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                      <Video className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white">Video de Venta / Introducción</h4>
+                      <p className="text-xs text-slate-400 mt-0.5">Elige si quieres incluir un video explicativo en tu landing page.</p>
+                    </div>
                   </div>
-                  <div className="flex-1 space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Video de Venta / Introducción</Label>
-                     <Input 
-                      placeholder="https://www.youtube.com/watch?v=..." 
+                  <div className="flex items-center gap-3">
+                    <Label htmlFor={`show-video-${lIdx}`} className="text-xs font-bold text-slate-300 cursor-pointer">
+                      {(l.showVideo !== undefined ? l.showVideo : !!l.videoUrl?.trim()) ? "Video Habilitado" : "Sin Video"}
+                    </Label>
+                    <Switch
+                      id={`show-video-${lIdx}`}
+                      checked={l.showVideo !== undefined ? l.showVideo : !!l.videoUrl?.trim()}
+                      onCheckedChange={checked => {
+                        updateAsset('landings', lIdx, 'showVideo', checked);
+                        if (!checked) {
+                          // Opcionalmente podemos mantener o limpiar la URL
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {(l.showVideo !== undefined ? l.showVideo : !!l.videoUrl?.trim()) ? (
+                  <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                    <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest flex items-center gap-2">
+                      <span>URL del Video de Venta</span>
+                      <span className="text-red-400 font-bold text-[9px] lowercase tracking-normal">(obligatorio)</span>
+                    </Label>
+                    <Input 
+                      placeholder="https://www.youtube.com/watch?v=... o https://vimeo.com/..." 
                       value={l.videoUrl || ''} 
                       onChange={e => updateAsset('landings', lIdx, 'videoUrl', e.target.value)} 
                       className="h-14 rounded-2xl bg-white/5 border-white/5 px-8 font-mono text-xs text-emerald-400 focus-visible:ring-emerald-500/50" 
-                     />
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div className="p-4 bg-slate-950/40 rounded-2xl border border-dashed border-white/5 text-center">
+                    <p className="text-xs text-slate-400 italic">
+                      El video está desactivado para esta variante. No se mostrará ningún video en la landing page y el campo no es obligatorio.
+                    </p>
+                  </div>
+                )}
               </Card>
 
               <div className="space-y-8">

@@ -273,7 +273,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
             {content.subheadline}
           </p>
 
-          {content.videoUrl && (
+          {content.showVideo !== false && content.videoUrl && (
             <div
               className="max-w-4xl mx-auto aspect-video rounded-[3rem] overflow-hidden shadow-3xl border-[12px] border-slate-50 bg-black relative group/video-container select-none"
               onContextMenu={(e) => e.preventDefault()}
