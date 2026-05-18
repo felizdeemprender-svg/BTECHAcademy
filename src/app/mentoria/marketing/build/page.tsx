@@ -524,7 +524,7 @@ export default function CampaignOrchestratorPage() {
                                 if (socials.length === 0) return null;
 
                                 // Group socials by platform
-                                const platforms = Array.from(new Set(socials.map((s: any) => s.platform).filter(Boolean)));
+                                const platforms = Array.from(new Set(socials.map((s: any) => s.platform).filter(Boolean))) as string[];
 
                                 return (
                                   <div className="mt-4 p-5 rounded-2xl bg-slate-50/80 border border-slate-200/60 space-y-4">
