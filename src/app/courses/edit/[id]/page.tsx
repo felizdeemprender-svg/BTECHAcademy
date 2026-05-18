@@ -548,24 +548,82 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         />
         
         <div className="pl-4 border-l-4 border-primary/20 space-y-4">
-          {q.type === 'multiple_choice' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {q.options?.map((opt, optIdx) => (
-                <div key={`${q.id}-opt-${optIdx}`} className="flex gap-3 items-center bg-white p-2 rounded-xl border shadow-sm">
-                  <button type="button" className={`w-8 h-8 rounded-lg font-bold ${q.correctAnswer === opt ? (isSupport ? 'bg-emerald-500' : 'bg-primary') + ' text-white' : 'bg-muted'}`} onClick={() => {
-                    const key = isSupport ? 'supportQuestions' : 'questions';
-                    const newQs = [...currentModule![key]];
-                    newQs[qIdx].correctAnswer = opt;
-                    setCurrentModule({...currentModule!, [key]: newQs});
-                  }}>{String.fromCharCode(65+optIdx)}</button>
-                  <input value={opt} onChange={e => {
-                    const key = isSupport ? 'supportQuestions' : 'questions';
-                    const newQs = [...currentModule![key]];
-                    newQs[qIdx].options![optIdx] = e.target.value;
-                    setCurrentModule({...currentModule!, [key]: newQs});
-                  }} className="flex-1 border-none outline-none text-xs" placeholder="Opción" />
+          {q.type === 'multiple_choice' && q.options && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {q.options.map((opt, optIdx) => (
+                  <div key={`${q.id}-opt-${optIdx}`} className="flex gap-3 items-center bg-white p-2 rounded-xl border shadow-sm">
+                    <button 
+                      type="button" 
+                      className={`w-8 h-8 rounded-lg font-bold shrink-0 transition-colors ${
+                        q.correctAnswer === opt 
+                          ? (isSupport ? 'bg-emerald-500' : 'bg-primary') + ' text-white' 
+                          : 'bg-muted hover:bg-muted/80'
+                      }`} 
+                      onClick={() => {
+                        const key = isSupport ? 'supportQuestions' : 'questions';
+                        const newQs = [...currentModule![key]];
+                        newQs[qIdx].correctAnswer = opt;
+                        setCurrentModule({...currentModule!, [key]: newQs});
+                      }}
+                    >
+                      {String.fromCharCode(65 + optIdx)}
+                    </button>
+                    <input 
+                      value={opt} 
+                      onChange={e => {
+                        const key = isSupport ? 'supportQuestions' : 'questions';
+                        const newQs = [...currentModule![key]];
+                        const oldOpt = newQs[qIdx].options![optIdx];
+                        newQs[qIdx].options![optIdx] = e.target.value;
+                        if (newQs[qIdx].correctAnswer === oldOpt) {
+                          newQs[qIdx].correctAnswer = e.target.value;
+                        }
+                        setCurrentModule({...currentModule!, [key]: newQs});
+                      }} 
+                      className="flex-1 border-none outline-none text-xs bg-transparent" 
+                      placeholder={`Opción ${String.fromCharCode(65 + optIdx)}`} 
+                    />
+                    {q.options.length > 2 && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => {
+                          const key = isSupport ? 'supportQuestions' : 'questions';
+                          const newQs = [...currentModule![key]];
+                          const deletedOpt = newQs[qIdx].options![optIdx];
+                          newQs[qIdx].options!.splice(optIdx, 1);
+                          if (newQs[qIdx].correctAnswer === deletedOpt) {
+                            newQs[qIdx].correctAnswer = newQs[qIdx].options![0];
+                          }
+                          setCurrentModule({...currentModule!, [key]: newQs});
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {q.options.length < 6 && (
+                <div className="flex justify-end pt-1">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-xl text-[10px] font-bold h-8"
+                    onClick={() => {
+                      const key = isSupport ? 'supportQuestions' : 'questions';
+                      const newQs = [...currentModule![key]];
+                      newQs[qIdx].options!.push('');
+                      setCurrentModule({...currentModule!, [key]: newQs});
+                    }}
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> Añadir Opción
+                  </Button>
                 </div>
-              ))}
+              )}
             </div>
           )}
           {q.type === 'true_false' && (

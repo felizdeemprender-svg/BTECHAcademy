@@ -265,7 +265,7 @@ export default function CreateCoursePage() {
   };
 
   const addManualQuestion = (isSupport: boolean) => {
-    const newQ = { id: Date.now().toString(), text: '', type: 'multiple_choice', options: ['', ''], correctAnswer: 0 };
+    const newQ = { id: Date.now().toString(), text: '', type: 'multiple_choice', options: ['', '', '', ''], correctAnswer: 0 };
     if (isSupport) {
       setCurrentModule(prev => ({ ...prev, supportQuestions: [...prev.supportQuestions, newQ] }));
     } else {
@@ -493,9 +493,28 @@ export default function CreateCoursePage() {
       <CardHeader className="py-4 px-6 bg-secondary/5 flex flex-row justify-between items-center">
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="font-bold">Pregunta {idx + 1}</Badge>
-          <Badge className="bg-primary/10 text-primary border-none text-[10px] uppercase font-bold">
-            {q.type === 'multiple_choice' ? 'Opción Múltiple' : q.type === 'true_false' ? 'V/F' : 'Abierta'}
-          </Badge>
+          <div className="flex gap-2">
+            {['multiple_choice', 'true_false', 'free_response'].map(type => (
+              <button 
+                key={type} 
+                type="button"
+                onClick={() => {
+                  const key = isSupport ? 'supportQuestions' : 'questions';
+                  const newQs = [...currentModule[key]];
+                  newQs[idx] = { 
+                    ...newQs[idx], 
+                    type: type as any, 
+                    options: type === 'multiple_choice' ? ['', '', '', ''] : undefined, 
+                    correctAnswer: type === 'true_false' ? true : 0 
+                  };
+                  setCurrentModule(prev => ({ ...prev, [key]: newQs }));
+                }} 
+                className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all ${q.type === type ? 'bg-primary text-white' : 'bg-white border text-muted-foreground'}`}
+              >
+                {type === 'multiple_choice' ? 'Opción Múltiple' : type === 'true_false' ? 'V/F' : 'Abierta'}
+              </button>
+            ))}
+          </div>
         </div>
         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
           if (isSupport) {
@@ -511,45 +530,133 @@ export default function CreateCoursePage() {
           <Input value={q.text || q.question || ''} onChange={e => {
             const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
             newQs[idx].text = e.target.value;
+            newQs[idx].question = e.target.value;
             setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
           }} placeholder="¿Cuál es la pregunta?" className="font-medium h-12 rounded-xl" />
         </div>
 
         {q.type === 'multiple_choice' && q.options && (
-          <div className="grid gap-2 pt-2">
+          <div className="space-y-3 pt-2">
             <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Opciones de Respuesta</Label>
-            {q.options.map((opt: string, optIdx: number) => (
-              <div key={optIdx} className="flex gap-2 items-center">
-                <Checkbox 
-                  checked={q.correctAnswer === optIdx || q.correctAnswer === opt} 
-                  onCheckedChange={() => {
-                    const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
-                    newQs[idx].correctAnswer = optIdx;
-                    setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
-                  }} 
-                />
-                <Input value={opt} onChange={e => {
-                  const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
-                  if (!newQs[idx].options) newQs[idx].options = ['', '', '', ''];
-                  newQs[idx].options[optIdx] = e.target.value;
-                  setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
-                }} className="h-10 rounded-lg bg-secondary/10 border-none text-sm" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {q.options.map((opt: string, optIdx: number) => (
+                <div key={optIdx} className="flex gap-3 items-center bg-white p-2 rounded-xl border shadow-sm">
+                  <button 
+                    type="button" 
+                    className={`w-8 h-8 rounded-lg font-bold shrink-0 transition-colors ${
+                      (q.correctAnswer === optIdx || q.correctAnswer === opt) 
+                        ? 'bg-primary text-white' 
+                        : 'bg-muted hover:bg-muted/80'
+                    }`} 
+                    onClick={() => {
+                      const key = isSupport ? 'supportQuestions' : 'questions';
+                      const newQs = [...currentModule[key]];
+                      newQs[idx].correctAnswer = optIdx;
+                      setCurrentModule(prev => ({ ...prev, [key]: newQs }));
+                    }}
+                  >
+                    {String.fromCharCode(65 + optIdx)}
+                  </button>
+                  <input 
+                    value={opt} 
+                    onChange={e => {
+                      const key = isSupport ? 'supportQuestions' : 'questions';
+                      const newQs = [...currentModule[key]];
+                      newQs[idx].options[optIdx] = e.target.value;
+                      setCurrentModule(prev => ({ ...prev, [key]: newQs }));
+                    }} 
+                    className="flex-1 border-none outline-none text-xs bg-transparent" 
+                    placeholder={`Opción ${String.fromCharCode(65 + optIdx)}`} 
+                  />
+                  {q.options.length > 2 && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                      onClick={() => {
+                        const key = isSupport ? 'supportQuestions' : 'questions';
+                        const newQs = [...currentModule[key]];
+                        newQs[idx].options.splice(optIdx, 1);
+                        if (newQs[idx].correctAnswer >= newQs[idx].options.length) {
+                          newQs[idx].correctAnswer = 0;
+                        }
+                        setCurrentModule(prev => ({ ...prev, [key]: newQs }));
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {q.options.length < 6 && (
+              <div className="flex justify-end pt-1">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-xl text-[10px] font-bold h-8"
+                  onClick={() => {
+                    const key = isSupport ? 'supportQuestions' : 'questions';
+                    const newQs = [...currentModule[key]];
+                    newQs[idx].options.push('');
+                    setCurrentModule(prev => ({ ...prev, [key]: newQs }));
+                  }}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Añadir Opción
+                </Button>
               </div>
-            ))}
+            )}
           </div>
         )}
 
-        {(q.type === 'true_false' || q.type === 'free_response') && (
-          <div className="space-y-2 bg-secondary/5 p-4 rounded-xl border border-dashed">
+        {q.type === 'true_false' && (
+          <div className="space-y-3 pt-2">
+            <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Respuesta Correcta</Label>
+            <div className="flex gap-4">
+              <Button 
+                type="button"
+                variant={q.correctAnswer === true ? 'default' : 'outline'} 
+                className="flex-1 h-12 rounded-xl font-bold transition-all" 
+                onClick={() => {
+                  const key = isSupport ? 'supportQuestions' : 'questions';
+                  const newQs = [...currentModule[key]];
+                  newQs[idx].correctAnswer = true;
+                  setCurrentModule(prev => ({ ...prev, [key]: newQs }));
+                }}
+              >
+                Verdadero
+              </Button>
+              <Button 
+                type="button"
+                variant={q.correctAnswer === false ? 'default' : 'outline'} 
+                className="flex-1 h-12 rounded-xl font-bold transition-all" 
+                onClick={() => {
+                  const key = isSupport ? 'supportQuestions' : 'questions';
+                  const newQs = [...currentModule[key]];
+                  newQs[idx].correctAnswer = false;
+                  setCurrentModule(prev => ({ ...prev, [key]: newQs }));
+                }}
+              >
+                Falso
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {q.type === 'free_response' && (
+          <div className="space-y-3 pt-2">
             <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Respuesta Esperada / Puntos Clave</Label>
             <Textarea 
-              value={typeof q.correctAnswer === 'boolean' ? (q.correctAnswer ? 'Verdadero' : 'Falso') : q.correctAnswer}
+              value={typeof q.correctAnswer === 'string' ? q.correctAnswer : ''}
               onChange={e => {
-                const newQs = [...(isSupport ? currentModule.supportQuestions : currentModule.questions)];
+                const key = isSupport ? 'supportQuestions' : 'questions';
+                const newQs = [...currentModule[key]];
                 newQs[idx].correctAnswer = e.target.value;
-                setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
+                setCurrentModule(prev => ({ ...prev, [key]: newQs }));
               }}
-              className="min-h-[60px] bg-white rounded-lg text-sm"
+              placeholder="Escribe la respuesta esperada o los puntos clave que debe cubrir el alumno..."
+              className="min-h-[80px] bg-white rounded-xl text-sm"
             />
           </div>
         )}
