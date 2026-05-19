@@ -352,7 +352,7 @@ export default function ManageCoursesClient() {
         toast({ title: 'Sin novedades', description: 'La IA no encontró nuevas categorías SEO para esta rama.' });
       }
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Error de generación', description: 'No se pudo conectar con Gemini.' });
+      toast({ variant: 'destructive', title: 'Error de generación', description: 'No se pudo conectar con Gemini: ' + (e?.message || e) }); console.error(e);
     } finally {
       setIsGeneratingTags(false);
     }

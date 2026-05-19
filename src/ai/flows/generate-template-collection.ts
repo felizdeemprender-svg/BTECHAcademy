@@ -114,7 +114,7 @@ export async function generateTemplateCollection(input: CollectionInput): Promis
     console.log('✅ [Templates] API key validada');
   } catch (e: any) {
     console.error('❌ [Templates] API key no disponible:', e.message);
-    throw new Error('No se pudo conectar con Gemini: ' + e.message);
+    throw new Error('No se pudo conectar con Gemini: ' + (e?.message || e));
   }
   
   try {

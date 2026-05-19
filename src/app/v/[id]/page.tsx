@@ -157,7 +157,36 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
     const channel = searchParams.get('c') || 'direct';
 
     try {
-      // 1. Crear preferencia en el backend
+      // 1. Determinar si es gratis o de pago
+      if (price === 0) {
+        const response = await fetch('/api/courses/free-enrollment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pageId: id,
+            studentEmail: studentEmail,
+            studentName: studentName
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || data.error || 'Error al procesar inscripción');
+
+        // Trackeo de click en comprar (opcional)
+        try {
+          const { setDoc, increment, doc } = await import('firebase/firestore');
+          const pRef = doc(db, 'salesPages', id);
+          await setDoc(pRef, {
+            stats: { conversions: increment(1) }
+          }, { merge: true });
+        } catch (e) {}
+
+        toast({ title: '¡Inscripción exitosa!', description: 'Redirigiendo a tu curso...' });
+        window.location.href = data.redirectUrl || '/my-courses';
+        return;
+      }
+
+      // 1b. Crear preferencia en el backend para MercadoPago
       const response = await fetch('/api/payments/mercadopago/preference', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -212,7 +241,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   // Selección dinámica de la variante
   const landings = page.aiContent?.landings || [];
   const content = landings[variantIdx] || page.aiContent?.landing;
-  const price = page.price || 49990;
+  const price = typeof page.price === 'number' ? page.price : 49990;
 
   if (!content) return <div className="flex h-screen items-center justify-center"><p className="font-bold text-muted-foreground">Contenido en proceso de generación...</p></div>;
 
@@ -430,9 +459,9 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
             <div className="space-y-2">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Inversión Única</p>
               <p className="text-6xl font-black tracking-tighter" style={{ color: primaryColor }}>
-                ${price.toLocaleString('es-AR')}
+                {price === 0 ? 'Gratis' : `$${price.toLocaleString('es-AR')}`}
               </p>
-              <p className="text-sm font-bold text-slate-500 italic">Financiación disponible con MercadoPago</p>
+              {price > 0 && <p className="text-sm font-bold text-slate-500 italic">Financiación disponible con MercadoPago</p>}
             </div>
             <div className="space-y-4 pt-4 text-left">
               <div className="flex items-center gap-3 text-xs font-bold"><ShieldCheck className="h-4 w-4 text-emerald-500" /> Garantía de Satisfacción 7 días</div>
@@ -522,7 +551,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                 className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all hover:scale-[1.02]"
                 style={{ backgroundColor: primaryColor }}
               >
-                {loading ? <Loader2 className="animate-spin h-6 w-6" /> : `Pagar $${price.toLocaleString('es-AR')}`}
+                {loading ? <Loader2 className="animate-spin h-6 w-6" /> : price === 0 ? 'Acceder Gratis' : `Pagar $${price.toLocaleString('es-AR')}`}
               </Button>
             ) : (
               <div className="flex flex-col gap-3 w-full">
