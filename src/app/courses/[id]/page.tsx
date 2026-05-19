@@ -116,9 +116,9 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
         studentName: authProfile?.displayName
       });
       
-      const currentIsSupport = activeModule.supportQuestions?.length > 0 && 
-                             targetQuestions.length === activeModule.supportQuestions.length && 
-                             targetQuestions[0]?.question === activeModule.supportQuestions[0]?.question;
+      const currentIsSupport = activeModule?.supportQuestions?.length > 0 && 
+                             targetQuestions.length === activeModule?.supportQuestions?.length && 
+                             targetQuestions[0]?.question === activeModule?.supportQuestions[0]?.question;
 
       const fullResult = {
         score: result.score,
@@ -157,7 +157,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
 
         // Calcular el progreso global consolidado
         let processedCount = 0;
-        const currentIsSupport = activeModule.supportQuestions?.length > 0 && targetQuestions.length === activeModule.supportQuestions.length && targetQuestions[0]?.question === activeModule.supportQuestions[0]?.question;
+        const currentIsSupport = activeModule?.supportQuestions?.length > 0 && targetQuestions.length === activeModule?.supportQuestions?.length && targetQuestions[0]?.question === activeModule?.supportQuestions[0]?.question;
 
         modules.forEach(mod => {
           const isCompletedMod = nextCompletedModules.includes(mod.id);
@@ -287,7 +287,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                     isCompleted={isCompleted}
                     allowRetries={activeModule?.allowRetries !== false}
                     isLastModule={activeModuleIndex === modules.length - 1}
-                    isSupportNext={currentQuestions === activeModule.supportQuestions && (!evaluationResult?.isSupport)}
+                    isSupportNext={currentQuestions === activeModule?.supportQuestions && (!evaluationResult?.isSupport)}
                     primaryColor={primaryColor}
                  />
                )}
