@@ -61,29 +61,49 @@ export function useCourseProgressV3(courseId: string) {
   useEffect(() => {
     if (!courseId || !profile?.uid || !profile?.email || !db) return;
 
-    const qEnroll = query(
+    const qById = query(
       collection(db, 'enrollments'),
-      and(
-        where('courseId', '==', courseId),
-        or(
-          where('studentId', '==', profile.uid),
-          where('inviteEmail', '==', profile.email.toLowerCase().trim())
-        )
-      )
+      where('courseId', '==', courseId),
+      where('studentId', '==', profile.uid)
     );
 
-    const unsubEnroll = onSnapshot(qEnroll, (snap) => {
-      if (!snap.empty) {
-        const docData = { id: snap.docs[0].id, ...snap.docs[0].data() };
-        setEnrollment(docData);
+    const qByEmail = query(
+      collection(db, 'enrollments'),
+      where('courseId', '==', courseId),
+      where('inviteEmail', '==', profile.email.toLowerCase().trim())
+    );
+
+    let enrollById: any = null;
+    let enrollByEmail: any = null;
+
+    const updateEnrollment = (byId: any, byEmail: any) => {
+      const active = byId || byEmail;
+      if (active) {
+        setEnrollment(active);
       }
       setIsLoading(false);
+    };
+
+    const unsubById = onSnapshot(qById, (snap) => {
+      enrollById = !snap.empty ? { id: snap.docs[0].id, ...snap.docs[0].data() } : null;
+      updateEnrollment(enrollById, enrollByEmail);
     }, (err) => {
-      console.error("❌ [V3] Error inscripción:", err);
+      console.error("❌ [V3] Error inscripción por ID:", err);
       setIsLoading(false);
     });
 
-    return () => unsubEnroll();
+    const unsubByEmail = onSnapshot(qByEmail, (snap) => {
+      enrollByEmail = !snap.empty ? { id: snap.docs[0].id, ...snap.docs[0].data() } : null;
+      updateEnrollment(enrollById, enrollByEmail);
+    }, (err) => {
+      console.error("❌ [V3] Error inscripción por Email:", err);
+      setIsLoading(false);
+    });
+
+    return () => {
+      unsubById();
+      unsubByEmail();
+    };
   }, [courseId, profile?.uid, profile?.email, db]);
 
   useEffect(() => {

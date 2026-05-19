@@ -152,7 +152,7 @@ export default function AlumnosPage() {
                     <TableCell className="px-10 py-6">
                       <div className="flex items-center gap-4">
                         <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
-                          <AvatarImage src={student.photoURL} />
+                          <AvatarImage src={student.photoURL || undefined} />
                           <AvatarFallback className="bg-primary/10 text-primary font-bold">{student.displayName?.[0] || student.email?.[0]}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">

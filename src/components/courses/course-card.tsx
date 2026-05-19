@@ -66,12 +66,12 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
     <Card className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col rounded-2xl bg-white">
       <div className="relative aspect-video overflow-hidden">
         <Image 
-          src={course.thumbnail} 
+          src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'} 
           alt={course.title} 
           fill 
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover group-hover:scale-110 transition-transform duration-700" 
-          unoptimized 
+          unoptimized={!!course.thumbnail} 
         />
         <div className="absolute top-4 left-4 flex flex-wrap gap-1 max-w-[80%]">
           {course.tags?.slice(0, 2).map((tag, idx) => (
@@ -119,11 +119,12 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
           <div className="flex items-center gap-3 pt-2">
             <div className="relative w-10 h-10 rounded-full overflow-hidden shadow-inner">
               <Image 
-                src={course.tutor.photo} 
+                src={course.tutor.photo || `https://api.dicebear.com/7.x/adventurer/svg?seed=${course.tutor.displayName || 'tutor'}`} 
                 alt={course.tutor.displayName}
                 fill
                 sizes="40px"
                 className="object-cover"
+                unoptimized
               />
             </div>
             <div className="flex-1 min-w-0">

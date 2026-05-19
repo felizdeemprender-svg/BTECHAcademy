@@ -339,7 +339,7 @@ export default function BillingPage() {
                     <TableCell className="pl-8 py-5">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                          <AvatarImage src={tutor.photoURL} />
+                          <AvatarImage src={tutor.photoURL || undefined} />
                           <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold text-sm">
                             {tutor.displayName[0]}
                           </AvatarFallback>

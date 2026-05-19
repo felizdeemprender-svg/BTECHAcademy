@@ -84,7 +84,7 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
     const minRequired = 0.001; 
     const { ok, balance } = await checkSufficientCredits(uid, minRequired, role);
     if (!ok) {
-      throw new Error(`SALDO_INSUFICIENTE: Necesitas al menos ${minRequired} crédito para esta operación (Saldo actual: ${balance}).`);
+      throw new Error(`SALDO_INSUFICIENTE: Tu cuenta se ha quedado sin créditos de IA (Saldo actual: ${balance}). Por favor, dirígete a la pestaña "Suscripción" en el panel lateral para recargar saldo y continuar.`);
     }
   }
 

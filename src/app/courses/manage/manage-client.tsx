@@ -351,8 +351,18 @@ export default function ManageCoursesClient() {
       if (uniqueSuggestions.length === 0) {
         toast({ title: 'Sin novedades', description: 'La IA no encontró nuevas categorías SEO para esta rama.' });
       }
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Error de generación', description: 'No se pudo conectar con Gemini: ' + (e?.message || e) }); console.error(e);
+    } catch (e: any) {
+      const errMsg = e?.message || e;
+      if (typeof errMsg === 'string' && errMsg.includes('SALDO_INSUFICIENTE')) {
+        toast({
+          variant: 'destructive',
+          title: 'Créditos de IA Agotados',
+          description: 'No tienes saldo suficiente para generar estas categorías. Por favor, ve a la pestaña "Suscripción" en el menú principal para recargar tus créditos de Inteligencia Artificial.'
+        });
+      } else {
+        toast({ variant: 'destructive', title: 'Error de generación', description: 'Error conectando con la IA: ' + errMsg });
+      }
+      console.error(e);
     } finally {
       setIsGeneratingTags(false);
     }
@@ -693,6 +703,16 @@ export default function ManageCoursesClient() {
     try {
       const normalizedEmail = inviteEmail.toLowerCase().trim();
       
+      if (!normalizedEmail.endsWith('@gmail.com')) {
+        toast({ 
+          variant: 'destructive', 
+          title: 'Correo Inválido', 
+          description: 'Por políticas de seguridad y autenticación, solo se admiten usuarios con correo @gmail.com' 
+        });
+        setAddingStudent(false);
+        return;
+      }
+      
       // 1. Si es INVITACIÓN, verificar límite del plan
       if (isInvitation && !isAdmin) {
         const limitCount = sub?.invitationsPerCourse || 0;
@@ -718,71 +738,22 @@ export default function ManageCoursesClient() {
         studentId = userSnap.docs[0].id;
         studentName = userSnap.docs[0].data().displayName || studentName;
       } else {
-        console.log('🔍 PASO 2 - Creando nuevo usuario en Firebase Auth...');
+        console.log('🔍 PASO 2 - Creando perfil provisional de alumno...');
         
-        // Generar una contraseña temporal
-        const tempPassword = Math.random().toString(36).slice(-8) + 'A1!';
+        const tempId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
+        studentId = tempId;
         
-        try {
-          // Crear usuario en Firebase Authentication
-          const auth = getAuth();
-          const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, tempPassword);
-          
-          // Enviar correo de verificación
-          await sendEmailVerification(userCredential.user);
-          
-          studentId = userCredential.user.uid;
-          
-          console.log('🔍 PASO 2 - Usuario creado en Firebase Auth, correo enviado');
-          
-          // Crear el usuario en Firestore
-          const newUser = {
-            uid: studentId,
-            email: normalizedEmail,
-            displayName: studentName,
-            roles: ['alumno'],
-            isActive: true,
-            isPreRegistered: true,
-            createdAt: serverTimestamp(),
-            tempPassword: tempPassword // Guardar para poder comunicarla
-          };
-          
-          await setDoc(doc(db, 'users', studentId), newUser);
-          console.log('🔍 PASO 2 - Usuario creado en Firestore');
-          
-          toast({ 
-            title: 'Usuario creado exitosamente', 
-            description: `Se ha enviado un correo de verificación a ${normalizedEmail}. La contraseña temporal es: ${tempPassword}` 
-          });
-          
-        } catch (e: any) {
-          console.error('🔍 ERROR - Creando usuario en Firebase Auth:', e);
-          
-          // Si el usuario ya existe en Firebase Auth, obtener su UID
-          if (e.code === 'auth/email-already-in-use') {
-            // Buscar el usuario existente
-            const auth = getAuth();
-            // Aquí necesitaríamos una función para obtener el UID del usuario existente
-            // Por ahora, creamos un ID temporal
-            const tempId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
-            studentId = tempId;
-            
-            const newUser = {
-              uid: studentId,
-              email: normalizedEmail,
-              displayName: studentName,
-              roles: ['alumno'],
-              isActive: true,
-              isPreRegistered: true,
-              createdAt: serverTimestamp()
-            };
-            
-            await setDoc(doc(db, 'users', studentId), newUser);
-            console.log('🔍 PASO 2 - Usuario existente, creado en Firestore');
-          } else {
-            throw e;
-          }
-        }
+        const newUser = {
+          email: normalizedEmail,
+          displayName: studentName,
+          roles: ['alumno'],
+          isActive: true,
+          createdVia: 'manual_enrollment',
+          createdAt: serverTimestamp()
+        };
+        
+        await setDoc(doc(db, 'users', studentId), newUser);
+        toast({ title: 'Perfil pre-registrado', description: 'El alumno completará su alta al entrar con Google.' });
       }
 
       // 3. Crear inscripción (Carga Directa vs Invitación)

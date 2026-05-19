@@ -72,7 +72,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-4">
               <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9 ring-2 ring-white/10">
-                  <AvatarImage src={profile?.photoURL} />
+                  <AvatarImage src={profile?.photoURL || undefined} />
                   <AvatarFallback className="bg-white/10 text-xs font-bold text-white uppercase">{profile?.displayName?.[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">

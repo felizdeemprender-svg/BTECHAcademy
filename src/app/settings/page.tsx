@@ -395,7 +395,7 @@ export default function SettingsPage() {
           <div className="p-10 bg-primary/5 flex flex-col md:flex-row items-center gap-10 border-b">
             <div className="relative">
               <Avatar className="w-32 h-32 border-4 border-white shadow-2xl">
-                <AvatarImage src={formData.photoURL} />
+                <AvatarImage src={formData.photoURL || undefined} />
                 <AvatarFallback className="text-3xl font-bold">{formData.displayName?.[0]}</AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-2 right-0 flex gap-1">
@@ -802,7 +802,7 @@ export default function SettingsPage() {
                       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logotipo Institucional</Label>
                       <div className="flex items-center gap-8">
                         <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-2 border-dashed border-muted-foreground/20">
-                          {formData.logoUrl ? (
+                          {(formData.logoUrl && typeof formData.logoUrl === 'string') ? (
                             <Image 
                               src={formData.logoUrl} 
                               alt="Logo" 

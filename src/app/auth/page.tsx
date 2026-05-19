@@ -1,18 +1,12 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Sparkles, AlertCircle, Loader2, Globe, ShieldCheck, ShieldAlert, UserPlus, KeyRound, Eye, EyeOff, Copy, Cookie, ArrowRight } from 'lucide-react';
+import { Sparkles, AlertCircle, Loader2, Globe, ShieldCheck, ShieldAlert, Copy, Cookie, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/components/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useFirestore } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 
 // Fallback for Alert components if local import fails
 const CustomAlert = ({ variant, children, className }: any) => (
@@ -21,31 +15,21 @@ const CustomAlert = ({ variant, children, className }: any) => (
   </div>
 );
 
-type AuthView = 'login' | 'reset' | 'activate';
-
 export default function AuthPage() {
-  const [view, setView] = useState<AuthView>('login');
   const [loading, setLoading] = useState(false);
   const [showPopupWarning, setShowPopupWarning] = useState(false);
   const [unauthorizedDomain, setUnauthorizedDomain] = useState<string | null>(null);
   const [popupLostError, setPopupLostError] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   
   const { 
     loginWithGoogle, 
     loginWithGoogleRedirect, 
-    loginWithEmail, 
-    registerWithEmail, 
-    resetPassword, 
     user,
     isLoading: authLoading,
     isRedirecting
   } = useAuth();
   
-  const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -118,106 +102,6 @@ export default function AuthPage() {
           description: error.message 
         });
       }
-      setLoading(false);
-    }
-  };
-
-  const handleResetPassword = async () => {
-    if (!email) {
-      toast({ variant: 'destructive', title: 'Email requerido', description: 'Ingresa tu correo institucional.' });
-      return;
-    }
-    setLoading(true);
-    try {
-      await resetPassword(email);
-      toast({ 
-        title: 'Correo enviado', 
-        description: 'Si tu cuenta ya está activa, recibirás un enlace de recuperación.' 
-      });
-      setView('login');
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo procesar la solicitud.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleActivateAccount = async () => {
-    const normalizedEmail = email.toLowerCase().trim();
-    
-    if (!normalizedEmail || !password) {
-      toast({ variant: 'destructive', title: 'Datos incompletos', description: 'Ingresa email y contraseña para activar.' });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({ variant: 'destructive', title: 'Contraseña débil', description: 'La clave debe tener al menos 6 caracteres.' });
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const tempId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
-      const userRef = doc(db, 'users', tempId);
-      
-      let snap;
-      try {
-        snap = await getDoc(userRef);
-      } catch (e: any) {
-        console.error("[Auth Check Error]", e);
-        toast({ 
-          variant: 'destructive', 
-          title: 'Error de Verificación', 
-          description: `Servidor: ${e.message || 'No se pudo contactar con la base de datos.'}` 
-        });
-        setLoading(false);
-        return;
-      }
-      
-      if (!snap.exists()) {
-        toast({ 
-          variant: 'destructive', 
-          title: 'Acceso Denegado', 
-          description: 'Este correo no figura en nuestra lista de invitados.' 
-        });
-        setLoading(false);
-        return;
-      }
-
-      await registerWithEmail(normalizedEmail, password);
-      toast({ title: 'Éxito', description: 'Cuenta activada. Redirigiendo...' });
-
-    } catch (error: any) {
-      console.error("[Activation Error]", error);
-      let errorMsg = error.message || "No se pudo verificar la cuenta. Intenta nuevamente.";
-      
-      if (error.code === 'auth/email-already-in-use') {
-        errorMsg = "Esta cuenta ya está activa. Por favor, inicia sesión normalmente.";
-        setView('login');
-      }
-
-      toast({ 
-        variant: 'destructive', 
-        title: 'Fallo de Activación', 
-        description: errorMsg 
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEmailLogin = async () => {
-    if (!email || !password) return;
-    setLoading(true);
-    try {
-      await loginWithEmail(email, password);
-    } catch (error: any) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Error de acceso', 
-        description: 'Credenciales incorrectas o cuenta no activada.' 
-      });
-    } finally {
       setLoading(false);
     }
   };
@@ -296,126 +180,24 @@ export default function AuthPage() {
               </div>
             )}
 
-            {view === 'activate' ? (
-              <div className="space-y-4 animate-in slide-in-from-top-2">
-                <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><UserPlus className="h-5 w-5 text-accent" /> Activar Invitación</h3>
-                  <p className="text-xs text-muted-foreground">Si fuice invitado por un mentor, crea tu contraseña aquí.</p>
-                </div>
-                <div className="space-y-4 pt-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="activate-email" className="text-xs font-bold uppercase text-slate-500">Correo Invitado</Label>
-                    <Input id="activate-email" name="email" type="email" placeholder="usuario@institucion.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="activate-password" title="Crear Contraseña" className="text-xs font-bold uppercase text-slate-500">Crear Contraseña</Label>
-                    <div className="relative">
-                      <Input 
-                        id="activate-password"
-                        name="password"
-                        type={showPassword ? "text" : "password"} 
-                        placeholder="Mínimo 6 caracteres" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        className="h-12 rounded-xl pr-10" 
-                      />
-                      <button 
-                        type="button" 
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  <Button onClick={handleActivateAccount} className="w-full h-12 rounded-xl font-bold bg-accent hover:bg-accent/90" disabled={loading}>
-                    {loading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Activar mi Cuenta'}
-                  </Button>
-                  <Button variant="link" onClick={() => setView('login')} className="w-full text-xs font-bold text-slate-400">Volver al ingreso</Button>
-                </div>
-              </div>
-            ) : view === 'reset' ? (
-              <div className="space-y-4 animate-in slide-in-from-top-2">
-                <div className="space-y-2">
-                  <Label htmlFor="reset-email" className="text-xs font-bold uppercase tracking-wider text-slate-500">Correo institucional</Label>
-                  <Input 
-                    id="reset-email"
-                    name="email"
-                    type="email" 
-                    placeholder="usuario@institucion.com" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 rounded-xl"
-                  />
-                </div>
-                <Button 
-                  onClick={handleResetPassword} 
-                  className="w-full h-12 rounded-xl font-bold bg-slate-900"
-                  disabled={loading}
-                >
-                  {loading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Enviar Enlace de Acceso'}
-                </Button>
-                <Button variant="link" onClick={() => setView('login')} className="w-full text-xs font-bold text-slate-400">Volver al ingreso</Button>
-              </div>
-            ) : (
-              <form onSubmit={(e) => { e.preventDefault(); handleEmailLogin(); }} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="auth-email" className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Correo Electrónico</Label>
-                  <Input id="auth-email" name="email" type="email" placeholder="usuario@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl border-slate-200" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center pr-1">
-                    <Label htmlFor="auth-password" className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Contraseña</Label>
-                    <button type="button" onClick={() => setView('reset')} className="text-[10px] font-bold text-muted-foreground hover:underline uppercase tracking-tighter">¿Olvidaste tu clave?</button>
-                  </div>
-                  <div className="relative">
-                    <Input 
-                      id="auth-password" 
-                      name="password" 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="••••••••" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      className="h-12 rounded-xl border-slate-200 pr-10" 
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                <Button type="submit" className="w-full h-12 rounded-xl font-bold text-base shadow-sm bg-slate-900 hover:bg-slate-800" disabled={loading || !email || !password}>
-                  {loading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Entrar al Sistema'}
-                </Button>
-                <div className="pt-2">
-                  <Button variant="outline" onClick={() => { setView('activate'); setPassword(''); }} className="w-full h-12 rounded-xl font-bold text-accent border-accent/20 hover:bg-accent/5 gap-2">
-                    <KeyRound className="h-4 w-4" /> Activar Invitación
-                  </Button>
-                </div>
-              </form>
-            )}
-
-            {view === 'login' && !popupLostError && !showPopupWarning && (
-              <>
-                <div className="relative py-2">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-100" /></div>
-                  <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest">
-                    <span className="bg-white px-4 text-slate-400">O continúa con</span>
-                  </div>
+            {!popupLostError && !showPopupWarning && (
+              <div className="space-y-6">
+                <div className="text-center space-y-2">
+                  <h3 className="font-bold text-slate-900">Acceso a la plataforma</h3>
+                  <p className="text-xs text-slate-500">
+                    Utiliza tu cuenta de Google o institucional para acceder a tus cursos y contenido.
+                  </p>
                 </div>
 
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full h-12 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center gap-3 border-slate-200 hover:bg-slate-50" onClick={handleGoogleLogin} disabled={loading}>
-                    <Globe className="h-5 w-5 text-accent" /> Google Workspace
+                  <Button variant="outline" className="w-full h-14 rounded-xl text-base font-bold shadow-sm flex items-center justify-center gap-3 border-slate-200 hover:bg-slate-50 transition-all hover:scale-[1.02]" onClick={handleGoogleLogin} disabled={loading}>
+                    <Globe className="h-5 w-5 text-accent" /> Continuar con Google
                   </Button>
                   <Button variant="ghost" className="w-full h-10 rounded-xl text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:bg-slate-100" onClick={handleGoogleRedirectLogin} disabled={loading}>
-                    Problemas con el login? <span className="text-accent ml-1 underline">Usa Redirección</span>
+                    Problemas con el popup? <span className="text-accent ml-1 underline">Usar Redirección</span>
                   </Button>
                 </div>
-              </>
+              </div>
             )}
           </CardContent>
           <CardFooter className="bg-slate-50/50 p-6 border-t border-slate-100">

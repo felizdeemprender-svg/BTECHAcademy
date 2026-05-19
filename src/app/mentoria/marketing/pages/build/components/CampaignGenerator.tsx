@@ -66,8 +66,6 @@ export function CampaignGenerator({
   setTargetAudience,
   campaignMission,
   setCampaignMission,
-  price,
-  setPrice,
   courses,
   collections,
   allTags,

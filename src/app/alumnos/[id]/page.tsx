@@ -502,7 +502,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-8">
           <div className="flex items-center gap-6">
             <Avatar className="w-24 h-24 border-4 border-white shadow-2xl">
-              <AvatarImage src={studentData?.photoURL} />
+              <AvatarImage src={studentData?.photoURL || undefined} />
               <AvatarFallback className="text-2xl font-bold bg-primary text-white">
                 {studentData?.displayName?.[0] || 'A'}
               </AvatarFallback>

@@ -13,7 +13,7 @@ declare global {
 }
 
 interface VideoPlayerProps {
-  url: string;
+  url?: string;
   title?: string;
   primaryColor?: string;
 }
@@ -28,8 +28,8 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
   const [showEndScreen, setShowEndScreen] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
 
-  const getSecureUrl = (rawUrl: string) => {
-    if (!rawUrl) return '';
+  const getSecureUrl = (rawUrl?: string) => {
+    if (!rawUrl) return undefined;
     let videoId = '';
     
     if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
@@ -65,7 +65,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
   };
 
   const togglePlayback = () => {
-    if (!iframeRef.current) return;
+    if (!iframeRef.current || !url) return;
 
     const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
     const isVimeo = url.includes('vimeo.com');
@@ -96,6 +96,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
 
   // Inicializar YouTube API
   useEffect(() => {
+    if (!url) return;
     const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
     if (!isYouTube) return;
 
@@ -163,7 +164,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
 
   useEffect(() => {
       setIsPlaying(false);
-      setIsLoading(true);
+      setIsLoading(!!url);
   }, [url]);
 
   return (
@@ -178,19 +179,26 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
         </div>
       )}
 
-      <iframe
-        ref={iframeRef}
-        src={getSecureUrl(url)}
-        className="w-full h-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        webkitallowfullscreen="true"
-        mozallowfullscreen="true"
-        onLoad={() => setIsLoading(false)}
-      />
+      {getSecureUrl(url) ? (
+        <iframe
+          ref={iframeRef}
+          src={getSecureUrl(url)}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          webkitallowfullscreen="true"
+          mozallowfullscreen="true"
+          onLoad={() => setIsLoading(false)}
+        />
+      ) : (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 z-10 text-slate-500">
+          <Play className="h-12 w-12 opacity-20 mb-4" />
+          <p className="text-sm font-bold">Video no disponible aún</p>
+        </div>
+      )}
 
       {/* Security Overlay & Custom Play Button */}
-      {!isLoading && (
+      {!isLoading && getSecureUrl(url) && (
         <div 
             className="absolute inset-0 z-20 cursor-pointer group"
             onClick={togglePlayback}

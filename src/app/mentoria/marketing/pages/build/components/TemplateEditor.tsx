@@ -884,7 +884,7 @@ export function TemplateEditor({
                                     <div className="flex items-center gap-4 md:gap-6">
                                       <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
                                       <div>
-                                        <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest">{s.marketingName || `${getPlatformLabels(p).type} ${globalIdx + 1}`}</h3>
+                                        <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest">{s.marketingName || `${getPlatformLabels(s.type).badge} ${globalIdx + 1}`}</h3>
                                         <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none mt-1 md:mt-2 text-[10px] md:text-xs">Publicación Lista</Badge>
                                       </div>
                                     </div>
@@ -893,7 +893,7 @@ export function TemplateEditor({
                                         variant="outline"
                                         size="icon"
                                         title="Descargar Video"
-                                        onClick={() => handleDownloadVideo(s.production_notes?.video_url || renderedVideos[`socials-${globalIdx}`]?.videoUrl || s.exportUrls?.socialExportUrl, `${s.marketingName || 'Video_Sellado'}.mp4`, s.production_notes?.video_drive_id)} 
+                                        onClick={() => handleDownloadVideo(s.production_notes?.video_url || renderedVideos[globalIdx] || s.exportUrls?.socialExportUrl, `${s.marketingName || 'Video_Sellado'}.mp4`, s.production_notes?.video_drive_id)} 
                                         className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-emerald-600/10 border-emerald-500/20 hover:bg-emerald-500 hover:text-white text-emerald-400"
                                       >
                                         <Download className="h-5 w-5" />
@@ -957,7 +957,7 @@ export function TemplateEditor({
                                     <div className="flex items-center gap-4 md:gap-6">
                                       <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/5 text-slate-400 flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
                                       <div>
-                                        <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest">{s.marketingName || `${getPlatformLabels(p).type} ${globalIdx + 1}`}</h3>
+                                        <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest">{s.marketingName || `${getPlatformLabels(s.type).badge} ${globalIdx + 1}`}</h3>
                                         <Badge variant="secondary" className="mt-1 md:mt-2 text-slate-300 bg-white/10 hover:bg-white/20 border-none text-[10px] md:text-xs">Borrador / Producción</Badge>
                                       </div>
                                     </div>
@@ -966,7 +966,7 @@ export function TemplateEditor({
                                         variant="outline"
                                         size="icon"
                                         title="Descargar Video Temporal"
-                                        onClick={() => handleDownloadVideo(s.production_notes?.video_url || renderedVideos[`socials-${globalIdx}`]?.videoUrl || s.exportUrls?.socialExportUrl, `${s.marketingName || 'Video_Temporal'}.mp4`, s.production_notes?.video_drive_id)} 
+                                        onClick={() => handleDownloadVideo(s.production_notes?.video_url || renderedVideos[globalIdx] || s.exportUrls?.socialExportUrl, `${s.marketingName || 'Video_Temporal'}.mp4`, s.production_notes?.video_drive_id)} 
                                         className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-emerald-600/10 border-emerald-500/20 hover:bg-emerald-500 hover:text-white text-emerald-400"
                                       >
                                         <Download className="h-5 w-5" />

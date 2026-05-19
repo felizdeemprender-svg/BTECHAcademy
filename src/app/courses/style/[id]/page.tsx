@@ -187,7 +187,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logo del Programa</Label>
                     <div className="flex items-center gap-8">
                       <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white shadow-xl">
-                        {formData.logoUrl ? (
+                        {(formData.logoUrl && typeof formData.logoUrl === 'string') ? (
                           <Image 
                             src={formData.logoUrl} 
                             alt="Logo" 
@@ -267,7 +267,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                 <div className="flex items-end gap-6 text-right">
                   <div><h3 className="font-bold text-2xl" style={{ color: formData.primaryColor }}>{course?.title}</h3><p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.3em]">Módulo Actual: Introducción</p></div>
                   <div className="w-16 h-16 relative bg-secondary/10 rounded-2xl overflow-hidden flex items-center justify-center">
-                    {formData.logoUrl ? (
+                    {(formData.logoUrl && typeof formData.logoUrl === 'string') ? (
                       <Image 
                         src={formData.logoUrl} 
                         alt="Logo" 
@@ -338,7 +338,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-2xl relative overflow-hidden shadow-md">
                         <Image 
-                          src={mentorProfile?.photoURL || 'https://placehold.co/100/png'} 
+                          src={(mentorProfile?.photoURL && typeof mentorProfile.photoURL === 'string') ? mentorProfile.photoURL : 'https://placehold.co/100/png'} 
                           alt="Mentor" 
                           fill 
                           sizes="48px"

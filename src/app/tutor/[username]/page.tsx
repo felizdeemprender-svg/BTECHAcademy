@@ -376,12 +376,13 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
                 />
                 <div className={cn("relative w-48 h-48 lg:w-64 lg:h-64 rounded-[2.5rem] overflow-hidden border-8 shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]", isDark ? "border-slate-800" : "border-white")}>
                   <Image 
-                    src={tutorData.photo} 
+                    src={tutorData.photo || `https://api.dicebear.com/7.x/adventurer/svg?seed=${tutorData.displayName || 'tutor'}`} 
                     alt={tutorData.displayName}
                     fill
                     sizes="256px"
                     className="object-cover"
                     priority
+                    unoptimized
                   />
                 </div>
               </div>

@@ -215,11 +215,12 @@ export default function TutorCoursesPage({ params }: { params: Promise<{ usernam
             <div className="flex items-center gap-3 flex-1">
               <div className="relative w-12 h-12 rounded-full overflow-hidden">
                 <Image 
-                  src={tutor.photo} 
+                  src={tutor.photo || `https://api.dicebear.com/7.x/adventurer/svg?seed=${tutor.displayName || 'tutor'}`} 
                   alt={tutor.displayName}
                   fill
                   sizes="48px"
                   className="object-cover"
+                  unoptimized
                 />
               </div>
               <div>
@@ -322,12 +323,12 @@ export default function TutorCoursesPage({ params }: { params: Promise<{ usernam
                   {/* Image */}
                   <div className="relative lg:w-2/5 aspect-video lg:aspect-square overflow-hidden">
                     <Image 
-                      src={course.thumbnail} 
+                      src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'} 
                       alt={course.title} 
                       fill
                       sizes="(max-width: 768px) 100vw, 40vw"
                       className="object-cover group-hover:scale-110 transition-transform duration-700" 
-                      unoptimized 
+                      unoptimized={!!course.thumbnail} 
                     />
                     <div className="absolute top-4 right-4">
                       <Badge className={course.price === 0 ? "bg-green-500 text-white" : "bg-blue-500 text-white"}>

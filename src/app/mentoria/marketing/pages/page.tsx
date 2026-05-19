@@ -87,6 +87,8 @@ export default function SalesPagesDashboardPage() {
       const pageRef = doc(db, 'salesPages', id);
       const snap = await getDoc(pageRef);
 
+      // 🔑 IMPORTANTE: La limpieza de assets (Storage/Drive) es "best effort".
+      // Si falla, NO debe bloquear el borrado real del documento en Firestore.
       if (snap.exists()) {
         const data = snap.data();
         const driveIds: string[] = [];
@@ -107,7 +109,7 @@ export default function SalesPagesDashboardPage() {
         };
         scan(data);
 
-        // 2. Borrado de Google Drive
+        // 2. Borrado de Google Drive (best effort — no bloquea el delete principal)
         const accessToken = localStorage.getItem('google_access_token');
         if (driveIds.length > 0 && accessToken) {
           for (const dId of driveIds) {
@@ -116,34 +118,39 @@ export default function SalesPagesDashboardPage() {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${accessToken}` }
               });
-            } catch (e) { console.warn("Fallo al borrar en Drive:", dId); }
+            } catch (e) { console.warn("[Delete] Fallo al borrar en Drive (ignorado):", dId); }
           }
         }
 
-        // 3. Borrado de Firebase Storage
+        // 3. Borrado de Firebase Storage (best effort — no bloquea el delete principal)
         const uniqueUrls = Array.from(new Set(storageUrls));
-        if (uniqueUrls.length > 0) {
-          for (const url of uniqueUrls) {
-            try { await deleteObject(ref(storage, url)); } catch (e) { console.warn("Fallo al borrar en Storage:", url); }
-          }
+        for (const url of uniqueUrls) {
+          try { await deleteObject(ref(storage, url)); } catch (e) { console.warn("[Delete] Fallo al borrar en Storage (ignorado):", url); }
         }
 
-        // 4. Limpiar carpeta de exportaciones
+        // 4. Limpiar carpeta de exportaciones (best effort)
         const exportKeys = ['emailsExportUrl', 'socialExportUrl', 'adsExportUrl'];
         if (data.exportUrls) {
           for (const key of exportKeys) {
             const url = data.exportUrls[key];
             if (url) {
-              try { await deleteObject(ref(storage, url)); } catch (e) { }
+              try { await deleteObject(ref(storage, url)); } catch (e) { /* ignorado */ }
             }
           }
         }
       }
+    } catch (assetCleanupError: any) {
+      // ⚠️ Si falla la limpieza de assets, lo logueamos pero CONTINUAMOS con el borrado del doc
+      console.warn("[Delete] Error en limpieza de assets (se continuará con el borrado):", assetCleanupError);
+    }
 
+    // 🗑️ El borrado real de Firestore está SIEMPRE garantizado en su propio try/catch
+    try {
+      const pageRef = doc(db, 'salesPages', id);
       await deleteDoc(pageRef);
       toast({ title: 'Pack eliminado', description: 'Todos los datos han sido borrados con éxito.' });
     } catch (e: any) {
-      console.error("[Delete Error]", e);
+      console.error("[Delete] Error al borrar en Firestore:", e);
       toast({ variant: 'destructive', title: 'Error al borrar', description: e.message || "Error de red o permisos." });
     } finally {
       setDeletingIds(prev => ({ ...prev, [id]: false }));

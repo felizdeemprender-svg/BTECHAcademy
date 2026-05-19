@@ -376,7 +376,7 @@ export default function AdminUsersPage() {
                       <TableCell className="px-6 py-5">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-10 w-10 border shadow-sm">
-                            <AvatarImage src={user.photoURL} />
+                            <AvatarImage src={user.photoURL || undefined} />
                             <AvatarFallback className="bg-slate-100 text-slate-600 font-bold uppercase">{user.displayName?.[0] || 'U'}</AvatarFallback>
                           </Avatar>
                           <div>
@@ -576,7 +576,7 @@ export default function AdminUsersPage() {
               <div className="p-10 space-y-10">
                 <div className="flex items-center gap-6 p-6 bg-secondary/10 rounded-3xl border border-primary/5">
                   <Avatar className="h-16 w-16 border-4 border-white shadow-xl">
-                    <AvatarImage src={pendingUser?.photoURL} />
+                    <AvatarImage src={pendingUser?.photoURL || undefined} />
                     <AvatarFallback className="bg-slate-100 text-slate-600 font-bold uppercase text-xl">{pendingUser?.displayName?.[0] || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">

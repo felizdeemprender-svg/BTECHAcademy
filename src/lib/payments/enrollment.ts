@@ -48,13 +48,33 @@ export async function processSuccessfulEnrollment({
       return { success: true, alreadyEnrolled: true, enrollmentId };
     }
 
-    // 3. Crear Inscripción
+    // 3. Obtener o crear al estudiante en la colección 'users'
+    let studentId = '';
+    const userQuery = await db.collection('users').where('email', '==', normalizedEmail).limit(1).get();
+    
+    if (!userQuery.empty) {
+      studentId = userQuery.docs[0].id;
+    } else {
+      // Crear un perfil provisional para que el usuario ya figure de alta
+      const tempId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
+      studentId = tempId;
+      await db.collection('users').doc(tempId).set({
+        email: normalizedEmail,
+        displayName: normalizedEmail.split('@')[0],
+        roles: ['alumno'],
+        isActive: true,
+        createdAt: FieldValue.serverTimestamp(),
+        createdVia: 'auto_enrollment'
+      });
+    }
+
+    // 4. Crear Inscripción
     const enrollmentData = {
       id: enrollmentId,
       courseId,
       mentorId,
       inviteEmail: normalizedEmail,
-      studentId: '', // Se vinculará cuando el alumno haga login con este email
+      studentId: studentId,
       status: 'active',
       enrolledAt: FieldValue.serverTimestamp(),
       paymentId: paymentId,

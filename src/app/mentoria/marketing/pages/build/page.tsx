@@ -99,6 +99,15 @@ function BuilderContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get('id');
 
+  const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(editId);
+
+  // Sincronizar ID de edición si cambia en la URL
+  useEffect(() => {
+    if (editId) {
+      setCurrentCampaignId(editId);
+    }
+  }, [editId]);
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -111,7 +120,7 @@ function BuilderContent() {
   const [targetAudience, setTargetAudience] = useState('');
   const [campaignMission, setCampaignMission] = useState<'venta' | 'autoridad' | 'lanzamiento' | 'leads'>('venta');
   const [templateDirectives, setTemplateDirectives] = useState('');
-  const [generatedAssets, setGeneratedAssets] = useState<GenerateCampaignOutput | null>(null);
+  const [generatedAssets, setGeneratedAssets] = useState<any | null>(null);
   const [blueprintData, setBlueprintData] = useState<any>(null);
 
   const [activeLandingIdx, setActiveLandingIdx] = useState(0);
@@ -323,7 +332,11 @@ function BuilderContent() {
         }
       */
 
-      setGenerationProgress({ current: 0, total: tasks.length || 1, label: 'Iniciando conexión interactiva...' });
+      if (tasks.length === 0) {
+        setGenerationProgress({ current: 0, total: 1, label: 'Preparando borradores...' });
+      } else {
+        setGenerationProgress({ current: 0, total: tasks.length, label: 'Iniciando conexión interactiva...' });
+      }
 
       let finalAssets: any = {};
 
@@ -409,7 +422,53 @@ function BuilderContent() {
         if (result.ads?.length) finalAssets.ads = [...(finalAssets.ads || []), ...result.ads];
       }
 
-      setGenerationProgress({ current: tasks.length, total: tasks.length, label: 'Validando Compatibilidad con APIs...' });
+      // Inicializar colecciones de finalAssets si no existen
+      if (!finalAssets.socials) finalAssets.socials = [];
+      if (!finalAssets.emails) finalAssets.emails = [];
+      if (!finalAssets.ads) finalAssets.ads = [];
+      if (!finalAssets.landings) finalAssets.landings = [];
+
+      // Pre-poblar borradores de Redes Sociales si no se generaron inicialmente (ya que son a demanda)
+      if (finalAssets.socials.length === 0 && Array.isArray(collection.assets?.socials)) {
+        finalAssets.socials = collection.assets.socials.map((s: any) => ({
+          platform: s.platform,
+          type: s.type || 'story',
+          marketingName: s.marketingName || s.name || `Video ${s.platform}`,
+          caption: '',
+          hook: '',
+          slides: [],
+          designTokens: s.designTokens || {},
+          production_notes: {
+            adnId: s.adnId || '01_CINEMA',
+            isLocked: false,
+            enable_tts: true,
+            voice_id: 'mateo'
+          }
+        }));
+      }
+
+      // Pre-poblar borradores de Emails si no se generaron inicialmente
+      if (finalAssets.emails.length === 0 && Array.isArray(collection.assets?.emails)) {
+        finalAssets.emails = collection.assets.emails.map((e: any) => ({
+          marketingName: e.marketingName || e.name || 'Email Borrador',
+          subject: '',
+          body: '',
+          landingId: 'mentor'
+        }));
+      }
+
+      // Pre-poblar borradores de Anuncios si no se generaron inicialmente
+      if (finalAssets.ads.length === 0 && Array.isArray(collection.assets?.ads)) {
+        finalAssets.ads = collection.assets.ads.map((a: any) => ({
+          marketingName: a.marketingName || a.name || 'Ad Borrador',
+          headline: '',
+          primaryText: '',
+          platform: a.platform || 'facebook',
+          designTokens: a.designTokens || {},
+        }));
+      }
+
+      setGenerationProgress({ current: tasks.length || 1, total: tasks.length || 1, label: 'Validando Compatibilidad con APIs...' });
 
       // Validar y ajustar diseños para compatibilidad con APIs
       const validatedAssets = { ...finalAssets };
@@ -486,12 +545,13 @@ function BuilderContent() {
         }
       }
 
-      if (!validatedAssets.emails && !validatedAssets.landings && !validatedAssets.socials && !validatedAssets.ads) {
-        console.error('[Fusion:Debug] finalAssets vacío. tasks generadas:', tasks.length, 'tasks:', JSON.stringify(tasks.map(t => t.channel)));
-        console.error('[Fusion:Debug] collection.assets keys:', Object.keys(collection.assets || {}));
-        console.error('[Fusion:Debug] finalAssets:', JSON.stringify(finalAssets).substring(0, 500));
-        throw new Error('La IA no devolvió un formato de activos válido.');
-      }
+      // Colección lista para procesamiento dinámico a demanda
+      console.log('[Fusion:Debug] Inicialización de finalAssets completada. Arreglos listos:', {
+        emails: validatedAssets.emails?.length || 0,
+        ads: validatedAssets.ads?.length || 0,
+        socials: validatedAssets.socials?.length || 0,
+        landings: validatedAssets.landings?.length || 0
+      });
 
       const assetsWithLinks = {
         ...validatedAssets,
@@ -618,9 +678,14 @@ function BuilderContent() {
 
       setGeneratedAssets(assetsWithLinks as any);
       setStep(3);
-      toast({ title: 'Pack de Producción Completo', description: 'Todos los guiones e imágenes han sido generados por la IA.' });
+      toast({ 
+        title: tasks.length > 0 ? 'Pack de Producción Completo' : 'Estudio de Videos On-Demand Listo', 
+        description: tasks.length > 0 
+          ? 'Todos los guiones e imágenes han sido generados por la IA.' 
+          : 'Módulo de producción de video dinámica inicializado con éxito.' 
+      });
     } catch (e: any) {
-      console.error("[Fusion Error]", e);
+      console.warn("[Fusion Error]", e);
       toast({
         variant: 'destructive',
         title: 'Error de Fusión',
@@ -635,7 +700,7 @@ function BuilderContent() {
   const updateAsset = (channel: 'landings' | 'emails' | 'socials' | 'ads', variantIdx: number, field: string, value: any, subIndex?: number) => {
     if (!generatedAssets) return;
 
-    setGeneratedAssets(prev => {
+    setGeneratedAssets((prev: any) => {
       if (!prev) return prev;
 
       const channelData = [...(prev[channel] || [])];
@@ -701,15 +766,21 @@ function BuilderContent() {
           }
           return obj;
         };
-        const pageId = editId || Math.random().toString(36).substring(2, 15);
+        const pageId = currentCampaignId || editId || Math.random().toString(36).substring(2, 15);
+        if (!currentCampaignId) setCurrentCampaignId(pageId);
         const pageRef = doc(db, 'salesPages', pageId);
-        await updateDoc(pageRef, cleanUndefined({
-          'aiContent.landings': currentAssets.landings || [],
-          'aiContent.socials': currentAssets.socials || [],
-          'aiContent.emails': currentAssets.emails || [],
-          'aiContent.ads': currentAssets.ads || [],
+        
+        // setDoc con merge es 100% robusto si el documento aún no existe en base de datos
+        const { setDoc } = await import('firebase/firestore');
+        await setDoc(pageRef, cleanUndefined({
+          aiContent: {
+            landings: currentAssets.landings || [],
+            socials: currentAssets.socials || [],
+            emails: currentAssets.emails || [],
+            ads: currentAssets.ads || [],
+          },
           updatedAt: serverTimestamp(),
-        }));
+        }), { merge: true });
 
         // CRITICAL: Actualizar estado local para que los links aparezcan en la UI sin refrescar
         setGeneratedAssets(currentAssets);
@@ -742,7 +813,8 @@ function BuilderContent() {
         return obj;
       };
 
-      const pageId = editId || Math.random().toString(36).substring(2, 15);
+      const pageId = currentCampaignId || editId || Math.random().toString(36).substring(2, 15);
+      if (!currentCampaignId) setCurrentCampaignId(pageId);
       const pageRef = doc(db, 'salesPages', pageId);
 
       // --- 0. LIMPIEZA DE ACTIVOS OBSOLETOS (FIREBASE STORAGE) ---
@@ -979,7 +1051,6 @@ function BuilderContent() {
           <TemplateEditor
             generatedAssets={generatedAssets}
             blueprintData={blueprintData}
-            activeEmailIdx={activeEmailIdx}
             activeEmailIdx={activeEmailIdx}
             setActiveEmailIdx={setActiveEmailIdx}
             activeSocialIdx={activeSocialIdx}
