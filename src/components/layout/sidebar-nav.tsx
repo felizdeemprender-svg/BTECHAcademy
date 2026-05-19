@@ -117,6 +117,7 @@ export function SidebarNav() {
         { name: 'Mi Perfil', href: '/settings', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Settings },
         { name: 'Métodos de Cobro', href: '/dashboard/payment-methods', roles: ['mentor', 'admin'], icon: Wallet },
         { name: 'Mi Plan', href: '/dashboard/plan', roles: ['mentor', 'admin'], icon: CreditCard },
+        { name: 'Motores de Publicación', href: '/dashboard/publishing-engines', roles: ['mentor', 'admin'], icon: Cpu },
       ]
     }
   ];
