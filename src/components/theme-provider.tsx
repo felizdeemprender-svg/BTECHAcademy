@@ -59,11 +59,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (config) {
-      setTheme({
-        primaryColor: config.primaryColor || '#3B2D86',
-        secondaryColor: config.secondaryColor || '#6366f1',
-        accentColor: config.accentColor || '#ec4899',
-        themeType: config.themeType || 'institucional'
+      const newPrimary = config.primaryColor || '#3B2D86';
+      const newSecondary = config.secondaryColor || '#6366f1';
+      const newAccent = config.accentColor || '#ec4899';
+      const newType = config.themeType || 'institucional';
+      
+      setTheme(prev => {
+        // Only update state if values actually changed to avoid render loops
+        if (
+          prev.primaryColor === newPrimary &&
+          prev.secondaryColor === newSecondary &&
+          prev.accentColor === newAccent &&
+          prev.themeType === newType
+        ) {
+          return prev;
+        }
+        return {
+          primaryColor: newPrimary,
+          secondaryColor: newSecondary,
+          accentColor: newAccent,
+          themeType: newType
+        };
       });
     }
   }, [config]);

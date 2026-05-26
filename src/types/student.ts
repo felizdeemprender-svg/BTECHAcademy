@@ -4,6 +4,8 @@ export interface EvaluationData {
   feedback: string;
   submittedAt: string;
   isSupport?: boolean;
+  strengths?: string[];
+  areasToImprove?: string[];
   answers?: Record<string, any>;
   questions?: any[];
 }
@@ -32,6 +34,7 @@ export interface Module {
   videoUrl?: string;
   questions?: any[];
   supportQuestions?: any[];
+  enableSupportQuestions?: boolean;
   hasSupportEnabled?: boolean;
   minPassingScore?: number;
   allowRetries?: boolean;
@@ -47,6 +50,10 @@ export interface CourseDetails {
   status?: string;
   category?: string;
   mentorId?: string;
+  brandingOverride?: {
+    primaryColor?: string;
+    [key: string]: any;
+  };
   modules?: Module[];
 }
 

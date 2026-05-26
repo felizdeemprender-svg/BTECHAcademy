@@ -34,8 +34,22 @@ export async function GET(request: NextRequest) {
     const salesPagesSnapshot = await getDocs(
       query(collection(firestore, 'salesPages'), where('isActive', '==', true))
     );
-    const activeCourseIds = new Set(salesPagesSnapshot.docs.map(doc => doc.data().courseId));
-    const activeMentorIdsFromSales = new Set(salesPagesSnapshot.docs.map(doc => doc.data().mentorId));
+    const now = new Date();
+    const validSalesPages = salesPagesSnapshot.docs.filter(doc => {
+      const data = doc.data();
+      if (data.referidoId) return false;
+      
+      if (data.landingType === 'promocion') {
+         const fromDate = data.activeFrom?.toDate ? data.activeFrom.toDate() : null;
+         const untilDate = data.activeUntil?.toDate ? data.activeUntil.toDate() : null;
+         if (fromDate && fromDate > now) return false;
+         if (untilDate && untilDate < now) return false;
+      }
+      return true;
+    });
+    
+    const activeCourseIds = new Set(validSalesPages.map(doc => doc.data().courseId));
+    const activeMentorIdsFromSales = new Set(validSalesPages.map(doc => doc.data().mentorId));
 
     const coursesSnapshot = await getDocs(coursesQuery);
     

@@ -89,7 +89,14 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
   }
 
   // 2. Ejecutar la IA (Usando la instancia interna para evitar recursión infinita)
-  const response = await genkitInstance.generate(options);
+  const generateOptions = { ...options };
+  generateOptions.context = {
+    ...(generateOptions.context || {}),
+    uid,
+    role
+  };
+
+  const response = await genkitInstance.generate(generateOptions);
 
   // 3. Auditoría Silenciosa (No bloquea la IA si falla)
   if (uid && response.usage) {

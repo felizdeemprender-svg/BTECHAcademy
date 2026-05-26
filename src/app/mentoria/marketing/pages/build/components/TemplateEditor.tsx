@@ -578,6 +578,48 @@ export function TemplateEditor({
     toast({ title: 'PDF Eliminado', description: 'Referencia de archivo borrada.' });
   };
 
+  const normalizeWatermark = (value?: string) => {
+    if (!value) {
+      return '';
+    }
+
+    const cleaned = cleanSocialHandle(value);
+    if (!cleaned) {
+      return '';
+    }
+
+    return cleaned.startsWith('@') ? cleaned : `@${cleaned}`;
+  };
+
+  const isPlaceholderWatermark = (value?: string) => {
+    const normalized = normalizeWatermark(value);
+    return normalized.toLowerCase() === '@usuario';
+  };
+
+  const resolveWatermarkHandle = (platform?: string, fallbackHandle?: string, currentWatermark?: string) => {
+    const socials = profile?.profile?.socials || {};
+    const normalizedPlatform = String(platform || '').toLowerCase();
+    const platformKey = normalizedPlatform === 'x' ? 'twitter' : normalizedPlatform;
+    const rawProfileHandle = socials?.[platformKey];
+    const profileHandle = normalizeWatermark(rawProfileHandle);
+
+    if (profileHandle) {
+      return profileHandle;
+    }
+
+    const normalizedFallback = normalizeWatermark(fallbackHandle);
+    if (normalizedFallback && !isPlaceholderWatermark(normalizedFallback)) {
+      return normalizedFallback;
+    }
+
+    const normalizedCurrent = normalizeWatermark(currentWatermark);
+    if (normalizedCurrent && !isPlaceholderWatermark(normalizedCurrent)) {
+      return normalizedCurrent;
+    }
+
+    return '';
+  };
+
   const handleGenerateBreakdown = async (variant: any, index: number, channel: 'emails' | 'socials' | 'ads') => {
     setIsGeneratingBreakdown(`${channel}-${index}`);
     try {
@@ -586,12 +628,13 @@ export function TemplateEditor({
       const breakdown = await (await import('@/ai/flows/generate-variant-content')).generateVariantContent(variant, realDirectives, selectedCourse?.title || '', selectedCourse?.description || '', selectedCourse?.targetAudience || '', (campaignMission as any) || 'venta');
       if (channel === 'socials') {
         const sourceArray = (breakdown.scenes && breakdown.scenes.length > 0) ? breakdown.scenes : (breakdown.slides || []);
+        const currentPlatform = generatedAssets?.socials?.[index]?.platform || variant.platform;
         const mappedScenes = sourceArray.map((s: any, i: number) => ({ 
           segment: s.segment_label || 'VALOR', 
           title: s.title || '',
           text: s.text || '', 
           subtitle: s.subtitle || '',
-          watermark: s.watermark || (variant.handle ? (variant.handle.startsWith('@') ? variant.handle : `@${variant.handle}`) : ''),
+          watermark: resolveWatermarkHandle(currentPlatform, variant.handle, s.watermark),
           voiceover: s.voiceover || '', 
           description: s.description || s.imageUrl || '',
           duration: s.duration || 5, 

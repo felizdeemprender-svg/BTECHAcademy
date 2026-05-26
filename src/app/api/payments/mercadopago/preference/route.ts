@@ -5,7 +5,7 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 export async function POST(req: NextRequest) {
   try {
     const db = getAdminFirestore();
-    const { pageId, studentEmail, studentName } = await req.json();
+    const { pageId, studentEmail, studentName, referidoId } = await req.json();
 
     if (!pageId) {
       return NextResponse.json({ error: 'El ID de la página es obligatorio' }, { status: 400 });
@@ -93,7 +93,9 @@ export async function POST(req: NextRequest) {
     const externalReference = JSON.stringify({
       pageId,
       studentEmail: studentEmail || 'guest',
-      mentorId
+      studentName: studentName || '',
+      mentorId,
+      referidoId: referidoId || null
     });
 
     const body: any = {
@@ -141,6 +143,15 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('Error en Preferencia MercadoPago:', error);
+    
+    // Si es un error de credenciales en desarrollo local, devolver un mensaje claro y guiado
+    if (process.env.NODE_ENV === 'development' && error.message?.includes('Could not load the default credentials')) {
+      return NextResponse.json({
+        error: 'Credenciales de Firebase Admin Faltantes',
+        message: 'Para procesar inscripciones y pagos de MercadoPago en tu servidor de desarrollo local, debes colocar el archivo "service-account.json" con tus claves de Firebase Admin en la raíz del proyecto. En producción, esto se resuelve automáticamente sin configurar nada.'
+      }, { status: 412 });
+    }
+
     return NextResponse.json({ 
       error: 'Error interno del servidor', 
       details: error.message,

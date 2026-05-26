@@ -36,7 +36,8 @@ interface AuthContextType {
   isRedirecting: boolean;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
-  registerWithEmail: (email: string, pass: string) => Promise<void>;
+  registerWithEmail: (email: string, pass: string) => Promise<FirebaseUser>;
+  refreshProfile: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -73,8 +74,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           // 1. Verificación y Migración Silenciosa
           const initialSnap = await getDoc(userRef);
-          
-          if (!initialSnap.exists()) {
+
+          if (initialSnap.exists()) {
+            const data = initialSnap.data();
+            setProfile(data);
+            if (typeof document !== 'undefined') {
+              const primaryRole = data.roles?.[0] || 'none';
+              document.cookie = `btech_uid=${firebaseUser.uid}; path=/; max-age=36000; SameSite=Lax`;
+              document.cookie = `btech_role=${primaryRole}; path=/; max-age=36000; SameSite=Lax`;
+            }
+            setIsLoading(false);
+          } else {
             const userEmail = (firebaseUser.email || '').toLowerCase();
             const q = query(collection(db, 'users'), where('email', '==', userEmail), limit(1));
             const querySnap = await getDocs(q);
@@ -103,16 +113,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               if (preDoc.id !== firebaseUser.uid) {
                 await deleteDoc(preDoc.ref).catch(() => {});
               }
+              setProfile(finalProfile);
             } else {
-              await setDoc(userRef, {
+              const newProfile = {
                 uid: firebaseUser.uid,
                 email: userEmail,
                 displayName: firebaseUser.displayName || userEmail.split('@')[0],
                 roles: isSuperAdmin ? ['alumno', 'mentor', 'admin', 'marketing'] : ['alumno'],
                 isActive: true,
                 createdAt: serverTimestamp(),
-              });
+              };
+
+              await setDoc(userRef, newProfile);
+              setProfile(newProfile);
             }
+
+            if (typeof document !== 'undefined') {
+              const primaryRole = (profile?.roles?.[0] || 'alumno') as string;
+              document.cookie = `btech_uid=${firebaseUser.uid}; path=/; max-age=36000; SameSite=Lax`;
+              document.cookie = `btech_role=${primaryRole}; path=/; max-age=36000; SameSite=Lax`;
+            }
+            setIsLoading(false);
           }
 
           // 2. Establecer listener definitivo
@@ -175,6 +196,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res.user;
   };
 
+  const refreshProfile = async () => {
+    if (!user) return;
+    try {
+      const snapshot = await getDoc(doc(db, 'users', user.uid));
+      if (snapshot.exists()) {
+        setProfile(snapshot.data());
+      }
+    } catch (e) {
+      console.error('[Auth] Error refreshing profile:', e);
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -186,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{ 
       user, profile, isLoading, isRedirecting,
-      loginWithGoogle, loginWithEmail, registerWithEmail, logout 
+      loginWithGoogle, loginWithEmail, registerWithEmail, refreshProfile, logout 
     }}>
       {children}
     </AuthContext.Provider>

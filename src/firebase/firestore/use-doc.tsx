@@ -1,6 +1,6 @@
 'use client';
     
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -46,18 +46,29 @@ export function useDoc<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  
+  // Track the current ref path to avoid unnecessary re-subscriptions when
+  // the memoizedDocRef object identity changes but the path is the same.
+  const currentPathRef = useRef<string | null>(null);
 
   useEffect(() => {
+    const newPath = memoizedDocRef?.path ?? null;
+    
     if (!memoizedDocRef) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
+      // Only update state if it actually needs to change
+      if (currentPathRef.current !== null) {
+        currentPathRef.current = null;
+        setData(null);
+        setIsLoading(false);
+        setError(null);
+      }
       return;
     }
 
+    currentPathRef.current = newPath;
+
     setIsLoading(true);
     setError(null);
-    // Optional: setData(null); // Clear previous data instantly
 
     let unsubscribe = () => {};
     
@@ -98,4 +109,4 @@ export function useDoc<T = any>(
   }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
 
   return { data, isLoading, error };
-}
+}

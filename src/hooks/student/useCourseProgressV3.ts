@@ -33,7 +33,7 @@ export function useCourseProgressV3(courseId: string) {
     
     const unsubCourse = onSnapshot(doc(db, 'courses', courseId), (snap) => {
       if (snap.exists()) {
-        const data = { id: snap.id, ...snap.data() };
+        const data = { id: snap.id, ...snap.data() } as CourseDetails;
         setCourse(data);
         if (data.mentorId) {
           onSnapshot(doc(db, 'users', data.mentorId), (mSnap) => {
@@ -45,10 +45,10 @@ export function useCourseProgressV3(courseId: string) {
 
     const qMods = query(collection(db, 'courses', courseId, 'modules'), orderBy('order', 'asc'));
     const unsubMods = onSnapshot(qMods, (snap) => {
-      // Usando funciones tradicionales para evitar errores de codificación
-      const modsData = snap.docs.map(function(d) {
-        return { id: d.id, ...d.data() };
-      });
+      const modsData = snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Partial<Module>)
+      })) as Module[];
       setModules(modsData);
     }, (err) => console.error("❌ [V3] Error módulos:", err));
 
@@ -85,7 +85,7 @@ export function useCourseProgressV3(courseId: string) {
     };
 
     const unsubById = onSnapshot(qById, (snap) => {
-      enrollById = !snap.empty ? { id: snap.docs[0].id, ...snap.docs[0].data() } : null;
+      enrollById = !snap.empty ? ({ id: snap.docs[0].id, ...snap.docs[0].data() } as StudentEnrollment) : null;
       updateEnrollment(enrollById, enrollByEmail);
     }, (err) => {
       console.error("❌ [V3] Error inscripción por ID:", err);
@@ -93,7 +93,7 @@ export function useCourseProgressV3(courseId: string) {
     });
 
     const unsubByEmail = onSnapshot(qByEmail, (snap) => {
-      enrollByEmail = !snap.empty ? { id: snap.docs[0].id, ...snap.docs[0].data() } : null;
+      enrollByEmail = !snap.empty ? ({ id: snap.docs[0].id, ...snap.docs[0].data() } as StudentEnrollment) : null;
       updateEnrollment(enrollById, enrollByEmail);
     }, (err) => {
       console.error("❌ [V3] Error inscripción por Email:", err);

@@ -23,7 +23,8 @@ import {
   ChevronDown,
   ChevronRight,
   ReceiptText,
-  Wallet
+  Wallet,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-context';
@@ -46,7 +47,7 @@ export function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { profile } = useAuth();
-  const [openSections, setOpenSections] = useState<string[]>(['Cursos', 'Comercialización']);
+  const [openSections, setOpenSections] = useState<string[]>([]);
 
   // Filtrar items de marketing basados en permisos
   const filterMarketingItems = (items: NavItem[]) => {
@@ -71,6 +72,7 @@ export function SidebarNav() {
       items: [
         { name: 'Inicio', href: '/dashboard', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: LayoutDashboard },
         { name: 'Catálogo', href: '/courses', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: BookOpen },
+        { name: 'Control de Tutores', href: '/courses/embajadores', roles: ['alumno'], icon: Users },
         { name: 'Mis Cursos', href: '/my-courses', roles: ['alumno'], icon: Library },
         { name: 'Mis Desafíos', href: '/tasks', roles: ['alumno'], icon: Zap },
         { name: 'Seguimientos', href: '/seguimientos', roles: ['alumno', 'mentor', 'admin'], subPermission: 'followups_management', icon: ClipboardList },
@@ -85,10 +87,16 @@ export function SidebarNav() {
       ]
     },
     {
-      label: 'Comercialización',
+      label: 'Landings',
+      items: [
+        { name: 'Landings de Venta', href: '/mentoria/marketing/landings', roles: ['admin', 'marketing', 'mentor'], icon: LayoutIcon },
+        { name: 'Control de Embajadores', href: '/mentoria/influencers', roles: ['mentor', 'admin'], icon: Users },
+      ]
+    },
+    {
+      label: 'Campañas',
       items: filterMarketingItems([
         { name: 'Mis Campañas', href: '/mentoria/marketing', roles: ['admin', 'marketing', 'mentor'], icon: Rocket },
-        { name: 'Landings de Venta', href: '/mentoria/marketing/landings', roles: ['admin', 'marketing', 'mentor'], icon: LayoutIcon },
         { name: 'Centro de Mando', href: '/mentoria/marketing/execution', roles: ['admin', 'marketing', 'mentor'], icon: Cpu },
         { name: 'Track de Campañas', href: '/mentoria/marketing/track', roles: ['admin', 'marketing', 'mentor'], icon: Activity },
         { name: 'Generación de Contenido', href: '/mentoria/marketing/pages', roles: ['admin', 'marketing', 'mentor'], icon: FileBox },
@@ -114,6 +122,7 @@ export function SidebarNav() {
     {
       label: 'Gestión de Cuenta',
       items: [
+        { name: 'Evo', href: '/evo', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Sparkles },
         { name: 'Mi Perfil', href: '/settings', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Settings },
         { name: 'Métodos de Cobro', href: '/dashboard/payment-methods', roles: ['mentor', 'admin'], icon: Wallet },
         { name: 'Mi Plan', href: '/dashboard/plan', roles: ['mentor', 'admin'], icon: CreditCard },
@@ -123,26 +132,32 @@ export function SidebarNav() {
   ];
 
   const toggleSection = (label: string) => {
+    // Toggle: si ya está abierto lo cierra, si está cerrado abre solo ese
     setOpenSections(prev =>
-      prev.includes(label) ? prev.filter(s => s !== label) : [...prev, label]
+      prev.includes(label) ? prev.filter(s => s !== label) : [label]
     );
   };
 
-  // Auto-open section if current path is inside it
+  // Abrir automáticamente SOLO la sección activa al cambiar de ruta
   useEffect(() => {
-    sections.forEach(section => {
-      if (section.items.some(item => item.href === pathname)) {
-        if (!openSections.includes(section.label)) {
-          setOpenSections(prev => [...prev, section.label]);
-        }
-      }
-    });
+    const activeSection = sections.find(section =>
+      section.items.some(item => pathname.startsWith(item.href) && item.href !== '/dashboard')
+      || section.items.some(item => item.href === pathname)
+    );
+    if (activeSection) {
+      setOpenSections([activeSection.label]);
+    }
   }, [pathname]);
 
   const filteredSections = sections.map(section => ({
     ...section,
     items: section.items.filter(item => {
       if (!profile) return false;
+
+      if (item.href === '/courses/embajadores') {
+        const hasEmbajadorAccess = profile.roles.includes('referido') && (profile.associatedMentors || []).length > 0;
+        return hasEmbajadorAccess;
+      }
 
       const hasBaseRole = item.roles.some(role => profile.roles.includes(role as any));
       if (!hasBaseRole) return false;

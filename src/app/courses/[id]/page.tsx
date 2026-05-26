@@ -6,12 +6,13 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useFirestore } from '@/firebase';
 import { doc, updateDoc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { evaluateQuizPerformance, EvaluationOutput } from '@/ai/flows/evaluate-quiz-performance';
+import { evaluateQuizPerformance } from '@/ai/flows/evaluate-quiz-performance';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { EvaluationData } from '@/types/student';
 
 // Hooks
 import { useCourseProgressV3 } from '@/hooks/student/useCourseProgressV3';
@@ -56,7 +57,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
 
   // Local UI State
   const [isEvaluating, setIsEvaluating] = useState(false);
-  const [evaluationResult, setEvaluationResult] = useState<EvaluationOutput | null>(null);
+  const [evaluationResult, setEvaluationResult] = useState<EvaluationData | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
 
   // Determine questions to show (Main vs Support/Reinforcement)
@@ -83,7 +84,8 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
         setEvaluationResult({
           score: prevEval.score,
           feedback: prevEval.feedback,
-          isSupport: prevEval.isSupport, // ¡AHORA SÍ GUARDAMOS ESTO!
+          submittedAt: prevEval.submittedAt || new Date().toISOString(),
+          isSupport: prevEval.isSupport,
           strengths: prevEval.strengths || [],
           areasToImprove: prevEval.areasToImprove || []
         });
@@ -115,12 +117,13 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
         answers: userAnswers,
         studentName: authProfile?.displayName
       });
-      
-      const currentIsSupport = activeModule?.supportQuestions?.length > 0 && 
-                             targetQuestions.length === activeModule?.supportQuestions?.length && 
-                             targetQuestions[0]?.question === activeModule?.supportQuestions[0]?.question;
 
-      const fullResult = {
+      const supportQuestions = activeModule?.supportQuestions || [];
+      const currentIsSupport = supportQuestions.length > 0 &&
+        targetQuestions.length === supportQuestions.length &&
+        targetQuestions[0]?.question === supportQuestions[0]?.question;
+
+      const fullResult: EvaluationData = {
         score: result.score,
         feedback: result.feedback,
         submittedAt: new Date().toISOString(),
@@ -157,7 +160,6 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
 
         // Calcular el progreso global consolidado
         let processedCount = 0;
-        const currentIsSupport = activeModule?.supportQuestions?.length > 0 && targetQuestions.length === activeModule?.supportQuestions?.length && targetQuestions[0]?.question === activeModule?.supportQuestions[0]?.question;
 
         modules.forEach(mod => {
           const isCompletedMod = nextCompletedModules.includes(mod.id);
@@ -169,8 +171,8 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
           if (isCompletedMod) {
             processedCount++;
           } else if (hasEval && !allowsRetries) {
-            const needsSupport = mod.enableSupportQuestions && mod.supportQuestions?.length > 0;
-            if (!needsSupport || modEval.isSupport) {
+            const needsSupport = !!mod.enableSupportQuestions && (mod.supportQuestions?.length || 0) > 0;
+            if (!needsSupport || modEval?.isSupport) {
               processedCount++;
             }
           }
@@ -179,7 +181,10 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
         const newProgressPercent = Math.round((processedCount / modules.length) * 100);
 
         // Reconstruir el objeto de progreso para asegurar que se guarde todo
-        const currentProgress = enrollment.progress || {};
+        const currentProgress = (enrollment.progress || {
+          completedModules: [],
+          evaluations: {} as Record<string, EvaluationData>
+        });
         const updatedEvaluations = {
           ...(currentProgress.evaluations || {}),
           [activeModule.id]: {

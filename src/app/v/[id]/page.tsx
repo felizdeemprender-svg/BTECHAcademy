@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { createOrFindLead, REFERIDO_SESSION_KEY, LANDING_SESSION_KEY } from '@/lib/leads/manage-lead';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +26,9 @@ import {
   Users,
   Globe,
   Youtube,
-  Phone
+  Phone,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
@@ -92,6 +95,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const [studentEmail, setStudentEmail] = useState('');
   const [studentName, setStudentName] = useState('');
   const [paymentInitPoint, setPaymentInitPoint] = useState<string | null>(null);
+  const [isExpired, setIsExpired] = useState(false);
+  const [activeReferidoId, setActiveReferidoId] = useState<string | null>(null);
 
   // Auto-completar datos si el usuario está logueado
   useEffect(() => {
@@ -101,8 +106,75 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
     }
   }, [profile, isPurchaseDialogOpen, studentName, studentEmail]);
 
+  // Capturar el referidoId desde la URL y persistirlo en sessionStorage
+  useEffect(() => {
+    const refParam = searchParams.get('ref');
+    if (refParam) {
+      sessionStorage.setItem(REFERIDO_SESSION_KEY, refParam);
+      sessionStorage.setItem(LANDING_SESSION_KEY, id);
+      setActiveReferidoId(refParam);
+    } else {
+      // Recuperar de sessionStorage si ya existía (ej: el usuario navegó y volvió)
+      const stored = sessionStorage.getItem(REFERIDO_SESSION_KEY);
+      const storedLanding = sessionStorage.getItem(LANDING_SESSION_KEY);
+      if (stored && storedLanding === id) {
+        setActiveReferidoId(stored);
+      }
+    }
+  }, [searchParams, id]);
+
   const pageRef = useMemoFirebase(() => doc(db, 'salesPages', id), [db, id]);
   const { data: page, isLoading: pageLoading } = useDoc(pageRef);
+
+  // Validar vigencia de la landing (debe ir DESPUÉS de declarar `page`)
+  useEffect(() => {
+    if (!page) return;
+    const now = new Date();
+    const from: Date | null = page.activeFrom?.toDate ? page.activeFrom.toDate() : null;
+    const until: Date | null = page.activeUntil?.toDate ? page.activeUntil.toDate() : null;
+    const expired = (until !== null && now > until) || (from !== null && now < from);
+    setIsExpired(expired);
+  }, [page]);
+
+  // Registrar acceso/vista automáticamente al cargar la landing
+  useEffect(() => {
+    if (pageLoading || !page?.isActive) return;
+
+    const sessionTrackKey = `tracked_view_${id}`;
+    if (sessionStorage.getItem(sessionTrackKey)) return;
+
+    // Registrar de inmediato en sessionStorage para evitar ejecuciones concurrentes por React 18 Strict Mode
+    sessionStorage.setItem(sessionTrackKey, 'true');
+
+    const trackView = async () => {
+      try {
+        const { setDoc, increment, doc } = await import('firebase/firestore');
+        const pRef = doc(db, 'salesPages', id);
+
+        const source = searchParams.get('s') || searchParams.get('source') || 'direct';
+        const channel = searchParams.get('c') || searchParams.get('channel') || 'direct';
+
+        await setDoc(pRef, {
+          stats: {
+            totalClicks: increment(1),
+            channelBreakdown: {
+              [channel]: { clicks: increment(1) }
+            },
+            sourceBreakdown: {
+              [source]: { clicks: increment(1) }
+            }
+          }
+        }, { merge: true });
+      } catch (e) {
+        console.warn('[Tracking] Error registering page view:', e);
+        // Si falla la red, permitimos reintentar en la próxima carga
+        sessionStorage.removeItem(sessionTrackKey);
+      }
+    };
+
+    trackView();
+  }, [db, id, pageLoading, page, searchParams]);
+
 
   useEffect(() => {
     if (page?.mentorId) {
@@ -156,6 +228,24 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
     const source = searchParams.get('s') || 'direct';
     const channel = searchParams.get('c') || 'direct';
 
+    // Crear o recuperar el Lead con control anti-colisión ANTES del pago
+    let leadReferidoId = activeReferidoId || page?.referidoId || null;
+    if (page?.courseId) {
+      try {
+        await createOrFindLead(
+          db,
+          id,
+          page.courseId,
+          leadReferidoId,
+          studentEmail,
+          studentName
+        );
+      } catch (leadError) {
+        // No bloqueamos el flujo de pago si el lead falla
+        console.warn('[Lead] Error al crear lead (no crítico):', leadError);
+      }
+    }
+
     try {
       // 1. Determinar si es gratis o de pago
       if (price === 0) {
@@ -193,7 +283,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         body: JSON.stringify({
           pageId: id,
           studentEmail: studentEmail,
-          studentName: studentName
+          studentName: studentName,
+          referidoId: leadReferidoId || null
         })
       });
 
@@ -225,7 +316,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       });
 
     } catch (e: any) {
-      console.error('Detalle completo del error en compra:', e);
+      console.warn('Detalle completo del error en compra:', e);
       toast({ 
         variant: 'destructive', 
         title: 'Error al iniciar el pago', 
@@ -245,8 +336,6 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   if (!content) return <div className="flex h-screen items-center justify-center"><p className="font-bold text-muted-foreground">Contenido en proceso de generación...</p></div>;
 
-  const socials = mentorProfile?.profile?.socials || {};
-
   // Extract template design tokens
   const tokens = (content as any)?.designTokens || {};
   const primaryColor = tokens.primary || page.branding?.primaryColor || '#3B2D86';
@@ -254,6 +343,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const accentColor = tokens.accent || '#FACC15';
   const fontHeading = tokens.fontHeading || 'inherit';
   const fontBody = tokens.fontBody || 'inherit';
+  const socials = mentorProfile?.profile?.socials || {};
 
   return (
     <div
@@ -283,11 +373,35 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
             )}
             <span className="font-headline font-black text-xl tracking-tight" style={{ color: primaryColor }}>{mentorProfile?.displayName || 'Programa Pro'}</span>
           </div>
-          <Button onClick={handlePurchase} className="rounded-xl font-bold h-11 px-8 shadow-lg shadow-primary/20 font-body" style={{ backgroundColor: primaryColor }}>
+          <Button
+            onClick={handlePurchase}
+            disabled={isExpired}
+            className="rounded-xl font-bold h-11 px-8 shadow-lg shadow-primary/20 font-body disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ backgroundColor: isExpired ? '#94a3b8' : primaryColor }}
+          >
             {content.ctaText}
           </Button>
         </div>
       </nav>
+
+      {/* Banner de Vigencia Expirada / No Iniciada */}
+      {isExpired && (
+        <div className="sticky top-20 z-40 w-full bg-amber-50 border-b-2 border-amber-200 py-3 px-6">
+          <div className="container mx-auto flex items-center justify-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+            <p className="text-sm font-bold text-amber-800">
+              Esta promoción ya no está disponible.
+            </p>
+            <span className="text-xs text-amber-600 font-medium">
+              {page.activeUntil?.toDate && new Date() > page.activeUntil.toDate()
+                ? `Finalió el ${page.activeUntil.toDate().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}`
+                : page.activeFrom?.toDate && new Date() < page.activeFrom.toDate()
+                ? `Comienza el ${page.activeFrom.toDate().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}`
+                : ''}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-white relative overflow-hidden">
@@ -345,8 +459,14 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           )}
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <Button onClick={handlePurchase} size="lg" className="h-16 px-12 text-xl font-bold rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95" style={{ backgroundColor: primaryColor }}>
-              {loading ? <Loader2 className="animate-spin h-6 w-6" /> : content.ctaText}
+            <Button
+              onClick={handlePurchase}
+              disabled={isExpired}
+              size="lg"
+              className="h-16 px-12 text-xl font-bold rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{ backgroundColor: isExpired ? '#94a3b8' : primaryColor }}
+            >
+              {loading ? <Loader2 className="animate-spin h-6 w-6" /> : isExpired ? 'Promoción Finalizada' : content.ctaText}
             </Button>
           </div>
         </div>
@@ -467,8 +587,14 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
               <div className="flex items-center gap-3 text-xs font-bold"><ShieldCheck className="h-4 w-4 text-emerald-500" /> Garantía de Satisfacción 7 días</div>
               <div className="flex items-center gap-3 text-xs font-bold"><Users className="h-4 w-4 text-blue-500" /> Acceso a Comunidad Exclusiva</div>
             </div>
-            <Button onClick={handlePurchase} size="lg" className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all" style={{ backgroundColor: primaryColor }}>
-              {loading ? <Loader2 className="animate-spin h-6 w-6" /> : content.ctaText}
+            <Button
+              onClick={handlePurchase}
+              disabled={isExpired}
+              size="lg"
+              className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ backgroundColor: isExpired ? '#94a3b8' : primaryColor }}
+            >
+              {loading ? <Loader2 className="animate-spin h-6 w-6" /> : isExpired ? 'Promoción Finalizada' : content.ctaText}
             </Button>
           </Card>
         </div>

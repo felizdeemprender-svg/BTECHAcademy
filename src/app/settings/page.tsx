@@ -439,7 +439,9 @@ export default function SettingsPage() {
           <Tabs defaultValue="perfil" className="w-full">
             <TabsList className="bg-secondary/10 p-1.5 rounded-none border-b h-16 w-full justify-start gap-2 px-10">
               <TabsTrigger value="perfil" className="rounded-xl gap-2 font-bold px-6 h-11"><User className="h-4 w-4" /> Perfil</TabsTrigger>
-              <TabsTrigger value="web" className="rounded-xl gap-2 font-bold px-6 h-11 text-amber-600 bg-amber-50/50 border-amber-100"><Sparkles className="h-4 w-4" /> Web Personal</TabsTrigger>
+              {isMentorOrAdmin && (
+                <TabsTrigger value="web" className="rounded-xl gap-2 font-bold px-6 h-11 text-amber-600 bg-amber-50/50 border-amber-100"><Sparkles className="h-4 w-4" /> Web Personal</TabsTrigger>
+              )}
               <TabsTrigger value="contacto" className="rounded-xl gap-2 font-bold px-6 h-11"><Globe className="h-4 w-4" /> Contacto</TabsTrigger>
               {isMentorOrAdmin && (
                 <TabsTrigger value="marca" className="rounded-xl gap-2 font-bold px-6 h-11"><Palette className="h-4 w-4" /> Marca</TabsTrigger>

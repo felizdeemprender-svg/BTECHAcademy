@@ -22,7 +22,7 @@ export async function processSuccessfulEnrollment({
   }
 
   try {
-    const { pageId, studentEmail, mentorId } = JSON.parse(externalReference);
+    const { pageId, studentEmail, mentorId, referidoId } = JSON.parse(externalReference);
     const normalizedEmail = studentEmail.toLowerCase().trim();
 
     console.log(`[Enrollment] Procesando inscripción: ${normalizedEmail} -> Page: ${pageId}`);
@@ -93,6 +93,33 @@ export async function processSuccessfulEnrollment({
       'stats.conversions': FieldValue.increment(1),
       'stats.lastSaleAt': FieldValue.serverTimestamp()
     });
+
+    // 5. Convertir el Lead asociado (si existe) → 'converted'
+    //    Buscamos por email + courseId para encontrar el lead original.
+    try {
+      const leadsQuery = await db.collection('leads')
+        .where('studentEmail', '==', normalizedEmail)
+        .where('courseId', '==', courseId)
+        .limit(1)
+        .get();
+
+      if (!leadsQuery.empty) {
+        const leadDoc = leadsQuery.docs[0];
+        await leadDoc.ref.update({
+          status: 'converted',
+          paymentId: paymentId,
+          updatedAt: FieldValue.serverTimestamp()
+        });
+        const leadReferidoId = leadDoc.data().referidoId || referidoId || null;
+        console.log(`[Leads] Lead ${leadDoc.id} convertido exitosamente. Referido: ${leadReferidoId}`);
+      } else {
+        console.log(`[Leads] No se encontró lead previo para ${normalizedEmail} / Curso: ${courseId}. Venta directa sin lead.`);
+      }
+    } catch (leadError: any) {
+      // No propagamos el error — la inscripción ya fue exitosa.
+      // El lead puede corregirse manualmente si es necesario.
+      console.error(`[Leads] Error al convertir lead (no crítico):`, leadError.message);
+    }
 
     console.log(`[Enrollment] ÉXITO: Alumno ${normalizedEmail} inscrito en curso ${courseId}`);
     return { success: true, enrollmentId };

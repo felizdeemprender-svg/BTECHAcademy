@@ -1,30 +1,76 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
-import { useFirebase, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, deleteDoc, getDoc } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc, deleteDoc, getDocs } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { 
-  Plus, 
-  Trash2, 
-  Copy, 
-  Loader2, 
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
+  Plus,
+  Trash2,
+  Copy,
+  Loader2,
   ExternalLink,
   Layout,
-  MoreVertical,
   FileEdit,
-  DollarSign
+  Search,
+  ChevronDown,
+  ChevronRight,
+  BookOpen,
+  DollarSign,
+  Globe,
+  ShieldOff,
+  Megaphone,
+  Star,
+  Users,
+  BarChart2,
+  CheckCircle2,
+  Clock,
+  Target,
+  TrendingUp,
+  MousePointer2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { es } from 'date-fns/locale';
+
+// Determina etiqueta y color basándose en landingType (campo real) y referidoId
+function getPageTypeInfo(page: any) {
+  const lt = page.landingType as string | undefined;
+
+  if (lt === 'general') {
+    return { label: 'General', color: 'bg-blue-500/10 text-blue-700', icon: Globe };
+  }
+  if (lt === 'promocion') {
+    if (page.referidoId) {
+      return { label: 'Promo Embajador', color: 'bg-violet-500/10 text-violet-700', icon: Users };
+    }
+    return { label: 'Promo Directa', color: 'bg-amber-500/10 text-amber-700', icon: Megaphone };
+  }
+  // Pages del builder de campañas (type !== 'landing_only')
+  if (page.type === 'landing_only') {
+    return { label: 'Pack x3', color: 'bg-emerald-500/10 text-emerald-700', icon: Star };
+  }
+  return { label: 'Pack Multimedia', color: 'bg-slate-500/10 text-slate-600', icon: Layout };
+}
 
 export default function SalesLandingsDashboardPage() {
   const { profile } = useAuth();
@@ -32,157 +78,667 @@ export default function SalesLandingsDashboardPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [openCourses, setOpenCourses] = useState<string[]>([]);
+  const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Estados para estadísticas detalladas de una landing seleccionada
+  const [selectedStatsPage, setSelectedStatsPage] = useState<any | null>(null);
+  const [statsLeads, setStatsLeads] = useState<any[]>([]);
+  const [statsEnrollments, setStatsEnrollments] = useState<any[]>([]);
+  const [isLoadingStatsData, setIsLoadingStatsData] = useState(false);
+
+  // Consulta de todas las sales pages del mentor
   const pagesQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
-    // Por ahora listamos todas las salesPages, luego podemos filtrar por un flag si es necesario
     return query(collection(db, 'salesPages'), where('mentorId', '==', profile.uid));
   }, [db, profile?.uid]);
   const { data: rawPages, isLoading } = useCollection(pagesQuery);
 
-  const pages = useMemo(() => {
-    if (!rawPages) return null;
-    return [...rawPages]
-      .filter(p => p.type === 'landing_only')
-      .sort((a, b) => {
-      const dateA = a.createdAt?.toDate?.() || new Date(0);
-      const dateB = b.createdAt?.toDate?.() || new Date(0);
-      return dateB.getTime() - dateA.getTime();
-    });
-  }, [rawPages]);
+  // Consulta de cursos del mentor para nombres
+  const coursesQuery = useMemoFirebase(() => {
+    if (!profile?.uid) return null;
+    return query(collection(db, 'courses'), where('mentorId', '==', profile.uid));
+  }, [db, profile?.uid]);
+  const { data: courses } = useCollection(coursesQuery);
 
-  const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const { storage } = useFirebase();
+  // Consulta de referidos del mentor para nombres de embajadores
+  const referidosQuery = useMemoFirebase(() => {
+    if (!profile?.uid) return null;
+    return query(collection(db, 'mentorInfluencers', profile.uid, 'referidos'));
+  }, [db, profile?.uid]);
+  const { data: referidos } = useCollection(referidosQuery);
+
+  const referidosMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    referidos?.forEach((r: any) => { map[r.id] = r.displayName || r.email || 'Embajador'; });
+    return map;
+  }, [referidos]);
+
+  // Consulta global de todos los leads asociados a las landings del mentor (por lotes de 30)
+  const [allLeads, setAllLeads] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!rawPages || rawPages.length === 0) {
+      setAllLeads([]);
+      return;
+    }
+
+    const fetchAllLeads = async () => {
+      try {
+        const pageIds = rawPages.map((p: any) => p.id);
+        const chunks = [];
+        for (let i = 0; i < pageIds.length; i += 30) {
+          chunks.push(pageIds.slice(i, i + 30));
+        }
+
+        const allFetchedLeads: any[] = [];
+        for (const chunk of chunks) {
+          const q = query(collection(db, 'leads'), where('landingId', 'in', chunk));
+          const snap = await getDocs(q);
+          snap.docs.forEach(doc => {
+            allFetchedLeads.push({ id: doc.id, ...doc.data() });
+          });
+        }
+        setAllLeads(allFetchedLeads);
+      } catch (err) {
+        console.error("Error al cargar todos los leads para el panel:", err);
+      }
+    };
+
+    fetchAllLeads();
+  }, [db, rawPages]);
+
+  const leadsByLanding = useMemo(() => {
+    const map: Record<string, number> = {};
+    allLeads.forEach((l: any) => {
+      if (!l.landingId) return;
+      map[l.landingId] = (map[l.landingId] || 0) + 1;
+    });
+    return map;
+  }, [allLeads]);
+
+  // Carga reactiva de detalles de la landing seleccionada (leads e inscripciones)
+  useEffect(() => {
+    if (!selectedStatsPage?.id) {
+      setStatsLeads([]);
+      setStatsEnrollments([]);
+      return;
+    }
+
+    const fetchStatsData = async () => {
+      setIsLoadingStatsData(true);
+      try {
+        // Consultar leads específicos de esta landing
+        const qLeads = query(
+          collection(db, 'leads'),
+          where('landingId', '==', selectedStatsPage.id)
+        );
+        const leadsSnap = await getDocs(qLeads);
+        const leadsData = leadsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        leadsData.sort((a: any, b: any) => {
+          const tA = a.createdAt?.seconds || 0;
+          const tB = b.createdAt?.seconds || 0;
+          return tB - tA;
+        });
+        setStatsLeads(leadsData);
+
+        // Consultar inscripciones (ventas) específicas de esta landing
+        const qEnrollments = query(
+          collection(db, 'enrollments'),
+          where('metadata.pageId', '==', selectedStatsPage.id)
+        );
+        const enrollmentsSnap = await getDocs(qEnrollments);
+        const enrollmentsData = enrollmentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        enrollmentsData.sort((a: any, b: any) => {
+          const tA = a.enrolledAt?.seconds || 0;
+          const tB = b.enrolledAt?.seconds || 0;
+          return tB - tA;
+        });
+        setStatsEnrollments(enrollmentsData);
+      } catch (err) {
+        console.error("Error al cargar las estadísticas de la landing:", err);
+      } finally {
+        setIsLoadingStatsData(false);
+      }
+    };
+
+    fetchStatsData();
+  }, [db, selectedStatsPage?.id]);
+
+  const courseMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    courses?.forEach((c: any) => { map[c.id] = c.title; });
+    return map;
+  }, [courses]);
+
+  // Agrupar landings por curso
+  const groupedByCourse = useMemo(() => {
+    if (!rawPages) return null;
+
+    const filtered = rawPages.filter((p: any) => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        p.title?.toLowerCase().includes(term) ||
+        courseMap[p.courseId]?.toLowerCase().includes(term) ||
+        p.type?.toLowerCase().includes(term)
+      );
+    });
+
+    const groups: Record<string, { courseName: string; pages: any[] }> = {};
+    filtered.forEach((page: any) => {
+      const cId = page.courseId || '__sin_curso__';
+      const cName = courseMap[cId] || (cId === '__sin_curso__' ? 'Sin Curso Asignado' : `Curso ${cId.substring(0, 6)}…`);
+      if (!groups[cId]) groups[cId] = { courseName: cName, pages: [] };
+      groups[cId].pages.push(page);
+    });
+
+    // Ordenar páginas dentro de cada grupo por fecha desc
+    Object.values(groups).forEach(g => {
+      g.pages.sort((a: any, b: any) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+    });
+
+    return groups;
+  }, [rawPages, courseMap, searchTerm]);
+
+  const toggleCourse = (id: string) => {
+    setOpenCourses(prev =>
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
+  };
 
   const handleCopyLink = (id: string, variant: number) => {
     const url = `${window.location.origin}/v/${id}?v=${variant}`;
     navigator.clipboard.writeText(url);
-    toast({ title: 'Enlace Copiado', description: `URL de variante ${variant + 1} lista para compartir.` });
+    toast({ title: 'Enlace copiado', description: `URL de variante ${variant + 1} lista para compartir.` });
   };
 
   const handleDelete = async (e: React.BaseSyntheticEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (confirmDeleteId !== id) {
       setConfirmDeleteId(id);
       setTimeout(() => setConfirmDeleteId(current => current === id ? null : current), 3000);
       toast({ title: '¿Confirmar borrado?', description: 'Pulsa de nuevo para eliminar permanentemente.' });
       return;
     }
-    
     setConfirmDeleteId(null);
     setDeletingIds(prev => ({ ...prev, [id]: true }));
-    
     try {
-      const pageRef = doc(db, 'salesPages', id);
-      // ... Lógica de borrado simplificada o completa igual que la original
-      await deleteDoc(pageRef);
-      toast({ title: 'Landing eliminada', description: 'Los datos han sido borrados con éxito.' });
+      await deleteDoc(doc(db, 'salesPages', id));
+      toast({ title: 'Landing eliminada' });
     } catch (e: any) {
-      console.error("[Delete Error]", e);
       toast({ variant: 'destructive', title: 'Error al borrar', description: e.message });
     } finally {
       setDeletingIds(prev => ({ ...prev, [id]: false }));
     }
   };
 
+  const totalCount = rawPages?.length ?? 0;
+  const courseCount = groupedByCourse ? Object.keys(groupedByCourse).length : 0;
+
   return (
     <DashboardLayout>
-      <div className="space-y-10 pb-20">
+      <div className="space-y-8 pb-20">
+
+        {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Landings de Venta</h1>
-            <p className="text-muted-foreground text-lg font-medium">Gestiona las páginas de venta independientes para tus cursos.</p>
+            <p className="text-muted-foreground text-lg font-medium">
+              {totalCount} landing{totalCount !== 1 ? 's' : ''} en {courseCount} curso{courseCount !== 1 ? 's' : ''}
+            </p>
           </div>
-          <Button 
-            onClick={() => router.push('/mentoria/marketing/landings/build')} 
-            className="h-14 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2 bg-accent hover:bg-accent/90 transition-all"
+          <Button
+            onClick={() => router.push('/mentoria/marketing/landings/build')}
+            className="h-12 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2 bg-primary hover:bg-primary/90 transition-all"
           >
-            <Plus className="h-5 w-5" /> Nueva Landing de Venta
+            <Plus className="h-4 w-4" /> Nueva Landing
           </Button>
         </header>
 
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            [1, 2, 3].map(i => <div key={i} className="h-72 bg-muted animate-pulse rounded-[2.5rem]" />)
-          ) : pages?.length === 0 ? (
-            <div className="col-span-full py-24 text-center bg-secondary/10 rounded-[3rem] border-2 border-dashed">
-              <Layout className="h-16 w-16 text-muted-foreground/30 mx-auto mb-6" />
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-slate-600">No hay landings creadas</h3>
-                <p className="text-muted-foreground max-w-sm mx-auto">Crea tu primera página de venta independiente para empezar a comercializar.</p>
-              </div>
-              <Button onClick={() => router.push('/mentoria/marketing/landings/build')} variant="link" className="font-bold text-accent mt-4">Crear Landing ahora</Button>
-            </div>
-          ) : pages?.map((page) => (
-            <Card key={page.id} className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white group hover:shadow-2xl transition-all duration-500 flex flex-col">
-              <div className="p-8 space-y-6 flex-1">
-                <div className="flex justify-between items-start">
-                  <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-none px-3 py-1 font-bold text-[10px] uppercase tracking-widest">
-                    Landing Pack (x3)
-                  </Badge>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{page.createdAt?.toDate ? format(page.createdAt.toDate(), 'dd/MM/yyyy') : '-'}</span>
+        {/* Buscador */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por curso, título o tipo…"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="pl-11 h-12 rounded-2xl bg-white border-border/50 shadow-sm font-medium"
+          />
+        </div>
+
+        {/* Contenido */}
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-16 bg-muted animate-pulse rounded-2xl" />
+            ))}
+          </div>
+        ) : !groupedByCourse || Object.keys(groupedByCourse).length === 0 ? (
+          <div className="py-24 text-center bg-secondary/5 rounded-3xl border-2 border-dashed">
+            <Layout className="h-14 w-14 text-muted-foreground/30 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-600 mb-1">
+              {searchTerm ? 'Sin resultados' : 'No hay landings creadas'}
+            </h3>
+            <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+              {searchTerm
+                ? `No encontramos landings que coincidan con "${searchTerm}"`
+                : 'Crea tu primera landing de venta para empezar a comercializar tus cursos.'}
+            </p>
+            {!searchTerm && (
+              <Button
+                onClick={() => router.push('/mentoria/marketing/landings/build')}
+                variant="link"
+                className="font-bold text-primary mt-3"
+              >
+                Crear Landing ahora
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {Object.entries(groupedByCourse).map(([courseId, group]) => {
+              const isOpen = openCourses.includes(courseId);
+              return (
+                <div key={courseId} className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+                  {/* Cabecera del grupo / curso */}
+                  <button
+                    onClick={() => toggleCourse(courseId)}
+                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-slate-800 text-sm leading-tight">{group.courseName}</p>
+                        <p className="text-[11px] text-muted-foreground font-medium">
+                          {group.pages.length} landing{group.pages.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {/* Resumen de tipos */}
+                      <div className="hidden sm:flex gap-1.5">
+                        {Array.from(new Set(group.pages.map((p: any) => p.landingType || p.type))).map((lt: any) => {
+                          const info = getPageTypeInfo({ landingType: lt, type: lt, referidoId: null });
+                          return (
+                            <span key={lt} className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', info.color)}>
+                              {info.label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      {isOpen
+                        ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        : <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      }
+                    </div>
+                  </button>
+
+                  {/* Filas de landings */}
+                  {isOpen && (
+                    <div className="border-t border-border/40">
+                      {/* Cabecera de tabla */}
+                      <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-2 bg-slate-50 border-b border-border/30">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Landing</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-24 text-center hidden sm:block">Tipo</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-16 text-center hidden md:block">Inicio</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-16 text-center hidden md:block">Fin</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-32 text-center hidden md:block">Embajador</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-20 text-center hidden md:block">Precio</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-20 text-center hidden lg:block">Creada</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-28 text-right">Acciones</span>
+                      </div>
+
+                      {group.pages.map((page: any) => {
+                        const typeInfo = getPageTypeInfo(page);
+                        const TypeIcon = typeInfo.icon;
+                        const isConfirmDelete = confirmDeleteId === page.id;
+                        const isDeleting = deletingIds[page.id];
+                        const variantsCount = page.aiContent?.landings?.length || (page.aiContent?.landing ? 1 : 0);
+
+                        return (
+                          <div
+                            key={page.id}
+                            className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-3.5 border-b border-border/20 last:border-b-0 hover:bg-slate-50/50 transition-colors"
+                          >
+                            {/* Nombre y variantes */}
+                            <div className="min-w-0">
+                              <p className="font-bold text-sm text-slate-800 truncate leading-tight">{page.title || 'Sin título'}</p>
+                              {variantsCount > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                  {Array.from({ length: variantsCount }, (_, v) => {
+                                    const label = page.aiContent?.landings?.[v]?.marketingName || `Variante ${v + 1}`;
+                                    return (
+                                      <button
+                                        key={v}
+                                        onClick={() => window.open(`/v/${page.id}?v=${v}`, '_blank')}
+                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 hover:bg-primary/10 hover:text-primary text-slate-500 transition-colors"
+                                      >
+                                        <ExternalLink className="h-2.5 w-2.5" />
+                                        {label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Tipo */}
+                            <div className="w-24 justify-center hidden sm:flex">
+                              <span className={cn('flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full', typeInfo.color)}>
+                                <TypeIcon className="h-3 w-3" />
+                                {typeInfo.label}
+                              </span>
+                            </div>
+
+                            {/* Inicio */}
+                            <div className="w-16 text-center hidden md:block">
+                              <span className="text-[10px] font-bold text-slate-600">
+                                {page.activeFrom?.toDate 
+                                  ? format(page.activeFrom.toDate(), 'dd/MM/yy') 
+                                  : page.activeFrom?.seconds 
+                                    ? format(new Date(page.activeFrom.seconds * 1000), 'dd/MM/yy') 
+                                    : '—'}
+                              </span>
+                            </div>
+
+                            {/* Fin */}
+                            <div className="w-16 text-center hidden md:block">
+                              <span className="text-[10px] font-bold text-slate-600">
+                                {page.activeUntil?.toDate 
+                                  ? format(page.activeUntil.toDate(), 'dd/MM/yy') 
+                                  : page.activeUntil?.seconds 
+                                    ? format(new Date(page.activeUntil.seconds * 1000), 'dd/MM/yy') 
+                                    : '—'}
+                              </span>
+                            </div>
+
+                            {/* Embajador */}
+                            <div className="w-32 text-center hidden md:block truncate px-2">
+                              <span className="text-xs font-bold text-violet-600 truncate">
+                                {page.referidoId ? referidosMap[page.referidoId] || 'ID: ' + page.referidoId.substring(0, 6) : '—'}
+                              </span>
+                            </div>
+
+                            {/* Precio */}
+                            <div className="w-20 text-center hidden md:flex items-center justify-center gap-1">
+                              {page.price != null ? (
+                                <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
+                                  <DollarSign className="h-3 w-3" />
+                                  {page.price === 0 ? 'Gratis' : page.price.toLocaleString('es-AR')}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </div>
+
+                            {/* Fecha */}
+                            <div className="w-20 text-center hidden lg:block">
+                              <span className="text-[10px] font-bold text-muted-foreground">
+                                {page.createdAt?.toDate ? format(page.createdAt.toDate(), 'dd/MM/yy') : '—'}
+                              </span>
+                            </div>
+
+                            {/* Acciones */}
+                            <div className="w-28 flex items-center justify-end gap-1">
+                              {/* Ver Estadísticas */}
+                              <button
+                                onClick={() => setSelectedStatsPage(page)}
+                                title="Ver Estadísticas"
+                                className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                              >
+                                <BarChart2 className="h-3.5 w-3.5" />
+                              </button>
+                              {/* Editar */}
+                              <button
+                                onClick={() => router.push(`/mentoria/marketing/landings/build?id=${page.id}`)}
+                                title="Editar"
+                                className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                              >
+                                <FileEdit className="h-3.5 w-3.5" />
+                              </button>
+                              {/* Eliminar */}
+                              <button
+                                onClick={(e) => handleDelete(e, page.id)}
+                                title={isConfirmDelete ? '¿Confirmar?' : 'Eliminar'}
+                                className={cn(
+                                  'h-8 w-8 rounded-xl flex items-center justify-center transition-colors',
+                                  isConfirmDelete
+                                    ? 'bg-red-500 text-white animate-pulse'
+                                    : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
+                                )}
+                              >
+                                {isDeleting
+                                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  : <Trash2 className="h-3.5 w-3.5" />
+                                }
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors line-clamp-1">{page.title}</h3>
-                  <div className="flex items-center gap-2 text-emerald-600 font-bold">
-                    <DollarSign className="h-4 w-4" />
-                    <span>{page.price ? page.price.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }) : 'Consultar'}</span>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Modal de Detalle de Estadísticas */}
+        <Dialog open={!!selectedStatsPage} onOpenChange={(open) => !open && setSelectedStatsPage(null)}>
+          <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto rounded-3xl p-6 border-none shadow-2xl bg-white/95 backdrop-blur-md">
+            <DialogHeader className="pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                  <BarChart2 className="h-6 w-6 text-indigo-600 animate-pulse" />
+                </div>
+                <div className="text-left font-sans">
+                  <DialogTitle className="text-2xl font-black text-slate-800 tracking-tight">
+                    Estadísticas de la Landing
+                  </DialogTitle>
+                  <DialogDescription className="text-slate-500 font-medium line-clamp-1">
+                    {selectedStatsPage?.title || 'Sin título'}
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            {isLoadingStatsData ? (
+              <div className="py-20 flex flex-col items-center justify-center gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                <p className="text-sm text-slate-500 font-semibold">Cargando métricas de rendimiento...</p>
+              </div>
+            ) : (
+              <div className="space-y-6 pt-4 font-sans">
+                {/* Metric Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  {/* Accesos */}
+                  <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-2xl p-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 text-indigo-600 group-hover:scale-110 transition-transform">
+                      <MousePointer2 className="h-16 w-16" />
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-indigo-400">Accesos (Clics)</p>
+                    <p className="text-3xl font-black text-slate-800 mt-1">
+                      {Math.max(selectedStatsPage?.stats?.totalClicks || 0, statsLeads.length, selectedStatsPage?.stats?.conversions || 0).toLocaleString()}
+                    </p>
+                  </div>
+
+                  {/* Leads */}
+                  <div className="bg-violet-50/50 border border-violet-100/50 rounded-2xl p-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 text-violet-600 group-hover:scale-110 transition-transform">
+                      <Users className="h-16 w-16" />
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-violet-400">Leads Obtenidos</p>
+                    <p className="text-3xl font-black text-slate-800 mt-1">
+                      {statsLeads.length.toLocaleString()}
+                    </p>
+                  </div>
+
+                  {/* Ventas */}
+                  <div className="bg-emerald-50/50 border border-emerald-100/50 rounded-2xl p-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 text-emerald-600 group-hover:scale-110 transition-transform">
+                      <Target className="h-16 w-16" />
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Ventas Realizadas</p>
+                    <p className="text-3xl font-black text-slate-800 mt-1">
+                      {(selectedStatsPage?.stats?.conversions || 0).toLocaleString()}
+                    </p>
+                  </div>
+
+                  {/* Tasa de conversión */}
+                  <div className="bg-amber-50/50 border border-amber-100/50 rounded-2xl p-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 text-amber-600 group-hover:scale-110 transition-transform">
+                      <TrendingUp className="h-16 w-16" />
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-amber-400">Conversion Rate (CR)</p>
+                    <p className="text-3xl font-black text-slate-800 mt-1">
+                      {(() => {
+                        const clicks = Math.max(selectedStatsPage?.stats?.totalClicks || 0, statsLeads.length, selectedStatsPage?.stats?.conversions || 0);
+                        const convs = selectedStatsPage?.stats?.conversions || 0;
+                        return clicks > 0 ? `${((convs / clicks) * 100).toFixed(1)}%` : '0.0%';
+                      })()}
+                    </p>
                   </div>
                 </div>
-                
-                <div className="space-y-3 pt-4 border-t">
-                  {[0, 1, 2].map(v => {
-                    const landing = (page.aiContent as any)?.landings?.[v];
-                    const label = landing?.marketingName || `Variante ${v + 1}`;
-                    return (
-                      <div key={v} className="flex gap-2">
-                        <Button 
-                          onClick={() => window.open(`/v/${page.id}?v=${v}`, '_blank')} 
-                          variant="outline" 
-                          className="flex-1 h-10 rounded-xl font-bold text-[10px] uppercase gap-2 border-slate-200 bg-white hover:bg-slate-50"
-                        >
-                          <ExternalLink className="h-3 w-3" /> {label}
-                        </Button>
-                        <Button 
-                          onClick={() => handleCopyLink(page.id, v)} 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-10 w-10 rounded-xl border"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
 
-              <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
-                <p className="text-[10px] font-bold text-muted-foreground">ID: {page.id.substring(0, 8)}...</p>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 rounded-full text-red-500 hover:bg-red-50"
-                    onClick={(e) => handleDelete(e, page.id)}
-                  >
-                    {deletingIds[page.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 rounded-full text-slate-400"
-                    onClick={() => router.push(`/mentoria/marketing/landings/build?id=${page.id}`)}
-                  >
-                    <FileEdit className="h-4 w-4" />
-                  </Button>
+                {/* Tabs for details */}
+                <Tabs defaultValue="leads" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-xl">
+                    <TabsTrigger value="leads" className="rounded-lg font-bold text-sm">
+                      Historial de Leads ({statsLeads.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="sales" className="rounded-lg font-bold text-sm">
+                      Ventas / Inscritos ({statsEnrollments.length})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Leads Tab Content */}
+                  <TabsContent value="leads" className="mt-4">
+                    <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
+                      <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                        <table className="w-full text-sm text-left">
+                          <thead className="text-[10px] text-slate-500 uppercase bg-slate-50 font-black tracking-widest border-b border-slate-100 sticky top-0 z-10">
+                            <tr>
+                              <th className="px-5 py-3">Estudiante</th>
+                              <th className="px-5 py-3">Fecha</th>
+                              <th className="px-5 py-3 text-right">Estado</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {statsLeads.length === 0 ? (
+                              <tr>
+                                <td colSpan={3} className="px-5 py-10 text-center text-slate-400 italic">
+                                  Aún no hay leads registrados para esta landing.
+                                </td>
+                              </tr>
+                            ) : (
+                              statsLeads.map((lead: any) => {
+                                const date = lead.createdAt?.seconds 
+                                  ? format(new Date(lead.createdAt.seconds * 1000), "dd MMM yyyy, HH:mm", { locale: es })
+                                  : 'Reciente';
+
+                                return (
+                                  <tr key={lead.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-5 py-3.5">
+                                      <div className="font-bold text-slate-800">{lead.studentName}</div>
+                                      <div className="text-xs text-slate-500">{lead.studentEmail}</div>
+                                    </td>
+                                    <td className="px-5 py-3.5 text-slate-500 text-xs font-semibold">
+                                      {date}
+                                    </td>
+                                    <td className="px-5 py-3.5 text-right">
+                                      {lead.status === 'converted' ? (
+                                        <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border-none font-bold text-[10px]">
+                                          <CheckCircle2 className="h-3 w-3 mr-1" /> Convertido
+                                        </Badge>
+                                      ) : (
+                                        <Badge className="bg-amber-50 text-amber-600 hover:bg-amber-50 border-none font-bold text-[10px]">
+                                          <Clock className="h-3 w-3 mr-1" /> Pendiente
+                                        </Badge>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Sales Tab Content */}
+                  <TabsContent value="sales" className="mt-4">
+                    <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
+                      <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                        <table className="w-full text-sm text-left">
+                          <thead className="text-[10px] text-slate-500 uppercase bg-slate-50 font-black tracking-widest border-b border-slate-100 sticky top-0 z-10">
+                            <tr>
+                              <th className="px-5 py-3">Alumno</th>
+                              <th className="px-5 py-3">Fecha Compra</th>
+                              <th className="px-5 py-3">ID Pago</th>
+                              <th className="px-5 py-3 text-right">Estado</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {statsEnrollments.length === 0 ? (
+                              <tr>
+                                <td colSpan={4} className="px-5 py-10 text-center text-slate-400 italic">
+                                  Aún no hay inscripciones registradas para esta landing.
+                                </td>
+                              </tr>
+                            ) : (
+                              statsEnrollments.map((enroll: any) => {
+                                const date = enroll.enrolledAt?.seconds 
+                                  ? format(new Date(enroll.enrolledAt.seconds * 1000), "dd MMM yyyy, HH:mm", { locale: es })
+                                  : 'Reciente';
+
+                                return (
+                                  <tr key={enroll.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="px-5 py-3.5">
+                                      <div className="font-bold text-slate-800">{enroll.inviteEmail}</div>
+                                      <div className="text-[10px] text-slate-400">ID: {enroll.studentId}</div>
+                                    </td>
+                                    <td className="px-5 py-3.5 text-slate-500 text-xs font-semibold">
+                                      {date}
+                                    </td>
+                                    <td className="px-5 py-3.5 text-xs font-mono text-slate-500">
+                                      {enroll.paymentId || 'N/A'}
+                                    </td>
+                                    <td className="px-5 py-3.5 text-right">
+                                      <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-50 border-none font-bold text-[10px]">
+                                        {enroll.status === 'active' ? 'Activo' : enroll.status}
+                                      </Badge>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                {/* Nota de advertencia sobre la permanencia de los datos al borrar landings */}
+                <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-100 text-xs text-amber-800 leading-relaxed font-medium">
+                  ⚠️ <strong>Nota de Integridad de Datos:</strong> Los leads y alumnos registrados son propiedad exclusiva del tutor de forma global. La eliminación de esta landing no afectará a los leads ni a los alumnos generados, los cuales permanecerán seguros en tu base de datos para no interrumpir su progreso.
                 </div>
               </div>
-            </Card>
-          ))}
-        </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

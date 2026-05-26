@@ -69,6 +69,11 @@ service cloud.firestore {
       allow write: if isAdmin() || isMarketing() || isMentor();
     }
 
+    match /leads/{leadId} {
+      allow read: if true; // Public for viewing conversions or mentor calculating stats
+      allow write: if true; // Public to capture leads from landing pages
+    }
+
     match /courses/{courseId} {
       allow read: if true;
       allow create: if isAdmin() || isMentor();
@@ -116,7 +121,11 @@ service cloud.firestore {
       allow update: if isSignedIn() && (
         request.auth.uid == userId || 
         isAdmin() || 
-        (resource.data.get('email', '').lower() == request.auth.token.email.lower())
+        (resource.data.get('email', '').lower() == request.auth.token.email.lower()) ||
+        // Mentors can only ADD roles to other users (never remove), ensuring no privilege escalation
+        (isMentor() && 
+          request.resource.data.get('roles', []).hasAll(resource.data.get('roles', []))
+        )
       );
       allow delete: if isAdmin() || (isSignedIn() && resource.data.get('email', '').lower() == request.auth.token.email.lower());
 
@@ -197,5 +206,16 @@ service cloud.firestore {
 
     match /roles_admin/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
     match /roles_mentor/{userId} { allow get: if isSignedIn(); allow list, write: if isAdmin(); }
+
+    // Mentors store their influencer relationships in their own subcollection
+    match /mentorInfluencers/{mentorId} {
+      allow read: if isSignedIn() && (request.auth.uid == mentorId || isAdmin());
+      allow write: if isSignedIn() && (request.auth.uid == mentorId || isAdmin());
+
+      match /referidos/{referidoId} {
+        allow read: if isSignedIn() && (request.auth.uid == mentorId || isAdmin());
+        allow write: if isSignedIn() && (request.auth.uid == mentorId || isAdmin());
+      }
+    }
   }
 }

@@ -95,8 +95,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     return () => unsubscribe(); // Cleanup
   }, [auth]); // Depends on the auth instance
 
-  // Memoize the context value
-  const contextValue = useMemo((): FirebaseContextState => {
+  // Memoize the stable services separately from the user auth state
+  // This prevents re-creating firestore/auth references on every auth state change
+  const stableServices = useMemo(() => {
     const servicesAvailable = !!(firebaseApp && firestore && auth && storage);
     return {
       areServicesAvailable: servicesAvailable,
@@ -104,11 +105,16 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       firestore: servicesAvailable ? firestore : null,
       auth: servicesAvailable ? auth : null,
       storage: servicesAvailable ? storage : null,
-      user: userAuthState.user,
-      isUserLoading: userAuthState.isUserLoading,
-      userError: userAuthState.userError,
     };
-  }, [firebaseApp, firestore, auth, storage, userAuthState]);
+  }, [firebaseApp, firestore, auth, storage]); // NOTE: does NOT include userAuthState
+
+  // Memoize the full context value including user auth state
+  const contextValue = useMemo((): FirebaseContextState => ({
+    ...stableServices,
+    user: userAuthState.user,
+    isUserLoading: userAuthState.isUserLoading,
+    userError: userAuthState.userError,
+  }), [stableServices, userAuthState]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>

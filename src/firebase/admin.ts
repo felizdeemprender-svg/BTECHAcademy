@@ -23,7 +23,34 @@ export function getAdminApp() {
   // En Cloud Functions o App Hosting, initializeApp() sin argumentos usa 
   // automáticamente las credenciales por defecto del entorno (ADC).
   console.log('[Firebase Admin] Inicializando con "Default Initialization" (Producción).');
-  return initializeApp();
+  
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || firebaseConfig.projectId;
+  if (!process.env.GCLOUD_PROJECT && projectId) {
+    process.env.GCLOUD_PROJECT = projectId;
+  }
+  if (!process.env.GOOGLE_CLOUD_PROJECT && projectId) {
+    process.env.GOOGLE_CLOUD_PROJECT = projectId;
+  }
+  
+  return initializeApp({
+    projectId: projectId
+  });
+}
+
+export function hasAdminCredentials(): boolean {
+  const serviceAccountPath = path.join(process.cwd(), 'service-account.json');
+
+  // En local, solo consideramos Admin válido si hay un service-account explícito.
+  if (fs.existsSync(serviceAccountPath)) {
+    return true;
+  }
+
+  // En producción, las credenciales de ADC están garantizadas por el entorno.
+  if (process.env.NODE_ENV === 'production') {
+    return true;
+  }
+
+  return false;
 }
 
 export function getAdminFirestore() {
