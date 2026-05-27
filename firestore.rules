@@ -117,7 +117,12 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin()); 
+      allow create: if isSignedIn() && (
+        request.auth.uid == userId || 
+        isAdmin() ||
+        // Mentors can pre-register students who don't have an account yet
+        (isMentor() && request.resource.data.get('createdVia', '') == 'manual_enrollment')
+      );
       allow update: if isSignedIn() && (
         request.auth.uid == userId || 
         isAdmin() || 

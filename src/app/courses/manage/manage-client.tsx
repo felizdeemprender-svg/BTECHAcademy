@@ -727,8 +727,11 @@ export default function ManageCoursesClient() {
         }
       }
 
-      // 2. Identificar o pre-registrar al alumno
-      let studentId = '';
+      // 2. Identificar al alumno si ya existe; si no, usar email como referencia
+      // NOTA: No se crea perfil provisional aquí porque las reglas de Firestore
+      // solo permiten que el propio usuario o un admin creen documentos en /users/.
+      // El perfil se creará automáticamente cuando el alumno entre con Google.
+      let studentId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_'); // fallback
       let studentName = normalizedEmail.split('@')[0];
       
       const userQ = query(collection(db, 'users'), where('email', '==', normalizedEmail));
@@ -737,23 +740,9 @@ export default function ManageCoursesClient() {
       if (!userSnap.empty) {
         studentId = userSnap.docs[0].id;
         studentName = userSnap.docs[0].data().displayName || studentName;
+        console.log('✅ Alumno encontrado en Firestore:', studentId);
       } else {
-        console.log('🔍 PASO 2 - Creando perfil provisional de alumno...');
-        
-        const tempId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
-        studentId = tempId;
-        
-        const newUser = {
-          email: normalizedEmail,
-          displayName: studentName,
-          roles: ['alumno'],
-          isActive: true,
-          createdVia: 'manual_enrollment',
-          createdAt: serverTimestamp()
-        };
-        
-        await setDoc(doc(db, 'users', studentId), newUser);
-        toast({ title: 'Perfil pre-registrado', description: 'El alumno completará su alta al entrar con Google.' });
+        console.log('ℹ️ Alumno nuevo, se usará email como referencia hasta su primer login.');
       }
 
       // 3. Crear inscripción (Carga Directa vs Invitación)
