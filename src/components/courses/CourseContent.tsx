@@ -89,16 +89,16 @@ export function CourseContent({
                     <Download className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{m.title || 'Recurso'}</p>
+                    <p className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{m.title || m.name || 'Recurso'}</p>
                     <p className="text-[10px] text-muted-foreground uppercase font-medium">Material de Apoyo</p>
                   </div>
                 </div>
                 <a 
-                    href={m.url || '#'}
+                    href={m.url || m.content || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => {
-                      if (!m.url) {
+                      if (!m.url && !m.content) {
                         e.preventDefault();
                         toast({ variant: 'destructive', title: 'Error', description: 'El enlace del recurso no está disponible.' });
                       }
