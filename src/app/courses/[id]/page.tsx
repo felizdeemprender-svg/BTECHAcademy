@@ -215,8 +215,10 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
         }
       }
       setShowQuiz(false);
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Error en evaluación' });
+    } catch (e: any) {
+      const msg = e?.message || 'No se pudo completar la evaluación. Intenta de nuevo.';
+      console.error('[Quiz] Error al evaluar:', e);
+      toast({ variant: 'destructive', title: 'Error en evaluación', description: msg });
     } finally {
       setIsEvaluating(false);
     }

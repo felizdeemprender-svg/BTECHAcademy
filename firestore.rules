@@ -199,6 +199,13 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Intentos de evaluación de quiz (logs inmutables)
+    match /quiz_attempts/{attemptId} {
+      allow read: if isSignedIn() && (isAdmin() || isMentor() || resource.data.studentId == request.auth.uid);
+      allow create: if isSignedIn(); // Alumnos y tutores pueden registrar intentos
+      allow update, delete: if isAdmin(); // Solo admin puede modificar
+    }
+
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if isAdmin();

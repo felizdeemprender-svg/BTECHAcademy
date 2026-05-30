@@ -2,9 +2,18 @@
 /**
  * @fileOverview Un flujo de Genkit para evaluar el desempeño de un alumno en un examen.
  * Analiza las respuestas del alumno en comparación con las respuestas correctas y proporciona feedback pedagógico.
+ * NOTA: Este flujo usa la instancia interna de Genkit (sin proxy de créditos) porque es un
+ * servicio al alumno que no debe cobrar saldo al mentor/tutor.
  */
 
-import { ai } from '@/ai/genkit';
+// Usamos la instancia interna para NO pasar por el proxy de créditos (no cobrar al tutor)
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
+
+const ai = genkit({
+  plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY })],
+  model: 'googleai/gemini-2.5-flash',
+} as any);
 import { z } from 'genkit';
 
 const EvaluationInputSchema = z.object({
