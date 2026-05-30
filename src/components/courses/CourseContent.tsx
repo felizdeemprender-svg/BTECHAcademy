@@ -93,14 +93,20 @@ export function CourseContent({
                     <p className="text-[10px] text-muted-foreground uppercase font-medium">Material de Apoyo</p>
                   </div>
                 </div>
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 rounded-lg text-[10px] font-bold text-primary"
-                    onClick={() => handleDownload(m.url, m.title)}
+                <a 
+                    href={m.url || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      if (!m.url) {
+                        e.preventDefault();
+                        toast({ variant: 'destructive', title: 'Error', description: 'El enlace del recurso no está disponible.' });
+                      }
+                    }}
+                    className="h-8 px-3 rounded-lg text-[10px] font-bold text-primary hover:bg-primary/10 flex items-center justify-center transition-colors"
                 >
                     Descargar
-                </Button>
+                </a>
               </div>
             ))}
           </div>

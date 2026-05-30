@@ -99,6 +99,7 @@ service cloud.firestore {
     match /enrollments/{enrollmentId} {
       allow read, list: if isSignedIn() && (
         request.auth.uid == resource.data.studentId || 
+        ("inviteEmail" in resource.data && resource.data.inviteEmail == request.auth.token.email) ||
         isAdmin() || 
         isMentor() ||
         (exists(/databases/$(database)/documents/courses/$(resource.data.courseId)) && 
@@ -107,7 +108,7 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update: if isSignedIn() && (
         resource.data.studentId == request.auth.uid || 
-        resource.data.get('inviteEmail', '').lower() == request.auth.token.email.lower() ||
+        ("inviteEmail" in resource.data && resource.data.inviteEmail == request.auth.token.email) ||
         isAdmin() || 
         (exists(/databases/$(database)/documents/courses/$(resource.data.courseId)) && 
          get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.mentorId == request.auth.uid)
