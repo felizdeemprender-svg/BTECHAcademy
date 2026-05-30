@@ -175,6 +175,10 @@ export function LandingEditor({
                      <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Titular Principal (Hero)</Label>
                      <Textarea value={l.headline || ''} onChange={e => updateAsset('landings', lIdx, 'headline', e.target.value)} className="text-3xl font-black text-white border-none bg-white/5 rounded-3xl p-8 min-h-[120px] focus-visible:ring-emerald-500/50" />
                   </div>
+                  <div className="space-y-2">
+                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Subtítulo de Apoyo (Hero)</Label>
+                     <Textarea value={l.subheadline || ''} onChange={e => updateAsset('landings', lIdx, 'subheadline', e.target.value)} className="text-lg font-medium text-slate-300 border-none bg-white/5 rounded-3xl p-8 min-h-[100px] focus-visible:ring-emerald-500/50" />
+                  </div>
                 </div>
               </Card>
 

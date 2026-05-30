@@ -1,5 +1,6 @@
 import { getAdminFirestore } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { sendWelcomeEmailServer } from '@/lib/email-server';
 
 /**
  * Procesa una inscripción exitosa de forma atómica e idempotente.
@@ -50,17 +51,19 @@ export async function processSuccessfulEnrollment({
 
     // 3. Obtener o crear al estudiante en la colección 'users'
     let studentId = '';
+    let studentName = normalizedEmail.split('@')[0];
     const userQuery = await db.collection('users').where('email', '==', normalizedEmail).limit(1).get();
     
     if (!userQuery.empty) {
       studentId = userQuery.docs[0].id;
+      studentName = userQuery.docs[0].data().displayName || studentName;
     } else {
       // Crear un perfil provisional para que el usuario ya figure de alta
       const tempId = normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_');
       studentId = tempId;
       await db.collection('users').doc(tempId).set({
         email: normalizedEmail,
-        displayName: normalizedEmail.split('@')[0],
+        displayName: studentName,
         roles: ['alumno'],
         isActive: true,
         createdAt: FieldValue.serverTimestamp(),
@@ -87,6 +90,15 @@ export async function processSuccessfulEnrollment({
     };
 
     await enrollmentRef.set(enrollmentData);
+
+    // Enviar correo de felicitación por Trigger Email
+    try {
+      const courseSnap = await db.collection('courses').doc(courseId).get();
+      const courseTitle = courseSnap.exists ? (courseSnap.data()?.title || 'tu curso') : 'tu curso';
+      await sendWelcomeEmailServer(normalizedEmail, studentName, courseTitle);
+    } catch (emailErr) {
+      console.error('[Enrollment] Error al enviar correo de bienvenida:', emailErr);
+    }
 
     // 4. Actualizar estadísticas de la página de forma atómica
     await db.collection('salesPages').doc(pageId).update({

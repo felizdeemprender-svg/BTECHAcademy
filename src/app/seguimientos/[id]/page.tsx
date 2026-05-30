@@ -4,6 +4,7 @@
 import { useState, useEffect, use, useMemo, useCallback } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
+import { sendWelcomeEmailClient } from '@/lib/email-client';
 import { useFirestore, useDoc, useCollection, useMemoFirebase, useFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc, setDoc, serverTimestamp, orderBy, getDocs, deleteDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -333,16 +334,27 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         const studentSnap = await getDoc(doc(db, 'users', followUp.studentId));
         const studentData = studentSnap.data();
         const newEnrollRef = doc(collection(db, 'enrollments'));
+        const targetEmail = studentData?.email || '';
         await setDoc(newEnrollRef, {
           id: newEnrollRef.id,
           courseId: taskForm.courseId,
           studentId: followUp.studentId,
           studentName: followUp.studentName,
-          inviteEmail: studentData?.email || '',
+          inviteEmail: targetEmail,
           status: 'active',
           enrolledAt: serverTimestamp(),
           progress: { completedModules: [] }
         });
+
+        // Enviar correo de felicitación por Trigger Email
+        if (targetEmail) {
+          await sendWelcomeEmailClient(
+            db,
+            targetEmail,
+            followUp.studentName,
+            course?.title || 'tu curso'
+          );
+        }
       }
     }
 
