@@ -9,7 +9,8 @@ service cloud.firestore {
       allow write: if request.auth != null && (
         request.auth.token.email == 'felizdeemprender@gmail.com' ||
         request.auth.token.email == 'btouchacademy@gmail.com' ||
-        request.auth.token.email == 'btechacademy.ai@gmail.com'
+        request.auth.token.email == 'btechacademy.ai@gmail.com' ||
+        request.auth.token.email == 'tutor.felizdeemprender@gmail.com'
       );
     }
 
@@ -28,7 +29,8 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.token.email == 'felizdeemprender@gmail.com' ||
         request.auth.token.email == 'btouchacademy@gmail.com' ||
-        request.auth.token.email == 'btechacademy.ai@gmail.com'
+        request.auth.token.email == 'btechacademy.ai@gmail.com' ||
+        request.auth.token.email == 'tutor.felizdeemprender@gmail.com'
       );
     }
 
@@ -235,6 +237,16 @@ service cloud.firestore {
         allow read: if isSignedIn() && (request.auth.uid == mentorId || isAdmin());
         allow write: if isSignedIn() && (request.auth.uid == mentorId || isAdmin());
       }
+    }
+
+    // Órdenes de pago por transferencia bancaria
+    // El backend (Admin SDK) crea los documentos; solo el mentor dueño puede leerlos.
+    match /transferOrders/{orderId} {
+      allow read, list: if isSignedIn() && (
+        resource.data.mentorId == request.auth.uid || isAdmin()
+      );
+      // Solo el backend (Admin SDK) puede crear/actualizar — el cliente no escribe directamente.
+      allow write: if false;
     }
   }
 }

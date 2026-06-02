@@ -48,6 +48,14 @@
         { "fieldPath": "mentorId", "order": "ASCENDING" },
         { "fieldPath": "totalClicks", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionId": "transferOrders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "mentorId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

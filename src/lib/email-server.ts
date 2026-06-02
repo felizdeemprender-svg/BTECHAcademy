@@ -58,3 +58,129 @@ export async function sendWelcomeEmailServer(
     console.error('Error al encolar el correo de bienvenida (servidor):', error);
   }
 }
+
+interface TransferEmailParams {
+  studentEmail: string;
+  studentName: string;
+  mentorEmail: string;
+  mentorName: string;
+  courseTitle: string;
+  amount: number;
+  bankDetails: {
+    alias: string;
+    cbu: string;
+    bankName: string;
+    titularName: string;
+  };
+  referenceCode: string;
+}
+
+/**
+ * Envía dos correos al iniciar un pago por transferencia:
+ * 1. Al alumno con los datos bancarios y el código de referencia.
+ * 2. Al tutor avisando que hay una transferencia pendiente de aprobación.
+ */
+export async function sendTransferNotificationEmails(params: TransferEmailParams) {
+  const db = getAdminFirestore();
+  const {
+    studentEmail, studentName, mentorEmail, mentorName,
+    courseTitle, amount, bankDetails, referenceCode
+  } = params;
+
+  const formattedAmount = amount.toLocaleString('es-AR');
+  const platformUrl = 'https://btechacademy.ai';
+
+  // === EMAIL AL ALUMNO ===
+  await db.collection('mail').add({
+    to: studentEmail,
+    message: {
+      subject: `Instrucciones de pago para "${courseTitle}" 💸`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="color: #6366f1; margin: 0; font-size: 24px;">¡Ya casi terminás!</h1>
+            <p style="color: #6b7280; margin-top: 8px;">Solo falta realizar la transferencia para activar tu acceso.</p>
+          </div>
+
+          <p style="font-size: 15px; color: #374151;">Hola <strong>${studentName}</strong>,</p>
+          <p style="font-size: 15px; color: #374151; line-height: 1.6;">
+            Gracias por tu interés en <strong>${courseTitle}</strong>. A continuación encontrás los datos para realizar la transferencia:
+          </p>
+
+          <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #15803d; margin: 0 0 16px 0; font-size: 16px;">🏦 Datos Bancarios</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Titular:</td><td style="padding: 6px 0; font-weight: bold; color: #111827;">${bankDetails.titularName || '–'}</td></tr>
+              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Banco:</td><td style="padding: 6px 0; font-weight: bold; color: #111827;">${bankDetails.bankName || '–'}</td></tr>
+              ${bankDetails.alias ? `<tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Alias:</td><td style="padding: 6px 0; font-weight: bold; color: #111827; font-size: 18px; letter-spacing: 1px;">${bankDetails.alias}</td></tr>` : ''}
+              ${bankDetails.cbu ? `<tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">CBU/CVU:</td><td style="padding: 6px 0; font-weight: bold; color: #111827; font-family: monospace;">${bankDetails.cbu}</td></tr>` : ''}
+              <tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Monto:</td><td style="padding: 6px 0; font-weight: bold; color: #6366f1; font-size: 20px;">$${formattedAmount}</td></tr>
+            </table>
+          </div>
+
+          <div style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 12px; padding: 16px; margin: 16px 0; text-align: center;">
+            <p style="margin: 0 0 8px 0; color: #92400e; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">📋 Tu Código de Referencia</p>
+            <p style="margin: 0; color: #92400e; font-size: 24px; font-weight: 900; font-family: monospace; letter-spacing: 2px;">${referenceCode}</p>
+            <p style="margin: 8px 0 0 0; color: #b45309; font-size: 12px;">Incluí este código en el concepto de la transferencia.</p>
+          </div>
+
+          <p style="font-size: 14px; color: #6b7280; line-height: 1.6;">
+            Una vez que tu tutor confirme el pago, recibirás un correo de bienvenida con acceso a la plataforma. Esto suele demorar <strong>menos de 24 horas hábiles</strong>.
+          </p>
+
+          <p style="font-size: 14px; color: #9ca3af; margin-top: 24px; text-align: center;">
+            © ${new Date().getFullYear()} BTECH Academy. Todos los derechos reservados.
+          </p>
+        </div>
+      `
+    }
+  });
+
+  // === EMAIL AL TUTOR ===
+  if (mentorEmail) {
+    await db.collection('mail').add({
+      to: mentorEmail,
+      message: {
+        subject: `💰 Nueva transferencia pendiente de ${studentName} – ${courseTitle}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h1 style="color: #6366f1; margin: 0; font-size: 22px;">Tenés una transferencia pendiente</h1>
+            </div>
+
+            <p style="font-size: 15px; color: #374151;">Hola <strong>${mentorName}</strong>,</p>
+            <p style="font-size: 15px; color: #374151; line-height: 1.6;">
+              <strong>${studentName}</strong> (<a href="mailto:${studentEmail}">${studentEmail}</a>) declaró haber realizado una transferencia para inscribirse en <strong>${courseTitle}</strong>.
+            </p>
+
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 20px 0;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Alumno:</td><td style="padding: 6px 0; font-weight: bold; color: #111827;">${studentName}</td></tr>
+                <tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Email:</td><td style="padding: 6px 0; font-weight: bold; color: #111827;">${studentEmail}</td></tr>
+                <tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Curso:</td><td style="padding: 6px 0; font-weight: bold; color: #111827;">${courseTitle}</td></tr>
+                <tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Monto declarado:</td><td style="padding: 6px 0; font-weight: bold; color: #6366f1;">$${formattedAmount}</td></tr>
+                <tr><td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Código de referencia:</td><td style="padding: 6px 0; font-weight: bold; color: #92400e; font-family: monospace;">${referenceCode}</td></tr>
+              </table>
+            </div>
+
+            <p style="font-size: 14px; color: #374151; line-height: 1.6;">
+              Por favor, verificá en tu cuenta bancaria que el pago fue acreditado con el código de referencia y luego aprobá la inscripción desde tu panel:
+            </p>
+
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="${platformUrl}/dashboard/transfers" style="background-color: #6366f1; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; display: inline-block;">
+                Ver Transferencias Pendientes
+              </a>
+            </div>
+
+            <p style="font-size: 13px; color: #9ca3af; margin-top: 24px; text-align: center;">
+              © ${new Date().getFullYear()} BTECH Academy.
+            </p>
+          </div>
+        `
+      }
+    });
+  }
+
+  console.log(`[TransferEmails] Correos encolados para orden ${referenceCode}.`);
+}

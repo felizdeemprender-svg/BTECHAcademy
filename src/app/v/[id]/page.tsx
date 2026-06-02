@@ -90,11 +90,14 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   const [loading, setLoading] = useState(false);
   const [mentorProfile, setMentorProfile] = useState<any>(null);
+  const [mentorPaymentMethods, setMentorPaymentMethods] = useState<any[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [studentEmail, setStudentEmail] = useState('');
   const [studentName, setStudentName] = useState('');
+  const [selectedPaymentType, setSelectedPaymentType] = useState<'mercadopago' | 'transfer' | null>(null);
   const [paymentInitPoint, setPaymentInitPoint] = useState<string | null>(null);
+  const [transferResult, setTransferResult] = useState<{ referenceCode: string; bankDetails: any; amount: number } | null>(null);
   const [isExpired, setIsExpired] = useState(false);
   const [activeReferidoId, setActiveReferidoId] = useState<string | null>(null);
 
@@ -178,14 +181,28 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     if (page?.mentorId) {
+      // Perfil del mentor
       fetch(`/api/tutors/by-id/${page.mentorId}`)
         .then(res => res.json())
+        .then(data => { if (data && !data.error) setMentorProfile(data); })
+        .catch(err => console.error('Error fetching mentor profile:', err));
+
+      // Métodos de pago activos del mentor (sanitizados, sin secretos)
+      fetch(`/api/tutors/${page.mentorId}/payment-options`)
+        .then(res => res.json())
         .then(data => {
-          if (data && !data.error) {
-            setMentorProfile(data);
+          if (data?.methods) {
+            let methods = data.methods;
+            // Filtrar según lo que permita la landing
+            if (page.allowedPaymentMethods && Array.isArray(page.allowedPaymentMethods) && page.allowedPaymentMethods.length > 0) {
+              methods = methods.filter((m: any) => page.allowedPaymentMethods.includes(m.type));
+            }
+            setMentorPaymentMethods(methods);
+            // Pre-seleccionar: si solo hay uno, seleccionarlo automáticamente
+            if (methods.length === 1) setSelectedPaymentType(methods[0].type);
           }
         })
-        .catch(err => console.error('Error fetching mentor profile:', err));
+        .catch(err => console.error('Error fetching payment methods:', err));
     }
   }, [page?.mentorId]);
 
@@ -208,6 +225,10 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   const handlePurchase = async () => {
     setIsPurchaseDialogOpen(true);
+    setPaymentInitPoint(null);
+    setTransferResult(null);
+    // Reset selección si hay varios métodos
+    if (mentorPaymentMethods.length !== 1) setSelectedPaymentType(null);
   };
 
   const executePurchase = async () => {
@@ -252,53 +273,50 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         const response = await fetch('/api/courses/free-enrollment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pageId: id,
-            studentEmail: studentEmail,
-            studentName: studentName
-          })
+          body: JSON.stringify({ pageId: id, studentEmail, studentName })
         });
-
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || data.error || 'Error al procesar inscripción');
-
-        // Trackeo de click en comprar (opcional)
         try {
           const { setDoc, increment, doc } = await import('firebase/firestore');
-          const pRef = doc(db, 'salesPages', id);
-          await setDoc(pRef, {
-            stats: { conversions: increment(1) }
-          }, { merge: true });
+          await setDoc(doc(db, 'salesPages', id), { stats: { conversions: increment(1) } }, { merge: true });
         } catch (e) {}
-
         toast({ title: '¡Inscripción exitosa!', description: 'Redirigiendo a tu curso...' });
         window.location.href = data.redirectUrl || '/my-courses';
         return;
       }
 
-      // 1b. Crear preferencia en el backend para MercadoPago
+      // 2a. Pago por Transferencia Bancaria
+      if (selectedPaymentType === 'transfer') {
+        const response = await fetch('/api/payments/transfer/initiate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pageId: id, studentEmail, studentName, referidoId: leadReferidoId || null })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Error al registrar la transferencia');
+        setTransferResult({
+          referenceCode: data.referenceCode,
+          bankDetails: data.bankDetails,
+          amount: data.amount,
+        });
+        toast({ title: '¡Datos de transferencia enviados!', description: 'Revisá tu correo con las instrucciones.' });
+        setLoading(false);
+        return;
+      }
+
+      // 2b. Pago por MercadoPago
       const response = await fetch('/api/payments/mercadopago/preference', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pageId: id,
-          studentEmail: studentEmail,
-          studentName: studentName,
-          referidoId: leadReferidoId || null
-        })
+        body: JSON.stringify({ pageId: id, studentEmail, studentName, referidoId: leadReferidoId || null })
       });
-
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || data.error || 'Error al conectar con MercadoPago');
 
-      if (!response.ok) {
-        throw new Error(data.message || data.error || 'Error al conectar con MercadoPago');
-      }
-
-      // 2. Trackeo de click en comprar (opcional)
       try {
         const { setDoc, increment, doc } = await import('firebase/firestore');
-        const pRef = doc(db, 'salesPages', id);
-        await setDoc(pRef, {
+        await setDoc(doc(db, 'salesPages', id), {
           stats: {
             conversions: increment(1),
             channelBreakdown: { [channel]: { conversions: increment(1) } },
@@ -307,20 +325,15 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         }, { merge: true });
       } catch (e) {}
 
-      // 3. Mostrar el QR / Link de Pago
       setPaymentInitPoint(data.init_point);
-      
-      toast({
-        title: '¡Preferencia generada!',
-        description: 'Escanea el código QR o haz clic en el botón para pagar.'
-      });
+      toast({ title: '¡Preferencia generada!', description: 'Escanea el QR o usá el botón para pagar.' });
 
     } catch (e: any) {
-      console.warn('Detalle completo del error en compra:', e);
-      toast({ 
-        variant: 'destructive', 
-        title: 'Error al iniciar el pago', 
-        description: e.message || 'Error interno del servidor. Por favor intenta más tarde.' 
+      console.warn('Error en compra:', e);
+      toast({
+        variant: 'destructive',
+        title: 'Error al iniciar el pago',
+        description: e.message || 'Error interno del servidor. Por favor intenta más tarde.'
       });
       setLoading(false);
     }
@@ -628,74 +641,194 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
             </div>
             <DialogTitle className="text-3xl font-black tracking-tight text-primary">Detalles de Inscripción</DialogTitle>
             <DialogDescription className="text-slate-500 font-medium">
-              Completa tus datos para recibir el acceso al contenido inmediatamente tras el pago.
+              Completa tus datos para recibir el acceso al contenido.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6 py-6 text-center">
-            {!paymentInitPoint ? (
+
+          <div className="space-y-5 py-4">
+            {/* Paso 1: datos del alumno + selección de método — solo si no hay resultado aún */}
+            {!paymentInitPoint && !transferResult && (
               <>
-                <div className="space-y-2 text-left">
+                <div className="space-y-2">
                   <Label htmlFor="purchase-name" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nombre Completo</Label>
-                  <Input 
+                  <Input
                     id="purchase-name"
                     placeholder="Juan Pérez"
                     value={studentName}
                     onChange={e => setStudentName(e.target.value)}
-                    className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
+                    className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6"
                   />
                 </div>
-                <div className="space-y-2 text-left">
+                <div className="space-y-2">
                   <Label htmlFor="purchase-email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email de Acceso</Label>
-                  <Input 
+                  <Input
                     id="purchase-email"
                     type="email"
                     placeholder="tu@email.com"
                     value={studentEmail}
                     onChange={e => setStudentEmail(e.target.value)}
-                    className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
+                    className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6"
                   />
                   <p className="text-[10px] text-slate-400 italic px-1">Este será tu usuario para entrar a la plataforma.</p>
                 </div>
+
+                {/* Selector de método de pago (solo si hay >1 método o hay transferencia disponible) */}
+                {price > 0 && mentorPaymentMethods.length > 1 && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Forma de Pago</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {mentorPaymentMethods.map((method: any) => (
+                        <button
+                          key={method.id}
+                          type="button"
+                          onClick={() => setSelectedPaymentType(method.type)}
+                          className={cn(
+                            'flex flex-col items-center gap-2 p-4 rounded-2xl border-2 font-bold text-sm transition-all',
+                            selectedPaymentType === method.type
+                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                              : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'
+                          )}
+                        >
+                          {method.type === 'mercadopago' ? (
+                            <>
+                              <span className="text-2xl">💳</span>
+                              <span>Mercado Pago</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-2xl">🏦</span>
+                              <span>Transferencia</span>
+                            </>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
-            ) : (
+            )}
+
+            {/* Paso 2a: QR de Mercado Pago */}
+            {paymentInitPoint && (
               <div className="flex flex-col items-center gap-6 animate-in zoom-in-95 duration-300">
                 <div className="p-4 bg-white rounded-3xl shadow-xl border-8 border-slate-50">
                   <QRCodeSVG value={paymentInitPoint} size={200} />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1 text-center">
                   <p className="text-sm font-black text-slate-800">Escanea con la App de Mercado Pago</p>
-                  <p className="text-xs text-slate-500 font-medium max-w-[200px] mx-auto">O si estás en tu móvil, pulsa el botón de abajo para ir al sitio seguro.</p>
+                  <p className="text-xs text-slate-500 font-medium">O si estás en tu móvil, usá el botón de abajo.</p>
                 </div>
               </div>
             )}
+
+            {/* Paso 2b: Confirmación de transferencia */}
+            {transferResult && (
+              <div className="space-y-4 animate-in zoom-in-95 duration-300">
+                <div className="text-center">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+                  </div>
+                  <p className="font-black text-slate-900">¡Listo! Revisá tu correo</p>
+                  <p className="text-sm text-slate-500 font-medium mt-1">Te enviamos los datos bancarios para completar el pago.</p>
+                </div>
+
+                {/* Datos bancarios inline */}
+                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 space-y-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">🏦 Datos para transferir</p>
+                  {transferResult.bankDetails.titularName && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Titular</span>
+                      <span className="font-bold text-slate-900">{transferResult.bankDetails.titularName}</span>
+                    </div>
+                  )}
+                  {transferResult.bankDetails.bankName && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Banco</span>
+                      <span className="font-bold text-slate-900">{transferResult.bankDetails.bankName}</span>
+                    </div>
+                  )}
+                  {transferResult.bankDetails.alias && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Alias</span>
+                      <span className="font-black text-slate-900 text-base tracking-wide">{transferResult.bankDetails.alias}</span>
+                    </div>
+                  )}
+                  {transferResult.bankDetails.cbu && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">CBU/CVU</span>
+                      <span className="font-mono font-bold text-slate-900 text-xs">{transferResult.bankDetails.cbu}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm pt-2 border-t border-emerald-200">
+                    <span className="text-slate-500">Monto</span>
+                    <span className="font-black text-indigo-700 text-lg">${(transferResult.amount).toLocaleString('es-AR')}</span>
+                  </div>
+                </div>
+
+                {/* Código de referencia */}
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Código de referencia</p>
+                  <p className="font-black text-amber-900 text-xl font-mono tracking-widest">{transferResult.referenceCode}</p>
+                  <div className="bg-white/60 p-3 rounded-xl border border-amber-200/50 mt-2 text-left flex items-start gap-3">
+                    <span className="text-xl leading-none">💡</span>
+                    <p className="text-xs font-semibold text-amber-900/80 leading-tight">
+                      IMPORTANTE: Ingresa este código exacto en el "Motivo" o "Concepto" de tu transferencia en tu app del banco. Es indispensable para que el tutor reconozca tu pago sin demoras.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-400 text-center font-medium">
+                  Tu tutor activará tu acceso en menos de 24 hs hábiles tras verificar el pago.
+                </p>
+              </div>
+            )}
           </div>
+
           <DialogFooter>
-            {!paymentInitPoint ? (
-              <Button 
-                onClick={executePurchase} 
-                disabled={loading || !studentEmail}
+            {!paymentInitPoint && !transferResult && (
+              <Button
+                onClick={executePurchase}
+                disabled={loading || !studentEmail || (price > 0 && mentorPaymentMethods.length > 1 && !selectedPaymentType)}
                 className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all hover:scale-[1.02]"
                 style={{ backgroundColor: primaryColor }}
               >
-                {loading ? <Loader2 className="animate-spin h-6 w-6" /> : price === 0 ? 'Acceder Gratis' : `Pagar $${price.toLocaleString('es-AR')}`}
+                {loading ? (
+                  <Loader2 className="animate-spin h-6 w-6" />
+                ) : price === 0 ? (
+                  'Acceder Gratis'
+                ) : selectedPaymentType === 'transfer' ? (
+                  'Confirmar Transferencia'
+                ) : (
+                  `Pagar $${price.toLocaleString('es-AR')}`
+                )}
               </Button>
-            ) : (
+            )}
+            {paymentInitPoint && (
               <div className="flex flex-col gap-3 w-full">
-                <Button 
-                  onClick={() => window.location.href = paymentInitPoint}
-                  className="w-full h-14 text-lg font-bold rounded-2xl shadow-xl bg-primary"
+                <Button
+                  onClick={() => window.location.href = paymentInitPoint!}
+                  className="w-full h-14 text-lg font-bold rounded-2xl shadow-xl"
                   style={{ backgroundColor: primaryColor }}
                 >
                   Continuar al Pago Seguro
                 </Button>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   onClick={() => { setPaymentInitPoint(null); setLoading(false); }}
                   className="text-slate-400 font-bold hover:bg-transparent"
                 >
                   Volver / Corregir mis datos
                 </Button>
               </div>
+            )}
+            {transferResult && (
+              <Button
+                onClick={() => setIsPurchaseDialogOpen(false)}
+                className="w-full h-14 text-lg font-bold rounded-2xl"
+                style={{ backgroundColor: primaryColor }}
+              >
+                Entendido, cerrar
+              </Button>
             )}
           </DialogFooter>
         </DialogContent>

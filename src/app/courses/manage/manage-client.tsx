@@ -212,6 +212,9 @@ export default function ManageCoursesClient() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [associatedLandings, setAssociatedLandings] = useState<{id: string, title: string}[]>([]);
+  const [isCheckingLandings, setIsCheckingLandings] = useState(false);
   const [isEnrollmentsDialogOpen, setIsEnrollmentsDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
@@ -385,15 +388,27 @@ export default function ManageCoursesClient() {
     return 0;
   });
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!selectedId) return;
-    const docRef = doc(db, 'courses', selectedId);
-    deleteDoc(docRef).then(() => {
-      toast({ title: 'Curso eliminado' });
+    setIsDeleting(true);
+    try {
+      // Eliminar landings asociadas primero
+      for (const landing of associatedLandings) {
+        await deleteDoc(doc(db, 'salesPages', landing.id));
+      }
+      // Eliminar curso
+      const docRef = doc(db, 'courses', selectedId);
+      await deleteDoc(docRef);
+      
+      toast({ title: associatedLandings.length > 0 ? 'Curso y landings eliminados' : 'Curso eliminado' });
       setIsDeleteDialogOpen(false);
-    }).catch(async (error: any) => {
+    } catch(error: any) {
+      const docRef = doc(db, 'courses', selectedId);
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'delete' }));
-    });
+    } finally {
+      setIsDeleting(false);
+      setAssociatedLandings([]);
+    }
   };
 
   const handleManualAudit = async (course: any, currentTags?: string[]) => {
@@ -926,7 +941,17 @@ export default function ManageCoursesClient() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => openEnrollments(course)} className="cursor-pointer gap-2 py-2"><Users className="h-3.5 w-3.5 text-accent" /> Gestionar Alumnos</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={() => { setSelectedId(course.id); setIsDeleteDialogOpen(true); }} className="text-destructive font-bold gap-2 py-2 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /> Eliminar Programa</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={async (e) => { 
+                                  e.preventDefault();
+                                  setSelectedId(course.id); 
+                                  setIsCheckingLandings(true);
+                                  setIsDeleteDialogOpen(true); 
+                                  try {
+                                    const snap = await getDocs(query(collection(db, 'salesPages'), where('courseId', '==', course.id)));
+                                    setAssociatedLandings(snap.docs.map(d => ({ id: d.id, title: d.data().title || 'Landing sin título' })));
+                                  } catch(e) { console.error(e); }
+                                  setIsCheckingLandings(false);
+                                }} className="text-destructive font-bold gap-2 py-2 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /> Eliminar Programa</DropdownMenuItem>
                               </>
                             )}
                           </DropdownMenuContent>
@@ -1334,20 +1359,30 @@ export default function ManageCoursesClient() {
         </Dialog>
 
         {/* AlertDialog: Delete Course */}
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => { setIsDeleteDialogOpen(open); if(!open) clearUILocks(); }}>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => { if(!isDeleting) { setIsDeleteDialogOpen(open); if(!open) clearUILocks(); } }}>
           <AlertDialogContent className="rounded-md p-8 max-sm border-none shadow-2xl pointer-events-auto">
             <AlertDialogHeader className="items-center text-center">
               <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center text-destructive mb-4">
                 <Trash2 className="h-6 w-6" />
               </div>
               <AlertDialogTitle className="text-lg font-bold">¿Eliminar Programa?</AlertDialogTitle>
-              <AlertDialogDescription className="text-center text-sm text-muted-foreground">
-                Esta acción es permanente. Se eliminarán todas las clases, materiales y registros asociados a este programa.
+              <AlertDialogDescription className="text-center text-sm text-muted-foreground flex flex-col gap-2">
+                <span>Esta acción es permanente. Se eliminarán todas las clases, materiales y registros asociados a este programa.</span>
+                {isCheckingLandings && (
+                  <span className="text-amber-600 font-medium flex items-center justify-center gap-2 mt-2"><Loader2 className="h-3 w-3 animate-spin"/> Verificando landings asociadas...</span>
+                )}
+                {!isCheckingLandings && associatedLandings.length > 0 && (
+                  <span className="text-destructive font-bold mt-2 bg-destructive/5 p-3 rounded-xl border border-destructive/10">
+                    ¡Atención! Este curso tiene {associatedLandings.length} Landing Page(s) activa(s). Se eliminarán automáticamente junto con el curso para evitar enlaces rotos.
+                  </span>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="pt-4">
-              <AlertDialogCancel className="flex-1">Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteConfirm} className="flex-1 bg-destructive">Eliminar Definitivamente</AlertDialogAction>
+            <AlertDialogFooter className="pt-4 flex items-center gap-3">
+              <AlertDialogCancel disabled={isDeleting} className="flex-1 mt-0">Cancelar</AlertDialogCancel>
+              <AlertDialogAction disabled={isDeleting || isCheckingLandings} onClick={(e) => { e.preventDefault(); handleDeleteConfirm(); }} className="flex-1 bg-destructive hover:bg-destructive/90">
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar Definitivamente'}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

@@ -24,7 +24,8 @@ import {
   ChevronRight,
   ReceiptText,
   Wallet,
-  Sparkles
+  Sparkles,
+  ArrowLeftRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-context';
@@ -125,6 +126,7 @@ export function SidebarNav() {
         { name: 'Evo', href: '/evo', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Sparkles },
         { name: 'Mi Perfil', href: '/settings', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Settings },
         { name: 'Métodos de Cobro', href: '/dashboard/payment-methods', roles: ['mentor', 'admin'], icon: Wallet },
+        { name: 'Transferencias', href: '/dashboard/transfers', roles: ['mentor', 'admin'], icon: ArrowLeftRight },
         { name: 'Mi Plan', href: '/dashboard/plan', roles: ['mentor', 'admin'], icon: CreditCard },
         { name: 'Motores de Publicación', href: '/dashboard/publishing-engines', roles: ['mentor', 'admin'], icon: Cpu },
       ]

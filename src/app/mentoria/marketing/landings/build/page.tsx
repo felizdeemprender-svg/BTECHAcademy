@@ -26,7 +26,8 @@ import {
   Lightbulb,
   Brain,
   CalendarDays,
-  UserPlus
+  UserPlus,
+  AlertTriangle
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -90,6 +91,10 @@ function LandingBuilderContent() {
   const [referidoId, setReferidoId] = useState<string>('');
   const [referidos, setReferidos] = useState<{ id: string; displayName: string; email: string }[]>([]);
   const [landingType, setLandingType] = useState<'general' | 'promocion'>('general');
+  const [allowedPaymentMethods, setAllowedPaymentMethods] = useState<string[]>(['mercadopago', 'transfer']);
+
+  const isMercadoPagoActive = !!profile?.profile?.mercadopago?.accessToken || !!profile?.mercadopago?.accessToken;
+  const isTransferActive = !!profile?.profile?.bankDetails?.cbu || !!profile?.profile?.bankDetails?.alias || !!profile?.bankDetails?.cbu || !!profile?.bankDetails?.alias;
 
   // Índices para el Editor
   const [activeLandingIdx, setActiveLandingIdx] = useState(0);
@@ -138,6 +143,7 @@ function LandingBuilderContent() {
             
             if (data.referidoId) setReferidoId(data.referidoId);
             if (data.landingType) setLandingType(data.landingType);
+            if (data.allowedPaymentMethods) setAllowedPaymentMethods(data.allowedPaymentMethods);
             setStep(3); 
           }
         } catch (err) {
@@ -277,6 +283,7 @@ function LandingBuilderContent() {
         isActive: true,
         engineMeta: { mission },
         landingType: landingType,
+        allowedPaymentMethods,
         // Campos de vigencia y referido
         activeFrom: activeFrom ? Timestamp.fromDate(new Date(activeFrom)) : null,
         activeUntil: activeUntil ? Timestamp.fromDate(new Date(activeUntil)) : null,
@@ -464,6 +471,56 @@ function LandingBuilderContent() {
                 </div>
               </div>
 
+              {/* MEDIOS DE PAGO PERMITIDOS */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <Label className="text-[10px] font-black uppercase text-slate-400">Medios de Pago Aceptados</Label>
+                  <Badge variant="outline" className="text-[8px] font-bold text-accent border-accent/20 h-5 px-2">Checkout</Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {isMercadoPagoActive && (
+                    <button
+                      onClick={() => setAllowedPaymentMethods(prev => prev.includes('mercadopago') ? prev.filter(m => m !== 'mercadopago') : [...prev, 'mercadopago'])}
+                      className={cn(
+                        'flex items-center gap-3 p-4 rounded-2xl border-2 transition-all text-left',
+                        allowedPaymentMethods.includes('mercadopago') ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'
+                      )}
+                    >
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl", allowedPaymentMethods.includes('mercadopago') ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400')}>💳</div>
+                      <div>
+                        <p className={cn("font-black text-sm", allowedPaymentMethods.includes('mercadopago') ? 'text-indigo-900' : 'text-slate-600')}>Mercado Pago</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Tarjetas, saldo, etc.</p>
+                      </div>
+                    </button>
+                  )}
+                  {isTransferActive && (
+                    <button
+                      onClick={() => setAllowedPaymentMethods(prev => prev.includes('transfer') ? prev.filter(m => m !== 'transfer') : [...prev, 'transfer'])}
+                      className={cn(
+                        'flex items-center gap-3 p-4 rounded-2xl border-2 transition-all text-left',
+                        allowedPaymentMethods.includes('transfer') ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'
+                      )}
+                    >
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl", allowedPaymentMethods.includes('transfer') ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400')}>🏦</div>
+                      <div>
+                        <p className={cn("font-black text-sm", allowedPaymentMethods.includes('transfer') ? 'text-indigo-900' : 'text-slate-600')}>Transferencia</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Aprobación manual</p>
+                      </div>
+                    </button>
+                  )}
+                </div>
+                {(!isMercadoPagoActive && !isTransferActive) && (
+                  <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1">
+                    <AlertTriangle className="h-4 w-4" /> No tienes métodos de cobro configurados. Configúralos en tu Perfil de Mentor.
+                  </p>
+                )}
+                {allowedPaymentMethods.length === 0 && (
+                  <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1">
+                    <AlertTriangle className="h-4 w-4" /> Debes seleccionar al menos un medio de pago (si el precio es mayor a 0).
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <Label className="text-[10px] font-black uppercase text-slate-400">Segmentación Estratégica (Buyer Persona)</Label>
@@ -579,7 +636,7 @@ function LandingBuilderContent() {
               </div>
               )}
 
-              <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience} className="w-full h-24 rounded-[2.5rem] font-bold text-2xl shadow-3xl bg-slate-900 group transition-all">
+              <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience || (price > 0 && allowedPaymentMethods.length === 0)} className="w-full h-24 rounded-[2.5rem] font-bold text-2xl shadow-3xl bg-slate-900 group transition-all">
                 {isGenerating ? <Loader2 className="animate-spin mr-3 h-10 w-10" /> : <Sparkles className="mr-3 h-10 w-10 text-accent group-hover:rotate-12 transition-transform" />}
                 Lanzar Generación Atómica
               </Button>
