@@ -179,6 +179,10 @@ export function LandingEditor({
                      <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Subtítulo de Apoyo (Hero)</Label>
                      <Textarea value={l.subheadline || ''} onChange={e => updateAsset('landings', lIdx, 'subheadline', e.target.value)} className="text-lg font-medium text-slate-300 border-none bg-white/5 rounded-3xl p-8 min-h-[100px] focus-visible:ring-emerald-500/50" />
                   </div>
+                  <div className="space-y-2">
+                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Texto del Botón de Compra (CTA)</Label>
+                     <Input value={l.ctaText || ''} onChange={e => updateAsset('landings', lIdx, 'ctaText', e.target.value)} className="h-14 rounded-2xl bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-emerald-500/50" />
+                  </div>
                 </div>
               </Card>
 
