@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, deleteDoc, getDocs } from 'firebase/firestore';
+import { collection, query, where, doc, deleteDoc, getDocs, addDoc, Timestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -82,6 +82,16 @@ export default function SalesLandingsDashboardPage() {
   const [openCourses, setOpenCourses] = useState<string[]>([]);
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Estados para clonación de embajador
+  const [cloningPage, setCloningPage] = useState<any | null>(null);
+  const [cloneData, setCloneData] = useState({
+    referidoId: '',
+    startDate: '',
+    endDate: '',
+    price: 0
+  });
+  const [isCloning, setIsCloning] = useState(false);
 
   // Estados para estadísticas detalladas de una landing seleccionada
   const [selectedStatsPage, setSelectedStatsPage] = useState<any | null>(null);
@@ -277,6 +287,41 @@ export default function SalesLandingsDashboardPage() {
       toast({ variant: 'destructive', title: 'Error al borrar', description: e.message });
     } finally {
       setDeletingIds(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const handleClone = async () => {
+    if (!cloningPage || !cloneData.referidoId || !cloneData.startDate || !cloneData.endDate) {
+      toast({ variant: 'destructive', title: 'Faltan datos', description: 'Por favor completa todos los campos.' });
+      return;
+    }
+    setIsCloning(true);
+    try {
+      const start = new Date(cloneData.startDate);
+      const end = new Date(cloneData.endDate);
+      const embajadorName = referidosMap[cloneData.referidoId] || 'Embajador';
+
+      const newPage = {
+        ...cloningPage,
+        landingType: 'promocion',
+        referidoId: cloneData.referidoId,
+        title: `${cloningPage.title} - Promo ${embajadorName}`,
+        price: Number(cloneData.price),
+        activeFrom: Timestamp.fromDate(start),
+        activeUntil: Timestamp.fromDate(end),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        stats: { conversions: 0, totalClicks: 0 },
+      };
+      delete newPage.id;
+
+      await addDoc(collection(db, 'salesPages'), newPage);
+      toast({ title: 'Landing clonada con éxito', description: `Se ha creado la promoción para ${embajadorName}.` });
+      setCloningPage(null);
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error al clonar', description: e.message });
+    } finally {
+      setIsCloning(false);
     }
   };
 
@@ -490,6 +535,19 @@ export default function SalesLandingsDashboardPage() {
 
                             {/* Acciones */}
                             <div className="w-28 flex items-center justify-end gap-1">
+                              {/* Clonar Promo */}
+                              {(!page.landingType || page.landingType === 'general') && (
+                                <button
+                                  onClick={() => {
+                                    setCloningPage(page);
+                                    setCloneData({ referidoId: '', startDate: '', endDate: '', price: page.price || 0 });
+                                  }}
+                                  title="Clonar Promo"
+                                  className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </button>
+                              )}
                               {/* Ver Estadísticas */}
                               <button
                                 onClick={() => setSelectedStatsPage(page)}
@@ -737,6 +795,68 @@ export default function SalesLandingsDashboardPage() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Clonación */}
+        <Dialog open={!!cloningPage} onOpenChange={(open) => !open && setCloningPage(null)}>
+          <DialogContent className="max-w-md rounded-[2.5rem] p-8 border-none shadow-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black text-slate-800">Clonar para Embajador</DialogTitle>
+              <DialogDescription>
+                Crea una promoción exclusiva de "{cloningPage?.title}".
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase">Embajador / Influencer</label>
+                <select
+                  className="flex h-12 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  value={cloneData.referidoId}
+                  onChange={e => setCloneData({...cloneData, referidoId: e.target.value})}
+                >
+                  <option value="">Selecciona un embajador...</option>
+                  {referidos?.map((r: any) => (
+                    <option key={r.id} value={r.id}>{r.displayName || r.email}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Fecha Inicio</label>
+                  <Input 
+                    type="datetime-local" 
+                    value={cloneData.startDate}
+                    onChange={e => setCloneData({...cloneData, startDate: e.target.value})}
+                    className="h-12 rounded-xl bg-slate-50 border-slate-200"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Fecha Fin</label>
+                  <Input 
+                    type="datetime-local" 
+                    value={cloneData.endDate}
+                    onChange={e => setCloneData({...cloneData, endDate: e.target.value})}
+                    className="h-12 rounded-xl bg-slate-50 border-slate-200"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase">Precio Promocional ($)</label>
+                <Input 
+                  type="number" 
+                  value={cloneData.price}
+                  onChange={e => setCloneData({...cloneData, price: Number(e.target.value)})}
+                  className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold text-lg"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end pt-4 border-t border-slate-100">
+              <Button variant="ghost" onClick={() => setCloningPage(null)} disabled={isCloning} className="rounded-xl">Cancelar</Button>
+              <Button onClick={handleClone} disabled={isCloning} className="rounded-xl bg-violet-600 hover:bg-violet-700">
+                {isCloning ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Promoción'}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

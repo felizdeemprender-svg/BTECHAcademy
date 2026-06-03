@@ -358,6 +358,27 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const fontBody = tokens.fontBody || 'inherit';
   const socials = mentorProfile?.profile?.socials || {};
 
+  if (isExpired) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center space-y-6" style={{ fontFamily: fontBody }}>
+        <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mb-4 shadow-sm border-[8px] border-amber-50">
+          <AlertTriangle className="h-10 w-10 text-amber-500" />
+        </div>
+        <h1 className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight max-w-lg">
+          Esta promoción ya no se encuentra disponible
+        </h1>
+        <p className="text-lg text-slate-500 font-medium max-w-md">
+          {page.activeUntil?.toDate && new Date() > page.activeUntil.toDate()
+            ? `Finalizó el ${page.activeUntil.toDate().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}`
+            : page.activeFrom?.toDate && new Date() < page.activeFrom.toDate()
+            ? `Comenzará el ${page.activeFrom.toDate().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}`
+            : 'La oferta ha caducado.'}
+        </p>
+        <p className="text-sm text-slate-400 mt-8 font-medium">Gracias por tu interés en los programas de {mentorProfile?.displayName || 'este tutor'}.</p>
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-screen bg-slate-50 text-slate-900 selection:bg-primary/20"
@@ -396,25 +417,6 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           </Button>
         </div>
       </nav>
-
-      {/* Banner de Vigencia Expirada / No Iniciada */}
-      {isExpired && (
-        <div className="sticky top-20 z-40 w-full bg-amber-50 border-b-2 border-amber-200 py-3 px-6">
-          <div className="container mx-auto flex items-center justify-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
-            <p className="text-sm font-bold text-amber-800">
-              Esta promoción ya no está disponible.
-            </p>
-            <span className="text-xs text-amber-600 font-medium">
-              {page.activeUntil?.toDate && new Date() > page.activeUntil.toDate()
-                ? `Finalió el ${page.activeUntil.toDate().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}`
-                : page.activeFrom?.toDate && new Date() < page.activeFrom.toDate()
-                ? `Comienza el ${page.activeFrom.toDate().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}`
-                : ''}
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-white relative overflow-hidden">
