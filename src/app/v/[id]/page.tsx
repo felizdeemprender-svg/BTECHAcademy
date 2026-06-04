@@ -135,7 +135,20 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
     const now = new Date();
     const from: Date | null = page.activeFrom?.toDate ? page.activeFrom.toDate() : null;
     const until: Date | null = page.activeUntil?.toDate ? page.activeUntil.toDate() : null;
-    const expired = (until !== null && now > until) || (from !== null && now < from);
+    
+    let expired = false;
+    if (until !== null) {
+      const untilDate = new Date(until);
+      untilDate.setHours(23, 59, 59, 999);
+      if (now > untilDate) expired = true;
+    }
+    
+    if (from !== null) {
+      const fromDate = new Date(from);
+      fromDate.setHours(0, 0, 0, 0);
+      if (now < fromDate) expired = true;
+    }
+    
     setIsExpired(expired);
   }, [page]);
 
@@ -368,9 +381,17 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           Esta promoción ya no se encuentra disponible
         </h1>
         <p className="text-lg text-slate-500 font-medium max-w-md">
-          {page.activeUntil?.toDate && new Date() > page.activeUntil.toDate()
+          {page.activeUntil?.toDate && (() => {
+            const d = page.activeUntil.toDate();
+            d.setHours(23, 59, 59, 999);
+            return new Date() > d;
+          })()
             ? `Finalizó el ${page.activeUntil.toDate().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}`
-            : page.activeFrom?.toDate && new Date() < page.activeFrom.toDate()
+            : page.activeFrom?.toDate && (() => {
+            const d = page.activeFrom.toDate();
+            d.setHours(0, 0, 0, 0);
+            return new Date() < d;
+          })()
             ? `Comenzará el ${page.activeFrom.toDate().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}`
             : 'La oferta ha caducado.'}
         </p>
