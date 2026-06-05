@@ -1,0 +1,1039 @@
+
+'use client';
+
+import { useState, useEffect, use, useMemo, useCallback } from 'react';
+import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
+import { useAuth } from '@/components/auth-context';
+import { sendWelcomeEmailClient } from '@/lib/email-client';
+import { useFirestore, useDoc, useCollection, useMemoFirebase, useFirebase } from '@/firebase';
+import { collection, query, where, doc, updateDoc, setDoc, serverTimestamp, orderBy, getDocs, deleteDoc, getDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  ClipboardList, 
+  Calendar, 
+  CheckCircle2, 
+  Clock, 
+  Plus, 
+  Save, 
+  Loader2, 
+  Zap, 
+  TrendingUp, 
+  FileText, 
+  MessageSquare,
+  ArrowLeft,
+  X,
+  History,
+  Target,
+  BarChart3,
+  BookOpen,
+  Send,
+  Upload,
+  BrainCircuit,
+  Info,
+  CalendarDays,
+  ExternalLink,
+  Download,
+  AlertCircle,
+  Sparkles,
+  PauseCircle
+} from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { evaluateQuizPerformance } from '@/ai/flows/evaluate-quiz-performance';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { Switch } from '@/components/ui/switch';
+
+const MENTOR_ORGANIZER_EMAIL = 'felizdeemprender@gmail.com';
+
+export default function FollowUpDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: followUpId } = use(params);
+  const { profile } = useAuth();
+  const db = useFirestore();
+  const { storage } = useFirebase();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('sessions');
+  const [mentorCourses, setMentorCourses] = useState<any[]>([]);
+  const [studentEnrollments, setStudentEnrollments] = useState<Record<string, any>>({});
+  const [studentEmail, setStudentEmail] = useState('');
+  const [mentorEmail, setMentorEmail] = useState('');
+  const [isUploadingGuide, setIsUploadingGuide] = useState(false);
+
+  const isMentor = profile?.roles.includes('mentor') || profile?.roles.includes('admin');
+  const isStudent = profile?.roles.includes('alumno') && !isMentor;
+
+  const clearUILocks = useCallback(() => {
+    document.body.style.pointerEvents = 'auto';
+    document.body.style.overflow = 'auto';
+    document.documentElement.style.pointerEvents = 'auto';
+    document.documentElement.style.overflow = 'auto';
+    document.body.removeAttribute('inert');
+    document.body.classList.remove('pointer-events-none');
+    document.documentElement.classList.remove('pointer-events-none');
+  }, []);
+
+  const followUpRef = useMemoFirebase(() => doc(db, 'followups', followUpId), [db, followUpId]);
+  const { data: followUp, isLoading: followUpLoading } = useDoc(followUpRef);
+
+  const sessionsQuery = useMemoFirebase(() => 
+    query(collection(db, 'followups', followUpId, 'sessions'))
+  , [db, followUpId]);
+  const { data: sessions } = useCollection(sessionsQuery);
+
+  const sortedSessions = useMemo(() => {
+    if (!sessions) return [];
+    return [...sessions].sort((a, b) => {
+      if (a.date && b.date) {
+        const dateTimeA = new Date(`${a.date}T${a.time || '00:00'}`).getTime();
+        const dateTimeB = new Date(`${b.date}T${b.time || '00:00'}`).getTime();
+        if (dateTimeA !== dateTimeB) return dateTimeA - dateTimeB;
+      }
+      if (a.date && !b.date) return -1;
+      if (!a.date && b.date) return 1;
+      return (a.orderIndex || 0) - (b.orderIndex || 0);
+    });
+  }, [sessions]);
+
+  const tasksQuery = useMemoFirebase(() => 
+    query(collection(db, 'followups', followUpId, 'tasks'), orderBy('createdAt', 'desc'))
+  , [db, followUpId]);
+  const { data: tasks } = useCollection(tasksQuery);
+
+  const [editingSession, setEditingSession] = useState<any>(null);
+  const [sessionForm, setSessionData] = useState({
+    date: '',
+    time: '',
+    duration: 60,
+    topics: [] as string[],
+    newTopic: '',
+    minutes: ''
+  });
+
+  const [taskForm, setTaskData] = useState({
+    title: '',
+    description: '',
+    evaluationCriteria: '',
+    type: 'free' as 'free' | 'course',
+    courseId: '',
+    deadline: '',
+    allowFileUpload: false
+  });
+
+  const [answeringTaskId, setAnsweringTaskId] = useState<string | null>(null);
+  const [studentAnswer, setStudentAnswer] = useState('');
+  const [studentFile, setStudentFile] = useState<File | null>(null);
+  const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+
+  useEffect(() => {
+    if (!editingSession && !answeringTaskId) {
+      const timer = setTimeout(clearUILocks, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [editingSession, answeringTaskId, clearUILocks]);
+
+  useEffect(() => {
+    if (isMentor) {
+      getDocs(query(collection(db, 'courses'), where('mentorId', '==', profile?.uid))).then(snap => {
+        setMentorCourses(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
+  }, [db, profile, isMentor]);
+
+  useEffect(() => {
+    if (followUp?.studentId) {
+      getDoc(doc(db, 'users', followUp.studentId)).then(snap => {
+        if (snap.exists()) setStudentEmail(snap.data().email || '');
+      });
+
+      getDocs(query(collection(db, 'enrollments'), where('studentId', '==', followUp.studentId))).then(snap => {
+        const mapping: Record<string, any> = {};
+        snap.docs.forEach(d => {
+          const data = d.data();
+          mapping[data.courseId] = data;
+        });
+        setStudentEnrollments(mapping);
+      });
+    }
+    
+    if (followUp?.mentorId) {
+      getDoc(doc(db, 'users', followUp.mentorId)).then(snap => {
+        if (snap.exists()) setMentorEmail(snap.data().email || '');
+      });
+    }
+  }, [db, followUp?.studentId, followUp?.mentorId]);
+
+  const handleAddAdditionalSession = async () => {
+    if (!followUp) return;
+    setLoading(true);
+    const sessionId = Math.random().toString(36).substring(2, 15);
+    const sessionRef = doc(db, 'followups', followUpId, 'sessions', sessionId);
+    
+    const maxIndex = sessions?.reduce((max, s) => Math.max(max, s.orderIndex || 0), 0) || 0;
+
+    const sessionData = {
+      id: sessionId,
+      followUpId,
+      orderIndex: maxIndex + 1,
+      isAdditional: true,
+      isCompleted: false,
+      topics: [],
+      minutes: '',
+      updatedAt: serverTimestamp()
+    };
+
+    try {
+      await setDoc(sessionRef, sessionData);
+      toast({ title: 'Sesión Extra Añadida', description: 'Se ha incorporado una sesión adicional al plan.' });
+    } catch (e: any) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: sessionRef.path,
+        operation: 'create',
+        requestResourceData: sessionData
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditSession = (session: any) => {
+    setEditingSession(session);
+    setSessionData({
+      date: session.date || '',
+      time: session.time || '',
+      duration: session.duration || 60,
+      topics: session.topics || [],
+      newTopic: '',
+      minutes: session.minutes || ''
+    });
+  };
+
+  const handleSaveSession = async (shouldSchedule = false) => {
+    if (!editingSession) return;
+    setLoading(true);
+    const ref = doc(db, 'followups', followUpId, 'sessions', editingSession.id);
+    const data = {
+      ...sessionForm,
+      isCompleted: sessionForm.minutes.trim().length > 0,
+      updatedAt: serverTimestamp()
+    };
+    delete (data as any).newTopic;
+
+    try {
+      await updateDoc(ref, data);
+      toast({ title: 'Datos Guardados', description: 'La sesión ha sido actualizada en el cronograma.' });
+      
+      if (shouldSchedule && sessionForm.date && sessionForm.time) {
+        const calendarLink = generateGoogleCalendarLink(sessionForm, editingSession.orderIndex, editingSession.isAdditional);
+        if (calendarLink) window.open(calendarLink, '_blank');
+      }
+      
+      setEditingSession(null);
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Error al guardar' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickUploadGuide = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !followUp || !profile) return;
+
+    setIsUploadingGuide(true);
+    try {
+      const guideRef = ref(storage, `followup_guides/${profile.uid}/${Date.now()}_${file.name}`);
+      const uploadResult = await uploadBytes(guideRef, file);
+      const url = await getDownloadURL(uploadResult.ref);
+
+      await updateDoc(doc(db, 'followups', followUpId), {
+        planGuideUrl: url,
+        updatedAt: serverTimestamp()
+      });
+
+      toast({ title: 'Guía Institucional Cargada', description: 'El documento ahora está disponible para el alumno.' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Error al subir guía' });
+    } finally {
+      setIsUploadingGuide(false);
+    }
+  };
+
+  const generateGoogleCalendarLink = (form: any, orderIndex: number, isAdditional: boolean) => {
+    if (!form.date || !form.time) return null;
+    
+    try {
+      const [year, month, day] = form.date.split('-');
+      const [hour, minute] = form.time.split(':');
+      
+      const start = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+      const end = new Date(start.getTime() + (form.duration || 60) * 60000);
+      
+      const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d\d\d/g, '');
+      
+      const title = `${isAdditional ? 'Sesión Extra' : 'Sesión ' + orderIndex}: ${followUp?.title}`;
+      const details = `Seguimiento Académico: ${followUp?.goal}\n\nMentor: ${mentorEmail || 'Mentor Institucional'}\nAlumno: ${followUp?.studentName}\n\nTemas Previstos:\n${form.topics.map((t: string) => `• ${t}`).join('\n')}`;
+      
+      const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
+      
+      let guestToAdd = '';
+      if (isMentor) {
+        guestToAdd = studentEmail;
+      } else {
+        guestToAdd = mentorEmail || MENTOR_ORGANIZER_EMAIL;
+      }
+
+      const params = [
+        `text=${encodeURIComponent(title)}`,
+        `dates=${formatDate(start)}/${formatDate(end)}`,
+        `details=${encodeURIComponent(details)}`,
+        guestToAdd ? `add=${encodeURIComponent(guestToAdd)}` : ''
+      ].filter(Boolean).join('&');
+      
+      return `${baseUrl}&${params}`;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const handleCreateTask = async () => {
+    const isFree = taskForm.type === 'free';
+    const isValid = isFree ? !!taskForm.description : !!taskForm.courseId;
+    if (!isValid || !followUp) return;
+
+    setLoading(true);
+    const taskId = Math.random().toString(36).substring(2, 15);
+    const taskRef = doc(db, 'followups', followUpId, 'tasks', taskId);
+    
+    const course = mentorCourses.find(c => c.id === taskForm.courseId);
+    
+    if (taskForm.type === 'course' && taskForm.courseId) {
+      const enrollQuery = query(
+        collection(db, 'enrollments'), 
+        where('studentId', '==', followUp.studentId),
+        where('courseId', '==', taskForm.courseId)
+      );
+      const enrollSnap = await getDocs(enrollQuery);
+      
+      if (enrollSnap.empty) {
+        const studentSnap = await getDoc(doc(db, 'users', followUp.studentId));
+        const studentData = studentSnap.data();
+        const newEnrollRef = doc(collection(db, 'enrollments'));
+        const targetEmail = studentData?.email || '';
+        await setDoc(newEnrollRef, {
+          id: newEnrollRef.id,
+          courseId: taskForm.courseId,
+          studentId: followUp.studentId,
+          studentName: followUp.studentName,
+          inviteEmail: targetEmail,
+          status: 'active',
+          enrolledAt: serverTimestamp(),
+          progress: { completedModules: [] }
+        });
+
+        // Enviar correo de felicitación por Trigger Email
+        if (targetEmail) {
+          await sendWelcomeEmailClient(
+            db,
+            targetEmail,
+            followUp.studentName,
+            course?.title || 'tu curso'
+          );
+        }
+      }
+    }
+
+    const taskData = {
+      id: taskId,
+      followUpId,
+      ...taskForm,
+      title: taskForm.title || (taskForm.type === 'course' ? `Curso: ${course?.title}` : 'Desafío Libre'),
+      description: isFree ? taskForm.description : `Completar el programa académico: ${course?.title}`,
+      courseTitle: course?.title || null,
+      status: 'pending',
+      progress: 0,
+      createdAt: serverTimestamp()
+    };
+
+    try {
+      await setDoc(taskRef, taskData);
+      toast({ title: 'Tarea Asignada' });
+      setTaskData({ title: '', description: '', evaluationCriteria: '', type: 'free', courseId: '', deadline: '', allowFileUpload: false });
+    } catch (e: any) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: taskRef.path,
+        operation: 'create',
+        requestResourceData: taskData
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitStudentTask = async (taskId: string) => {
+    if (!studentAnswer.trim() || !followUp) return;
+    setIsSubmittingTask(true);
+    try {
+      let fileUrl = null;
+      if (studentFile) {
+        const fileRef = ref(storage, `followup_tasks/${followUp.studentId}/${taskId}/${Date.now()}_${studentFile.name}`);
+        await uploadBytes(fileRef, studentFile);
+        fileUrl = await getDownloadURL(fileRef);
+      }
+
+      const task = tasks?.find(t => t.id === taskId);
+
+      const aiResult = await evaluateQuizPerformance({
+        questions: [{
+          question: task.description,
+          type: 'free_response',
+          correctAnswer: task.evaluationCriteria || 'Evalúa la profundidad conceptual y aplicación práctica basándote en la consigna de mentoría.'
+        }],
+        answers: { "0": studentAnswer },
+        studentName: followUp.studentName
+      });
+
+      const taskRef = doc(db, 'followups', followUpId, 'tasks', taskId);
+      await updateDoc(taskRef, {
+        answer: studentAnswer,
+        fileUrl,
+        aiFeedback: aiResult.feedback,
+        score: aiResult.score,
+        progress: 100,
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp()
+      });
+
+      toast({ title: 'Tarea enviada' });
+      setAnsweringTaskId(null);
+      setStudentAnswer('');
+      setStudentFile(null);
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Error al enviar tarea' });
+    } finally {
+      setIsSubmittingTask(false);
+    }
+  };
+
+  const handleUpdateTaskProgress = async (taskId: string, progress: number, status: string) => {
+    const ref = doc(db, 'followups', followUpId, 'tasks', taskId);
+    await updateDoc(ref, { progress, status, updatedAt: serverTimestamp() });
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    await deleteDoc(doc(db, 'followups', followUpId, 'tasks', taskId));
+    toast({ title: 'Tarea eliminada' });
+  };
+
+  if (followUpLoading) return <DashboardLayout><div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary h-10 w-10" /></div></DashboardLayout>;
+
+  const plannedSessionsList = sessions?.filter(s => !s.isAdditional) || [];
+  const extraSessionsList = sessions?.filter(s => s.isAdditional) || [];
+  
+  const completedPlanned = plannedSessionsList.filter(s => s.isCompleted).length;
+  const totalPlanned = followUp?.totalSessions || plannedSessionsList.length || 0;
+  
+  const completedExtra = extraSessionsList.filter(s => s.isCompleted).length;
+  const totalExtra = extraSessionsList.length;
+
+  const completedTasks = tasks?.filter(t => t.status === 'completed').length || 0;
+  const totalTasks = tasks?.length || 0;
+  const avgProgress = totalTasks > 0 ? tasks!.reduce((acc, t) => acc + (t.progress || 0), 0) / totalTasks : 0;
+
+  const isGmailSession = studentEmail?.toLowerCase().endsWith('@gmail.com') || mentorEmail?.toLowerCase().endsWith('@gmail.com') || MENTOR_ORGANIZER_EMAIL.toLowerCase().endsWith('@gmail.com');
+  const isSuspended = followUp?.status === 'suspended';
+
+  return (
+    <DashboardLayout>
+      <div className={cn("space-y-8 pb-20", isSuspended && "opacity-80")}>
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-8">
+          <div className="flex items-center gap-6">
+            <Button variant="ghost" size="icon" onClick={() => router.push('/seguimientos')} className="rounded-full h-12 w-12 hover:bg-secondary"><ArrowLeft className="h-6 w-6" /></Button>
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">{followUp?.title}</h1>
+                <Badge variant="outline" className={cn(
+                  "border-none px-3 py-1",
+                  isSuspended ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                )}>
+                  {isSuspended ? <PauseCircle className="h-3 w-3 mr-1" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
+                  {isSuspended ? 'Suspendido' : 'En Curso'}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground font-medium flex items-center gap-2"><Target className="h-4 w-4" /> Alumno: {followUp?.studentName}</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border text-center">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cumplimiento Plan</p>
+              <p className="text-2xl font-black text-primary">{Math.round((completedPlanned / (totalPlanned || 1)) * 100)}%</p>
+            </div>
+          </div>
+        </header>
+
+        {isSuspended && (
+          <div className="bg-rose-50 border-l-4 border-rose-400 p-6 rounded-r-2xl flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2">
+            <AlertCircle className="h-6 w-6 text-rose-500 shrink-0 mt-0.5" />
+            <div className="text-sm text-rose-800 space-y-1">
+              <p className="font-bold">Seguimiento Suspendido Institucionalmente</p>
+              <p>Este programa de acompañamiento se encuentra pausado. Las tareas y el registro de sesiones han sido inhabilitados temporalmente.</p>
+            </div>
+          </div>
+        )}
+
+        <div className={cn("grid lg:grid-cols-4 gap-8", isSuspended && "pointer-events-none select-none grayscale-[0.5]")}>
+          <div className="lg:col-span-3 space-y-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <TabsList className="bg-secondary/20 p-1 rounded-2xl h-14 w-full md:w-auto justify-start gap-2">
+                  <TabsTrigger value="sessions" className="rounded-xl px-6 font-bold gap-2"><History className="h-4 w-4" /> Sesiones y Minutas</TabsTrigger>
+                  <TabsTrigger value="tasks" className="rounded-xl px-6 font-bold gap-2"><Zap className="h-4 w-4" /> Plan de Acción</TabsTrigger>
+                  <TabsTrigger value="report" className="rounded-xl px-6 font-bold gap-2"><BarChart3 className="h-4 w-4" /> Reporte de Avance</TabsTrigger>
+                </TabsList>
+                {activeTab === 'sessions' && isMentor && !isSuspended && (
+                  <Button onClick={handleAddAdditionalSession} disabled={loading} className="h-12 px-6 rounded-xl font-bold bg-accent text-white shadow-lg gap-2 shrink-0">
+                    <Plus className="h-4 w-4" /> Sesión Extra
+                  </Button>
+                )}
+              </div>
+
+              <TabsContent value="sessions" className="space-y-6">
+                <div className="grid gap-4">
+                  {sortedSessions.map((session) => (
+                    <Card key={session.id} className={cn(
+                      "border-none shadow-md rounded-[2rem] overflow-hidden transition-all",
+                      session.isCompleted ? "bg-white" : "bg-slate-50 border-2 border-dashed opacity-70",
+                      session.isAdditional && !session.isCompleted && "bg-amber-50 border-amber-200"
+                    )}>
+                      <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-sm",
+                            session.isCompleted 
+                              ? "bg-primary text-white" 
+                              : session.isAdditional 
+                                ? "bg-amber-500 text-white" 
+                                : "bg-muted text-muted-foreground"
+                          )}>
+                            {session.isAdditional ? <Plus className="h-5 w-5" /> : session.orderIndex}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <h3 className="font-bold text-lg">
+                                {session.isCompleted 
+                                  ? `Sesión Realizada: ${format(new Date(session.date + 'T' + session.time), 'dd/MM/yyyy')}` 
+                                  : session.date 
+                                    ? `Programada para: ${format(new Date(session.date + 'T' + session.time), 'dd/MM/yyyy HH:mm')}`
+                                    : session.isAdditional ? 'Sesión Extra - Por Programar' : `Sesión ${session.orderIndex} - Pendiente`
+                                }
+                              </h3>
+                              {session.isAdditional && <Badge className="bg-amber-100 text-amber-700 border-none text-[8px] uppercase tracking-widest font-black">Adicional</Badge>}
+                            </div>
+                            <p className="text-xs font-medium text-muted-foreground">
+                              {session.isCompleted ? `${session.duration} min • ${session.topics.length} temas tratados` : 'Agenda tu próximo encuentro'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          {!session.isCompleted && session.date && (
+                            <Button 
+                              onClick={() => {
+                                const link = generateGoogleCalendarLink(session, session.orderIndex, session.isAdditional);
+                                if (link) window.open(link, '_blank');
+                              }}
+                              variant="outline" 
+                              title="Tú serás el organizador del evento al agendarlo."
+                              className="rounded-xl font-bold h-11 px-4 gap-2 border-primary/20 text-primary bg-white shadow-sm"
+                            >
+                              <CalendarDays className="h-4 w-4" /> 
+                              {isGmailSession ? 'Agendar (Google)' : 'Agendar'}
+                            </Button>
+                          )}
+
+                          {isMentor && !isSuspended && (
+                            <>
+                              {!session.isCompleted && !session.date && (
+                                <Button 
+                                  onClick={() => handleEditSession(session)}
+                                  variant="outline" 
+                                  className="rounded-xl font-bold h-11 px-4 gap-2 border-primary/20 text-primary bg-white shadow-sm"
+                                >
+                                  <CalendarDays className="h-4 w-4" /> Programar Fecha
+                                </Button>
+                              )}
+                              <Button onClick={() => handleEditSession(session)} variant={session.isCompleted ? 'outline' : 'default'} className="rounded-xl font-bold h-11 px-6 shadow-sm">
+                                {session.isCompleted ? 'Ver / Editar Minuta' : 'Registrar Sesión'}
+                              </Button>
+                            </>
+                          )}
+                          {!isMentor && session.isCompleted && (
+                            <Badge className="bg-emerald-50 text-emerald-700 border-none font-bold">Realizada</Badge>
+                          )}
+                        </div>
+                      </div>
+                      {session.isCompleted && (
+                        <div className="px-6 pb-6 pt-0 space-y-4">
+                          <div className="flex flex-wrap gap-2">
+                            {session.topics.map((t: string, i: number) => <Badge key={i} className="bg-primary/10 text-primary border-none text-[9px] uppercase font-bold">{t}</Badge>)}
+                          </div>
+                          <p className="text-sm text-slate-600 italic line-clamp-2 bg-muted/20 p-4 rounded-xl border border-black/5 leading-relaxed">"{session.minutes}"</p>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="tasks" className="space-y-8">
+                {isMentor && !isSuspended && (
+                  <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+                    <CardHeader className="bg-primary/5 p-8 border-b">
+                      <CardTitle className="xl font-bold">Asignar Compromiso</CardTitle>
+                      <CardDescription>Establece objetivos pedagógicos para el alumno entre sesiones.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-8 space-y-6">
+                      <div className="grid sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Tipo de Tarea</Label>
+                          <div className="flex gap-4 p-4 bg-secondary/10 rounded-xl">
+                            <div className="flex items-center gap-2">
+                              <input type="radio" id="task-free" checked={taskForm.type === 'free'} onChange={() => setTaskData({...taskForm, type: 'free', courseId: ''})} className="accent-primary" />
+                              <Label htmlFor="task-free" className="text-xs font-bold cursor-pointer">Pregunta Libre</Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input type="radio" id="task-course" checked={taskForm.type === 'course'} onChange={() => setTaskData({...taskForm, type: 'course'})} className="accent-primary" />
+                              <Label htmlFor="task-course" className="text-xs font-bold cursor-pointer">Vincular Curso</Label>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Fecha Límite</Label>
+                          <Input type="date" value={taskForm.deadline} onChange={e => setTaskData({...taskForm, deadline: e.target.value})} className="h-12 rounded-xl bg-secondary/5" />
+                        </div>
+                      </div>
+
+                      {taskForm.type === 'free' ? (
+                        <div className="space-y-6 animate-in slide-in-from-top-2">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Título del Desafío</Label>
+                            <Input value={taskForm.title} onChange={e => setTaskData({...taskForm, title: e.target.value})} placeholder="Ej: Análisis de Competencia" className="h-12 rounded-xl bg-secondary/5" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Consigna Detallada (Pregunta)</Label>
+                            <Textarea value={taskForm.description} onChange={e => setTaskData({...taskForm, description: e.target.value})} placeholder="Describe qué debe realizar el alumno..." className="min-h-[100px] rounded-xl bg-secondary/5" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase text-accent ml-1 flex items-center gap-2"><BrainCircuit className="h-3 w-3" /> Criterios de Evaluación para la IA</Label>
+                            <Textarea value={taskForm.evaluationCriteria} onChange={e => setTaskData({...taskForm, evaluationCriteria: e.target.value})} placeholder="Indica qué puntos debe validar Gemini para calificar esta tarea..." className="min-h-[100px] rounded-xl bg-accent/5 border-accent/20" />
+                          </div>
+                          <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-dashed border-primary/10">
+                            <div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><Label className="text-xs font-bold">Habilitar Adjunto PDF</Label></div>
+                            <Switch checked={taskForm.allowFileUpload} onCheckedChange={(val) => setTaskData({...taskForm, allowFileUpload: val})} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2 animate-in slide-in-from-top-2">
+                          <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Seleccionar Curso del Mentor</Label>
+                          <Select onValueChange={id => setTaskData({...taskForm, courseId: id})}>
+                            <SelectTrigger className="h-12 rounded-xl bg-secondary/5"><SelectValue placeholder="Elegir programa..." /></SelectTrigger>
+                            <SelectContent>
+                              {mentorCourses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-2 items-start mt-4">
+                            <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                            <p className="text-[10px] text-blue-800 font-medium leading-relaxed">Al seleccionar un curso, el alumno será inscrito automáticamente. La tarea se marcará como completada cuando el curso llegue al 100%.</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <Button onClick={handleCreateTask} disabled={loading || (taskForm.type === 'free' && !taskForm.description) || (taskForm.type === 'course' && !taskForm.courseId)} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 bg-primary">
+                        {loading ? <Loader2 className="animate-spin mr-2" /> : <Plus className="mr-2" />} Asignar Tarea de Seguimiento
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg px-2 flex items-center gap-2 text-primary/80"><ClipboardList className="h-5 w-5" /> Plan de Acción Vigente ({tasks?.length})</h3>
+                  {tasks?.map((task) => {
+                    const isLinkedCourse = task.type === 'course';
+                    const enrollment = isLinkedCourse ? studentEnrollments[task.courseId] : null;
+                    const courseInfo = isLinkedCourse ? mentorCourses.find(c => c.id === task.courseId) : null;
+                    
+                    let displayProgress = task.progress || 0;
+                    let displayStatus = task.status || 'pending';
+                    let displayScore = task.score;
+                    let displayFeedback = task.aiFeedback;
+
+                    if (isLinkedCourse && enrollment) {
+                      const completedModules = enrollment.progress?.completedModules || [];
+                      const totalModules = courseInfo?.modulesCount || 1;
+                      displayProgress = Math.min(100, Math.round((completedModules.length / totalModules) * 100));
+                      displayStatus = displayProgress >= 100 ? 'completed' : (displayProgress > 0 ? 'in_progress' : 'pending');
+                      
+                      if (displayProgress >= 100 && enrollment.progress?.evaluations) {
+                        const evals = Object.values(enrollment.progress.evaluations) as any[];
+                        if (evals.length > 0) {
+                          displayScore = Math.round(evals.reduce((sum, e) => sum + (e.score || 0), 0) / evals.length);
+                          displayFeedback = displayFeedback || "Programa completado satisfactoriamente según el registro de evaluaciones.";
+                        }
+                      }
+                    }
+
+                    return (
+                      <Card key={task.id} className="p-6 rounded-3xl border-none shadow-sm bg-white hover:shadow-md transition-all relative group">
+                        {isMentor && !isSuspended && <Button variant="ghost" size="icon" onClick={() => handleDeleteTask(task.id)} className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-destructive rounded-full hover:bg-destructive/10"><X className="h-4 w-4" /></Button>}
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="space-y-1">
+                            <h4 className="font-bold text-primary text-lg leading-tight">{task.title || task.description}</h4>
+                            <div className="flex items-center gap-3">
+                              <Badge variant="secondary" className="text-[9px] uppercase font-bold tracking-widest bg-secondary/50 border-none">{isLinkedCourse ? `VINCULADO: ${task.courseTitle}` : 'CONSIGNA LIBRE'}</Badge>
+                              {task.deadline && <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="h-3 w-3" /> Límite: {format(new Date(task.deadline), 'dd/MM/yyyy')}</span>}
+                            </div>
+                          </div>
+                          <Badge className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase border-none shadow-sm",
+                            displayStatus === 'completed' ? "bg-emerald-500 text-white" : displayStatus === 'in_progress' ? "bg-blue-500 text-white" : "bg-amber-500 text-white"
+                          )}>
+                            {displayStatus === 'completed' ? 'Completada' : displayStatus === 'in_progress' ? 'En Progreso' : 'Pendiente'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-3 pt-4 border-t border-dashed border-black/5">
+                          <div className="flex justify-between items-end mb-1">
+                            <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest">Estado de Avance: {displayProgress}%</span>
+                            {isMentor && !isLinkedCourse && !isSuspended && (
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 hover:bg-slate-100" onClick={() => handleUpdateTaskProgress(task.id, 0, 'pending')}>Reset</Button>
+                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 text-blue-600 hover:bg-blue-50" onClick={() => handleUpdateTaskProgress(task.id, 50, 'in_progress')}>50%</Button>
+                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 text-emerald-600 hover:bg-emerald-50" onClick={() => handleUpdateTaskProgress(task.id, 100, 'completed')}>Listo</Button>
+                              </div>
+                            )}
+                            {isStudent && !isLinkedCourse && task.status !== 'completed' && !isSuspended && (
+                              <Button size="sm" onClick={() => { setAnsweringTaskId(task.id); setStudentAnswer(''); setStudentFile(null); }} className="h-8 rounded-lg font-bold text-[10px] gap-2 shadow-md bg-primary">
+                                <Plus className="h-3 w-3" /> Responder Desafío
+                              </Button>
+                            )}
+                          </div>
+                          <Progress value={displayProgress} className="h-1.5 bg-secondary/50" />
+                        </div>
+
+                        {displayStatus === 'completed' && (
+                          <div className="mt-4 space-y-4 pt-4 border-t border-dashed border-black/5">
+                            {!isLinkedCourse && task.answer && (
+                              <div className="bg-secondary/10 p-4 rounded-xl border border-black/5">
+                                <span className="text-[9px] font-bold uppercase text-muted-foreground block mb-1">Respuesta del Alumno</span>
+                                <p className="text-sm font-medium text-slate-700 leading-relaxed">{task.answer}</p>
+                                {task.fileUrl && (
+                                  <Button variant="link" size="sm" className="h-auto p-0 text-[10px] font-bold mt-2 text-primary" onClick={() => window.open(task.fileUrl, '_blank')}>
+                                    <FileText className="h-3 w-3 mr-1" /> Ver Documento Adjunto
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                            {(displayScore !== undefined || displayFeedback) && (
+                              <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 relative overflow-hidden">
+                                <BrainCircuit className="absolute -right-2 -top-2 h-16 w-16 opacity-5 text-emerald-500" />
+                                <h5 className="text-[10px] font-bold uppercase text-emerald-600 mb-2 flex items-center gap-2">
+                                  {isLinkedCourse ? <CheckCircle2 className="h-3 w-3" /> : <BrainCircuit className="h-3 w-3" />} 
+                                  {isLinkedCourse ? 'Resultado Académico' : 'Evaluación IA'}
+                                </h5>
+                                {displayFeedback && <p className="text-sm italic text-emerald-800 leading-relaxed font-medium">"{displayFeedback}"</p>}
+                                {displayScore !== undefined && (
+                                  <div className="mt-3 flex justify-between items-center">
+                                    <Badge className="bg-emerald-500 text-white border-none h-5 text-[9px] font-black">Puntaje: {displayScore}%</Badge>
+                                    {task.completedAt && <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-tighter">{format(new Date(task.completedAt), 'dd/MM/yyyy HH:mm')}</span>}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="report" className="space-y-8">
+                <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-900 text-white overflow-hidden p-12 relative">
+                  <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none"><Sparkles className="h-64 w-64" /></div>
+                  <header className="flex justify-between items-start mb-12 relative z-10">
+                    <div>
+                      <h2 className="text-3xl font-headline font-bold text-white tracking-tight">Informe de Evolución</h2>
+                      <p className="text-slate-400 font-medium">Análisis de acompañamiento institucional</p>
+                    </div>
+                    <Badge className="bg-white/10 text-white border-white/20 h-8 px-4 font-bold uppercase tracking-widest text-[10px]">REPORTE MENTORED v1.5</Badge>
+                  </header>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6 mb-12 relative z-10">
+                    <div className="p-6 bg-white/5 rounded-3xl border border-white/10 text-center backdrop-blur-md">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Plan Original</p>
+                      <p className="text-4xl font-black text-white">{completedPlanned} / {totalPlanned}</p>
+                    </div>
+                    <div className="p-6 bg-amber-500/10 rounded-3xl border border-amber-500/20 text-center backdrop-blur-md">
+                      <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2">Sesiones Extras</p>
+                      <p className="text-4xl font-black text-amber-400">{completedExtra} / {totalExtra}</p>
+                    </div>
+                    <div className="p-6 bg-white/5 rounded-3xl border border-white/10 text-center backdrop-blur-md">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tareas Completadas</p>
+                      <p className="text-4xl font-black text-white">{completedTasks} / {totalTasks}</p>
+                    </div>
+                    <div className="p-6 bg-white/5 rounded-3xl border border-white/10 text-center backdrop-blur-md">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Progreso General</p>
+                      <p className="text-4xl font-black text-emerald-400">{Math.round(avgProgress)}%</p>
+                    </div>
+                    <div className="p-6 bg-emerald-500 text-slate-900 rounded-3xl shadow-xl shadow-emerald-500/20 text-center transform hover:scale-105 transition-transform">
+                      <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest mb-2">Estado del Plan</p>
+                      <p className="text-2xl font-black uppercase">Consistente</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-10 relative z-10">
+                    <div className="space-y-4">
+                      <h3 className="font-bold text-xl flex items-center gap-3 text-white"><Zap className="h-6 w-6 text-emerald-400" /> Logros Académicos</h3>
+                      <div className="grid gap-4">
+                        {tasks?.filter(t => t.status === 'completed').length === 0 ? (
+                          <p className="text-slate-500 italic text-sm py-4">Aún no se han registrado hitos completados.</p>
+                        ) : tasks?.filter(t => t.status === 'completed').map(t => (
+                          <div key={t.id} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                            <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+                            <span className="font-medium text-slate-200 line-clamp-1">{t.title || t.description}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="font-bold text-xl flex items-center gap-3 text-white"><MessageSquare className="h-6 w-6 text-blue-400" /> Observaciones del Mentor</h3>
+                      <ScrollArea className="h-[250px] pr-4">
+                        <div className="space-y-4">
+                          {sessions?.filter(s => s.isCompleted).length === 0 ? (
+                            <p className="text-slate-500 italic text-sm">No hay minutas registradas para este periodo.</p>
+                          ) : sessions?.filter(s => s.isCompleted).map(s => (
+                            <div key={s.id} className="p-6 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/8 transition-colors">
+                              <div className="flex justify-between items-center mb-3">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sesión {s.isAdditional ? 'Extra' : s.orderIndex} • {format(new Date(s.date + 'T' + s.time), 'dd/MM/yyyy')}</p>
+                                {s.isAdditional && <Badge className="bg-amber-500/20 text-amber-400 border-none h-4 text-[8px]">Adicional</Badge>}
+                              </div>
+                              <p className="text-sm text-slate-300 italic leading-relaxed">"{s.minutes}"</p>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <div className="space-y-8">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden sticky top-8">
+              <CardHeader className="bg-primary p-8 text-white border-b relative">
+                <Target className="absolute -right-4 -top-4 h-24 w-24 opacity-10" />
+                <CardTitle className="text-lg font-bold flex items-center gap-3 relative z-10"><Target className="h-5 w-5 text-accent" /> Objetivo del Programa</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <div className="bg-secondary/10 p-6 rounded-3xl border-l-4 border-primary shadow-inner">
+                  <p className="text-sm leading-relaxed text-slate-700 font-medium italic">"{followUp?.goal}"</p>
+                </div>
+
+                {followUp?.planGuideUrl ? (
+                  <Button 
+                    onClick={() => window.open(followUp.planGuideUrl, '_blank')}
+                    className="w-full h-12 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02]"
+                  >
+                    <Download className="h-4 w-4" /> Ver Guía del Plan
+                  </Button>
+                ) : isMentor && !isSuspended && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Documento Maestro (Plan)</Label>
+                    <div className="p-4 border-2 border-dashed rounded-xl bg-secondary/5 flex flex-col items-center gap-2 relative hover:bg-secondary/10 transition-all border-primary/10">
+                      <input 
+                        type="file" 
+                        className="absolute inset-0 opacity-0 cursor-pointer" 
+                        onChange={handleQuickUploadGuide}
+                        disabled={isUploadingGuide}
+                      />
+                      {isUploadingGuide ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      ) : (
+                        <>
+                          <Upload className="h-6 w-6 text-primary/40" />
+                          <p className="text-[10px] font-bold text-primary/60 text-center">Subir guía institucional para el alumno</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4 pt-4 border-t border-dashed border-black/5">
+                  <div className="flex justify-between items-center text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                    <span>Cronograma Plan</span>
+                    <span className="text-primary font-black">{Math.round((completedPlanned/(totalPlanned || 1))*100)}%</span>
+                  </div>
+                  <Progress value={(completedPlanned/(totalPlanned || 1))*100} className="h-2 bg-secondary/50" />
+                  <div className="flex flex-col gap-2 text-[10px] font-bold text-muted-foreground uppercase mt-4">
+                    <p className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-black/5"><Calendar className="h-3.5 w-3.5 text-primary/40" /> Inicio: {followUp?.startDate ? format(new Date(followUp.startDate), 'dd/MM/yyyy') : '-'}</p>
+                    <p className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-black/5"><Clock className="h-3.5 w-3.5 text-primary/40" /> Fin Previsto: {followUp?.endDate ? format(new Date(followUp.endDate), 'dd/MM/yyyy') : '-'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Session Editor Dialog */}
+      <Dialog open={!!editingSession} onOpenChange={open => !open && setEditingSession(null)}>
+        <DialogContent className="max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
+          <div className={cn("p-8 text-white flex justify-between items-center relative", editingSession?.isAdditional ? "bg-amber-500" : "bg-primary")}>
+            <div className="relative z-10">
+              <DialogTitle className="text-2xl font-bold text-white">
+                {editingSession?.isAdditional ? 'Sesión Extraordinaria' : `Sesión ${editingSession?.orderIndex}`}
+              </DialogTitle>
+              <DialogDescription className="text-white/70">Registra el avance o agenda el encuentro.</DialogDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setEditingSession(null)} className="rounded-full text-white hover:bg-white/10 shrink-0 relative z-10"><X className="h-6 w-6" /></Button>
+            {editingSession?.isAdditional && <Zap className="absolute -right-4 -top-4 h-32 w-32 opacity-10 pointer-events-none" />}
+          </div>
+          <div className="p-8 space-y-8">
+            <div className="grid sm:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Fecha Encuentro</Label>
+                <Input type="date" value={sessionForm.date} onChange={e => setSessionData({...sessionForm, date: e.target.value})} className="h-12 rounded-xl bg-secondary/5 border-none font-bold" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Hora Inicio</Label>
+                <Input type="time" value={sessionForm.time} onChange={e => setSessionData({...sessionForm, time: e.target.value})} className="h-12 rounded-xl bg-secondary/5 border-none font-bold" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Duración (Min)</Label>
+                <Input type="number" value={sessionForm.duration} onChange={e => setSessionData({...sessionForm, duration: parseInt(e.target.value) || 0})} className="h-12 rounded-xl bg-secondary/5 border-none font-bold" />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Temas Tratados / Por Tratar</Label>
+              <div className="flex gap-2">
+                <Input value={sessionForm.newTopic} onChange={e => setSessionData({...sessionForm, newTopic: e.target.value})} onKeyDown={e => e.key === 'Enter' && sessionForm.newTopic && setSessionData({...sessionForm, topics: [...sessionForm.topics, sessionForm.newTopic], newTopic: ''})} placeholder="Ej: Análisis FODA..." className="h-12 rounded-xl flex-1 bg-secondary/5 border-none" />
+                <Button onClick={() => sessionForm.newTopic && setSessionData({...sessionForm, topics: [...sessionForm.topics, sessionForm.newTopic], newTopic: ''})} className="h-12 px-6 rounded-xl font-bold bg-primary shadow-md"><Plus className="h-4 w-4" /></Button>
+              </div>
+              <div className="flex flex-wrap gap-2 min-h-[40px]">
+                {sessionForm.topics.length === 0 ? (
+                  <p className="text-[10px] text-muted-foreground italic ml-1">No se han definido temas aún.</p>
+                ) : sessionForm.topics.map((t, i) => (
+                  <Badge key={i} className="bg-primary/10 text-primary border-none py-1.5 px-4 rounded-xl gap-2 font-bold group shadow-sm">
+                    {t}
+                    <button onClick={() => setSessionData({...sessionForm, topics: sessionForm.topics.filter((_, idx) => idx !== i)})} className="hover:text-destructive transition-colors"><X className="h-3 w-3" /></button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Minuta / Conclusiones Académicas</Label>
+              <Textarea value={sessionForm.minutes} onChange={e => setSessionData({...sessionForm, minutes: e.target.value})} placeholder="Registra las conclusiones una vez terminada la sesión..." className="min-h-[150px] rounded-2xl p-6 shadow-inner bg-secondary/10 border-none leading-relaxed text-sm" />
+            </div>
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-3">
+              {sessionForm.date && sessionForm.time && (
+                <Button onClick={() => handleSaveSession(true)} variant="outline" className="flex-1 h-14 rounded-2xl font-bold text-primary border-primary/20 gap-2 bg-white shadow-sm hover:bg-primary/5">
+                  <CalendarDays className="h-5 w-5" /> Agendar en Google Calendar
+                </Button>
+              )}
+              <Button onClick={() => handleSaveSession(false)} disabled={loading || !sessionForm.date || !sessionForm.time} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 bg-primary">
+                {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} {sessionForm.minutes ? 'Finalizar Sesión' : 'Guardar Datos'}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Student Task Response Dialog */}
+      <Dialog open={!!answeringTaskId} onOpenChange={open => !open && setAnsweringTaskId(null)}>
+        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
+          <div className="bg-accent p-8 text-white flex justify-between items-center relative">
+            <div className="relative z-10">
+              <DialogTitle className="text-2xl font-bold">Enviar Respuesta</DialogTitle>
+              <DialogDescription className="text-white/70">Tu respuesta será analizada integralmente por la IA institucional.</DialogDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setAnsweringTaskId(null)} className="rounded-full text-white hover:bg-white/10 shrink-0 relative z-10"><X className="h-6 w-6" /></Button>
+            <BrainCircuit className="absolute -right-4 -top-4 h-32 w-32 opacity-10 pointer-events-none" />
+          </div>
+          <div className="p-8 space-y-6">
+            <div className="bg-accent/5 p-6 rounded-2xl border border-accent/10 shadow-inner">
+              <p className="text-xs font-black text-accent uppercase tracking-[0.2em] mb-2">Consigna Académica:</p>
+              <p className="text-sm font-medium italic text-slate-700 leading-relaxed">"{tasks?.find(t => t.id === answeringTaskId)?.description}"</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Tu Análisis / Desarrollo</Label>
+              <Textarea 
+                value={studentAnswer} 
+                onChange={e => setStudentAnswer(e.target.value)} 
+                placeholder="Escribe aquí tu respuesta detallada, reflexiones y hallazgos..." 
+                className="min-h-[200px] rounded-2xl p-6 bg-secondary/10 border-none shadow-inner leading-relaxed text-sm" 
+              />
+            </div>
+
+            {tasks?.find(t => t.id === answeringTaskId)?.allowFileUpload && (
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Documento de Respaldo (PDF)</Label>
+                <div className="p-8 border-2 border-dashed rounded-2xl flex flex-col items-center gap-3 relative bg-muted/5 group hover:bg-muted/10 transition-all border-accent/20">
+                  <input 
+                    type="file" 
+                    accept=".pdf" 
+                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                    onChange={e => setStudentFile(e.target.files?.[0] || null)} 
+                  />
+                  <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                    {studentFile ? <FileText className="text-accent h-7 w-7" /> : <Upload className="text-accent h-7 w-7" />}
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-slate-700">{studentFile ? studentFile.name : 'Seleccionar Archivo PDF'}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 max-w-[200px]">El archivo será leído por Gemini para integrarlo a tu feedback.</p>
+                  </div>
+                  {studentFile && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute top-2 right-2 h-8 w-8 rounded-full text-muted-foreground hover:text-destructive z-10"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setStudentFile(null); }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="pt-4">
+              <Button onClick={() => handleSubmitStudentTask(answeringTaskId!)} disabled={isSubmittingTask || !studentAnswer.trim()} className="w-full h-16 rounded-[1.5rem] font-bold text-xl shadow-2xl bg-accent hover:bg-accent/90 transition-all hover:scale-[1.01]">
+                {isSubmittingTask ? <><Loader2 className="animate-spin mr-2 h-6 w-6" /> Procesando con Gemini...</> : <><Send className="mr-3 h-6 w-6" /> Enviar para Evaluación IA</>}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout>
+  );
+}

@@ -1,0 +1,66 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "site": "btechacademy-8b329",
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "X-XSS-Protection",
+            "value": "1; mode=block"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": "ssrbtechacademy8b329",
+        "region": "us-central1"
+      },
+      {
+        "source": "/(dashboard|auth|courses|my-courses|tasks|alumnos|seguimientos|settings|mentoria|ai-assistant|admin|upgrade-required|tutor|v|about|services|case-studies|abonos)/**",
+        "function": "ssrbtechacademy8b329",
+        "region": "us-central1"
+      },
+      {
+        "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg))",
+        "destination": "/public/$1"
+      },
+      {
+        "source": "**",
+        "function": "ssrbtechacademy8b329",
+        "region": "us-central1"
+      }
+    ]
+  }
+}

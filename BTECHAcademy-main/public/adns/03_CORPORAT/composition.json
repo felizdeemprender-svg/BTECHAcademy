@@ -1,0 +1,46 @@
+{
+  "composition": {
+    "global_filters": [],
+    "safe_areas": {
+      "top": 0.1,
+      "bottom": 0.1,
+      "sides": 0.05
+    }
+  },
+  "logic_segments": {
+    "GANCHO": {
+      "camera": "cinematic_zoom",
+      "style": "gancho_title",
+      "overlay": "film_dust",
+      "duration_multiplier": 1
+    },
+    "VALOR": {
+      "camera": "slow_pan",
+      "style": "valor_title",
+      "overlay": null,
+      "duration_multiplier": 1
+    },
+    "CTA": {
+      "camera": "rapid_zoom",
+      "style": "cta_text",
+      "overlay": "glitch",
+      "duration_multiplier": 1
+    },
+    "CIERRE": {
+      "camera": "static",
+      "style": "valor_title",
+      "overlay": null,
+      "duration_multiplier": 1
+    }
+  },
+  "watermark_config": {
+    "position": "bottom-right",
+    "fontSize": 24,
+    "marginV": 40,
+    "marginH": 40,
+    "opacity": 0.4,
+    "color": "#FFFFFF",
+    "fontName": "Inter-Regular.ttf",
+    "animation": "fade_in"
+  }
+}

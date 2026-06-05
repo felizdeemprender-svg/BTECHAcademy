@@ -1,0 +1,46 @@
+{
+  "placeholderImages": [
+    {
+      "id": "course-ai",
+      "description": "Artificial Intelligence Course",
+      "imageUrl": "https://images.unsplash.com/photo-1749006590639-e749e6b7d84c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxhcnRpZmljaWFsJTIwaW50ZWxsaWdlbmNlJTIwdGVjaG5vbG9neXxlbnwwfHx8fDE3NzIwNjMxNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "artificial intelligence technology"
+    },
+    {
+      "id": "course-math",
+      "description": "Advanced Mathematics",
+      "imageUrl": "https://images.unsplash.com/photo-1747654804155-ffd62d5dfb51?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtYXRoZW1hdGljcyUyMGdlb21ldHJ5fGVufDB8fHx8MTc3MjA1Mjc3M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mathematics geometry"
+    },
+    {
+      "id": "course-programming",
+      "description": "Full-Stack Development",
+      "imageUrl": "https://images.unsplash.com/photo-1669023414171-56f0740e34cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxjb2RpbmclMjBjb21wdXRlcnxlbnwwfHx8fDE3NzIwNTY0MjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "coding computer"
+    },
+    {
+      "id": "user-avatar",
+      "description": "User Avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1529995049601-ef63465a463f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZXJzb24lMjBwcm9maWxlfGVufDB8fHx8MTc3MjA2NzQzOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person profile"
+    },
+    {
+      "id": "hero-education",
+      "description": "Learning Experience",
+      "imageUrl": "https://images.unsplash.com/photo-1593197199016-06f9e95b7be5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxsZWFybmluZyUyMHVuaXZlcnNpdHl8ZW58MHx8fHwxNzcyMTI0MTE4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "learning university"
+    },
+    {
+      "id": "marketing-landing-hero",
+      "description": "Marketing Landing Hero Placeholder",
+      "imageUrl": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtYXJrZXRpbmclMjB3ZWJzaXRlfGVufDB8fHx8MTc3MjEzMzA0N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "marketing website"
+    },
+    {
+      "id": "marketing-social-mockup",
+      "description": "Social Media Mockup",
+      "imageUrl": "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzb2NpYWwlMjBtZWRpYXxlbnwwfHx8fDE3NzIxMzMxMjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "social media"
+    }
+  ]
+}

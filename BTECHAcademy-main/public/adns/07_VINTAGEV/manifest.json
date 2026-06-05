@@ -1,0 +1,21 @@
+{
+  "id": "07_VINTAGEV",
+  "version": "2.0",
+  "name": "07_Vintage_VHS",
+  "description": "Master basado en template Vintage VHS",
+  "target_format": "vertical",
+  "isModular": true,
+  "engine_requirements": {
+    "ffmpeg_build": "BtbN-GPL-Master-v6.1",
+    "features": [
+      "libass",
+      "xfade",
+      "acrossfade",
+      "sidechaincompress",
+      "curves",
+      "vignette",
+      "unsharp"
+    ],
+    "adn_version": "2.0"
+  }
+}

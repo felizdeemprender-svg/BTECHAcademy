@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ADN Audio Module",
+  "type": "object",
+  "required": ["voice_id", "mastering"],
+  "properties": {
+    "voice_id": { "type": "string" },
+    "mastering": { "type": "string", "enum": ["studio", "broadcast", "cinema", "social"] },
+    "sidechain": {
+      "type": "object",
+      "properties": {
+        "threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+        "ratio": { "type": "number", "minimum": 1, "maximum": 50 },
+        "attack": { "type": "number", "minimum": 0 },
+        "release": { "type": "number", "minimum": 0 }
+      }
+    },
+    "voice_fx": { "type": "string" },
+    "music_fx": { "type": "string" }
+  }
+}

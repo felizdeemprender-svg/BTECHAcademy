@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ADN Blueprint Information Module",
+  "type": "object",
+  "required": ["id", "name", "adnId"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "adnId": { "type": "string" },
+    "background_music_url": { "type": "string" },
+    "concatenate_slices": { "type": "boolean" }
+  }
+}
