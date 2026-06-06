@@ -246,13 +246,23 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   const executePurchase = async () => {
     if (!studentEmail) {
-      toast({ variant: 'destructive', title: 'Email requerido', description: 'Por favor ingresa tu email para la inscripción.' });
+      toast({ variant: 'destructive', title: 'Email requerido', description: 'Por favor ingresa tu correo de Gmail para la inscripción.' });
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(studentEmail.trim())) {
-      toast({ variant: 'destructive', title: 'Email inválido', description: 'Por favor ingresa un correo electrónico válido (ej: nombre@correo.com).' });
+      toast({ variant: 'destructive', title: 'Email inválido', description: 'Por favor ingresa un correo electrónico válido (ej: nombre@gmail.com).' });
+      return;
+    }
+
+    // Solo se admiten cuentas de Gmail (la plataforma opera 100% sobre el ecosistema Google)
+    if (!studentEmail.trim().toLowerCase().endsWith('@gmail.com')) {
+      toast({
+        variant: 'destructive',
+        title: '⚠️ Solo se admite Gmail',
+        description: 'Esta plataforma opera exclusivamente sobre el ecosistema Google. Por favor ingresa tu correo @gmail.com para acceder al curso.',
+      });
       return;
     }
 
@@ -683,16 +693,16 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="purchase-email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email de Acceso</Label>
+                  <Label htmlFor="purchase-email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email de Acceso (Gmail)</Label>
                   <Input
                     id="purchase-email"
                     type="email"
-                    placeholder="tu@email.com"
+                    placeholder="tu@gmail.com"
                     value={studentEmail}
                     onChange={e => setStudentEmail(e.target.value)}
                     className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6"
                   />
-                  <p className="text-[10px] text-slate-400 italic px-1">Este será tu usuario para entrar a la plataforma.</p>
+                  <p className="text-[10px] text-slate-400 italic px-1">⚠️ Esta plataforma funciona exclusivamente con Google. Debes usar tu correo @gmail.com.</p>
                 </div>
 
                 {/* Selector de método de pago (solo si hay >1 método o hay transferencia disponible) */}
