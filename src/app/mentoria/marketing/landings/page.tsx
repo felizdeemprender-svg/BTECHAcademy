@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, deleteDoc, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, doc, deleteDoc, getDocs, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -45,6 +45,7 @@ import {
   Target,
   TrendingUp,
   MousePointer2,
+  CalendarClock,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -98,6 +99,11 @@ export default function SalesLandingsDashboardPage() {
   const [statsLeads, setStatsLeads] = useState<any[]>([]);
   const [statsEnrollments, setStatsEnrollments] = useState<any[]>([]);
   const [isLoadingStatsData, setIsLoadingStatsData] = useState(false);
+
+  // Estados para prórroga de vencimiento
+  const [extendingPage, setExtendingPage] = useState<any | null>(null);
+  const [newEndDate, setNewEndDate] = useState('');
+  const [isExtending, setIsExtending] = useState(false);
 
   // Consulta de todas las sales pages del mentor
   const pagesQuery = useMemoFirebase(() => {
@@ -290,6 +296,25 @@ export default function SalesLandingsDashboardPage() {
     }
   };
 
+  const handleExtend = async () => {
+    if (!extendingPage || !newEndDate) {
+      toast({ variant: 'destructive', title: 'Fecha requerida', description: 'Por favor seleccioná una nueva fecha de vencimiento.' });
+      return;
+    }
+    setIsExtending(true);
+    try {
+      const newUntil = Timestamp.fromDate(new Date(newEndDate));
+      await updateDoc(doc(db, 'salesPages', extendingPage.id), { activeUntil: newUntil, updatedAt: Timestamp.now() });
+      toast({ title: '¡Prórroga aplicada!', description: `La landing "${extendingPage.title}" fue extendida hasta el ${new Date(newEndDate).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}.` });
+      setExtendingPage(null);
+      setNewEndDate('');
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error al extender', description: e.message });
+    } finally {
+      setIsExtending(false);
+    }
+  };
+
   const handleClone = async () => {
     if (!cloningPage || !cloneData.referidoId || !cloneData.startDate || !cloneData.endDate) {
       toast({ variant: 'destructive', title: 'Faltan datos', description: 'Por favor completa todos los campos.' });
@@ -432,7 +457,7 @@ export default function SalesLandingsDashboardPage() {
                   {isOpen && (
                     <div className="border-t border-border/40">
                       {/* Cabecera de tabla */}
-                      <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-2 bg-slate-50 border-b border-border/30">
+                      <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-2 bg-slate-50 border-b border-border/30">
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Landing</span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-24 text-center hidden sm:block">Tipo</span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-16 text-center hidden md:block">Inicio</span>
@@ -440,7 +465,7 @@ export default function SalesLandingsDashboardPage() {
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-32 text-center hidden md:block">Embajador</span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-20 text-center hidden md:block">Precio</span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-20 text-center hidden lg:block">Creada</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-28 text-right">Acciones</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-36 text-right">Acciones</span>
                       </div>
 
                       {group.pages.map((page: any) => {
@@ -453,7 +478,7 @@ export default function SalesLandingsDashboardPage() {
                         return (
                           <div
                             key={page.id}
-                            className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-3.5 border-b border-border/20 last:border-b-0 hover:bg-slate-50/50 transition-colors"
+                            className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-3.5 border-b border-border/20 last:border-b-0 hover:bg-slate-50/50 transition-colors"
                           >
                             {/* Nombre y variantes */}
                             <div className="min-w-0">
@@ -534,7 +559,7 @@ export default function SalesLandingsDashboardPage() {
                             </div>
 
                             {/* Acciones */}
-                            <div className="w-28 flex items-center justify-end gap-1">
+                            <div className="w-36 flex items-center justify-end gap-1">
                               {/* Clonar Promo */}
                               {(!page.landingType || page.landingType === 'general') && (
                                 <button
@@ -546,6 +571,27 @@ export default function SalesLandingsDashboardPage() {
                                   className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
                                 >
                                   <Copy className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                              {/* Prorrogar vencimiento — solo para landings de tipo promocion */}
+                              {page.landingType === 'promocion' && (
+                                <button
+                                  onClick={() => {
+                                    const current = page.activeUntil?.toDate
+                                      ? page.activeUntil.toDate()
+                                      : page.activeUntil?.seconds
+                                        ? new Date(page.activeUntil.seconds * 1000)
+                                        : new Date();
+                                    // Formato yyyy-MM-ddTHH:mm requerido por datetime-local
+                                    const pad = (n: number) => String(n).padStart(2, '0');
+                                    const local = `${current.getFullYear()}-${pad(current.getMonth() + 1)}-${pad(current.getDate())}T${pad(current.getHours())}:${pad(current.getMinutes())}`;
+                                    setNewEndDate(local);
+                                    setExtendingPage(page);
+                                  }}
+                                  title="Prorrogar vencimiento"
+                                  className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                                >
+                                  <CalendarClock className="h-3.5 w-3.5" />
                                 </button>
                               )}
                               {/* Ver Estadísticas */}
@@ -855,6 +901,76 @@ export default function SalesLandingsDashboardPage() {
               <Button variant="ghost" onClick={() => setCloningPage(null)} disabled={isCloning} className="rounded-xl">Cancelar</Button>
               <Button onClick={handleClone} disabled={isCloning} className="rounded-xl bg-violet-600 hover:bg-violet-700">
                 {isCloning ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Promoción'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Prórroga de Vencimiento */}
+        <Dialog open={!!extendingPage} onOpenChange={(open) => { if (!open) { setExtendingPage(null); setNewEndDate(''); } }}>
+          <DialogContent className="max-w-sm rounded-[2.5rem] p-8 border-none shadow-2xl">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
+                  <CalendarClock className="h-5 w-5 text-amber-500" />
+                </div>
+                <DialogTitle className="text-xl font-black text-slate-800 leading-tight">Prorrogar Vencimiento</DialogTitle>
+              </div>
+              <DialogDescription className="text-slate-500 text-sm font-medium leading-relaxed pl-[3.25rem]">
+                Extendé la fecha de cierre de la landing<br />
+                <span className="font-bold text-slate-700 truncate block mt-0.5">&ldquo;{extendingPage?.title}&rdquo;</span>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-5 py-4">
+              {/* Fecha actual */}
+              {extendingPage?.activeUntil && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <Clock className="h-4 w-4 text-slate-400 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Vencimiento actual</p>
+                    <p className="text-sm font-bold text-slate-700">
+                      {(() => {
+                        const d = extendingPage.activeUntil?.toDate
+                          ? extendingPage.activeUntil.toDate()
+                          : new Date(extendingPage.activeUntil.seconds * 1000);
+                        return format(d, "dd 'de' MMMM yyyy, HH:mm", { locale: es });
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Nueva fecha */}
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Nueva fecha de vencimiento</label>
+                <Input
+                  type="datetime-local"
+                  value={newEndDate}
+                  onChange={e => setNewEndDate(e.target.value)}
+                  className="h-12 rounded-xl bg-amber-50/60 border-amber-200 focus:border-amber-400 font-semibold text-slate-700"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-2 border-t border-slate-100">
+              <Button
+                variant="ghost"
+                onClick={() => { setExtendingPage(null); setNewEndDate(''); }}
+                disabled={isExtending}
+                className="rounded-xl"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleExtend}
+                disabled={isExtending || !newEndDate}
+                className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-md shadow-amber-200"
+              >
+                {isExtending
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <><CalendarClock className="h-4 w-4 mr-1.5" /> Aplicar Prórroga</>
+                }
               </Button>
             </div>
           </DialogContent>
