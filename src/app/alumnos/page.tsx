@@ -58,9 +58,11 @@ export default function AlumnosPage() {
           const email = enroll.inviteEmail?.toLowerCase().trim();
           if (!email) continue;
 
+          const studentId = enroll.studentId ?? '';
+
           if (!studentMap.has(email)) {
             studentMap.set(email, {
-              id: enroll.studentId,
+              id: studentId,
               name: enroll.studentName,
               email: email,
               coursesCount: 1,
@@ -72,9 +74,10 @@ export default function AlumnosPage() {
             if (enroll.status === 'active') existing.status = 'active';
             
             // Si el registro actual tiene un UID real (sin guiones bajos de invitación), actualizamos el ID de referencia
-            const currentId = enroll.studentId;
-            const isExistingTemp = existing.id.includes('_') || existing.id.includes('@');
-            const isCurrentReal = !currentId.includes('_') && !currentId.includes('@');
+            const currentId = studentId;
+            const existingId = existing.id ?? '';
+            const isExistingTemp = existingId.includes('_') || existingId.includes('@');
+            const isCurrentReal = currentId.length > 0 && !currentId.includes('_') && !currentId.includes('@');
             
             if (isExistingTemp && isCurrentReal) {
               existing.id = currentId;
@@ -85,15 +88,22 @@ export default function AlumnosPage() {
         const studentList = Array.from(studentMap.values());
         
         const finalStudents = await Promise.all(studentList.map(async (s) => {
-          const profileSnap = await getDoc(doc(db, 'users', s.id));
-          if (profileSnap.exists()) {
-            const pData = profileSnap.data();
-            return { 
-              ...s, 
-              photoURL: pData.photoURL, 
-              signInProvider: pData.signInProvider,
-              displayName: pData.displayName || s.name
-            };
+          // Solo consultamos Firestore si tenemos un ID real (no vacío, no temporal)
+          if (s.id && !s.id.includes('_') && !s.id.includes('@')) {
+            try {
+              const profileSnap = await getDoc(doc(db, 'users', s.id));
+              if (profileSnap.exists()) {
+                const pData = profileSnap.data();
+                return { 
+                  ...s, 
+                  photoURL: pData.photoURL, 
+                  signInProvider: pData.signInProvider,
+                  displayName: pData.displayName || s.name
+                };
+              }
+            } catch (_) {
+              // Ignorar errores de perfil individual
+            }
           }
           return s;
         }));
