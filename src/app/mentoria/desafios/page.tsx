@@ -40,6 +40,14 @@ import {
   Table, TableHeader, TableRow, TableHead, TableBody, TableCell 
 } from '@/components/ui/table';
 
+function toDate(value: any): Date | null {
+  if (!value) return null;
+  if (typeof value?.toDate === 'function') return value.toDate();
+  if (typeof value?.seconds === 'number') return new Date(value.seconds * 1000);
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 // Subcomponente de Tabla (Fuera para mayor claridad)
 const ChallengeTable = ({ list, setSelectedGroup }: { list: any[], setSelectedGroup: (g: any) => void }) => (
   <div className="space-y-4">
@@ -173,12 +181,25 @@ export default function MentorChallengesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isPurgeOpen, setIsPurgeOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [assignmentMode, setAssignmentMode] = useState<'course' | 'free'>('course');
   const [searchTerm, setSearchTerm] = useState('');
   
   const [mentorCourses, setMentorCourses] = useState<any[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState('');
-  const [students, setStudents] = useState<any[]>([]);
+  
+  // Advanced filter states
+  const [assignmentMode, setAssignmentMode] = useState<'global' | 'course'>('course');
+  const [filterCourseId, setFilterCourseId] = useState<string>('');
+  const [filterLastInteractionDays, setFilterLastInteractionDays] = useState<string>('');
+  const [filterCompleted, setFilterCompleted] = useState<'all' | 'yes' | 'no'>('no');
+  const [filterProgressMin, setFilterProgressMin] = useState<string>('');
+  const [filterProgressMax, setFilterProgressMax] = useState<string>('');
+  const [filterScoreMin, setFilterScoreMin] = useState<string>('');
+  const [filterScoreMax, setFilterScoreMax] = useState<string>('');
+  const [filterCompletedDays, setFilterCompletedDays] = useState<string>('');
+  const [filterNewStudentsDays, setFilterNewStudentsDays] = useState<string>('');
+
+  const [allStudentsData, setAllStudentsData] = useState<any[]>([]);
+  const [courseEnrollments, setCourseEnrollments] = useState<any[]>([]);
+  const [selectedCourseDetails, setSelectedCourseDetails] = useState<any>(null);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   
   const [taskData, setTaskData] = useState({
@@ -276,45 +297,166 @@ export default function MentorChallengesPage() {
     }
   }, [db, profile?.uid]);
 
+  // 1. Fetch all users once (when dialog is opened or profile changes)
   useEffect(() => {
-    if (assignmentMode === 'free') {
+    if (profile?.uid) {
       const q = query(collection(db, 'users'), where('roles', 'array-contains', 'alumno'));
       getDocs(q).then(snap => {
-        setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setAllStudentsData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       });
     }
-  }, [db, assignmentMode]);
+  }, [db, profile?.uid]);
 
+  // 2. Fetch enrollments and course details if course is selected
   useEffect(() => {
-    if (assignmentMode === 'course' && selectedCourseId) {
-      const fetchFinishedStudents = async () => {
+    if (assignmentMode === 'course' && filterCourseId) {
+      const fetchEnrollmentsAndCourse = async () => {
         setLoading(true);
         try {
-          const modsSnap = await getDocs(collection(db, 'courses', selectedCourseId, 'modules'));
-          const modulesCount = modsSnap.size;
+          // Fetch course details for dynamic progress calculation
+          const courseSnap = await getDoc(doc(db, 'courses', filterCourseId));
+          if (courseSnap.exists()) {
+            const courseData = courseSnap.data() as any;
+            let modulesCount = courseData.modulesCount || 0;
+            // If modulesCount is missing/0 in Firestore, count from subcollection (same as useStudentEnrollments)
+            if (!modulesCount) {
+              try {
+                const modulesSnap = await getDocs(collection(db, 'courses', filterCourseId, 'modules'));
+                modulesCount = modulesSnap.size;
+              } catch {
+                modulesCount = 0;
+              }
+            }
+            setSelectedCourseDetails({ id: courseSnap.id, ...courseData, modulesCount });
+          } else {
+            setSelectedCourseDetails(null);
+          }
 
-          const enrollQuery = query(collection(db, 'enrollments'), where('courseId', '==', selectedCourseId));
-          const enrollSnap = await getDocs(enrollQuery);
-          
-          const finished = enrollSnap.docs
-            .map(d => d.data())
-            .filter(e => (e.progress?.completedModules?.length || 0) >= modulesCount)
-            .map(e => ({
-              id: e.studentId,
-              displayName: e.studentName,
-              email: e.inviteEmail
-            }));
-          
-          setStudents(finished);
+          const enrollSnap = await getDocs(query(collection(db, 'enrollments'), where('courseId', '==', filterCourseId)));
+          setCourseEnrollments(enrollSnap.docs.map(d => ({ id: d.id, ...d.data() })));
         } catch (e) {
-          toast({ variant: 'destructive', title: 'Error al filtrar alumnos' });
+          console.error("Error fetching enrollments or course details", e);
         } finally {
           setLoading(false);
         }
       };
-      fetchFinishedStudents();
+      fetchEnrollmentsAndCourse();
+    } else {
+      setCourseEnrollments([]);
+      setSelectedCourseDetails(null);
     }
-  }, [db, selectedCourseId, assignmentMode, toast]);
+  }, [db, assignmentMode, filterCourseId]);
+
+  // 3. Apply advanced filters locally
+  const filteredStudents = useMemo(() => {
+    let list: any[] = [];
+
+    if (assignmentMode === 'course' && filterCourseId) {
+      // Base: enrollments for this course
+      list = courseEnrollments.map(e => {
+        const user = allStudentsData.find(u => u.id === e.studentId);
+        return {
+          id: e.studentId,
+          displayName: user?.displayName || e.studentName || 'Alumno',
+          email: user?.email || e.inviteEmail || '',
+          enrollment: e,
+          user: user
+        };
+      });
+    } else if (assignmentMode === 'global') {
+      // Base: all global students
+      list = allStudentsData.map(u => ({
+        id: u.id,
+        displayName: u.displayName || 'Alumno',
+        email: u.email || '',
+        user: u
+      }));
+    }
+
+    const now = new Date();
+
+    return list.filter(item => {
+      // Name / Email Text Search
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        if (!item.displayName.toLowerCase().includes(term) && !item.email.toLowerCase().includes(term)) return false;
+      }
+
+      // Alumnos Nuevos (Joined < X days ago)
+      if (filterNewStudentsDays) {
+        const days = parseInt(filterNewStudentsDays);
+        if (!isNaN(days) && item.user?.createdAt) {
+          const joinDate = toDate(item.user.createdAt);
+          if (joinDate && differenceInDays(now, joinDate) > days) return false;
+        }
+      }
+
+      // Última Interacción (< X days ago)
+      if (filterLastInteractionDays) {
+        const maxDays = parseInt(filterLastInteractionDays);
+        if (!isNaN(maxDays)) {
+          let lastDate = null;
+          if (assignmentMode === 'course' && filterCourseId) {
+             lastDate = toDate(item.enrollment?.progress?.lastAccessed || item.enrollment?.updatedAt);
+          } else {
+             lastDate = toDate(item.user?.lastLogin || item.user?.createdAt);
+          }
+          if (!lastDate || differenceInDays(now, lastDate) > maxDays) return false;
+        }
+      }
+
+      // Course Specific Filters
+      if (assignmentMode === 'course' && filterCourseId && item.enrollment) {
+        const e = item.enrollment;
+
+        const completedModulesCount = e.progress?.completedModules?.length || 0;
+        const totalModules = selectedCourseDetails?.modulesCount || 1;
+        const pct = selectedCourseDetails 
+          ? Math.min(100, Math.round((completedModulesCount / totalModules) * 100)) 
+          : (e.progressPercent || 0);
+
+        // Curso finalizado
+        if (filterCompleted !== 'all') {
+          const isCompleted = pct === 100;
+          if (filterCompleted === 'yes' && !isCompleted) return false;
+          if (filterCompleted === 'no' && isCompleted) return false;
+        }
+
+        // Porcentaje Finalización (solo si está En Progreso o Cualquiera)
+        if (filterCompleted !== 'yes' && (filterProgressMin !== '' || filterProgressMax !== '')) {
+          const min = filterProgressMin !== '' ? parseFloat(filterProgressMin) : 0;
+          const max = filterProgressMax !== '' ? parseFloat(filterProgressMax) : 100;
+          if (pct < min || pct > max) return false;
+        }
+
+        // Nota evaluación (relevante para Finalizado)
+        if (filterScoreMin !== '' || filterScoreMax !== '') {
+          const min = filterScoreMin !== '' ? parseFloat(filterScoreMin) : 0;
+          const max = filterScoreMax !== '' ? parseFloat(filterScoreMax) : 100;
+          
+          let score = 0;
+          if (e.progress?.evaluations) {
+            const evals = Object.values(e.progress.evaluations) as any[];
+            const scores = evals.map(v => v.score).filter(s => typeof s === 'number');
+            if (scores.length > 0) score = scores.reduce((a, b) => a + b, 0) / scores.length;
+          }
+
+          if (score < min || score > max) return false;
+        }
+
+        // Días desde que completó el curso (solo si Finalizado)
+        if (filterCompleted === 'yes' && filterCompletedDays) {
+          const maxDays = parseInt(filterCompletedDays);
+          if (!isNaN(maxDays)) {
+            const completedDate = toDate(e.progress?.completedAt || e.updatedAt);
+            if (!completedDate || differenceInDays(now, completedDate) > maxDays) return false;
+          }
+        }
+      }
+
+      return true;
+    });
+  }, [allStudentsData, courseEnrollments, assignmentMode, filterCourseId, searchTerm, filterNewStudentsDays, filterLastInteractionDays, filterCompleted, filterProgressMin, filterProgressMax, filterScoreMin, filterScoreMax, filterCompletedDays, selectedCourseDetails]);
 
   const handleCreateChallenges = async () => {
     if (!taskData.title || !taskData.description || selectedStudentIds.length === 0) return;
@@ -324,7 +466,7 @@ export default function MentorChallengesPage() {
       const batch = writeBatch(db);
       
       for (const studentId of selectedStudentIds) {
-        const student = students.find(s => s.id === studentId);
+        const student = allStudentsData.find(s => s.id === studentId);
         const taskRef = doc(collection(db, 'users', studentId, 'individualTasks'));
         
         const finalTask = {
@@ -401,15 +543,18 @@ export default function MentorChallengesPage() {
 
   const resetForm = () => {
     setTaskData({ title: '', description: '', evaluationCriteria: '', allowFileUpload: false });
+    setAssignmentMode('course');
     setSelectedStudentIds([]);
-    setSelectedCourseId('');
-    setStudents([]);
+    setFilterCourseId('');
+    setSearchTerm('');
+    setFilterLastInteractionDays('');
+    setFilterCompleted('all');
+    setFilterProgressMin('');
+    setFilterProgressMax('');
+    setFilterScoreMin('');
+    setFilterScoreMax('');
+    setFilterNewStudentsDays('');
   };
-
-  const filteredStudents = students.filter(s => 
-    s.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <DashboardLayout>
@@ -652,29 +797,129 @@ export default function MentorChallengesPage() {
                     
                     <div className="flex gap-4 p-1 bg-secondary/20 rounded-2xl h-14">
                       <Button variant="ghost" onClick={() => setAssignmentMode('course')} className={cn("flex-1 rounded-xl font-bold gap-2", assignmentMode === 'course' ? "bg-white shadow-sm text-primary" : "text-muted-foreground")}>
-                        <BookOpen className="h-4 w-4" /> Por Curso Finalizado
+                        <BookOpen className="h-4 w-4" /> Desafío de Curso
                       </Button>
-                      <Button variant="ghost" onClick={() => setAssignmentMode('free')} className={cn("flex-1 rounded-xl font-bold gap-2", assignmentMode === 'free' ? "bg-white shadow-sm text-primary" : "text-muted-foreground")}>
-                        <UserPlus className="h-4 w-4" /> Selección Libre
+                      <Button variant="ghost" onClick={() => setAssignmentMode('global')} className={cn("flex-1 rounded-xl font-bold gap-2", assignmentMode === 'global' ? "bg-white shadow-sm text-primary" : "text-muted-foreground")}>
+                        <UserPlus className="h-4 w-4" /> Desafío Global Libre
                       </Button>
                     </div>
 
-                    {assignmentMode === 'course' && (
-                      <div className="space-y-4 animate-in slide-in-from-top-2">
-                        <Select onValueChange={setSelectedCourseId} value={selectedCourseId}>
-                          <SelectTrigger className="h-12 rounded-xl border-2">
-                            <SelectValue placeholder="Elegir curso para filtrar..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mentorCourses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-2 items-start mt-4">
-                          <Info className="h-4 w-4 text-blue-600 mt-0.5" />
-                          <p className="text-[10px] text-blue-800 font-medium">El sistema solo mostrará alumnos que han completado el 100% de los módulos del curso seleccionado.</p>
-                        </div>
-                      </div>
-                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-secondary/10 p-6 rounded-2xl border">
+                      
+                      {/* Master View: Por Curso */}
+                      {assignmentMode === 'course' && (
+                        <>
+                          <div className="space-y-2 col-span-1 md:col-span-2">
+                            <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Seleccionar Curso</Label>
+                            <Select onValueChange={setFilterCourseId} value={filterCourseId}>
+                              <SelectTrigger className="h-10 bg-white shadow-sm">
+                                <SelectValue placeholder="Elige un curso para ver a sus alumnos..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {mentorCourses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {filterCourseId && (
+                            <>
+
+                              <div className="col-span-1 md:col-span-2 mt-2 pt-6 border-t border-dashed space-y-5">
+                                 <h4 className="text-[10px] font-bold uppercase text-primary">Criterios de Cursada</h4>
+
+                                 {/* Paso 1: Estado del curso — siempre visible */}
+                                 <div className="space-y-2">
+                                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Estado del Curso</Label>
+                                   <div className="flex gap-2">
+                                     {([['yes','✅ Completado'],['no','🔄 En Progreso']] as const).map(([val, label]) => (
+                                       <button
+                                         key={val}
+                                         type="button"
+                                         onClick={() => { setFilterCompleted(val); setFilterScoreMin(''); setFilterScoreMax(''); setFilterProgressMin(''); setFilterProgressMax(''); setFilterCompletedDays(''); setFilterLastInteractionDays(''); }}
+                                         className={cn(
+                                           'flex-1 h-10 rounded-xl text-xs font-bold border-2 transition-all',
+                                           filterCompleted === val
+                                             ? val === 'yes' ? 'bg-emerald-500 text-white border-emerald-500 shadow-md'
+                                             : 'bg-blue-500 text-white border-blue-500 shadow-md'
+                                             : 'bg-white text-muted-foreground border-border hover:border-primary/40'
+                                         )}
+                                       >{label}</button>
+                                     ))}
+                                   </div>
+                                 </div>
+
+                                 {/* Paso 2a: Sub-filtros para COMPLETADO */}
+                                 {filterCompleted === 'yes' && (
+                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 animate-in fade-in duration-300">
+                                     <div className="space-y-2">
+                                       <Label className="text-[10px] font-bold uppercase text-emerald-700">Nota de Aprobación (%)</Label>
+                                       <div className="flex items-center gap-2">
+                                         <Input type="number" min="0" max="100" placeholder="Mín" value={filterScoreMin} onChange={e => setFilterScoreMin(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
+                                         <span className="text-slate-400">-</span>
+                                         <Input type="number" min="0" max="100" placeholder="Máx" value={filterScoreMax} onChange={e => setFilterScoreMax(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
+                                       </div>
+                                     </div>
+                                     <div className="space-y-2">
+                                       <Label className="text-[10px] font-bold uppercase text-emerald-700 flex items-center gap-1"><Clock className="h-3 w-3" /> Terminó hace menos de</Label>
+                                       <div className="flex items-center gap-2">
+                                         <Input type="number" min="0" placeholder="Ej: 14" value={filterCompletedDays} onChange={e => setFilterCompletedDays(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
+                                         <span className="text-sm font-medium text-slate-500">días</span>
+                                       </div>
+                                     </div>
+                                   </div>
+                                 )}
+
+                                 {/* Paso 2b: Sub-filtros para EN PROGRESO */}
+                                 {filterCompleted === 'no' && (
+                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 animate-in fade-in duration-300">
+                                     <div className="space-y-2">
+                                       <Label className="text-[10px] font-bold uppercase text-blue-700 flex items-center gap-1"><Clock className="h-3 w-3" /> Última unidad hace menos de</Label>
+                                       <div className="flex items-center gap-2">
+                                         <Input type="number" min="0" placeholder="Ej: 7" value={filterLastInteractionDays} onChange={e => setFilterLastInteractionDays(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
+                                         <span className="text-sm font-medium text-slate-500">días</span>
+                                       </div>
+                                     </div>
+                                     <div className="space-y-2">
+                                       <Label className="text-[10px] font-bold uppercase text-blue-700">Progreso del Curso (%)</Label>
+                                       <div className="flex items-center gap-2">
+                                         <Input type="number" min="0" max="100" placeholder="Mín" value={filterProgressMin} onChange={e => setFilterProgressMin(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
+                                         <span className="text-slate-400">-</span>
+                                         <Input type="number" min="0" max="100" placeholder="Máx" value={filterProgressMax} onChange={e => setFilterProgressMax(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
+                                       </div>
+                                     </div>
+                                   </div>
+                                 )}
+                              </div>
+                            </>
+                          )}
+                        </>
+                      )}
+
+                      {/* Master View: Global */}
+                      {assignmentMode === 'global' && (
+                        <>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1 flex gap-1 items-center">
+                               Último login en la academia hace <span title="Días desde que el alumno ingresó a la plataforma por última vez"><Info className="h-3 w-3" /></span>
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-slate-500">Menos de</span>
+                              <Input type="number" min="0" placeholder="Ej: 7" value={filterLastInteractionDays} onChange={e => setFilterLastInteractionDays(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
+                              <span className="text-sm font-medium text-slate-500">días</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1 flex gap-1 items-center">Antigüedad (Nuevos en la academia)</Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-slate-500">Ingresó hace menos de</span>
+                              <Input type="number" min="0" placeholder="Ej: 30" value={filterNewStudentsDays} onChange={e => setFilterNewStudentsDays(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
+                              <span className="text-sm font-medium text-slate-500">días</span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
 
                     <div className="space-y-4">
                       <div className="relative">
@@ -684,15 +929,15 @@ export default function MentorChallengesPage() {
 
                       <div className="border rounded-2xl overflow-hidden bg-slate-50">
                         <div className="p-3 bg-white border-b flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase text-muted-foreground ml-2">Candidatos ({students.length})</span>
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedStudentIds(students.map(s => s.id))} className="text-[10px] font-bold h-7 uppercase">Marcar Todos</Button>
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground ml-2">Candidatos ({filteredStudents.length})</span>
+                          <Button variant="ghost" size="sm" onClick={() => setSelectedStudentIds(filteredStudents.map(s => s.id))} className="text-[10px] font-bold h-7 uppercase">Marcar Todos</Button>
                         </div>
                         <ScrollArea className="h-[250px]">
                           <div className="p-2 space-y-1">
                             {loading ? (
                               <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
-                            ) : students.length === 0 ? (
-                              <div className="py-10 text-center italic text-xs text-muted-foreground">No se encontraron alumnos bajo este criterio.</div>
+                            ) : filteredStudents.length === 0 ? (
+                              <div className="py-10 text-center italic text-xs text-muted-foreground">No se encontraron alumnos bajo los filtros seleccionados.</div>
                             ) : filteredStudents.map(s => (
                               <div key={s.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-transparent hover:border-primary/20 transition-colors group">
                                 <div className="flex items-center gap-3">

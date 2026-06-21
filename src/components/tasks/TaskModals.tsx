@@ -27,6 +27,15 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/** Convierte cualquier formato de fecha de Firestore a Date de forma segura */
+function toDate(value: any): Date | null {
+  if (!value) return null;
+  if (typeof value?.toDate === 'function') return value.toDate();
+  if (typeof value?.seconds === 'number') return new Date(value.seconds * 1000);
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 interface TaskModalsProps {
   isResponseOpen: boolean;
   setIsResponseOpen: (o: boolean) => void;
@@ -169,7 +178,7 @@ export function TaskModals({
                 <History className="h-4 w-4 text-muted-foreground" />
                 <div className="flex flex-col">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground">Completado el</span>
-                  <span className="text-xs font-bold">{selectedTask.completedAt ? new Date(selectedTask.completedAt).toLocaleDateString() : '-'}</span>
+                  <span className="text-xs font-bold">{(() => { const d = toDate(selectedTask.completedAt); return d ? d.toLocaleDateString() : '-'; })()}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">

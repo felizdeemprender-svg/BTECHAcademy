@@ -25,6 +25,17 @@ import {
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+/** Convierte cualquier formato de fecha de Firestore a Date de forma segura */
+function toDate(value: any): Date | null {
+  if (!value) return null;
+  // Firestore Timestamp ({seconds, nanoseconds})
+  if (typeof value?.toDate === 'function') return value.toDate();
+  if (typeof value?.seconds === 'number') return new Date(value.seconds * 1000);
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+
 interface TaskTableProps {
   tasks: any[];
   isLoading: boolean;
@@ -96,9 +107,7 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
                 )}
 
                 <TableCell className="text-center font-medium text-muted-foreground text-sm">
-                  {task.completedAt || task.createdAt 
-                    ? format(new Date(task.completedAt || task.createdAt), 'dd/MM/yyyy') 
-                    : '-'}
+                  {(() => { const d = toDate(task.completedAt || task.createdAt); return d ? format(d, 'dd/MM/yyyy') : '-'; })()}
                 </TableCell>
 
                 <TableCell className="text-center">
@@ -160,9 +169,7 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] uppercase font-black text-muted-foreground tracking-tighter">Fecha</span>
                 <span className="text-xs font-bold">
-                  {task.completedAt || task.createdAt 
-                    ? format(new Date(task.completedAt || task.createdAt), 'dd/MM/yyyy') 
-                    : '-'}
+                  {(() => { const d = toDate(task.completedAt || task.createdAt); return d ? format(d, 'dd/MM/yyyy') : '-'; })()}
                 </span>
               </div>
               <div className="flex flex-col gap-1">

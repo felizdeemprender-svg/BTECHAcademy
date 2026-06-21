@@ -83,6 +83,7 @@ export async function processSuccessfulEnrollment({
       paymentId: paymentId,
       source: 'mercadopago',
       progress: { completedModules: [] },
+      progressPercent: 0,
       metadata: {
         pageId,
         externalReference

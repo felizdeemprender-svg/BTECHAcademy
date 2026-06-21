@@ -12,7 +12,7 @@ import { useAuth } from '@/components/auth-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { EvaluationData } from '@/types/student';
+import { EvaluationData, StudentAchievement } from '@/types/student';
 
 // Hooks
 import { useCourseProgressV3 } from '@/hooks/student/useCourseProgressV3';
@@ -207,7 +207,56 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
         };
 
         await updateDoc(doc(db, 'enrollments', enrollment.id), updatePayload);
-        
+
+        // ── HISTORIAL ACADÉMICO PERMANENTE ─────────────────────────────────
+        // Si el alumno acaba de llegar al 100%, creamos / sobreescribimos
+        // un documento en /student_achievements que sobrevive a la eliminación
+        // del curso. ID determinista para idempotencia.
+        if (newProgressPercent === 100 && authProfile?.email && course) {
+          try {
+            const allEvals = updatedEvaluations as Record<string, EvaluationData>;
+            const evalEntries = Object.entries(allEvals);
+
+            // Promedio de scores (solo evaluaciones con score numérico)
+            const scores = evalEntries.map(([, e]) => e.score).filter(s => typeof s === 'number');
+            const finalScore = scores.length > 0
+              ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+              : 0;
+
+            // Resumen liviano por módulo (sin answers/questions completas)
+            const moduleSummary = nextCompletedModules.map(modId => {
+              const modMeta = modules.find(m => m.id === modId);
+              const evalData = allEvals[modId];
+              return {
+                moduleId: modId,
+                moduleTitle: modMeta?.title || modId,
+                score: evalData?.score ?? 100,
+                completedAt: evalData?.submittedAt || new Date().toISOString()
+              };
+            });
+
+            const achievementId = `${authProfile.uid}_${courseId}`;
+            const achievement: StudentAchievement = {
+              id: achievementId,
+              studentId: authProfile.uid,
+              studentEmail: authProfile.email.toLowerCase().trim(),
+              courseId,
+              courseTitle: course.title,          // snapshot — inmune al borrado del curso
+              mentorId: course.mentorId || '',
+              completedAt: new Date().toISOString(),
+              finalScore,
+              moduleSummary
+            };
+
+            await setDoc(doc(db, 'student_achievements', achievementId), achievement);
+            console.log('[Achievement] Historial académico guardado:', achievementId);
+          } catch (achErr) {
+            // No crítico — la inscripción ya fue actualizada correctamente
+            console.error('[Achievement] Error al guardar historial (no crítico):', achErr);
+          }
+        }
+        // ──────────────────────────────────────────────────────────────────
+
         if (isPassing) {
             toast({ title: '¡Felicitaciones!', description: 'Has aprobado este módulo y desbloqueado el siguiente.' });
         } else {

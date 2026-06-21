@@ -743,7 +743,18 @@ export default function ManageCoursesClient() {
         }
       }
 
-      // 2. Identificar al alumno si ya existe; si no, usar email como referencia
+      // 2. Comprobar si ya existe una inscripción para este email en este curso
+      const existingQ = query(
+        collection(db, 'enrollments'),
+        where('courseId', '==', selectedId),
+        where('inviteEmail', '==', normalizedEmail)
+      );
+      const existingSnap = await getDocs(existingQ);
+      if (!existingSnap.empty) {
+        throw new Error('Este usuario ya se encuentra inscripto o invitado a este curso.');
+      }
+
+      // 3. Identificar al alumno si ya existe; si no, usar email como referencia
       // NOTA: No se crea perfil provisional aquí porque las reglas de Firestore
       // solo permiten que el propio usuario o un admin creen documentos en /users/.
       // El perfil se creará automáticamente cuando el alumno entre con Google.
@@ -761,7 +772,7 @@ export default function ManageCoursesClient() {
         console.log('ℹ️ Alumno nuevo, se usará email como referencia hasta su primer login.');
       }
 
-      // 3. Crear inscripción (Carga Directa vs Invitación)
+      // 4. Crear inscripción (Carga Directa vs Invitación)
       const newEnrollRef = doc(collection(db, 'enrollments'));
       const enrollmentData = {
         id: newEnrollRef.id,
@@ -773,7 +784,8 @@ export default function ManageCoursesClient() {
         isInvited: isInvitation, 
         isDirect: !isInvitation,
         enrolledAt: serverTimestamp(),
-        progress: { completedModules: [] }
+        progress: { completedModules: [] },
+        progressPercent: 0
       };
 
       await setDoc(newEnrollRef, enrollmentData);

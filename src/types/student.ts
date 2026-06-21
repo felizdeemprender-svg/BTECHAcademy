@@ -93,3 +93,29 @@ export interface StudentFollowUp {
 export interface FollowUpSessionStats {
   consumed: number;
 }
+
+/**
+ * Registro permanente e independiente del curso.
+ * Se crea cuando un alumno alcanza el 100% de progreso.
+ * Sobrevive a la eliminación del curso — es el historial académico del alumno.
+ * ID del documento: `{studentId}_{courseId}`
+ */
+export interface StudentAchievement {
+  id: string;
+  studentId: string;
+  studentEmail: string;
+  courseId: string;
+  /** Snapshot del título al momento de completar — persiste aunque el curso se borre */
+  courseTitle: string;
+  mentorId: string;
+  completedAt: string;
+  /** Promedio ponderado de scores de todas las evaluaciones aprobadas */
+  finalScore: number;
+  /** Resumen liviano por módulo — sin answers ni questions completas */
+  moduleSummary: {
+    moduleId: string;
+    moduleTitle: string;
+    score: number;
+    completedAt: string;
+  }[];
+}

@@ -65,12 +65,12 @@ export default function AlumnosPage() {
               id: studentId,
               name: enroll.studentName,
               email: email,
-              coursesCount: 1,
+              courseIds: new Set([enroll.courseId]),
               status: enroll.status
             });
           } else {
             const existing = studentMap.get(email);
-            existing.coursesCount += 1;
+            existing.courseIds.add(enroll.courseId);
             if (enroll.status === 'active') existing.status = 'active';
             
             // Si el registro actual tiene un UID real (sin guiones bajos de invitación), actualizamos el ID de referencia
@@ -85,7 +85,10 @@ export default function AlumnosPage() {
           }
         }
 
-        const studentList = Array.from(studentMap.values());
+        const studentList = Array.from(studentMap.values()).map(s => ({
+          ...s,
+          coursesCount: s.courseIds.size
+        }));
         
         const finalStudents = await Promise.all(studentList.map(async (s) => {
           // Solo consultamos Firestore si tenemos un ID real (no vacío, no temporal)

@@ -51,6 +51,29 @@ const SUPER_ADMIN_EMAILS = [
 
 const ALL_MENTOR_PERMISSIONS = ['academic', 'challenges', 'students', 'followups', 'marketing'];
 
+async function consolidateEnrollmentsForUser(uid: string, email: string, displayName: string) {
+  if (!email) return;
+  try {
+    const q = query(
+      collection(db, 'enrollments'),
+      where('inviteEmail', '==', email.toLowerCase().trim())
+    );
+    const snap = await getDocs(q);
+    for (const docSnap of snap.docs) {
+      const data = docSnap.data();
+      if (data.studentId !== uid) {
+        console.log(`[Auth-Consolidation] Migrando enrollment ${docSnap.id} a UID real ${uid}`);
+        await setDoc(docSnap.ref, {
+          studentId: uid,
+          studentName: displayName || data.studentName
+        }, { merge: true });
+      }
+    }
+  } catch (err) {
+    console.error("[Auth-Consolidation] Error consolidando inscripciones:", err);
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
@@ -84,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               document.cookie = `btech_role=${primaryRole}; path=/; max-age=36000; SameSite=Lax`;
             }
             setIsLoading(false);
+            consolidateEnrollmentsForUser(firebaseUser.uid, firebaseUser.email || '', data.displayName || firebaseUser.displayName || '');
           } else {
             const userEmail = (firebaseUser.email || '').toLowerCase();
             const q = query(collection(db, 'users'), where('email', '==', userEmail), limit(1));
@@ -134,6 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               document.cookie = `btech_role=${primaryRole}; path=/; max-age=36000; SameSite=Lax`;
             }
             setIsLoading(false);
+            consolidateEnrollmentsForUser(firebaseUser.uid, userEmail, firebaseUser.displayName || userEmail.split('@')[0]);
           }
 
           // 2. Establecer listener definitivo

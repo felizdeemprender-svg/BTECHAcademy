@@ -323,18 +323,40 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
     const course = mentorCourses.find(c => c.id === taskForm.courseId);
     
     if (taskForm.type === 'course' && taskForm.courseId) {
-      const enrollQuery = query(
-        collection(db, 'enrollments'), 
-        where('studentId', '==', followUp.studentId),
-        where('courseId', '==', taskForm.courseId)
-      );
-      const enrollSnap = await getDocs(enrollQuery);
-      
-      if (enrollSnap.empty) {
-        const studentSnap = await getDoc(doc(db, 'users', followUp.studentId));
-        const studentData = studentSnap.data();
+      const studentSnap = await getDoc(doc(db, 'users', followUp.studentId));
+      const studentData = studentSnap.data();
+      const targetEmail = studentData?.email?.toLowerCase().trim() || '';
+
+      let existingEnrollment = false;
+
+      // 1. Verificar por email si el alumno ya está inscripto
+      if (targetEmail) {
+        const qByEmail = query(
+          collection(db, 'enrollments'),
+          where('courseId', '==', taskForm.courseId),
+          where('inviteEmail', '==', targetEmail)
+        );
+        const snapByEmail = await getDocs(qByEmail);
+        if (!snapByEmail.empty) {
+          existingEnrollment = true;
+        }
+      }
+
+      // 2. Verificar por studentId si no se encontró por email
+      if (!existingEnrollment) {
+        const qById = query(
+          collection(db, 'enrollments'),
+          where('courseId', '==', taskForm.courseId),
+          where('studentId', '==', followUp.studentId)
+        );
+        const snapById = await getDocs(qById);
+        if (!snapById.empty) {
+          existingEnrollment = true;
+        }
+      }
+
+      if (!existingEnrollment) {
         const newEnrollRef = doc(collection(db, 'enrollments'));
-        const targetEmail = studentData?.email || '';
         await setDoc(newEnrollRef, {
           id: newEnrollRef.id,
           courseId: taskForm.courseId,
@@ -343,7 +365,8 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
           inviteEmail: targetEmail,
           status: 'active',
           enrolledAt: serverTimestamp(),
-          progress: { completedModules: [] }
+          progress: { completedModules: [] },
+          progressPercent: 0
         });
 
         // Enviar correo de felicitación por Trigger Email
