@@ -70,7 +70,28 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
   }, [url, courseId]);
 
   const getSecureUrl = (rawUrl?: string) => {
-    if (!rawUrl || !videoToken) return undefined;
+    if (!rawUrl) return undefined;
+    
+    // Si no hay token, usar fallback normal (sin máxima seguridad pero funcional)
+    if (!videoToken) {
+      let videoId = '';
+      if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
+        if (rawUrl.includes('v=')) videoId = rawUrl.split('v=')[1].split('&')[0];
+        else if (rawUrl.includes('youtu.be/')) videoId = rawUrl.split('youtu.be/')[1].split('?')[0];
+        else if (rawUrl.includes('embed/')) videoId = rawUrl.split('embed/')[1].split('?')[0];
+        else if (rawUrl.includes('/shorts/')) videoId = rawUrl.split('/shorts/')[1].split('?')[0];
+        return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&iv_load_policy=3&controls=1&hl=es&enablejsapi=1`;
+      }
+
+      if (rawUrl.includes('vimeo.com')) {
+        const vimeoId = rawUrl.split('/').pop()?.split('?')[0];
+        return `https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&title=0&byline=0&portrait=0`;
+      }
+
+      return rawUrl;
+    }
+
+    // Sistema de seguridad con token
     const videoId = extractVideoId(rawUrl);
     if (!videoId) return undefined;
     
