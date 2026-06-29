@@ -310,6 +310,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                     url={activeModule?.videoUrl} 
                     title={activeModule?.title} 
                     primaryColor={primaryColor}
+                    courseId={course.id}
                 />
                 <div className="flex justify-between items-center px-4">
                     <h1 className="text-2xl md:text-3xl font-black text-primary leading-tight">{activeModule?.title}</h1>

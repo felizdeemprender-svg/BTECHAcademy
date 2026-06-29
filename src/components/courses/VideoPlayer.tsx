@@ -2,8 +2,9 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { Play, ShieldCheck, Loader2, Maximize, Minimize, RotateCcw } from 'lucide-react';
+import { Play, ShieldCheck, Loader2, Maximize, Minimize, RotateCcw, FastForward, Rewind, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { generateSecureYouTubeUrl, extractVideoId } from '@/lib/video-security';
 
 declare global {
   interface Window {
@@ -16,9 +17,10 @@ interface VideoPlayerProps {
   url?: string;
   title?: string;
   primaryColor?: string;
+  courseId?: string;
 }
 
-export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlayerProps) {
+export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -27,18 +29,53 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [videoToken, setVideoToken] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [showProgressBar, setShowProgressBar] = useState(false);
+
+  // Formatear tiempo en MM:SS
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Obtener token de video desde el backend
+  useEffect(() => {
+    const fetchVideoToken = async () => {
+      if (!url) return;
+      
+      try {
+        const response = await fetch('/api/video/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videoUrl: url, courseId })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setVideoToken(data.token);
+        } else {
+          console.error('Error obteniendo token de video');
+        }
+      } catch (error) {
+        console.error('Error fetching video token:', error);
+      }
+    };
+    
+    fetchVideoToken();
+  }, [url, courseId]);
 
   const getSecureUrl = (rawUrl?: string) => {
-    if (!rawUrl) return undefined;
-    let videoId = '';
+    if (!rawUrl || !videoToken) return undefined;
+    const videoId = extractVideoId(rawUrl);
+    if (!videoId) return undefined;
     
     if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
-      if (rawUrl.includes('v=')) videoId = rawUrl.split('v=')[1].split('&')[0];
-      else if (rawUrl.includes('youtu.be/')) videoId = rawUrl.split('youtu.be/')[1].split('?')[0];
-      else if (rawUrl.includes('embed/')) videoId = rawUrl.split('embed/')[1].split('?')[0];
-      else if (rawUrl.includes('/shorts/')) videoId = rawUrl.split('/shorts/')[1].split('?')[0];
-      
-      return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&iv_load_policy=3&controls=1&hl=es&enablejsapi=1`;
+      return generateSecureYouTubeUrl(videoId, videoToken);
     }
 
     if (rawUrl.includes('vimeo.com')) {
@@ -88,9 +125,35 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
       playerRef.current.playVideo();
       setShowEndScreen(false);
       setIsPlaying(true);
-    } else {
-      // Fallback si la API no está lista
-      window.location.reload();
+    }
+  };
+
+  const handleSeek = (time: number) => {
+    if (playerRef.current && playerRef.current.seekTo) {
+      playerRef.current.seekTo(time, true);
+    }
+  };
+
+  const handleSpeedChange = (rate: number) => {
+    if (playerRef.current && playerRef.current.setPlaybackRate) {
+      playerRef.current.setPlaybackRate(rate);
+      setPlaybackRate(rate);
+      setShowSpeedMenu(false);
+    }
+  };
+
+  const handleRewind = () => {
+    if (playerRef.current && playerRef.current.getCurrentTime) {
+      const currentTime = playerRef.current.getCurrentTime();
+      handleSeek(Math.max(0, currentTime - 10));
+    }
+  };
+
+  const handleForward = () => {
+    if (playerRef.current && playerRef.current.getCurrentTime && playerRef.current.getDuration) {
+      const currentTime = playerRef.current.getCurrentTime();
+      const duration = playerRef.current.getDuration();
+      handleSeek(Math.min(duration, currentTime + 10));
     }
   };
 
@@ -117,6 +180,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
                 setIsPlaying(true);
                 setShowEndScreen(false);
                 setHasStarted(true);
+                setShowProgressBar(true);
               } else if (event.data === 2) {
                 setIsPlaying(false);
               } else if (event.data === 0) {
@@ -136,7 +200,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
     }
   }, [isLoading, url]);
 
-  // Monitor de tiempo para los 3 segundos finales
+  // Monitor de tiempo para progreso y detección de final
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isPlaying && playerRef.current && playerRef.current.getCurrentTime) {
@@ -144,6 +208,9 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
         try {
           const currentTime = playerRef.current.getCurrentTime();
           const duration = playerRef.current.getDuration();
+          setCurrentTime(currentTime);
+          setDuration(duration);
+          
           if (duration > 0 && (duration - currentTime) <= 3) {
             setShowEndScreen(true);
             clearInterval(interval);
@@ -186,8 +253,6 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
-          webkitallowfullscreen="true"
-          mozallowfullscreen="true"
           onLoad={() => setIsLoading(false)}
         />
       ) : (
@@ -206,14 +271,83 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86' }: VideoPlaye
             {/* Top protection */}
             <div className="absolute top-0 inset-x-0 h-20 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
             
-            {/* Custom Controls (Fullscreen) */}
-            <div className="absolute bottom-6 right-6 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={toggleFullScreen}
-                  className="w-12 h-12 rounded-xl bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition-colors"
-                >
-                  {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                </button>
+            {/* Custom Controls */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 z-30 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                {/* Progress Bar */}
+                {showProgressBar && duration > 0 && (
+                  <div className="mb-4">
+                    <div 
+                      className="h-2 bg-white/20 rounded-full cursor-pointer hover:bg-white/30 transition-colors"
+                      onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const percent = (e.clientX - rect.left) / rect.width;
+                        handleSeek(percent * duration);
+                      }}
+                    >
+                      <div 
+                        className="h-full rounded-full transition-all duration-100"
+                        style={{ 
+                          width: `${(currentTime / duration) * 100}%`,
+                          backgroundColor: primaryColor 
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-white/70 mt-1">
+                      <span>{formatTime(currentTime)}</span>
+                      <span>{formatTime(duration)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Control Buttons */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <button 
+                          onClick={handleRewind}
+                          className="w-10 h-10 rounded-lg bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition-colors"
+                          title="Retroceder 10s"
+                        >
+                          <Rewind className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={handleForward}
+                          className="w-10 h-10 rounded-lg bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition-colors"
+                          title="Adelantar 10s"
+                        >
+                          <FastForward className="h-4 w-4" />
+                        </button>
+                        <div className="relative">
+                          <button 
+                            onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                            className="w-10 h-10 rounded-lg bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition-colors"
+                            title="Velocidad"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </button>
+                          {showSpeedMenu && (
+                            <div className="absolute bottom-full left-0 mb-2 bg-black/90 backdrop-blur-md rounded-lg border border-white/20 p-2 flex flex-col gap-1">
+                              {[0.5, 0.75, 1, 1.25, 1.5, 2].map(rate => (
+                                <button
+                                  key={rate}
+                                  onClick={() => handleSpeedChange(rate)}
+                                  className={`px-3 py-1 rounded text-xs text-white hover:bg-white/20 transition-colors ${
+                                    playbackRate === rate ? 'bg-white/20 font-bold' : ''
+                                  }`}
+                                >
+                                  {rate}x
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                    </div>
+                    <button 
+                      onClick={toggleFullScreen}
+                      className="w-10 h-10 rounded-lg bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-black/60 transition-colors"
+                    >
+                      {isFullScreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                    </button>
+                </div>
             </div>
 
             {!isPlaying && (
