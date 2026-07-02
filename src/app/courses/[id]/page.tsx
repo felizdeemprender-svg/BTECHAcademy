@@ -139,6 +139,8 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
         const minPassing = activeModule.minPassingScore ?? 70;
         const isPassing = result.score >= minPassing;
         
+        console.log('[Quiz] Evaluando módulo:', activeModule.id, 'Score:', result.score, 'MinPassing:', minPassing, 'IsPassing:', isPassing);
+        
         // Log attempt
         const attemptRef = doc(collection(db, 'quiz_attempts'));
         await setDoc(attemptRef, {
@@ -153,6 +155,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
           questions: targetQuestions,
           completedAt: new Date().toISOString()
         });
+        console.log('[Quiz] Intento guardado:', attemptRef.id);
 
         const nextCompletedModules = isPassing && !completedModules.includes(activeModule.id) 
           ? [...completedModules, activeModule.id] 
@@ -206,7 +209,9 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
           progressPercent: newProgressPercent
         };
 
+        console.log('[Quiz] Actualizando enrollment:', enrollment.id, 'Payload:', updatePayload);
         await updateDoc(doc(db, 'enrollments', enrollment.id), updatePayload);
+        console.log('[Quiz] Enrollment actualizado exitosamente');
 
         // ── HISTORIAL ACADÉMICO PERMANENTE ─────────────────────────────────
         // Si el alumno acaba de llegar al 100%, creamos / sobreescribimos
@@ -267,6 +272,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
     } catch (e: any) {
       const msg = e?.message || 'No se pudo completar la evaluación. Intenta de nuevo.';
       console.error('[Quiz] Error al evaluar:', e);
+      console.error('[Quiz] Error details:', e?.code, e?.stack);
       toast({ variant: 'destructive', title: 'Error en evaluación', description: msg });
     } finally {
       setIsEvaluating(false);
