@@ -139,7 +139,14 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
         const minPassing = activeModule.minPassingScore ?? 70;
         const isPassing = result.score >= minPassing;
         
+        // Normalizar evaluations: si es array, convertir a objeto vacío
+        const currentEvaluations = enrollment.progress?.evaluations || {};
+        const normalizedEvaluations = Array.isArray(currentEvaluations) 
+          ? {} 
+          : (typeof currentEvaluations === 'object' ? currentEvaluations : {});
+        
         console.log('[Quiz] Evaluando módulo:', activeModule.id, 'Score:', result.score, 'MinPassing:', minPassing, 'IsPassing:', isPassing);
+        console.log('[Quiz] Evaluations normalizadas:', Object.keys(normalizedEvaluations));
         
         // Log attempt
         const attemptRef = doc(collection(db, 'quiz_attempts'));
@@ -167,7 +174,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
         modules.forEach(mod => {
           const isCompletedMod = nextCompletedModules.includes(mod.id);
           const isCurrentMod = mod.id === activeModule.id;
-          const modEval = isCurrentMod ? { isSupport: currentIsSupport } : enrollment.progress?.evaluations?.[mod.id];
+          const modEval = isCurrentMod ? { isSupport: currentIsSupport } : normalizedEvaluations?.[mod.id];
           const hasEval = !!modEval;
           const allowsRetries = mod.allowRetries !== false;
 
@@ -189,7 +196,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
           evaluations: {} as Record<string, EvaluationData>
         });
         const updatedEvaluations = {
-          ...(currentProgress.evaluations || {}),
+          ...normalizedEvaluations,
           [activeModule.id]: {
             score: result.score,
             feedback: result.feedback,
