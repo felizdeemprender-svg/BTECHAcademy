@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     const allowedDomains = [
       'http://localhost:9002',
       'https://FastoriaAcademy-8b329.web.app',
+      'https://btechacademy-pro--btechacademy-8b329.us-central1.hosted.app',
       'https://fastoria.com.ar',
       process.env.NEXT_PUBLIC_APP_URL
     ].filter(Boolean);
