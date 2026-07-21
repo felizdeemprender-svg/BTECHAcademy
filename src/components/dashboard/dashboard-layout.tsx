@@ -18,6 +18,7 @@ import { Sparkles, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
+import { SubscriptionAlert } from '@/components/dashboard/subscription-alert';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, profile, logout, isLoading } = useAuth();
@@ -103,9 +104,19 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </p>
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
-            <div className="max-w-7xl mx-auto pb-12">
-              {children}
+          <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+            {/* Banner de alerta de suscripción (past_due / suspended) */}
+            {profile?.subscription?.status && profile.subscription.status !== 'active' && profile.subscription.status !== 'trialing' && (
+              <SubscriptionAlert
+                status={profile.subscription.status}
+                gracePeriodEndsAt={profile.subscription.gracePeriodEndsAt}
+                trialEndsAt={profile.subscription.trialEndsAt}
+              />
+            )}
+            <div className="flex-1 p-4 lg:p-8">
+              <div className="max-w-7xl mx-auto pb-12">
+                {children}
+              </div>
             </div>
           </main>
         </SidebarInset>

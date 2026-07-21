@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/firebase/admin';
+import { getAdminFirestore } from '@/firebase/admin';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
+import { activateTrial } from '@/services/subscriptions/subscription-engine';
 
 export async function POST(req: NextRequest) {
   try {
+    const db = getAdminFirestore();
     const { planId, userId, email, firstName, lastName, paymentMethodId, isUpgrade, upgradePrice } = await req.json();
 
     if (!planId || !email) {
@@ -11,21 +13,21 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Obtener datos del plan
-    const planDoc = await adminDb.collection('subscriptionPlans').doc(planId).get();
+    const planDoc = await db.collection('subscriptionPlans').doc(planId).get();
     if (!planDoc.exists) {
       return NextResponse.json({ error: 'El plan no existe' }, { status: 404 });
     }
-    const plan = planDoc.data();
+    const plan = planDoc.data()!;
 
-    // 1.2 VALIDACIÓN DE DOWNGRADE
+    // 1.1 VALIDACIÓN DE DOWNGRADE
     if (userId && userId !== 'new_mentor' && userId !== 'temp_lead') {
-      const userDoc = await adminDb.collection('users').doc(userId).get();
+      const userDoc = await db.collection('users').doc(userId).get();
       const userData = userDoc.data();
       if (userData?.subscription?.status === 'active' && userData?.subscription?.planId) {
-        const currentPlanDoc = await adminDb.collection('subscriptionPlans').doc(userData.subscription.planId).get();
+        const currentPlanDoc = await db.collection('subscriptionPlans').doc(userData.subscription.planId).get();
         if (currentPlanDoc.exists) {
-          const currentPlan = currentPlanDoc.data();
-          if (Number(plan?.price) < Number(currentPlan?.price) && plan?.type !== 'free') {
+          const currentPlan = currentPlanDoc.data()!;
+          if (Number(plan.price) < Number(currentPlan.price) && plan.type !== 'free') {
             return NextResponse.json({ 
               error: 'No es posible bajar de plan hasta que finalice la vigencia de tu suscripción actual.' 
             }, { status: 400 });
@@ -34,31 +36,53 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const finalPrice = isUpgrade && upgradePrice !== undefined ? upgradePrice : Number(plan?.price);
+    const finalPrice = isUpgrade && upgradePrice !== undefined ? upgradePrice : Number(plan.price);
 
-    // 1.1 CASO ESPECIAL: PLAN GRATUITO O UPGRADE DE COSTO 0
+    // 1.2 CASO ESPECIAL: PLAN GRATUITO
     if (finalPrice === 0 && !isUpgrade) {
-      try {
-        const { processSuccessfulSubscription } = await import('@/lib/payments/subscription');
-        await processSuccessfulSubscription('free_activation', planId, 'free_activation', {
-          userId,
-          email,
-          displayName: `${firstName} ${lastName}`.trim()
-        });
-        return NextResponse.json({ success: true, message: 'Plan activado correctamente' });
-      } catch (error: any) {
-        console.error('[FREE_ACTIVATION_ERROR]:', error);
-        return NextResponse.json({ error: `Error en activación: ${error.message}` }, { status: 500 });
+      if (userId) {
+        await activateTrial(userId, planId);
       }
+      return NextResponse.json({ success: true, message: 'Plan activado correctamente' });
     }
 
-    // 2. Obtener credenciales del método de pago
+    // 1.3 CASO: EL PLAN TIENE TRIAL — Activar sin cobrar ahora
+    const trialDays = plan.trialDays ?? 0;
+    if (trialDays > 0 && !isUpgrade && userId) {
+      // Verificar que el tutor tenga al menos un método de pago si el plan lo requiere
+      if (plan.requiresPaymentMethod !== false) {
+        const methodsSnap = await db.collection('users').doc(userId).collection('paymentMethods')
+          .where('isActive', '==', true)
+          .limit(1)
+          .get();
+
+        if (methodsSnap.empty) {
+          return NextResponse.json({
+            error: 'required_payment_method',
+            message: 'Este plan requiere que cargues un medio de pago antes de activar el trial. Podrás usarlo gratuitamente durante el período de prueba.',
+          }, { status: 412 });
+        }
+      }
+
+      // Activar el trial en el motor de suscripciones
+      const { trialDays: days, trialEndsAt } = await activateTrial(userId, planId);
+
+      return NextResponse.json({
+        success: true,
+        trial: true,
+        trialDays: days,
+        trialEndsAt: trialEndsAt.toISOString(),
+        message: `¡Bienvenido! Tu período de prueba gratuita de ${days} días comenzó ahora. No se realizará ningún cobro hasta el ${trialEndsAt.toLocaleDateString('es-AR')}.`,
+      });
+    }
+
+    // 2. COBRO INMEDIATO: Obtener credenciales del método de pago del sistema
     let paymentMethod;
     if (paymentMethodId) {
-      const methodDoc = await adminDb.collection('systemPaymentMethods').doc(paymentMethodId).get();
+      const methodDoc = await db.collection('systemPaymentMethods').doc(paymentMethodId).get();
       paymentMethod = methodDoc.exists ? methodDoc.data() : null;
     } else {
-      const methodsSnapshot = await adminDb.collection('systemPaymentMethods')
+      const methodsSnapshot = await db.collection('systemPaymentMethods')
         .where('isActive', '==', true)
         .limit(1)
         .get();
@@ -69,7 +93,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No hay métodos de pago configurados' }, { status: 500 });
     }
 
-    // 3. Procesar según el tipo de pasarela (Mercado Pago)
+    // 3. Procesar según el tipo de pasarela
     if (paymentMethod.type === 'mercadopago') {
       const { accessToken } = paymentMethod.config || {};
       if (!accessToken) return NextResponse.json({ error: 'Credenciales incompletas' }, { status: 500 });
@@ -84,33 +108,27 @@ export async function POST(req: NextRequest) {
         leadData: { email, firstName, lastName }
       });
 
+      const origin = process.env.NEXT_PUBLIC_APP_URL || 'https://btechacademy.ai';
       const body = {
-        items: [
-          {
-            id: planId,
-            title: isUpgrade ? `Upgrade BTECHAcademy: ${plan?.name}` : `Suscripción BTECHAcademy: ${plan?.name}`,
-            quantity: 1,
-            unit_price: finalPrice,
-            currency_id: 'USD'
-          }
-        ],
-        payer: {
-          email: email,
-          name: firstName,
-          surname: lastName
-        },
+        items: [{
+          id: planId,
+          title: isUpgrade ? `Upgrade BTECHAcademy: ${plan.name}` : `Suscripción BTECHAcademy: ${plan.name}`,
+          quantity: 1,
+          unit_price: finalPrice,
+          currency_id: 'ARS'
+        }],
+        payer: { email, name: firstName, surname: lastName },
         external_reference: externalReference,
         back_urls: {
-          success: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?payment=success`,
-          failure: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/planes?payment=failure`,
-          pending: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/planes?payment=pending`
+          success: `${origin}/dashboard?payment=success`,
+          failure: `${origin}/dashboard/plan?payment=failure`,
+          pending: `${origin}/dashboard/plan?payment=pending`
         },
         auto_return: 'approved' as const,
-        notification_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://btechacademy-pro--btechacademy-8b329.us-central1.hosted.app'}/api/webhooks/mercadopago`
+        notification_url: `${origin}/api/webhooks/mercadopago`
       };
 
       const response = await preference.create({ body });
-
       return NextResponse.json({ 
         id: response.id,
         init_point: response.init_point,

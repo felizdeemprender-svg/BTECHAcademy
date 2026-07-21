@@ -98,6 +98,13 @@ interface SubscriptionPlan {
     price: number;
     credits: number;
   }[];
+  // --- Ciclo de Vida / Billing ---
+  trialDays?: number;
+  trialReminderDays?: number;
+  gracePeriodDays?: number;
+  retryIntervalDays?: number;
+  billingCycleMonths?: number;
+  requiresPaymentMethod?: boolean;
   createdAt: any;
   updatedAt: any;
 }
@@ -277,7 +284,14 @@ export default function AdminSubscriptionsPage() {
     aiQuotas: {
       totalCredits: 1000
     },
-    rechargeOptions: Array(5).fill({ price: 0, credits: 0 })
+    rechargeOptions: Array(5).fill({ price: 0, credits: 0 }),
+    // Ciclo de Vida
+    trialDays: 90,
+    trialReminderDays: 5,
+    gracePeriodDays: 7,
+    retryIntervalDays: 2,
+    billingCycleMonths: 1,
+    requiresPaymentMethod: true
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -327,6 +341,13 @@ export default function AdminSubscriptionsPage() {
           price: Number(opt.price || 0),
           credits: Number(opt.credits || 0)
         })),
+        // Ciclo de Vida / Billing
+        trialDays: Number(formData.trialDays ?? 90),
+        trialReminderDays: Number(formData.trialReminderDays ?? 5),
+        gracePeriodDays: Number(formData.gracePeriodDays ?? 7),
+        retryIntervalDays: Number(formData.retryIntervalDays ?? 2),
+        billingCycleMonths: Number(formData.billingCycleMonths ?? 1),
+        requiresPaymentMethod: formData.requiresPaymentMethod !== false,
         updatedAt: serverTimestamp(),
       };
 
@@ -354,7 +375,15 @@ export default function AdminSubscriptionsPage() {
 
   const handleEdit = (plan: SubscriptionPlan) => {
     setEditingPlan(plan);
-    setFormData(plan);
+    setFormData({
+      ...plan,
+      trialDays: plan.trialDays ?? 90,
+      trialReminderDays: plan.trialReminderDays ?? 5,
+      gracePeriodDays: plan.gracePeriodDays ?? 7,
+      retryIntervalDays: plan.retryIntervalDays ?? 2,
+      billingCycleMonths: plan.billingCycleMonths ?? 1,
+      requiresPaymentMethod: plan.requiresPaymentMethod !== false,
+    });
     setShowCreateForm(true);
   };
 
@@ -537,6 +566,7 @@ export default function AdminSubscriptionsPage() {
                     <TabsList className="bg-slate-100/50 p-1 rounded-xl w-full justify-start h-12 gap-2">
                       <TabsTrigger value="comercial" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">🏷️ Comercial</TabsTrigger>
                       <TabsTrigger value="permisos" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">🛡️ Límites y Permisos</TabsTrigger>
+                      <TabsTrigger value="ciclo" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">⏱️ Ciclo de Vida</TabsTrigger>
                       <TabsTrigger value="freno" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">⚡ Freno de Mano (IA)</TabsTrigger>
                     </TabsList>
                   </div>
@@ -669,6 +699,70 @@ export default function AdminSubscriptionsPage() {
                             />
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="ciclo" className="p-8 space-y-8 max-w-3xl mx-auto m-0 pb-12">
+                    <div className="p-6 bg-blue-50/50 rounded-[2.5rem] border border-blue-100 space-y-8">
+                      <div className="flex items-center gap-4 border-b border-blue-100 pb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600">
+                          <Clock className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-blue-900">Configuración del Ciclo de Vida</h3>
+                          <p className="text-xs text-blue-700/60 font-medium">Define los tiempos del trial, facturación y gestión de cobros fallidos.</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Días de Prueba Gratuita (Trial)</Label>
+                          <div className="relative">
+                            <Input type="number" min="0" value={formData.trialDays ?? 90} onChange={(e) => setFormData({...formData, trialDays: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
+                          </div>
+                          <p className="text-[10px] text-blue-700/50 ml-1">El tutor no paga durante este período. 0 = sin trial.</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Aviso Previo al Fin del Trial</Label>
+                          <div className="relative">
+                            <Input type="number" min="1" value={formData.trialReminderDays ?? 5} onChange={(e) => setFormData({...formData, trialReminderDays: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
+                          </div>
+                          <p className="text-[10px] text-blue-700/50 ml-1">Días antes del vencimiento del trial para enviar el email de aviso.</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Ciclo de Facturación</Label>
+                          <div className="relative">
+                            <Input type="number" min="1" value={formData.billingCycleMonths ?? 1} onChange={(e) => setFormData({...formData, billingCycleMonths: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">mes</span>
+                          </div>
+                          <p className="text-[10px] text-blue-700/50 ml-1">1 = mensual, 3 = trimestral, 12 = anual.</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Período de Gracia (Cobro Fallido)</Label>
+                          <div className="relative">
+                            <Input type="number" min="1" value={formData.gracePeriodDays ?? 7} onChange={(e) => setFormData({...formData, gracePeriodDays: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
+                          </div>
+                          <p className="text-[10px] text-blue-700/50 ml-1">Si el cobro falla, cuántos días tiene el tutor para pagar antes de la suspensión.</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Reintentos de Cobro (Cada)</Label>
+                          <div className="relative">
+                            <Input type="number" min="1" value={formData.retryIntervalDays ?? 2} onChange={(e) => setFormData({...formData, retryIntervalDays: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
+                          </div>
+                          <p className="text-[10px] text-blue-700/50 ml-1">Cada cuántos días reintentar el débito automáticamente durante el período de gracia.</p>
+                        </div>
+                        <div className="flex items-center justify-between p-5 bg-white rounded-2xl border border-blue-100 col-span-full">
+                          <div className="space-y-1">
+                            <Label className="text-sm font-black text-blue-900">Exigir Medio de Pago al Registrarse</Label>
+                            <p className="text-[10px] text-blue-700/60 font-medium">Si está activo, el tutor no podrá activar su cuenta sin cargar primero una tarjeta o medio de cobro.</p>
+                          </div>
+                          <Switch checked={formData.requiresPaymentMethod !== false} onCheckedChange={(c) => setFormData({...formData, requiresPaymentMethod: c})} className="data-[state=checked]:bg-blue-600" />
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
