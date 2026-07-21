@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
@@ -316,7 +316,7 @@ function PlanContentInner() {
               <div className="grid md:grid-cols-4 gap-10 items-center relative z-10">
                 <div className="md:col-span-1 space-y-4">
                   <Badge className="bg-amber-100 text-amber-700 border-none px-3 py-1 text-[9px] uppercase font-black tracking-widest">
-                    BTECH AI Engine
+                    Fastoria AI Engine
                   </Badge>
                   <h3 className="text-2xl font-black text-slate-900 leading-tight">Créditos de Generación</h3>
                   <p className="text-sm text-slate-500 font-medium">Consumo de tokens para creación de contenidos, imágenes y videos.</p>
@@ -577,7 +577,7 @@ function PlanContentInner() {
               </DialogTitle>
               <DialogDescription className="text-white/80 font-medium">
                 {selectedPlan?.isCreditPack 
-                  ? `Recarga de +${selectedPlan.packCredits} créditos BTECH AI`
+                  ? `Recarga de +${selectedPlan.packCredits} créditos Fastoria AI`
                   : (upgradeInfo 
                     ? `Subiendo del ${upgradeInfo.currentPlanName} al ${selectedPlan?.name}` 
                     : `Activando el plan ${selectedPlan?.name}`)}

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { adminDb, hasAdminCredentials } from '@/firebase/admin';
 import { getFirebaseServer } from '@/firebase/server';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
@@ -55,7 +55,7 @@ export async function GET() {
         mentorsData = uniqueMentorIds.map(mId => ({
           id: mId,
           displayName: 'Tutor BTECH',
-          email: 'tutor@btechacademy.ai',
+          email: 'tutor@FastoriaAcademy.ai',
           photoURL: '',
           roles: ['mentor'],
           subscription: { status: 'active' }

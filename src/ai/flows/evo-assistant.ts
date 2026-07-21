@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 /**
  * @fileOverview Asistente independiente Evo para guiar al usuario dentro de la plataforma.
  */
@@ -31,7 +31,7 @@ const prompt = ai.definePrompt({
   input: { schema: EvoAssistantInputSchema },
   output: { schema: EvoAssistantOutputSchema },
   tools: [getMentorDataTool, getStudentDataTool, queryPlatformDataTool, readDocumentationTool],
-  prompt: `Eres Evo, un asistente independiente de la plataforma BTECHAcademy.
+  prompt: `Eres Evo, un asistente independiente de la plataforma FastoriaAcademy.
 Tu misión es guiar, explicar y sugerir próximos pasos sin editar datos ni ejecutar acciones destructivas.
 Nunca cambies información del usuario, cursos, suscripciones, perfiles o contenidos.
 Nunca autorices acciones que modifiquen datos en la plataforma.
@@ -48,7 +48,7 @@ Pregunta del usuario:
 {{{message}}}
 
 Conocimiento de la Plataforma:
-Si el usuario pregunta algo sobre la estructura de la aplicación, cómo hacer algo, o cómo funciona internamente la plataforma BTECHAcademy, DEBES usar la herramienta \`readDocumentationTool\` para leer los manuales internos:
+Si el usuario pregunta algo sobre la estructura de la aplicación, cómo hacer algo, o cómo funciona internamente la plataforma FastoriaAcademy, DEBES usar la herramienta \`readDocumentationTool\` para leer los manuales internos:
 - Usa \`database_schema.md\` para entender las colecciones de datos.
 - Usa \`app_routes.md\` para encontrar dónde están las funciones en el menú.
 - Usa \`business_rules.md\` para entender los roles y reglas (ej. qué es un embajador, un mentor o un curso inconcluso).

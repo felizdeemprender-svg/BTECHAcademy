@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
@@ -46,7 +46,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const SUPER_ADMIN_EMAILS = [
   'felizdeemprender@gmail.com',
   'btouchacademy@gmail.com',
-  'btechacademy.ai@gmail.com'
+  'FastoriaAcademy.ai@gmail.com'
 ];
 
 const ALL_MENTOR_PERMISSIONS = ['academic', 'challenges', 'students', 'followups', 'marketing'];

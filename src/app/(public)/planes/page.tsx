@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -271,7 +271,7 @@ export default function PricingPage() {
                             {plan.aiQuotas?.totalCredits || 0}
                           </p>
                           <p className={cn("text-[9px] font-bold uppercase tracking-widest opacity-60", plan.isEnterprise ? "text-slate-400" : "text-slate-500")}>
-                            BTECH Credits
+                            Fastoria Credits
                           </p>
                         </div>
                       </div>

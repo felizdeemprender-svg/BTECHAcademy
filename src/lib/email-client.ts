@@ -1,4 +1,4 @@
-import { collection, addDoc } from 'firebase/firestore';
+﻿import { collection, addDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
 
 /**
@@ -25,7 +25,7 @@ export async function sendWelcomeEmailClient(
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
             <div style="text-align: center; margin-bottom: 24px;">
-              <h1 style="color: #6366f1; margin: 0; font-size: 26px;">¡Bienvenido/a a BTECH Academy!</h1>
+              <h1 style="color: #6366f1; margin: 0; font-size: 26px;">¡Bienvenido/a a Fastoria Academy!</h1>
             </div>
             <p style="font-size: 16px; color: #374151; line-height: 1.6;">
               Hola <strong>${studentName}</strong>,
@@ -40,7 +40,7 @@ export async function sendWelcomeEmailClient(
               Ya tienes el acceso habilitado. Para comenzar, simplemente inicia sesión en la plataforma con tu correo <strong>${normalizedEmail}</strong>.
             </p>
             <div style="text-align: center; margin: 32px 0;">
-              <a href="https://btechacademy.ai/auth/login" style="background-color: #6366f1; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);">
+              <a href="https://FastoriaAcademy.ai/auth/login" style="background-color: #6366f1; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);">
                 Acceder a mis cursos
               </a>
             </div>
@@ -48,7 +48,7 @@ export async function sendWelcomeEmailClient(
               Si tienes alguna duda o necesitas ayuda para ingresar, por favor ponte en contacto con nosotros respondiendo a este correo.
             </p>
             <p style="font-size: 14px; color: #9ca3af; margin-top: 8px; text-align: center;">
-              © ${new Date().getFullYear()} BTECH Academy. Todos los derechos reservados.
+              © ${new Date().getFullYear()} Fastoria Academy. Todos los derechos reservados.
             </p>
           </div>
         `

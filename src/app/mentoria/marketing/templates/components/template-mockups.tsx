@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -882,7 +882,7 @@ export const LandingMockup = ({
 
           {/* Footer - Visible */}
           <div className="p-6 bg-gray-900 text-white text-center relative z-10">
-            <span className="text-sm leading-relaxed">© 2024 BTECHAcademy</span>
+            <span className="text-sm leading-relaxed">© 2024 FastoriaAcademy</span>
           </div>
         </div>
       </div>
@@ -930,9 +930,9 @@ export const EmailMockup = ({
                 <span className="text-white font-bold text-lg">B</span>
               </div>
               <div>
-                <p className="font-semibold text-sm">BTECHAcademy</p>
+                <p className="font-semibold text-sm">FastoriaAcademy</p>
                 <p className="text-xs text-gray-500">
-                  mentoria@btechacademy.com
+                  mentoria@FastoriaAcademy.com
                 </p>
               </div>
             </div>
@@ -968,7 +968,7 @@ export const EmailMockup = ({
               <div>
                 <p className="font-semibold text-sm">Hola, [Nombre]</p>
                 <p className="text-xs text-gray-500">
-                  Estudiante de BTECHAcademy
+                  Estudiante de FastoriaAcademy
                 </p>
               </div>
             </div>
@@ -1037,7 +1037,7 @@ export const EmailMockup = ({
               <p className="text-gray-700 leading-relaxed">
                 Atentamente,
                 <br />
-                El equipo de BTECHAcademy
+                El equipo de FastoriaAcademy
               </p>
             </div>
           </div>
@@ -1046,7 +1046,7 @@ export const EmailMockup = ({
         {/* Email Footer */}
         <div className="p-4 border-t bg-gray-50 text-center">
           <p className="text-xs text-gray-500">
-            © 2024 BTECHAcademy. Todos los derechos reservados.
+            © 2024 FastoriaAcademy. Todos los derechos reservados.
           </p>
           <div className="flex justify-center gap-4 mt-2">
             <span className="text-xs text-blue-500 underline cursor-pointer">
@@ -1138,7 +1138,7 @@ export const AdMockup = ({
 
             {/* Ad URL */}
             <div className="text-xs text-green-600 truncate">
-              btechacademy.com/cursos/marketing-digital
+              FastoriaAcademy.com/cursos/marketing-digital
             </div>
 
             {/* Ad Visual */}
@@ -1158,7 +1158,7 @@ export const AdMockup = ({
                 <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
                   Ad
                 </span>
-                <span className="text-xs text-gray-500">BTECHAcademy</span>
+                <span className="text-xs text-gray-500">FastoriaAcademy</span>
               </div>
               <Button
                 size="sm"

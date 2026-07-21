@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/firebase/admin';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { activateTrial } from '@/services/subscriptions/subscription-engine';
@@ -108,11 +108,11 @@ export async function POST(req: NextRequest) {
         leadData: { email, firstName, lastName }
       });
 
-      const origin = process.env.NEXT_PUBLIC_APP_URL || 'https://btechacademy.ai';
+      const origin = process.env.NEXT_PUBLIC_APP_URL || 'https://FastoriaAcademy.ai';
       const body = {
         items: [{
           id: planId,
-          title: isUpgrade ? `Upgrade BTECHAcademy: ${plan.name}` : `Suscripción BTECHAcademy: ${plan.name}`,
+          title: isUpgrade ? `Upgrade FastoriaAcademy: ${plan.name}` : `Suscripción FastoriaAcademy: ${plan.name}`,
           quantity: 1,
           unit_price: finalPrice,
           currency_id: 'ARS'

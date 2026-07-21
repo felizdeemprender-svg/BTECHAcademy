@@ -1,4 +1,4 @@
-import { getAdminFirestore } from '@/firebase/admin';
+﻿import { getAdminFirestore } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 /**
@@ -138,7 +138,7 @@ export async function processSuccessfulSubscription(
     await db.collection('mail').add({
       to: userData.email,
       message: {
-        subject: isUpgrade ? '¡Tu Upgrade ha sido exitoso!' : '¡Bienvenido a BTECHAcademy! Tu cuenta de Mentor está activa',
+        subject: isUpgrade ? '¡Tu Upgrade ha sido exitoso!' : '¡Bienvenido a FastoriaAcademy! Tu cuenta de Mentor está activa',
         html: `
           <h1>¡Hola ${userData.displayName || 'Mentor'}!</h1>
           <p>Tu ${isUpgrade ? 'mejora al' : 'suscripción al'} plan <strong>${plan?.name}</strong> ha sido procesada.</p>

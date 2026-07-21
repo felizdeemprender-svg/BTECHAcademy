@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useAuth } from '@/components/auth-context';
 import { useRouter } from 'next/navigation';
@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="space-y-3 max-w-sm mb-10">
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Acceso Restringido</h1>
           <p className="text-slate-500 font-medium leading-relaxed">
-            Esta sección es para uso exclusivo de la administración institucional de <span className="text-primary font-bold">BTECHAcademy</span>.
+            Esta sección es para uso exclusivo de la administración institucional de <span className="text-primary font-bold">FastoriaAcademy</span>.
           </p>
         </div>
 

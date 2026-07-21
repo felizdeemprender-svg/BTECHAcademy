@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Content Exporter - Formateo y Exportación de Templates
  * 
  * Responsable de generar packs de exportación con metadatos de protocolos
@@ -31,7 +31,7 @@ export function formatEmailContent(emails: TemplateMetadata[], options: ExportOp
     
     if (email.landingId && email.landingId !== 'mentor') {
       const [packId, vIdx] = email.landingId.split('-');
-      link = `${options.baseUrl || 'https://btechacademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
+      link = `${options.baseUrl || 'https://FastoriaAcademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
     } else if (email.landingId === 'mentor') {
       link = 'URL_DEL_MENTOR_AQUÍ';
     }
@@ -67,7 +67,7 @@ export function formatSocialContent(socials: TemplateMetadata[], options: Export
     
     if (social.landingId && social.landingId !== 'mentor') {
       const [packId, vIdx] = social.landingId.split('-');
-      landingLink = `${options.baseUrl || 'https://btechacademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
+      landingLink = `${options.baseUrl || 'https://FastoriaAcademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
     } else if (social.landingId === 'mentor') {
       landingLink = 'URL_DEL_MENTOR_AQUÍ';
     }
@@ -115,7 +115,7 @@ export function formatAdsContent(ads: TemplateMetadata[], options: ExportOptions
     
     if (ad.landingId && ad.landingId !== 'mentor') {
       const [packId, vIdx] = ad.landingId.split('-');
-      landingLink = `${options.baseUrl || 'https://btechacademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
+      landingLink = `${options.baseUrl || 'https://FastoriaAcademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
     } else if (ad.landingId === 'mentor') {
       landingLink = 'URL_DEL_MENTOR_AQUÍ';
     }

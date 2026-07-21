@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ export default function LandingPage() {
               <div className="absolute inset-4 bg-white rounded-2xl shadow-2xl flex items-center justify-center">
                 <div className="text-center space-y-4 p-8">
                   <GraduationCap className="w-16 h-16 text-primary mx-auto" />
-                  <h3 className="text-2xl font-bold text-primary">BTECHAcademy</h3>
+                  <h3 className="text-2xl font-bold text-primary">FastoriaAcademy</h3>
                   <p className="text-muted-foreground">Educación de Alto Impacto</p>
                 </div>
               </div>
@@ -135,7 +135,7 @@ export default function LandingPage() {
             <Badge className="mb-4">Comienza Hoy</Badge>
             <h2 className="text-4xl font-bold text-primary mb-4">¿Listo para transformar tu futuro?</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Únete a miles de mentores que ya están cambiando vidas con BTECHAcademy
+              Únete a miles de mentores que ya están cambiando vidas con FastoriaAcademy
             </p>
             <Link href="/auth">
               <Button size="lg" className="h-16 px-12 text-lg bg-primary hover:bg-primary/90 shadow-xl">

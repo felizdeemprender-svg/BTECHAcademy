@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import { LandingFooter } from '@/components/layout/LandingFooter';
 export default function AboutPage() {
   const team = [
     {
-      name: 'BTECHAcademy',
+      name: 'FastoriaAcademy',
       role: 'Fundador Institucional',
       bio: 'Visionario en educación tecnológica con 15+ años de experiencia en transformación digital.',
       photo: 'https://loremflickr.com/200/200/person,professional?lock=founder',
@@ -80,7 +80,7 @@ export default function AboutPage() {
               Estamos <span className="text-accent">revolucionando</span> la educación
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              En BTECHAcademy, creemos que el conocimiento es el motor del progreso. 
+              En FastoriaAcademy, creemos que el conocimiento es el motor del progreso. 
               Combinamos la experiencia humana con el poder de la inteligencia artificial para 
               crear experiencias de aprendizaje transformadoras.
             </p>

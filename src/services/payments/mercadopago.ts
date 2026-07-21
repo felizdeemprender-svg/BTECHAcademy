@@ -1,4 +1,4 @@
-import { MercadoPagoConfig, Preference } from 'mercadopago';
+﻿import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { getAdminFirestore } from '@/firebase/admin';
 
 interface MPSessionParams {
@@ -71,7 +71,7 @@ export async function createMercadoPagoSession(params: MPSessionParams) {
       pending: `${baseUrl}/v/${pageId}?payment_status=pending`
     },
     external_reference: externalReference,
-    statement_descriptor: 'BTECH ACADEMY',
+    statement_descriptor: 'Fastoria Academy',
     expires: false
   };
 

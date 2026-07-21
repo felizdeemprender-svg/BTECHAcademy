@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { useAuth } from '@/components/auth-context';
@@ -61,7 +61,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <div className="w-10 h-10 rounded-xl bg-accent text-accent-foreground flex items-center justify-center shadow-lg shadow-accent/20 transition-transform group-hover:rotate-12">
                 <Sparkles className="h-6 w-6" />
               </div>
-              <span className="font-headline font-bold text-xl text-[hsl(var(--sidebar-foreground))] tracking-tight">BTECHAcademy</span>
+              <span className="font-headline font-bold text-xl text-[hsl(var(--sidebar-foreground))] tracking-tight">FastoriaAcademy</span>
             </Link>
           </SidebarHeader>
           
@@ -100,7 +100,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="h-4 w-px bg-border mx-2" />
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 truncate">
-                Panel Institucional • BTECHAcademy
+                Panel Institucional • FastoriaAcademy
               </p>
             </div>
           </header>

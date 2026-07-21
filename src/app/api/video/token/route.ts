@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 // Clave secreta para firmar tokens (en producción usar variable de entorno)
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     
     const allowedDomains = [
       'http://localhost:9002',
-      'https://btechacademy-8b329.web.app',
+      'https://FastoriaAcademy-8b329.web.app',
       process.env.NEXT_PUBLIC_APP_URL
     ].filter(Boolean);
 

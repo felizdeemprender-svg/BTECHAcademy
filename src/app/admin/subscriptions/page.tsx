@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
@@ -781,7 +781,7 @@ export default function AdminSubscriptionsPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-amber-800/50 ml-1">BTECH Credits / mes (Abono)</Label>
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-amber-800/50 ml-1">Fastoria Credits / mes (Abono)</Label>
                           <div className="relative">
                             <Input 
                               type="number" 

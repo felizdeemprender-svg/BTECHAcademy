@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { Sparkles, Globe } from 'lucide-react';
@@ -13,7 +13,7 @@ export function LandingFooter() {
               <div className="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md">
                  <Sparkles className="h-6 w-6 text-accent" />
               </div>
-              <span className="font-bold text-2xl text-white tracking-tight">BTECHAcademy</span>
+              <span className="font-bold text-2xl text-white tracking-tight">FastoriaAcademy</span>
             </div>
             <p className="text-primary-foreground/60 max-w-sm text-lg leading-relaxed">
               Transformando la educación digital con inteligencia artificial y herramientas de gestión exclusivas para mentores.
@@ -49,7 +49,7 @@ export function LandingFooter() {
         </div>
         
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-sm text-primary-foreground/40 font-medium">© 2024 BTECHAcademy. Todos los derechos reservados.</p>
+          <p className="text-sm text-primary-foreground/40 font-medium">© 2024 FastoriaAcademy. Todos los derechos reservados.</p>
           <div className="flex gap-8 text-xs font-bold text-primary-foreground/40 uppercase tracking-widest">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacidad</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Términos</Link>

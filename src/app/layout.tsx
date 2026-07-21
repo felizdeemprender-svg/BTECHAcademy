@@ -1,11 +1,11 @@
-import type {Metadata} from 'next';
+﻿import type {Metadata} from 'next';
 import './globals.css';
 import { LayoutWrapper } from './layout-wrapper';
 
 export const metadata: Metadata = {
-  title: 'BTECHAcademy | Plataforma de Alto Impacto para Mentores',
-  description: 'Descubre el futuro de la educación digital con BTECHAcademy. Potencia tu marca personal, gestiona tus cursos con IA y accede a una red exclusiva de conocimiento institucional.',
-  keywords: ['educación', 'IA', 'mentores', 'cursos online', 'BTECH', 'academy', 'BTECHAcademy'],
+  title: 'FastoriaAcademy | Plataforma de Alto Impacto para Mentores',
+  description: 'Descubre el futuro de la educación digital con FastoriaAcademy. Potencia tu marca personal, gestiona tus cursos con IA y accede a una red exclusiva de conocimiento institucional.',
+  keywords: ['educación', 'IA', 'mentores', 'cursos online', 'BTECH', 'academy', 'FastoriaAcademy'],
 };
 
 export default function RootLayout({

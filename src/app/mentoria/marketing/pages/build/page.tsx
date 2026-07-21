@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import { useState, useRef, useEffect, useMemo, Suspense } from 'react';
@@ -937,7 +937,7 @@ function BuilderContent() {
         engineMeta: {
           generationEngine: 'Antigravity-AI-Command',
           blueprintId: selectedCollectionId,
-          sourceApp: 'BTECHAcademy',
+          sourceApp: 'FastoriaAcademy',
           mission: campaignMission
         },
         type: 'campaign_pack',

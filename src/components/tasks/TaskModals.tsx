@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import { 
@@ -139,7 +139,7 @@ export function TaskModals({
               </div>
             </div>
             <DialogTitle className="text-xl md:text-2xl font-bold">{selectedTask.title}</DialogTitle>
-            <DialogDescription className="text-emerald-100/70 text-sm">Desafío completado y evaluado por el motor BTECH AI.</DialogDescription>
+            <DialogDescription className="text-emerald-100/70 text-sm">Desafío completado y evaluado por el motor Fastoria AI.</DialogDescription>
           </DialogHeader>
           
           <div className="p-6 md:p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">

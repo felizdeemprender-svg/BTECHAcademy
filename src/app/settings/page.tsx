@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
@@ -365,7 +365,7 @@ export default function SettingsPage() {
     
     const parts = origin.split('://');
     const protocol = parts[0];
-    const fullHost = parts[1]; // ej: admin.localhost:9002 o juan.btechacademy.com
+    const fullHost = parts[1]; // ej: admin.localhost:9002 o juan.FastoriaAcademy.com
     
     let baseHost = fullHost;
     

@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 /**
  * @fileOverview Herramientas de Genkit para que Evo consulte la BD autónomamente.
  * Usa las cookies para garantizar la seguridad del UID.
@@ -193,7 +193,7 @@ export const queryPlatformDataTool = ai.defineTool(
 export const readDocumentationTool = ai.defineTool(
   {
     name: 'readDocumentation',
-    description: 'Herramienta para leer manuales y documentación de la plataforma. Usa esta herramienta cuando necesites saber cómo funciona algo en BTECHAcademy.',
+    description: 'Herramienta para leer manuales y documentación de la plataforma. Usa esta herramienta cuando necesites saber cómo funciona algo en FastoriaAcademy.',
     inputSchema: z.object({
       filename: z.enum(['database_schema.md', 'app_routes.md', 'business_rules.md']).describe('Nombre del archivo de documentación a leer'),
     }),

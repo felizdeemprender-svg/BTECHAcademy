@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ export function LandingHeader() {
           <Sparkles className="text-primary-foreground h-6 w-6" />
         </div>
         <div className="flex flex-col -gap-1">
-          <span className="font-bold text-xl text-primary tracking-tight leading-none">BTECHAcademy</span>
+          <span className="font-bold text-xl text-primary tracking-tight leading-none">FastoriaAcademy</span>
           <span className="text-[10px] uppercase tracking-widest font-black text-accent ml-0.5">Potenciado por IA</span>
         </div>
       </Link>
