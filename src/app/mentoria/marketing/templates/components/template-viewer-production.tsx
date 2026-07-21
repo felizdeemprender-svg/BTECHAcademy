@@ -638,28 +638,108 @@ export const TemplateViewerProduction = ({
               </section>
 
               {editingChannel === "landing" && (
-                <section className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
-                    Densidad Académica
-                  </Label>
-                  <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-xl">
-                    <div>
-                      <p className="text-xs font-bold">Cantidad de Secciones</p>
-                      <p className="text-[9px] text-muted-foreground uppercase">
-                        Minimal (1-3), Balanced (3-5), Detailed (5-7)
-                      </p>
+                <section className="space-y-8">
+                  {/* TEMA VISUAL */}
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                      Modo Visual (Theme Mode)
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {['light', 'dark', 'glass'].map((mode) => (
+                        <button
+                          key={mode}
+                          onClick={() =>
+                            setEditingVariant({
+                              ...editingVariant,
+                              themeMode: mode,
+                            })
+                          }
+                          className={cn(
+                            "py-2 rounded-xl text-xs font-bold border-2 capitalize transition-all",
+                            (editingVariant?.themeMode || 'light') === mode
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
+                          )}
+                        >
+                          {mode}
+                        </button>
+                      ))}
                     </div>
-                    <Input
-                      type="number"
-                      className="w-20 h-10 font-black text-center bg-white border-none"
-                      value={editingVariant?.sectionCount || 0}
-                      onChange={(e) =>
-                        setEditingVariant({
-                          ...editingVariant,
-                          sectionCount: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
+                  </div>
+
+                  {/* DENSIDAD ACADÉMICA */}
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                      Densidad Académica
+                    </Label>
+                    <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-xl">
+                      <div>
+                        <p className="text-xs font-bold">Cantidad de Secciones</p>
+                        <p className="text-[9px] text-muted-foreground uppercase">
+                          Minimal (1-3), Balanced (3-5), Detailed (5-7)
+                        </p>
+                      </div>
+                      <Input
+                        type="number"
+                        className="w-20 h-10 font-black text-center bg-white border-none"
+                        value={editingVariant?.sectionCount || 0}
+                        onChange={(e) =>
+                          setEditingVariant({
+                            ...editingVariant,
+                            sectionCount: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* VISIBILIDAD DE SECCIONES */}
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                      Secciones Visibles
+                    </Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { key: 'showHeroVideo', label: 'Video Principal' },
+                        { key: 'showNarrative', label: 'Textos Narrativos' },
+                        { key: 'showSyllabus', label: 'Temario del Curso' },
+                        { key: 'showBenefits', label: 'Beneficios' },
+                        { key: 'showMentor', label: 'Perfil del Mentor' },
+                        { key: 'showFaqs', label: 'Preguntas Frecuentes' },
+                      ].map((item) => {
+                        const isVisible = editingVariant?.visibility?.[item.key] ?? true;
+                        return (
+                          <button
+                            key={item.key}
+                            onClick={() =>
+                              setEditingVariant({
+                                ...editingVariant,
+                                visibility: {
+                                  ...(editingVariant?.visibility || {
+                                    showHeroVideo: true,
+                                    showNarrative: true,
+                                    showSyllabus: true,
+                                    showBenefits: true,
+                                    showMentor: true,
+                                    showFaqs: true,
+                                  }),
+                                  [item.key]: !isVisible,
+                                },
+                              })
+                            }
+                            className={cn(
+                              "flex items-center justify-between p-3 rounded-xl border-2 text-xs font-bold transition-all",
+                              isVisible
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                : "border-slate-200 bg-slate-50 text-slate-400"
+                            )}
+                          >
+                            {item.label}
+                            <div className={cn("w-3 h-3 rounded-full transition-colors", isVisible ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-slate-300")} />
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </section>
               )}

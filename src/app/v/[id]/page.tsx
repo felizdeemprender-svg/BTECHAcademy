@@ -4,8 +4,8 @@
 import { useState, useEffect, use, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth-context';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
 import { createOrFindLead, REFERIDO_SESSION_KEY, LANDING_SESSION_KEY } from '@/lib/leads/manage-lead';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -128,6 +128,12 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   const pageRef = useMemoFirebase(() => doc(db, 'salesPages', id), [db, id]);
   const { data: page, isLoading: pageLoading } = useDoc(pageRef);
+
+  const courseRef = useMemoFirebase(() => page?.courseId ? doc(db, 'courses', page.courseId) : null, [db, page?.courseId]);
+  const { data: course } = useDoc(courseRef);
+
+  const modulesQuery = useMemoFirebase(() => page?.courseId ? query(collection(db, 'courses', page.courseId, 'modules'), orderBy('order', 'asc')) : null, [db, page?.courseId]);
+  const { data: modules } = useCollection(modulesQuery);
 
   // Validar vigencia de la landing (debe ir DESPUÉS de declarar `page`)
   useEffect(() => {
@@ -381,6 +387,16 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const fontBody = tokens.fontBody || 'inherit';
   const socials = mentorProfile?.profile?.socials || {};
 
+  // Theme Modes
+  const themeMode = content.themeMode || 'light';
+  const isDark = themeMode === 'dark';
+  
+  const bgBase = isDark ? 'bg-slate-950' : 'bg-slate-50';
+  const textBase = isDark ? 'text-slate-100' : 'text-slate-900';
+  const bgSurface = isDark ? 'bg-slate-900' : 'bg-white';
+  const textMuted = isDark ? 'text-slate-400' : 'text-slate-600';
+  const borderSubtle = isDark ? 'border-slate-800' : 'border-slate-100';
+
   if (isExpired) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center space-y-6" style={{ fontFamily: fontBody }}>
@@ -412,7 +428,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div
-      className="min-h-screen bg-slate-50 text-slate-900 selection:bg-primary/20"
+      className={cn("min-h-screen pb-24 selection:bg-primary/20", bgBase, textBase)}
       style={{
         fontFamily: fontBody,
         ['--primary' as any]: primaryColor,
@@ -422,13 +438,13 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
     >
       {/* Dynamic Font Injection */}
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=${fontHeading.replace(/\s+/g, '+')} &family=${fontBody.replace(/\s+/g, '+')}&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=${fontHeading.replace(/\s+/g, '+')}&family=${fontBody.replace(/\s+/g, '+')}&display=swap');
         .font-headline { font-family: ${fontHeading}, sans-serif !important; }
         .font-body { font-family: ${fontBody}, sans-serif !important; }
       `}</style>
 
       {/* Header - Marca Blanca */}
-      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100 font-body">
+      <nav className={cn("backdrop-blur-md sticky top-0 z-50 border-b font-body", isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white/80 border-slate-100')}>
         <div className="container mx-auto px-6 h-20 flex justify-between items-center">
           <div className="flex items-center gap-4">
             {page.branding?.logoUrl && (
@@ -450,7 +466,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       </nav>
 
       {/* Hero Section */}
-      <section className="py-20 lg:py-32 bg-white relative overflow-hidden">
+      <section className={cn("py-20 lg:py-32 relative overflow-hidden", bgSurface)}>
         <div className="absolute top-0 right-0 p-20 opacity-5 pointer-events-none" style={{ color: primaryColor }}>
           <Sparkles className="h-96 w-96" />
         </div>
@@ -458,11 +474,11 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           <h1 className="text-5xl lg:text-7xl font-headline font-black leading-[1.1] tracking-tighter" style={{ color: primaryColor }}>
             {content.headline}
           </h1>
-          <p className="text-xl lg:text-2xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed italic">
+          <p className={cn("text-xl lg:text-2xl font-medium max-w-3xl mx-auto leading-relaxed italic", textMuted)}>
             {content.subheadline}
           </p>
 
-          {content.showVideo !== false && content.videoUrl && (
+          {content.visibility?.showHeroVideo !== false && content.showVideo !== false && content.videoUrl && (
             <div
               className="max-w-4xl mx-auto aspect-video rounded-[3rem] overflow-hidden shadow-3xl border-[12px] border-slate-50 bg-black relative group/video-container select-none"
               onContextMenu={(e) => e.preventDefault()}
@@ -519,7 +535,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       </section>
 
       {/* Narrative Sections */}
-      <section className="py-24 space-y-32">
+      {content.visibility?.showNarrative !== false && content.sections && content.sections.length > 0 && (
+      <section className={cn("py-24 space-y-32", bgBase)}>
         {content.sections?.map((s: any, i: number) => (
           <div key={i} className="container mx-auto px-6 max-w-6xl">
             <div className={cn(
@@ -527,28 +544,67 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
               i % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"
             )}>
               <div className="flex-1 space-y-8">
-                <h3 className="text-4xl font-black text-slate-900 leading-tight">{s.title}</h3>
-                <p className="text-lg text-slate-600 leading-relaxed font-medium">{s.paragraph}</p>
+                <h3 className={cn("text-4xl font-black leading-tight", textBase)}>{s.title}</h3>
+                <p className={cn("text-lg leading-relaxed font-medium", textMuted)}>{s.paragraph}</p>
                 <div className="grid gap-4">
                   {s.microBullets?.map((bullet: string, bIdx: number) => (
-                    <div key={bIdx} className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <div key={bIdx} className={cn("flex items-start gap-4 p-4 rounded-2xl border shadow-sm", bgSurface, borderSubtle)}>
                       <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" style={{ color: primaryColor }} />
-                      <span className="text-sm font-bold text-slate-700">{bullet}</span>
+                      <span className={cn("text-sm font-bold", textBase)}>{bullet}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="flex-1 w-full aspect-[4/3] rounded-[3rem] bg-slate-100 border-[12px] border-white shadow-2xl relative overflow-hidden group">
+              <div className={cn("flex-1 w-full aspect-[4/3] rounded-[3rem] border-[12px] shadow-2xl relative overflow-hidden group", isDark ? 'border-slate-800 bg-slate-800' : 'border-white bg-slate-100')}>
                 <Image src={s.imageUrl || `https://loremflickr.com/800/600/${(page.aiContent?.courseKeywords || 'business,education,growth').split(',').slice(0, 3).join(',')},professional?lock=${i + 1}`} alt="Visual" fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
               </div>
             </div>
           </div>
         ))}
       </section>
+      )}
 
-      {/* Benefits Section (New) */}
-      {content.benefits && content.benefits.length > 0 && (
-        <section className="py-24 bg-slate-50">
+      {/* Syllabus Section (New) */}
+      {content.visibility?.showSyllabus !== false && modules && modules.length > 0 && (
+        <section className={cn("py-24", bgSurface)}>
+          <div className="container mx-auto px-6 max-w-4xl">
+             <div className="text-center space-y-4 mb-16">
+              <Badge className="bg-primary/10 text-primary border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">
+                Temario del Curso
+              </Badge>
+              <h2 className="text-4xl lg:text-5xl font-headline font-black tracking-tight" style={{ color: primaryColor }}>
+                ¿Qué vas a aprender?
+              </h2>
+            </div>
+            
+            <div className="space-y-6">
+              {modules.map((mod: any, idx: number) => (
+                <div key={idx} className={cn("p-6 rounded-[1.5rem] border shadow-sm flex items-start gap-5 transition-transform hover:scale-[1.01]", bgBase, borderSubtle)}>
+                  <div className="w-8 h-8 rounded-xl flex-shrink-0 mt-1 flex items-center justify-center text-sm font-black" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h3 className={cn("text-base font-bold leading-snug", textBase)}>{mod.title}</h3>
+                    {(mod.description || mod.content) && (
+                      <p className={cn("text-sm font-medium leading-relaxed", textMuted)}>{mod.description || mod.content}</p>
+                    )}
+                    {mod.duration && (
+                      <div className="flex items-center gap-1.5 pt-1" style={{ color: primaryColor }}>
+                        <Clock className="w-3.5 h-3.5" />
+                        <span className="text-xs font-bold">{mod.duration}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Benefits Section */}
+      {content.visibility?.showBenefits !== false && content.benefits && content.benefits.length > 0 && (
+        <section className={cn("py-24", bgBase)}>
           <div className="container mx-auto px-6 max-w-5xl">
             <div className="text-center space-y-4 mb-16">
               <Badge className="bg-primary/10 text-primary border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">
@@ -560,11 +616,11 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {content.benefits.map((benefit: string, bIdx: number) => (
-                <div key={bIdx} className="p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl hover:shadow-2xl transition-all group">
+                <div key={bIdx} className={cn("p-8 rounded-[2.5rem] border shadow-xl hover:shadow-2xl transition-all group", bgSurface, borderSubtle)}>
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <CheckCircle2 className="h-6 w-6" />
                   </div>
-                  <p className="font-bold text-slate-800 leading-snug">{benefit}</p>
+                  <p className={cn("font-bold leading-snug", textBase)}>{benefit}</p>
                 </div>
               ))}
             </div>
@@ -573,12 +629,13 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       )}
 
       {/* Mentor Section (Redesigned) */}
-      <section className="py-24 bg-white overflow-hidden relative border-t border-slate-100">
+      {content.visibility?.showMentor !== false && (
+      <section className={cn("py-24 overflow-hidden relative border-t", bgSurface, borderSubtle)}>
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="flex flex-col lg:flex-row items-center gap-16">
              <div className="relative w-64 h-64 lg:w-80 lg:h-80 shrink-0">
                <div className="absolute inset-0 bg-primary/5 rounded-[4rem] rotate-6" />
-               <div className="absolute inset-0 bg-slate-100 rounded-[4rem] -rotate-3 overflow-hidden border-[10px] border-white shadow-2xl">
+               <div className={cn("absolute inset-0 rounded-[4rem] -rotate-3 overflow-hidden border-[10px] shadow-2xl", isDark ? 'border-slate-800 bg-slate-900' : 'border-white bg-slate-100')}>
                  <Image
                     src={mentorProfile?.photoURL || 'https://placehold.co/400/png'}
                     alt="Mentor"
@@ -597,37 +654,68 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                    Sobre tu Mentor
                  </h2>
                </div>
-               <p className="text-xl text-slate-600 leading-relaxed font-medium italic">
+               <p className={cn("text-xl leading-relaxed font-medium italic", textMuted)}>
                  "{content.aboutMentor || mentorProfile?.profile?.bio || 'Experto dedicado a transformar tu aprendizaje con metodologías prácticas y resultados probados.'}"
                </p>
                <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-4">
-                 <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                 <div className={cn("flex items-center gap-2 px-4 py-2 rounded-xl border", bgBase, borderSubtle)}>
                    <Users className="h-4 w-4 text-primary" />
-                   <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Comunidad Activa</span>
+                   <span className={cn("text-xs font-bold uppercase tracking-tighter", textMuted)}>Comunidad Activa</span>
                  </div>
-                 <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                 <div className={cn("flex items-center gap-2 px-4 py-2 rounded-xl border", bgBase, borderSubtle)}>
                    <Award className="h-4 w-4 text-emerald-500" />
-                   <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Certificación Oficial</span>
+                   <span className={cn("text-xs font-bold uppercase tracking-tighter", textMuted)}>Certificación Oficial</span>
                  </div>
                </div>
              </div>
+           </div>
+         </div>
+       </section>
+      )}
+
+      {/* FAQs Section (New) */}
+      {content.visibility?.showFaqs !== false && content.faqs && content.faqs.length > 0 && (
+        <section className={cn("py-24 border-t", bgBase, borderSubtle)}>
+          <div className="container mx-auto px-6 max-w-3xl">
+            <div className="text-center space-y-4 mb-16">
+              <h2 className="text-4xl lg:text-5xl font-headline font-black tracking-tight" style={{ color: primaryColor }}>
+                Preguntas Frecuentes
+              </h2>
+            </div>
+            <div className="space-y-4">
+              {content.faqs.map((faq: any, idx: number) => (
+                <details key={idx} className={cn("group rounded-2xl border p-6 [&_summary::-webkit-details-marker]:hidden", bgSurface, borderSubtle)}>
+                  <summary className={cn("flex cursor-pointer items-center justify-between gap-1.5 font-bold text-lg", textBase)}>
+                    {faq.question}
+                    <span className="shrink-0 rounded-full bg-primary/10 p-1.5 text-primary group-open:-rotate-180 transition-transform">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  </summary>
+                  <p className={cn("mt-4 leading-relaxed font-medium", textMuted)}>
+                    {faq.answer}
+                  </p>
+                </details>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Pricing & Closure */}
-      <section className="py-24 bg-slate-900 text-white overflow-hidden relative">
+      <section className="py-32 bg-slate-900 text-white overflow-hidden relative">
         <div className="absolute bottom-0 left-0 p-20 opacity-5 pointer-events-none">
           <Rocket className="h-96 w-96 text-white" />
         </div>
         <div className="container mx-auto px-6 max-w-5xl relative z-10 text-center space-y-12">
-          <Card className="max-w-md mx-auto bg-white text-slate-900 rounded-[3rem] p-12 space-y-8 border-none shadow-3xl transform hover:scale-105 transition-transform">
+          <Card className={cn("max-w-md mx-auto rounded-[3rem] p-12 space-y-8 border-none shadow-3xl transform hover:scale-105 transition-transform", isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900')}>
             <div className="space-y-2">
-              <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Inversión Única</p>
+              <p className={cn("text-xs font-black uppercase tracking-[0.3em]", isDark ? 'text-slate-400' : 'text-slate-400')}>Inversión Única</p>
               <p className="text-6xl font-black tracking-tighter" style={{ color: primaryColor }}>
                 {price === 0 ? 'Gratis' : `$${price.toLocaleString('es-AR')}`}
               </p>
-              {price > 0 && <p className="text-sm font-bold text-slate-500 italic">Financiación disponible con MercadoPago</p>}
+              {price > 0 && <p className={cn("text-sm font-bold italic", isDark ? 'text-slate-400' : 'text-slate-500')}>Financiación disponible con MercadoPago</p>}
             </div>
             <div className="space-y-4 pt-4 text-left">
               <div className="flex items-center gap-3 text-xs font-bold"><ShieldCheck className="h-4 w-4 text-emerald-500" /> Garantía de Satisfacción 7 días</div>
@@ -638,7 +726,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
               disabled={isExpired}
               size="lg"
               className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ backgroundColor: isExpired ? '#94a3b8' : primaryColor }}
+              style={{ backgroundColor: isExpired ? '#94a3b8' : primaryColor, color: '#FFFFFF' }}
             >
               {loading ? <Loader2 className="animate-spin h-6 w-6" /> : isExpired ? 'Promoción Finalizada' : content.ctaText}
             </Button>
@@ -647,24 +735,41 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       </section>
 
       {/* Footer - Marca Blanca */}
-      <footer className="py-16 border-t border-slate-200 bg-white">
+      <footer className={cn("py-16 border-t pb-32 md:pb-16", bgSurface, borderSubtle)}>
         <div className="container mx-auto px-6 text-center space-y-10">
           <div className="flex items-center justify-center gap-6">
-            {socials.linkedin && <a href={socials.linkedin} target="_blank" className="hover:scale-110 transition-transform"><Linkedin className="h-6 w-6 text-slate-400 hover:text-[#0077B5]" /></a>}
-            {socials.instagram && <a href={socials.instagram} target="_blank" className="hover:scale-110 transition-transform"><Instagram className="h-6 w-6 text-slate-400 hover:text-[#E4405F]" /></a>}
-            {socials.twitter && <a href={socials.twitter} target="_blank" className="hover:scale-110 transition-transform"><Twitter className="h-6 w-6 text-slate-400 hover:text-black" /></a>}
-            {socials.youtube && <a href={socials.youtube} target="_blank" className="hover:scale-110 transition-transform"><Youtube className="h-6 w-6 text-slate-400 hover:text-[#FF0000]" /></a>}
-            {socials.tiktok && <a href={socials.tiktok} target="_blank" className="hover:scale-110 transition-transform"><TikTokIcon className="h-6 w-6 text-slate-400 hover:text-black" /></a>}
-            {socials.whatsapp && <a href={`https://wa.me/${socials.whatsapp}`} target="_blank" className="hover:scale-110 transition-transform"><MessageCircle className="h-6 w-6 text-slate-400 hover:text-[#25D366]" /></a>}
-            {socials.website && <a href={socials.website} target="_blank" className="hover:scale-110 transition-transform"><Globe className="h-6 w-6 text-slate-400" /></a>}
+            {socials.linkedin && <a href={socials.linkedin} target="_blank" className="hover:scale-110 transition-transform"><Linkedin className={cn("h-6 w-6 hover:text-[#0077B5]", textMuted)} /></a>}
+            {socials.instagram && <a href={socials.instagram} target="_blank" className="hover:scale-110 transition-transform"><Instagram className={cn("h-6 w-6 hover:text-[#E4405F]", textMuted)} /></a>}
+            {socials.twitter && <a href={socials.twitter} target="_blank" className="hover:scale-110 transition-transform"><Twitter className={cn("h-6 w-6 hover:text-black dark:hover:text-white", textMuted)} /></a>}
+            {socials.youtube && <a href={socials.youtube} target="_blank" className="hover:scale-110 transition-transform"><Youtube className={cn("h-6 w-6 hover:text-[#FF0000]", textMuted)} /></a>}
+            {socials.tiktok && <a href={socials.tiktok} target="_blank" className="hover:scale-110 transition-transform"><TikTokIcon className={cn("h-6 w-6 hover:text-black dark:hover:text-white", textMuted)} /></a>}
+            {socials.whatsapp && <a href={`https://wa.me/${socials.whatsapp}`} target="_blank" className="hover:scale-110 transition-transform"><MessageCircle className={cn("h-6 w-6 hover:text-[#25D366]", textMuted)} /></a>}
+            {socials.website && <a href={socials.website} target="_blank" className="hover:scale-110 transition-transform"><Globe className={cn("h-6 w-6", textMuted)} /></a>}
           </div>
           <div className="flex items-center justify-center gap-2">
             <ShieldCheck className="h-5 w-5 text-emerald-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Entorno de Aprendizaje Seguro</span>
+            <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", textMuted)}>Entorno de Aprendizaje Seguro</span>
           </div>
-          <p className="text-xs text-slate-400 font-medium">© {new Date().getFullYear()} {mentorProfile?.displayName}. Todos los derechos reservados.</p>
+          <p className={cn("text-xs font-medium", textMuted)}>© {new Date().getFullYear()} {mentorProfile?.displayName}. Todos los derechos reservados.</p>
         </div>
       </footer>
+
+      {/* Sticky Bottom CTA */}
+      <div className={cn("fixed bottom-0 left-0 right-0 p-4 backdrop-blur-xl border-t z-50 flex items-center justify-between md:justify-center md:gap-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]", isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white/80 border-slate-200')}>
+        <div className="hidden md:block text-right">
+          <p className={cn("text-xs font-black uppercase tracking-wider", textMuted)}>Inversión Única</p>
+          <p className="text-2xl font-black" style={{ color: primaryColor }}>{price === 0 ? 'Gratis' : `$${price.toLocaleString('es-AR')}`}</p>
+        </div>
+        <Button
+          onClick={handlePurchase}
+          disabled={isExpired}
+          size="lg"
+          className="w-full md:w-auto h-12 md:h-14 px-8 text-base md:text-lg font-bold rounded-xl shadow-xl transition-all"
+          style={{ backgroundColor: isExpired ? '#94a3b8' : primaryColor, color: '#FFFFFF' }}
+        >
+          {content.ctaText}
+        </Button>
+      </div>
       {/* Purchase Dialog */}
       <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
         <DialogContent className="sm:max-w-md rounded-[2.5rem] p-8 border-none shadow-3xl">

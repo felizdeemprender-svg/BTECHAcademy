@@ -7,7 +7,6 @@ import { checkAiHealth } from "@/ai/flows/check-ai-health";
 import {
   AIHealthState,
   GenerationOptions,
-  SocialTarget,
   GenerationProgress,
   GenerationResult,
 } from "../types/template-types";
@@ -31,18 +30,7 @@ export function useAIGeneration(profile?: any) {
   const [enabledChannels, setEnabledChannels] = useState<GenerationOptions>({
     landings: true,
     emails: true,
-    socials: true,
     ads: true,
-  });
-
-  // Social targets
-  const [socialTargets, setSocialTargets] = useState<
-    Record<string, SocialTarget>
-  >({
-    twitter: { enabled: true, thread: 3, single_post: 2 },
-    instagram: { enabled: true, story: 5, carousel: 3, single_post: 2 },
-    tiktok: { enabled: true, short_video: 3, carousel: 3 },
-    linkedin: { enabled: true, document: 2, single_post: 2, carousel: 2 },
   });
 
   // Health check - optimizado para evitar llamadas constantes
@@ -90,47 +78,12 @@ export function useAIGeneration(profile?: any) {
       });
 
       try {
-        // Convertir socialTargets al formato esperado por platforms
-        const platforms = {
-          twitter: socialTargets.twitter.enabled
-            ? {
-              enabled: true,
-              thread: socialTargets.twitter.thread || 3,
-              single_post: socialTargets.twitter.single_post || 2,
-            }
-            : undefined,
-          instagram: socialTargets.instagram.enabled
-            ? {
-              enabled: true,
-              story: socialTargets.instagram.story || 5,
-              carousel: socialTargets.instagram.carousel || 3,
-              single_post: socialTargets.instagram.single_post || 2,
-            }
-            : undefined,
-          tiktok: socialTargets.tiktok.enabled
-            ? {
-              enabled: true,
-              short_video: socialTargets.tiktok.short_video || 3,
-              carousel: socialTargets.tiktok.carousel || 3,
-            }
-            : undefined,
-          linkedin: socialTargets.linkedin.enabled
-            ? {
-              enabled: true,
-              document: socialTargets.linkedin.document || 2,
-              single_post: socialTargets.linkedin.single_post || 2,
-              carousel: socialTargets.linkedin.carousel || 2,
-            }
-            : undefined,
-        };
-
         // Generar templates con IA
         const result = await generateTemplateCollection({
           directives,
           mentorName: profile?.displayName,
-          designTokens, // ✅ Agregar los colores seleccionados
+          designTokens,
           enabledChannels,
-          platforms,
         });
 
         console.log("🔍 Resultado de generateTemplateCollection:", result);
@@ -189,7 +142,7 @@ export function useAIGeneration(profile?: any) {
 
         toast({
           title: "✅ Generación Exitosa",
-          description: `Se generaron ${result.landings.length} landings, ${result.emails.length} emails y ${(result.socials?.length || 0) + (result.ads?.length || 0)} templates de redes sociales.`,
+          description: `Se generaron ${result.landings.length} landings, ${result.emails.length} emails y ${result.ads?.length || 0} templates de anuncios.`,
         });
 
         return true;
@@ -266,7 +219,6 @@ export function useAIGeneration(profile?: any) {
     },
     [
       aiHealth.status,
-      socialTargets,
       enabledChannels,
       profile?.displayName,
       profile?.uid,
@@ -282,26 +234,13 @@ export function useAIGeneration(profile?: any) {
     [],
   );
 
-  // Actualizar social targets
-  const updateSocialTargets = useCallback(
-    (platform: string, target: Partial<SocialTarget>) => {
-      setSocialTargets((prev) => ({
-        ...prev,
-        [platform]: { ...prev[platform], ...target },
-      }));
-    },
-    [],
-  );
-
   return {
     isGenerating,
     generationProgress,
     aiHealth,
     enabledChannels,
-    socialTargets,
     performHealthCheck,
     generateTemplates,
     updateEnabledChannels,
-    updateSocialTargets,
   };
 }

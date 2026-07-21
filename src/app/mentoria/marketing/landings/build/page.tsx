@@ -99,19 +99,23 @@ function LandingBuilderContent() {
   // Índices para el Editor
   const [activeLandingIdx, setActiveLandingIdx] = useState(0);
 
-  // Cargar usuarios con rol 'referido' para el selector
+  // Cargar usuarios con rol 'referido' para el selector (solo los del mentor actual)
   useEffect(() => {
-    if (!db) return;
+    if (!db || !profile?.uid) return;
     const loadReferidos = async () => {
       try {
-        const snap = await getDocs(query(collection(db, 'users'), where('roles', 'array-contains', 'referido')));
-        setReferidos(snap.docs.map(d => ({ id: d.id, displayName: d.data().displayName || d.data().email, email: d.data().email })));
+        const snap = await getDocs(collection(db, 'mentorInfluencers', profile.uid, 'referidos'));
+        setReferidos(snap.docs.map(d => ({ 
+          id: d.id, 
+          displayName: d.data().displayName || d.data().email, 
+          email: d.data().email 
+        })));
       } catch (e) {
         console.warn('[Builder] No se pudieron cargar los referidos:', e);
       }
     };
     loadReferidos();
-  }, [db]);
+  }, [db, profile?.uid]);
 
   // Cargar página existente para edición
   useEffect(() => {

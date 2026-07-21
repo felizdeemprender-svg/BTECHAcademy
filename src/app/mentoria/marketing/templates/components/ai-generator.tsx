@@ -35,7 +35,6 @@ import {
 import {
   AIHealthState,
   GenerationOptions,
-  SocialTarget,
 } from "../types/template-types";
 import { cn } from "@/lib/utils";
 
@@ -47,12 +46,7 @@ interface AIGeneratorProps {
   isGenerating: boolean;
   generationProgress: { current: number; total: number; label: string } | null;
   enabledChannels: GenerationOptions;
-  socialTargets: Record<string, SocialTarget>;
   onChannelsChange: (channels: Partial<GenerationOptions>) => void;
-  onSocialTargetsChange: (
-    platform: string,
-    targets: Partial<SocialTarget>,
-  ) => void;
   onHealthCheck: () => void;
   // Props para diseño de identidad
   identityDesign: any;
@@ -77,9 +71,7 @@ export function AIGenerator({
   isGenerating,
   generationProgress,
   enabledChannels,
-  socialTargets,
   onChannelsChange,
-  onSocialTargetsChange,
   onHealthCheck,
   // Props para diseño de identidad
   identityDesign,
@@ -289,7 +281,7 @@ export function AIGenerator({
                 <Label className="text-base font-medium">
                   Canales a Generar
                 </Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
                   {[
                     {
                       key: "landings",
@@ -297,11 +289,6 @@ export function AIGenerator({
                       icon: LayoutTemplate,
                     },
                     { key: "emails", label: "Emails", icon: Mail },
-                    {
-                      key: "socials",
-                      label: "Redes Sociales",
-                      icon: Instagram,
-                    },
                     { key: "ads", label: "Anuncios", icon: Megaphone },
                   ].map(({ key, label, icon: Icon }) => (
                     <div key={key} className="flex items-center space-x-2">
@@ -326,72 +313,6 @@ export function AIGenerator({
                   ))}
                 </div>
               </div>
-
-              {/* Configuración de redes sociales */}
-              {enabledChannels.socials && (
-                <div>
-                  <Label className="text-base font-medium">
-                    Configuración de Redes Sociales
-                  </Label>
-                  <div className="space-y-3 mt-2">
-                    {Object.entries(socialTargets).map(
-                      ([platform, targets]) => (
-                        <div key={platform} className="border rounded-lg p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <PlatformIcon platform={platform} />
-                            <span className="font-medium capitalize">
-                              {platform}
-                            </span>
-                            <Checkbox
-                              checked={targets.enabled}
-                              onCheckedChange={(checked) =>
-                                onSocialTargetsChange(platform, {
-                                  enabled: checked as boolean,
-                                })
-                              }
-                              disabled={isGenerating}
-                            />
-                          </div>
-
-                          {targets.enabled && (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                              {Object.entries(targets)
-                                .filter(([key]) => key !== "enabled")
-                                .map(([type, count]) => (
-                                  <div
-                                    key={type}
-                                    className="flex items-center gap-1"
-                                  >
-                                    <Label
-                                      htmlFor={`${platform}-${type}`}
-                                      className="text-xs capitalize"
-                                    >
-                                      {type.replace("_", " ")}:
-                                    </Label>
-                                    <Input
-                                      id={`${platform}-${type}`}
-                                      type="number"
-                                      min="0"
-                                      max="5"
-                                      value={count as number}
-                                      onChange={(e) =>
-                                        onSocialTargetsChange(platform, {
-                                          [type]: parseInt(e.target.value) || 0,
-                                        })
-                                      }
-                                      className="h-6 w-12 text-xs"
-                                      disabled={isGenerating}
-                                    />
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* Acciones del Tab 1 */}
               <div className="flex justify-end gap-3 pt-4 border-t">

@@ -131,12 +131,18 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
               <p className="text-sm font-bold text-primary truncate">
                 {course.tutor.displayName}
               </p>
-              <Link 
-                href={`/tutor/${course.tutor.username}`}
-                className="text-[10px] font-bold text-accent uppercase tracking-wider hover:underline"
-              >
-                Perfil
-              </Link>
+              {course.tutor.username ? (
+                <Link 
+                  href={`/tutor/${course.tutor.username}`}
+                  className="text-[10px] font-bold text-accent uppercase tracking-wider hover:underline"
+                >
+                  Perfil
+                </Link>
+              ) : (
+                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                  Sin Perfil
+                </span>
+              )}
             </div>
             {course.tutor.subscription?.status === 'active' && (
               <Badge className="text-[9px] bg-emerald-50 text-emerald-600 border-emerald-100 font-bold">

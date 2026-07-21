@@ -41,7 +41,6 @@ export interface SocialTarget {
 export interface GenerationOptions {
   landings: boolean;
   emails: boolean;
-  socials: boolean;
   ads: boolean;
 }
 

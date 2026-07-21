@@ -18,7 +18,8 @@ import {
   Plus,
   Trash2,
   Mic2,
-  Brain
+  Brain,
+  MessageCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageEditor } from '@/components/courses/ImageEditor';
@@ -348,6 +349,122 @@ export function LandingEditor({
                       placeholder="Describe la autoridad del mentor..."
                     />
                   </div>
+                </div>
+              </Card>
+
+              {/* FAQs Card */}
+              <Card className="p-12 rounded-[4rem] bg-slate-900 border border-white/5 shadow-2xl space-y-12 mt-8">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between ml-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                        <MessageCircle className="h-4 w-4 text-orange-400" />
+                      </div>
+                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Preguntas Frecuentes (FAQs)</Label>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        const f = [...(l.faqs || [])];
+                        f.push({ question: "Nueva pregunta...", answer: "Respuesta..." });
+                        updateAsset('landings', lIdx, 'faqs', f);
+                      }}
+                      className="h-8 rounded-lg bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 text-[10px] font-bold px-3"
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> AGREGAR FAQ
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {l.faqs && l.faqs.length > 0 ? l.faqs.map((faq: any, fIdx: number) => (
+                      <div key={fIdx} className="group relative space-y-3 bg-white/5 p-6 rounded-3xl border border-white/5">
+                        <Input 
+                          value={faq.question || ''} 
+                          onChange={e => { 
+                            const f = [...(l.faqs || [])]; 
+                            f[fIdx].question = e.target.value; 
+                            updateAsset('landings', lIdx, 'faqs', f); 
+                          }} 
+                          className="h-12 bg-white/5 border-none rounded-xl px-4 font-bold text-slate-200 focus-visible:ring-orange-500/50"
+                          placeholder="Pregunta frecuente..."
+                        />
+                        <Textarea 
+                          value={faq.answer || ''} 
+                          onChange={e => { 
+                            const f = [...(l.faqs || [])]; 
+                            f[fIdx].answer = e.target.value; 
+                            updateAsset('landings', lIdx, 'faqs', f); 
+                          }} 
+                          className="min-h-[100px] bg-white/5 border-none rounded-2xl p-4 font-medium text-slate-400 focus-visible:ring-orange-500/50"
+                          placeholder="Respuesta detallada..."
+                        />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => {
+                            const f = (l.faqs || []).filter((_: any, i: number) => i !== fIdx);
+                            updateAsset('landings', lIdx, 'faqs', f);
+                          }}
+                          className="absolute -top-3 -right-3 h-8 w-8 opacity-0 group-hover:opacity-100 bg-red-500 text-white hover:bg-red-600 transition-all rounded-full shadow-lg"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )) : (
+                      <div className="col-span-1 md:col-span-2 p-8 border-2 border-dashed border-white/5 rounded-3xl text-center">
+                        <p className="text-sm text-slate-500 mb-4">No hay preguntas frecuentes definidas.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+
+              {/* ─── Ajustes de Blueprint ─── */}
+              <Card className="p-10 rounded-[3rem] bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/20 shadow-2xl space-y-8 mt-8">
+                <div className="flex items-center gap-4 border-b border-white/5 pb-8">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Ajustes de Blueprint</h4>
+                    <p className="text-xs text-slate-400 mt-0.5">Activa o desactiva secciones visibles en tu landing page.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { key: 'showNarrative',  label: 'Secciones Narrativas',  desc: 'Bloques de texto persuasivo con viñetas.',  color: 'emerald' },
+                    { key: 'showSyllabus',   label: 'Temario del Curso',     desc: 'Lista de módulos con horas de cátedra.',  color: 'sky'     },
+                    { key: 'showBenefits',   label: 'Beneficios del Curso',  desc: 'Listado de beneficios clave.',            color: 'violet'  },
+                    { key: 'showMentor',     label: 'Sobre el Mentor',       desc: 'Perfil y autoridad del tutor.',           color: 'rose'    },
+                    { key: 'showFaqs',       label: 'Preguntas Frecuentes',  desc: 'Bloque de FAQs con respuestas.',         color: 'orange'  },
+                  ].map(({ key, label, desc, color }) => {
+                    const isOn = l.visibility?.[key] !== false;
+                    return (
+                      <div
+                        key={key}
+                        className={cn(
+                          'flex items-center justify-between p-5 rounded-2xl border transition-all',
+                          isOn
+                            ? `bg-${color}-500/5 border-${color}-500/20`
+                            : 'bg-white/3 border-white/5 opacity-60'
+                        )}
+                      >
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-bold text-white">{label}</p>
+                          <p className="text-[10px] text-slate-400">{desc}</p>
+                        </div>
+                        <Switch
+                          id={`vis-${key}-${lIdx}`}
+                          checked={isOn}
+                          onCheckedChange={checked => {
+                            const current = l.visibility || {};
+                            updateAsset('landings', lIdx, 'visibility', { ...current, [key]: checked });
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </Card>
             </TabsContent>

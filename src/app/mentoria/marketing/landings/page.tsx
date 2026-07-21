@@ -269,6 +269,13 @@ export default function SalesLandingsDashboardPage() {
     );
   };
 
+  // Auto-expandir todos los cursos al cargar por primera vez
+  useEffect(() => {
+    if (groupedByCourse && openCourses.length === 0) {
+      setOpenCourses(Object.keys(groupedByCourse));
+    }
+  }, [groupedByCourse]);
+
   const handleCopyLink = (id: string, variant: number) => {
     const url = `${window.location.origin}/v/${id}?v=${variant}`;
     navigator.clipboard.writeText(url);

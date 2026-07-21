@@ -826,6 +826,16 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       />
                       <p className="text-xs text-muted-foreground">Esta descripción será visible para los alumnos al iniciar la clase.</p>
                     </div>
+                    <div className="space-y-2">
+                      <Label>Tiempo Estimado (Horas de Cátedra)</Label>
+                      <Input 
+                        value={currentModule.duration || ''} 
+                        onChange={e => setCurrentModule({...currentModule!, duration: e.target.value})} 
+                        className="h-14 font-bold rounded-xl" 
+                        placeholder="Ej. 2 horas, 45 min..."
+                      />
+                      <p className="text-xs text-muted-foreground">Esto se mostrará en el Temario de tu landing page.</p>
+                    </div>
                   </div>
                   <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({...currentModule!, contentType: v as any})}>
                     <TabsList className="mb-6 h-12 rounded-2xl p-1 bg-muted">

@@ -93,7 +93,14 @@ export function useCollections(profile: any) {
   // Eliminar colección
   const deleteCollection = useCallback(
     async (collectionId: string) => {
-      if (!isAdmin) return;
+      if (!isAdmin) {
+        toast({
+          title: "Acceso Denegado",
+          description: "Solo los administradores pueden eliminar plantillas.",
+          variant: "destructive",
+        });
+        return;
+      }
       setIsLoading(true);
       try {
         await deleteDoc(doc(db, "templateCollections", collectionId));
@@ -119,7 +126,14 @@ export function useCollections(profile: any) {
   // Actualizar colección
   const updateCollection = useCallback(
     async (collectionId: string, updates: Partial<TemplateCollection>) => {
-      if (!isAdmin) return;
+      if (!isAdmin) {
+        toast({
+          title: "Acceso Denegado",
+          description: "Solo los administradores pueden editar plantillas.",
+          variant: "destructive",
+        });
+        return;
+      }
       setIsLoading(true);
       try {
         await updateDoc(doc(db, "templateCollections", collectionId), {

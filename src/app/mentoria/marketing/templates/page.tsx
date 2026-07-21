@@ -30,11 +30,9 @@ export default function MarketingTemplatesPage() {
     generationProgress,
     aiHealth,
     enabledChannels,
-    socialTargets,
     performHealthCheck,
     generateTemplates,
     updateEnabledChannels,
-    updateSocialTargets,
   } = useAIGeneration(profile);
 
   const {
@@ -189,9 +187,7 @@ export default function MarketingTemplatesPage() {
           isGenerating={isGenerating}
           generationProgress={generationProgress}
           enabledChannels={enabledChannels}
-          socialTargets={socialTargets}
           onChannelsChange={updateEnabledChannels}
-          onSocialTargetsChange={updateSocialTargets}
           onHealthCheck={performHealthCheck}
           // Props para diseño de identidad
           identityDesign={identityDesign}
