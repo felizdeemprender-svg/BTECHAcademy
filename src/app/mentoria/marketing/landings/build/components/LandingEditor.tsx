@@ -462,6 +462,46 @@ export function LandingEditor({
                   </div>
                 </div>
 
+                {/* Vista Previa del Tema */}
+                {(() => {
+                  const currentTheme = l.themeMode || 'light';
+                  const isDark = currentTheme === 'dark';
+                  const isGlass = currentTheme === 'glass';
+                  const primaryColor = l.designTokens?.primary || '#3B2D86';
+
+                  const bgBase = isDark ? 'bg-slate-950 border-slate-800' : isGlass ? 'bg-indigo-950 border-indigo-500/30' : 'bg-slate-50 border-slate-200';
+                  const bgSurface = isDark ? 'bg-slate-900' : isGlass ? 'bg-indigo-900/60 backdrop-blur-md' : 'bg-white';
+                  const textBase = isDark ? 'text-slate-100' : isGlass ? 'text-indigo-50' : 'text-slate-900';
+                  const textMuted = isDark ? 'text-slate-400' : isGlass ? 'text-indigo-200' : 'text-slate-600';
+
+                  return (
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vista Previa (Tiempo Real)</p>
+                      <div className={cn("rounded-2xl border p-6 overflow-hidden relative transition-colors duration-500", bgBase)}>
+                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none" style={{ color: primaryColor }}>
+                          <Sparkles className="h-32 w-32" />
+                        </div>
+                        <div className="relative z-10 space-y-3">
+                          <h2 className="text-xl font-black leading-tight line-clamp-2" style={{ color: primaryColor }}>
+                            {l.headline || 'Título de tu Landing Page'}
+                          </h2>
+                          <p className={cn("text-xs font-medium line-clamp-2 leading-relaxed italic", textMuted)}>
+                            {l.subheadline || 'Subtítulo persuasivo que enganche al lector.'}
+                          </p>
+                          <div className="pt-2 flex gap-2">
+                            <div className="h-8 px-4 rounded-lg font-bold text-xs flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: primaryColor }}>
+                              Comprar Ahora
+                            </div>
+                            <div className={cn("h-8 px-4 rounded-lg font-bold text-xs flex items-center justify-center border", bgSurface, textBase)}>
+                              Ver Temario
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Switches de Visibilidad */}
                 <div className="space-y-3">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secciones Visibles</p>

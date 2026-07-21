@@ -337,6 +337,7 @@ export default function SalesLandingsDashboardPage() {
         ...cloningPage,
         landingType: 'promocion',
         referidoId: cloneData.referidoId,
+        referidoName: embajadorName,
         title: `${cloningPage.title} - Promo ${embajadorName}`,
         price: Number(cloneData.price),
         activeFrom: Timestamp.fromDate(start),
@@ -542,7 +543,7 @@ export default function SalesLandingsDashboardPage() {
                             {/* Embajador */}
                             <div className="w-32 text-center hidden md:block truncate px-2">
                               <span className="text-xs font-bold text-violet-600 truncate">
-                                {page.referidoId ? referidosMap[page.referidoId] || 'ID: ' + page.referidoId.substring(0, 6) : '—'}
+                                {page.referidoId ? page.referidoName || referidosMap[page.referidoId] || 'ID: ' + page.referidoId.substring(0, 6) : '—'}
                               </span>
                             </div>
 
