@@ -335,10 +335,16 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       }
 
       // 2b. Pago por MercadoPago
-      const response = await fetch('/api/payments/mercadopago/preference', {
+      const response = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pageId: id, studentEmail, studentName, referidoId: leadReferidoId || null })
+        body: JSON.stringify({ 
+          pageId: id,
+          studentEmail: studentEmail,
+          studentName: studentName,
+          referidoId: leadReferidoId || null,
+          gateway: 'mercadopago' // Por defecto usamos MP, luego se podrá elegir en la UI
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || data.error || 'Error al conectar con MercadoPago');

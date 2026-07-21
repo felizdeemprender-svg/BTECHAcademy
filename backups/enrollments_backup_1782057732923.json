@@ -1,0 +1,860 @@
+[
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "5SZagWn1jekvC6s29tbg",
+      "courseId": "2AAEy29PWe0AaEdSZeZB",
+      "studentId": "martinabatiz_gmail_com",
+      "studentName": "martinabatiz",
+      "inviteEmail": "martinabatiz@gmail.com",
+      "status": "active",
+      "isInvited": true,
+      "isDirect": false,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781807534,
+        "_nanoseconds": 395000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "6H0ynCzHaurOAosCWNbd",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "studentId": "marieholistica_gmail_com",
+      "studentName": "marieholistica",
+      "inviteEmail": "marieholistica@gmail.com",
+      "status": "active",
+      "isInvited": true,
+      "isDirect": false,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1780664953,
+        "_nanoseconds": 272000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "Aadiy3LKmBSEX3B7RGVI",
+      "courseId": "sAULHR7mvBJZ6qmWY4B2",
+      "studentId": "caro_piccinini_gmail_com",
+      "studentName": "caro.piccinini",
+      "inviteEmail": "caro.piccinini@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1780671250,
+        "_nanoseconds": 255000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "DOKCekdlSwkAJygXgM6E",
+      "courseId": "sAULHR7mvBJZ6qmWY4B2",
+      "studentId": "YMG8zFYw12XQkn9mOPYJ5qLSyLp1",
+      "studentName": "Paola Barreiro",
+      "inviteEmail": "barreirolet@gmail.com",
+      "status": "active",
+      "isInvited": true,
+      "isDirect": false,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781807625,
+        "_nanoseconds": 465000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "jEaxK3im4XPW21z85X8w",
+      "courseId": "sAULHR7mvBJZ6qmWY4B2",
+      "studentId": "barreirolet_gmail_com",
+      "studentName": "barreirolet",
+      "inviteEmail": "barreirolet@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781313684,
+        "_nanoseconds": 26000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "JjkgGCW8o5cMi27Ja5v2",
+      "courseId": "lkK84waxKvxoSrpYtxBC",
+      "studentId": "biocoaching_fusion_gmail_com",
+      "studentName": "biocoaching.fusion",
+      "inviteEmail": "biocoaching.fusion@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "enrolledAt": {
+        "_seconds": 1781622735,
+        "_nanoseconds": 550000000
+      },
+      "progress": {
+        "completedModules": [
+          "k5ZrtIAAplctzs9EOG3z"
+        ],
+        "evaluations": {
+          "k5ZrtIAAplctzs9EOG3z": {
+            "score": 75,
+            "feedback": "Hola Lorena Mariana, ¡es un placer revisar tus respuestas! Has demostrado una gran introspección y claridad al describir tu negocio actual y tus aspiraciones. Es evidente el compromiso que tienes con la transformación de tus clientes y tu deseo de crecimiento. Has articulado de manera excelente lo que te enorgullece y lo que te pesa, lo cual es un punto de partida fundamental para este proceso. Tus objetivos para ESCALAR son muy claros y ambiciosos, lo que demuestra una visión potente para el futuro. Sin embargo, para capitalizar completamente el programa, te sugiero profundizar en la autoevaluación de las acciones pasadas que intentaste para superar tus obstáculos, analizando por qué no funcionaron. Esto te permitirá diseñar estrategias futuras más efectivas. Además, al planificar la aplicación de los conocimientos de ESCALAR, busca ser más específica sobre cómo integrarás activamente el workbook y los encuentros en tu día a día. Sigue con ese entusiasmo y esa claridad de visión; estás en un camino prometedor.",
+            "submittedAt": "2026-06-18T01:20:14.931Z",
+            "answers": {
+              "0": "Somos Lore y Maru y hace 8 años venimos brindando talleres vivenciales presenciales en los que fucionamos la Biodescodificacion , el Coaching ontologico , las constelaciones familiares y mucho mas ... es nuestra principal actividad , aparte de las consultas individuales que cada una realiza . al dia de hoy tenemos varios 5 grupos con los cuales tenemos dos encuentros mensuales de 2 hs cada uno. La intencion del taller es dar a conocer estas tecnicas y saber como aplicarlas a la vida diaria, hacemos dinamicas grupales y ejercicios de trabajo interior con muy buenos resultados hasta hoy . La mayoria de personas que se suman son quienes estan en busqueda de sanar interiormente y vienen recomendadas por alguien que ya nos conoce o tambien son consultantes nuestros. Actualmente la facturacion de la gente que tenemos activa ronda entre $1.000.000/%1.300.000 mensuales lo cual luego se divide y se descuentan los gastos.\nlas horas aprox serian 20 mensuales y algunas horas mas por el traslado al lugar y armado de las clases que la mayoria ya las tenemos hechas. tambien damos constelaciones grupales pero ahi tenemos 1 o 2 dias de 4 hs por mes y la cantidad de gente varia segun el lugar y el dia.\nActualmente lo que a ambas nos demanda mucho tiempo son las consultas individuales que cada una tiene y es lo que estamos buscando mutar a lo grupal . \nTambien vamos sumando algunos talleres mas a parte de lo que comente antes que vamos armando sobre la marcha de acuerdo a la disponibilidad . Algunos los hacemos juntas y otros no .",
+              "1": "Lo que mas nos orgullese es ver las transformaciones que se produce en las personas , como van cambiando la forma de ver la vida y las situaciones que se les presentan , entendiendo para que les sucede y pudiendo elegir como vivirlo. Es maravilloso!!!\n\nLo que mas nos pesa es no ver esa transformacion reflejada en la facturacion , por lo cual seguimos sumando consultas individuales y quedamos con poca disponibilidad para crear algo diferente.\nTambien el no saber como estructurar una propuesta de valor diferente para dar ese paso y vivir de lo que amamos hacer, lo que nos genera satisfaccion.\ny el no tener la certeza mes a mes de lo que vamos a ganar ya que varia de un mes a otro.\n",
+              "2": "Lo que mas nos orgullese es ver las transformaciones que se produce en las personas , como van cambiando la forma de ver la vida y las situaciones que se les presentan , entendiendo para que les sucede y pudiendo elegir como vivirlo. Es maravilloso!!!\n\nLo que mas nos pesa es no ver esa transformacion reflejada en la facturacion , por lo cual seguimos sumando consultas individuales y quedamos con poca disponibilidad para crear algo diferente.\nTambien el no saber como estructurar una propuesta de valor diferente para dar ese paso y vivir de lo que amamos hacer, lo que nos genera satisfaccion.\ny el no tener la certeza mes a mes de lo que vamos a ganar ya que varia de un mes a otro.\n",
+              "3": "Esperamos armar una propuesta de valor de acuerdo a nuestra idea y nuestros conocimientos , ponerla en marcha a la brevedad. \nAumentar nuestra facturacion minimo a $5.000.000 mensuales para comenzar. Tener clientes de todo el mundo. \nAfianzarnos como equipo y tambien poder ir delegando parte del trabajo a otros para tambien aportarles una fuente de ingresos  y nosotras disponer de tiempo libre para crear y disfrutar de nuestros mundos tranquilas y en paz , agradeciendo lo logrado.",
+              "4": "Soltar la resignacion y la procrastinacion por no saber como hacerlo o no saber por donde comenzar.\nCOmprometerme a aplicar lo aprendido a la brevedad para no postergar y conseguir los resultados deseados."
+            },
+            "questions": [
+              {
+                "question": "Basándote en la 'PARTE 1 — Tu negocio hoy' del workbook, describe tu negocio actual. Incluye qué ofrecés, a quién, tu facturación promedio y las horas que le dedicás semanalmente, sin omitir detalles.",
+                "correctAnswer": "La respuesta debe detallar los productos/servicios ofrecidos por el negocio del estudiante, el público objetivo al que se dirige, una estimación de facturación promedio (puede ser un rango) y el número de horas de trabajo dedicadas semanalmente al negocio.",
+                "options": null,
+                "id": "43he53b66",
+                "type": "free_response"
+              },
+              {
+                "question": "Reflexionando sobre la 'PARTE 1 — Tu negocio hoy', ¿cuál es la parte de tu negocio que más te enorgullece actualmente y cuál es la que más te pesa? Justifica brevemente ambas elecciones en el contexto de tu propia experiencia.",
+                "correctAnswer": "La respuesta debe identificar una parte específica del negocio del estudiante que genera orgullo y otra que representa una carga o peso, con una breve justificación personal y contextual para cada una.",
+                "options": null,
+                "id": "06g1nfyoy",
+                "type": "free_response"
+              },
+              {
+                "type": "free_response",
+                "correctAnswer": "La respuesta debe señalar un obstáculo claro y específico que el estudiante siente en su negocio, describir al menos una acción concreta que intentó para superarlo y ofrecer una razón plausible de por qué esa acción no tuvo el éxito esperado.",
+                "options": null,
+                "id": "0jp4kfz9u",
+                "question": "Considerando la 'PARTE 2 — El techo que sentís', identifica el principal obstáculo o 'techo' que percibes en tu negocio hoy. Luego, describe qué acciones específicas intentaste para resolverlo en el pasado y por qué crees que no funcionaron en tu caso."
+              },
+              {
+                "correctAnswer": "La respuesta debe especificar objetivos claros y medibles para el negocio del estudiante post-ESCALAR, cubriendo al menos dos de las siguientes áreas: aspectos numéricos (ej. facturación, clientes), cambios en la estructura del negocio (ej. equipo, procesos) y la sensación o experiencia personal deseada.",
+                "options": null,
+                "id": "no856z6an",
+                "question": "En línea con la 'PARTE 3 — Lo que querés construir', sé específico sobre qué esperas que sea diferente en tu negocio al terminar ESCALAR. Incluye detalles concretos sobre números (ej. facturación, clientes), estructura (ej. equipo, procesos) y la sensación general que deseas experimentar en tu día a día.",
+                "type": "free_response"
+              },
+              {
+                "type": "free_response",
+                "id": "nd821dtd0",
+                "options": null,
+                "correctAnswer": "La respuesta debe identificar al menos un aspecto específico del negocio del estudiante que está dispuesto a cambiar o soltar. También debe describir cómo planea aplicar los aprendizajes del programa ESCALAR (workbook, encuentros) de manera activa para impulsar el crecimiento de su negocio.",
+                "question": "El compromiso final del workbook subraya la necesidad de revisar lo existente. ¿Qué estás dispuesto/a a cambiar o soltar en tu negocio para alcanzar los objetivos que te propusiste en ESCALAR? ¿Cómo planeas aplicar activamente el trabajo del workbook y los encuentros para lograr ese crecimiento en tu propio negocio?"
+              }
+            ],
+            "isSupport": false
+          }
+        }
+      },
+      "progressPercent": 8
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "PTfmUVgSdpYVQyVxqtLl",
+      "courseId": "2AAEy29PWe0AaEdSZeZB",
+      "studentId": "caro_piccinini_gmail_com",
+      "studentName": "caro.piccinini",
+      "inviteEmail": "caro.piccinini@gmail.com",
+      "status": "active",
+      "isInvited": true,
+      "isDirect": false,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1780599858,
+        "_nanoseconds": 110000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "RNdnXIpZA4hWu5SiEVlF",
+      "courseId": "lkK84waxKvxoSrpYtxBC",
+      "studentId": "maria_marta_dom_gmail_com",
+      "studentName": "maria.marta.dom",
+      "inviteEmail": "maria.marta.dom@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781813000,
+        "_nanoseconds": 66000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "UXRmEFMF0wGRsjlttFfo",
+      "courseId": "sAULHR7mvBJZ6qmWY4B2",
+      "studentId": "marieholistica_gmail_com",
+      "studentName": "marieholistica",
+      "inviteEmail": "marieholistica@gmail.com",
+      "isInvited": true,
+      "isDirect": false,
+      "enrolledAt": {
+        "_seconds": 1780664984,
+        "_nanoseconds": 50000000
+      },
+      "status": "active",
+      "progress": {
+        "completedModules": [
+          "K9XX7dIZ19x4fKTFRGi3"
+        ],
+        "evaluations": {
+          "K9XX7dIZ19x4fKTFRGi3": {
+            "score": 98,
+            "feedback": "¡Excelente trabajo, Marie.Holistica! Has demostrado una claridad impresionante y una visión muy inspiradora para tu emprendimiento. Tus respuestas reflejan no solo un profundo entendimiento de tus aspiraciones personales y profesionales, sino también una fuerte conexión con el propósito y el impacto que deseas generar. Es evidente que has reflexionado a fondo sobre tus motivaciones y las actividades que deseas llevar a cabo. Tu enfoque empático y el deseo de crear una red de apoyo para mujeres son aspectos sumamente valiosos.",
+            "submittedAt": "2026-06-17T14:45:16.859Z",
+            "answers": {
+              "0": "De este proceso espero aprender a darle estructura a mi negocio. Aprender a gestionarlo y promoverlo para que se vuelva rentable y me dé la expansión de amor incondicional necesaria para mi evolución personal.",
+              "1": "Abrir un IG donde poder promover mi negocio, llegar a las personas que necesiten y formar una red de mujeres para sostener a otras en sus procesos. Creo en la unión, el amor de un equipo que trabaje para sostener a otras mujeres.",
+              "2": "Mi base es la mediumnidad, pero aspiro a trabajar con círculos de mujeres que necesiten asistencia, no crear dependencia, sino que puedan tomar las herramientas necesarias para sortear dificultades en su vida. "
+            },
+            "questions": [
+              {
+                "correctAnswer": 0,
+                "question": "Que esperas aprender en este proceso",
+                "id": "1779391399468",
+                "type": "free_response",
+                "text": "Que esperas aprender en este proceso"
+              },
+              {
+                "id": "1779391426597",
+                "question": "Que actividaes tenes en mente realizar",
+                "correctAnswer": 0,
+                "options": [
+                  "Dar sesiones",
+                  "dar clases",
+                  "vender productos fisicos",
+                  "Todas ellas"
+                ],
+                "text": "Que actividaes tenes en mente realizar",
+                "type": "multiple_choice"
+              },
+              {
+                "question": "Que tipo de producto / servicio tenes en mente",
+                "id": "1779391545639",
+                "correctAnswer": 0,
+                "type": "free_response",
+                "text": "Que tipo de producto / servicio tenes en mente"
+              }
+            ],
+            "isSupport": false
+          }
+        }
+      },
+      "progressPercent": 7
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "W9lcW89lBa5T5Jq4sXzA",
+      "courseId": "lkK84waxKvxoSrpYtxBC",
+      "studentId": "terebuetto_gmail_com",
+      "studentName": "terebuetto",
+      "inviteEmail": "terebuetto@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781808049,
+        "_nanoseconds": 807000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "avJzKHVvKSVgFhL01Hy0",
+      "courseId": "sAULHR7mvBJZ6qmWY4B2",
+      "studentId": "martinabatiz_gmail_com",
+      "studentName": "martinabatiz",
+      "inviteEmail": "martinabatiz@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781647122,
+        "_nanoseconds": 352000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "cGnTPgoqHAPqvKEstnMC",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "studentId": "recreogrupo_gmail_com",
+      "studentName": "recreogrupo",
+      "inviteEmail": "recreogrupo@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781116626,
+        "_nanoseconds": 379000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_andylakshmi8_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "andylakshmi8@gmail.com",
+      "studentId": "andylakshmi8_gmail_com",
+      "status": "active",
+      "paymentId": "free_1780766666137",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"andylakshmi8@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1780766667,
+        "_nanoseconds": 613000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_carla_pagano111_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "carla.pagano111@gmail.com",
+      "studentId": "carla_pagano111_gmail_com",
+      "status": "active",
+      "paymentId": "free_1780761809161",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"carla.pagano111@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1780761811,
+        "_nanoseconds": 122000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_dra_paulavalsa_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "dra.paulavalsa@gmail.com",
+      "studentId": "dra_paulavalsa_gmail_com",
+      "status": "active",
+      "paymentId": "free_1780855914813",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"dra.paulavalsa@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1780855916,
+        "_nanoseconds": 235000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_fernandez_mrosa_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "fernandez.mrosa@gmail.com",
+      "studentId": "fernandez_mrosa_gmail_com",
+      "status": "active",
+      "paymentId": "free_1780760383008",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"fernandez.mrosa@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1780760384,
+        "_nanoseconds": 615000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_marigkuhle_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "marigkuhle@gmail.com",
+      "studentId": "marigkuhle_gmail_com",
+      "status": "active",
+      "paymentId": "free_1781319262924",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"marigkuhle@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1781319265,
+        "_nanoseconds": 250000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_mylittleonesimon_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "mylittleonesimon@gmail.com",
+      "studentId": "mylittleonesimon_gmail_com",
+      "status": "active",
+      "paymentId": "free_1781117768869",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"mylittleonesimon@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1781117771,
+        "_nanoseconds": 219000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_nadia_dome_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "nadia.dome@gmail.com",
+      "studentId": "nadia_dome_gmail_com",
+      "status": "active",
+      "paymentId": "free_1780760387894",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"nadia.dome@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1780760388,
+        "_nanoseconds": 627000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_pauladeanio_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "pauladeanio@gmail.com",
+      "studentId": "pauladeanio_gmail_com",
+      "status": "active",
+      "paymentId": "free_1781117107356",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"pauladeanio@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1781117109,
+        "_nanoseconds": 344000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_siledife06_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "siledife06@gmail.com",
+      "studentId": "siledife06_gmail_com",
+      "status": "active",
+      "paymentId": "free_1780767270019",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"siledife06@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1780767271,
+        "_nanoseconds": 979000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "enroll_A1xGilngHRZBLzMVXAd9_zoelaida_gc_gmail_com",
+      "courseId": "A1xGilngHRZBLzMVXAd9",
+      "mentorId": "wopEachK2FchcKG5pORV56ZPAsh1",
+      "inviteEmail": "zoelaida.gc@gmail.com",
+      "studentId": "zoelaida_gc_gmail_com",
+      "status": "active",
+      "paymentId": "free_1780778921595",
+      "source": "mercadopago",
+      "progress": {
+        "completedModules": []
+      },
+      "metadata": {
+        "pageId": "1egz3jxz1r6",
+        "externalReference": "{\"pageId\":\"1egz3jxz1r6\",\"studentEmail\":\"zoelaida.gc@gmail.com\",\"mentorId\":\"wopEachK2FchcKG5pORV56ZPAsh1\"}"
+      },
+      "enrolledAt": {
+        "_seconds": 1780778923,
+        "_nanoseconds": 223000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "gEqF3F6j5JoJPM1izmy4",
+      "courseId": "2AAEy29PWe0AaEdSZeZB",
+      "studentId": "marieholistica_gmail_com",
+      "studentName": "marieholistica",
+      "inviteEmail": "marieholistica@gmail.com",
+      "status": "active",
+      "isInvited": true,
+      "isDirect": false,
+      "enrolledAt": {
+        "_seconds": 1781016509,
+        "_nanoseconds": 832000000
+      },
+      "progress": {
+        "completedModules": [
+          "sAKt0ekLEOLsvhhpRALi",
+          "yShzcv7YB4fpG0KJ96WV",
+          "tb2Z4gVEdHV8xmqGreqp",
+          "k6GLLyfkp277gF6GJQ0C"
+        ],
+        "evaluations": {
+          "sAKt0ekLEOLsvhhpRALi": {
+            "score": 100,
+            "feedback": "¡Excelente trabajo, Marie.Holistica! Has demostrado una comprensión inmediata y precisa al responder correctamente a la pregunta inicial. Tu respuesta 'si' es perfectamente equivalente a 'Verdadero' en este contexto, lo que indica que estás atenta y lista para comenzar. Este es un gran inicio.",
+            "submittedAt": "2026-06-16T13:17:47.161Z",
+            "answers": {
+              "0": "si"
+            },
+            "questions": [
+              {
+                "type": "true_false",
+                "id": "3ijyf6r74if",
+                "options": null,
+                "correctAnswer": true,
+                "question": "Listo para empezar?",
+                "allowFileUpload": false
+              }
+            ],
+            "isSupport": false
+          },
+          "yShzcv7YB4fpG0KJ96WV": {
+            "score": 95,
+            "feedback": "¡Excelente, Marie! Tu respuesta demuestra una profunda introspección y una clara conciencia de tus dones y habilidades. Has articulado de manera muy personal y auténtica las características que te definen, destacando tu capacidad de conexión sutil y tu empatía genuina. Es evidente que posees una gran sensibilidad y un deseo sincero de servir a los demás, lo cual es fundamental en un camino como el tuyo. Tu reconocimiento de la importancia del amor incondicional y de la necesidad de las personas de vivir más livianas refleja una perspectiva madura y centrada en el bienestar.",
+            "submittedAt": "2026-06-16T13:37:05.410Z",
+            "answers": {
+              "0": "Reconozco la capacidad de conectar sutilmente entre planos. Eso es lo que me hizo conocer el amor incondicional que se siente cuando la sesión de mediumnidad fluye. La gente me cuenta cosas. Soy buen escuchando. Las personas necesitan vivir más livianas."
+            },
+            "questions": [
+              {
+                "type": "free_response",
+                "id": "oicjbr6kjb",
+                "correctAnswer": "",
+                "options": null,
+                "question": "¿Qué caracteristicas reconoces en vos?",
+                "allowFileUpload": false
+              }
+            ],
+            "isSupport": false
+          },
+          "tb2Z4gVEdHV8xmqGreqp": {
+            "score": 95,
+            "feedback": "Marie, es inspirador leer tus respuestas; has demostrado una profunda introspección y una claridad excepcional sobre tu camino. Tus visiones para un futuro sin restricciones y tu día ideal están llenas de propósito y autenticidad, reflejando una coherencia admirable entre lo que sientes, piensas y haces. Has logrado conectar tus experiencias personales más significativas con tus aspiraciones profesionales, lo cual es una base poderosa para construir tu propósito. Tu capacidad para articular tus pasiones, habilidades y el impacto que deseas generar es notable, y has demostrado una excelente autoconciencia a lo largo de este módulo.",
+            "submittedAt": "2026-06-16T14:17:59.286Z",
+            "answers": {
+              "0": "Daría sesiones de mediumnidad terapéutica, donde encontrar respuestas en esas sesiones aliviarian la vida de los consultantes. \nFormaría grupos de mujeres para sostenernos y atravesar situaciones complejas. Acompañaria procesos. \nCompartiria mi tiempo con colegas y amigas que vibren en la misma frecuencia de servicio que yo.\nDisfrutaría y conectaría con la naturaleza. Viviria más genuina. ",
+              "1": "Me levantaria cerca de las 8 am. me prepararia unos mates con yuyitos.\nOrganizaría el material a trabajar en el circulo de mujeres, estudiaria para seguir formándome. \nIría a pilates tres veces a la semana. O saldria a caminar cunado no truviera esa actividad.\nALmorzaria y descansaria al sol o una siesta.\n\nOrganziaria encuentros relacionados con la energia lunar. -Podria sumar alguna colega y amiga que sume a esos encuentros.\nEn esos encuentros danzariamos, pintariamos, conectariamos con la energia, nos conectariamos con nuestro poder personal. Lo que nos hace vibrar. \nDaria sesiones de mediumnidad todos los dias. \n\nTendria un espacio especial para esos encuentros, cargados y dotados de una energía necesaria para sostener la energia que traigan esas mujeres.\n\nEn mi tiempo libre: leeria, me formaría en otras disciplinas, caminaría y me conectaría con la naturaleza. Me conectaría tambien con mujeres, terapeutas y amigas para seguir fortaleciendo el vinculo",
+              "2": "Mi pasión es la magia, el esoterismo, la mediumnidad, los rituales, las piedras, los elementos, los símbolos antiguos de poder.\nAcompañar procesos de crecimiento personal de mujeres, a través de todos los elementos que forman mi pasión. ",
+              "3": "1.- pintar, hacer rituales, limpiezas energéticas.\n2.-Acepté la muerte como parte de la vida. La incorporé. Hablo de ella con naturalidad y pasión. Sin miedos.\n3.-Me marcó la muerte de un gran amor. Allí fue donde empecé a buscar como sentirme mejor y atravesar ese momento doloroso. Conociendo métodos, terapias, etc hasta que llegué a formarme en mediumnidad.\n4.- Acompañar a personas al final de vida y a sus familiares. Acompañar procesos de personas para su crecimiento personal, para vivir mejor, con otra perspectiva.\n5.- Mi perspectiva sobre la muerte como parte de la vida. Mi deseo de acompañar esos momentos difíciles como los duelos, cualquiera sean. \nLa escucha activa.\n6.- Haber tocado fondo luego de mi pérdida, me ayudó o impulsó a buscar. Buscar sentirme mejor, conectarme con quien partió. Entender o encontrarle sentido a esa ausencia inesperada. \nHabilidad mediúmnica desarrollada y en expansión. La conexión con el amor incondicional y en expansión que se siente y fluye en cada sesión cuando el consultante se abre a ella.\nHabilidad de maternar, cuidar, sostener.\nhabilidad de negociación.\nEmpatía\n\n\n",
+              "4": "COSAS QUE SÉ HACER:\nCocinar, cuidar, acompañar, organizar, resolver cosas o situaciones de manera práctica, conexión con lo sutil.\n\nLA GENTE ME RECONOCE...\nCapacidad para cambiar el ambiente del lugar. \nResolver muchas cosas en siimultáneo con practicidad.\nMaternar a todos.\nLiderazgo.\n\nCOSAS QUE ME APASIONAN:\nLeer, escuchar sobre mistica, rituales, espiritualidad.\nConectar con lo sutil.\nEl mar, la energia de la montaña.\nFormarme en distintas disciplinas para ayudar a otros.\n\nCOSAS QUE ME GUSTAN:\npintar, escribir, conducir autos, viajar sola, conocer lugares, trabajar en le banco, compartir con mi familia, atender a mi familia, viajar en general.\n",
+              "5": "1.- Acompañar a otros\n2.- Conexión con lo sutil\n3.-Capacidad para cambiar el ambiente del lugar.\n\nSi me haria feliz. \nHay gente que vive de esto.\n",
+              "6": "Si, me veo feliz y plena.\nObtendría paz y coherencia de lo que siento, pienso y hago",
+              "7": "1.- mediumnidad.\n2.- Generaria más ingresos los circulos de mujeres o retiros, potencialmente.\n3.- Las dos me harian sentir completa y plena. \n4.- Siento que la mediumnidad es el primer paso para algo más grande.\n"
+            },
+            "questions": [
+              {
+                "type": "free_response",
+                "allowFileUpload": false,
+                "correctAnswer": "Espero que la persona se imagine su propio sueño.  La respuesta tiene que incluir alguna actividad comercial, laboral, de enseñanza, de trabajo, de ayuda a otro.",
+                "options": null,
+                "id": "9jn09t52r7u",
+                "question": "Si no tuvieras restricciones\n¿Qué harías si no tuvieras restricciones de tiempo ni dinero?\n¿Dónde estarías?\n¿Con quién compartirías tu tiempo?\n¿A quién ayudarías?\n¿Qué problema resolverías?"
+              },
+              {
+                "type": "free_response",
+                "allowFileUpload": false,
+                "correctAnswer": "La prsona tiene que describir sus rutinas,  las cosas que son importantes para el o ella y como administraria su tiempo.   Suelen aparecer cosas que quiere hacer hoy y no puede por tiempos o porque no tiene aun el habito",
+                "id": "hjsu9grfn7w",
+                "options": null,
+                "question": "Tu día ideal\nImaginá un día desde que te levantás hasta que te acostás.\n¿Qué harías en cada momento?\n¿Dónde vivirías?\n¿Cómo sería tu casa y tu lugar de trabajo?\n¿Qué harías en tu tiempo libre?\n"
+              },
+              {
+                "type": "free_response",
+                "correctAnswer": "Buscamos proposito, pasion y publico objetivo,  tiene que responder las 3 cosas para poder avanzar",
+                "id": "odrm2eu0ap",
+                "options": null,
+                "question": "Las 3P del propósito\nReflexioná y escribí:\n•\tTu pasión actual \n•\tUn problema que podrías ayudar a resolver \n•\tUna persona o grupo a quien querrías ayudar \n",
+                "allowFileUpload": false
+              },
+              {
+                "type": "free_response",
+                "question": "Preguntas de indagación\n¿Qué actividad te gusta tanto que perdés la noción del tiempo?\n¿Qué desafíos superaste que podrían ayudar a otros?\n¿Qué experiencia te marcó que puede transformarse en pasión?\n¿Qué elegirías hoy si pudieras tener tu vida profesional soñada?\n¿Qué te hace única/o?\nConocimientos, habilidades, experiencias destacadas.\n",
+                "id": "hht0fsy864i",
+                "correctAnswer": "Queremos conocer sus intereses,  no hay respuestas incorrectas salvo \"no se\" o similares. ",
+                "options": null,
+                "allowFileUpload": false
+              },
+              {
+                "type": "free_response",
+                "correctAnswer": "Nuevamente buscamos habilidades, intereses, autoconocimiento y autoreconocimiento.    ",
+                "options": null,
+                "id": "3m1lvt7fnjp",
+                "question": "Crea Listas con las siguientes consignas\n•\tCosas que sé hacer \n•\tCosas que me gustan \n•\tLa gente me reconoce por… \n•\tCosas que me apasionan \n",
+                "allowFileUpload": false
+              },
+              {
+                "allowFileUpload": false,
+                "correctAnswer": "lo que responsa aqui tiene que ver con las respuestas a las preguntas anteriores.   Empieza la seleccion de sus intereses. ",
+                "id": "z3foyqr2q5",
+                "options": null,
+                "question": "Tamiz fuerte\nElegí 3 o 4 ideas de las listas anteriores y respondé:\n¿Me haría feliz hacer esto todos los días?\n¿Hay gente que vive abundantemente de esto?\n¿Es ecológico para mi vida?\n",
+                "type": "free_response"
+              },
+              {
+                "type": "free_response",
+                "allowFileUpload": false,
+                "question": "Horizonte temporal\nImagináte haciendo eso en 2 o 3 años.\n¿Te ves feliz, pleno/a, estable?\n¿Qué podría cambiar en tu vida?\n",
+                "options": null,
+                "id": "pvu3955d5l",
+                "correctAnswer": "Esperamos que se conecte con como se va a sentir.   Si no afirma sentirse viviendo emociones positivas, tenemos que pedirle que repase los pasos anteriores.  "
+              },
+              {
+                "type": "free_response",
+                "question": "Filtros para definir tu pasión\nSi tenés varias opciones:\n¿Con cuál podés empezar más rápido?\n¿Cuál podría generar mejores ingresos?\n¿Cuál te hace sentir más completo?\n¿Por cuál sentís que te llama la intuición?\n",
+                "correctAnswer": "Tiene que delinear una idea.   Si tiene varias debemos sugerirle que las integre. ",
+                "options": null,
+                "id": "r54onwky8rn",
+                "allowFileUpload": false
+              }
+            ],
+            "isSupport": false
+          },
+          "k6GLLyfkp277gF6GJQ0C": {
+            "score": 90,
+            "feedback": "¡Excelente trabajo, Marie.Holistica! Has demostrado una gran capacidad creativa y una profunda conexión con tu proceso personal. En la primera pregunta, te sumergiste de lleno en la exploración de ideas de contenido, superando las expectativas y mostrando una rica veta de temas relevantes para tu nicho. Tu autoreflexión es muy valiosa y demuestra la autenticidad que buscas transmitir. En la segunda pregunta, tu declaración de \"Me dedico a...\" es muy sólida, escrita en presente y con un enfoque claro en el acompañamiento y la sanación. Has capturado la esencia de lo que se pedía. Sigue cultivando esa autenticidad y claridad en tu mensaje.",
+            "submittedAt": "2026-06-16T14:43:18.023Z",
+            "answers": {
+              "0": "Qué es la mediumnidad?\nCómo me preparo para una sesión mediúmnica? Limpiezas del espacio, mía propia, y del consultante.\nCómo es una sesión mediúmnica conmigo?\nMitos y realidades sobre la mediumnidad.\nMi historia..\nMensaje dirigido a mujeres sensibles, invitando a conectar con su intuición como base de su poder.\nqué herencia emocional estás lista para soltar?\nSeñales cotidianas de nuestros guías.\nLive con preguntas y respuestas en vivo: Hablemos del más allá y del más acá, para generar confianza antes de agendar una sesión conmigo.\nel poder de los altares: incentivar a armar uno para honrar a los ancestros.\nAutoreflexión: \"No tenés que poder con todo sola\". Yo estoy en proceso con eso tb. La idea es acompañarnos no demostrar que me las sé todas. Yo tambien estoy en proceso de evolución.\nCómo es una sesión conmigo?\nQue hacemos en los encuentros de mujeres.\n\n\n\n\n\n",
+              "1": "Me dedico a acompañar procesos de sanación, crecimiento personal y de evolución para ayudar a mujeres o personas que necesiten transitar estos temas y otros."
+            },
+            "questions": [
+              {
+                "question": "Exploración creativa\nGenerá 10 ideas de contenido para redes sociales para cada opción.\nPedile una señal al universo: observá qué aparece.\n",
+                "options": null,
+                "correctAnswer": "No hay respuestas correctas o incorrectas,  solo se espera que siga su proceso de autoindagacion.",
+                "id": "0j39652vvmnm",
+                "type": "free_response"
+              },
+              {
+                "type": "free_response",
+                "id": "skevit44inq",
+                "correctAnswer": "Es el enunciado final,  debe estar redactado en presente, en primera persona del singular o plural.   en positivo,  sin condicionantes.",
+                "options": null,
+                "question": "Declaración final\n\nEscribí en tiempo presente:\nMe dedico a…\n"
+              }
+            ],
+            "isSupport": false
+          }
+        }
+      },
+      "progressPercent": 80
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "pgPRluGp12PtxXnqMRIq",
+      "courseId": "2AAEy29PWe0AaEdSZeZB",
+      "studentId": "terebuetto_gmail_com",
+      "studentName": "terebuetto",
+      "inviteEmail": "terebuetto@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781808013,
+        "_nanoseconds": 729000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "rQtwE54U4d8BEArjLpkL",
+      "courseId": "2AAEy29PWe0AaEdSZeZB",
+      "studentId": "recreogrupo_gmail_com",
+      "studentName": "recreogrupo",
+      "inviteEmail": "recreogrupo@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "enrolledAt": {
+        "_seconds": 1781116616,
+        "_nanoseconds": 247000000
+      },
+      "progress": {
+        "completedModules": [
+          "yShzcv7YB4fpG0KJ96WV"
+        ],
+        "evaluations": {
+          "yShzcv7YB4fpG0KJ96WV": {
+            "score": 98,
+            "feedback": "¡Excelente trabajo, Maria Lourdes! Has demostrado una profunda capacidad de introspección y autoconocimiento al identificar un amplio y detallado abanico de características personales. Tu respuesta a la pregunta 1 es extraordinariamente rica y honesta, reflejando una gran madurez en tu auto-percepción. Es muy valioso que reconozcas tanto tus fortalezas como tus áreas de desafío, lo cual es un pilar fundamental para el crecimiento continuo. Esta claridad sobre quién eres te brindará una base sólida para navegar y destacar en cualquier contexto.",
+            "submittedAt": "2026-06-18T11:02:31.873Z",
+            "answers": {
+              "0": "creatividad,  claridad en la forma de decir, generar cercanía profunda en lo vincular, preguntas poderosas, simpleza, pasion alegria, intuición, mirada, inseguridad, dificultad para mostrarme en lo público,  acidez y humor, humildad, ver la vida como una gran posibilidad, aventura, juego, estrategia.... movimiento, soy inspiración constante, motivo, amo...."
+            },
+            "questions": [
+              {
+                "correctAnswer": "",
+                "question": "¿Qué caracteristicas reconoces en vos?",
+                "id": "oicjbr6kjb",
+                "options": null,
+                "type": "free_response",
+                "allowFileUpload": false
+              }
+            ],
+            "isSupport": false
+          }
+        }
+      },
+      "progressPercent": 20
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "vYIeTNZWFcNNGLY2Wyga",
+      "courseId": "2AAEy29PWe0AaEdSZeZB",
+      "studentId": "YS34tFmDZyY4Q9lW8kPMlyfAUOz1",
+      "studentName": "Maria Lourdes Dorronsoro",
+      "inviteEmail": "recreogrupo@gmail.com",
+      "status": "active",
+      "isInvited": true,
+      "isDirect": false,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781807678,
+        "_nanoseconds": 270000000
+      }
+    }
+  },
+  {
+    "action": "before_modification_or_deletion",
+    "document": {
+      "id": "uepGJYw5eIl1mQF0C6ig",
+      "courseId": "2AAEy29PWe0AaEdSZeZB",
+      "studentId": "maria_marta_dom_gmail_com",
+      "studentName": "maria.marta.dom",
+      "inviteEmail": "maria.marta.dom@gmail.com",
+      "status": "active",
+      "isInvited": false,
+      "isDirect": true,
+      "progress": {
+        "completedModules": []
+      },
+      "enrolledAt": {
+        "_seconds": 1781813017,
+        "_nanoseconds": 287000000
+      }
+    }
+  }
+]
