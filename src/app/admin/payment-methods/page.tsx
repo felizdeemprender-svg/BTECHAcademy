@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { 
   Plus, 
   Trash2, 
@@ -20,13 +19,15 @@ import {
   CreditCard, 
   Zap, 
   ShieldCheck, 
+  Wallet,
   Settings2,
-  ToggleLeft,
-  ToggleRight,
   Eye,
-  EyeOff
+  EyeOff,
+  Info,
+  KeyRound,
+  Globe
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { 
   Select, 
   SelectContent, 
@@ -36,6 +37,8 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminPaymentMethodsPage() {
   const db = useFirestore();
@@ -52,6 +55,7 @@ export default function AdminPaymentMethodsPage() {
     if (!profile?.roles?.includes('admin') || isAuthLoading) return null;
     return query(collection(db, 'systemPaymentMethods'), orderBy('createdAt', 'desc'));
   }, [db, profile, isAuthLoading]);
+  
   const { data: methods, isLoading: methodsLoading } = useCollection(methodsQuery);
 
   const [formData, setFormData] = useState({
@@ -61,8 +65,10 @@ export default function AdminPaymentMethodsPage() {
     config: {
       publicKey: '',
       accessToken: '',
-      clientId: '',
-      clientSecret: ''
+      alias: '',
+      cbu: '',
+      bankName: '',
+      titularName: ''
     }
   });
 
@@ -76,8 +82,10 @@ export default function AdminPaymentMethodsPage() {
         config: {
           publicKey: method.config?.publicKey || '',
           accessToken: method.config?.accessToken || '',
-          clientId: method.config?.clientId || '',
-          clientSecret: method.config?.clientSecret || ''
+          alias: method.config?.alias || '',
+          cbu: method.config?.cbu || '',
+          bankName: method.config?.bankName || '',
+          titularName: method.config?.titularName || ''
         }
       });
     } else {
@@ -86,19 +94,24 @@ export default function AdminPaymentMethodsPage() {
         name: '', 
         type: 'mercadopago', 
         isActive: true,
-        config: { publicKey: '', accessToken: '', clientId: '', clientSecret: '' } 
+        config: { publicKey: '', accessToken: '', alias: '', cbu: '', bankName: '', titularName: '' } 
       });
     }
     setIsDialogOpen(true);
   };
 
   const handleSaveMethod = async () => {
-    if (!formData.name || !formData.config.publicKey) {
-      toast({ variant: 'destructive', title: 'Faltan datos', description: 'Nombre y Public Key son obligatorios.' });
+    if (!formData.name) {
+      toast({ variant: 'destructive', title: 'Faltan datos', description: 'El nombre descriptivo es obligatorio.' });
       return;
     }
-    setLoading(true);
+    
+    if (formData.type === 'mercadopago' && (!formData.config.publicKey || !formData.config.accessToken)) {
+      toast({ variant: 'destructive', title: 'Credenciales incompletas', description: 'Public Key y Access Token son obligatorios para Mercado Pago.' });
+      return;
+    }
 
+    setLoading(true);
     const methodId = editingMethod?.id || `pm_${Math.random().toString(36).substring(2, 9)}`;
     const methodRef = doc(db, 'systemPaymentMethods', methodId);
     
@@ -111,11 +124,11 @@ export default function AdminPaymentMethodsPage() {
 
     try {
       await setDoc(methodRef, methodData, { merge: true });
-      toast({ title: editingMethod ? 'Método actualizado' : 'Método de pago creado' });
+      toast({ title: editingMethod ? 'Método actualizado' : 'Método de cobro creado' });
       setIsDialogOpen(false);
     } catch (e) {
       console.error("[AdminPaymentMethods] Error al guardar:", e);
-      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo guardar el método de pago.' });
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo guardar la configuración.' });
     } finally {
       setLoading(false);
     }
@@ -125,7 +138,7 @@ export default function AdminPaymentMethodsPage() {
     if (!confirm('¿Estás seguro de que deseas eliminar este método de pago?')) return;
     
     deleteDoc(doc(db, 'systemPaymentMethods', id))
-      .then(() => toast({ title: 'Método de pago eliminado' }))
+      .then(() => toast({ title: 'Método eliminado' }))
       .catch(() => toast({ variant: 'destructive', title: 'Error', description: 'No se pudo eliminar.' }));
   };
 
@@ -142,66 +155,127 @@ export default function AdminPaymentMethodsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-8 pb-20">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Métodos de Pago del Sistema</h1>
-            <p className="text-muted-foreground text-lg font-medium">Configura las pasarelas para el cobro de planes de suscripción a los tutores.</p>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <Wallet className="h-10 w-10 text-indigo-600" /> Métodos de Pago del Sistema
+            </h1>
+            <p className="text-slate-500 text-lg font-medium">Configura cómo deseas cobrar a los tutores y planes de la plataforma.</p>
           </div>
-          <Button onClick={() => handleOpenDialog()} className="h-12 px-8 rounded-xl font-bold shadow-xl flex items-center gap-2">
-            <Plus className="h-5 w-5" /> Nuevo Método
+          <Button onClick={() => handleOpenDialog()} className="h-14 px-8 rounded-2xl font-bold bg-slate-900 text-white shadow-xl flex items-center gap-2 hover:scale-105 transition-all">
+            <Plus className="h-5 w-5" /> Añadir Método
           </Button>
         </header>
 
-        <Card className="border-none shadow-xl rounded-2xl overflow-hidden bg-white">
+        {/* Guía rápida */}
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-3xl flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+              <Zap className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-black text-emerald-900 text-sm">Cobro Directo</p>
+              <p className="text-xs text-emerald-700 font-medium">Los cobros a los tutores van directo a las cuentas de la plataforma.</p>
+            </div>
+          </div>
+          <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-3xl flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-600/20">
+              <Globe className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-black text-indigo-900 text-sm">Pasarelas Activas</p>
+              <p className="text-xs text-indigo-700 font-medium">Puedes mantener múltiples métodos activos según corresponda.</p>
+            </div>
+          </div>
+          <div className="bg-amber-50 border border-amber-100 p-6 rounded-3xl flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-black text-amber-900 text-sm">Seguridad Total</p>
+              <p className="text-xs text-amber-700 font-medium">Tus credenciales se almacenan de forma segura a nivel global.</p>
+            </div>
+          </div>
+        </div>
+
+        <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-primary/5">
+              <TableHeader className="bg-slate-50/80">
                 <TableRow className="border-none">
-                  <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Plataforma / Nombre</TableHead>
-                  <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Estado</TableHead>
-                  <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Public Key (Preview)</TableHead>
-                  <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-right">Acciones</TableHead>
+                  <TableHead className="py-6 px-10 text-slate-400 uppercase tracking-widest text-[10px] font-black">Plataforma / Nombre</TableHead>
+                  <TableHead className="py-6 text-slate-400 uppercase tracking-widest text-[10px] font-black">Estado</TableHead>
+                  <TableHead className="py-6 text-slate-400 uppercase tracking-widest text-[10px] font-black">Detalles</TableHead>
+                  <TableHead className="py-6 px-10 text-slate-400 uppercase tracking-widest text-[10px] font-black text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {methodsLoading ? (
-                  <TableRow><TableCell colSpan={4} className="py-20 text-center text-muted-foreground animate-pulse font-bold text-lg">Sincronizando métodos...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="py-24 text-center">
+                    <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mx-auto mb-4" />
+                    <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Sincronizando pasarelas...</p>
+                  </TableCell></TableRow>
                 ) : methods?.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="py-20 text-center italic text-muted-foreground">No hay métodos de pago configurados.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="py-24 text-center">
+                    <div className="max-w-xs mx-auto space-y-4">
+                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                        <CreditCard className="h-10 w-10" />
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-900">No hay métodos de pago</p>
+                        <p className="text-xs text-slate-400 font-medium leading-relaxed">Configura al menos un método para el sistema.</p>
+                      </div>
+                      <Button onClick={() => handleOpenDialog()} variant="outline" className="rounded-xl font-bold border-2">Añadir el primero</Button>
+                    </div>
+                  </TableCell></TableRow>
                 ) : methods?.map((method) => (
-                  <TableRow key={method.id} className="hover:bg-primary/5 transition-colors border-b border-border/30">
-                    <TableCell className="px-10 py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                          <CreditCard className="h-5 w-5" />
+                  <TableRow key={method.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100">
+                    <TableCell className="px-10 py-8">
+                      <div className="flex items-center gap-5">
+                        <div className={cn(
+                          "w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner transition-colors",
+                          method.isActive ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-400"
+                        )}>
+                          {method.type === 'mercadopago' ? <Wallet className="h-7 w-7" /> : <CreditCard className="h-7 w-7" />}
                         </div>
                         <div>
-                          <p className="font-bold text-lg text-foreground">{method.name}</p>
-                          <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground mt-0.5">{method.type}</Badge>
+                          <p className="font-black text-lg text-slate-900">{method.name}</p>
+                          <Badge variant="outline" className="text-[9px] uppercase font-black text-slate-400 mt-1 border-slate-200">
+                            {method.type === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'}
+                          </Badge>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <Switch 
                           checked={method.isActive} 
                           onCheckedChange={() => toggleMethodStatus(method)}
                         />
-                        <span className={`text-xs font-bold uppercase tracking-wider ${method.isActive ? 'text-emerald-600' : 'text-rose-500'}`}>
+                        <span className={cn(
+                          "text-[10px] font-black uppercase tracking-widest",
+                          method.isActive ? "text-emerald-600" : "text-slate-400"
+                        )}>
                           {method.isActive ? 'Activo' : 'Inactivo'}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {method.config?.publicKey ? `${method.config.publicKey.substring(0, 12)}...` : '-'}
+                    <TableCell className="font-mono text-[10px] text-slate-400 font-bold">
+                      {method.type === 'mercadopago' ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="flex items-center gap-1"><KeyRound className="h-3 w-3" /> {method.config?.publicKey?.substring(0, 15)}...</span>
+                        </div>
+                      ) : (
+                        <span>{method.config?.alias || method.config?.cbu || 'Sin datos'}</span>
+                      )}
                     </TableCell>
                     <TableCell className="px-10 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(method)} className="h-10 w-10 rounded-xl hover:bg-primary/10 text-primary">
-                          <Pencil className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(method)} className="h-12 w-12 rounded-2xl hover:bg-slate-100 text-slate-600">
+                          <Pencil className="h-5 w-5" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)} className="h-10 w-10 rounded-xl hover:bg-destructive/10 text-destructive">
-                          <Trash2 className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)} className="h-12 w-12 rounded-2xl hover:bg-rose-50 text-rose-500">
+                          <Trash2 className="h-5 w-5" />
                         </Button>
                       </div>
                     </TableCell>
@@ -211,125 +285,171 @@ export default function AdminPaymentMethodsPage() {
             </Table>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Dialog: ABM */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="rounded-2xl p-10 max-w-2xl border-none shadow-3xl overflow-y-auto max-h-[90vh]">
-            <DialogHeader className="mb-6">
-              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4">
-                <Zap className="h-8 w-8" />
+      {/* Dialog: ABM */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="rounded-[2.5rem] p-0 max-w-2xl border-none shadow-3xl overflow-hidden">
+          <div className="bg-slate-900 p-10 text-white relative overflow-hidden">
+             <div className="relative z-10 space-y-2">
+               <DialogHeader>
+                 <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-indigo-400 mb-4 backdrop-blur-sm border border-white/10">
+                   <Settings2 className="h-8 w-8" />
+                 </div>
+                 <DialogTitle className="text-3xl font-black">{editingMethod ? 'Editar Configuración' : 'Nueva Pasarela del Sistema'}</DialogTitle>
+                 <DialogDescription className="text-slate-400 font-medium">
+                   Configura los parámetros globales para el cobro en la plataforma.
+                 </DialogDescription>
+               </DialogHeader>
+             </div>
+             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full -mr-32 -mt-32 blur-3xl" />
+          </div>
+          
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveMethod(); }} className="p-10 space-y-8 bg-white max-h-[70vh] overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nombre Descriptivo</Label>
+                <Input 
+                  value={formData.name} 
+                  onChange={e => setFormData({...formData, name: e.target.value})} 
+                  placeholder="Ej: Mercado Pago Principal" 
+                  className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-800"
+                />
               </div>
-              <DialogTitle className="text-2xl font-bold">{editingMethod ? 'Configurar Método' : 'Nuevo Método de Pago'}</DialogTitle>
-              <DialogDescription>Configura las credenciales de la pasarela para recibir pagos de los tutores.</DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={(e) => { e.preventDefault(); handleSaveMethod(); }} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nombre Descriptivo</Label>
-                  <Input 
-                    value={formData.name} 
-                    onChange={e => setFormData({...formData, name: e.target.value})} 
-                    placeholder="Ej: Mercado Pago Principal" 
-                    className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Plataforma</Label>
-                  <Select 
-                    value={formData.type} 
-                    onValueChange={(val) => setFormData({...formData, type: val})}
-                  >
-                    <SelectTrigger className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold">
-                      <SelectValue placeholder="Seleccionar plataforma" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-none shadow-2xl">
-                      <SelectItem value="mercadopago">Mercado Pago</SelectItem>
-                      <SelectItem value="stripe" disabled>Stripe (Próximamente)</SelectItem>
-                      <SelectItem value="paypal" disabled>PayPal (Próximamente)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pasarela / Plataforma</Label>
+                <Select 
+                  value={formData.type} 
+                  onValueChange={(val) => setFormData({...formData, type: val})}
+                >
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-800">
+                    <SelectValue placeholder="Seleccionar plataforma" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    <SelectItem value="mercadopago" className="font-bold py-3">Mercado Pago</SelectItem>
+                    <SelectItem value="transfer" className="font-bold py-3">Transferencia Bancaria</SelectItem>
+                    <SelectItem value="stripe" disabled className="py-3 opacity-50">Stripe (Dólares - Próximamente)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
 
-              <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-black uppercase tracking-widest text-primary">Credenciales de API</span>
+            {formData.type === 'mercadopago' ? (
+              <div className="p-8 bg-indigo-50/50 rounded-[2.5rem] border border-indigo-100 space-y-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <ShieldCheck className="h-5 w-5 text-indigo-600" />
+                  <span className="text-xs font-black uppercase tracking-widest text-indigo-900">Credenciales Mercado Pago</span>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Public Key</Label>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">Public Key</Label>
                   <Input 
                     value={formData.config.publicKey} 
                     onChange={e => setFormData({...formData, config: { ...formData.config, publicKey: e.target.value }})} 
                     placeholder="APP_USR-..." 
-                    className="h-12 rounded-xl bg-white border-none px-4 font-mono text-sm"
+                    className="h-14 rounded-2xl bg-white border-none px-6 font-mono text-xs shadow-sm"
                   />
                 </div>
 
-                <div className="space-y-2 relative">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Access Token</Label>
+                <div className="space-y-3 relative">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">Access Token (Privado)</Label>
                   <div className="relative">
                     <Input 
                       type={showSecret ? "text" : "password"}
                       value={formData.config.accessToken} 
                       onChange={e => setFormData({...formData, config: { ...formData.config, accessToken: e.target.value }})} 
-                      placeholder="PROD_ACCESS_TOKEN-..." 
-                      className="h-12 rounded-xl bg-white border-none px-4 font-mono text-sm pr-12"
+                      placeholder="APP_USR-..." 
+                      className="h-14 rounded-2xl bg-white border-none px-6 font-mono text-xs pr-14 shadow-sm"
                     />
                     <button 
                       type="button"
                       onClick={() => setShowSecret(!showSecret)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
                     >
                       {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
-
+                
+                <div className="flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-indigo-100">
+                  <Info className="h-4 w-4 text-indigo-600 shrink-0" />
+                  <p className="text-[10px] text-indigo-800 leading-relaxed font-medium">
+                    Consigue estas credenciales en el <a href="https://www.mercadopago.com.ar/developers/panel/credentials" target="_blank" className="font-bold underline">Panel de Desarrolladores</a> de Mercado Pago.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-8 bg-emerald-50/50 rounded-[2.5rem] border border-emerald-100 space-y-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900">Datos Bancarios</span>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Client ID (Opcional)</Label>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Titular de la Cuenta</Label>
                     <Input 
-                      value={formData.config.clientId} 
-                      onChange={e => setFormData({...formData, config: { ...formData.config, clientId: e.target.value }})} 
-                      className="h-12 rounded-xl bg-white border-none px-4 font-mono text-sm"
+                      value={formData.config.titularName} 
+                      onChange={e => setFormData({...formData, config: { ...formData.config, titularName: e.target.value }})} 
+                      placeholder="Nombre Completo" 
+                      className="h-14 rounded-2xl bg-white border-none px-6 font-bold shadow-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Client Secret (Opcional)</Label>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Banco / Entidad</Label>
                     <Input 
-                      type="password"
-                      value={formData.config.clientSecret} 
-                      onChange={e => setFormData({...formData, config: { ...formData.config, clientSecret: e.target.value }})} 
-                      className="h-12 rounded-xl bg-white border-none px-4 font-mono text-sm"
+                      value={formData.config.bankName} 
+                      onChange={e => setFormData({...formData, config: { ...formData.config, bankName: e.target.value }})} 
+                      placeholder="Ej: Banco Galicia o Brubank" 
+                      className="h-14 rounded-2xl bg-white border-none px-6 font-bold shadow-sm"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-2xl">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-bold">Estado del Método</Label>
-                  <p className="text-[10px] text-muted-foreground">Define si este método estará disponible para el cobro de planes.</p>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">CBU / CVU</Label>
+                  <Input 
+                    value={formData.config.cbu} 
+                    onChange={e => setFormData({...formData, config: { ...formData.config, cbu: e.target.value }})} 
+                    placeholder="0000000000000000000000" 
+                    className="h-14 rounded-2xl bg-white border-none px-6 font-mono text-sm shadow-sm"
+                  />
                 </div>
-                <Switch 
-                  checked={formData.isActive}
-                  onCheckedChange={(val) => setFormData({...formData, isActive: val})}
-                />
-              </div>
 
-              <DialogFooter className="mt-8">
-                <Button type="submit" disabled={loading || !formData.name || !formData.config.publicKey} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20">
-                  {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />} 
-                  {editingMethod ? 'Actualizar Configuración' : 'Guardar Método de Pago'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Alias de la Cuenta</Label>
+                  <Input 
+                    value={formData.config.alias} 
+                    onChange={e => setFormData({...formData, config: { ...formData.config, alias: e.target.value }})} 
+                    placeholder="MI.ALIAS.PAGO" 
+                    className="h-14 rounded-2xl bg-white border-none px-6 font-bold shadow-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100">
+              <div className="space-y-1">
+                <Label className="text-sm font-black text-slate-800">Estado del Método</Label>
+                <p className="text-[10px] text-slate-400 font-medium tracking-tight">Los métodos inactivos no se utilizarán.</p>
+              </div>
+              <Switch 
+                checked={formData.isActive}
+                onCheckedChange={(val) => setFormData({...formData, isActive: val})}
+              />
+            </div>
+
+            <Button 
+              type="submit" 
+              disabled={loading || !formData.name} 
+              className="w-full h-16 rounded-[1.5rem] text-xl font-black bg-slate-900 text-white shadow-2xl hover:scale-[1.02] transition-all"
+            >
+              {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <Save className="h-6 w-6 mr-3" />} 
+              {editingMethod ? 'Actualizar Pasarela' : 'Guardar Método'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
