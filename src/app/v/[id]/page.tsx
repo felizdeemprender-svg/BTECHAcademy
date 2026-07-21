@@ -390,12 +390,13 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   // Theme Modes
   const themeMode = content.themeMode || 'light';
   const isDark = themeMode === 'dark';
-  
-  const bgBase = isDark ? 'bg-slate-950' : 'bg-slate-50';
-  const textBase = isDark ? 'text-slate-100' : 'text-slate-900';
-  const bgSurface = isDark ? 'bg-slate-900' : 'bg-white';
-  const textMuted = isDark ? 'text-slate-400' : 'text-slate-600';
-  const borderSubtle = isDark ? 'border-slate-800' : 'border-slate-100';
+  const isGlass = themeMode === 'glass';
+
+  const bgBase    = isDark ? 'bg-slate-950' : isGlass ? 'bg-indigo-950' : 'bg-slate-50';
+  const textBase  = isDark ? 'text-slate-100' : isGlass ? 'text-indigo-50' : 'text-slate-900';
+  const bgSurface = isDark ? 'bg-slate-900' : isGlass ? 'bg-indigo-900/60 backdrop-blur-xl' : 'bg-white';
+  const textMuted = isDark ? 'text-slate-400' : isGlass ? 'text-indigo-200' : 'text-slate-600';
+  const borderSubtle = isDark ? 'border-slate-800' : isGlass ? 'border-indigo-700/40' : 'border-slate-100';
 
   if (isExpired) {
     return (
@@ -444,7 +445,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       `}</style>
 
       {/* Header - Marca Blanca */}
-      <nav className={cn("backdrop-blur-md sticky top-0 z-50 border-b font-body", isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white/80 border-slate-100')}>
+      <nav className={cn("backdrop-blur-md sticky top-0 z-50 border-b font-body", isDark ? 'bg-slate-950/80 border-slate-800' : isGlass ? 'bg-indigo-950/80 border-indigo-800' : 'bg-white/80 border-slate-100')}>
         <div className="container mx-auto px-6 h-20 flex justify-between items-center">
           <div className="flex items-center gap-4">
             {page.branding?.logoUrl && (
@@ -555,7 +556,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
               </div>
-              <div className={cn("flex-1 w-full aspect-[4/3] rounded-[3rem] border-[12px] shadow-2xl relative overflow-hidden group", isDark ? 'border-slate-800 bg-slate-800' : 'border-white bg-slate-100')}>
+              <div className={cn("flex-1 w-full aspect-[4/3] rounded-[3rem] border-[12px] shadow-2xl relative overflow-hidden group", isDark ? 'border-slate-800 bg-slate-800' : isGlass ? 'border-indigo-800 bg-indigo-900' : 'border-white bg-slate-100')}>
                 <Image src={s.imageUrl || `https://loremflickr.com/800/600/${(page.aiContent?.courseKeywords || 'business,education,growth').split(',').slice(0, 3).join(',')},professional?lock=${i + 1}`} alt="Visual" fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
               </div>
             </div>

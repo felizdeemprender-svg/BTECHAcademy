@@ -427,44 +427,77 @@ export function LandingEditor({
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-white">Ajustes de Blueprint</h4>
-                    <p className="text-xs text-slate-400 mt-0.5">Activa o desactiva secciones visibles en tu landing page.</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Personaliza el estilo visual y las secciones de esta variante.</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { key: 'showNarrative',  label: 'Secciones Narrativas',  desc: 'Bloques de texto persuasivo con viñetas.',  color: 'emerald' },
-                    { key: 'showSyllabus',   label: 'Temario del Curso',     desc: 'Lista de módulos con horas de cátedra.',  color: 'sky'     },
-                    { key: 'showBenefits',   label: 'Beneficios del Curso',  desc: 'Listado de beneficios clave.',            color: 'violet'  },
-                    { key: 'showMentor',     label: 'Sobre el Mentor',       desc: 'Perfil y autoridad del tutor.',           color: 'rose'    },
-                    { key: 'showFaqs',       label: 'Preguntas Frecuentes',  desc: 'Bloque de FAQs con respuestas.',         color: 'orange'  },
-                  ].map(({ key, label, desc, color }) => {
-                    const isOn = l.visibility?.[key] !== false;
-                    return (
-                      <div
-                        key={key}
-                        className={cn(
-                          'flex items-center justify-between p-5 rounded-2xl border transition-all',
-                          isOn
-                            ? `bg-${color}-500/5 border-${color}-500/20`
-                            : 'bg-white/3 border-white/5 opacity-60'
-                        )}
-                      >
-                        <div className="space-y-0.5">
-                          <p className="text-sm font-bold text-white">{label}</p>
-                          <p className="text-[10px] text-slate-400">{desc}</p>
+                {/* Selector de Tema */}
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estilo Visual (Tema)</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: 'light', label: '☀️ Claro',  desc: 'Fondo blanco',     bg: 'bg-white',       text: 'text-slate-900', border: 'border-white/30' },
+                      { value: 'dark',  label: '🌑 Oscuro', desc: 'Fondo negro',      bg: 'bg-slate-950',   text: 'text-white',     border: 'border-slate-700' },
+                      { value: 'glass', label: '💎 Glass',  desc: 'Glassmorphism',    bg: 'bg-indigo-950',  text: 'text-indigo-100',border: 'border-indigo-500/40' },
+                    ].map(({ value, label, desc, bg, text, border }) => {
+                      const isActive = (l.themeMode || 'light') === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => updateAsset('landings', lIdx, 'themeMode', value)}
+                          className={cn(
+                            'flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all text-center',
+                            isActive
+                              ? 'border-indigo-400 shadow-lg shadow-indigo-500/20 scale-[1.03]'
+                              : 'border-white/10 opacity-50 hover:opacity-80 hover:border-white/20'
+                          )}
+                        >
+                          <div className={cn('w-10 h-10 rounded-xl border-2 shadow-inner', bg, border)} />
+                          <p className={cn('text-xs font-bold', text, isActive ? 'opacity-100' : 'opacity-70')}>{label}</p>
+                          <p className="text-[9px] text-slate-500">{desc}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Switches de Visibilidad */}
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secciones Visibles</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                      { key: 'showNarrative',  label: 'Secciones Narrativas',  desc: 'Bloques de texto persuasivo con viñetas.' },
+                      { key: 'showSyllabus',   label: 'Temario del Curso',     desc: 'Lista de módulos con horas de cátedra.'  },
+                      { key: 'showBenefits',   label: 'Beneficios del Curso',  desc: 'Listado de beneficios clave.'             },
+                      { key: 'showMentor',     label: 'Sobre el Mentor',       desc: 'Perfil y autoridad del tutor.'            },
+                      { key: 'showFaqs',       label: 'Preguntas Frecuentes',  desc: 'Bloque de FAQs con respuestas.'          },
+                    ].map(({ key, label, desc }) => {
+                      const isOn = l.visibility?.[key] !== false;
+                      return (
+                        <div
+                          key={key}
+                          className={cn(
+                            'flex items-center justify-between p-4 rounded-2xl border transition-all',
+                            isOn ? 'bg-white/5 border-white/10' : 'bg-white/[0.02] border-white/5 opacity-50'
+                          )}
+                        >
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-bold text-white">{label}</p>
+                            <p className="text-[10px] text-slate-500">{desc}</p>
+                          </div>
+                          <Switch
+                            id={`vis-${key}-${lIdx}`}
+                            checked={isOn}
+                            onCheckedChange={checked => {
+                              const current = l.visibility || {};
+                              updateAsset('landings', lIdx, 'visibility', { ...current, [key]: checked });
+                            }}
+                          />
                         </div>
-                        <Switch
-                          id={`vis-${key}-${lIdx}`}
-                          checked={isOn}
-                          onCheckedChange={checked => {
-                            const current = l.visibility || {};
-                            updateAsset('landings', lIdx, 'visibility', { ...current, [key]: checked });
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </Card>
             </TabsContent>
