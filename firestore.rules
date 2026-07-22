@@ -77,8 +77,10 @@ service cloud.firestore {
     }
 
     match /mail/{mailId} {
-      allow create: if isSignedIn();
-      allow read, update, delete: if false; // Solo el backend/extensión procesa
+      // Los emails se encolan exclusivamente desde el servidor (Admin SDK via Server Actions / API Routes).
+      // El cliente nunca escribe directamente en esta colección.
+      allow create: if false;
+      allow read, update, delete: if false;
     }
 
 

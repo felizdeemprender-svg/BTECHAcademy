@@ -1,5 +1,9 @@
-﻿import { getAdminFirestore } from '@/firebase/admin';
+import { getAdminFirestore } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import {
+  sendSubscriptionUpgradeEmail,
+  sendNewSubscriptionEmail,
+} from '@/lib/emails/subscription';
 
 /**
  * Servicio centralizado para activar suscripciones de mentores.
@@ -134,21 +138,23 @@ export async function processSuccessfulSubscription(
       details: isUpgrade ? `Upgrade con ${remainingMonths} meses de extensión` : 'Nueva suscripción'
     });
 
-    // 7. Notificación
-    await db.collection('mail').add({
-      to: userData.email,
-      message: {
-        subject: isUpgrade ? '¡Tu Upgrade ha sido exitoso!' : '¡Bienvenido a FastoriaAcademy! Tu cuenta de Mentor está activa',
-        html: `
-          <h1>¡Hola ${userData.displayName || 'Mentor'}!</h1>
-          <p>Tu ${isUpgrade ? 'mejora al' : 'suscripción al'} plan <strong>${plan?.name}</strong> ha sido procesada.</p>
-          ${isUpgrade ? `<p>Hemos sumado tus ${remainingMonths} meses restantes a la nueva vigencia. Tu nueva fecha de renovación es el ${nextBillingDate.toLocaleDateString()}.</p>` : ''}
-          <p>Ya puedes acceder a todas las herramientas de tu nuevo nivel.</p>
-          <br/>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="background:#4f46e5; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">Ir al Dashboard</a>
-        `
-      }
-    });
+    // 7. Notificación de suscripción
+    if (isUpgrade) {
+      await sendSubscriptionUpgradeEmail(
+        userData.email,
+        userData.displayName || 'Mentor',
+        plan?.name || 'Pro',
+        remainingMonths,
+        nextBillingDate
+      );
+    } else {
+      await sendNewSubscriptionEmail(
+        userData.email,
+        userData.displayName || 'Mentor',
+        plan?.name || 'Pro',
+        nextBillingDate
+      );
+    }
 
     return { success: true, userId: userRef.id };
 

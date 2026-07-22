@@ -4,7 +4,7 @@
 import { useState, useEffect, use, useMemo, useCallback } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
-import { sendWelcomeEmailClient } from '@/lib/email-client';
+import { sendWelcomeEmailAction } from '@/app/actions/email-actions';
 import { useFirestore, useDoc, useCollection, useMemoFirebase, useFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc, setDoc, serverTimestamp, orderBy, getDocs, deleteDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -369,15 +369,16 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
           progressPercent: 0
         });
 
-        // Enviar correo de felicitación por Trigger Email
-        if (targetEmail) {
-          await sendWelcomeEmailClient(
-            db,
-            targetEmail,
-            followUp.studentName,
-            course?.title || 'tu curso'
-          );
-        }
+        // Enviar correo de felicitación via Server Action (Admin SDK en servidor)
+          if (targetEmail) {
+            await sendWelcomeEmailAction(
+              targetEmail,
+              followUp.studentName,
+              course?.title || 'tu curso',
+              profile?.displayName || 'Tutor',
+              profile?.email || undefined
+            );
+          }
       }
     }
 

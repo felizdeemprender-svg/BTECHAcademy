@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { sendTransferNotificationEmails } from '@/lib/email-server';
+import { sendTransferStudentEmail } from '@/lib/emails/transfer-student';
+import { sendTransferMentorEmail } from '@/lib/emails/transfer-mentor';
 
 /**
  * POST /api/payments/transfer/initiate
@@ -93,14 +94,24 @@ export async function POST(req: NextRequest) {
 
     // 5. Enviar emails de notificación
     try {
-      await sendTransferNotificationEmails({
+      await sendTransferStudentEmail({
         studentEmail: normalizedEmail,
         studentName: orderData.studentName,
-        mentorEmail,
-        mentorName,
         courseTitle: pageTitle,
         amount: price,
         bankDetails,
+        referenceCode,
+        mentorName,
+        mentorEmail
+      });
+
+      await sendTransferMentorEmail({
+        mentorEmail,
+        mentorName,
+        studentName: orderData.studentName,
+        studentEmail: normalizedEmail,
+        courseTitle: pageTitle,
+        amount: price,
         referenceCode,
       });
     } catch (emailErr) {

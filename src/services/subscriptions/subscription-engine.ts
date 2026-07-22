@@ -5,7 +5,7 @@ import {
   sendSubscriptionActivatedEmail,
   sendPaymentFailedEmail,
   sendAccountSuspendedEmail,
-} from '@/lib/email-server';
+} from '@/lib/emails/subscription';
 import { createMercadoPagoSession } from '@/services/payments/mercadopago';
 
 type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'suspended' | 'canceled';

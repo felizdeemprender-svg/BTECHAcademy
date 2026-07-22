@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
-import { sendWelcomeEmailClient } from '@/lib/email-client';
+import { sendWelcomeEmailAction } from '@/app/actions/email-actions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -790,12 +790,13 @@ export default function ManageCoursesClient() {
 
       await setDoc(newEnrollRef, enrollmentData);
 
-      // Enviar correo de felicitación por Trigger Email
-      await sendWelcomeEmailClient(
-        db,
+      // Enviar correo de felicitación via Server Action (Admin SDK en servidor)
+      await sendWelcomeEmailAction(
         normalizedEmail,
         studentName,
-        selectedCourse?.title || 'tu curso'
+        selectedCourse?.title || 'tu curso',
+        profile?.displayName || 'Tutor',
+        profile?.email || undefined
       );
 
       console.log('🔍 PASO 4 - Actualizando estado local...');

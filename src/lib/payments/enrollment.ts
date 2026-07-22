@@ -1,6 +1,6 @@
 import { getAdminFirestore } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { sendWelcomeEmailServer } from '@/lib/email-server';
+import { sendWelcomeEmailServer } from '@/lib/emails/welcome';
 
 /**
  * Procesa una inscripción exitosa de forma atómica e idempotente.
@@ -96,7 +96,24 @@ export async function processSuccessfulEnrollment({
     try {
       const courseSnap = await db.collection('courses').doc(courseId).get();
       const courseTitle = courseSnap.exists ? (courseSnap.data()?.title || 'tu curso') : 'tu curso';
-      await sendWelcomeEmailServer(normalizedEmail, studentName, courseTitle);
+      
+      let mentorName = undefined;
+      let mentorEmail = undefined;
+      if (mentorId) {
+        const mentorSnap = await db.collection('users').doc(mentorId).get();
+        if (mentorSnap.exists) {
+          mentorName = mentorSnap.data()?.displayName;
+          mentorEmail = mentorSnap.data()?.email;
+        }
+      }
+
+      await sendWelcomeEmailServer({
+        studentEmail: normalizedEmail,
+        studentName,
+        courseTitle,
+        mentorName,
+        mentorEmail
+      });
     } catch (emailErr) {
       console.error('[Enrollment] Error al enviar correo de bienvenida:', emailErr);
     }
