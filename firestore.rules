@@ -199,6 +199,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+
     match /campaigns/{campaignId} {
       allow read: if isSignedIn() && (isAdmin() || resource.data.mentorId == request.auth.uid);
       allow write: if isSignedIn() && (isAdmin() || isMentor());

@@ -11,6 +11,7 @@ import {
   validateAdsTemplates
 } from '@/lib/template-validator';
 import { analyzeColorSimilarity, generateColorRecommendations } from '@/lib/color-matcher';
+import { CLASSIC_STYLE_CONFIG } from '@/app/mentoria/marketing/templates/styles/classic-style-config';
 
 const DesignTokensSchema = z.object({
   primary: z.string().describe('Color primario (Hex)'),
@@ -28,6 +29,7 @@ const LandingVariantSchema = z.object({
   subheadline: z.string(),
   ctaText: z.string(),
   sectionCount: z.number().describe('Cantidad de secciones narrativas clásicas.'),
+  styleId: z.string().optional().describe('ID del estilo visual (classic, modern, minimal, corporate, creative)'),
   visibility: z.object({
     showHeroVideo: z.boolean().default(true),
     showNarrative: z.boolean().default(true),
@@ -74,6 +76,7 @@ const CollectionInputSchema = z.object({
     emails: z.boolean(),
     ads: z.boolean(),
   }),
+  styleId: z.string().optional().describe('ID del estilo visual seleccionado (classic, modern, minimal, corporate, creative)'),
 });
 export type CollectionInput = z.infer<typeof CollectionInputSchema>;
 
@@ -118,6 +121,26 @@ const generateTemplateCollectionFlow = ai.defineFlow(
     outputSchema: CollectionOutputSchema,
   },
   async (input) => {
+    // Obtener configuración específica del estilo seleccionado
+    const selectedStyleId = input.styleId || 'classic';
+    let styleConfig = null;
+    
+    if (selectedStyleId === 'classic') {
+      styleConfig = CLASSIC_STYLE_CONFIG;
+    }
+    
+    // Construir el prompt con información específica del estilo
+    let styleSpecificInstructions = '';
+    if (styleConfig && styleConfig.layout) {
+      styleSpecificInstructions = `
+CONFIGURACIÓN ESPECÍFICA DEL ESTILO ${styleConfig.name.toUpperCase()}:
+- Layout: ${styleConfig.layout.hero} hero, ${styleConfig.layout.sections} sections, ${styleConfig.layout.footer} footer
+- Secciones disponibles: ${styleConfig.availableSections.map(s => s.name).join(', ')}
+- Secciones duplicables: ${styleConfig.repeatableSections.join(', ')}
+- Número de secciones por defecto: ${styleConfig.defaultSectionCount}
+`;
+    }
+    
     // El flujo utiliza el modelo predeterminado para asegurar compatibilidad
     const { output } = await ai.generate({
       prompt: `Actúa como un Director de Arte y Arquitecto de Marketing Digital. Tu tarea es generar un "Blueprint de Identidad" multicanal.
@@ -129,6 +152,12 @@ IDENTIDAD VISUAL SELECCIONADA (USA ESTOS COLORES OBLIGATORIAMENTE):
 - Fuente Títulos: ${input.designTokens.fontHeading}
 - Fuente Cuerpo: ${input.designTokens.fontBody}
 
+ESTILO VISUAL SELECCIONADO: ${selectedStyleId}
+${styleSpecificInstructions}
+- Este estilo define el layout, componentes, tipografía y animaciones de las landings.
+- DEBES incluir el campo "styleId" con valor "${selectedStyleId}" en CADA landing generada.
+- DEBES incluir "sectionCount" con valor ${styleConfig?.defaultSectionCount || 3} en CADA landing generada.
+
 ¡IMPORTANTE! DEBES USAR EXACTAMENTE ESTOS COLORES EN TODOS LOS TEMPLATES.
 
 FILTRO DE GENERACIÓN (Solo genera para estos canales):
@@ -137,12 +166,12 @@ FILTRO DE GENERACIÓN (Solo genera para estos canales):
 - Ads: ${input.enabledChannels.ads ? 'HABILITADO (3 variantes: Search, Visual, Retargeting)' : 'DESACTIVADO'}
 
 REGLAS DE CONTENIDO (PARA LLENAR EN SIGUIENTE ETAPA):
-- Para landings: sectionCount es obligatorio. DEBES incluir "themeMode" (varía entre light, dark y glass para dar estilos visuales únicos). DEBES incluir de 3 a 5 "faqs" para derribar objeciones (ej: conocimientos previos, duración, garantías). El objeto "visibility" debe tener todos sus flags en true por defecto.
+- Para landings: sectionCount es obligatorio. DEBES incluir "themeMode" (varía entre light, dark y glass para dar estilos visuales únicos). DEBUS incluir de 3 a 5 "faqs" para derribar objeciones (ej: conocimientos previos, duración, garantías). El objeto "visibility" debe tener todos sus flags en true por defecto. DEBES incluir "styleId" con valor "${selectedStyleId}".
 - Para emails: subject, body, preheader son obligatorios
 - NO generes URLs, imágenes, o contenido multimedia.
 
 INSTRUCCIÓN FINAL CRÍTICA:
-Asegúrate de que la cantidad de elementos devueltos en los arrays corresponda FIELMENTE a los números exactos requeridos. ¡Crea múltiples ítems si el número es mayor a 1!
+Asegúrate de que la cantidad de elementos devueltos en los arrays correspondan FIELMENTE a los números exactos requeridos. ¡Crea múltiples ítems si el número es mayor a 1!
 Devuelve un objeto JSON estructurado con DATOS COMPLETOS.`,
       output: { schema: CollectionOutputSchema },
       config: { 

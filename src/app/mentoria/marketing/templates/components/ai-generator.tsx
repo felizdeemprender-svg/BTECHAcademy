@@ -11,6 +11,13 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { LandingMockup } from "./template-mockups";
+import {
   Sparkles,
   Loader2,
   Target,
@@ -31,12 +38,14 @@ import {
   Edit3,
   ChevronLeft,
   ChevronRight,
+  Eye,
 } from "lucide-react";
 import {
   AIHealthState,
   GenerationOptions,
 } from "../types/template-types";
 import { cn } from "@/lib/utils";
+import { useStyleExamples } from "../hooks/use-style-examples";
 
 interface AIGeneratorProps {
   isOpen: boolean;
@@ -89,6 +98,8 @@ export function AIGenerator({
 }: AIGeneratorProps) {
   const [campaignName, setCampaignName] = useState("");
   const [directives, setDirectives] = useState("");
+  const { examples, loading: examplesLoading } = useStyleExamples('classic');
+  const [showExamplesModal, setShowExamplesModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState("config");
 
@@ -273,6 +284,47 @@ export function AIGenerator({
                     rows={4}
                     disabled={isGenerating}
                   />
+                </div>
+              </div>
+
+              {/* Estilo de Landing */}
+              <div>
+                <Label className="text-base font-medium">
+                  Estilo de Landing
+                </Label>
+                <p className="text-xs text-gray-600 mt-1 mb-4">
+                  Estilo Classic seleccionado por defecto.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                  <div className="rounded-xl border-2 border-blue-500 ring-2 ring-blue-200 transition-all overflow-hidden">
+                    <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
+                        <div className="text-white text-center p-4">
+                          <div className="w-16 h-16 mx-auto mb-2 bg-white/20 rounded-lg" />
+                          <div className="h-2 bg-white/30 rounded w-3/4 mx-auto mb-1" />
+                          <div className="h-2 bg-white/30 rounded w-1/2 mx-auto" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-sm">Classic</span>
+                        <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <p className="text-xs text-gray-600 line-clamp-2 mb-3">
+                        El estilo original, balanceado y profesional
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full text-xs"
+                        onClick={() => setShowExamplesModal(true)}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        Ver Ejemplos (3)
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -639,6 +691,72 @@ export function AIGenerator({
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Modal para mostrar ejemplos del estilo */}
+      <Dialog open={showExamplesModal} onOpenChange={setShowExamplesModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogTitle className="text-xl font-bold">
+            Ejemplos del Estilo Classic
+          </DialogTitle>
+          <DialogDescription>
+            3 landings generadas por IA con el tema "por qué BTECHAcademy nuestra aplicación web es bueno para tutores y alumnos"
+          </DialogDescription>
+          
+          {examplesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            </div>
+          ) : examples.length > 0 ? (
+            <div className="space-y-6 mt-4">
+              {examples.map((example: any, index: number) => (
+                <div key={example.variant || index} className="border rounded-lg overflow-hidden">
+                  <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                    {example.imageUrl && (
+                      <img 
+                        src={example.imageUrl} 
+                        alt={example.marketingName || `Variante ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="secondary" className="bg-white/90 text-xs">
+                        {example.variant || `Variante ${index + 1}`}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-sm mb-2">
+                      {example.marketingName || `Variante ${index + 1}`}
+                    </h3>
+                    <p className="text-xs text-gray-600 line-clamp-2 mb-3">
+                      {example.headline || 'Ejemplo generado por IA'}
+                    </p>
+                    {example.sections && example.sections.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-gray-700">Secciones:</p>
+                        {example.sections.slice(0, 2).map((section: any, sIndex: number) => (
+                          <div key={sIndex} className="text-xs text-gray-600">
+                            • {section.title}
+                          </div>
+                        ))}
+                        {example.sections.length > 2 && (
+                          <div className="text-xs text-gray-500">
+                            +{example.sections.length - 2} secciones más...
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500 text-sm">
+              No hay ejemplos disponibles
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

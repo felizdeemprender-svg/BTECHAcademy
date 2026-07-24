@@ -38,11 +38,11 @@ import {
 import { cn } from "@/lib/utils";
 import { TemplateCollection } from "../types/template-types";
 import {
-  SocialMockup,
   LandingMockup,
   EmailMockup,
   AdMockup,
 } from "./template-mockups";
+import { useStyleExamples } from "../hooks/use-style-examples";
 
 interface TemplateViewerProductionProps {
   collection: TemplateCollection | null;
@@ -66,6 +66,7 @@ export const TemplateViewerProduction = ({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isRefining, setIsRefining] = useState<string | null>(null);
   const [pendingRefinement, setPendingRefinement] = useState<any>(null);
+  const { examples, loading: examplesLoading } = useStyleExamples(collection?.styleId || 'classic');
 
   const [masterAdns, setMasterAdns] = useState<Record<string, any>>({});
 
@@ -201,7 +202,7 @@ export const TemplateViewerProduction = ({
         <DialogTitle className="sr-only">
           {collection?.name || "Colección de Templates"}
         </DialogTitle>
-        <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
+        <DialogContent aria-describedby={undefined} className="max-w-6xl h-[90vh] flex flex-col p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
           {/* Header */}
           <div className="bg-white border-b p-8 pb-6">
             <div className="flex items-center justify-between">
@@ -274,14 +275,6 @@ export const TemplateViewerProduction = ({
                       <Mail className="h-4 w-4" /> Emails
                     </TabsTrigger>
                   )}
-                  {collection?.assets?.socials && (
-                    <TabsTrigger
-                      value="social"
-                      className="rounded-xl px-6 font-bold gap-2 shrink-0"
-                    >
-                      <Instagram className="h-4 w-4" /> Social
-                    </TabsTrigger>
-                  )}
                   {collection?.assets?.ads && (
                     <TabsTrigger
                       value="ads"
@@ -305,6 +298,7 @@ export const TemplateViewerProduction = ({
                         className="w-full"
                       >
                         <TabsList className="bg-transparent p-0 flex-wrap h-auto gap-2">
+                          {/* Landings de la colección */}
                           {collection?.assets?.landings?.map(
                             (l: any, lIdx: number) => (
                               <TabsTrigger
@@ -317,6 +311,8 @@ export const TemplateViewerProduction = ({
                             ),
                           )}
                         </TabsList>
+                        
+                        {/* Landings de la colección */}
                         {collection?.assets?.landings?.map(
                           (l: any, lIdx: number) => (
                             <TabsContent
@@ -326,7 +322,14 @@ export const TemplateViewerProduction = ({
                             >
                               <Card className="overflow-hidden border-none shadow-2xl rounded-[2rem] bg-white">
                                 <CardContent className="p-0">
-                                  <LandingMockup template={l} index={lIdx} />
+                                  <div className="flex justify-center w-full h-[600px] overflow-hidden bg-gray-50 rounded-b-[2rem]">
+                                    <iframe 
+                                      src={`/v/${collection.id}?v=${lIdx}&preview=true`} 
+                                      className="w-[1280px] h-[calc(600px*1.28)] origin-top-left"
+                                      style={{ transform: 'scale(0.78125)', border: 'none' }}
+                                      title={`Preview Variante ${lIdx + 1}`}
+                                    />
+                                  </div>
                                 </CardContent>
                                 {isAdmin && (
                                   <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
@@ -434,97 +437,6 @@ export const TemplateViewerProduction = ({
                       </Tabs>
                     </TabsContent>
 
-                    {/* Social Tab */}
-                    <TabsContent value="social" className="m-0 space-y-6">
-                      <Tabs defaultValue="instagram" className="w-full">
-                        <TabsList className="bg-transparent p-0 flex-wrap h-auto gap-2">
-                          <TabsTrigger
-                            value="instagram"
-                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
-                          >
-                            Instagram
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="twitter"
-                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
-                          >
-                            Twitter
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="linkedin"
-                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
-                          >
-                            LinkedIn
-                          </TabsTrigger>
-                          <TabsTrigger
-                            value="tiktok"
-                            className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
-                          >
-                            TikTok
-                          </TabsTrigger>
-                        </TabsList>
-
-                        {["instagram", "twitter", "linkedin", "tiktok"].map(
-                          (plat) => (
-                            <TabsContent
-                              key={plat}
-                              value={plat}
-                              className="mt-6"
-                            >
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                {collection?.assets?.socials
-                                  ?.map((s: any, globalIdx: number) => ({
-                                    ...s,
-                                    globalIdx,
-                                  }))
-                                  .filter((s: any) => s.platform === plat)
-                                  .map((s: any) => (
-                                    <Card
-                                      key={s.globalIdx}
-                                      className="overflow-hidden border-none shadow-2xl rounded-3xl bg-white transition-all hover:scale-[1.02]"
-                                    >
-                                      <CardContent className="p-0">
-                                        <SocialMockup
-                                          variant={s}
-                                          index={s.globalIdx}
-                                          masterAdn={
-                                            masterAdns[
-                                            s.blueprintConfig?.presetId ||
-                                            s.videoConfig?.presetId ||
-                                            "01"
-                                            ]
-                                          }
-                                        />
-                                      </CardContent>
-
-                                      {isAdmin && (
-                                        <div className="p-3 border-t border-slate-100 flex justify-end gap-2 bg-white">
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() =>
-                                              handleOpenEditVariant(
-                                                s,
-                                                "social",
-                                                s.globalIdx,
-                                              )
-                                            }
-                                            className="rounded-xl font-bold h-8 px-4 text-xs text-primary hover:bg-primary/10"
-                                          >
-                                            <Settings2 className="h-3 w-3 mr-1" />{" "}
-                                            Editar
-                                          </Button>
-                                        </div>
-                                      )}
-                                    </Card>
-                                  ))}
-                              </div>
-                            </TabsContent>
-                          ),
-                        )}
-                      </Tabs>
-                    </TabsContent>
-
                     {/* Ads Tab */}
                     <TabsContent value="ads" className="m-0 space-y-6">
                       <Tabs
@@ -603,7 +515,7 @@ export const TemplateViewerProduction = ({
 
       {/* Editor Modal - Ajustes de Blueprint */}
       <Dialog open={isEditVariantOpen} onOpenChange={setIsEditVariantOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent aria-describedby={undefined} className="max-w-2xl">
           <DialogTitle className="text-2xl font-bold">
             Ajustes de Blueprint
           </DialogTitle>

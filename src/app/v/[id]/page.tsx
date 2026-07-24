@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, use, useRef } from 'react';
+import { useState, useEffect, use, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -126,8 +126,30 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
     }
   }, [searchParams, id]);
 
-  const pageRef = useMemoFirebase(() => doc(db, 'salesPages', id), [db, id]);
-  const { data: page, isLoading: pageLoading } = useDoc(pageRef);
+  const isPreview = searchParams.get('preview') === 'true';
+
+  const pageRef = useMemoFirebase(() => {
+    if (isPreview) return doc(db, 'templateCollections', id);
+    return doc(db, 'salesPages', id);
+  }, [db, id, isPreview]);
+  
+  const { data: rawPage, isLoading: pageLoading } = useDoc(pageRef);
+
+  // Normalizar los datos si es una previsualización de un templateCollection
+  const page = useMemo(() => {
+    if (!rawPage) return null;
+    if (isPreview) {
+      return {
+        ...rawPage,
+        isActive: true, // Forzar activo
+        aiContent: rawPage.assets, // Mapear assets a aiContent
+        price: 0, // Precio falso
+        mentorId: rawPage.ownerId || "W7oR0f2q39bU0Ff10w4yv9FmZ6D3", // Default a Felipe si falta
+        courseId: null,
+      };
+    }
+    return rawPage;
+  }, [rawPage, isPreview]);
 
   const courseRef = useMemoFirebase(() => page?.courseId ? doc(db, 'courses', page.courseId) : null, [db, page?.courseId]);
   const { data: course } = useDoc(courseRef);
@@ -160,7 +182,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   // Registrar acceso/vista automáticamente al cargar la landing
   useEffect(() => {
-    if (pageLoading || !page?.isActive) return;
+    if (pageLoading || !page?.isActive || isPreview) return;
 
     const sessionTrackKey = `tracked_view_${id}`;
     if (sessionStorage.getItem(sessionTrackKey)) return;
@@ -243,6 +265,10 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   };
 
   const handlePurchase = async () => {
+    if (isPreview) {
+      toast({ title: 'Modo Vista Previa', description: 'Los pagos están desactivados en esta vista miniatura.' });
+      return;
+    }
     setIsPurchaseDialogOpen(true);
     setPaymentInitPoint(null);
     setTransferResult(null);

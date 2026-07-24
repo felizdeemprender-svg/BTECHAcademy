@@ -1,11 +1,11 @@
 import { getAdminFirestore } from '@/firebase/admin';
 
-export const PLATFORM_URL = 'https://fastoriaacademy.ai';
+export const PLATFORM_URL = 'https://felizdeemprender.com'; // O el dominio que uses
 export const BRAND_COLOR = '#6366f1';
-export const BRAND_NAME = 'Fastoria Academy';
-export const ADMIN_SENDER_NAME = 'Equipo de Fastoria Academy';
-export const SUPPORT_EMAIL = 'soporte@fastoriaacademy.ai';
-export const NOREPLY_EMAIL = 'noreply@fastoriaacademy.ai';
+export const BRAND_NAME = 'Feliz de Emprender';
+export const ADMIN_SENDER_NAME = 'Equipo de Feliz de Emprender';
+export const SUPPORT_EMAIL = 'supervisor.felizdeemprender@gmail.com';
+export const NOREPLY_EMAIL = 'supervisor.felizdeemprender@gmail.com';
 
 export interface EnqueueEmailParams {
   to: string;

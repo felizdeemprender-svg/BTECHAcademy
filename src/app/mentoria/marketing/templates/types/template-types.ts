@@ -24,6 +24,7 @@ export interface TemplateCollection {
     fontHeading: string;
     fontBody: string;
   };
+  styleId?: string;
   validationMetadata?: any;
   generationConfig?: any;
 }

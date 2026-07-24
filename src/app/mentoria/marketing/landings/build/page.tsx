@@ -180,7 +180,8 @@ function LandingBuilderContent() {
   const { data: courses } = useCollection(coursesQuery);
 
   const collectionsQuery = useMemoFirebase(() => query(collection(db, 'templateCollections')), [db]);
-  const { data: collections } = useCollection(collectionsQuery);
+  const { data: rawCollections } = useCollection(collectionsQuery);
+  const collections = useMemo(() => rawCollections?.filter(c => !c.isDemo), [rawCollections]);
 
   const myLandingsQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
@@ -235,7 +236,8 @@ function LandingBuilderContent() {
         templateStructure: { landings: collection.assets?.landings || [] },
         targetAudience: targetAudience,
         courseTags: course.tagIds || [],
-        templateDirectives: templateDirectives
+        templateDirectives: templateDirectives,
+        styleId: collection.styleId || 'classic', // Pasar el styleId de la colección
       });
 
       setGeneratedAssets(result);

@@ -6,6 +6,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { CLASSIC_STYLE_CONFIG } from '@/app/mentoria/marketing/templates/styles/classic-style-config';
 
 const LandingFilledSchema = z.object({
   type: z.string(),
@@ -36,6 +37,7 @@ const GenerateLandingInputSchema = z.object({
   targetAudience: z.string().optional(),
   courseTags: z.array(z.string()).optional().default([]),
   templateDirectives: z.string().optional().default(''),
+  styleId: z.string().optional().describe('ID del estilo visual de la colección (classic, modern, etc.)'),
 });
 export type GenerateLandingInput = z.infer<typeof GenerateLandingInputSchema>;
 
@@ -101,6 +103,29 @@ const generateLandingFlow = ai.defineFlow(
     outputSchema: GenerateLandingOutputSchema,
   },
   async (input) => {
+    // Obtener configuración del estilo seleccionado
+    const selectedStyleId = input.styleId || 'classic';
+    let styleConfig = null;
+    
+    if (selectedStyleId === 'classic') {
+      styleConfig = CLASSIC_STYLE_CONFIG;
+    }
+    
+    // Construir instrucciones específicas del estilo
+    let styleSpecificInstructions = '';
+    if (styleConfig) {
+      styleSpecificInstructions = `
+CONFIGURACIÓN DEL ESTILO ${styleConfig.name.toUpperCase()}:
+- Layout: ${styleConfig.layout.hero} hero, ${styleConfig.layout.sections} sections, ${styleConfig.layout.footer} footer
+- Secciones disponibles: ${styleConfig.availableSections.map(s => s.name).join(', ')}
+- Secciones duplicables: ${styleConfig.repeatableSections.join(', ')}
+- Número de secciones por defecto: ${styleConfig.defaultSectionCount}
+- DEBES respetar exactamente la cantidad de secciones: ${styleConfig.defaultSectionCount}
+- INSTRUCCIÓN CRÍTICA ARQUITECTÓNICA: La plataforma ya dibuja de forma automática y por separado el Hero (usando 'headline'), el Tutor (usando 'aboutMentor'), los Beneficios (usando 'benefits') y los Precios (usando 'price'). 
+- POR LO TANTO: El array 'sections' sirve ÚNICA Y EXCLUSIVAMENTE para generar los bloques de contenido persuasivo / características del producto (argumentos de venta). ¡NUNCA metas al Tutor, los Beneficios, las Faqs ni los Precios dentro del array 'sections'!
+`;
+    }
+    
     const missionDirectives = {
       venta: "ENFOQUE: Venta Directa / Hard Sell. REGLAS: Usa urgencia real, escasez, resalta el ROI y el valor del precio.",
       autoridad: "ENFOQUE: Autoridad / Branding. REGLAS: Posiciona al mentor, usa lenguaje sofisticado, resalta la metodología.",
@@ -117,14 +142,16 @@ DATOS CLAVE (OBLIGATORIO RESPETAR):
 - Misión: ${missionDirectives[input.mission]} (Define el OBJETIVO estratégico).
 - Público Objetivo: ${input.targetAudience} (Define el LENGUAJE y el tono).
 - Directivas de Copy: ${input.templateDirectives}
+${styleSpecificInstructions}
 
 === REGLA DE ORO: EL CURSO ES EL REY (FUSIÓN DE NICHO) ===
 1. EJE CENTRAL: El curso trata sobre "${input.courseTitle}". La descripción es: "${input.courseDescription}". 
 2. LENGUAJE Y TONO: Debes fusionar la temática del curso con el LENGUAJE técnico o emocional del PÚBLICO OBJETIVO. Si el público es experto, usa lenguaje avanzado; si es principiante, sé didáctico.
 3. ESTRATEGIA: Usa la MISIÓN para dictar la urgencia y el tipo de oferta.
 4. FILTRO DE INDUSTRIA: Si el público o directivas mencionan temáticas de otra industria (ej. salud), DEBES IGNORAR esa industria y usar solo su ESTILO de comunicación aplicado al CURSO.
-5. REGLA DE CANTIDAD: Genera exactamente las secciones indicadas en 'templateStructure'.
+5. REGLA DE CANTIDAD: Genera exactamente las secciones indicadas en 'templateStructure' y respeta la configuración del estilo ${selectedStyleId}.
 6. PRECIO: Usa el precio de $${input.price} para justificar la inversión.
+7. ESTILO VISUAL: Respeta la estructura del estilo ${selectedStyleId} incluyendo las secciones duplicables definidas.
 
 ESTRUCTURA A LLENAR (3 VARIANTES):
 ${JSON.stringify(input.templateStructure)}

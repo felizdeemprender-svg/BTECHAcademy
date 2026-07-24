@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { generateTemplateCollection } from "@/ai/flows/generate-template-collection";
+import { generateStyleDemos } from "@/ai/flows/generate-style-demos";
 import { checkAiHealth } from "@/ai/flows/check-ai-health";
 import {
   AIHealthState,
@@ -10,7 +11,7 @@ import {
   GenerationProgress,
   GenerationResult,
 } from "../types/template-types";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, updateDoc, doc } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
 
 export function useAIGeneration(profile?: any) {
@@ -60,6 +61,7 @@ export function useAIGeneration(profile?: any) {
       campaignName: string,
       directives: string,
       designTokens?: any,
+      styleId?: string,
     ) => {
       if (aiHealth.status !== "healthy") {
         toast({
@@ -84,6 +86,7 @@ export function useAIGeneration(profile?: any) {
           mentorName: profile?.displayName,
           designTokens,
           enabledChannels,
+          styleId,
         });
 
         console.log("🔍 Resultado de generateTemplateCollection:", result);
@@ -123,6 +126,7 @@ export function useAIGeneration(profile?: any) {
           ownerId: profile?.uid,
           assets: result,
           designTokens: designTokens || null,
+          styleId: styleId || 'classic', // Guardar el estilo seleccionado, default a classic
           createdAt: new Date(),
           updatedAt: new Date(),
         };

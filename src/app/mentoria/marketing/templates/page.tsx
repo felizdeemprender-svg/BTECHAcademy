@@ -97,12 +97,13 @@ export default function MarketingTemplatesPage() {
     approveDesign();
   };
 
-  const handleGenerate = async (name: string, directives: string) => {
+  const handleGenerate = async (name: string, directives: string, styleId?: string) => {
     const success = await generateTemplates(
       "new-collection", // collectionId
       name,
       directives,
       identityDesign?.designTokens,
+      styleId,
     );
     if (success) {
       resetDesign(); // Resetear para próxima campaña
