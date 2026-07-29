@@ -47,6 +47,7 @@ export function extractVideoId(url: string): string | null {
 // Generar URL segura de YouTube con token
 export function generateSecureYouTubeUrl(videoId: string, token: string): string {
   const baseUrl = 'https://www.youtube-nocookie.com/embed/';
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const params = new URLSearchParams({
     modestbranding: '1',
     rel: '0',
@@ -54,7 +55,7 @@ export function generateSecureYouTubeUrl(videoId: string, token: string): string
     controls: '1',
     hl: 'es',
     enablejsapi: '1',
-    origin: window.location.origin,
+    origin: origin,
     widgetid: '1'
   });
   

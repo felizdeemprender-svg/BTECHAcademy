@@ -118,6 +118,7 @@ export function SidebarNav() {
         { name: 'Facturación', href: '/admin/billing', roles: ['admin'], icon: ReceiptText },
         { name: 'Tema del Sistema', href: '/admin/theme', roles: ['admin'], icon: Palette },
         { name: 'Gestión de ADNs', href: '/admin/adns', roles: ['admin'], icon: FileBox },
+        { name: 'Estilos de Landing', href: '/admin/styles', roles: ['admin'], icon: LayoutIcon },
       ]
     },
     {

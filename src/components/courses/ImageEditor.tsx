@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useFirebase } from '@/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, uploadString } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -85,8 +85,9 @@ export function ImageEditor({
           prompt: '',
           keywords: keywords || '',
           courseTitle: courseTitle || '',
-          contextHint: aiPromptHint || (description ? `Course description: ${description}. ` : '') + (label || ''),
-          engine
+          contextHint: aiPromptHint || (description ? `Descripción: ${description}. ` : '') + (label || ''),
+          engine,
+          channel
         }),
       });
 
@@ -100,11 +101,16 @@ export function ImageEditor({
         toast({ title: 'Prompt Generado (Debug)', description: data.generatedPrompt, duration: 8000 });
       }
 
-      // En lugar de subirla directamente a Firebase Storage, pasamos el Base64 (Data URI)
-      // para que el usuario pueda previsualizarlo libremente sin quemar recursos de nube.
-      onUpdate?.(data.imageDataUrl);
+      // Subir a Firebase Storage para no exceder el límite de 1MB de Firestore (Data URI)
+      toast({ title: 'Subiendo a la nube...', description: 'Optimizando la imagen generada...' });
+      const storagePath = `campaigns/${courseId}/${channel}/ai_${Date.now()}.jpg`;
+      const sRef = ref(storage, storagePath);
+      await uploadString(sRef, data.imageDataUrl, 'data_url');
+      const downloadUrl = await getDownloadURL(sRef);
+
+      onUpdate?.(downloadUrl);
       
-      toast({ title: 'Imagen de IA generada', description: 'Cargada como borrador. Guarda para confirmarla definitivamente.' });
+      toast({ title: 'Imagen de IA lista', description: 'La imagen ha sido subida y está lista para guardarse.' });
     } catch (err: any) {
       console.error('[AI Image]', err);
       toast({ variant: 'destructive', title: 'Error de generación IA', description: err.message });

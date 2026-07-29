@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { AtomicRenderer } from './components/atomic-renderer';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -403,9 +404,10 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   if (pageLoading) return <div className="flex h-screen items-center justify-center bg-white"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
   if (!page || !page.isActive) return <div className="flex h-screen items-center justify-center"><p className="font-bold text-muted-foreground uppercase tracking-widest">Página no disponible.</p></div>;
 
-  // Selección dinámica de la variante
+  // Selección dinámica de la variante o V2
+  const isV2 = !!page.content?.sections;
   const landings = page.aiContent?.landings || [];
-  const content = landings[variantIdx] || page.aiContent?.landing;
+  const content = isV2 ? page.content : (landings[variantIdx] || page.aiContent?.landing);
   const price = typeof page.price === 'number' ? page.price : 49990;
 
   if (!content) return <div className="flex h-screen items-center justify-center"><p className="font-bold text-muted-foreground">Contenido en proceso de generación...</p></div>;
@@ -415,8 +417,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const primaryColor = tokens.primary || page.branding?.primaryColor || '#3B2D86';
   const secondaryColor = tokens.secondary || '#F1F5F9';
   const accentColor = tokens.accent || '#FACC15';
-  const fontHeading = tokens.fontHeading || 'inherit';
-  const fontBody = tokens.fontBody || 'inherit';
+  const fontHeading = tokens.typography?.headingFont || tokens.fontHeading || 'inherit';
+  const fontBody = tokens.typography?.bodyFont || tokens.fontBody || 'inherit';
   const socials = mentorProfile?.profile?.socials || {};
 
   // Theme Modes
@@ -493,13 +495,18 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
             className="rounded-xl font-bold h-11 px-8 shadow-lg shadow-primary/20 font-body disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ backgroundColor: isExpired ? '#94a3b8' : primaryColor }}
           >
-            {content.ctaText}
+            {content.ctaText || 'Inscribirme'}
           </Button>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className={cn("py-20 lg:py-32 relative overflow-hidden", bgSurface)}>
+      {/* Renderizado Condicional: V2 (Atomic) vs V1 (Monolítico) */}
+      {isV2 ? (
+        <AtomicRenderer page={page} onPurchase={handlePurchase} mentorProfile={mentorProfile} />
+      ) : (
+        <>
+          {/* Hero Section */}
+          <section className={cn("py-20 lg:py-32 relative overflow-hidden", bgSurface)}>
         <div className="absolute top-0 right-0 p-20 opacity-5 pointer-events-none" style={{ color: primaryColor }}>
           <Sparkles className="h-96 w-96" />
         </div>
@@ -786,6 +793,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           <p className={cn("text-xs font-medium", textMuted)}>© {new Date().getFullYear()} {mentorProfile?.displayName}. Todos los derechos reservados.</p>
         </div>
       </footer>
+        </>
+      )}
 
       {/* Sticky Bottom CTA */}
       <div className={cn("fixed bottom-0 left-0 right-0 p-4 backdrop-blur-xl border-t z-50 flex items-center justify-between md:justify-center md:gap-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]", isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white/80 border-slate-200')}>
@@ -800,7 +809,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           className="w-full md:w-auto h-12 md:h-14 px-8 text-base md:text-lg font-bold rounded-xl shadow-xl transition-all"
           style={{ backgroundColor: isExpired ? '#94a3b8' : primaryColor, color: '#FFFFFF' }}
         >
-          {content.ctaText}
+          {content.ctaText || 'Inscribirme'}
         </Button>
       </div>
       {/* Purchase Dialog */}

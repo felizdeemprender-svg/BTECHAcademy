@@ -374,7 +374,7 @@ export default function SalesLandingsDashboardPage() {
             </p>
           </div>
           <Button
-            onClick={() => router.push('/mentoria/marketing/landings/build')}
+            onClick={() => router.push('/mentoria/marketing/landings/v2-build')}
             className="h-12 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2 bg-primary hover:bg-primary/90 transition-all"
           >
             <Plus className="h-4 w-4" /> Nueva Landing
@@ -481,7 +481,8 @@ export default function SalesLandingsDashboardPage() {
                         const TypeIcon = typeInfo.icon;
                         const isConfirmDelete = confirmDeleteId === page.id;
                         const isDeleting = deletingIds[page.id];
-                        const variantsCount = page.aiContent?.landings?.length || (page.aiContent?.landing ? 1 : 0);
+                        const isV2 = !!page.content?.sections;
+                        const variantsCount = isV2 ? 1 : (page.aiContent?.landings?.length || (page.aiContent?.landing ? 1 : 0));
 
                         return (
                           <div
@@ -494,11 +495,12 @@ export default function SalesLandingsDashboardPage() {
                               {variantsCount > 0 && (
                                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                                   {Array.from({ length: variantsCount }, (_, v) => {
-                                    const label = page.aiContent?.landings?.[v]?.marketingName || `Variante ${v + 1}`;
+                                    const label = isV2 ? 'Ver Landing' : (page.aiContent?.landings?.[v]?.marketingName || `Variante ${v + 1}`);
+                                    const link = isV2 ? `/v/${page.id}` : `/v/${page.id}?v=${v}`;
                                     return (
                                       <button
                                         key={v}
-                                        onClick={() => window.open(`/v/${page.id}?v=${v}`, '_blank')}
+                                        onClick={() => window.open(link, '_blank')}
                                         className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 hover:bg-primary/10 hover:text-primary text-slate-500 transition-colors"
                                       >
                                         <ExternalLink className="h-2.5 w-2.5" />
@@ -612,7 +614,7 @@ export default function SalesLandingsDashboardPage() {
                               </button>
                               {/* Editar */}
                               <button
-                                onClick={() => router.push(`/mentoria/marketing/landings/build?id=${page.id}`)}
+                                onClick={() => router.push(isV2 ? `/mentoria/marketing/landings/v2-edit/${page.id}` : `/mentoria/marketing/landings/build?id=${page.id}`)}
                                 title="Editar"
                                 className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors"
                               >

@@ -3,7 +3,7 @@ import { generateImagePromptFlow } from '@/ai/flows/generate-image-prompt';
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, keywords, courseTitle, contextHint, engine } = await req.json();
+    const { prompt, keywords, courseTitle, contextHint, engine, channel } = await req.json();
 
     const finalKeywords = keywords || 'education, online course, professional';
     let finalPrompt = prompt || 'professional corporate training photo';
@@ -15,7 +15,8 @@ export async function POST(req: NextRequest) {
         finalPrompt = await generateImagePromptFlow({
           keywords: finalKeywords,
           contextHint: contextHint || '',
-          courseTitle: courseTitle || ''
+          courseTitle: courseTitle || '',
+          channel: channel || 'video'
         });
         console.log('[generate-image] Prompt mejorado generado:', finalPrompt);
       } catch (e) {
@@ -34,11 +35,13 @@ export async function POST(req: NextRequest) {
       // Endpoint para Imagen 4 en Google AI Studio (Beta)
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
       
+      const aspectRatio = channel === 'landing' ? "16:9" : "9:16";
+
       const reqBody = {
         instances: [{ prompt: promptPremium }],
         parameters: {
           sampleCount: 1,
-          aspectRatio: "9:16",
+          aspectRatio: aspectRatio,
           outputOptions: { mimeType: "image/jpeg" }
         }
       };
@@ -72,8 +75,13 @@ export async function POST(req: NextRequest) {
     // Modificamos ligeramente el literal del prompt para destrozar el caché interno del backend de IA
     const uniquePrompt = `${finalPrompt.trim()} - variation ${seed}`;
     const encodedPrompt = encodeURIComponent(uniquePrompt);
+    
+    // Dimensiones según el canal (Landing = Apaisado, Video = Vertical)
+    const w = channel === 'landing' ? 1080 : 608;
+    const h = channel === 'landing' ? 608 : 1080;
+    
     // Utilizamos el modelo FLUX estricto que demora < 5 segundos en lugar del default que puede saturarse
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=608&height=1080&seed=${seed}&nologo=true&cb=${cb}&model=flux`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${w}&height=${h}&seed=${seed}&nologo=true&cb=${cb}&model=flux`;
 
     let imageRes;
     let usedFallback = false;
@@ -91,7 +99,7 @@ export async function POST(req: NextRequest) {
                  lowercaseKw.includes('data') || lowercaseKw.includes('tech') ? 'technology,data' : 
                  'business,office';
       
-      imageRes = await fetch(`https://loremflickr.com/608/1080/${kw}?lock=${seed}`);
+      imageRes = await fetch(`https://loremflickr.com/${w}/${h}/${kw}?lock=${seed}`);
     }
 
     const arrayBuffer = await imageRes.arrayBuffer();

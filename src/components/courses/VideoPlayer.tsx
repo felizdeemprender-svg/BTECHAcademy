@@ -80,7 +80,8 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
         else if (rawUrl.includes('youtu.be/')) videoId = rawUrl.split('youtu.be/')[1].split('?')[0];
         else if (rawUrl.includes('embed/')) videoId = rawUrl.split('embed/')[1].split('?')[0];
         else if (rawUrl.includes('/shorts/')) videoId = rawUrl.split('/shorts/')[1].split('?')[0];
-        return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&iv_load_policy=3&controls=1&hl=es&enablejsapi=1`;
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&iv_load_policy=3&controls=1&hl=es&enablejsapi=1&origin=${origin}`;
       }
 
       if (rawUrl.includes('vimeo.com')) {
@@ -129,8 +130,12 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
     const isVimeo = url.includes('vimeo.com');
 
     if (isYouTube) {
-      const command = isPlaying ? 'pauseVideo' : 'playVideo';
-      iframeRef.current.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: command, args: '' }), '*');
+      if (playerRef.current && playerRef.current.playVideo) {
+        isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo();
+      } else {
+        const command = isPlaying ? 'pauseVideo' : 'playVideo';
+        iframeRef.current.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: command, args: [] }), '*');
+      }
     } else if (isVimeo) {
       const command = isPlaying ? 'pause' : 'play';
       iframeRef.current.contentWindow?.postMessage(JSON.stringify({ method: command }), '*');
