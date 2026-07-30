@@ -107,9 +107,9 @@ export const TemplateViewerProduction = ({
       <DialogTitle className="sr-only">
         {collection?.name || "Colección de Templates"}
       </DialogTitle>
-      <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
+      <DialogContent className="mw-6xl h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+        <div className="text-white px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div>

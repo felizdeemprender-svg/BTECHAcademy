@@ -1,0 +1,42 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/draft/draft.json",
+  "description": "FastoriaAcademy — Brand Design Tokens (DTCG/W3C format). Edit this file to change the brand globally.",
+  "fastoria": {
+    "color": {
+      "bg":                 { "$value": "oklch(98.5% 0.005 75)", "$type": "color" },
+      "surface":            { "$value": "oklch(100% 0.002 75)", "$type": "color" },
+      "fg":                 { "$value": "oklch(20% 0.01 70)", "$type": "color" },
+      "fg-2":               { "$value": "oklch(38% 0.012 70)", "$type": "color" },
+      "muted":              { "$value": "oklch(55% 0.008 70)", "$type": "color" },
+      "border":             { "$value": "oklch(88% 0.006 75)", "$type": "color" },
+      "border-soft":        { "$value": "oklch(93% 0.004 75)", "$type": "color" },
+      "accent":             { "$value": "oklch(52% 0.12 38)", "$type": "color" },
+      "accent-muted":       { "$value": "oklch(75% 0.08 48)", "$type": "color" },
+      "accent-light":       { "$value": "oklch(90% 0.04 50)", "$type": "color" },
+      "accent-on":          { "$value": "oklch(98% 0.002 75)", "$type": "color" },
+      "success":            { "$value": "oklch(50% 0.12 145)", "$type": "color" },
+      "warn":               { "$value": "oklch(62% 0.12 85)", "$type": "color" },
+      "danger":             { "$value": "oklch(45% 0.16 30)", "$type": "color" }
+    },
+    "typography": {
+      "font-display":       { "$value": "Lexend", "$type": "fontFamily" },
+      "font-body":          { "$value": "Inter", "$type": "fontFamily" },
+      "font-mono":          { "$value": "Source Code Pro", "$type": "fontFamily" }
+    },
+    "radius": {
+      "sm":                 { "$value": "6px", "$type": "dimension" },
+      "md":                 { "$value": "12px", "$type": "dimension" },
+      "lg":                 { "$value": "24px", "$type": "dimension" },
+      "card":               { "$value": "2.5rem", "$type": "dimension" }
+    },
+    "elevation": {
+      "shadow":             { "$value": "none", "$type": "shadow" },
+      "card-shadow":        { "$value": "0 20px 60px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.03)", "$type": "shadow" },
+      "border-width":       { "$value": "1px", "$type": "dimension" }
+    },
+    "theme": {
+      "active":             { "$value": "institucional", "$type": "string" },
+      "logo-selected":      { "$value": "arc", "$type": "string" }
+    }
+  }
+}

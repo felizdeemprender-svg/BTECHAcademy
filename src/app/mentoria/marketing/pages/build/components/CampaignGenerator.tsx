@@ -82,7 +82,7 @@ export function CampaignGenerator({
     <>
       {step === 1 && (
         <div className="grid md:grid-cols-2 gap-8 animate-in fade-in">
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden flex flex-col">
+          <Card className="flex flex-col">
             <CardHeader className="bg-primary/5 p-8">
               <CardTitle className="text-xl flex items-center gap-3">
                 <BookOpen className="h-5 w-5 text-primary" /> 
@@ -121,7 +121,7 @@ export function CampaignGenerator({
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden flex flex-col">
+          <Card className="flex flex-col">
             <CardHeader className="bg-accent/5 p-8">
               <CardTitle className="text-xl flex items-center gap-3">
                 <Layout className="h-5 w-5 text-accent" /> 
@@ -163,7 +163,7 @@ export function CampaignGenerator({
       )}
 
       {step === 2 && (
-        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden max-w-4xl mx-auto">
+        <Card className="max-w-4xl mx-auto">
           <CardHeader className="bg-primary/5 p-10">
             <CardTitle className="text-2xl font-bold">Configuración Estratégica de Campaign Brain</CardTitle>
             <p className="text-sm text-muted-foreground">Define el objetivo y el tono que la IA usará para persuadir a tu audiencia.</p>
@@ -219,8 +219,8 @@ export function CampaignGenerator({
                   value={pageTitle} 
                   onChange={e => setPageTitle(e.target.value)} 
                   placeholder="Ej: Lanzamiento Masterclass IA" 
-                  className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-bold w-full" 
-                />
+                  className="bg-secondary/10 border-none px-6 font-bold w-full" 
+                 size="xl" />
               </div>
             </div>
 

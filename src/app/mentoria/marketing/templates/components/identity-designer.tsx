@@ -20,6 +20,7 @@ import {
   Info,
 } from "lucide-react";
 import { IdentityDesign, DesignTokens } from "../hooks/use-identity-design";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 interface IdentityDesignerProps {
@@ -51,8 +52,6 @@ export function IdentityDesigner({
 }: IdentityDesignerProps) {
   const [editingMode, setEditingMode] = useState(false);
   const [editedTokens, setEditedTokens] = useState<DesignTokens | null>(null);
-
-  if (!isOpen) return null;
 
   const handleGenerateDesign = async () => {
     await onGenerateDesign(directives);
@@ -100,8 +99,8 @@ export function IdentityDesigner({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="mw-6xl max-h-[90vh] overflow-y-auto p-0">
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
@@ -529,7 +528,7 @@ export function IdentityDesigner({
             </Button>
           </div>
         </CardContent>
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

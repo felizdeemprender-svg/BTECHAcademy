@@ -202,7 +202,7 @@ export const TemplateViewerProduction = ({
         <DialogTitle className="sr-only">
           {collection?.name || "Colección de Templates"}
         </DialogTitle>
-        <DialogContent aria-describedby={undefined} className="max-w-6xl h-[90vh] flex flex-col p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
+        <DialogContent aria-describedby={undefined} className="mw-6xl h-[90vh] flex flex-col p-0 overflow-hidden">
           {/* Header */}
           <div className="bg-white border-b p-8 pb-6">
             <div className="flex items-center justify-between">
@@ -515,7 +515,7 @@ export const TemplateViewerProduction = ({
 
       {/* Editor Modal - Ajustes de Blueprint */}
       <Dialog open={isEditVariantOpen} onOpenChange={setIsEditVariantOpen}>
-        <DialogContent aria-describedby={undefined} className="max-w-2xl">
+        <DialogContent aria-describedby={undefined} className="mw-2xl">
           <DialogTitle className="text-2xl font-bold">
             Ajustes de Blueprint
           </DialogTitle>
@@ -829,7 +829,7 @@ export const TemplateViewerProduction = ({
                                 </Label>
                                 <Input
                                   type="number"
-                                  className="h-12 font-black text-center bg-white border-none shadow-sm"
+                                  className="font-black text-center bg-white border-none shadow-sm"
                                   value={
                                     editingVariant?.blueprintConfig?.sceneCount ||
                                     5
@@ -848,7 +848,7 @@ export const TemplateViewerProduction = ({
                                       },
                                     })
                                   }
-                                />
+                                 size="lg" />
                               </div>
                             </div>
                             <div className="grid grid-cols-1 gap-4">
@@ -859,7 +859,7 @@ export const TemplateViewerProduction = ({
                                 </Label>
                                 <Input
                                   type="number"
-                                  className="h-12 font-black text-center bg-white border-none shadow-sm"
+                                  className="font-black text-center bg-white border-none shadow-sm"
                                   value={
                                     editingVariant?.blueprintConfig
                                       ?.totalDuration || 30
@@ -880,7 +880,7 @@ export const TemplateViewerProduction = ({
                                       },
                                     })
                                   }
-                                />
+                                 size="lg" />
                               </div>
                             </div>
                           </div>
@@ -900,7 +900,7 @@ export const TemplateViewerProduction = ({
                               </Label>
                               <Input
                                 type="number"
-                                className="h-12 font-black text-center bg-white border-none shadow-sm"
+                                className="font-black text-center bg-white border-none shadow-sm"
                                 value={
                                   editingVariant?.blueprintConfig?.slideCount ||
                                   editingVariant?.slideCount ||
@@ -919,7 +919,7 @@ export const TemplateViewerProduction = ({
                                     },
                                   })
                                 }
-                              />
+                               size="lg" />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
@@ -928,7 +928,7 @@ export const TemplateViewerProduction = ({
                               </Label>
                               <Input
                                 type="number"
-                                className="h-12 font-black text-center bg-white border-none shadow-sm"
+                                className="font-black text-center bg-white border-none shadow-sm"
                                 value={
                                   editingVariant?.blueprintConfig
                                     ?.totalDuration || 45
@@ -947,7 +947,7 @@ export const TemplateViewerProduction = ({
                                     },
                                   })
                                 }
-                              />
+                               size="lg" />
                             </div>
                           </div>
                         )}
@@ -1006,8 +1006,8 @@ export const TemplateViewerProduction = ({
                               },
                             })
                           }
-                          className="h-12 rounded-xl bg-secondary/10 border-none font-bold"
-                        />
+                          className="bg-secondary/10 border-none font-bold"
+                         size="lg" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">
@@ -1026,8 +1026,8 @@ export const TemplateViewerProduction = ({
                               },
                             })
                           }
-                          className="h-12 rounded-xl bg-secondary/10 border-none font-bold"
-                        />
+                          className="bg-secondary/10 border-none font-bold"
+                         size="lg" />
                       </div>
                     </div>
                   </section>
@@ -1049,7 +1049,7 @@ export const TemplateViewerProduction = ({
                           <div className="flex flex-col items-center gap-2">
                             <Input
                               type="color"
-                              className="w-12 h-12 p-0 border-none rounded-xl cursor-pointer shadow-md"
+                              className="w-12 p-0 border-none cursor-pointer shadow-md"
                               value={
                                 editingVariant?.designTokens?.[c.id] ||
                                 "#000000"
@@ -1063,7 +1063,7 @@ export const TemplateViewerProduction = ({
                                   },
                                 })
                               }
-                            />
+                             size="lg" />
                             <Input
                               value={
                                 editingVariant?.designTokens?.[c.id] ||

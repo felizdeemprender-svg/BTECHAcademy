@@ -193,7 +193,7 @@ export default function CampaignsDashboardPage() {
                 const currentDay = differenceInDays(new Date(), start) + 1;
                 
                 return (
-                  <Card key={camp.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                  <Card key={camp.id} className="group hover:shadow-2xl transition-all duration-500">
                     <div className="flex flex-col lg:flex-row items-stretch">
                       <div className="bg-slate-900 p-8 lg:w-80 flex flex-col justify-between text-white shrink-0">
                         <div>
@@ -276,22 +276,22 @@ export default function CampaignsDashboardPage() {
 
         {/* Dialog: Campaign Schedule Detail & Editor */}
         <Dialog open={!!selectedCampaign} onOpenChange={open => !open && setSelectedCampaign(null)}>
-          <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
-            <div className="bg-primary p-8 text-white shrink-0 relative">
+          <DialogContent className="mw-4xl h-[85vh] flex flex-col">
+            <div className="shrink-0 relative px-8 pt-8">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl font-bold">{selectedCampaign?.title}</DialogTitle>
-                  <DialogDescription className="text-primary-foreground/70">
+                  <DialogDescription className="text-muted-foreground">
                     {isEditing ? 'Modificando Estrategia de Emisión' : 'Plan de Lanzamiento Activo'}
                   </DialogDescription>
                 </div>
                 <div className="flex gap-2">
                   {!isEditing ? (
-                    <Button onClick={() => setIsEditing(true)} className="rounded-xl font-bold bg-white/10 hover:bg-white/20 border border-white/20 gap-2">
+                    <Button onClick={() => setIsEditing(true)} className="rounded-xl font-bold bg-primary/10 hover:bg-primary/20 border border-primary/20 gap-2">
                       <Pencil className="h-4 w-4" /> Editar Plan
                     </Button>
                   ) : (
-                    <Button onClick={() => setIsEditing(false)} variant="ghost" className="text-white hover:bg-white/10 rounded-xl">
+                    <Button onClick={() => setIsEditing(false)} variant="ghost" className="text-muted-foreground hover:bg-muted rounded-xl">
                       <X className="h-4 w-4 mr-2" /> Cancelar
                     </Button>
                   )}

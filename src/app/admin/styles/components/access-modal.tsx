@@ -57,7 +57,7 @@ export default function AccessModal({ styleData, isOpen, onClose }: AccessModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="mw-md">
         <DialogHeader>
           <DialogTitle>Administrar Accesos</DialogTitle>
           <DialogDescription>

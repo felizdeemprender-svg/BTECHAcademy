@@ -1,4 +1,4 @@
-export interface SubscriptionPermissions {
+export interface MentorPermissions {
   academic_management: boolean;
   mentor_challenges: boolean;
   students_view: boolean;

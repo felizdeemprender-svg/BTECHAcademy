@@ -248,7 +248,7 @@ function PlanContentInner() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {/* Tarjeta de Plan Actual */}
-            <Card className="md:col-span-1 border-none shadow-xl rounded-[2.5rem] bg-indigo-600 text-white overflow-hidden relative group">
+            <Card className="md:col-span-1 bg-indigo-600 text-white relative group">
               <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
                 <Package className="w-32 h-32" />
               </div>
@@ -271,7 +271,7 @@ function PlanContentInner() {
 
             {/* Tarjeta de Métricas */}
             <div className="md:col-span-2 grid sm:grid-cols-2 gap-6">
-              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white p-8 space-y-6">
+              <Card className="p-8 space-y-6">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cursos Activos</p>
@@ -289,7 +289,7 @@ function PlanContentInner() {
                 </div>
               </Card>
 
-              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white p-8 space-y-6">
+              <Card className="p-8 space-y-6">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Estudiantes</p>
@@ -421,7 +421,7 @@ function PlanContentInner() {
                   .map((opt: any, idx: number) => (
                     <Card 
                       key={idx}
-                      className="group relative border-none shadow-xl rounded-[2.5rem] bg-white p-8 transition-all hover:-translate-y-2 hover:shadow-2xl overflow-hidden"
+                      className="group relative p-8 transition-all hover:-translate-y-2 hover:shadow-2xl"
                     >
                       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Sparkles className="w-20 h-20" />
@@ -565,17 +565,14 @@ function PlanContentInner() {
 
       {/* Checkout Modal */}
       <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl">
-          <div className={cn(
-            "p-8 text-white",
-            selectedPlan?.isCreditPack ? "bg-amber-600" : "bg-slate-900"
-          )}>
+        <DialogContent className="mw-md">
+          <div className="px-8 pt-8">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black flex items-center gap-2 text-white">
-                {selectedPlan?.isCreditPack ? <Zap className="h-6 w-6" /> : (upgradeInfo ? <Sparkles className="h-6 w-6 text-amber-300" /> : <Rocket className="h-6 w-6" />)}
+              <DialogTitle className="text-2xl font-black flex items-center gap-2">
+                {selectedPlan?.isCreditPack ? <Zap className="h-6 w-6 text-primary" /> : (upgradeInfo ? <Sparkles className="h-6 w-6 text-amber-300" /> : <Rocket className="h-6 w-6 text-primary" />)}
                 {selectedPlan?.isCreditPack ? 'Comprar Créditos Extra' : (upgradeInfo ? 'Mejora de Capacidad' : 'Confirmar Suscripción')}
               </DialogTitle>
-              <DialogDescription className="text-white/80 font-medium">
+              <DialogDescription className="text-muted-foreground font-medium">
                 {selectedPlan?.isCreditPack 
                   ? `Recarga de +${selectedPlan.packCredits} créditos Fastoria AI`
                   : (upgradeInfo 
@@ -585,7 +582,7 @@ function PlanContentInner() {
             </DialogHeader>
           </div>
           
-          <form onSubmit={handleFinalCheckout} className="p-8 space-y-6 bg-white">
+          <form onSubmit={handleFinalCheckout} className="px-8 pb-8 space-y-6 bg-white">
             {selectedPlan?.isCreditPack ? (
               <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5">
                 <div className="flex justify-between items-center">

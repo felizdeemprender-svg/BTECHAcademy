@@ -33,7 +33,7 @@ interface Tutor {
   photoURL: string;
   subscription: {
     hasCustomPage: boolean;
-    subscriptionType: 'fixed' | 'percentage' | 'free';
+    type: 'fixed' | 'percentage' | 'free';
     fixedAmount?: number;
     percentageRate?: number;
     requiresFreeCourses: boolean;
@@ -92,7 +92,7 @@ export default function AdminTutorsPage() {
   };
 
   const getSubscriptionBadge = (subscription: any) => {
-    switch (subscription.subscriptionType) {
+    switch (subscription.type) {
       case 'free':
         return <Badge variant="secondary">🆓 Gratis</Badge>;
       case 'fixed':
@@ -131,7 +131,7 @@ export default function AdminTutorsPage() {
     const matchesSearch = tutor.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          tutor.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || tutor.subscription.status === statusFilter;
-    const matchesSubscription = subscriptionFilter === 'all' || tutor.subscription.subscriptionType === subscriptionFilter;
+    const matchesSubscription = subscriptionFilter === 'all' || tutor.subscription.type === subscriptionFilter;
     
     return matchesSearch && matchesStatus && matchesSubscription;
   }) || [];
@@ -370,7 +370,7 @@ export default function AdminTutorsPage() {
                               Configurar
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                          <DialogContent className="mw-4xl max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle>
                                 Configurar Suscripción - {selectedTutor?.displayName}

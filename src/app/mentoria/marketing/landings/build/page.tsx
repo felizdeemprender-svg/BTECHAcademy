@@ -370,7 +370,7 @@ function LandingBuilderContent() {
 
         {step === 1 && (
           <div className="grid md:grid-cols-2 gap-8 animate-in fade-in">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden p-8 space-y-8">
+            <Card className="p-8 space-y-8">
               <div className="space-y-4">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">1. Programa Académico</Label>
                 <ScrollArea className="h-64 rounded-2xl border p-2">
@@ -466,13 +466,13 @@ function LandingBuilderContent() {
               <div className="grid sm:grid-cols-2 gap-8 pt-6 border-t border-slate-100">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400">Título de la Página</Label>
-                  <Input value={title} onChange={e => setTitle(e.target.value)} className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-bold" />
+                  <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-secondary/10 border-none px-6 font-bold"  size="xl" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-accent">Precio de Venta (ARS)</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-accent" />
-                    <Input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} className="h-14 rounded-2xl bg-accent/5 border-none pl-12 font-black text-xl text-accent" />
+                    <Input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} className="bg-accent/5 border-none pl-12 font-black text-xl text-accent"  size="xl" />
                   </div>
                 </div>
               </div>
@@ -532,7 +532,7 @@ function LandingBuilderContent() {
                   <Label className="text-[10px] font-black uppercase text-slate-400">Segmentación Estratégica (Buyer Persona)</Label>
                   <Badge variant="outline" className="text-[8px] font-bold text-accent border-accent/20 h-5 px-2">Guía para la IA</Badge>
                 </div>
-                <Textarea value={targetAudience} onChange={e => setTargetAudience(e.target.value)} placeholder="Ej: Médicos interesados en optimizar su consulta..." className="min-h-[120px] rounded-[2rem] bg-secondary/10 border-none p-6 text-base font-medium" />
+                <Textarea value={targetAudience} onChange={e => setTargetAudience(e.target.value)} placeholder="Ej: Médicos interesados en optimizar su consulta..." size="lg" className="bg-secondary/10 border-none p-6 text-base font-medium" />
                 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {dynamicProfiles.map((seg: any) => (
@@ -549,7 +549,7 @@ function LandingBuilderContent() {
                   <Label className="text-[10px] font-black uppercase text-slate-400">Directivas para la IA (Guía de Copy)</Label>
                   <Badge variant="outline" className="text-[8px] font-bold text-primary border-primary/20 h-5 px-2">Cerebro de Marketing</Badge>
                 </div>
-                <Textarea value={templateDirectives} onChange={e => setTemplateDirectives(e.target.value)} placeholder="Ej: Usa un tono muy técnico, enfócate en el ROI..." className="min-h-[120px] rounded-[2rem] bg-secondary/10 border-none p-6 text-sm font-medium" />
+                <Textarea value={templateDirectives} onChange={e => setTemplateDirectives(e.target.value)} placeholder="Ej: Usa un tono muy técnico, enfócate en el ROI..." size="lg" className="bg-secondary/10 border-none p-6 text-sm font-medium" />
               </div>
 
               {/* ─── VIGENCIA DE LA LANDING ─── */}
@@ -571,8 +571,8 @@ function LandingBuilderContent() {
                       type="datetime-local"
                       value={activeFrom}
                       onChange={e => setActiveFrom(e.target.value)}
-                      className="h-14 rounded-2xl bg-indigo-50/50 border-none px-6 font-bold text-slate-700"
-                    />
+                      className="bg-indigo-50/50 border-none px-6 font-bold text-slate-700"
+                     size="xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400">Fin (Hasta)</Label>
@@ -580,8 +580,8 @@ function LandingBuilderContent() {
                       type="datetime-local"
                       value={activeUntil}
                       onChange={e => setActiveUntil(e.target.value)}
-                      className="h-14 rounded-2xl bg-rose-50/50 border-none px-6 font-bold text-slate-700"
-                    />
+                      className="bg-rose-50/50 border-none px-6 font-bold text-slate-700"
+                     size="xl" />
                   </div>
                 </div>
               </div>

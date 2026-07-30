@@ -87,7 +87,7 @@ export default function AiPricingAdminPage() {
         </header>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white group hover:shadow-2xl transition-all">
+          <Card className="group hover:shadow-2xl transition-all">
             <CardHeader className="bg-slate-50 border-b pb-6 relative">
               <div className="absolute top-4 right-4 p-2 bg-indigo-100 rounded-xl text-indigo-600">
                 <BrainCircuit className="w-6 h-6" />
@@ -104,8 +104,8 @@ export default function AiPricingAdminPage() {
                     step="0.01"
                     value={config.geminiPricePerMillionTokens} 
                     onChange={e => handleNumChange('geminiPricePerMillionTokens', e.target.value)} 
-                    className="h-12 rounded-xl font-bold border-slate-100 focus:border-indigo-500"
-                  />
+                    className="font-bold border-slate-100 focus:border-indigo-500"
+                   size="lg" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400">Margen (%)</Label>
@@ -114,8 +114,8 @@ export default function AiPricingAdminPage() {
                       type="number" 
                       value={config.geminiMarkupPercentage} 
                       onChange={e => handleNumChange('geminiMarkupPercentage', e.target.value)} 
-                      className="h-12 pl-8 rounded-xl font-bold border-slate-100 focus:border-indigo-500"
-                    />
+                      className="pl-8 font-bold border-slate-100 focus:border-indigo-500"
+                     size="lg" />
                     <span className="absolute left-3 top-3 text-slate-400 font-black">%</span>
                   </div>
                 </div>
@@ -130,7 +130,7 @@ export default function AiPricingAdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white group hover:shadow-2xl transition-all">
+          <Card className="group hover:shadow-2xl transition-all">
             <CardHeader className="bg-slate-50 border-b pb-6 relative">
               <div className="absolute top-4 right-4 p-2 bg-amber-100 rounded-xl text-amber-600">
                 <Mic className="w-6 h-6" />
@@ -147,8 +147,8 @@ export default function AiPricingAdminPage() {
                     step="0.1"
                     value={config.ttsPricePerMillionChars} 
                     onChange={e => handleNumChange('ttsPricePerMillionChars', e.target.value)} 
-                    className="h-12 rounded-xl font-bold border-slate-100 focus:border-amber-500"
-                  />
+                    className="font-bold border-slate-100 focus:border-amber-500"
+                   size="lg" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400">Margen (%)</Label>
@@ -157,8 +157,8 @@ export default function AiPricingAdminPage() {
                       type="number" 
                       value={config.ttsMarkupPercentage} 
                       onChange={e => handleNumChange('ttsMarkupPercentage', e.target.value)} 
-                      className="h-12 pl-8 rounded-xl font-bold border-slate-100 focus:border-amber-500"
-                    />
+                      className="pl-8 font-bold border-slate-100 focus:border-amber-500"
+                     size="lg" />
                     <span className="absolute left-3 top-3 text-slate-400 font-black">%</span>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ export default function AiPricingAdminPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 mt-6">
-          <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white group hover:shadow-2xl transition-all">
+          <Card className="group hover:shadow-2xl transition-all">
             <CardHeader className="bg-slate-50 border-b pb-6 relative">
               <div className="absolute top-4 right-4 p-2 bg-rose-100 rounded-xl text-rose-600">
                 <ImageIcon className="w-6 h-6" />
@@ -192,8 +192,8 @@ export default function AiPricingAdminPage() {
                     step="0.1"
                     value={config.imagePricePerHundred} 
                     onChange={e => handleNumChange('imagePricePerHundred', e.target.value)} 
-                    className="h-12 rounded-xl font-bold border-slate-100 focus:border-rose-500"
-                  />
+                    className="font-bold border-slate-100 focus:border-rose-500"
+                   size="lg" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400">Margen (%)</Label>
@@ -202,8 +202,8 @@ export default function AiPricingAdminPage() {
                       type="number" 
                       value={config.imageMarkupPercentage} 
                       onChange={e => handleNumChange('imageMarkupPercentage', e.target.value)} 
-                      className="h-12 pl-8 rounded-xl font-bold border-slate-100 focus:border-rose-500"
-                    />
+                      className="pl-8 font-bold border-slate-100 focus:border-rose-500"
+                     size="lg" />
                     <span className="absolute left-3 top-3 text-slate-400 font-black">%</span>
                   </div>
                 </div>
@@ -218,7 +218,7 @@ export default function AiPricingAdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white group hover:shadow-2xl transition-all">
+          <Card className="group hover:shadow-2xl transition-all">
             <CardHeader className="bg-slate-50 border-b pb-6 relative">
               <div className="absolute top-4 right-4 p-2 bg-blue-100 rounded-xl text-blue-600">
                 <Film className="w-6 h-6" />
@@ -235,8 +235,8 @@ export default function AiPricingAdminPage() {
                     step="0.01"
                     value={config.videoPricePerMinute} 
                     onChange={e => handleNumChange('videoPricePerMinute', e.target.value)} 
-                    className="h-12 rounded-xl font-bold border-slate-100 focus:border-blue-500"
-                  />
+                    className="font-bold border-slate-100 focus:border-blue-500"
+                   size="lg" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400">Margen (%)</Label>
@@ -245,8 +245,8 @@ export default function AiPricingAdminPage() {
                       type="number" 
                       value={config.videoMarkupPercentage} 
                       onChange={e => handleNumChange('videoMarkupPercentage', e.target.value)} 
-                      className="h-12 pl-8 rounded-xl font-bold border-slate-100 focus:border-blue-500"
-                    />
+                      className="pl-8 font-bold border-slate-100 focus:border-blue-500"
+                     size="lg" />
                     <span className="absolute left-3 top-3 text-slate-400 font-black">%</span>
                   </div>
                 </div>

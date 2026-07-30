@@ -980,14 +980,14 @@ export default function ManageCoursesClient() {
 
         {/* Dialog: Terms Acceptance (Required before publish) */}
         <Dialog open={isTermsDialogOpen} onOpenChange={setIsTermsDialogOpen}>
-          <DialogContent className="max-w-2xl rounded-[2rem] p-0 overflow-hidden border-none shadow-3xl pointer-events-auto">
-            <div className="bg-amber-500 p-8 text-white relative">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><Scale className="h-6 w-6" /></div>
+          <DialogContent className="mw-2xl">
+            <div className="relative px-8 pt-8">
+              <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mb-4"><Scale className="text-primary h-6 w-6" /></div>
               <DialogTitle className="text-2xl font-bold">Protocolo Institucional</DialogTitle>
-              <DialogDescription className="text-white/80 mt-1">Es obligatorio aceptar los términos académicos para proceder con la publicación.</DialogDescription>
+              <DialogDescription className="text-muted-foreground mt-1">Es obligatorio aceptar los términos académicos para proceder con la publicación.</DialogDescription>
             </div>
-            <div className="p-8 space-y-6">
-              <div className="bg-slate-50 border rounded-2xl p-6">
+            <div className="space-y-6 px-8 pb-8">
+              <div className="bg-slate-50 border p-6">
                 <ScrollArea className="h-[300px] pr-4">
                   <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
                     {termsConfig?.content || "Cargando protocolo académico..."}
@@ -995,7 +995,7 @@ export default function ManageCoursesClient() {
                 </ScrollArea>
               </div>
 
-              <div className="flex items-center space-x-3 p-4 bg-amber-50/50 rounded-xl border border-dashed border-amber-200">
+              <div className="flex items-center space-x-3 p-4 bg-amber-50/50 border border-dashed border-amber-200">
                 <Checkbox id="manage-terms-accept" checked={termsAccepted} onCheckedChange={(v) => setTermsAccepted(!!v)} className="h-5 w-5" />
                 <Label htmlFor="manage-terms-accept" className="text-xs font-bold cursor-pointer">
                   Confirmo que el contenido cumple con el protocolo académico vigente.
@@ -1003,11 +1003,11 @@ export default function ManageCoursesClient() {
               </div>
 
               <DialogFooter className="flex flex-col sm:flex-row gap-3">
-                <Button variant="ghost" onClick={() => setIsTermsDialogOpen(false)} className="flex-1 rounded-xl h-12 font-bold">Cancelar</Button>
+                <Button variant="ghost" onClick={() => setIsTermsDialogOpen(false)} className="flex-1 h-12 font-bold">Cancelar</Button>
                 <Button 
                   onClick={handleAcceptTermsInManage} 
                   disabled={!termsAccepted || isUpdatingTerms} 
-                  className="flex-1 h-14 rounded-xl font-bold text-lg shadow-xl bg-primary"
+                  className="flex-1 h-14 font-bold text-lg bg-primary"
                 >
                   {isUpdatingTerms ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} 
                   Aceptar y Continuar
@@ -1019,17 +1019,17 @@ export default function ManageCoursesClient() {
 
         {/* Dialog: Associated Courses */}
         <Dialog open={isAssociatedDialogOpen} onOpenChange={(open) => { setIsAssociatedDialogOpen(open); if(!open) clearUILocks(); }}>
-          <DialogContent className="max-w-xl rounded-[2rem] p-0 overflow-hidden border-none shadow-3xl pointer-events-auto">
-            <div className="bg-primary p-8 text-white">
+          <DialogContent className="mw-xl">
+            <div className="px-8 pt-8">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4"><Link2 className="h-6 w-6" /></div>
+                  <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mb-4"><Link2 className="text-primary h-6 w-6" /></div>
                   <DialogTitle className="text-2xl font-bold">Cursos Asociados</DialogTitle>
-                  <DialogDescription className="text-primary-foreground/70 mt-1">Recomienda otros programas de tu autoría para completar la ruta académica.</DialogDescription>
+                  <DialogDescription className="text-muted-foreground mt-1">Recomienda otros programas de tu autoría para completar la ruta académica.</DialogDescription>
                 </div>
               </div>
             </div>
-            <div className="p-8 space-y-6">
+            <div className="space-y-6 px-8 pb-8">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
@@ -1083,36 +1083,36 @@ export default function ManageCoursesClient() {
 
         {/* Publish Dialog */}
         <Dialog open={isPublishDialogOpen} onOpenChange={(open) => { setIsPublishDialogOpen(open); if(!open) clearUILocks(); }}>
-          <DialogContent className="max-w-2xl rounded-[2rem] p-0 overflow-hidden border-none shadow-3xl pointer-events-auto">
-            <div className="bg-primary p-8 text-white relative">
+          <DialogContent className="mw-2xl">
+            <div className="relative px-8 pt-8">
               <Sparkles className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
-              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4"><Tags className="h-6 w-6 text-accent" /></div>
+              <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mb-4"><Tags className="h-6 w-6 text-accent" /></div>
               <DialogTitle className="text-2xl font-bold">Lanzamiento Comercial</DialogTitle>
-              <DialogDescription className="text-primary-foreground/70 mt-1">
+              <DialogDescription className="text-muted-foreground mt-1">
                 Define la estrategia de posicionamiento SEO y etiquetas comerciales para la landing page del curso.
               </DialogDescription>
             </div>
-            <div className="p-8 space-y-8">
+            <div className="space-y-8 px-8 pb-8">
               <div className="flex justify-between items-center px-1">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Hashtags Comerciales / SEO (Landing Page)</Label>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => setIsAiTagDialogOpen(true)}
-                  className="rounded-xl font-bold text-[10px] uppercase gap-2 border-accent/20 text-accent hover:bg-accent/5 h-8"
+                  className="font-bold text-[10px] uppercase gap-2 border-accent/20 text-accent hover:bg-accent/5 h-8"
                 >
                   <Sparkles className="h-3 w-3" /> Sugerencias IA
                 </Button>
               </div>
 
-              <div className="flex flex-wrap gap-2 p-4 bg-secondary/10 rounded-2xl border border-dashed min-h-[100px]">
+              <div className="flex flex-wrap gap-2 p-4 bg-secondary/10 border border-dashed min-h-[100px]">
                 {selectedTags?.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic flex items-center justify-center w-full">Usa "Sugerencias IA" para generar taxonomía estratégica.</p>
                 ) : selectedTags?.map(tagName => (
                   <Badge 
                     key={tagName}
                     variant='default'
-                    className="cursor-pointer py-1.5 px-3 rounded-lg text-[10px] font-bold transition-all shadow-sm"
+                    className="cursor-pointer py-1.5 px-3 text-[10px] font-bold transition-all"
                     onClick={() => {
                       setSelectedTags(prev => prev.filter(t => t !== tagName));
                     }}
@@ -1122,12 +1122,12 @@ export default function ManageCoursesClient() {
                 ))}
               </div>
 
-              <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex gap-3 items-start">
+              <div className="bg-amber-50 p-4 border border-amber-100 flex gap-3 items-start">
                 <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-amber-800 font-medium">Al confirmar, se iniciará el proceso de auditoría institucional mediante Gemini 2.5 Pro para validar que el contenido cumple con los protocolos.</p>
               </div>
               
-              <Button onClick={confirmPublication} disabled={selectedTags.length === 0} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl">
+              <Button onClick={confirmPublication} disabled={selectedTags.length === 0} className="w-full h-14 text-lg font-bold">
                 Confirmar y Publicar Catálogo
               </Button>
             </div>
@@ -1136,15 +1136,15 @@ export default function ManageCoursesClient() {
 
         {/* AI Tag Suggestion Dialog */}
         <Dialog open={isAiTagDialogOpen} onOpenChange={setIsAiTagDialogOpen}>
-          <DialogContent className="max-w-xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl pointer-events-auto">
-            <div className="bg-slate-900 p-8 text-white relative">
+          <DialogContent className="mw-xl">
+            <div className="relative px-8 pt-8">
               <Sparkles className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
-              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><Globe className="h-6 w-6 text-accent" /></div>
+              <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mb-4"><Globe className="h-6 w-6 text-accent" /></div>
               <DialogTitle className="text-2xl font-bold">Generador SEO del Curso</DialogTitle>
-              <DialogDescription className="text-slate-400 mt-1">Define el área temática y Gemini propondrá keywords para Google.</DialogDescription>
+              <DialogDescription className="text-muted-foreground mt-1">Define el área temática y Gemini propondrá keywords para Google.</DialogDescription>
             </div>
 
-            <div className="p-8 space-y-8">
+            <div className="space-y-8 px-8 pb-8">
               <div className="space-y-4">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Área o Nicho Académico</Label>
                 <div className="flex gap-3">
@@ -1153,12 +1153,12 @@ export default function ManageCoursesClient() {
                     onChange={e => setBranchInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleGenerateAiTags()}
                     placeholder="Ej: Marketing, IA, Salud..." 
-                    className="h-14 rounded-2xl bg-secondary/10 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
-                  />
+                    className="bg-secondary/10 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
+                   size="xl" />
                   <Button 
                     onClick={handleGenerateAiTags} 
                     disabled={isGeneratingTags || !branchInput.trim()}
-                    className="h-14 px-6 rounded-2xl font-bold bg-accent hover:bg-accent/90 shadow-lg"
+                    className="h-14 px-6 font-bold bg-accent hover:bg-accent/90"
                   >
                     {isGeneratingTags ? <Loader2 className="animate-spin h-5 w-5" /> : <Search className="h-5 w-5" />}
                   </Button>
@@ -1182,9 +1182,9 @@ export default function ManageCoursesClient() {
                         <div 
                           key={suggestion.name}
                           className={cn(
-                            "p-4 rounded-2xl border-2 transition-all cursor-pointer group",
+                            "p-4 border-2 transition-all cursor-pointer group",
                             selectedAiTags.includes(suggestion.name) 
-                              ? "bg-primary/5 border-primary shadow-sm" 
+                              ? "bg-primary/5 border-primary" 
                               : "bg-white border-border/50 hover:border-primary/20"
                           )}
                           onClick={() => {
@@ -1218,7 +1218,7 @@ export default function ManageCoursesClient() {
                     <Button 
                       onClick={handleLoadAiSelectedTags} 
                       disabled={isSavingAiTags}
-                      className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl"
+                      className="w-full h-14 font-bold text-lg"
                     >
                       {isSavingAiTags ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : null}
                       Incorporar {selectedAiTags.length} Keywords al Curso
@@ -1233,20 +1233,20 @@ export default function ManageCoursesClient() {
 
         {/* Enrollments Dialog */}
         <Dialog open={isEnrollmentsDialogOpen} onOpenChange={(open) => { setIsEnrollmentsDialogOpen(open); if(!open) clearUILocks(); }}>
-          <DialogContent className="max-w-xl p-0 border-none shadow-2xl rounded-2xl overflow-hidden pointer-events-auto">
-            <div className="bg-primary p-8 text-primary-foreground">
+          <DialogContent className="mw-xl">
+            <div className="px-8 pt-8">
               <div className="flex justify-between items-center">
                 <div>
-                  <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Users className="h-6 w-6" /> Gestión de Matrícula</DialogTitle>
-                  <DialogDescription className="text-primary-foreground/70 mt-1">Autoriza solicitudes y gestiona alumnos activos.</DialogDescription>
+                  <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Users className="text-primary h-6 w-6" /> Gestión de Matrícula</DialogTitle>
+                  <DialogDescription className="text-muted-foreground mt-1">Autoriza solicitudes y gestiona alumnos activos.</DialogDescription>
                 </div>
               </div>
             </div>
-            <div className="p-8 space-y-8">
+            <div className="space-y-8 px-8 pb-8">
               <div className="space-y-3">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2"><UserPlus className="h-3 w-3" /> Alta Directa por Correo</Label>
                 <div className="flex flex-col gap-4">
-                  <Input placeholder="ejemplo@correo.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="h-12 rounded-xl bg-secondary/10 border-none font-medium px-4" />
+                  <Input placeholder="ejemplo@correo.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="bg-secondary/10 border-none font-medium px-4"  size="lg" />
                   
                   <div className="flex items-center justify-between bg-secondary/5 p-4 rounded-xl border border-secondary/10">
                     <div className="flex flex-col gap-0.5">
@@ -1297,19 +1297,19 @@ export default function ManageCoursesClient() {
 
         {/* Moderation History Dialog */}
         <Dialog open={isHistoryDialogOpen} onOpenChange={(open) => { setIsHistoryDialogOpen(open); if(!open) clearUILocks(); }}>
-          <DialogContent className="max-w-3xl p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden pointer-events-auto">
-            <div className="bg-slate-900 p-8 text-white">
+          <DialogContent className="mw-3xl">
+            <div className="px-8 pt-8">
               <div className="flex justify-between items-start">
                 <div>
                   <DialogTitle className="text-2xl font-bold flex items-center gap-3">
                     <History className="h-6 w-6 text-accent" /> Historial de Auditoría
                   </DialogTitle>
-                  <DialogDescription className="text-slate-400 mt-1">Registros de cumplimiento para {selectedCourse?.title}</DialogDescription>
+                  <DialogDescription className="text-muted-foreground mt-1">Registros de cumplimiento para {selectedCourse?.title}</DialogDescription>
                 </div>
-                <Badge variant="outline" className="border-white/20 text-white font-mono text-[10px]">{selectedId}</Badge>
+                <Badge variant="outline" className="border-primary/20 text-muted-foreground font-mono text-[10px]">{selectedId}</Badge>
               </div>
             </div>
-            <div className="p-8">
+            <div className="px-8 pb-8">
               <ScrollArea className="h-[500px] pr-4">
                 {loadingLogs ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -1365,15 +1365,15 @@ export default function ManageCoursesClient() {
                 )}
               </ScrollArea>
             </div>
-            <DialogFooter className="p-6 bg-slate-50 border-t">
-              <Button onClick={() => setIsHistoryDialogOpen(false)} variant="ghost" className="rounded-xl font-bold">Cerrar Historial</Button>
+            <DialogFooter className="bg-slate-50 border-t px-8 py-6">
+              <Button onClick={() => setIsHistoryDialogOpen(false)} variant="ghost" className="font-bold">Cerrar Historial</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* AlertDialog: Delete Course */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => { if(!isDeleting) { setIsDeleteDialogOpen(open); if(!open) clearUILocks(); } }}>
-          <AlertDialogContent className="rounded-md p-8 max-sm border-none shadow-2xl pointer-events-auto">
+          <AlertDialogContent className="">
             <AlertDialogHeader className="items-center text-center">
               <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center text-destructive mb-4">
                 <Trash2 className="h-6 w-6" />

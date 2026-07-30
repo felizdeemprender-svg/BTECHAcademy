@@ -147,16 +147,16 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
             </TabsList>
 
             <TabsContent value="perfil">
-              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
+              <Card>
                 <CardHeader className="bg-primary/5 p-10"><CardTitle className="text-2xl font-bold text-primary">Biografía Específica</CardTitle><CardDescription>Presentación del mentor para este programa.</CardDescription></CardHeader>
                 <CardContent className="p-10 space-y-6">
-                  <div className="space-y-2"><Label>Biografía corta</Label><Textarea value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="min-h-[160px] rounded-[2rem] bg-secondary/10 border-none p-8" /></div>
+                  <div className="space-y-2"><Label>Biografía corta</Label><Textarea value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} size="xl" className="bg-secondary/10 border-none p-8" /></div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="contacto">
-              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
+              <Card>
                 <CardHeader className="bg-primary/5 p-10"><CardTitle className="text-2xl font-bold text-primary">Canales de Contacto</CardTitle><CardDescription>Sobrescribe las redes globales para este curso.</CardDescription></CardHeader>
                 <CardContent className="p-10 grid sm:grid-cols-2 gap-8">
                   {[
@@ -172,7 +172,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                   ].map((social) => (
                     <div key={social.id} className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2"><social.icon className="h-3 w-3" /> {social.label}</Label>
-                      <Input value={formData.socials[social.id] || ''} onChange={e => setFormData({...formData, socials: {...formData.socials, [social.id]: e.target.value}})} className="h-14 rounded-2xl bg-secondary/10 border-none" />
+                      <Input value={formData.socials[social.id] || ''} onChange={e => setFormData({...formData, socials: {...formData.socials, [social.id]: e.target.value}})} className="bg-secondary/10 border-none"  size="xl" />
                     </div>
                   ))}
                 </CardContent>
@@ -180,7 +180,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
             </TabsContent>
 
             <TabsContent value="marca">
-              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
+              <Card>
                 <CardHeader className="bg-primary/5 p-10"><CardTitle className="text-2xl font-bold text-primary">Identidad Visual del Curso</CardTitle></CardHeader>
                 <CardContent className="p-10 space-y-12">
                   <div className="space-y-4">
@@ -231,8 +231,8 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                         <Input 
                           value={formData.primaryColor} 
                           onChange={e => setFormData({...formData, primaryColor: e.target.value})}
-                          className="h-14 text-2xl font-mono font-bold text-center rounded-2xl bg-white border-none shadow-sm"
-                        />
+                          className="text-2xl font-mono font-bold text-center bg-white border-none shadow-sm"
+                         size="xl" />
                       </div>
                     </div>
                   </div>

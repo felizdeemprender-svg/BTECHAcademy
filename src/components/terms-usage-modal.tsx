@@ -50,18 +50,18 @@ export function TermsUsageModal() {
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl pointer-events-auto">
-        <DialogHeader className="bg-primary p-8 text-white relative">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
-            <ShieldCheck className="text-white h-6 w-6" />
+      <DialogContent className="mw-2xl">
+        <DialogHeader className="px-8 pt-8 relative">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+            <ShieldCheck className="text-primary h-6 w-6" />
           </div>
           <DialogTitle className="text-2xl font-bold">Contrato de Uso Institucional</DialogTitle>
-          <DialogDescription className="text-primary-foreground/70 text-sm mt-1">
+          <DialogDescription className="text-sm mt-1 text-muted-foreground">
             Para continuar, debes aceptar las normas de la plataforma Evolución Académica.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="p-8 space-y-6">
+        <div className="px-8 pb-8 space-y-6">
           <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6">
             <ScrollArea className="h-[300px] pr-4">
               <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
@@ -85,7 +85,8 @@ export function TermsUsageModal() {
           <Button 
             onClick={handleAccept} 
             disabled={!accepted || loading} 
-            className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl"
+            size="xl" 
+            className="w-full font-bold shadow-xl"
           >
             {loading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} 
             Confirmar y Entrar

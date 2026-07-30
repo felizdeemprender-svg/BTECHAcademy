@@ -418,8 +418,8 @@ export default function V2LandingEditorPage() {
                       <Input 
                         value={activeSection.title}
                         onChange={(e) => updateActiveSection({ title: e.target.value })}
-                        className="font-bold text-lg h-12"
-                      />
+                        className="font-bold text-lg"
+                       size="lg" />
                     </div>
                   )}
                   {activeSection.subtitle !== undefined && (

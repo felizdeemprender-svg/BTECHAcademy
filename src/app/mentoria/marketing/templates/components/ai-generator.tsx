@@ -103,8 +103,6 @@ export function AIGenerator({
 
   const [activeTab, setActiveTab] = useState("config");
 
-  if (!isOpen) return null;
-
   const handleGenerateDesign = async () => {
     if (!directives.trim()) {
       return;
@@ -177,8 +175,8 @@ export function AIGenerator({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="mw-4xl max-h-[90vh] overflow-y-auto p-0">
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
@@ -690,11 +688,11 @@ export function AIGenerator({
             </TabsContent>
           </Tabs>
         </CardContent>
-      </Card>
+      </DialogContent>
 
       {/* Modal para mostrar ejemplos del estilo */}
       <Dialog open={showExamplesModal} onOpenChange={setShowExamplesModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="mw-4xl max-h-[90vh] overflow-y-auto">
           <DialogTitle className="text-xl font-bold">
             Ejemplos del Estilo Classic
           </DialogTitle>
@@ -757,6 +755,6 @@ export function AIGenerator({
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </Dialog>
   );
 }

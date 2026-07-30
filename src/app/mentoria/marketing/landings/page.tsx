@@ -388,8 +388,8 @@ export default function SalesLandingsDashboardPage() {
             placeholder="Buscar por curso, título o tipo…"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="pl-11 h-12 rounded-2xl bg-white border-border/50 shadow-sm font-medium"
-          />
+            className="pl-11 bg-white border-border/50 shadow-sm font-medium"
+           size="lg" />
         </div>
 
         {/* Contenido */}
@@ -650,7 +650,7 @@ export default function SalesLandingsDashboardPage() {
 
         {/* Modal de Detalle de Estadísticas */}
         <Dialog open={!!selectedStatsPage} onOpenChange={(open) => !open && setSelectedStatsPage(null)}>
-          <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto rounded-3xl p-6 border-none shadow-2xl bg-white/95 backdrop-blur-md">
+          <DialogContent className="mw-4xl max-h-[85vh] overflow-y-auto">
             <DialogHeader className="pb-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
@@ -856,7 +856,7 @@ export default function SalesLandingsDashboardPage() {
 
         {/* Modal de Clonación */}
         <Dialog open={!!cloningPage} onOpenChange={(open) => !open && setCloningPage(null)}>
-          <DialogContent className="max-w-md rounded-[2.5rem] p-8 border-none shadow-2xl">
+          <DialogContent className="mw-md">
             <DialogHeader>
               <DialogTitle className="text-2xl font-black text-slate-800">Clonar para Embajador</DialogTitle>
               <DialogDescription>
@@ -884,8 +884,8 @@ export default function SalesLandingsDashboardPage() {
                     type="datetime-local" 
                     value={cloneData.startDate}
                     onChange={e => setCloneData({...cloneData, startDate: e.target.value})}
-                    className="h-12 rounded-xl bg-slate-50 border-slate-200"
-                  />
+                    className="bg-slate-50 border-slate-200"
+                   size="lg" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase">Fecha Fin</label>
@@ -893,8 +893,8 @@ export default function SalesLandingsDashboardPage() {
                     type="datetime-local" 
                     value={cloneData.endDate}
                     onChange={e => setCloneData({...cloneData, endDate: e.target.value})}
-                    className="h-12 rounded-xl bg-slate-50 border-slate-200"
-                  />
+                    className="bg-slate-50 border-slate-200"
+                   size="lg" />
                 </div>
               </div>
               <div className="space-y-2">
@@ -903,8 +903,8 @@ export default function SalesLandingsDashboardPage() {
                   type="number" 
                   value={cloneData.price}
                   onChange={e => setCloneData({...cloneData, price: Number(e.target.value)})}
-                  className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold text-lg"
-                />
+                  className="bg-slate-50 border-slate-200 font-bold text-lg"
+                 size="lg" />
               </div>
             </div>
             <div className="flex gap-3 justify-end pt-4 border-t border-slate-100">
@@ -918,7 +918,7 @@ export default function SalesLandingsDashboardPage() {
 
         {/* Modal de Prórroga de Vencimiento */}
         <Dialog open={!!extendingPage} onOpenChange={(open) => { if (!open) { setExtendingPage(null); setNewEndDate(''); } }}>
-          <DialogContent className="max-w-sm rounded-[2.5rem] p-8 border-none shadow-2xl">
+          <DialogContent className="mw-sm">
             <DialogHeader>
               <div className="flex items-center gap-3 mb-1">
                 <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
@@ -958,8 +958,8 @@ export default function SalesLandingsDashboardPage() {
                   type="datetime-local"
                   value={newEndDate}
                   onChange={e => setNewEndDate(e.target.value)}
-                  className="h-12 rounded-xl bg-amber-50/60 border-amber-200 focus:border-amber-400 font-semibold text-slate-700"
-                />
+                  className="bg-amber-50/60 border-amber-200 focus:border-amber-400 font-semibold text-slate-700"
+                 size="lg" />
               </div>
             </div>
 

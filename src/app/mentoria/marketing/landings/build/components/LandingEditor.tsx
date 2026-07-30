@@ -170,7 +170,7 @@ export function LandingEditor({
                 <div className="space-y-6 relative z-10 pt-8">
                   <div className="space-y-2">
                      <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Nombre Comercial</Label>
-                     <Input value={l.marketingName || ''} onChange={e => updateAsset('landings', lIdx, 'marketingName', e.target.value)} className="h-14 rounded-2xl bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-emerald-500/50" />
+                     <Input value={l.marketingName || ''} onChange={e => updateAsset('landings', lIdx, 'marketingName', e.target.value)} className="bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-emerald-500/50"  size="xl" />
                   </div>
                   <div className="space-y-2">
                      <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Titular Principal (Hero)</Label>
@@ -182,7 +182,7 @@ export function LandingEditor({
                   </div>
                   <div className="space-y-2">
                      <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Texto del Botón de Compra (CTA)</Label>
-                     <Input value={l.ctaText || ''} onChange={e => updateAsset('landings', lIdx, 'ctaText', e.target.value)} className="h-14 rounded-2xl bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-emerald-500/50" />
+                     <Input value={l.ctaText || ''} onChange={e => updateAsset('landings', lIdx, 'ctaText', e.target.value)} className="bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-emerald-500/50"  size="xl" />
                   </div>
                 </div>
               </Card>
@@ -225,8 +225,8 @@ export function LandingEditor({
                       placeholder="https://www.youtube.com/watch?v=... o https://vimeo.com/..." 
                       value={l.videoUrl || ''} 
                       onChange={e => updateAsset('landings', lIdx, 'videoUrl', e.target.value)} 
-                      className="h-14 rounded-2xl bg-white/5 border-white/5 px-8 font-mono text-xs text-emerald-400 focus-visible:ring-emerald-500/50" 
-                    />
+                      className="bg-white/5 border-white/5 px-8 font-mono text-xs text-emerald-400 focus-visible:ring-emerald-500/50" 
+                     size="xl" />
                   </div>
                 ) : (
                   <div className="p-4 bg-slate-950/40 rounded-2xl border border-dashed border-white/5 text-center">
@@ -244,11 +244,11 @@ export function LandingEditor({
                       <div className="space-y-8">
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black text-slate-500 ml-4 tracking-[0.3em]">TÍTULO DE SECCIÓN</Label>
-                          <Input value={section.title || ''} onChange={e => { const s = [...l.sections]; s[sIdx].title = e.target.value; updateAsset('landings', lIdx, 'sections', s); }} className="font-black text-xl border-none bg-white/5 text-white rounded-2xl h-14 px-8" />
+                          <Input value={section.title || ''} onChange={e => { const s = [...l.sections]; s[sIdx].title = e.target.value; updateAsset('landings', lIdx, 'sections', s); }} className="font-black text-xl border-none bg-white/5 text-white px-8"  size="xl" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black text-slate-500 ml-4 tracking-[0.3em]">CUERPO DE TEXTO</Label>
-                          <Textarea value={section.paragraph || ''} onChange={e => { const s = [...l.sections]; s[sIdx].paragraph = e.target.value; updateAsset('landings', lIdx, 'sections', s); }} className="min-h-[180px] border-none bg-white/5 text-slate-300 rounded-[2rem] p-8 text-base font-medium leading-relaxed" />
+                          <Textarea value={section.paragraph || ''} onChange={e => { const s = [...l.sections]; s[sIdx].paragraph = e.target.value; updateAsset('landings', lIdx, 'sections', s); }} className="min-h-[180px] border-none bg-white/5 text-slate-300 p-8 text-base font-medium leading-relaxed" />
                         </div>
                       </div>
                       <ImageEditor label={`Imagen ${sIdx + 1}`} url={section.imageUrl || ''} onUpdate={u => { const s = [...l.sections]; s[sIdx].imageUrl = u; updateAsset('landings', lIdx, 'sections', s); }} courseId={selectedCourseId || ''} channel="landing" keywords={section.title} description={section.paragraph} />
@@ -269,9 +269,9 @@ export function LandingEditor({
                                 s[sIdx].microBullets[bIdx] = e.target.value; 
                                 updateAsset('landings', lIdx, 'sections', s); 
                               }} 
-                              className="h-12 bg-white/5 border-none rounded-xl pl-6 pr-4 text-sm text-slate-300 focus-visible:ring-emerald-500/30 transition-all group-hover:bg-white/[0.07]"
+                              className="bg-white/5 border-none pl-6 pr-4 text-sm text-slate-300 focus-visible:ring-emerald-500/30 transition-all group-hover:bg-white/[0.07]"
                               placeholder="Escribe un beneficio clave..."
-                            />
+                             size="lg" />
                           </div>
                         ))}
                       </div>
@@ -313,8 +313,8 @@ export function LandingEditor({
                               b[bIdx] = e.target.value; 
                               updateAsset('landings', lIdx, 'benefits', b); 
                             }} 
-                            className="h-14 bg-white/5 border-white/5 rounded-2xl px-6 font-medium text-slate-300 focus-visible:ring-emerald-500/50 flex-1"
-                          />
+                            className="bg-white/5 border-white/5 px-6 font-medium text-slate-300 focus-visible:ring-emerald-500/50 flex-1"
+                           size="xl" />
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -385,9 +385,9 @@ export function LandingEditor({
                             f[fIdx].question = e.target.value; 
                             updateAsset('landings', lIdx, 'faqs', f); 
                           }} 
-                          className="h-12 bg-white/5 border-none rounded-xl px-4 font-bold text-slate-200 focus-visible:ring-orange-500/50"
+                          className="bg-white/5 border-none px-4 font-bold text-slate-200 focus-visible:ring-orange-500/50"
                           placeholder="Pregunta frecuente..."
-                        />
+                         size="lg" />
                         <Textarea 
                           value={faq.answer || ''} 
                           onChange={e => { 

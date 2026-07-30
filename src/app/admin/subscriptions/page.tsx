@@ -552,14 +552,14 @@ export default function AdminSubscriptionsPage() {
 
         {/* Dialog Formulario de Creación/Edición */}
         <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-          <DialogContent className="max-w-4xl max-h-[90vh] p-0 border-none rounded-[2rem] overflow-hidden flex flex-col bg-slate-50">
-            <DialogHeader className="p-8 bg-indigo-600 text-white shrink-0 relative">
+          <DialogContent className="mw-4xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="px-8 pt-8 bg-indigo-600 text-white shrink-0 relative">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
               <DialogTitle className="text-2xl font-bold">{editingPlan ? 'Editar Configuración del Plan' : 'Definir Nuevo Plan Comercial'}</DialogTitle>
               <DialogDescription className="text-indigo-100 font-medium text-base">Especifica permisos, topes y regalías del nivel de suscripción.</DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto p-0">
+            <div className="flex-1 overflow-y-auto">
               <form id="plan-form" onSubmit={handleSubmit}>
                 <Tabs defaultValue="comercial" className="w-full">
                   <div className="px-8 pt-4 pb-2 bg-white border-b border-slate-100 sticky top-0 z-10">
@@ -575,7 +575,7 @@ export default function AdminSubscriptionsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
                         <Label htmlFor="planName" className="text-xs font-bold uppercase tracking-widest text-slate-500">Nombre del Nivel</Label>
-                        <Input id="planName" name="planName" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Plan Profesional" className="h-12 rounded-xl border-slate-200" required />
+                        <Input id="planName" name="planName" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Plan Profesional" className="border-slate-200" required  size="lg" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="planType" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tipo de Contrato</Label>
@@ -596,7 +596,7 @@ export default function AdminSubscriptionsPage() {
                               setFormData({...formData, type: newType});
                             }}
                           >
-                            <SelectTrigger className="h-12 rounded-xl border-slate-200">
+                            <SelectTrigger size="lg" className="border-slate-200">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="font-sans">
@@ -615,24 +615,24 @@ export default function AdminSubscriptionsPage() {
                       {formData.type !== 'percentage' && (
                         <div className="space-y-2">
                           <Label htmlFor="planPrice" className="text-xs font-bold uppercase tracking-widest text-slate-500">Fijo (USD/mes)</Label>
-                          <Input id="planPrice" name="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free'} className="h-12 rounded-xl bg-slate-50" />
+                          <Input id="planPrice" name="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free'} className="bg-slate-50"  size="lg" />
                         </div>
                       )}
                       {formData.type === 'percentage' && (
                         <div className="space-y-2">
                           <Label htmlFor="planPercentage" className="text-xs font-bold uppercase tracking-widest text-slate-500">Regalía (%)</Label>
-                          <Input id="planPercentage" name="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
+                          <Input id="planPercentage" name="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} className="bg-slate-50"  size="lg" />
                         </div>
                       )}
                       <div className="space-y-2">
                         <Label htmlFor="planDuration" className="text-xs font-bold uppercase tracking-widest text-slate-500">Duración mínima (m)</Label>
-                        <Input id="planDuration" name="planDuration" type="number" min="1" value={formData.durationMonths} onChange={(e) => setFormData({...formData, durationMonths: parseInt(e.target.value)})} className="h-12 rounded-xl bg-slate-50" />
+                        <Input id="planDuration" name="planDuration" type="number" min="1" value={formData.durationMonths} onChange={(e) => setFormData({...formData, durationMonths: parseInt(e.target.value)})} className="bg-slate-50"  size="lg" />
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="planFeatures" className="text-xs font-bold uppercase tracking-widest text-slate-500">Propuesta de Valor (1 línea = 1 viñeta)</Label>
-                      <Textarea id="planFeatures" name="planFeatures" rows={4} value={formData.features?.join('\n') || ''} onChange={(e) => setFormData({...formData, features: e.target.value.split('\n')})} placeholder="Perfil premium&#10;Analytics avanzadas&#10;API" className="rounded-xl border-slate-200" required />
+                      <Textarea id="planFeatures" name="planFeatures" rows={4} value={formData.features?.join('\n') || ''} onChange={(e) => setFormData({...formData, features: e.target.value.split('\n')})} placeholder="Perfil premium&#10;Analytics avanzadas&#10;API" className="border-slate-200" required />
                     </div>
 
                     <div className="flex flex-col gap-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -665,15 +665,15 @@ export default function AdminSubscriptionsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       <div className="space-y-2">
                         <Label htmlFor="planMaxCourses" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Cursos Publicados</Label>
-                        <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val, limits: { ...formData.limits, maxCourses: isNaN(val) ? 0 : val } as any}); }} placeholder="10 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
+                        <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val, limits: { ...formData.limits, maxCourses: isNaN(val) ? 0 : val } as any}); }} placeholder="10 (-1 = ∞)" className="border-slate-200"  size="lg" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Alumnos (Base)</Label>
-                        <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, limits: { ...formData.limits, maxStudents: isNaN(val) ? 0 : val } as any}); }} placeholder="200 (-1 = ∞)" className="h-12 rounded-xl border-slate-200" />
+                        <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, limits: { ...formData.limits, maxStudents: isNaN(val) ? 0 : val } as any}); }} placeholder="200 (-1 = ∞)" className="border-slate-200"  size="lg" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="planInvitationsPerCourse" className="text-xs font-bold uppercase tracking-widest text-slate-500">Alumnos Invitados por Curso</Label>
-                        <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, invitationsPerCourse: isNaN(val) ? 0 : val}); }} placeholder="5" className="h-12 rounded-xl border-slate-200" />
+                        <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, invitationsPerCourse: isNaN(val) ? 0 : val}); }} placeholder="5" className="border-slate-200"  size="lg" />
                       </div>
                     </div>
 
@@ -719,7 +719,7 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Días de Prueba Gratuita (Trial)</Label>
                           <div className="relative">
-                            <Input type="number" min="0" value={formData.trialDays ?? 90} onChange={(e) => setFormData({...formData, trialDays: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <Input type="number" min="0" value={formData.trialDays ?? 90} onChange={(e) => setFormData({...formData, trialDays: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">El tutor no paga durante este período. 0 = sin trial.</p>
@@ -727,7 +727,7 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Aviso Previo al Fin del Trial</Label>
                           <div className="relative">
-                            <Input type="number" min="1" value={formData.trialReminderDays ?? 5} onChange={(e) => setFormData({...formData, trialReminderDays: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <Input type="number" min="1" value={formData.trialReminderDays ?? 5} onChange={(e) => setFormData({...formData, trialReminderDays: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">Días antes del vencimiento del trial para enviar el email de aviso.</p>
@@ -735,7 +735,7 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Ciclo de Facturación</Label>
                           <div className="relative">
-                            <Input type="number" min="1" value={formData.billingCycleMonths ?? 1} onChange={(e) => setFormData({...formData, billingCycleMonths: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <Input type="number" min="1" value={formData.billingCycleMonths ?? 1} onChange={(e) => setFormData({...formData, billingCycleMonths: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">mes</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">1 = mensual, 3 = trimestral, 12 = anual.</p>
@@ -743,7 +743,7 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Período de Gracia (Cobro Fallido)</Label>
                           <div className="relative">
-                            <Input type="number" min="1" value={formData.gracePeriodDays ?? 7} onChange={(e) => setFormData({...formData, gracePeriodDays: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <Input type="number" min="1" value={formData.gracePeriodDays ?? 7} onChange={(e) => setFormData({...formData, gracePeriodDays: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">Si el cobro falla, cuántos días tiene el tutor para pagar antes de la suspensión.</p>
@@ -751,7 +751,7 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Reintentos de Cobro (Cada)</Label>
                           <div className="relative">
-                            <Input type="number" min="1" value={formData.retryIntervalDays ?? 2} onChange={(e) => setFormData({...formData, retryIntervalDays: parseInt(e.target.value)})} className="h-14 rounded-2xl bg-white border-blue-100 font-black text-blue-900 text-lg pl-12" />
+                            <Input type="number" min="1" value={formData.retryIntervalDays ?? 2} onChange={(e) => setFormData({...formData, retryIntervalDays: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">Cada cuántos días reintentar el débito automáticamente durante el período de gracia.</p>
@@ -787,8 +787,8 @@ export default function AdminSubscriptionsPage() {
                               type="number" 
                               value={formData.aiQuotas?.totalCredits || 0} 
                               onChange={(e) => setFormData({...formData, aiQuotas: { totalCredits: parseInt(e.target.value) }})}
-                              className="h-14 rounded-2xl bg-white border-amber-100 font-black text-amber-900 text-xl pl-12"
-                            />
+                              className="bg-white border-amber-100 font-black text-amber-900 text-xl pl-12"
+                             size="xl" />
                             <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-500" />
                           </div>
                         </div>
@@ -876,7 +876,7 @@ export default function AdminSubscriptionsPage() {
               </form>
             </div>
 
-            <div className="p-6 bg-white border-t border-slate-100 shrink-0 flex flex-col md:flex-row gap-4 justify-between items-center rounded-b-[2rem]">
+            <div className="px-8 py-6 bg-white border-t border-slate-100 shrink-0 flex flex-col md:flex-row gap-4 justify-between items-center">
               <div className="flex gap-2 items-center">
                 <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-emerald-500" />
                 <Label htmlFor="plan-is-active" className="font-bold text-[10px] uppercase tracking-widest text-slate-500 cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>

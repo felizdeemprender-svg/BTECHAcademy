@@ -182,7 +182,7 @@ export default function AbonosPage() {
         </Card>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="rounded-2xl p-10 max-w-md border-none shadow-3xl">
+          <DialogContent className="mw-md">
             <DialogHeader className="mb-6">
               <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4">
                 <ShieldCheck className="h-8 w-8" />
@@ -199,8 +199,8 @@ export default function AbonosPage() {
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
                   placeholder="Ej: Plan Institucional Gold" 
-                  className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                />
+                  className="bg-secondary/10 border-none px-4 font-bold"
+                 size="lg" />
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -214,8 +214,8 @@ export default function AbonosPage() {
                       const val = parseInt(e.target.value);
                       setFormData({...formData, durationMonths: isNaN(val) ? 0 : val});
                     }} 
-                    className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                  />
+                    className="bg-secondary/10 border-none px-4 font-bold"
+                   size="lg" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="plan-capacity" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Cursos Simultáneos</Label>
@@ -228,8 +228,8 @@ export default function AbonosPage() {
                       const val = parseInt(e.target.value);
                       setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val});
                     }} 
-                    className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                  />
+                    className="bg-secondary/10 border-none px-4 font-bold"
+                   size="lg" />
                 </div>
               </div>
               <div className="flex items-center justify-between p-4 bg-amber-50 rounded-2xl border border-amber-100">

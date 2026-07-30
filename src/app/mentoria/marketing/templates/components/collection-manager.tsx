@@ -172,7 +172,7 @@ export function CollectionManager({
         )}
       </div>
 
-      <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white/50 backdrop-blur-xl">
+      <Card className="bg-white/50 backdrop-blur-xl">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-primary/5">

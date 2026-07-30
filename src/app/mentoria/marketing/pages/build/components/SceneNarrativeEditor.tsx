@@ -146,8 +146,8 @@ export function SceneNarrativeEditor({
                           updateAsset('socials', sIdx, 'slides', newItems);
                         }}
                         placeholder="Texto secundario opcional..."
-                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 h-12 text-xs font-medium focus-visible:ring-1 focus-visible:ring-slate-500/50 rounded-xl px-4"
-                      />
+                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 text-xs font-medium focus-visible:ring-1 focus-visible:ring-slate-500/50 px-4"
+                       size="lg" />
                     </div>
                   </div>
               </div>

@@ -147,8 +147,8 @@ export default function AltaInfluencerPage() {
                       required
                       value={searchEmail}
                       onChange={e => setSearchEmail(e.target.value)}
-                      className="h-12 pl-12 rounded-xl bg-slate-50 border-slate-200"
-                    />
+                      className="pl-12 bg-slate-50 border-slate-200"
+                     size="lg" />
                     <Search className="h-5 w-5 text-slate-400 absolute left-4 top-3.5" />
                   </div>
                   <Button 

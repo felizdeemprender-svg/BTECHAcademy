@@ -34,8 +34,8 @@ export function SmartFilterBar({
           placeholder={placeholder} 
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pl-11 h-12 rounded-2xl bg-white border-none shadow-sm font-medium focus-visible:ring-primary/20 transition-all"
-        />
+          className="pl-11 bg-white border-none shadow-sm font-medium focus-visible:ring-primary/20 transition-all"
+         size="lg" />
       </div>
       <div className="flex items-center gap-3 px-4 shrink-0">
          <BarChart3 className="h-4 w-4 text-primary opacity-50" />

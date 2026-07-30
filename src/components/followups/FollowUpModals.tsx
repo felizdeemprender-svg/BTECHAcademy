@@ -73,13 +73,13 @@ export function FollowUpModals({
     <>
       {/* Dialog: Create */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <DialogHeader className="bg-primary p-6 md:p-8 text-white text-left">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><ClipboardList className="h-6 w-6" /></div>
+        <DialogContent className="mw-2xl">
+          <DialogHeader className="text-left">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><ClipboardList className="text-primary h-6 w-6" /></div>
             <DialogTitle className="text-xl md:text-2xl font-bold">Nuevo Seguimiento Académico</DialogTitle>
-            <DialogDescription className="text-primary-foreground/70 text-sm">Define el alcance del acompañamiento para el alumno.</DialogDescription>
+            <DialogDescription className="text-sm text-muted-foreground">Define el alcance del acompañamiento para el alumno.</DialogDescription>
           </DialogHeader>
-          <div className="p-6 md:p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div className="space-y-6 px-8 pb-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Alumno del Seguimiento</Label>
@@ -91,14 +91,14 @@ export function FollowUpModals({
                   
                   <TabsContent value="select" className="m-0 animate-in fade-in">
                     <Select onValueChange={id => setFormData({...formData, studentId: id})} value={formData.studentId}>
-                      <SelectTrigger className="h-12 rounded-xl">
+                      <SelectTrigger size="lg">
                         <SelectValue placeholder="Elegir estudiante de la lista..." />
                       </SelectTrigger>
                       <SelectContent>
                         {students.length === 0 ? (
                           <div className="p-4 text-center text-xs text-muted-foreground italic">No se encontraron alumnos disponibles.</div>
                         ) : students.map(s => (
-                          <SelectItem key={s.id} value={s.id} className="rounded-lg">
+                          <SelectItem key={s.id} value={s.id}>
                             <div className="flex flex-col text-left">
                               <span className="font-bold">{s.displayName}</span>
                               <span className="text-[10px] opacity-60">{s.email}</span>
@@ -116,8 +116,8 @@ export function FollowUpModals({
                         placeholder="ejemplo@correo.com" 
                         value={inviteEmail} 
                         onChange={e => setInviteEmail(e.target.value)} 
-                        className="h-12 rounded-xl border-2" 
-                      />
+                        className="border-2" 
+                       size="lg" />
                       <p className="text-[9px] text-muted-foreground ml-1 font-medium italic">
                         Si el alumno no está asociado a un curso previo, se dará de alta su perfil automáticamente.
                       </p>
@@ -128,13 +128,13 @@ export function FollowUpModals({
 
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nombre del Seguimiento</Label>
-                <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ej: Mentoría Mentores Expertos" className="h-12 rounded-xl" />
+                <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ej: Mentoría Mentores Expertos" className=""  size="lg" />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Objetivo del Programa</Label>
-              <Textarea value={formData.goal} onChange={e => setFormData({...formData, goal: e.target.value})} placeholder="¿Qué esperamos lograr?" className="min-h-[100px] rounded-2xl" />
+              <Textarea value={formData.goal} onChange={e => setFormData({...formData, goal: e.target.value})} placeholder="¿Qué esperamos lograr?" size="lg" className="min-h-[100px]" />
             </div>
 
             <div className="space-y-2">
@@ -175,15 +175,15 @@ export function FollowUpModals({
             <div className="grid grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nº Sesiones</Label>
-                <Input type="number" value={formData.totalSessions} onChange={e => setFormData({...formData, totalSessions: parseInt(e.target.value) || 0})} className="h-12 rounded-xl" />
+                <Input type="number" value={formData.totalSessions} onChange={e => setFormData({...formData, totalSessions: parseInt(e.target.value) || 0})} className=""  size="lg" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Inicio</Label>
-                <Input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="h-12 rounded-xl" />
+                <Input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className=""  size="lg" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Fin Estimado</Label>
-                <Input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="h-12 rounded-xl" />
+                <Input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className=""  size="lg" />
               </div>
             </div>
 
@@ -198,21 +198,21 @@ export function FollowUpModals({
 
       {/* Dialog: Edit */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <DialogHeader className="bg-primary p-6 md:p-8 text-white text-left">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><Pencil className="h-6 w-6" /></div>
+        <DialogContent className="mw-2xl">
+          <DialogHeader className="text-left">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><Pencil className="text-primary h-6 w-6" /></div>
             <DialogTitle className="text-xl md:text-2xl font-bold">Editar Seguimiento</DialogTitle>
-            <DialogDescription className="text-primary-foreground/70 text-sm">Ajusta los parámetros del programa académico.</DialogDescription>
+            <DialogDescription className="text-sm text-muted-foreground">Ajusta los parámetros del programa académico.</DialogDescription>
           </DialogHeader>
-          <div className="p-6 md:p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div className="space-y-6 px-8 pb-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nombre del Seguimiento</Label>
-              <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="h-12 rounded-xl" />
+              <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className=""  size="lg" />
             </div>
 
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Objetivo del Programa</Label>
-              <Textarea value={formData.goal} onChange={e => setFormData({...formData, goal: e.target.value})} className="min-h-[100px] rounded-2xl" />
+              <Textarea value={formData.goal} onChange={e => setFormData({...formData, goal: e.target.value})} size="lg" className="min-h-[100px]" />
             </div>
 
             <div className="space-y-2">
@@ -248,11 +248,11 @@ export function FollowUpModals({
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Inicio</Label>
-                <Input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="h-12 rounded-xl" />
+                <Input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className=""  size="lg" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Fin Estimado</Label>
-                <Input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="h-12 rounded-xl" />
+                <Input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className=""  size="lg" />
               </div>
             </div>
 
@@ -267,7 +267,7 @@ export function FollowUpModals({
 
       {/* Dialog: Delete Confirm */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="max-w-md rounded-[2rem] p-8 overflow-hidden border-none shadow-3xl text-center">
+        <DialogContent className="mw-md overflow-hidden text-center">
           <DialogHeader>
             <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mx-auto mb-6">
               <AlertTriangle className="h-8 w-8" />

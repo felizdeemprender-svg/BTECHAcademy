@@ -366,7 +366,7 @@ export default function TransfersPage() {
 
       {/* Diálogo de confirmación */}
       <Dialog open={confirmDialog.open} onOpenChange={(open) => !open && handleAction(false)}>
-        <DialogContent className="rounded-[2.5rem] p-10 border-none shadow-3xl max-w-md">
+        <DialogContent className="mw-md">
           <DialogHeader className="space-y-4">
             <div
               className={cn(

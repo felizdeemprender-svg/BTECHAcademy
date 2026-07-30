@@ -299,20 +299,20 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
 
       {/* Dialog: ABM */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="rounded-[2.5rem] p-0 max-w-2xl border-none shadow-3xl overflow-hidden">
-          <div className="bg-slate-900 p-10 text-white relative overflow-hidden">
+        <DialogContent className="mw-2xl">
+          <div className="relative overflow-hidden px-8 pt-8">
              <div className="relative z-10 space-y-2">
                <DialogHeader>
-                 <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-indigo-400 mb-4 backdrop-blur-sm border border-white/10">
+                 <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 backdrop-blur-sm border border-primary/10">
                    <Settings2 className="h-8 w-8" />
                  </div>
                  <DialogTitle className="text-3xl font-black">{editingMethod ? 'Editar Configuración' : 'Nueva Pasarela'}</DialogTitle>
-                 <DialogDescription className="text-slate-400 font-medium">
+                 <DialogDescription className="text-muted-foreground font-medium">
                    Configura los parámetros globales para el cobro.
                  </DialogDescription>
                </DialogHeader>
              </div>
-             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full -mr-32 -mt-32 blur-3xl" />
+             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
           </div>
           
           <form onSubmit={(e) => { e.preventDefault(); handleSaveMethod(); }} className="p-10 space-y-8 bg-white max-h-[70vh] overflow-y-auto">
@@ -323,8 +323,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
                   placeholder="Ej: Mercado Pago Personal" 
-                  className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-800"
-                />
+                  className="bg-slate-50 border-none px-6 font-bold text-slate-800"
+                 size="xl" />
               </div>
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pasarela / Plataforma</Label>
@@ -332,10 +332,10 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   value={formData.type} 
                   onValueChange={(val) => setFormData({...formData, type: val})}
                 >
-                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-none px-6 font-bold text-slate-800">
+                  <SelectTrigger size="xl" className="bg-slate-50 border-none px-6 font-bold text-slate-800">
                     <SelectValue placeholder="Seleccionar plataforma" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl">
+                  <SelectContent className="border-none shadow-2xl">
                     <SelectItem value="mercadopago" className="font-bold py-3">Mercado Pago</SelectItem>
                     <SelectItem value="getnet" className="font-bold py-3">Getnet (Santander)</SelectItem>
                     <SelectItem value="transfer" className="font-bold py-3">Transferencia Bancaria</SelectItem>
@@ -358,8 +358,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                     value={formData.config.publicKey} 
                     onChange={e => setFormData({...formData, config: { ...formData.config, publicKey: e.target.value }})} 
                     placeholder="APP_USR-..." 
-                    className="h-14 rounded-2xl bg-white border-none px-6 font-mono text-xs shadow-sm"
-                  />
+                    className="bg-white border-none px-6 font-mono text-xs shadow-sm"
+                   size="xl" />
                 </div>
 
                 <div className="space-y-3 relative">
@@ -370,8 +370,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                       value={formData.config.accessToken} 
                       onChange={e => setFormData({...formData, config: { ...formData.config, accessToken: e.target.value }})} 
                       placeholder="APP_USR-..." 
-                      className="h-14 rounded-2xl bg-white border-none px-6 font-mono text-xs pr-14 shadow-sm"
-                    />
+                      className="bg-white border-none px-6 font-mono text-xs pr-14 shadow-sm"
+                     size="xl" />
                     <button 
                       type="button"
                       onClick={() => setShowSecret(!showSecret)}
@@ -402,8 +402,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                     value={formData.config.sellerId} 
                     onChange={e => setFormData({...formData, config: { ...formData.config, sellerId: e.target.value }})} 
                     placeholder="Tu Seller ID asignado por Getnet" 
-                    className="h-14 rounded-2xl bg-white border-none px-6 font-mono text-xs shadow-sm"
-                  />
+                    className="bg-white border-none px-6 font-mono text-xs shadow-sm"
+                   size="xl" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -413,8 +413,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                       value={formData.config.clientId} 
                       onChange={e => setFormData({...formData, config: { ...formData.config, clientId: e.target.value }})} 
                       placeholder="Identificador de cliente" 
-                      className="h-14 rounded-2xl bg-white border-none px-6 font-mono text-xs shadow-sm"
-                    />
+                      className="bg-white border-none px-6 font-mono text-xs shadow-sm"
+                     size="xl" />
                   </div>
 
                   <div className="space-y-3 relative">
@@ -425,8 +425,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                         value={formData.config.clientSecret} 
                         onChange={e => setFormData({...formData, config: { ...formData.config, clientSecret: e.target.value }})} 
                         placeholder="Secreto de integración" 
-                        className="h-14 rounded-2xl bg-white border-none px-6 font-mono text-xs pr-14 shadow-sm"
-                      />
+                        className="bg-white border-none px-6 font-mono text-xs pr-14 shadow-sm"
+                       size="xl" />
                       <button 
                         type="button"
                         onClick={() => setShowSecret(!showSecret)}
@@ -459,8 +459,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                       value={formData.config.titularName} 
                       onChange={e => setFormData({...formData, config: { ...formData.config, titularName: e.target.value }})} 
                       placeholder="Nombre Completo" 
-                      className="h-14 rounded-2xl bg-white border-none px-6 font-bold shadow-sm"
-                    />
+                      className="bg-white border-none px-6 font-bold shadow-sm"
+                     size="xl" />
                   </div>
                   <div className="space-y-3">
                     <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Banco / Entidad</Label>
@@ -468,8 +468,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                       value={formData.config.bankName} 
                       onChange={e => setFormData({...formData, config: { ...formData.config, bankName: e.target.value }})} 
                       placeholder="Ej: Banco Galicia o Brubank" 
-                      className="h-14 rounded-2xl bg-white border-none px-6 font-bold shadow-sm"
-                    />
+                      className="bg-white border-none px-6 font-bold shadow-sm"
+                     size="xl" />
                   </div>
                 </div>
 
@@ -479,8 +479,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                     value={formData.config.cbu} 
                     onChange={e => setFormData({...formData, config: { ...formData.config, cbu: e.target.value }})} 
                     placeholder="0000000000000000000000" 
-                    className="h-14 rounded-2xl bg-white border-none px-6 font-mono text-sm shadow-sm"
-                  />
+                    className="bg-white border-none px-6 font-mono text-sm shadow-sm"
+                   size="xl" />
                 </div>
 
                 <div className="space-y-3">
@@ -489,8 +489,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                     value={formData.config.alias} 
                     onChange={e => setFormData({...formData, config: { ...formData.config, alias: e.target.value }})} 
                     placeholder="MI.ALIAS.PAGO" 
-                    className="h-14 rounded-2xl bg-white border-none px-6 font-bold shadow-sm"
-                  />
+                    className="bg-white border-none px-6 font-bold shadow-sm"
+                   size="xl" />
                 </div>
               </div>
             )}

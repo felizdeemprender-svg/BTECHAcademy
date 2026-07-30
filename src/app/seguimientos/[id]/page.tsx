@@ -626,7 +626,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
               <TabsContent value="tasks" className="space-y-8">
                 {isMentor && !isSuspended && (
-                  <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+                  <Card>
                     <CardHeader className="bg-primary/5 p-8 border-b">
                       <CardTitle className="xl font-bold">Asignar Compromiso</CardTitle>
                       <CardDescription>Establece objetivos pedagógicos para el alumno entre sesiones.</CardDescription>
@@ -648,7 +648,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Fecha Límite</Label>
-                          <Input type="date" value={taskForm.deadline} onChange={e => setTaskData({...taskForm, deadline: e.target.value})} className="h-12 rounded-xl bg-secondary/5" />
+                          <Input type="date" value={taskForm.deadline} onChange={e => setTaskData({...taskForm, deadline: e.target.value})} className="bg-secondary/5"  size="lg" />
                         </div>
                       </div>
 
@@ -656,15 +656,15 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                         <div className="space-y-6 animate-in slide-in-from-top-2">
                           <div className="space-y-2">
                             <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Título del Desafío</Label>
-                            <Input value={taskForm.title} onChange={e => setTaskData({...taskForm, title: e.target.value})} placeholder="Ej: Análisis de Competencia" className="h-12 rounded-xl bg-secondary/5" />
+                            <Input value={taskForm.title} onChange={e => setTaskData({...taskForm, title: e.target.value})} placeholder="Ej: Análisis de Competencia" className="bg-secondary/5"  size="lg" />
                           </div>
                           <div className="space-y-2">
                             <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Consigna Detallada (Pregunta)</Label>
-                            <Textarea value={taskForm.description} onChange={e => setTaskData({...taskForm, description: e.target.value})} placeholder="Describe qué debe realizar el alumno..." className="min-h-[100px] rounded-xl bg-secondary/5" />
+                            <Textarea value={taskForm.description} onChange={e => setTaskData({...taskForm, description: e.target.value})} placeholder="Describe qué debe realizar el alumno..." size="lg" className="min-h-[100px] bg-secondary/5" />
                           </div>
                           <div className="space-y-2">
                             <Label className="text-[10px] font-bold uppercase text-accent ml-1 flex items-center gap-2"><BrainCircuit className="h-3 w-3" /> Criterios de Evaluación para la IA</Label>
-                            <Textarea value={taskForm.evaluationCriteria} onChange={e => setTaskData({...taskForm, evaluationCriteria: e.target.value})} placeholder="Indica qué puntos debe validar Gemini para calificar esta tarea..." className="min-h-[100px] rounded-xl bg-accent/5 border-accent/20" />
+                            <Textarea value={taskForm.evaluationCriteria} onChange={e => setTaskData({...taskForm, evaluationCriteria: e.target.value})} placeholder="Indica qué puntos debe validar Gemini para calificar esta tarea..." size="lg" className="min-h-[100px] bg-accent/5 border-accent/20" />
                           </div>
                           <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-dashed border-primary/10">
                             <div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><Label className="text-xs font-bold">Habilitar Adjunto PDF</Label></div>
@@ -675,7 +675,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                         <div className="space-y-2 animate-in slide-in-from-top-2">
                           <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Seleccionar Curso del Mentor</Label>
                           <Select onValueChange={id => setTaskData({...taskForm, courseId: id})}>
-                            <SelectTrigger className="h-12 rounded-xl bg-secondary/5"><SelectValue placeholder="Elegir programa..." /></SelectTrigger>
+                            <SelectTrigger size="lg" className="bg-secondary/5"><SelectValue placeholder="Elegir programa..." /></SelectTrigger>
                             <SelectContent>
                               {mentorCourses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
                             </SelectContent>
@@ -870,7 +870,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           <div className="space-y-8">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden sticky top-8">
+            <Card className="sticky top-8">
               <CardHeader className="bg-primary p-8 text-white border-b relative">
                 <Target className="absolute -right-4 -top-4 h-24 w-24 opacity-10" />
                 <CardTitle className="text-lg font-bold flex items-center gap-3 relative z-10"><Target className="h-5 w-5 text-accent" /> Objetivo del Programa</CardTitle>
@@ -928,8 +928,8 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
       {/* Session Editor Dialog */}
       <Dialog open={!!editingSession} onOpenChange={open => !open && setEditingSession(null)}>
-        <DialogContent className="max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <div className={cn("p-8 text-white flex justify-between items-center relative", editingSession?.isAdditional ? "bg-amber-500" : "bg-primary")}>
+        <DialogContent className="mw-3xl">
+          <div className={cn("text-white flex justify-between items-center relative px-8 pt-8", editingSession?.isAdditional ? "bg-amber-500" : "bg-primary")}>
             <div className="relative z-10">
               <DialogTitle className="text-2xl font-bold text-white">
                 {editingSession?.isAdditional ? 'Sesión Extraordinaria' : `Sesión ${editingSession?.orderIndex}`}
@@ -939,26 +939,26 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             <Button variant="ghost" size="icon" onClick={() => setEditingSession(null)} className="rounded-full text-white hover:bg-white/10 shrink-0 relative z-10"><X className="h-6 w-6" /></Button>
             {editingSession?.isAdditional && <Zap className="absolute -right-4 -top-4 h-32 w-32 opacity-10 pointer-events-none" />}
           </div>
-          <div className="p-8 space-y-8">
+          <div className="space-y-8 px-8 pb-8">
             <div className="grid sm:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Fecha Encuentro</Label>
-                <Input type="date" value={sessionForm.date} onChange={e => setSessionData({...sessionForm, date: e.target.value})} className="h-12 rounded-xl bg-secondary/5 border-none font-bold" />
+                <Input type="date" value={sessionForm.date} onChange={e => setSessionData({...sessionForm, date: e.target.value})} className="bg-secondary/5 border-none font-bold"  size="lg" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Hora Inicio</Label>
-                <Input type="time" value={sessionForm.time} onChange={e => setSessionData({...sessionForm, time: e.target.value})} className="h-12 rounded-xl bg-secondary/5 border-none font-bold" />
+                <Input type="time" value={sessionForm.time} onChange={e => setSessionData({...sessionForm, time: e.target.value})} className="bg-secondary/5 border-none font-bold"  size="lg" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Duración (Min)</Label>
-                <Input type="number" value={sessionForm.duration} onChange={e => setSessionData({...sessionForm, duration: parseInt(e.target.value) || 0})} className="h-12 rounded-xl bg-secondary/5 border-none font-bold" />
+                <Input type="number" value={sessionForm.duration} onChange={e => setSessionData({...sessionForm, duration: parseInt(e.target.value) || 0})} className="bg-secondary/5 border-none font-bold"  size="lg" />
               </div>
             </div>
 
             <div className="space-y-4">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Temas Tratados / Por Tratar</Label>
               <div className="flex gap-2">
-                <Input value={sessionForm.newTopic} onChange={e => setSessionData({...sessionForm, newTopic: e.target.value})} onKeyDown={e => e.key === 'Enter' && sessionForm.newTopic && setSessionData({...sessionForm, topics: [...sessionForm.topics, sessionForm.newTopic], newTopic: ''})} placeholder="Ej: Análisis FODA..." className="h-12 rounded-xl flex-1 bg-secondary/5 border-none" />
+                <Input value={sessionForm.newTopic} onChange={e => setSessionData({...sessionForm, newTopic: e.target.value})} onKeyDown={e => e.key === 'Enter' && sessionForm.newTopic && setSessionData({...sessionForm, topics: [...sessionForm.topics, sessionForm.newTopic], newTopic: ''})} placeholder="Ej: Análisis FODA..." className="flex-1 bg-secondary/5 border-none"  size="lg" />
                 <Button onClick={() => sessionForm.newTopic && setSessionData({...sessionForm, topics: [...sessionForm.topics, sessionForm.newTopic], newTopic: ''})} className="h-12 px-6 rounded-xl font-bold bg-primary shadow-md"><Plus className="h-4 w-4" /></Button>
               </div>
               <div className="flex flex-wrap gap-2 min-h-[40px]">
@@ -975,7 +975,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Minuta / Conclusiones Académicas</Label>
-              <Textarea value={sessionForm.minutes} onChange={e => setSessionData({...sessionForm, minutes: e.target.value})} placeholder="Registra las conclusiones una vez terminada la sesión..." className="min-h-[150px] rounded-2xl p-6 shadow-inner bg-secondary/10 border-none leading-relaxed text-sm" />
+              <Textarea value={sessionForm.minutes} onChange={e => setSessionData({...sessionForm, minutes: e.target.value})} placeholder="Registra las conclusiones una vez terminada la sesión..." className="min-h-[150px] p-6 shadow-inner bg-secondary/10 border-none leading-relaxed text-sm" />
             </div>
 
             <DialogFooter className="flex flex-col sm:flex-row gap-3">
@@ -994,16 +994,16 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
       {/* Student Task Response Dialog */}
       <Dialog open={!!answeringTaskId} onOpenChange={open => !open && setAnsweringTaskId(null)}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <div className="bg-accent p-8 text-white flex justify-between items-center relative">
+        <DialogContent className="mw-2xl">
+          <div className="flex justify-between items-center relative px-8 pt-8">
             <div className="relative z-10">
               <DialogTitle className="text-2xl font-bold">Enviar Respuesta</DialogTitle>
-              <DialogDescription className="text-white/70">Tu respuesta será analizada integralmente por la IA institucional.</DialogDescription>
+              <DialogDescription className="text-muted-foreground">Tu respuesta será analizada integralmente por la IA institucional.</DialogDescription>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setAnsweringTaskId(null)} className="rounded-full text-white hover:bg-white/10 shrink-0 relative z-10"><X className="h-6 w-6" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setAnsweringTaskId(null)} className="rounded-full text-muted-foreground hover:bg-muted shrink-0 relative z-10"><X className="h-6 w-6" /></Button>
             <BrainCircuit className="absolute -right-4 -top-4 h-32 w-32 opacity-10 pointer-events-none" />
           </div>
-          <div className="p-8 space-y-6">
+          <div className="space-y-6 px-8 pb-8">
             <div className="bg-accent/5 p-6 rounded-2xl border border-accent/10 shadow-inner">
               <p className="text-xs font-black text-accent uppercase tracking-[0.2em] mb-2">Consigna Académica:</p>
               <p className="text-sm font-medium italic text-slate-700 leading-relaxed">"{tasks?.find(t => t.id === answeringTaskId)?.description}"</p>

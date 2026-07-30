@@ -2,309 +2,375 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { useAuth } from '@/components/auth-context';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Card, CardContent } from '@/components/ui/card';
+import { doc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Palette, 
-  Layers, 
-  ShieldCheck, 
-  Check, 
-  Save, 
-  Loader2, 
-  Sparkles, 
-  Monitor, 
-  Focus
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { 
+  Upload, FileJson, Loader2, Trash2, 
+  Star, Clock, Eye, Plus, AlertTriangle
+} from 'lucide-react';
 
-const THEME_PREMISES = [
-  { 
-    id: 'institucional', 
-    name: 'Clásico Institucional', 
-    desc: 'Equilibrio perfecto, bordes estándar y sombras suaves. Ideal para entornos formales.',
-    icon: Monitor 
-  },
-  { 
-    id: 'hd', 
-    name: 'Alta Definición (HD)', 
-    desc: 'Bordes reforzados (2px), sombras profundas y esquinas técnicas. Máximo contraste.',
-    icon: Focus 
-  },
-  { 
-    id: 'vanguardia', 
-    name: 'Vanguardia Minimalist', 
-    desc: 'Bordes ultra-redondeados, sombras etéreas y fondos limpios. Look fluido.',
-    icon: Sparkles 
-  }
-] as const;
-
-function hexToHsl(hex: string): string {
-  let r = 0, g = 0, b = 0;
-  if (hex.length === 4) {
-    r = parseInt(hex[1] + hex[1], 16);
-    g = parseInt(hex[2] + hex[2], 16);
-    b = parseInt(hex[3] + hex[3], 16);
-  } else if (hex.length === 7) {
-    r = parseInt(hex.substring(1, 3), 16);
-    g = parseInt(hex.substring(3, 5), 16);
-    b = parseInt(hex.substring(5, 7), 16);
-  }
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s, l = (max + min) / 2;
-  if (max === min) {
-    h = s = 0;
-  } else {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h /= 6;
-  }
-  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+interface BrandItem {
+  id: string;
+  name: string;
+  tokens: any;
+  logoType: string;
+  themeType: string;
+  createdAt?: any;
+  updatedBy?: string;
+  colorCount: number;
+  tokenCount: number;
 }
 
 export default function AdminThemePage() {
   const db = useFirestore();
   const { profile } = useAuth();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [previewData, setPreviewData] = useState<{ file: File; parsed: any } | null>(null);
 
-  const configRef = useMemoFirebase(() => doc(db, 'config', 'theme'), [db]);
-  const { data: config, isLoading: configLoading } = useDoc(configRef);
+  const brandsRef = useMemoFirebase(() => doc(db, 'config', 'brands'), [db]);
+  const { data: brandsDoc } = useDoc(brandsRef);
 
-  const [formData, setFormData] = useState({
-    primaryColor: '#3B2D86',
-    secondaryColor: '#6366f1',
-    accentColor: '#ec4899',
-    themeType: 'institucional' as 'institucional' | 'hd' | 'vanguardia'
-  });
+  const brands: BrandItem[] = brandsDoc?.items || [];
+  const activeId: string | null = brandsDoc?.activeId || null;
 
-  useEffect(() => {
-    if (config) {
-      setFormData({
-        primaryColor: config.primaryColor || '#3B2D86',
-        secondaryColor: config.secondaryColor || '#6366f1',
-        accentColor: config.accentColor || '#ec4899',
-        themeType: config.themeType || 'institucional'
-      });
+  const activeBrand = brands.find(b => b.id === activeId) || null;
+
+  const parseFile = (file: File) => {
+    if (!file.name.endsWith('.json')) {
+      toast({ title: 'Formato inválido', description: 'Solo .json', variant: 'destructive' });
+      return;
     }
-  }, [config]);
-
-  const handleSaveTheme = () => {
-    if (!profile?.roles.includes('admin')) return;
-    setLoading(true);
-
-    const saveData = {
-      ...formData,
-      updatedAt: serverTimestamp(),
-      updatedBy: profile.uid
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const parsed = JSON.parse(text);
+        if (!parsed?.fastoria) {
+          toast({ title: 'Estructura inválida', description: 'Falta nodo "fastoria"', variant: 'destructive' });
+          return;
+        }
+        setPreviewData({ file, parsed });
+      } catch {
+        toast({ title: 'Error de parsing', description: 'El archivo no es JSON válido', variant: 'destructive' });
+      }
     };
-
-    setDoc(configRef, saveData, { merge: true })
-      .then(() => {
-        toast({ title: 'Identidad Aplicada', description: 'El nuevo tema global ha sido activado para todos los usuarios.' });
-      })
-      .catch(async (e) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: configRef.path,
-          operation: 'update',
-          requestResourceData: saveData
-        }));
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    reader.readAsText(file);
   };
 
-  if (configLoading) return <DashboardLayout><div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div></DashboardLayout>;
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) parseFile(file);
+  };
 
-  const previewHslPrimary = hexToHsl(formData.primaryColor);
-  const previewHslSecondary = hexToHsl(formData.secondaryColor);
-  const previewHslAccent = hexToHsl(formData.accentColor);
-  
-  const [h, s] = previewHslPrimary.split(' ');
-  const backgroundHsl = `${h} ${s} 98%`;
-  const mutedHsl = `${h} ${s} 92%`;
+  const confirmImport = async () => {
+    if (!profile?.roles.includes('admin') || !previewData) return;
+    setImporting(true);
+    try {
+      const { file, parsed } = previewData;
+      const t = parsed.fastoria;
+      const colorCount = Object.keys(t.color || {}).length;
+      const tokenCount = countTokens(t);
+      const newBrand: BrandItem = {
+        id: crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: file.name.replace('.json', ''),
+        tokens: parsed,
+        logoType: t.theme?.['logo-selected']?.$value || 'arc',
+        themeType: t.theme?.active?.$value || 'institucional',
+        createdAt: new Date().toISOString(),
+        updatedBy: profile?.uid,
+        colorCount,
+        tokenCount
+      };
+
+      const updatedItems = [...brands, newBrand];
+      await setDoc(brandsRef, { items: updatedItems, activeId }, { merge: false });
+      toast({ title: 'Importado', description: `${newBrand.name} — ${tokenCount} tokens. Activá desde la grilla.` });
+      setPreviewData(null);
+    } catch (e: any) {
+      const msg = e.message || '';
+      const friendly = msg.includes('permission') || msg.includes('denied') || msg.includes('Unauthorized')
+        ? 'No tenés permisos de escritura en config/. Tu email no está en la whitelist de Firestore rules.'
+        : msg || 'No se pudo guardar';
+      toast({ title: 'Error de guardado', description: friendly, variant: 'destructive' });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleActivate = async (id: string) => {
+    if (!profile?.roles.includes('admin')) return;
+    setLoading(true);
+    try {
+      await setDoc(brandsRef, { activeId: id }, { merge: true });
+      toast({ title: 'Brand kit activado', description: 'Los tokens se aplican a toda la plataforma.' });
+    } catch (e: any) {
+      const msg = e.message || '';
+      const friendly = msg.includes('permission') || msg.includes('denied') || msg.includes('Unauthorized')
+        ? 'No tenés permisos de escritura en config/. Tu email no está en la whitelist de Firestore rules.'
+        : msg || 'No se pudo activar';
+      toast({ title: 'Error de activación', description: friendly, variant: 'destructive' });
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: brandsRef.path, operation: 'update', requestResourceData: { activeId: id }
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!profile?.roles.includes('admin')) return;
+    if (id === activeId) {
+      toast({ title: 'No se puede eliminar', description: 'Desactivá este brand kit primero', variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const updatedItems = brands.filter(b => b.id !== id);
+      await setDoc(brandsRef, { items: updatedItems }, { merge: true });
+      toast({ title: 'Eliminado', description: 'Brand kit eliminado' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto space-y-8 pb-20">
+      <div className="max-w-6xl mx-auto space-y-8 pb-20">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Identidad del Sistema</h1>
-            <p className="text-muted-foreground text-lg font-medium">Controla la atmósfera visual y el profesionalismo de la plataforma.</p>
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Brand Kits</h1>
+            <p className="text-muted-foreground text-lg font-medium">Importá, activá y gestioná tus identidades visuales. Solo un brand kit puede estar activo a la vez.</p>
           </div>
-          <Button onClick={handleSaveTheme} disabled={loading} className="h-14 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2">
-            {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />} Aplicar Cambios Globales
-          </Button>
+          <div className="flex gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={(e) => e.target.files?.[0] && parseFile(e.target.files[0])}
+              className="hidden"
+            />
+            <Button onClick={() => fileInputRef.current?.click()} disabled={importing} className="gap-2">
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {importing ? 'Importando...' : 'Importar brand kit'}
+            </Button>
+          </div>
         </header>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <Card className="card-prof p-8 space-y-8">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <Layers className="h-4 w-4" /> Premisa de Diseño
-                </Label>
-                <div className="grid gap-4 mt-4">
-                  {THEME_PREMISES.map((premise) => (
-                    <button 
-                      key={premise.id}
-                      onClick={() => setFormData({...formData, themeType: premise.id})}
+        {previewData ? (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between bg-primary/5 p-4 rounded-2xl border border-primary/10">
+              <div className="flex items-center gap-3">
+                <FileJson className="h-6 w-6 text-primary" />
+                <div>
+                  <p className="font-bold text-sm">{previewData.file.name}</p>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {Object.keys(previewData.parsed.fastoria).length} categorías · {countTokens(previewData.parsed.fastoria)} tokens
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setPreviewData(null)}>
+                Cancelar
+              </Button>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              {renderTokenPreview(previewData.parsed.fastoria)}
+            </div>
+            <div className="flex gap-3 justify-end pt-4 border-t">
+              <Button variant="outline" onClick={() => setPreviewData(null)}>
+                Cancelar
+              </Button>
+              <Button onClick={confirmImport} disabled={importing} className="gap-2">
+                {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                {importing ? 'Importando...' : 'Guardar en grilla (inactivo)'}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={cn(
+                "border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer transition-all",
+                dragOver ? "border-primary bg-primary/5 scale-[1.02]" : "border-muted-foreground/20 hover:border-primary/40 hover:bg-muted/30"
+              )}
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Upload className="h-7 w-7 text-primary" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold">Arrastrá tu brand-tokens.json acá</p>
+                  <p className="text-sm text-muted-foreground mt-1">O hacé clic para seleccionar el archivo</p>
+                </div>
+              </div>
+            </div>
+
+            {brands.length > 0 && (
+              <div className="grid gap-4">
+                {brands.map((brand) => {
+                  const isActive = brand.id === activeId;
+                  return (
+                    <div
+                      key={brand.id}
                       className={cn(
-                        "w-full text-left p-6 rounded-2xl border-2 transition-all flex items-start gap-6 group",
-                        formData.themeType === premise.id 
-                          ? "bg-primary/5 border-primary shadow-lg" 
-                          : "bg-white border-transparent hover:border-primary/20"
+                        "rounded-2xl border p-5 flex items-center justify-between gap-4 transition-all",
+                        isActive
+                          ? "border-primary/30 bg-primary/5 shadow-lg ring-1 ring-primary/10"
+                          : "border-border bg-card hover:border-muted-foreground/20"
                       )}
                     >
-                      <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all",
-                        formData.themeType === premise.id ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-                      )}>
-                        <premise.icon className="h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center mb-1">
-                          <h3 className="font-bold text-lg">{premise.name}</h3>
-                          {formData.themeType === premise.id && <Check className="h-5 w-5 text-primary" />}
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className={cn(
+                          "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                          isActive ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                        )}>
+                          <FileJson className="h-6 w-6" />
                         </div>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{premise.desc}</p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold truncate">{brand.name}</p>
+                            {isActive && (
+                              <span className="text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-2 py-0.5 rounded-full shrink-0">
+                                Activo
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-0.5">
+                            <span>Logo: <span className="font-mono font-bold">{brand.logoType}</span></span>
+                            <span>Premisa: <span className="font-mono font-bold">{brand.themeType}</span></span>
+                            <span>{brand.colorCount} colores</span>
+                            <span>{brand.tokenCount} tokens</span>
+                            {brand.createdAt && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {new Date(brand.createdAt?.toDate?.() || brand.createdAt).toLocaleDateString?.() || 'reciente'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </button>
-                  ))}
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {!isActive ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleActivate(brand.id)}
+                            disabled={loading}
+                            className="gap-2"
+                          >
+                            <Star className="h-3.5 w-3.5" /> Activar
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="ghost" disabled className="gap-2 text-muted-foreground">
+                            <Star className="h-3.5 w-3.5 fill-primary text-primary" /> Activo
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(brand.id)}
+                          disabled={loading || isActive}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {activeBrand && (
+              <div className="bg-muted/30 rounded-2xl p-6 border">
+                <h2 className="font-bold flex items-center gap-2 mb-4">
+                  <Eye className="h-4 w-4 text-primary" /> Vista previa del brand kit activo
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {renderColorSwatches(activeBrand.tokens.fastoria.color || {})}
                 </div>
               </div>
-            </Card>
+            )}
 
-            <Card className="card-prof p-8 space-y-6">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <Palette className="h-4 w-4" /> Paleta Maestra de Interfaz
-              </Label>
-              
-              <div className="grid gap-6">
-                {/* Primary Color */}
-                <div className="flex flex-col sm:flex-row items-center gap-6 bg-secondary/10 p-4 rounded-2xl">
-                  <input 
-                    type="color" 
-                    value={formData.primaryColor} 
-                    onChange={e => setFormData({...formData, primaryColor: e.target.value})}
-                    className="w-16 h-16 rounded-xl p-0 border-none cursor-pointer shadow-sm"
-                  />
-                  <div className="flex-1 space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Color Primario (Sidebar & Dash)</Label>
-                    <Input 
-                      value={formData.primaryColor} 
-                      onChange={e => setFormData({...formData, primaryColor: e.target.value})}
-                      className="h-10 font-mono font-bold rounded-xl bg-white border-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Secondary Color */}
-                <div className="flex flex-col sm:flex-row items-center gap-6 bg-secondary/10 p-4 rounded-2xl">
-                  <input 
-                    type="color" 
-                    value={formData.secondaryColor} 
-                    onChange={e => setFormData({...formData, secondaryColor: e.target.value})}
-                    className="w-16 h-16 rounded-xl p-0 border-none cursor-pointer shadow-sm"
-                  />
-                  <div className="flex-1 space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Color Secundario (Componentes)</Label>
-                    <Input 
-                      value={formData.secondaryColor} 
-                      onChange={e => setFormData({...formData, secondaryColor: e.target.value})}
-                      className="h-10 font-mono font-bold rounded-xl bg-white border-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Accent Color */}
-                <div className="flex flex-col sm:flex-row items-center gap-6 bg-secondary/10 p-4 rounded-2xl">
-                  <input 
-                    type="color" 
-                    value={formData.accentColor} 
-                    onChange={e => setFormData({...formData, accentColor: e.target.value})}
-                    className="w-16 h-16 rounded-xl p-0 border-none cursor-pointer shadow-sm"
-                  />
-                  <div className="flex-1 space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Color de Acento (Interacción)</Label>
-                    <Input 
-                      value={formData.accentColor} 
-                      onChange={e => setFormData({...formData, accentColor: e.target.value})}
-                      className="h-10 font-mono font-bold rounded-xl bg-white border-none"
-                    />
-                  </div>
-                </div>
+            {!brands.length && (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center gap-3 text-sm text-amber-800">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
+                <p>No hay brand kits importados. Importá un archivo <code className="font-mono font-bold bg-amber-100 px-1 rounded">brand-tokens.json</code> en formato DTCG/W3C para empezar.</p>
               </div>
-            </Card>
-          </div>
-
-          <div className="space-y-8">
-            <Card className="card-prof p-8 space-y-6 sticky top-8">
-              <h2 className="font-bold text-xl flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-primary" /> Vista Previa
-              </h2>
-              <p className="text-sm text-muted-foreground">Así es como los usuarios experimentarán el contraste y las formas.</p>
-              
-              <div 
-                className={cn("space-y-6 py-4 p-6 rounded-[var(--radius)]", `theme-${formData.themeType}`)}
-                style={{
-                  '--primary': previewHslPrimary,
-                  '--secondary': previewHslSecondary,
-                  '--accent': previewHslAccent,
-                  '--ring': previewHslAccent,
-                  '--muted': mutedHsl,
-                  '--background': backgroundHsl,
-                  '--radius': formData.themeType === 'vanguardia' ? '2rem' : formData.themeType === 'hd' ? '0.5rem' : '1rem',
-                  '--prof-border-width': formData.themeType === 'hd' ? '2px' : '1px',
-                  '--prof-shadow': formData.themeType === 'hd' ? '0 20px 25px -5px rgba(0,0,0,0.15)' : formData.themeType === 'vanguardia' ? '0 35px 60px -12px rgba(0,0,0,0.2)' : '0 10px 15px -3px rgba(0,0,0,0.05)'
-                } as any}
-              >
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-bold text-muted-foreground">Botones Profesionales</Label>
-                  <div className="flex gap-2">
-                    <Button className="btn-prof bg-primary text-white flex-1 h-11 border-primary">Primario</Button>
-                    <Button variant="outline" style={{ borderColor: `hsl(${previewHslAccent})`, color: `hsl(${previewHslAccent})` }} className="btn-prof flex-1 h-11">Acento</Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-bold text-muted-foreground">Campos de Entrada</Label>
-                  <Input className="input-prof w-full border-primary/20" placeholder="Ejemplo de campo..." />
-                </div>
-
-                <div 
-                  className="p-6 rounded-2xl border space-y-3"
-                  style={{ backgroundColor: `hsl(${previewHslSecondary})`, borderColor: `hsl(${previewHslPrimary} / 0.1)` }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded flex items-center justify-center font-bold text-xs" style={{ backgroundColor: `hsl(${previewHslPrimary} / 0.1)`, color: `hsl(${previewHslPrimary})` }}>AI</div>
-                    <p className="font-bold text-sm">Contraste de Fondo</p>
-                  </div>
-                  <div className="h-2 w-full rounded-full" style={{ backgroundColor: `hsl(${previewHslPrimary} / 0.1)` }}>
-                    <div className="h-full rounded-full w-2/3" style={{ backgroundColor: `hsl(${previewHslAccent})` }} />
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
+            )}
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
+}
+
+function countTokens(obj: any): number {
+  let count = 0;
+  for (const key of Object.keys(obj)) {
+    if (obj[key]?.$value !== undefined) count++;
+    else if (typeof obj[key] === 'object') count += countTokens(obj[key]);
+  }
+  return count;
+}
+
+function renderTokenPreview(obj: any, path = ''): React.ReactNode[] {
+  const elements: React.ReactNode[] = [];
+  for (const key of Object.keys(obj)) {
+    const val = obj[key];
+    const currentPath = path ? `${path}.${key}` : key;
+    if (val?.$value !== undefined) {
+      const displayValue = typeof val.$value === 'object' ? JSON.stringify(val.$value).slice(0, 60) : String(val.$value);
+      elements.push(
+        <div key={currentPath} className="bg-card border rounded-xl p-3 space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono font-bold truncate">{currentPath}</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground ml-2 shrink-0">{val.$type || 'unknown'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {val.$type === 'color' && typeof val.$value === 'string' && (
+              <span className="w-5 h-5 rounded shrink-0 border" style={{ background: val.$value }} />
+            )}
+            <span className="text-xs font-mono text-muted-foreground truncate">{displayValue}</span>
+          </div>
+        </div>
+      );
+    } else if (typeof val === 'object') {
+      elements.push(...renderTokenPreview(val, currentPath));
+    }
+  }
+  return elements;
+}
+
+function renderColorSwatches(colors: Record<string, any>) {
+  return Object.entries(colors).map(([name, val]) => {
+    const color = val?.$value || '';
+    return (
+      <div key={name} className="space-y-1">
+        <div className="h-10 rounded-lg border" style={{ background: color }} />
+        <p className="text-[10px] font-mono font-bold truncate text-muted-foreground">{name}</p>
+        <p className="text-[9px] font-mono text-muted-foreground/60 truncate">{color}</p>
+      </div>
+    );
+  });
 }

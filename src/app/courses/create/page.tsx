@@ -532,7 +532,7 @@ export default function CreateCoursePage() {
             newQs[idx].text = e.target.value;
             newQs[idx].question = e.target.value;
             setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
-          }} placeholder="¿Cuál es la pregunta?" className="font-medium h-12 rounded-xl" />
+          }} placeholder="¿Cuál es la pregunta?" className="font-medium"  size="lg" />
         </div>
 
         {q.type === 'multiple_choice' && q.options && (
@@ -702,8 +702,8 @@ export default function CreateCoursePage() {
                         placeholder="Ej: Master en ADN Modeling" 
                         value={courseData.title}
                         onChange={e => setCourseData({ ...courseData, title: e.target.value })}
-                        className="h-12 rounded-xl bg-secondary/5 border-none px-4 font-bold"
-                      />
+                        className="bg-secondary/5 border-none px-4 font-bold"
+                       size="lg" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="course-description" className="text-sm font-bold ml-1">Descripción Breve</Label>
@@ -723,10 +723,10 @@ export default function CreateCoursePage() {
                       <div className="space-y-2">
                         <Label htmlFor="course-category" className="text-sm font-bold ml-1">Categoría Académica</Label>
                         <Select value={courseData.categoryId} onValueChange={v => setCourseData({ ...courseData, categoryId: v })}>
-                          <SelectTrigger id="course-category" className="h-12 rounded-xl bg-white border-none shadow-sm px-4 font-bold">
+                          <SelectTrigger id="course-category" size="lg" className="bg-white border-none shadow-sm px-4 font-bold">
                             <SelectValue placeholder="Selecciona una categoría" />
                           </SelectTrigger>
-                          <SelectContent className="rounded-xl border-none shadow-2xl">
+                          <SelectContent className="border-none shadow-2xl">
                             {categories?.map((cat: any) => (
                               <SelectItem key={cat.id} value={cat.id} className="font-bold">{cat.name}</SelectItem>
                             ))}
@@ -737,10 +737,10 @@ export default function CreateCoursePage() {
                       <div className="space-y-2">
                         <Label htmlFor="course-level" className="text-sm font-bold ml-1">Nivel del Programa</Label>
                         <Select value={courseData.level} onValueChange={v => setCourseData({ ...courseData, level: v })}>
-                          <SelectTrigger id="course-level" className="h-12 rounded-xl bg-white border-none shadow-sm px-4 font-bold">
+                          <SelectTrigger id="course-level" size="lg" className="bg-white border-none shadow-sm px-4 font-bold">
                             <SelectValue placeholder="Selecciona el nivel" />
                           </SelectTrigger>
-                          <SelectContent className="rounded-xl border-none shadow-2xl">
+                          <SelectContent className="border-none shadow-2xl">
                             {levels?.map((lvl: any) => (
                               <SelectItem key={lvl.id} value={lvl.name} className="font-bold">{lvl.name}</SelectItem>
                             ))}
@@ -765,7 +765,7 @@ export default function CreateCoursePage() {
 
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in duration-500">
-            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+            <Card>
               <CardHeader className="bg-accent/10 p-8 flex flex-row justify-between items-center"><div><Badge className="bg-accent text-white h-6 mb-2">Clase #{moduleOrder}</Badge><CardTitle className="text-2xl font-bold">Contenido Académico</CardTitle></div></CardHeader>
               <CardContent className="p-8 space-y-8">
                 <Input 
@@ -773,8 +773,8 @@ export default function CreateCoursePage() {
                   placeholder="Nombre de la Clase" 
                   value={currentModule.title} 
                   onChange={e => setCurrentModule({ ...currentModule, title: e.target.value })} 
-                  className="h-14 font-bold text-xl border-none bg-muted/40 rounded-2xl" 
-                />
+                  className="font-bold text-xl border-none bg-muted/40" 
+                 size="xl" />
                 <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({ ...currentModule, contentType: v as any })}>
                   <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full max-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
                   <TabsContent value="text" className="space-y-6">
@@ -802,8 +802,8 @@ export default function CreateCoursePage() {
                         placeholder="https://..."
                         value={currentModule.videoUrl}
                         onChange={e => setCurrentModule({ ...currentModule, videoUrl: e.target.value })}
-                        className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-medium"
-                      />
+                        className="bg-secondary/10 border-none px-6 font-medium"
+                       size="xl" />
                       <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-2xl flex items-start gap-4 mt-2">
                         <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                         <div className="text-[11px] text-blue-700 space-y-2">
@@ -830,8 +830,8 @@ export default function CreateCoursePage() {
                           const val = parseInt(e.target.value);
                           setCurrentModule({ ...currentModule, minPassingScore: isNaN(val) ? 0 : val });
                         }}
-                        className="h-12 rounded-xl bg-white border-none font-bold"
-                      />
+                        className="bg-white border-none font-bold"
+                       size="lg" />
                       <div className="flex items-start gap-2 mt-2 px-1">
                         <Info className="h-3 w-3 text-accent mt-0.5" />
                         <p className="text-[10px] text-accent/80 leading-tight">
@@ -867,7 +867,7 @@ export default function CreateCoursePage() {
 
         {step === 3 && (
           <div className="space-y-8 animate-in fade-in">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+            <Card>
               <CardHeader className="bg-primary/5 p-10 flex flex-row justify-between items-center">
                 <div>
                   <CardTitle className="text-2xl font-bold">3. Identidad del Programa</CardTitle>
@@ -913,9 +913,9 @@ export default function CreateCoursePage() {
                         <Input
                           value={brandingData.socials[social.id] || ''}
                           onChange={e => setBrandingData({ ...brandingData, socials: { ...brandingData.socials, [social.id]: e.target.value } })}
-                          className="h-14 rounded-2xl bg-secondary/10 border-none font-medium"
+                          className="bg-secondary/10 border-none font-medium"
                           placeholder={`Enlace a ${social.label}`}
-                        />
+                         size="xl" />
                       </div>
                     ))}
                   </TabsContent>
@@ -963,8 +963,8 @@ export default function CreateCoursePage() {
                           <Input
                             value={brandingData.primaryColor}
                             onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
-                            className="h-14 text-2xl font-mono font-bold text-center rounded-2xl bg-white border-none shadow-sm"
-                          />
+                            className="text-2xl font-mono font-bold text-center bg-white border-none shadow-sm"
+                           size="xl" />
                         </div>
                       </div>
                     </div>
@@ -982,7 +982,7 @@ export default function CreateCoursePage() {
 
         {step === 4 && (
           <div className="space-y-8 animate-in fade-in">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white">
+            <Card>
               <CardHeader className="bg-primary/5 p-10"><div className="flex justify-between items-center"><div><CardTitle className="text-2xl font-bold">4. Matrícula</CardTitle></div><Button variant="ghost" onClick={() => setStep(5)} className="rounded-xl">Saltar</Button></div></CardHeader>
               <CardContent className="p-10 space-y-10">
                 <div className="space-y-4">
@@ -1004,7 +1004,7 @@ export default function CreateCoursePage() {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <Input placeholder="alumno@institucion.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} className="h-14 rounded-2xl border-2" />
+                    <Input placeholder="alumno@institucion.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} className="border-2"  size="xl" />
                     <Button onClick={handleInviteStudent} disabled={!inviteEmail || addingStudent} className="h-14 px-8 rounded-2xl font-bold">
                       {addingStudent ? <Loader2 className="animate-spin" /> : <UserPlus className="mr-2" />} Inscribir
                     </Button>
@@ -1048,7 +1048,7 @@ export default function CreateCoursePage() {
 
         {step === 5 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+            <Card>
               <CardHeader className="bg-amber-50 p-10 border-b border-amber-100">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg"><Scale className="h-6 w-6" /></div>
@@ -1083,7 +1083,7 @@ export default function CreateCoursePage() {
 
         {step === 6 && (
           <div className="space-y-8 animate-in fade-in">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-slate-900 text-white overflow-hidden relative">
+            <Card className="bg-slate-900 text-white relative">
               <div className="absolute top-0 right-0 p-12 opacity-10"><Sparkles className="h-40 w-40" /></div>
               <CardHeader className="p-12 pb-6 relative z-10"><CardTitle className="text-4xl font-bold">6. Registro Final</CardTitle><CardDescription className="text-slate-400 text-lg">Tu programa ha cumplido todos los requisitos.</CardDescription></CardHeader>
               <CardContent className="p-12 pt-6 space-y-10 relative z-10">
@@ -1106,30 +1106,30 @@ export default function CreateCoursePage() {
       </div>
 
       <Dialog open={isAiModalOpen} onOpenChange={(open) => { setIsAiModalOpen(open); if (!open) { setAiFlowStep(1); setExtractedContent(''); clearUILocks(); } }}>
-        <DialogContent className="rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl max-w-xl">
-          <div className="bg-primary p-8 text-white relative">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4"><BrainCircuit className="text-white h-6 w-6" /></div>
+        <DialogContent className="mw-xl">
+          <div className="relative px-8 pt-8">
+            <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mb-4"><BrainCircuit className="text-primary h-6 w-6" /></div>
             <DialogTitle className="text-2xl font-bold">Generación Inteligente</DialogTitle>
-            <DialogDescription className="text-primary-foreground/70 text-sm mt-1">
+            <DialogDescription className="text-sm mt-1 text-muted-foreground">
               Gemini analizará tu documento maestro para proponer una estructura pedagógica y evaluaciones automáticas.
             </DialogDescription>
 
-            <div className="mt-8 flex items-center justify-between relative px-4">
-              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/10 -translate-y-1/2 z-0 mx-8" />
-              <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 1 ? "text-white" : "text-white/30")}>
-                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-green-500 border-green-500" : "bg-primary border-white/20")}>
+            <div className="mt-8 flex items-center justify-between relative px-0">
+              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-primary/10 -translate-y-1/2 z-0 mx-8" />
+              <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 1 ? "text-primary" : "text-muted-foreground/30")}>
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-green-500 border-green-500" : "bg-primary/10 border-primary/20")}>
                   {aiFlowStep > 1 ? <Check className="h-4 w-4" /> : "1"}
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-widest">Lectura</span>
               </div>
-              <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 2 ? "text-white" : "text-white/30")}>
-                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 2 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : "bg-primary border-white/20")}>2</div>
+              <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 2 ? "text-primary" : "text-muted-foreground/30")}>
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 2 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : "bg-primary/10 border-primary/20")}>2</div>
                 <span className="text-[10px] font-bold uppercase tracking-widest">Generación</span>
               </div>
             </div>
           </div>
 
-          <div className="p-8 space-y-8">
+          <div className="space-y-8 px-8 pb-8">
             {aiFlowStep === 1 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="flex flex-col items-center text-center gap-4 py-6 px-10 bg-secondary/10 rounded-[2rem] border-2 border-dashed border-primary/10">
@@ -1164,11 +1164,11 @@ export default function CreateCoursePage() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Cantidad</Label>
-                    <Input type="number" className="h-12 rounded-xl bg-secondary/30 border-none font-bold" value={aiPrefs.numQuestions} onChange={e => setAiPrefs({ ...aiPrefs, numQuestions: parseInt(e.target.value) || 0 })} />
+                    <Input type="number" className="bg-secondary/30 border-none font-bold" value={aiPrefs.numQuestions} onChange={e => setAiPrefs({ ...aiPrefs, numQuestions: parseInt(e.target.value) || 0 })}  size="lg" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Rol</Label>
-                    <Input className="h-12 rounded-xl bg-secondary/30 border-none" value={aiPrefs.role} onChange={e => setAiPrefs({ ...aiPrefs, role: e.target.value })} />
+                    <Input className="bg-secondary/30 border-none" value={aiPrefs.role} onChange={e => setAiPrefs({ ...aiPrefs, role: e.target.value })}  size="lg" />
                   </div>
                 </div>
 
@@ -1210,7 +1210,7 @@ export default function CreateCoursePage() {
       </Dialog>
 
       <AlertDialog open={showNextModuleDialog} onOpenChange={(open) => { setShowNextModuleDialog(open); if (!open) clearUILocks(); }}>
-        <AlertDialogContent className="rounded-[2.5rem] p-10 max-sm border-none shadow-3xl">
+        <AlertDialogContent className="">
           <AlertDialogHeader className="items-center text-center">
             <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mb-4">
               <CheckCircle2 className="h-8 w-8" />

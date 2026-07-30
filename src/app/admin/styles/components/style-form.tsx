@@ -135,7 +135,7 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="mw-4xl max-h-[90vh] flex flex-col">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>{isCloning ? 'Clonar Estilo' : (initialData ? 'Editar Estilo' : 'Crear Nuevo Estilo')}</DialogTitle>
           <DialogDescription>

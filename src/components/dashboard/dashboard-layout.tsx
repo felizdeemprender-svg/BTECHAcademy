@@ -14,11 +14,12 @@ import {
   SidebarHeader,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { Sparkles, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { SubscriptionAlert } from '@/components/dashboard/subscription-alert';
+import { Logo } from '@/components/logo';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, profile, logout, isLoading } = useAuth();
@@ -59,7 +60,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <SidebarHeader className="p-6">
             <Link href="/" className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-xl bg-accent text-accent-foreground flex items-center justify-center shadow-lg shadow-accent/20 transition-transform group-hover:rotate-12">
-                <Sparkles className="h-6 w-6" />
+                <Logo size={24} />
               </div>
               <span className="font-headline font-bold text-xl text-[hsl(var(--sidebar-foreground))] tracking-tight">FastoriaAcademy</span>
             </Link>

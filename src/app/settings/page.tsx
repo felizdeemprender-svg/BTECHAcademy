@@ -458,8 +458,8 @@ export default function SettingsPage() {
                       name="displayName"
                       value={formData.displayName || ''} 
                       onChange={e => setFormData({...formData, displayName: e.target.value})} 
-                      className="h-14 rounded-2xl bg-secondary/10 border-none font-bold text-lg px-6" 
-                    />
+                      className="bg-secondary/10 border-none font-bold text-lg px-6" 
+                     size="xl" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="settings-bio" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Biografía</Label>
@@ -496,8 +496,8 @@ export default function SettingsPage() {
                         value={formData.username || ''} 
                         onChange={e => setFormData({...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} 
                         placeholder="tu-nombre-de-usuario"
-                        className="h-14 rounded-2xl bg-secondary/10 border-none font-mono text-sm px-6" 
-                      />
+                        className="bg-secondary/10 border-none font-mono text-sm px-6" 
+                       size="xl" />
                       <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground opacity-50">
                         /tutor/{formData.username || '...'}
                       </div>
@@ -521,8 +521,8 @@ export default function SettingsPage() {
                           <Input 
                             readOnly 
                             value={tutorProfileUrl || ''} 
-                            className="h-12 rounded-xl bg-slate-50 border-slate-100 font-mono text-[10px] min-w-[200px]"
-                          />
+                            className="bg-slate-50 border-slate-100 font-mono text-[10px] min-w-[200px]"
+                           size="lg" />
                           <Button 
                             onClick={() => {
                               if (tutorProfileUrl) {
@@ -601,8 +601,8 @@ export default function SettingsPage() {
                               ...formData, 
                               websiteConfig: { ...formData.websiteConfig, headline: e.target.value }
                             })}
-                            className="h-12 rounded-xl bg-white border-none shadow-sm font-bold text-slate-800"
-                          />
+                            className="bg-white border-none shadow-sm font-bold text-slate-800"
+                           size="lg" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black uppercase text-slate-400 ml-1">Propuesta de Valor (Bajada)</Label>
@@ -791,8 +791,8 @@ export default function SettingsPage() {
                       value={(formData as any)[social.id] || ''} 
                       onChange={e => setFormData({...formData, [social.id]: e.target.value})} 
                       placeholder={social.placeholder} 
-                      className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-medium"
-                    />
+                      className="bg-secondary/10 border-none px-6 font-medium"
+                     size="xl" />
                   </div>
                 ))}
               </TabsContent>
@@ -858,8 +858,8 @@ export default function SettingsPage() {
                           <Input 
                             value={formData.primaryColor || ''} 
                             onChange={e => setFormData({...formData, primaryColor: e.target.value})}
-                            className="h-14 text-2xl font-mono font-bold text-center rounded-2xl bg-white border-none shadow-sm"
-                          />
+                            className="text-2xl font-mono font-bold text-center bg-white border-none shadow-sm"
+                           size="xl" />
                           <div className="flex gap-2">
                              {['#3B2D86', '#4F46E5', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444'].map(color => (
                                <button 

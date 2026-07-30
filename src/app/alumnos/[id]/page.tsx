@@ -533,7 +533,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               </TabsList>
 
               <TabsContent value="summary" className="space-y-8 animate-in fade-in duration-500">
-                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+                <Card>
                   <CardHeader className="bg-primary/5 p-8 border-b">
                     <CardTitle className="text-xl font-bold flex items-center gap-3"><Globe className="h-5 w-5 text-primary" /> Perfil del Cliente</CardTitle>
                   </CardHeader>
@@ -622,7 +622,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </Button>
                 </div>
 
-                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white/50 backdrop-blur-xl">
+                <Card className="bg-white/50 backdrop-blur-xl">
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader className="bg-primary/5">
@@ -678,7 +678,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                     <p className="text-muted-foreground font-bold italic">No hay cursos compartidos con este mentor.</p>
                   </Card>
                 ) : !selectedCourseId ? (
-                  <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white/50 backdrop-blur-xl animate-in fade-in duration-500">
+                  <Card className="bg-white/50 backdrop-blur-xl animate-in fade-in duration-500">
                     <CardContent className="p-0">
                       <Table>
                         <TableHeader className="bg-primary/5">
@@ -888,7 +888,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               </TabsContent>
 
               <TabsContent value="followups" className="space-y-6 animate-in fade-in duration-500">
-                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white/50 backdrop-blur-xl">
+                <Card className="bg-white/50 backdrop-blur-xl">
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader className="bg-primary/5">
@@ -957,7 +957,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </Button>
                 </div>
 
-                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white/50 backdrop-blur-xl">
+                <Card className="bg-white/50 backdrop-blur-xl">
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader className="bg-primary/5">
@@ -1032,7 +1032,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </Button>
                 </div>
 
-                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white/50 backdrop-blur-xl">
+                <Card className="bg-white/50 backdrop-blur-xl">
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader className="bg-primary/5">
@@ -1084,15 +1084,15 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
       {/* Profiling Dialog - Advanced Version */}
       <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-        <DialogContent className="max-w-2xl h-[90vh] rounded-[2rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col">
-          <div className="bg-primary p-8 text-white relative shrink-0">
+        <DialogContent className="mw-2xl h-[90vh] flex flex-col">
+          <div className="relative shrink-0 px-8 pt-8">
             <Settings2 className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
             <DialogTitle className="text-2xl font-bold flex items-center gap-3"><BrainCircuit className="h-6 w-6 text-emerald-400" /> Perfilamiento Estratégico IA</DialogTitle>
-            <DialogDescription className="text-primary-foreground/70 mt-1">Configura el enfoque del análisis y selecciona fuentes granulares.</DialogDescription>
+            <DialogDescription className="text-muted-foreground mt-1">Configura el enfoque del análisis y selecciona fuentes granulares.</DialogDescription>
           </div>
           
-          <ScrollArea className="flex-1 p-8">
-            <div className="space-y-10">
+          <ScrollArea className="flex-1 px-8 pt-0">
+            <div className="space-y-10 pb-8">
               <section className="space-y-4">
                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">1. ¿Qué queremos descubrir? (Lente del Análisis)</Label>
                 <div className="grid gap-4">
@@ -1100,8 +1100,8 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                     value={profilingFocus}
                     onChange={e => setProfilingFocus(e.target.value)}
                     placeholder="Ej: Determinar su cliente ideal, sugerencias de marca personal..."
-                    className="h-14 rounded-2xl border-2 border-primary/10 font-bold bg-slate-50"
-                  />
+                    className="border-2 border-primary/10 font-bold bg-slate-50"
+                   size="xl" />
                   <div className="flex flex-wrap gap-2">
                     {[
                       'Identificación de Cliente Ideal', 
@@ -1205,11 +1205,11 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
             </div>
           </ScrollArea>
 
-          <DialogFooter className="p-8 bg-slate-50 border-t shrink-0">
+          <DialogFooter className="bg-slate-50 border-t shrink-0 px-8 py-6">
             <Button 
               onClick={handleGenerateAIProfile} 
               disabled={isGeneratingProfile}
-              className="w-full h-16 rounded-[1.5rem] font-bold text-xl shadow-2xl bg-primary text-white gap-3"
+              className="w-full h-16 font-bold text-xl bg-primary text-white gap-3"
             >
               {isGeneratingProfile ? <Loader2 className="animate-spin h-6 w-6" /> : <Sparkles className="h-6 w-6" />} 
               Lanzar Diagnóstico Estratégico
@@ -1219,27 +1219,27 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
       </Dialog>
 
       <Dialog open={isAttemptDialogOpen} onOpenChange={setIsAttemptDialogOpen}>
-        <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
-          <div className="bg-primary p-8 text-white">
+        <DialogContent className="mw-4xl h-[90vh] flex flex-col">
+          <div className="px-8 pt-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center"><BrainCircuit className="h-6 w-6" /></div>
+                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center"><BrainCircuit className="text-primary h-6 w-6" /></div>
                 <div>
                   <DialogTitle className="text-2xl font-bold">Auditoría de Evaluación</DialogTitle>
-                  <DialogDescription className="text-primary-foreground/70">
+                  <DialogDescription className="text-muted-foreground">
                     {selectedAttempt?.courseTitle} • {selectedAttempt?.moduleTitle}
                   </DialogDescription>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setIsAttemptDialogOpen(false)} className="rounded-full text-white hover:bg-white/10">
+              <Button variant="ghost" size="icon" onClick={() => setIsAttemptDialogOpen(false)} className="rounded-full text-muted-foreground hover:bg-muted">
                 <X className="h-6 w-6" />
               </Button>
             </div>
           </div>
           
-          <ScrollArea className="flex-1 p-8">
-            <div className="space-y-10">
-              <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 flex items-start gap-6">
+          <ScrollArea className="flex-1 px-8 pt-0">
+            <div className="space-y-10 pb-8">
+              <div className="bg-primary/5 p-8 border border-primary/10 flex items-start gap-6">
                 <div className={cn(
                   "w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-black text-white shadow-xl shrink-0",
                   (selectedAttempt?.score || 0) >= 70 ? "bg-emerald-500" : "bg-rose-500"
@@ -1322,34 +1322,34 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           </ScrollArea>
-          <DialogFooter className="p-8 bg-slate-50 border-t">
-            <Button onClick={() => setIsAttemptDialogOpen(false)} variant="secondary" className="rounded-xl font-bold h-12 px-8">Cerrar Auditoría</Button>
+          <DialogFooter className="bg-slate-50 border-t px-8 py-6">
+            <Button onClick={() => setIsAttemptDialogOpen(false)} variant="secondary" className="font-bold h-12 px-8">Cerrar Auditoría</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* New Task Dialog */}
       <Dialog open={isNewTaskDialogOpen} onOpenChange={setIsNewTaskDialogOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <div className="bg-primary p-8 text-white relative">
+        <DialogContent className="mw-2xl">
+          <div className="relative px-8 pt-8">
             <Plus className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
             <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Send className="h-6 w-6 text-emerald-400" /> Asignar Tarea Individual</DialogTitle>
-            <DialogDescription className="text-primary-foreground/70 mt-1">Crea un desafío personalizado para el alumno con evaluación por IA.</DialogDescription>
+            <DialogDescription className="text-muted-foreground mt-1">Crea un desafío personalizado para el alumno con evaluación por IA.</DialogDescription>
           </div>
-          <ScrollArea className="max-h-[70vh]">
-            <div className="p-8 space-y-6">
+          <ScrollArea className="max-h-[70vh] px-8">
+            <div className="space-y-6 pb-8">
               <div className="space-y-2">
                 <Label htmlFor="task-title">Título del Desafío</Label>
-                <Input id="task-title" value={taskTitle} onChange={e => setTaskTitle(e.target.value)} placeholder="Ej: Análisis de caso práctico Módulo 2" className="h-12 rounded-xl" />
+                <Input id="task-title" value={taskTitle} onChange={e => setTaskTitle(e.target.value)} placeholder="Ej: Análisis de caso práctico Módulo 2" className=""  size="lg" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="task-desc">Consigna Detallada</Label>
-                <Textarea id="task-desc" value={taskDesc} onChange={e => setTaskTitleDesc(e.target.value)} placeholder="Describe qué debe realizar el alumno..." className="min-h-[120px] rounded-2xl" />
+                <Textarea id="task-desc" value={taskDesc} onChange={e => setTaskTitleDesc(e.target.value)} placeholder="Describe qué debe realizar el alumno..." size="lg" />
               </div>
               
               <div className="space-y-2">
                 <Label className="text-accent flex items-center gap-2"><BrainCircuit className="h-4 w-4" /> Criterios de Evaluación IA</Label>
-                <Textarea value={taskEvaluationCriteria} onChange={e => setTaskEvaluationCriteria(e.target.value)} placeholder="¿Qué puntos clave debe validar Gemini para calificar esta tarea?" className="min-h-[100px] rounded-2xl bg-accent/5 border-accent/20" />
+                <Textarea value={taskEvaluationCriteria} onChange={e => setTaskEvaluationCriteria(e.target.value)} placeholder="¿Qué puntos clave debe validar Gemini para calificar esta tarea?" size="lg" className="min-h-[100px] bg-accent/5 border-accent/20" />
               </div>
 
               <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-dashed border-primary/10">
@@ -1358,12 +1358,12 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           </ScrollArea>
-          <DialogFooter className="p-8 bg-slate-50 border-t gap-3">
-            <Button onClick={() => setIsNewTaskDialogOpen(false)} variant="ghost" className="rounded-xl font-bold">Cancelar</Button>
+          <DialogFooter className="bg-slate-50 border-t gap-3 px-8 py-6">
+            <Button onClick={() => setIsNewTaskDialogOpen(false)} variant="ghost" className="font-bold">Cancelar</Button>
             <Button 
               onClick={handleSendTask} 
               disabled={isSendingTask || !taskTitle} 
-              className="rounded-xl font-bold px-8 shadow-xl"
+              className="font-bold px-8"
             >
               {isSendingTask ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2 h-4 w-4" />} Asignar Tarea
             </Button>
@@ -1373,8 +1373,8 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
       {/* Task Detail Dialog */}
       <Dialog open={isTaskDetailDialogOpen} onOpenChange={setIsTaskDetailDialogOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <div className="bg-slate-900 p-8 text-white relative">
+        <DialogContent className="mw-2xl">
+          <div className="relative px-8 pt-8">
             <div className="absolute right-8 top-8">
               <Badge className={cn(
                 "px-3 py-1 rounded-full text-[10px] font-black uppercase border-none",
@@ -1384,10 +1384,10 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               </Badge>
             </div>
             <DialogTitle className="text-2xl font-bold pr-20">{selectedTask?.title}</DialogTitle>
-            <DialogDescription className="text-slate-400 mt-1">Asignada el {selectedTask?.createdAt ? format(selectedTask.createdAt.toDate(), 'dd/MM/yyyy HH:mm') : '-'}</DialogDescription>
+            <DialogDescription className="text-muted-foreground mt-1">Asignada el {selectedTask?.createdAt ? format(selectedTask.createdAt.toDate(), 'dd/MM/yyyy HH:mm') : '-'}</DialogDescription>
           </div>
-          <ScrollArea className="max-h-[70vh]">
-            <div className="p-8 space-y-8">
+          <ScrollArea className="max-h-[70vh] px-8">
+            <div className="space-y-8 pb-8">
               <div className="space-y-3">
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Target className="h-4 w-4" /> Consigna</h4>
                 <div className="p-5 bg-secondary/10 rounded-2xl text-sm leading-relaxed italic text-slate-700">
@@ -1433,15 +1433,15 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               )}
             </div>
           </ScrollArea>
-          <DialogFooter className="p-8 bg-slate-50 border-t">
-            <Button onClick={() => setIsTaskDetailDialogOpen(false)} variant="secondary" className="rounded-xl font-bold h-12 px-8">Cerrar Detalle</Button>
+          <DialogFooter className="bg-slate-50 border-t px-8 py-6">
+            <Button onClick={() => setIsTaskDetailDialogOpen(false)} variant="secondary" className="font-bold h-12 px-8">Cerrar Detalle</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       {/* AI Profile Detail Dialog */}
       <Dialog open={isProfileDetailDialogOpen} onOpenChange={setIsProfileDetailDialogOpen}>
-        <DialogContent className="max-w-3xl h-[90vh] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl bg-slate-950 text-white flex flex-col">
-          <div className="p-8 bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden shrink-0">
+        <DialogContent className="mw-3xl h-[90vh] flex flex-col modal-inverse">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden shrink-0 px-8 pt-8">
             <BrainCircuit className="absolute -right-10 -top-10 h-64 w-64 opacity-10 pointer-events-none" />
             <div className="flex items-center gap-5 mb-2">
               <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md">
@@ -1455,30 +1455,30 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="p-8 pt-2 space-y-6">
-              <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
+            <div className="px-8 pb-8 pt-2 space-y-6">
+              <div className="p-6 bg-white/5 border border-white/10">
                 <Label className="text-[10px] font-bold uppercase text-emerald-400 tracking-widest flex items-center gap-2 mb-3"><Lightbulb className="h-4 w-4" /> Resumen de Potencial</Label>
                 <p className="text-lg leading-relaxed text-slate-100 italic">"{selectedProfile?.summary}"</p>
               </div>
 
-              <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
+              <div className="p-6 bg-white/5 border border-white/10">
                 <h5 className="text-[10px] font-bold uppercase text-white/40 mb-3">Patrón de Marca Detectado</h5>
                 <Badge className="bg-emerald-500/20 text-emerald-400 border-none px-4 h-7 font-bold text-xs w-fit">{selectedProfile?.learningStyle}</Badge>
               </div>
 
-              <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
+              <div className="p-6 bg-white/5 border border-white/10">
                 <h5 className="text-[10px] font-bold uppercase text-white/40 mb-3">Justificación del Razonamiento</h5>
                 <p className="text-sm text-slate-400 leading-relaxed">{selectedProfile?.justification}</p>
               </div>
 
-              <div className="bg-white/10 p-8 rounded-[2rem] border border-white/20">
+              <div className="bg-white/10 p-8 border border-white/20">
                 <h4 className="text-[10px] font-bold uppercase text-amber-400 mb-4 flex items-center gap-2"><Target className="h-4 w-4" /> Hoja de Ruta Sugerida</h4>
                 <p className="text-base font-medium text-slate-100 leading-relaxed">{selectedProfile?.recommendation}</p>
               </div>
             </div>
           </ScrollArea>
 
-          <DialogFooter className="p-8 bg-slate-900/50 border-t border-white/10 flex justify-between items-center shrink-0">
+          <DialogFooter className="bg-slate-900/50 border-t border-white/10 flex justify-between items-center shrink-0 px-8 py-6">
             <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Generado el {selectedProfile?.createdAt ? format(selectedProfile.createdAt?.toDate?.() || new Date(selectedProfile.createdAt), 'dd/MM/yyyy HH:mm') : '-'}</span>
             <Button onClick={() => setIsProfileDetailDialogOpen(false)} variant="ghost" className="rounded-xl font-bold text-white hover:bg-white/10 border border-white/10 px-8">Cerrar Diagnóstico</Button>
           </DialogFooter>
@@ -1487,30 +1487,30 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
       {/* New Note Dialog */}
       <Dialog open={isNewNoteDialogOpen} onOpenChange={setIsNewNoteDialogOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <div className="bg-primary p-8 text-white relative">
+        <DialogContent className="mw-2xl">
+          <div className="relative px-8 pt-8">
             <MessageSquare className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
             <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Plus className="h-6 w-6 text-emerald-400" /> Nueva Observación</DialogTitle>
-            <DialogDescription className="text-primary-foreground/70 mt-1">Registra detalles cualitativos sobre el avance del alumno.</DialogDescription>
+            <DialogDescription className="text-muted-foreground mt-1">Registra detalles cualitativos sobre el avance del alumno.</DialogDescription>
           </div>
-          <div className="p-8 space-y-6">
+          <div className="space-y-6 px-8 pb-8">
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Contenido de la nota</Label>
               <Textarea 
                 value={newNote}
                 onChange={e => setNewNote(e.target.value)}
                 placeholder="Escribe aquí tus observaciones..."
-                className="min-h-[200px] rounded-2xl border-2 border-primary/10 font-medium bg-slate-50 p-4"
+                className="min-h-[200px] border-2 border-primary/10 font-medium bg-slate-50 p-4"
               />
             </div>
           </div>
-          <DialogFooter className="p-8 bg-slate-50 border-t">
+          <DialogFooter className="bg-slate-50 border-t px-8 py-6">
             <Button 
               onClick={() => {
                 handleSaveNote().then(() => setIsNewNoteDialogOpen(false));
               }} 
               disabled={isSavingNote || !newNote.trim()}
-              className="w-full h-16 rounded-[1.5rem] font-bold text-xl shadow-2xl bg-primary text-white gap-3"
+              className="w-full h-16 font-bold text-xl bg-primary text-white gap-3"
             >
               {isSavingNote ? <Loader2 className="animate-spin h-6 w-6" /> : <Save className="h-6 w-6" />} 
               Guardar en Bitácora
@@ -1521,22 +1521,22 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
       {/* Note Detail Dialog */}
       <Dialog open={isNoteDetailDialogOpen} onOpenChange={setIsNoteDetailDialogOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl flex flex-col max-h-[80vh]">
-          <div className="bg-slate-900 p-8 text-white relative shrink-0">
+        <DialogContent className="mw-2xl flex flex-col max-h-[80vh]">
+          <div className="relative shrink-0 px-8 pt-8">
             <DialogTitle className="text-xl font-bold flex items-center gap-3"><MessageSquare className="h-5 w-5 text-emerald-400" /> Detalle de Observación</DialogTitle>
-            <DialogDescription className="text-white/40 mt-1 uppercase text-[9px] font-bold tracking-widest">
+            <DialogDescription className="text-muted-foreground/60 mt-1 uppercase text-[9px] font-bold tracking-widest">
               Registrado el {selectedNote?.createdAt ? format(selectedNote.createdAt?.toDate?.() || new Date(selectedNote.createdAt), 'dd/MM/yyyy HH:mm') : '-'}
             </DialogDescription>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-8 space-y-6">
-              <div className="p-8 bg-primary/5 rounded-[2rem] border border-primary/10">
+            <div className="px-8 pb-8 space-y-6">
+              <div className="p-8 bg-primary/5 border border-primary/10">
                 <p className="text-lg leading-relaxed text-slate-700 italic">"{selectedNote?.content}"</p>
               </div>
             </div>
           </ScrollArea>
-          <DialogFooter className="p-8 bg-slate-50 border-t shrink-0">
-            <Button onClick={() => setIsNoteDetailDialogOpen(false)} variant="secondary" className="rounded-xl font-bold h-12 px-8 w-full">Cerrar</Button>
+          <DialogFooter className="bg-slate-50 border-t shrink-0 px-8 py-6">
+            <Button onClick={() => setIsNoteDetailDialogOpen(false)} variant="secondary" className="font-bold h-12 px-8 w-full">Cerrar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

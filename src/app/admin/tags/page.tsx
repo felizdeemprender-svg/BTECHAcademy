@@ -235,7 +235,7 @@ export default function AdminTagsPage() {
 
         {/* Dialog: Manual Add/Edit */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="rounded-2xl p-10 max-w-md border-none shadow-3xl">
+          <DialogContent className="mw-md">
             <DialogHeader className="mb-6">
               <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4">
                 <Tags className="h-8 w-8" />
@@ -252,8 +252,8 @@ export default function AdminTagsPage() {
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
                   placeholder="Ej: Inteligencia Artificial Aplicada" 
-                  className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                />
+                  className="bg-secondary/10 border-none px-4 font-bold"
+                 size="lg" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="tag-description" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Descripción para Buscadores</Label>
@@ -263,8 +263,8 @@ export default function AdminTagsPage() {
                   value={formData.description} 
                   onChange={e => setFormData({...formData, description: e.target.value})} 
                   placeholder="Incluye términos semánticos..." 
-                  className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                />
+                  className="bg-secondary/10 border-none px-4 font-bold"
+                 size="lg" />
               </div>
               <DialogFooter className="mt-8">
                 <Button type="submit" disabled={loading || !formData.name} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl">
@@ -278,19 +278,19 @@ export default function AdminTagsPage() {
 
         {/* Dialog: AI Suggestion */}
         <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
-          <DialogContent className="max-w-xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-            <div className="bg-primary p-8 text-white relative">
+          <DialogContent className="mw-xl">
+            <div className="px-8 pt-8 relative">
               <Sparkles className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
-              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <Globe className="h-6 w-6 text-accent" />
               </div>
               <DialogTitle className="text-2xl font-bold">Generador SEO Inteligente</DialogTitle>
-              <DialogDescription className="text-primary-foreground/70 mt-1">
+              <DialogDescription className="text-muted-foreground mt-1">
                 Indica una rama académica y Gemini propondrá keywords estratégicas para tu catálogo en Google.
               </DialogDescription>
             </div>
 
-            <div className="p-8 space-y-8">
+            <div className="px-8 pb-8 space-y-8">
               <div className="space-y-4">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Rama o Nicho Académico</Label>
                 <div className="flex gap-3">
@@ -299,8 +299,8 @@ export default function AdminTagsPage() {
                     onChange={e => setBranchInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleGenerateAI()}
                     placeholder="Ej: Marketing, Salud Mental, Python..." 
-                    className="h-14 rounded-2xl bg-secondary/10 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
-                  />
+                    className="bg-secondary/10 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
+                   size="xl" />
                   <Button 
                     onClick={handleGenerateAI} 
                     disabled={isGenerating || !branchInput.trim()}

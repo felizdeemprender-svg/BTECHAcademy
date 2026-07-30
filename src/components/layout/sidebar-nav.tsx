@@ -37,6 +37,7 @@ interface NavItem {
   roles: string[];
   subPermission?: string;
   icon: any;
+  group?: string;
 }
 
 interface NavSection {
@@ -101,24 +102,23 @@ export function SidebarNav() {
         { name: 'Centro de Mando', href: '/mentoria/marketing/execution', roles: ['admin', 'marketing', 'mentor'], icon: Cpu },
         { name: 'Track de Campañas', href: '/mentoria/marketing/track', roles: ['admin', 'marketing', 'mentor'], icon: Activity },
         { name: 'Generación de Contenido', href: '/mentoria/marketing/pages', roles: ['admin', 'marketing', 'mentor'], icon: FileBox },
-        { name: 'Colección de Templates', href: '/mentoria/marketing/templates', roles: ['admin', 'marketing', 'mentor'], icon: LayoutIcon },
       ])
     },
     {
       label: 'Administración',
       items: [
-        { name: 'Usuarios', href: '/admin/users', roles: ['admin'], icon: Users },
-        { name: 'Categorías Académicas', href: '/admin/categories', roles: ['admin'], icon: Library },
-        { name: 'Niveles Académicos', href: '/admin/levels', roles: ['admin'], icon: Target },
-        { name: 'Moderación IA', href: '/admin/moderation', roles: ['admin'], icon: ShieldAlert },
-        { name: 'Ecosistema Económico IA', href: '/admin/ai-pricing', roles: ['admin'], icon: Cpu },
-        { name: 'Términos y Condiciones', href: '/admin/terms', roles: ['admin'], icon: FileText },
-        { name: 'Planes de Suscripción', href: '/admin/subscriptions', roles: ['admin'], icon: CreditCard },
-        { name: 'Métodos de Pago', href: '/admin/payment-methods', roles: ['admin'], icon: Zap },
-        { name: 'Facturación', href: '/admin/billing', roles: ['admin'], icon: ReceiptText },
-        { name: 'Tema del Sistema', href: '/admin/theme', roles: ['admin'], icon: Palette },
-        { name: 'Gestión de ADNs', href: '/admin/adns', roles: ['admin'], icon: FileBox },
-        { name: 'Estilos de Landing', href: '/admin/styles', roles: ['admin'], icon: LayoutIcon },
+        { name: 'Usuarios', href: '/admin/users', roles: ['admin'], icon: Users, group: 'USUARIOS' },
+        { name: 'Categorías Académicas', href: '/admin/categories', roles: ['admin'], icon: Library, group: 'ACADÉMICO' },
+        { name: 'Niveles Académicos', href: '/admin/levels', roles: ['admin'], icon: Target, group: 'ACADÉMICO' },
+        { name: 'Plan de Suscripción', href: '/admin/subscriptions', roles: ['admin'], icon: CreditCard, group: 'COMERCIAL' },
+        { name: 'Métodos de Pago', href: '/admin/payment-methods', roles: ['admin'], icon: Zap, group: 'COMERCIAL' },
+        { name: 'Facturación', href: '/admin/billing', roles: ['admin'], icon: ReceiptText, group: 'COMERCIAL' },
+        { name: 'Moderación IA', href: '/admin/moderation', roles: ['admin'], icon: ShieldAlert, group: 'IA' },
+        { name: 'Ecosistema Económico IA', href: '/admin/ai-pricing', roles: ['admin'], icon: Cpu, group: 'IA' },
+        { name: 'Gestión de ADNs', href: '/admin/adns', roles: ['admin'], icon: FileBox, group: 'IA' },
+        { name: 'Tema del Sistema', href: '/admin/theme', roles: ['admin'], icon: Palette, group: 'APARIENCIA' },
+        { name: 'Estilos de Landing', href: '/admin/styles', roles: ['admin'], icon: LayoutIcon, group: 'APARIENCIA' },
+        { name: 'Términos y Condiciones', href: '/admin/terms', roles: ['admin'], icon: FileText, group: 'LEGAL' },
       ]
     },
     {
@@ -204,24 +204,36 @@ export function SidebarNav() {
               isOpen ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
             )}>
               <div className="pt-1.5 space-y-1">
-                {section.items.map((item, index) => (
-                  <button
-                    key={`${item.href}-${index}`}
-                    onClick={() => handleNavigation(item.href)}
-                    className={cn(
-                      "group flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ml-1 w-full text-left",
-                      pathname === item.href
-                        ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
-                        : "text-[hsl(var(--sidebar-foreground)/0.6)] hover:bg-white/5 hover:text-white"
-                    )}
-                  >
-                    <item.icon className={cn("h-4 w-4 shrink-0 transition-colors", pathname === item.href ? "text-accent" : "opacity-40 group-hover:opacity-100")} />
-                    <span className="flex-1 truncate">{item.name}</span>
-                    {pathname === item.href && (
-                      <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent),0.8)]" />
-                    )}
-                  </button>
-                ))}
+                {section.items.map((item, index) => {
+                  const prevGroup = index > 0 ? section.items[index - 1].group : undefined;
+                  const showGroupHeader = item.group && item.group !== prevGroup;
+                  return (
+                    <div key={`${item.href}-${index}`}>
+                      {showGroupHeader && (
+                        <div className="px-4 pt-4 pb-1">
+                          <span className="text-[8px] font-black uppercase tracking-[0.25em] text-[hsl(var(--sidebar-foreground)/0.25)]">
+                            {item.group}
+                          </span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => handleNavigation(item.href)}
+                        className={cn(
+                          "group flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ml-1 w-full text-left",
+                          pathname === item.href
+                            ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
+                            : "text-[hsl(var(--sidebar-foreground)/0.6)] hover:bg-white/5 hover:text-white"
+                        )}
+                      >
+                        <item.icon className={cn("h-4 w-4 shrink-0 transition-colors", pathname === item.href ? "text-accent" : "opacity-40 group-hover:opacity-100")} />
+                        <span className="flex-1 truncate">{item.name}</span>
+                        {pathname === item.href && (
+                          <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent),0.8)]" />
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

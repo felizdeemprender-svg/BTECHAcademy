@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, setDoc, serverTimestamp, limit } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Fragment, useEffect, useState, useCallback } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -519,29 +520,19 @@ export default function MentorInfluencersControl() {
       </div>
 
       {/* ── Modal de Alta ──────────────────────────────────────────────────── */}
-      {showAltaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+      <Dialog open={showAltaModal} onOpenChange={(open) => { if (!open) closeModal(); }}>
+        <DialogContent className="mw-md p-0">
 
-            {/* Header del modal */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
-                  <UserPlus className="h-5 w-5 text-indigo-600" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-slate-900">Dar de Alta Embajador</h2>
-                  <p className="text-xs text-slate-500 font-medium">Buscá al usuario por su email de registro</p>
-                </div>
-              </div>
-              <button
-                onClick={closeModal}
-                aria-label="Cerrar modal"
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
+          {/* Header del modal */}
+          <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100">
+            <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
+              <UserPlus className="h-5 w-5 text-indigo-600" />
             </div>
+            <div>
+              <h2 className="text-base font-black text-slate-900">Dar de Alta Embajador</h2>
+              <p className="text-xs text-slate-500 font-medium">Buscá al usuario por su email de registro</p>
+            </div>
+          </div>
 
             {/* Body del modal */}
             <div className="p-6 space-y-5">
@@ -623,9 +614,8 @@ export default function MentorInfluencersControl() {
                 </ul>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

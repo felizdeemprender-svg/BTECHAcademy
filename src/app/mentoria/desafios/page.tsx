@@ -609,17 +609,17 @@ export default function MentorChallengesPage() {
 
         {/* Dialog: Challenge Details (Student List) */}
         <Dialog open={!!selectedGroup} onOpenChange={open => !open && setSelectedGroup(null)}>
-          <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
-            <div className="bg-primary p-8 text-white shrink-0 relative">
+          <DialogContent className="mw-4xl h-[85vh] flex flex-col">
+            <div className="shrink-0 relative px-8 pt-8">
               <BarChart3 className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl font-bold">{selectedGroup?.title}</DialogTitle>
-                  <DialogDescription className="text-primary-foreground/70 font-medium">Análisis de cumplimiento por alumno.</DialogDescription>
+                  <DialogDescription className="text-muted-foreground font-medium">Análisis de cumplimiento por alumno.</DialogDescription>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-black text-white leading-none">{selectedGroup?.completed} / {selectedGroup?.total}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/50 mt-1">Completados</p>
+                  <p className="text-3xl font-black text-primary leading-none">{selectedGroup?.completed} / {selectedGroup?.total}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mt-1">Completados</p>
                 </div>
               </div>
             </div>
@@ -694,22 +694,22 @@ export default function MentorChallengesPage() {
 
         {/* Dialog: Response Detail (The actual student answer) */}
         <Dialog open={!!selectedTaskDetail} onOpenChange={open => !open && setSelectedTaskDetail(null)}>
-          <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
-            <div className="bg-emerald-600 p-8 text-white shrink-0 relative">
+          <DialogContent className="mw-3xl h-[80vh] flex flex-col">
+            <div className="shrink-0 relative px-8 pt-8">
               <BrainCircuit className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md">
-                  <CheckCircle2 className="h-6 w-6" />
+                <div className="w-12 h-12 bg-primary/10 flex items-center justify-center">
+                  <CheckCircle2 className="text-primary h-6 w-6" />
                 </div>
                 <div className="space-y-0.5">
                   <DialogTitle className="text-2xl font-bold">Auditoría de Entrega</DialogTitle>
-                  <p className="text-emerald-100/70 font-medium">{selectedTaskDetail?.studentName}</p>
+                  <p className="text-muted-foreground font-medium">{selectedTaskDetail?.studentName}</p>
                 </div>
               </div>
             </div>
 
-            <ScrollArea className="flex-1 p-8">
-              <div className="space-y-10">
+            <ScrollArea className="flex-1 px-8">
+              <div className="space-y-10 pb-8">
                 <div className="space-y-4">
                   <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                     <FileText className="h-4 w-4" /> Respuesta del Alumno
@@ -752,16 +752,16 @@ export default function MentorChallengesPage() {
 
         {/* Dialog: Create Global Challenge */}
         <Dialog open={isCreateOpen} onOpenChange={(open) => { setIsCreateOpen(open); if(!open) resetForm(); }}>
-          <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
-            <div className="bg-primary p-8 text-white relative shrink-0">
+          <DialogContent className="mw-4xl h-[90vh] flex flex-col">
+            <div className="relative shrink-0 px-8 pt-8">
               <Target className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
               <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Target className="h-6 w-6 text-accent" /> Asignar Desafío Global</DialogTitle>
-              <DialogDescription className="text-primary-foreground/70 mt-1">Crea una consigna y selecciona a los destinatarios por curso o perfil.</DialogDescription>
+              <DialogDescription className="text-muted-foreground mt-1">Crea una consigna y selecciona a los destinatarios por curso o perfil.</DialogDescription>
             </div>
 
             <div className="flex-1 overflow-hidden flex flex-col">
-              <ScrollArea className="flex-1 p-8">
-                <div className="space-y-10">
+              <ScrollArea className="flex-1 px-8">
+                <div className="space-y-10 pb-8">
                   {/* Step 1: Consigna */}
                   <section className="space-y-6">
                     <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
@@ -771,15 +771,15 @@ export default function MentorChallengesPage() {
                     <div className="grid gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Título del Desafío</Label>
-                        <Input value={taskData.title} onChange={e => setTaskData({...taskData, title: e.target.value})} placeholder="Ej: Proyecto Final: Plan de Marketing" className="h-12 rounded-xl bg-secondary/10 border-none font-bold" />
+                        <Input value={taskData.title} onChange={e => setTaskData({...taskData, title: e.target.value})} placeholder="Ej: Proyecto Final: Plan de Marketing" className="bg-secondary/10 border-none font-bold"  size="lg" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Consigna Pedagógica</Label>
-                        <Textarea value={taskData.description} onChange={e => setTaskData({...taskData, description: e.target.value})} placeholder="Describe detalladamente qué debe realizar el alumno..." className="min-h-[120px] rounded-2xl bg-secondary/10 border-none p-6" />
+                        <Textarea value={taskData.description} onChange={e => setTaskData({...taskData, description: e.target.value})} placeholder="Describe detalladamente qué debe realizar el alumno..." size="lg" className="bg-secondary/10 border-none p-6" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-bold uppercase text-accent ml-1 flex items-center gap-2"><BrainCircuit className="h-3 w-3" /> Criterios de Evaluación IA</Label>
-                        <Textarea value={taskData.evaluationCriteria} onChange={e => setTaskData({...taskData, evaluationCriteria: e.target.value})} placeholder="¿Qué puntos clave debe validar la IA para calificar la tarea?" className="min-h-[100px] rounded-2xl bg-accent/5 border-accent/20 p-6" />
+                        <Textarea value={taskData.evaluationCriteria} onChange={e => setTaskData({...taskData, evaluationCriteria: e.target.value})} placeholder="¿Qué puntos clave debe validar la IA para calificar la tarea?" size="lg" className="min-h-[100px] bg-accent/5 border-accent/20 p-6" />
                       </div>
                       <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-dashed border-primary/10">
                         <div className="flex items-center gap-3"><Info className="h-4 w-4 text-primary" /><Label className="text-xs font-bold">Exigir Adjunto (PDF)</Label></div>
@@ -924,7 +924,7 @@ export default function MentorChallengesPage() {
                     <div className="space-y-4">
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Buscar alumno..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 h-11 rounded-xl bg-secondary/5 border-none" />
+                        <Input placeholder="Buscar alumno..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 h-11 bg-secondary/5 border-none" />
                       </div>
 
                       <div className="border rounded-2xl overflow-hidden bg-slate-50">
@@ -988,7 +988,7 @@ export default function MentorChallengesPage() {
 
         {/* AlertDialog: Purge Tasks */}
         <AlertDialog open={isPurgeOpen} onOpenChange={(open) => { setIsPurgeOpen(open); if(!open) clearUILocks(); }}>
-          <AlertDialogContent className="rounded-[2.5rem] p-10 max-w-md border-none shadow-3xl">
+          <AlertDialogContent className="mw-md">
             <AlertDialogHeader className="items-center text-center">
               <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-6">
                 <AlertTriangle className="h-10 w-10" />

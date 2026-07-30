@@ -690,7 +690,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
               <CardContent className="p-8 space-y-8">
                 <div className="grid gap-6">
                   <div className="space-y-4">
-                    <div className="space-y-2"><Label>Título del Programa</Label><Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="h-12 rounded-xl font-bold" /></div>
+                    <div className="space-y-2"><Label>Título del Programa</Label><Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="font-bold"  size="lg" /></div>
                     
                     <ImageEditor 
                       label="Miniatura del Curso" 
@@ -710,7 +710,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       <Switch checked={!formData.skipAllowed} onCheckedChange={(val) => setFormData({...formData, skipAllowed: !val})} />
                     </div>
                   </div>
-                  <div className="space-y-2"><Label>Descripción General</Label><Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[120px] rounded-xl" /></div>
+                  <div className="space-y-2"><Label>Descripción General</Label><Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} size="lg" /></div>
 
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -719,10 +719,10 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         value={formData.categoryId} 
                         onValueChange={val => setFormData({...formData, categoryId: val})}
                       >
-                        <SelectTrigger className="h-12 rounded-xl bg-secondary/5 border-none font-bold">
+                        <SelectTrigger size="lg" className="bg-secondary/5 border-none font-bold">
                           <SelectValue placeholder="Selecciona una categoría" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-xl">
+                        <SelectContent className="border-none shadow-xl">
                           {categories?.map(cat => (
                             <SelectItem key={cat.id} value={cat.id} className="font-bold">
                               {cat.name}
@@ -738,10 +738,10 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         value={formData.level} 
                         onValueChange={val => setFormData({...formData, level: val})}
                       >
-                        <SelectTrigger className="h-12 rounded-xl bg-secondary/5 border-none font-bold">
+                        <SelectTrigger size="lg" className="bg-secondary/5 border-none font-bold">
                           <SelectValue placeholder="Selecciona el nivel" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-xl">
+                        <SelectContent className="border-none shadow-xl">
                           {levels?.map(lvl => (
                             <SelectItem key={lvl.id} value={lvl.name} className="font-bold">
                               {lvl.name}
@@ -798,14 +798,14 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         </Tabs>
 
         <Dialog open={isModuleModalOpen} onOpenChange={(open) => { setIsModuleModalOpen(open); if(!open) clearUILocks(); }}>
-          <DialogContent className="max-w-5xl h-[90vh] flex flex-col rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-            <DialogHeader className="p-8 bg-primary/5">
+          <DialogContent className="mw-5xl h-[90vh] flex flex-col">
+            <DialogHeader className="bg-primary/5 px-8 pt-8">
               <DialogTitle className="text-2xl font-bold">{currentModule?.id ? 'Diseñador de Clase' : 'Nuevo Tema Académico'}</DialogTitle>
               <DialogDescription>Define el contenido y los criterios de evaluación del módulo.</DialogDescription>
             </DialogHeader>
-            <ScrollArea className="flex-1 p-8">
+            <ScrollArea className="flex-1 px-8">
               {currentModule && (
-                <div className="space-y-10">
+                <div className="space-y-10 pb-8">
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Nombre de la Clase</Label>
@@ -813,8 +813,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         ref={classNameInputRef}
                         value={currentModule.title} 
                         onChange={e => setCurrentModule({...currentModule!, title: e.target.value})} 
-                        className="h-14 font-bold rounded-xl text-xl" 
-                      />
+                        className="font-bold text-xl" 
+                       size="xl" />
                     </div>
                     <div className="space-y-2">
                       <Label>Descripción de la Clase</Label>
@@ -831,9 +831,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       <Input 
                         value={currentModule.duration || ''} 
                         onChange={e => setCurrentModule({...currentModule!, duration: e.target.value})} 
-                        className="h-14 font-bold rounded-xl" 
+                        className="font-bold" 
                         placeholder="Ej. 2 horas, 45 min..."
-                      />
+                       size="xl" />
                       <p className="text-xs text-muted-foreground">Esto se mostrará en el Temario de tu landing page.</p>
                     </div>
                   </div>
@@ -907,7 +907,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     <TabsContent value="video">
                       <div className="space-y-4">
                         <Label>URL de Video (YouTube o Vimeo)</Label>
-                        <Input value={currentModule.videoUrl} onChange={e => setCurrentModule({...currentModule!, videoUrl: e.target.value})} className="h-12 rounded-xl" placeholder="https://..." />
+                        <Input value={currentModule.videoUrl} onChange={e => setCurrentModule({...currentModule!, videoUrl: e.target.value})} className="" placeholder="https://..."  size="lg" />
                         
                         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-xl flex items-start gap-3 mt-2">
                           <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
@@ -935,8 +935,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                             const val = parseInt(e.target.value);
                             setCurrentModule({...currentModule!, minPassingScore: isNaN(val) ? 0 : val});
                           }} 
-                          className="h-12 rounded-xl" 
-                        />
+                          className="" 
+                         size="lg" />
                         <div className="flex items-start gap-2 mt-2 px-1">
                           <Info className="h-3 w-3 text-accent mt-0.5" />
                           <p className="text-[10px] text-accent/80 leading-tight">
@@ -987,8 +987,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                 </div>
               )}
             </ScrollArea>
-            <DialogFooter className="p-8 bg-primary/5">
-              <Button onClick={handleSaveModule} className="h-14 px-12 rounded-2xl text-lg font-bold shadow-xl" disabled={loading}>
+            <DialogFooter className="bg-primary/5 px-8 py-6">
+              <Button onClick={handleSaveModule} className="h-14 px-12 text-lg font-bold" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} Guardar Clase
               </Button>
             </DialogFooter>
@@ -997,33 +997,33 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
         {/* AI Modal */}
         <Dialog open={isAiModalOpen} onOpenChange={(open) => { setIsAiModalOpen(open); if(!open) { setAiFlowStep(1); setExtractedContent(''); clearUILocks(); } }}>
-          <DialogContent className="rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl max-w-xl">
-            <div className="bg-primary p-8 text-white relative">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
-                <BrainCircuit className="text-white h-6 w-6" />
+          <DialogContent className="mw-xl">
+            <div className="relative px-8 pt-8">
+              <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mb-4">
+                <BrainCircuit className="text-primary h-6 w-6" />
               </div>
               <DialogTitle className="text-2xl font-bold">Generación Inteligente</DialogTitle>
-              <DialogDescription className="text-primary-foreground/70 text-sm mt-1">Utiliza el Documento Maestro para entrenar a la IA.</DialogDescription>
+              <DialogDescription className="text-sm mt-1 text-muted-foreground">Utiliza el Documento Maestro para entrenar a la IA.</DialogDescription>
               
-              <div className="mt-8 flex items-center justify-between relative px-4">
-                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/10 -translate-y-1/2 z-0 mx-8" />
-                <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 1 ? "text-white" : "text-white/30")}>
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-green-500 border-green-500" : "bg-primary border-white/20")}>
+              <div className="mt-8 flex items-center justify-between relative px-0">
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-primary/10 -translate-y-1/2 z-0 mx-8" />
+                <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 1 ? "text-primary" : "text-muted-foreground/30")}>
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-green-500 border-green-500" : "bg-primary/10 border-primary/20")}>
                     {aiFlowStep > 1 ? <Check className="h-4 w-4" /> : "1"}
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-widest">Lectura</span>
                 </div>
-                <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 2 ? "text-white" : "text-white/30")}>
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 2 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : "bg-primary border-white/20")}>2</div>
+                <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 2 ? "text-primary" : "text-muted-foreground/30")}>
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 2 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : "bg-primary/10 border-primary/20")}>2</div>
                   <span className="text-[10px] font-bold uppercase tracking-widest">Generación</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-8 space-y-8">
+            <div className="space-y-8 px-8 pb-8">
               {aiFlowStep === 1 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="flex flex-col items-center text-center gap-4 py-6 px-10 bg-secondary/10 rounded-[2rem] border-2 border-dashed border-primary/10">
+                  <div className="flex flex-col items-center text-center gap-4 py-6 px-10 bg-secondary/10 border-2 border-dashed border-primary/10">
                     <FileText className="h-12 w-12 text-primary/40" />
                     <div className="space-y-1">
                       <h4 className="font-bold text-lg">Procesar Documento Maestro</h4>
@@ -1055,11 +1055,11 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Cantidad</Label>
-                      <Input type="number" className="h-12 rounded-xl bg-secondary/30 border-none font-bold" value={aiPrefs.numQuestions} onChange={e => setAiPrefs({...aiPrefs, numQuestions: parseInt(e.target.value) || 0})} />
+                      <Input type="number" className="bg-secondary/30 border-none font-bold" value={aiPrefs.numQuestions} onChange={e => setAiPrefs({...aiPrefs, numQuestions: parseInt(e.target.value) || 0})}  size="lg" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Rol</Label>
-                      <Input className="h-12 rounded-xl bg-secondary/30 border-none" value={aiPrefs.role} onChange={e => setAiPrefs({...aiPrefs, role: e.target.value})} />
+                      <Input className="bg-secondary/30 border-none" value={aiPrefs.role} onChange={e => setAiPrefs({...aiPrefs, role: e.target.value})}  size="lg" />
                     </div>
                   </div>
 

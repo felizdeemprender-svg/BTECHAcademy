@@ -114,7 +114,7 @@ export default function StudentTasksPage() {
             </TabsTrigger>
           </TabsList>
 
-          <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+          <Card>
             <CardContent className="p-0">
               <TabsContent value="pending" className="m-0 animate-in fade-in">
                 <TaskTable 

@@ -191,8 +191,8 @@ export default function AdminModerationPage() {
                   onChange={e => setNewTopic(e.target.value)} 
                   onKeyDown={e => e.key === 'Enter' && handleAddTopic()}
                   placeholder="Ej: Criptomonedas, Salud Mental, Política..." 
-                  className="h-14 rounded-2xl bg-secondary/10 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
-                />
+                  className="bg-secondary/10 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
+                 size="xl" />
                 <Button onClick={handleAddTopic} className="h-14 px-6 rounded-2xl font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg">
                   <Plus className="h-5 w-5" />
                 </Button>
@@ -247,19 +247,19 @@ export default function AdminModerationPage() {
 
         {/* AI Suggestion Dialog */}
         <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
-          <DialogContent className="max-w-xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-            <div className="bg-slate-900 p-8 text-white relative">
+          <DialogContent className="mw-xl">
+            <div className="px-8 pt-8 relative">
               <Sparkles className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
-              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                 <ShieldAlert className="h-6 w-6 text-accent" />
               </div>
               <DialogTitle className="text-2xl font-bold">Generador de Protocolos IA</DialogTitle>
-              <DialogDescription className="text-slate-400 mt-1">
+              <DialogDescription className="text-muted-foreground mt-1">
                 Indica el área de actividad y Gemini propondrá temas que podrían requerir supervisión humana.
               </DialogDescription>
             </div>
 
-            <div className="p-8 space-y-8">
+            <div className="px-8 pb-8 space-y-8">
               <div className="space-y-4">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Área o Contexto Institucional</Label>
                 <div className="flex gap-3">
@@ -268,8 +268,8 @@ export default function AdminModerationPage() {
                     onChange={e => setContextInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleGenerateAI()}
                     placeholder="Ej: Fintech, Salud Infantil, Educación Terciaria..." 
-                    className="h-14 rounded-2xl bg-secondary/10 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
-                  />
+                    className="bg-secondary/10 border-none font-bold px-6 focus:ring-2 focus:ring-primary/20"
+                   size="xl" />
                   <Button 
                     onClick={handleGenerateAI} 
                     disabled={isGenerating || !contextInput.trim()}

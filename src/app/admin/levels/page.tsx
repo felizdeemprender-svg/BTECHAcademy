@@ -174,7 +174,7 @@ export default function AdminLevelsPage() {
 
         {/* Dialog: Manual Add/Edit */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="rounded-2xl p-10 max-w-md border-none shadow-3xl">
+          <DialogContent className="mw-md">
             <DialogHeader className="mb-6">
               <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4">
                 <Trophy className="h-8 w-8" />
@@ -191,8 +191,8 @@ export default function AdminLevelsPage() {
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
                   placeholder="Ej: Principiante" 
-                  className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                />
+                  className="bg-secondary/10 border-none px-4 font-bold"
+                 size="lg" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="level-order" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Orden de Visualización</Label>
@@ -202,8 +202,8 @@ export default function AdminLevelsPage() {
                   type="number"
                   value={formData.order} 
                   onChange={e => setFormData({...formData, order: parseInt(e.target.value) || 0})} 
-                  className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                />
+                  className="bg-secondary/10 border-none px-4 font-bold"
+                 size="lg" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="level-description" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Descripción</Label>
@@ -213,8 +213,8 @@ export default function AdminLevelsPage() {
                   value={formData.description} 
                   onChange={e => setFormData({...formData, description: e.target.value})} 
                   placeholder="Descripción breve..." 
-                  className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                />
+                  className="bg-secondary/10 border-none px-4 font-bold"
+                 size="lg" />
               </div>
               <DialogFooter className="mt-8">
                 <Button type="submit" disabled={loading || !formData.name} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl">

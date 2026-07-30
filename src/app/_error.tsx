@@ -33,7 +33,7 @@ export default function Error({
         <div className="space-y-4">
           <Button 
             onClick={reset} 
-            className="w-full h-12 text-lg bg-primary hover:bg-primary/90"
+            className="w-full h-12 text-lg"
           >
             <RefreshCw className="w-5 h-5 mr-2" />
             Intentar nuevamente

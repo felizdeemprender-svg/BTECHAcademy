@@ -119,7 +119,7 @@ export function VideoProductionPanel({
               });
             }}
           >
-            <SelectTrigger className="h-9 rounded-xl bg-emerald-600 border-none text-[9px] font-black uppercase text-white px-4 shadow-lg">
+            <SelectTrigger className="h-9 bg-emerald-600 border-none text-[9px] font-black uppercase text-white px-4 shadow-lg">
               <SelectValue placeholder="ADN" />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -170,7 +170,7 @@ export function VideoProductionPanel({
               });
             }}
           >
-            <SelectTrigger className="w-[140px] h-10 rounded-xl bg-slate-900 border-white/10 text-white text-[10px] font-black focus:ring-violet-500/50 shadow-2xl">
+            <SelectTrigger className="w-[140px] h-10 bg-slate-900 border-white/10 text-white text-[10px] font-black focus:ring-violet-500/50 shadow-2xl">
               <SelectValue placeholder="Elegir Voz" />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -198,7 +198,7 @@ export function VideoProductionPanel({
               });
             }}
           >
-            <SelectTrigger className="w-[100px] h-9 rounded-xl bg-violet-600 border-none text-white text-[9px] font-black shadow-lg">
+            <SelectTrigger className="w-[100px] h-9 bg-violet-600 border-none text-white text-[9px] font-black shadow-lg">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-white/10 text-white">

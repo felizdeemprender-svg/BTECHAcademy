@@ -13,7 +13,7 @@ interface StyleDetailsProps {
 export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) {
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+      <DialogContent className="mw-4xl h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 py-4 border-b bg-slate-50 shrink-0">
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-xl bg-white border shadow-sm flex items-center justify-center shrink-0 overflow-hidden">

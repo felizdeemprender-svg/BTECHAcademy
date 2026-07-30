@@ -720,7 +720,7 @@ export function TemplateEditor({
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-[0.2em]">Cuerpo Narrativo</Label>
-                    <Textarea value={e.body} onChange={v => updateAsset('emails', eIdx, 'body', v.target.value)} className="min-h-[500px] rounded-[2.5rem] border-white/5 bg-white/5 p-12 leading-relaxed text-lg font-medium text-slate-200 shadow-inner focus-visible:ring-violet-500/50" />
+                    <Textarea value={e.body} onChange={v => updateAsset('emails', eIdx, 'body', v.target.value)} className="min-h-[500px] border-white/5 bg-white/5 p-12 leading-relaxed text-lg font-medium text-slate-200 shadow-inner focus-visible:ring-violet-500/50" />
                   </div>
 
                   <div className="pt-6 border-t border-white/5">
@@ -729,7 +729,7 @@ export function TemplateEditor({
                       value={e.landingId || 'mentor'}
                       onValueChange={(val) => updateAsset('emails', eIdx, 'landingId', val)}
                     >
-                      <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/5 text-xs font-bold text-white px-8 shadow-2xl">
+                      <SelectTrigger size="xl" className="bg-white/5 border-white/5 text-xs font-bold text-white px-8 shadow-2xl">
                         <div className="flex items-center gap-3">
                           <Link2 className="h-4 w-4 text-violet-500" />
                           <span>Vincular con: <SelectValue placeholder="Seleccionar Landing" /></span>
@@ -782,8 +782,8 @@ export function TemplateEditor({
                         placeholder="Ej. Reel Venta Navidad" 
                         value={newPieceConfig.name} 
                         onChange={(e) => setNewPieceConfig(prev => ({ ...prev, name: e.target.value }))}
-                        className="h-14 rounded-2xl bg-white/5 border-white/10 text-sm font-bold text-white px-6"
-                      />
+                        className="bg-white/5 border-white/10 text-sm font-bold text-white px-6"
+                       size="xl" />
                     </div>
                     <div className="grid md:grid-cols-3 gap-6 w-full">
                       <div className="space-y-3">
@@ -797,7 +797,7 @@ export function TemplateEditor({
                           setNewPieceConfig(prev => ({ ...prev, platform: v, type: defaultType }));
                         }}
                       >
-                        <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-xs font-bold text-white px-6">
+                        <SelectTrigger size="xl" className="bg-white/5 border-white/10 text-xs font-bold text-white px-6">
                           <SelectValue placeholder="Plataforma" />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -811,7 +811,7 @@ export function TemplateEditor({
                     <div className="space-y-3">
                       <Label className="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">2. Formato</Label>
                       <Select value={newPieceConfig.type} onValueChange={(v) => setNewPieceConfig(prev => ({ ...prev, type: v }))}>
-                        <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-xs font-bold text-white px-6">
+                        <SelectTrigger size="xl" className="bg-white/5 border-white/10 text-xs font-bold text-white px-6">
                           <SelectValue placeholder="Tipo" />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -842,7 +842,7 @@ export function TemplateEditor({
                     <div className="space-y-3">
                       <Label className="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">3. ADN Maestro</Label>
                       <Select value={newPieceConfig.adnId} onValueChange={(v) => setNewPieceConfig(prev => ({ ...prev, adnId: v }))}>
-                        <SelectTrigger className="h-14 rounded-2xl bg-emerald-600 border-none text-xs font-black uppercase text-white px-6 shadow-xl">
+                        <SelectTrigger size="xl" className="bg-emerald-600 border-none text-xs font-black uppercase text-white px-6 shadow-xl">
                           <SelectValue placeholder="Estilo ADN" />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -948,7 +948,7 @@ export function TemplateEditor({
                                             <FileEdit className="h-5 w-5" />
                                           </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-xl w-full bg-slate-950 border-white/10 p-6 md:p-8 rounded-[3rem]">
+                                         <DialogContent className="mw-xl w-full modal-inverse">
                                           <DialogHeader>
                                             <DialogTitle className="text-xl md:text-2xl font-black text-white uppercase tracking-widest">Editar Textos de Publicación</DialogTitle>
                                             <DialogDescription className="text-slate-400">Edita el gancho y la descripción de la pieza.</DialogDescription>
@@ -957,11 +957,11 @@ export function TemplateEditor({
                                           <div className="space-y-6 mt-4">
                                             <div className="space-y-2">
                                               <Label className="text-[10px] font-bold text-emerald-600/60 uppercase ml-1">Gancho (Hook)</Label>
-                                              <Input value={s.hook} onChange={e => updateAsset('socials', globalIdx, 'hook', e.target.value)} className="bg-emerald-500/5 border-emerald-500/10 text-emerald-400 text-sm font-black italic rounded-xl h-12 px-4" />
+                                              <Input value={s.hook} onChange={e => updateAsset('socials', globalIdx, 'hook', e.target.value)} className="bg-emerald-500/5 border-emerald-500/10 text-emerald-400 text-sm font-black italic px-4"  size="lg" />
                                             </div>
                                             <div className="space-y-2">
                                               <Label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Cuerpo (Caption)</Label>
-                                              <Textarea value={s.caption} onChange={e => updateAsset('socials', globalIdx, 'caption', e.target.value)} className="min-h-[120px] border-white/10 bg-white/[0.02] rounded-2xl p-4 text-sm font-medium text-slate-300" />
+                                              <Textarea value={s.caption} onChange={e => updateAsset('socials', globalIdx, 'caption', e.target.value)} size="lg" className="border-white/10 bg-white/[0.02] p-4 text-sm font-medium text-slate-300" />
                                             </div>
                                           </div>
                                           
@@ -1021,7 +1021,7 @@ export function TemplateEditor({
                                             <FileEdit className="h-5 w-5" />
                                           </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-y-auto bg-slate-950 border-white/10 p-4 md:p-10 rounded-[3rem]">
+                                         <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-y-auto modal-inverse">
                                           <DialogHeader>
                                             <DialogTitle className="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">{s.marketingName || 'Editor de Pieza'}</DialogTitle>
                                             <DialogDescription className="text-slate-400">Edita los textos, escenas y produce el video de tu pieza on-demand.</DialogDescription>
@@ -1057,7 +1057,7 @@ export function TemplateEditor({
                                                       toast({ title: `ADN ${selectedAdn?.name || val} Seleccionado`, description: "Pulsa 'Re-generar' para ajustar el guion a este estilo." });
                                                     }}
                                                   >
-                                                    <SelectTrigger className="h-11 rounded-2xl bg-emerald-600 border-none text-[9px] font-black uppercase text-white tracking-widest shadow-2xl">
+                                                    <SelectTrigger className="h-11 bg-emerald-600 border-none text-[9px] font-black uppercase text-white tracking-widest shadow-2xl">
                                                       <div className="flex items-center gap-2">
                                                         <Clapperboard className="h-3.5 w-3.5" />
                                                         <span>ESTILO: <SelectValue placeholder="ADN" /></span>
@@ -1091,7 +1091,7 @@ export function TemplateEditor({
                                                       });
                                                     }}
                                                   >
-                                                    <SelectTrigger className="h-11 rounded-2xl bg-white/5 border-white/10 text-[9px] font-black uppercase text-white tracking-widest shadow-2xl">
+                                                    <SelectTrigger className="h-11 bg-white/5 border-white/10 text-[9px] font-black uppercase text-white tracking-widest shadow-2xl">
                                                       <div className="flex items-center gap-2">
                                                         <Layout className="h-3.5 w-3.5" />
                                                         <span>TIPO: <SelectValue placeholder="Formato" /></span>
@@ -1112,7 +1112,7 @@ export function TemplateEditor({
                                                     value={s.landingId || 'mentor'}
                                                     onValueChange={(val) => updateAsset('socials', globalIdx, 'landingId', val)}
                                                   >
-                                                    <SelectTrigger className="h-11 rounded-2xl bg-slate-900 border-white/10 text-[9px] font-black uppercase text-emerald-400 tracking-widest shadow-2xl">
+                                                    <SelectTrigger className="h-11 bg-slate-900 border-white/10 text-[9px] font-black uppercase text-emerald-400 tracking-widest shadow-2xl">
                                                       <div className="flex items-center gap-2">
                                                         <Link2 className="h-3.5 w-3.5" />
                                                         <span>URL <SelectValue placeholder="Destino" /></span>
@@ -1134,17 +1134,17 @@ export function TemplateEditor({
                                             </div>
 
                                             <div className="space-y-3">
-                                              <Input value={s.marketingName} onChange={e => updateAsset('socials', globalIdx, 'marketingName', e.target.value)} className="font-bold border-white/10 bg-white/5 h-16 px-10 rounded-[2rem] text-2xl text-white uppercase" />
+                                              <Input value={s.marketingName} onChange={e => updateAsset('socials', globalIdx, 'marketingName', e.target.value)} className="font-bold border-white/10 bg-white/5 h-16 px-10 text-2xl text-white uppercase" />
                                             </div>
                                             
                                             <div className="space-y-4 bg-white/5 p-8 rounded-[3rem] border border-white/5 shadow-2xl">
                                               <div className="space-y-2">
                                                 <Label className="text-[8px] font-bold text-emerald-600/60 uppercase ml-1">Gancho (Hook)</Label>
-                                                <Input value={s.hook} onChange={e => updateAsset('socials', globalIdx, 'hook', e.target.value)} className="bg-emerald-500/5 border-emerald-500/10 text-emerald-400 text-xs font-black italic rounded-xl h-10 px-4" />
+                                                <Input value={s.hook} onChange={e => updateAsset('socials', globalIdx, 'hook', e.target.value)} className="bg-emerald-500/5 border-emerald-500/10 text-emerald-400 text-xs font-black italic h-10 px-4" />
                                               </div>
                                               <div className="space-y-2">
                                                 <Label className="text-[8px] font-bold text-slate-500 uppercase ml-1">Cuerpo (Caption)</Label>
-                                                <Textarea value={s.caption} onChange={e => updateAsset('socials', globalIdx, 'caption', e.target.value)} className="min-h-[140px] border-none bg-white/[0.02] rounded-2xl p-4 text-sm font-medium text-slate-300" />
+                                                <Textarea value={s.caption} onChange={e => updateAsset('socials', globalIdx, 'caption', e.target.value)} className="min-h-[140px] border-none bg-white/[0.02] p-4 text-sm font-medium text-slate-300" />
                                               </div>
                                             </div>
 
@@ -1283,7 +1283,7 @@ export function TemplateEditor({
                     <h3 className="font-black text-2xl text-white uppercase tracking-tighter">Títulos</h3>
                     <div className="space-y-6">
                       {a.headlines?.map((h: string, i: number) => (
-                        <Input key={i} value={h} onChange={e => updateAsset('ads', aIdx, 'headlines', e.target.value, i)} className="font-bold h-16 bg-white/5 border-white/5 text-white rounded-xl px-8" />
+                        <Input key={i} value={h} onChange={e => updateAsset('ads', aIdx, 'headlines', e.target.value, i)} className="font-bold h-16 bg-white/5 border-white/5 text-white px-8" />
                       ))}
                     </div>
                  </Card>
@@ -1295,7 +1295,7 @@ export function TemplateEditor({
                           value={a.landingId || 'mentor'}
                           onValueChange={(val) => updateAsset('ads', aIdx, 'landingId', val)}
                         >
-                          <SelectTrigger className="h-10 rounded-xl bg-white/5 border-white/5 text-[9px] font-black uppercase text-cyan-400 tracking-widest shadow-2xl">
+                          <SelectTrigger className="h-10 bg-white/5 border-white/5 text-[9px] font-black uppercase text-cyan-400 tracking-widest shadow-2xl">
                             <div className="flex items-center gap-2">
                               <Link2 className="h-3.5 w-3.5" />
                               <span>Link: <SelectValue placeholder="Destino" /></span>
@@ -1316,7 +1316,7 @@ export function TemplateEditor({
                     </div>
                     <div className="space-y-8">
                       {a.descriptions?.map((d: string, i: number) => (
-                        <Textarea key={i} value={d} onChange={e => updateAsset('ads', aIdx, 'descriptions', e.target.value, i)} className="min-h-[140px] bg-white/5 border-white/5 text-slate-200 rounded-xl p-8" />
+                        <Textarea key={i} value={d} onChange={e => updateAsset('ads', aIdx, 'descriptions', e.target.value, i)} className="min-h-[140px] bg-white/5 border-white/5 text-slate-200 p-8" />
                       ))}
                     </div>
                  </Card>

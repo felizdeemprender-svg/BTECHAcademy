@@ -38,13 +38,13 @@ export default function LandingPage() {
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Link href="/auth">
-                <Button size="lg" className="h-16 px-12 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">
+                <Button size="2xl" className="shadow-xl shadow-primary/20">
                   <Rocket className="w-6 h-6 mr-2" />
                   Comenzar Ahora
                 </Button>
               </Link>
               <Link href="/courses">
-                <Button size="lg" variant="outline" className="h-16 px-12 text-lg border-2 hover:bg-secondary">
+                <Button size="2xl" variant="outline" className="border-2 hover:bg-secondary">
                   <BookOpen className="w-6 h-6 mr-2" />
                   Explorar Cursos
                 </Button>
@@ -138,7 +138,7 @@ export default function LandingPage() {
               Únete a miles de mentores que ya están cambiando vidas con FastoriaAcademy
             </p>
             <Link href="/auth">
-              <Button size="lg" className="h-16 px-12 text-lg bg-primary hover:bg-primary/90 shadow-xl">
+              <Button size="2xl" className="shadow-xl">
                 <UserCheck className="w-6 h-6 mr-2" />
                 Crear Cuenta Gratuita
               </Button>

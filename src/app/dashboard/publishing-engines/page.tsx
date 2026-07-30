@@ -425,8 +425,8 @@ export default function PublishingEnginesPage() {
         </div>
 
         <Dialog open={isConfigOpen} onOpenChange={(open) => { setIsConfigOpen(open); if(!open) clearUILocks(); }}>
-          <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-            <div className={cn("p-8 text-white relative", selectedMotor?.color === 'emerald' ? 'bg-emerald-600' : selectedMotor?.color === 'blue' ? 'bg-blue-600' : 'bg-amber-600')}>
+          <DialogContent className="mw-2xl">
+            <div className={cn("px-8 pt-8 text-white relative", selectedMotor?.color === 'emerald' ? 'bg-emerald-600' : selectedMotor?.color === 'blue' ? 'bg-blue-600' : 'bg-amber-600')}>
               <Sparkles className="absolute -right-4 -top-4 h-24 w-24 opacity-10" />
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
@@ -446,8 +446,8 @@ export default function PublishingEnginesPage() {
               </TabsList>
 
               <ScrollArea className="max-h-[60vh]">
-                <div className="p-8">
-                  <TabsContent value="params" className="m-0 space-y-8 animate-in fade-in">
+                  <div className="px-8 pb-8">
+                    <TabsContent value="params" className="m-0 space-y-8 animate-in fade-in">
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">
@@ -458,8 +458,8 @@ export default function PublishingEnginesPage() {
                           value={draftConfig.apiKey}
                           onChange={(e) => setDraftConfig(prev => ({ ...prev, apiKey: e.target.value }))}
                           placeholder="••••••••••••••••••••••••" 
-                          className="h-12 rounded-xl bg-secondary/10 border-none font-mono text-sm" 
-                        />
+                          className="bg-secondary/10 border-none font-mono text-sm" 
+                         size="lg" />
                       </div>
 
                       <div className="space-y-2">
@@ -470,8 +470,8 @@ export default function PublishingEnginesPage() {
                           value={draftConfig.accountId}
                           onChange={(e) => setDraftConfig(prev => ({ ...prev, accountId: e.target.value }))}
                           placeholder="Ej: 1234567890" 
-                          className="h-12 rounded-xl bg-secondary/10 border-none text-sm" 
-                        />
+                          className="bg-secondary/10 border-none text-sm" 
+                         size="lg" />
                       </div>
 
                       <div className="space-y-2">
@@ -482,7 +482,7 @@ export default function PublishingEnginesPage() {
                           value={draftConfig.mode}
                           onValueChange={(val) => setDraftConfig(prev => ({ ...prev, mode: val }))}
                         >
-                          <SelectTrigger className="h-12 rounded-xl bg-secondary/10 border-none font-bold">
+                          <SelectTrigger size="lg" className="bg-secondary/10 border-none font-bold">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>

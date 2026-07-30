@@ -222,7 +222,7 @@ export default function CampaignOrchestratorPage() {
 
         {step === 1 && (
           <div className="grid md:grid-cols-2 gap-8 animate-in fade-in">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden flex flex-col">
+            <Card className="flex flex-col">
               <CardHeader className="bg-primary/5 p-8">
                 <CardTitle className="text-xl flex items-center gap-3"><FileBox className="h-5 w-5 text-primary" /> 1. Elegir Contenido</CardTitle>
                 <CardDescription>Selecciona el pack multimedia para coordinar.</CardDescription>
@@ -252,7 +252,7 @@ export default function CampaignOrchestratorPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden flex flex-col">
+            <Card className="flex flex-col">
               <CardHeader className="bg-accent/5 p-8">
                 <CardTitle className="text-xl flex items-center gap-3"><Settings2 className="h-5 w-5 text-accent" /> Configuración</CardTitle>
                 <CardDescription>Define el nombre y la fecha de inicio.</CardDescription>
@@ -264,8 +264,8 @@ export default function CampaignOrchestratorPage() {
                     value={campaignTitle} 
                     onChange={e => setCampaignTitle(e.target.value)} 
                     placeholder="Ej: Lanzamiento Enero 2024" 
-                    className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                  />
+                    className="bg-secondary/10 border-none px-4 font-bold"
+                   size="lg" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Fecha de Lanzamiento (Día 1)</Label>
@@ -273,8 +273,8 @@ export default function CampaignOrchestratorPage() {
                     type="date"
                     value={startDate} 
                     onChange={e => setStartDate(e.target.value)} 
-                    className="h-12 rounded-xl bg-secondary/10 border-none px-4 font-bold"
-                  />
+                    className="bg-secondary/10 border-none px-4 font-bold"
+                   size="lg" />
                 </div>
 
                 {selectedPageId && (() => {
@@ -358,7 +358,7 @@ export default function CampaignOrchestratorPage() {
 
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 max-w-2xl mx-auto">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+            <Card>
               <CardHeader className="bg-primary/5 p-10">
                 <CardTitle className="text-2xl font-bold flex items-center gap-3"><BrainCircuit className="h-6 w-6 text-accent" /> Estrategia de Emisión</CardTitle>
                 <CardDescription>Gemini determinará el orden ideal para tus variantes.</CardDescription>
@@ -368,7 +368,7 @@ export default function CampaignOrchestratorPage() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Modelo de Lanzamiento</Label>
                     <Select value={strategy} onValueChange={(v: any) => setStrategy(v)}>
-                      <SelectTrigger className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-bold text-lg">
+                      <SelectTrigger size="xl" className="bg-secondary/10 border-none px-6 font-bold text-lg">
                         <SelectValue placeholder="Selecciona..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -387,8 +387,8 @@ export default function CampaignOrchestratorPage() {
                           type="number" 
                           value={duration} 
                           onChange={e => setDuration(parseInt(e.target.value) || 1)} 
-                          className="h-14 rounded-2xl bg-secondary/10 border-none px-6 font-black text-xl w-32" 
-                        />
+                          className="bg-secondary/10 border-none px-6 font-black text-xl w-32" 
+                         size="xl" />
                         <div>
                           <p className="text-xs font-bold text-slate-700">Duración sugerida</p>
                           {(() => {

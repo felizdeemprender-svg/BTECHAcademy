@@ -65,15 +65,15 @@ export function TaskModals({
     <>
       {/* Modal: Responder Desafío */}
       <Dialog open={isResponseOpen} onOpenChange={setIsResponseOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <DialogHeader className="bg-accent p-6 md:p-8 text-white text-left">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><Zap className="h-6 w-6" /></div>
+        <DialogContent className="mw-2xl">
+          <DialogHeader className="text-left">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><Zap className="text-primary h-6 w-6" /></div>
             <DialogTitle className="text-xl md:text-2xl font-bold">Completar Desafío</DialogTitle>
-            <DialogDescription className="text-accent-foreground/70 text-sm">Tu respuesta será analizada por nuestra IA para brindarte feedback inmediato.</DialogDescription>
+            <DialogDescription className="text-sm text-muted-foreground">Tu respuesta será analizada por nuestra IA para brindarte feedback inmediato.</DialogDescription>
           </DialogHeader>
           
-          <div className="p-6 md:p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-            <div className="bg-muted/30 p-5 rounded-2xl border-l-4 border-accent">
+          <div className="space-y-6 px-8 pb-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="bg-muted/30 p-5 border-l-4 border-accent">
               <Label className="text-[10px] font-bold uppercase text-accent mb-1 block">Consigna del Mentor</Label>
               <p className="text-sm font-medium text-slate-700 leading-relaxed italic">"{selectedTask.description}"</p>
             </div>
@@ -129,20 +129,20 @@ export function TaskModals({
 
       {/* Modal: Detalle de Historial */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-3xl">
-          <DialogHeader className="bg-emerald-600 p-6 md:p-8 text-white text-left">
+        <DialogContent className="mw-2xl">
+          <DialogHeader className="text-left">
             <div className="flex justify-between items-start">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4"><Trophy className="h-6 w-6" /></div>
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><Trophy className="text-primary h-6 w-6" /></div>
               <div className="text-right">
                 <span className="text-3xl md:text-4xl font-black">{selectedTask.score}%</span>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Resultado IA</p>
               </div>
             </div>
             <DialogTitle className="text-xl md:text-2xl font-bold">{selectedTask.title}</DialogTitle>
-            <DialogDescription className="text-emerald-100/70 text-sm">Desafío completado y evaluado por el motor Fastoria AI.</DialogDescription>
+            <DialogDescription className="text-sm text-muted-foreground">Desafío completado y evaluado por el motor Fastoria AI.</DialogDescription>
           </DialogHeader>
           
-          <div className="p-6 md:p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <div className="space-y-8 px-8 pb-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-1 h-4 bg-emerald-500 rounded-full" />

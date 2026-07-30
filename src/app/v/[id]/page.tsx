@@ -814,7 +814,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       </div>
       {/* Purchase Dialog */}
       <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
-        <DialogContent className="sm:max-w-md rounded-[2.5rem] p-8 border-none shadow-3xl">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader className="space-y-4">
             <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center mb-2 mx-auto sm:mx-0">
               <ShoppingCart className="h-8 w-8 text-primary" />
@@ -836,8 +836,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                     placeholder="Juan Pérez"
                     value={studentName}
                     onChange={e => setStudentName(e.target.value)}
-                    className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6"
-                  />
+                    className="bg-slate-50 border-none font-bold px-6"
+                   size="xl" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="purchase-email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email de Acceso (Gmail)</Label>
@@ -847,8 +847,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                     placeholder="tu@gmail.com"
                     value={studentEmail}
                     onChange={e => setStudentEmail(e.target.value)}
-                    className="h-14 rounded-2xl bg-slate-50 border-none font-bold px-6"
-                  />
+                    className="bg-slate-50 border-none font-bold px-6"
+                   size="xl" />
                   <p className="text-[10px] text-slate-400 italic px-1">⚠️ Esta plataforma funciona exclusivamente con Google. Debes usar tu correo @gmail.com.</p>
                 </div>
 

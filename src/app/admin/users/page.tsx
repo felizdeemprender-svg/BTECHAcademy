@@ -15,7 +15,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, User as UserIcon, GraduationCap, Search, Trash2, UserPlus, Loader2, Save, Globe, Info, KeyRound, Fingerprint, Target, Zap, Users as UsersIcon, ClipboardList, Check, Rocket } from 'lucide-react';
+import { Shield, User as UserIcon, GraduationCap, Search, Trash2, UserPlus, Loader2, Save, Globe, Info, KeyRound, Fingerprint, Target, Zap, Users as UsersIcon, ClipboardList, Check, Rocket, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -27,8 +27,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
-import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
-
 const SUPER_ADMIN_EMAIL = 'felizdeemprender@gmail.com';
 
 const MENTOR_SUB_PERMISSIONS = [
@@ -43,9 +41,11 @@ export default function AdminUsersPage() {
   const { profile, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   
-  // Forzar recompilación - quitar después
   console.log('🔄 AdminUsersPage loaded - forcing refresh v2');
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [planFilter, setPlanFilter] = useState<string>('all');
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
@@ -325,11 +325,27 @@ export default function AdminUsersPage() {
   };
 
   const filteredUsers = useMemo(() => {
-    return consolidatedUsers.filter(u => 
-      u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [consolidatedUsers, searchTerm]);
+    return consolidatedUsers.filter(u => {
+      const matchesSearch = !searchTerm ||
+        u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesRole = roleFilter.length === 0 ||
+        roleFilter.some(r => (u.roles || []).includes(r));
+
+      const matchesStatus = statusFilter === 'all' ||
+        (statusFilter === 'active' && u.isActive !== false) ||
+        (statusFilter === 'suspended' && u.isActive === false);
+
+      let matchesPlan = true;
+      if (planFilter !== 'all' && (u.roles || []).includes('mentor')) {
+        const planType = u.subscription?.type || 'free';
+        matchesPlan = planType === planFilter;
+      }
+
+      return matchesSearch && matchesRole && matchesStatus && matchesPlan;
+    });
+  }, [consolidatedUsers, searchTerm, roleFilter, statusFilter, planFilter]);
 
   return (
     <DashboardLayout>
@@ -344,11 +360,78 @@ export default function AdminUsersPage() {
           </Button>
         </header>
 
-        <SmartFilterBar 
-          placeholder="Buscar usuarios por nombre, email o rol..."
-          value={searchTerm}
-          onChange={setSearchTerm}
-        />
+        <Card className="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Buscar por nombre o email..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-10 h-10 rounded-xl border-slate-200"
+                />
+              </div>
+
+              <div className="flex gap-3 flex-wrap">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[10px] font-bold uppercase text-slate-500">Rol</span>
+                  {['alumno', 'mentor', 'marketing', 'admin'].map(role => (
+                    <button
+                      key={role}
+                      onClick={() => {
+                        setRoleFilter(prev =>
+                          prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
+                        );
+                      }}
+                      className={cn(
+                        "text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg border transition-all",
+                        roleFilter.includes(role)
+                          ? "bg-primary text-white border-primary"
+                          : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                      )}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                  {roleFilter.length > 0 && (
+                    <button
+                      onClick={() => setRoleFilter([])}
+                      className="text-[9px] text-rose-500 font-bold hover:underline ml-1"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-9 w-[130px] border-slate-200 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    <SelectItem value="active">Activos</SelectItem>
+                    <SelectItem value="suspended">Suspendidos</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {(roleFilter.length === 0 || roleFilter.includes('mentor')) && (
+                  <Select value={planFilter} onValueChange={setPlanFilter}>
+                    <SelectTrigger className="h-9 w-[150px] border-slate-200 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los planes</SelectItem>
+                      <SelectItem value="free">Gratis</SelectItem>
+                      <SelectItem value="fixed">Monto Fijo</SelectItem>
+                      <SelectItem value="percentage">Porcentaje</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
           <CardContent className="p-0">
@@ -357,15 +440,21 @@ export default function AdminUsersPage() {
                 <TableRow className="border-none hover:bg-transparent">
                   <TableHead className="font-bold py-4 px-6 text-slate-500 text-[10px] uppercase tracking-widest">Identidad</TableHead>
                   <TableHead className="font-bold py-4 text-slate-500 text-[10px] uppercase tracking-widest text-center">Permisos Asignados</TableHead>
+                  {(roleFilter.length === 0 || roleFilter.includes('mentor')) && (
+                    <TableHead className="font-bold py-4 text-slate-500 text-[10px] uppercase tracking-widest text-center">Plan</TableHead>
+                  )}
+                  {(roleFilter.length === 0 || roleFilter.includes('alumno')) && (
+                    <TableHead className="font-bold py-4 text-slate-500 text-[10px] uppercase tracking-widest text-center">Inscripciones</TableHead>
+                  )}
                   <TableHead className="font-bold py-4 text-slate-500 text-[10px] uppercase tracking-widest text-center">Estado</TableHead>
                   <TableHead className="font-bold py-4 px-6 text-slate-500 text-[10px] uppercase tracking-widest text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-20 animate-pulse text-slate-400">Sincronizando identidades...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-20 animate-pulse text-slate-400">Sincronizando identidades...</TableCell></TableRow>
                 ) : filteredUsers?.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-20 italic text-slate-400">No se encontraron registros.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-20 italic text-slate-400">No se encontraron registros.</TableCell></TableRow>
                 ) : filteredUsers?.map((user) => {
                   const isGoogleUser = user.signInProvider === 'google.com';
                   const isSuperAdminAccount = user.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
@@ -382,6 +471,15 @@ export default function AdminUsersPage() {
                           <div>
                             <div className="flex items-center gap-2">
                               <p className="font-bold text-slate-900 leading-tight">{user.displayName}</p>
+                              {user.roles?.includes('mentor') && (
+                                <button
+                                  onClick={() => window.location.href = `/admin/users/tutores/${user.id}`}
+                                  className="text-primary/50 hover:text-primary transition-colors"
+                                  title="Ver detalle del tutor"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                </button>
+                              )}
                               {isGoogleUser && (
                                 <span title="Usuario Google Workspace">
                                   <Globe className="h-3 w-3 text-accent" />
@@ -417,6 +515,42 @@ export default function AdminUsersPage() {
                           )}
                         </div>
                       </TableCell>
+                      {(roleFilter.length === 0 || roleFilter.includes('mentor')) && (
+                        <TableCell className="text-center">
+                          {user.roles?.includes('mentor') && user.subscription ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Badge className={cn(
+                                "text-[8px] uppercase font-bold px-2 h-4 border-none",
+                                user.subscription.type === 'free' ? "bg-slate-100 text-slate-600" :
+                                user.subscription.type === 'fixed' ? "bg-emerald-100 text-emerald-700" :
+                                "bg-blue-100 text-blue-700"
+                              )}>
+                                {user.subscription.type === 'free' ? 'Gratis' :
+                                 user.subscription.type === 'fixed' ? `$${user.subscription.fixedAmount}` :
+                                 `${user.subscription.percentageRate}%`}
+                              </Badge>
+                              <span className={cn(
+                                "text-[7px] font-bold uppercase",
+                                user.subscription.status === 'active' ? "text-emerald-500" :
+                                user.subscription.status === 'trial' ? "text-blue-500" : "text-slate-400"
+                              )}>
+                                {user.subscription.status}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-300">—</span>
+                          )}
+                        </TableCell>
+                      )}
+                      {(roleFilter.length === 0 || roleFilter.includes('alumno')) && (
+                        <TableCell className="text-center">
+                          {user.roles?.includes('alumno') && !user.roles?.includes('mentor') ? (
+                            <span className="text-[10px] text-slate-400 italic">—</span>
+                          ) : (
+                            <span className="text-[10px] text-slate-300">—</span>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-3">
                           <Badge className={cn(
@@ -468,21 +602,21 @@ export default function AdminUsersPage() {
 
         {/* Dialog: Add User */}
         <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-          <DialogContent className="max-w-xl p-0 border-none shadow-2xl rounded-2xl overflow-hidden">
-            <div className="bg-slate-900 p-8 text-white">
+          <DialogContent className="mw-xl">
+            <div className="px-8 pt-8">
               <DialogTitle className="text-xl font-bold flex items-center gap-3"><UserPlus className="h-6 w-6 text-accent" /> Alta Institucional</DialogTitle>
-              <DialogDescription className="text-slate-400 text-xs mt-2 uppercase tracking-widest font-bold">Pre-registro de identidad y capacidades</DialogDescription>
+              <DialogDescription className="text-muted-foreground text-xs mt-2 uppercase tracking-widest font-bold">Pre-registro de identidad y capacidades</DialogDescription>
             </div>
             <ScrollArea className="max-h-[75vh]">
-              <div className="p-8 space-y-8">
+              <div className="px-8 pb-8 space-y-8">
                 <div className="grid gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="new-user-email" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Correo Electrónico</Label>
-                    <Input id="new-user-email" name="email" type="email" value={newUserData.email} onChange={e => setNewUserData({...newUserData, email: e.target.value})} placeholder="ejemplo@correo.com" className="h-12 rounded-xl border-slate-200" />
+                    <Input id="new-user-email" name="email" type="email" value={newUserData.email} onChange={e => setNewUserData({...newUserData, email: e.target.value})} placeholder="ejemplo@correo.com" className="border-slate-200"  size="lg" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="new-user-name" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Nombre (Opcional)</Label>
-                    <Input id="new-user-name" name="displayName" value={newUserData.displayName} onChange={e => setNewUserData({...newUserData, displayName: e.target.value})} placeholder="Nombre del usuario" className="h-12 rounded-xl border-slate-200" />
+                    <Input id="new-user-name" name="displayName" value={newUserData.displayName} onChange={e => setNewUserData({...newUserData, displayName: e.target.value})} placeholder="Nombre del usuario" className="border-slate-200"  size="lg" />
                   </div>
                   
                   <div className="space-y-4">
@@ -565,15 +699,15 @@ export default function AdminUsersPage() {
 
         {/* Dialog: Permissions Editor */}
         <Dialog open={isPermissionsOpen} onOpenChange={setIsPermissionsOpen}>
-          <DialogContent className="max-w-2xl p-0 border-none shadow-3xl rounded-[2.5rem] overflow-hidden">
-            <div className="bg-primary p-10 text-white relative overflow-hidden">
+          <DialogContent className="mw-2xl">
+            <div className="px-10 pt-10 relative overflow-hidden">
               <Shield className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
               <DialogTitle className="text-2xl font-bold flex items-center gap-3 relative z-10"><Shield className="h-7 w-7 text-accent" /> Gestionar Permisos</DialogTitle>
-              <DialogDescription className="text-primary-foreground/70 text-xs mt-2 uppercase tracking-widest font-black relative z-10">Ajuste de roles institucionales y sub-capacidades</DialogDescription>
+              <DialogDescription className="text-muted-foreground text-xs mt-2 uppercase tracking-widest font-black relative z-10">Ajuste de roles institucionales y sub-capacidades</DialogDescription>
             </div>
             
             <ScrollArea className="max-h-[70vh]">
-              <div className="p-10 space-y-10">
+              <div className="px-10 pb-10 space-y-10">
                 <div className="flex items-center gap-6 p-6 bg-secondary/10 rounded-3xl border border-primary/5">
                   <Avatar className="h-16 w-16 border-4 border-white shadow-xl">
                     <AvatarImage src={pendingUser?.photoURL || undefined} />
@@ -642,7 +776,7 @@ export default function AdminUsersPage() {
                             if (selectedPlan) updateSubscriptionPlan(selectedPlan);
                           }}
                         >
-                          <SelectTrigger className="h-12 rounded-xl bg-white border-slate-200">
+                          <SelectTrigger size="lg" className="bg-white border-slate-200">
                             <SelectValue placeholder="Elegir un plan de suscripción..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -850,11 +984,11 @@ export default function AdminUsersPage() {
               </div>
             </ScrollArea>
 
-            <DialogFooter className="p-10 bg-slate-50 border-t shrink-0">
+            <DialogFooter className="px-10 py-6 bg-slate-50 border-t shrink-0">
               <Button 
                 onClick={handleSaveAllChanges} 
                 disabled={loading}
-                className="w-full h-16 rounded-[1.5rem] font-bold shadow-2xl bg-primary text-white text-xl"
+                className="w-full h-16 font-bold bg-primary text-white text-xl"
               >
                 {loading ? <Loader2 className="animate-spin h-6 w-6 mr-3" /> : <Save className="h-6 w-6 mr-3" />}
                 Guardar y Finalizar
@@ -865,7 +999,7 @@ export default function AdminUsersPage() {
 
         {/* AlertDialog: Delete User */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent className="rounded-2xl border-none shadow-2xl p-8 max-sm">
+          <AlertDialogContent className="">
             <AlertDialogHeader className="items-center text-center">
               <div className="w-14 h-14 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-4"><Trash2 className="h-7 w-7" /></div>
               <AlertDialogTitle className="text-xl font-bold">¿Borrar Registro?</AlertDialogTitle>

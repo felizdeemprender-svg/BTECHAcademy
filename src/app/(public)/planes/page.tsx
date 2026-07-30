@@ -183,20 +183,20 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-body">
+    <div className="min-h-screen bg-background font-body">
       <LandingHeader />
 
       {/* Hero Section */}
-      <section className="relative py-24 overflow-hidden bg-white">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-indigo-50/50 rounded-full blur-3xl opacity-50 -z-10" />
+      <section className="relative py-24 overflow-hidden bg-card">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/5 rounded-full blur-3xl opacity-50 -z-10" />
         <div className="container mx-auto px-6 text-center">
-          <Badge className="bg-indigo-100 text-indigo-700 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest mb-6">
+          <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest mb-6">
             Ecosistema de Mentores
           </Badge>
-          <h1 className="text-5xl lg:text-7xl font-headline font-black text-slate-900 tracking-tight mb-6">
-            Eleva tu academia al <span className="text-indigo-600 underline decoration-indigo-200">Siguiente Nivel</span>
+          <h1 className="text-5xl lg:text-7xl font-headline font-black text-foreground tracking-tight mb-6">
+            Eleva tu academia al <span className="text-primary underline decoration-primary/20">Siguiente Nivel</span>
           </h1>
-          <p className="text-xl text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-medium leading-relaxed">
             Gestión inteligente de planes con soporte para mejoras (Upgrades) y transición fluida entre niveles.
           </p>
         </div>
@@ -208,12 +208,12 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {loading ? (
               Array(3).fill(0).map((_, i) => (
-                <Card key={i} className="h-[600px] animate-pulse bg-white border-none shadow-xl rounded-[2.5rem]" />
+                <Card key={i} className="h-[600px] animate-pulse" />
               ))
             ) : (plans || []).length === 0 ? (
-              <div className="col-span-full text-center py-20 bg-white rounded-[3rem] shadow-xl border-2 border-dashed border-slate-100">
-                <ShieldCheck className="h-20 w-20 text-slate-200 mx-auto mb-6" />
-                <h3 className="text-xl font-bold text-slate-400 italic">No hay planes activos disponibles en este momento.</h3>
+              <div className="col-span-full text-center py-20 bg-card rounded-[3rem] shadow-xl border-2 border-dashed border-border">
+                <ShieldCheck className="h-20 w-20 text-muted mx-auto mb-6" />
+                <h3 className="text-xl font-bold text-muted-foreground/70 italic">No hay planes activos disponibles en este momento.</h3>
               </div>
             ) : (plans || []).map((plan: any) => {
               const isCurrent = currentPlan?.id === plan.id;
@@ -225,14 +225,14 @@ export default function PricingPage() {
                   key={plan.id} 
                   className={cn(
                     "relative flex flex-col h-full border-none shadow-2xl rounded-[3rem] transition-all duration-500 hover:-translate-y-2 overflow-hidden",
-                    plan.isEnterprise ? "bg-slate-900 text-white ring-4 ring-indigo-500/20" : "bg-white",
-                    isCurrent && "ring-4 ring-emerald-500/30",
+                    plan.isEnterprise ? "bg-foreground text-background ring-4 ring-primary/20" : "bg-card",
+                    isCurrent && "ring-4 ring-[hsl(var(--success))]/30",
                     isDowngrade && "opacity-80 grayscale-[0.5]"
                   )}
                 >
                   {isCurrent && (
                     <div className="absolute top-8 left-8">
-                      <Badge className="bg-emerald-500 text-white border-none font-black text-[9px] uppercase tracking-widest px-3 py-1 flex items-center gap-1">
+                      <Badge className="bg-[hsl(var(--success))] text-white border-none font-black text-[9px] uppercase tracking-widest px-3 py-1 flex items-center gap-1">
                         <Check className="h-3 w-3" /> Tu Plan Actual
                       </Badge>
                     </div>
@@ -240,7 +240,7 @@ export default function PricingPage() {
 
                   {isDowngrade && (
                     <div className="absolute top-8 left-8">
-                      <Badge className="bg-slate-200 text-slate-500 border-none font-black text-[9px] uppercase tracking-widest px-3 py-1 flex items-center gap-1">
+                      <Badge className="bg-muted text-muted-foreground border-none font-black text-[9px] uppercase tracking-widest px-3 py-1 flex items-center gap-1">
                         No Disponible
                       </Badge>
                     </div>
@@ -253,7 +253,7 @@ export default function PricingPage() {
                         <span className="text-4xl font-black">
                           {plan.type === 'free' ? '$0' : `$${plan.price}`}
                         </span>
-                        <span className={cn("text-sm font-bold opacity-60", plan.isEnterprise ? "text-slate-400" : "text-slate-500")}>
+                        <span className={cn("text-sm font-bold opacity-60", plan.isEnterprise ? "text-background/60" : "text-muted-foreground")}>
                           {plan.type === 'percentage' ? 'Regalías' : '/mes'}
                         </span>
                       </div>
@@ -262,15 +262,15 @@ export default function PricingPage() {
                     {/* Features & Quotas */}
                     <div className={cn(
                       "p-6 rounded-[2rem] mb-8 flex items-center justify-between",
-                      plan.isEnterprise ? "bg-white/5 border border-white/10" : "bg-slate-50 border border-slate-100"
+                      plan.isEnterprise ? "bg-white/5 border border-white/10" : "bg-muted border border-border"
                     )}>
                       <div className="flex items-center gap-3">
-                        <Zap className={cn("h-6 w-6", plan.isEnterprise ? "text-indigo-400" : "text-amber-500")} />
+                        <Zap className={cn("h-6 w-6", plan.isEnterprise ? "text-primary/80" : "text-[hsl(var(--warn))]")} />
                         <div>
-                          <p className={cn("text-lg font-black", plan.isEnterprise ? "text-white" : "text-slate-900")}>
+                          <p className={cn("text-lg font-black", plan.isEnterprise ? "text-white" : "text-foreground")}>
                             {plan.aiQuotas?.totalCredits || 0}
                           </p>
-                          <p className={cn("text-[9px] font-bold uppercase tracking-widest opacity-60", plan.isEnterprise ? "text-slate-400" : "text-slate-500")}>
+                          <p className={cn("text-[9px] font-bold uppercase tracking-widest opacity-60", plan.isEnterprise ? "text-background/60" : "text-muted-foreground")}>
                             Fastoria Credits
                           </p>
                         </div>
@@ -279,21 +279,21 @@ export default function PricingPage() {
 
                     <ul className="space-y-4 mb-10 flex-1">
                       <li className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-indigo-500 mt-0.5 shrink-0" />
+                          <Check className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                         <span className="text-sm font-bold opacity-80">
                           {plan.limits?.maxCourses === -1 ? 'Cursos Ilimitados' : `Hasta ${plan.limits?.maxCourses} Cursos`}
                         </span>
                       </li>
                       {(plan.features || []).slice(0, 5).map((feature: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-3">
-                          <Check className="h-5 w-5 text-indigo-500 mt-0.5 shrink-0" />
+                        <Check className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                           <span className="text-sm font-bold opacity-80 line-clamp-1">{feature}</span>
                         </li>
                       ))}
                     </ul>
 
                     {isDowngrade && (
-                      <div className="mb-4 flex items-center gap-2 text-slate-500 bg-slate-100 p-3 rounded-xl">
+                      <div className="mb-4 flex items-center gap-2 text-muted-foreground bg-muted p-3 rounded-xl">
                         <AlertCircle className="h-4 w-4" />
                         <p className="text-[10px] font-bold leading-tight">
                           Disponible tras vencer tu plan actual.
@@ -307,12 +307,12 @@ export default function PricingPage() {
                       className={cn(
                         "w-full h-14 rounded-2xl text-lg font-black shadow-xl transition-all active:scale-95",
                         isCurrent 
-                          ? "bg-emerald-50 text-emerald-600 border-2 border-emerald-100 cursor-default shadow-none" 
+                          ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-2 border-[hsl(var(--success))]/20 cursor-default shadow-none" 
                           : isDowngrade
-                            ? "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
+                            ? "bg-muted text-muted-foreground/70 cursor-not-allowed shadow-none"
                             : plan.isEnterprise 
-                              ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30" 
-                              : "bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/30"
+                              ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/30" 
+                              : "bg-foreground hover:bg-foreground/90 text-background shadow-foreground/30"
                       )}
                     >
                       {isCurrent ? 'Activo' : isDowngrade ? 'No Disponible' : isUpgrade ? 'Mejorar Plan' : 'Comenzar Ahora'}
@@ -328,14 +328,14 @@ export default function PricingPage() {
 
       {/* Checkout Modal */}
       <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl">
-          <div className="bg-primary p-8 text-white">
+        <DialogContent className="mw-md">
+          <div className="px-8 pt-8">
             <DialogHeader>
               <DialogTitle className="text-2xl font-black flex items-center gap-2">
-                {upgradeInfo ? <Sparkles className="h-6 w-6 text-amber-300" /> : <Rocket className="h-6 w-6" />}
+                {upgradeInfo ? <Sparkles className="h-6 w-6 text-[hsl(var(--warn))]" /> : <Rocket className="h-6 w-6 text-primary" />}
                 {upgradeInfo ? 'Mejora de Plan (Upgrade)' : 'Configura tu Suscripción'}
               </DialogTitle>
-              <DialogDescription className="text-white/70 font-medium">
+              <DialogDescription className="text-muted-foreground font-medium">
                 {upgradeInfo 
                   ? `Estás pasando del ${upgradeInfo.currentPlanName} al ${selectedPlan?.name}` 
                   : `Estás a un paso de activar el ${selectedPlan?.name}`}
@@ -343,57 +343,57 @@ export default function PricingPage() {
             </DialogHeader>
           </div>
           
-          <form onSubmit={handleFinalCheckout} className="p-8 space-y-6 bg-white">
+          <form onSubmit={handleFinalCheckout} className="px-8 pb-8 space-y-6 bg-card">
             {/* Info de Upgrade */}
             {upgradeInfo && (
-              <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 space-y-3">
+              <div className="bg-[hsl(var(--warn))]/10 border border-[hsl(var(--warn))]/20 rounded-2xl p-5 space-y-3">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                  <AlertCircle className="h-5 w-5 text-[hsl(var(--warn))] mt-0.5" />
                   <div>
-                    <p className="text-sm font-black text-amber-900">Aviso de Prorrateo</p>
-                    <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                    <p className="text-sm font-black text-foreground">Aviso de Prorrateo</p>
+                    <p className="text-xs text-foreground/70 font-medium leading-relaxed">
                       Tu plan actual vence el <strong>{upgradeInfo.expirationDate}</strong>. 
                       Se te cobrará solo la diferencia de los <strong>{upgradeInfo.remainingMonths} meses</strong> restantes.
                     </p>
                   </div>
                 </div>
-                <div className="pt-3 border-t border-amber-200 flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase text-amber-600 tracking-widest">Diferencial a Pagar:</span>
-                  <span className="text-lg font-black text-amber-900">${upgradeInfo.totalUpgradePrice.toFixed(2)}</span>
+                <div className="pt-3 border-t border-[hsl(var(--warn))]/30 flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase text-[hsl(var(--warn))] tracking-widest">Diferencial a Pagar:</span>
+                  <span className="text-lg font-black text-foreground">${upgradeInfo.totalUpgradePrice.toFixed(2)}</span>
                 </div>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label htmlFor="checkout-firstname" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nombre</label>
+                <label htmlFor="checkout-firstname" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nombre</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="checkout-firstname"
                     placeholder="Ej: Juan" 
                     value={checkoutData.firstName}
                     onChange={(e) => setCheckoutData({...checkoutData, firstName: e.target.value})}
-                    className="pl-10 h-12 rounded-xl bg-slate-50 border-none font-bold"
-                  />
+                    className="pl-10 bg-muted border-none font-bold"
+                   size="lg" />
                 </div>
               </div>
               <div className="space-y-2">
-                <label htmlFor="checkout-lastname" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Apellido</label>
+                <label htmlFor="checkout-lastname" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Apellido</label>
                 <Input 
                   id="checkout-lastname"
                   placeholder="Ej: Pérez" 
                   value={checkoutData.lastName}
                   onChange={(e) => setCheckoutData({...checkoutData, lastName: e.target.value})}
-                  className="h-12 rounded-xl bg-slate-50 border-none font-bold"
-                />
+                  className="bg-muted border-none font-bold"
+                 size="lg" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="checkout-email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email de Acceso</label>
+              <label htmlFor="checkout-email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email de Acceso</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
                   id="checkout-email"
                   type="email"
@@ -401,14 +401,14 @@ export default function PricingPage() {
                   value={checkoutData.email}
                   readOnly={!!profile}
                   onChange={(e) => setCheckoutData({...checkoutData, email: e.target.value})}
-                  className={cn("pl-10 h-12 rounded-xl bg-slate-50 border-none font-bold", !!profile && "opacity-60")}
+                  className={cn("pl-10 h-12 rounded-xl bg-muted border-none font-bold", !!profile && "opacity-60")}
                 />
               </div>
             </div>
 
             {selectedPlan?.price > 0 && (
               <div className="space-y-4 pt-4 border-t border-dashed">
-                <label id="payment-method-label" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Método de Pago</label>
+                <label id="payment-method-label" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Método de Pago</label>
                 <div className="grid grid-cols-1 gap-3" role="radiogroup" aria-labelledby="payment-method-label">
                   {paymentMethods.map(method => (
                     <button
@@ -419,12 +419,12 @@ export default function PricingPage() {
                         "flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
                         selectedMethodId === method.id 
                           ? "border-primary bg-primary/5 shadow-inner" 
-                          : "border-slate-100 hover:border-slate-200"
+                          : "border-border hover:border-muted-foreground/30"
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        {method.type === 'mercadopago' ? <QrCode className="h-5 w-5 text-blue-600" /> : <CreditCard className="h-5 w-5 text-slate-600" />}
-                        <span className="text-sm font-black text-slate-900">{method.name}</span>
+                        {method.type === 'mercadopago' ? <QrCode className="h-5 w-5 text-blue-600" /> : <CreditCard className="h-5 w-5 text-muted-foreground" />}
+                        <span className="text-sm font-black text-foreground">{method.name}</span>
                       </div>
                     </button>
                   ))}
@@ -435,7 +435,7 @@ export default function PricingPage() {
             <Button 
               type="submit"
               disabled={isProcessing}
-              className="w-full h-14 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 mt-4 transition-all active:scale-95"
+              className="w-full h-14 text-lg font-black bg-primary hover:bg-primary/90 text-white mt-4 transition-all active:scale-95"
             >
               {isProcessing ? (
                 <Loader2 className="animate-spin h-6 w-6" />

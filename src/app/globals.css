@@ -4,56 +4,114 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* Fastoria brand tokens (OKLCH) — paleta oficial: rosa #ec4899, foreground #1a1a2e */
+    --bg: oklch(98.5% 0 0);
+    --surface: oklch(100% 0 0);
+    --fg: oklch(14.5% 0.035 290);
+    --fg-2: oklch(32% 0.025 290);
+    --muted: oklch(46% 0.015 290);
+    --border: oklch(82.5% 0.02 295);
+    --border-soft: oklch(92% 0.01 290);
+    --accent: oklch(58% 0.19 340);
+    --accent-muted: oklch(75% 0.10 335);
+    --accent-light: oklch(90% 0.04 330);
+    --accent-on: oklch(100% 0 0);
+
+    /* shadcn/ui Tailwind variables (HSL) — Fastoria rosa/púrpura */
+    --background: 0 0% 98%;
+    --foreground: 240 28% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 240 28% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 222 47% 11%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 92%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 92%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 226 70% 55%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 85%;
-    --input: 214 32% 85%;
-    --ring: 226 70% 55%;
-    --radius: 1rem;
+    --popover-foreground: 240 28% 14%;
+    --primary: 249 50% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 260 20% 92%;
+    --secondary-foreground: 240 28% 14%;
+    --muted: 260 20% 92%;
+    --muted-foreground: 260 10% 46%;
+    --accent: 330 80% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 260 18% 83%;
+    --input: 260 18% 83%;
+    --ring: 330 80% 60%;
+    --radius: 0.5rem;
+
+    /* Card tokens */
+    --card-radius: 2.5rem;
+    --card-bg: #ffffff;
+    --card-shadow: 0 20px 60px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.03);
+    --card-border: none;
+    --card-bg-muted: oklch(98.5% 0 0 / 0.5);
+
+    /* Modal tokens */
+    --modal-overlay: rgba(0, 0, 0, 0.72);
+    --modal-bg: var(--bg);
+    --modal-border: 1px solid var(--border);
+    --modal-radius: var(--radius);
+    --modal-shadow: none;
+    --modal-padding: 1.5rem;
+    --modal-max-width: 520px;
+
+    /* Modal width scale */
+    --modal-w-sm: 24rem;
+    --modal-w-md: 28rem;
+    --modal-w-lg: 32rem;
+    --modal-w-xl: 36rem;
+    --modal-w-2xl: 42rem;
+    --modal-w-3xl: 48rem;
+    --modal-w-4xl: 56rem;
+    --modal-w-5xl: 64rem;
+    --modal-w-6xl: 72rem;
+    --modal-w-7xl: 80rem;
 
     /* Typography Tokens */
     --font-headline: 'Lexend', sans-serif;
     --font-body: 'Inter', sans-serif;
+    --font-mono: 'Source Code Pro', 'SF Mono', monospace;
 
-    /* Theme-specific sidebar tokens */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 15%;
+    /* Sidebar tokens (default theme) — Fastoria dark purple */
+    --sidebar-background: 240 30% 10%;
+    --sidebar-foreground: 260 15% 95%;
+    --sidebar-border: 240 30% 6%;
+    --sidebar-accent: 330 80% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-ring: 330 80% 60%;
+    --sidebar-primary: 330 80% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
 
-    /* Professional UI Tokens (Premise: MINIMAL / INSTITUCIONAL) */
+    /* Logo */
+    --logo-type: arc;
+
+    /* Professional UI Tokens */
     --prof-border-width: 1px;
-    --prof-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --prof-bg-secondary: 210 40% 92%;
+    --prof-shadow: none;
+    --prof-bg-secondary: 260 20% 92%;
   }
 
-  /* Theme Premise: ALTA DEFINICIÓN (HD) */
+  /* Theme: HD (bordes mas gruesos) */
   .theme-hd {
     --prof-border-width: 2px;
-    --prof-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --prof-shadow: none;
     --radius: 0.75rem;
-    --border: 214 32% 80%;
+    --border: 35 8% 78%;
+    --sidebar-background: 240 30% 8%;
+    --sidebar-foreground: 260 15% 95%;
+    --sidebar-border: 240 30% 5%;
   }
 
-  /* Theme Premise: VANGUARDIA (Ultra Premium) */
+  /* Theme: VANGUARDIA (ultra premium) */
   .theme-vanguardia {
     --radius: 2.25rem;
     --prof-border-width: 1.5px;
-    --prof-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.15);
-    --background: 210 40% 99%;
+    --prof-shadow: none;
+    --background: 0 0% 99%;
+    --sidebar-background: 240 30% 10%;
+    --sidebar-foreground: 260 15% 96%;
+    --sidebar-border: 240 30% 6%;
+    --sidebar-accent: 330 80% 55%;
   }
 }
 
@@ -73,9 +131,10 @@
 
 @layer components {
   .card-prof {
-    @apply bg-card border shadow-sm rounded-[var(--radius)] transition-all;
-    border-width: var(--prof-border-width);
-    box-shadow: var(--prof-shadow);
+    @apply bg-card transition-all;
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    border: var(--card-border);
   }
 
   .btn-prof {
@@ -87,6 +146,25 @@
     @apply border bg-background px-4 h-12 transition-all focus:ring-2 focus:ring-primary/20 rounded-[calc(var(--radius)*0.75)];
     border-width: var(--prof-border-width);
   }
+
+  /* Modal inverse (dark content preview) */
+  .modal-inverse {
+    --modal-bg: oklch(20% 0.018 70);
+    --modal-border: 1px solid oklch(30% 0.01 70);
+    color: oklch(98% 0 0);
+  }
+
+  /* Modal width utilities (theme-responsive) */
+  .mw-sm { max-width: var(--modal-w-sm); }
+  .mw-md { max-width: var(--modal-w-md); }
+  .mw-lg { max-width: var(--modal-w-lg); }
+  .mw-xl { max-width: var(--modal-w-xl); }
+  .mw-2xl { max-width: var(--modal-w-2xl); }
+  .mw-3xl { max-width: var(--modal-w-3xl); }
+  .mw-4xl { max-width: var(--modal-w-4xl); }
+  .mw-5xl { max-width: var(--modal-w-5xl); }
+  .mw-6xl { max-width: var(--modal-w-6xl); }
+  .mw-7xl { max-width: var(--modal-w-7xl); }
 }
 
 .custom-scrollbar::-webkit-scrollbar {

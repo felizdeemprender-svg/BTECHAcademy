@@ -346,7 +346,7 @@ export default function AdminAdnsPage() {
 
         {/* Modal: Detalle de Blueprint */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-          <DialogContent className="max-w-2xl rounded-[2.5rem] border-none shadow-2xl backdrop-blur-2xl bg-white/95 p-10">
+          <DialogContent className="mw-2xl">
             <DialogHeader>
               <DialogTitle className="text-3xl font-headline font-bold text-primary flex items-center gap-3">
                 <Info className="h-8 w-8 text-blue-500" /> Resumen del Blueprint
@@ -499,7 +499,7 @@ export default function AdminAdnsPage() {
 
         {/* Modal: Confirmación Eliminación */}
         <Dialog open={!!confirmDeleteId} onOpenChange={() => setConfirmDeleteId(null)}>
-          <DialogContent className="max-w-md rounded-[2.5rem] border-none shadow-2xl p-10 text-center">
+          <DialogContent className="mw-md text-center">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold mb-2 text-center w-full">¿Eliminar ADN Maestro?</DialogTitle>
             </DialogHeader>
@@ -516,7 +516,7 @@ export default function AdminAdnsPage() {
 
         {/* Modal: Nueva Carga (ZIP) */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent className="max-w-md rounded-[2.5rem] border-none shadow-2xl p-10">
+          <DialogContent className="mw-md">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <Upload className="text-emerald-500" /> Cargar ADN Maestro
