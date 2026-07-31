@@ -176,7 +176,7 @@ export default function TutorDetailPage() {
         <Card className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-6 items-start">
-              <Avatar className="h-20 w-20 border-4 border-white shadow-xl">
+              <Avatar className="h-20 w-20 border-4 border-white">
                 <AvatarImage src={tutor.photoURL || undefined} />
                 <AvatarFallback className="bg-primary/10 text-primary font-bold text-2xl">{tutor.displayName?.[0] || 'T'}</AvatarFallback>
               </Avatar>

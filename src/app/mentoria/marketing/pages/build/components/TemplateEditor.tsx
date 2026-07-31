@@ -656,7 +656,7 @@ export function TemplateEditor({
 
   if (!generatedAssets) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
+      <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
         <div className="text-center">
           <h3 className="text-xl font-bold text-slate-700">Cargando contenidos del Pack...</h3>
@@ -689,14 +689,14 @@ export function TemplateEditor({
           >
             Eliminar Pack
           </Button>
-          <Button onClick={() => onSave()} disabled={loading} className="h-16 px-12 rounded-2xl font-bold text-xl shadow-2xl bg-primary gap-3">
+          <Button onClick={() => onSave()} disabled={loading} className="h-16 px-12 rounded-2xl font-bold text-xl bg-primary gap-3">
             {loading ? <Loader2 className="animate-spin" /> : <Save className="h-6 w-6" />} Guardar Pack
           </Button>
         </div>
       </header>
 
       <Tabs defaultValue="email" className="w-full">
-        <TabsList className="bg-slate-950 p-1.5 h-14 w-full justify-start gap-2 px-6 rounded-2xl border border-white/10 shadow-2xl mb-8">
+        <TabsList className="bg-slate-950 p-1.5 h-14 w-full justify-start gap-2 px-6 rounded-2xl border border-white/10 mb-8">
           <TabsTrigger value="email" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-violet-600 data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Mail className="h-4 w-4" /> Emails</TabsTrigger>
           <TabsTrigger value="social" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Instagram className="h-4 w-4" /> Redes Sociales</TabsTrigger>
           <TabsTrigger value="ads" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Megaphone className="h-4 w-4" /> Ads</TabsTrigger>
@@ -713,14 +713,14 @@ export function TemplateEditor({
             </TabsList>
             {generatedAssets?.emails?.map((e: any, eIdx: number) => (
               <TabsContent key={eIdx} value={eIdx.toString()} className="space-y-8 max-w-4xl mx-auto">
-                <Card className="p-12 rounded-[3.5rem] bg-slate-900 border border-white/10 shadow-2xl space-y-10">
+                <Card className="p-12 rounded-lg bg-slate-900 border border-white/10 space-y-10">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-[0.2em]">Asunto del Correo</Label>
                     <Input value={e.subject} onChange={v => updateAsset('emails', eIdx, 'subject', v.target.value)} className="h-16 rounded-3xl border-white/5 bg-white/5 px-8 font-black text-2xl text-white focus-visible:ring-violet-500/50" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-[0.2em]">Cuerpo Narrativo</Label>
-                    <Textarea value={e.body} onChange={v => updateAsset('emails', eIdx, 'body', v.target.value)} className="min-h-[500px] border-white/5 bg-white/5 p-12 leading-relaxed text-lg font-medium text-slate-200 shadow-inner focus-visible:ring-violet-500/50" />
+                    <Textarea value={e.body} onChange={v => updateAsset('emails', eIdx, 'body', v.target.value)} className="min-h-[500px] border-white/5 bg-white/5 p-12 leading-relaxed text-lg font-medium text-slate-200 focus-visible:ring-violet-500/50" />
                   </div>
 
                   <div className="pt-6 border-t border-white/5">
@@ -729,7 +729,7 @@ export function TemplateEditor({
                       value={e.landingId || 'mentor'}
                       onValueChange={(val) => updateAsset('emails', eIdx, 'landingId', val)}
                     >
-                      <SelectTrigger size="xl" className="bg-white/5 border-white/5 text-xs font-bold text-white px-8 shadow-2xl">
+                      <SelectTrigger size="xl" className="bg-white/5 border-white/5 text-xs font-bold text-white px-8">
                         <div className="flex items-center gap-3">
                           <Link2 className="h-4 w-4 text-violet-500" />
                           <span>Vincular con: <SelectValue placeholder="Seleccionar Landing" /></span>
@@ -760,13 +760,13 @@ export function TemplateEditor({
               .filter(p => p !== 'linkedin') as string[];
             if (rawSocials.length === 0 || showSocialConfigurator) {
               return (
-                <div className="flex flex-col items-center justify-center p-12 space-y-8 bg-slate-950 border-2 border-dashed border-white/10 rounded-[4rem] max-w-4xl mx-auto shadow-2xl relative">
+                <div className="flex flex-col items-center justify-center p-12 space-y-8 bg-slate-950 border-2 border-dashed border-white/10 rounded-[4rem] max-w-4xl mx-auto relative">
                   {rawSocials.length > 0 && (
                     <Button onClick={() => setShowSocialConfigurator(false)} variant="ghost" className="absolute top-6 right-6 text-white/40 hover:text-white">
                       Cancelar
                     </Button>
                   )}
-                  <div className="w-20 h-20 rounded-[2rem] bg-emerald-500/10 text-emerald-400 flex items-center justify-center shadow-inner">
+                  <div className="w-20 h-20 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                     <Video className="h-10 w-10" />
                   </div>
                   
@@ -842,7 +842,7 @@ export function TemplateEditor({
                     <div className="space-y-3">
                       <Label className="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">3. ADN Maestro</Label>
                       <Select value={newPieceConfig.adnId} onValueChange={(v) => setNewPieceConfig(prev => ({ ...prev, adnId: v }))}>
-                        <SelectTrigger size="xl" className="bg-emerald-600 border-none text-xs font-black uppercase text-white px-6 shadow-xl">
+                        <SelectTrigger size="xl" className="bg-emerald-600 border-none text-xs font-black uppercase text-white px-6">
                           <SelectValue placeholder="Estilo ADN" />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -888,7 +888,7 @@ export function TemplateEditor({
                       setShowSocialConfigurator(false);
                       toast({ title: "Pieza Creada", description: `Cargadas ${initialSlides.length} placas desde el ADN.` });
                     }}
-                    className="h-16 px-16 rounded-[2rem] bg-white text-slate-950 hover:bg-emerald-50 font-black text-lg gap-3 shadow-2xl transition-all hover:scale-105 active:scale-95 mt-4"
+                    className="h-16 px-16 rounded-lg bg-white text-slate-950 hover:bg-emerald-50 font-black text-lg gap-3 transition-all hover:scale-105 active:scale-95 mt-4"
                   >
                     <Plus className="h-6 w-6" /> {rawSocials.length === 0 ? 'Crear Primera Pieza' : 'Crear Nueva Pieza'}
                   </Button>
@@ -922,7 +922,7 @@ export function TemplateEditor({
                           return (
                             <div key={globalIdx} className="space-y-4 animate-in zoom-in-95 duration-500">
                               {isLocked ? (
-                                <Card className="p-6 md:p-8 rounded-[3rem] bg-emerald-950/20 border border-emerald-500/20 shadow-xl space-y-6">
+                                <Card className="p-6 md:p-8 rounded-lg bg-emerald-950/20 border border-emerald-500/20 space-y-6">
                                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                     <div className="flex items-center gap-4 md:gap-6">
                                       <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
@@ -944,7 +944,7 @@ export function TemplateEditor({
                                       
                                       <Dialog>
                                         <DialogTrigger asChild>
-                                          <Button variant="secondary" size="icon" title="Editar Textos" className="bg-white/10 text-white hover:bg-white/20 h-10 w-10 md:h-12 md:w-12 rounded-xl shadow-xl border-none">
+                                          <Button variant="secondary" size="icon" title="Editar Textos" className="bg-white/10 text-white hover:bg-white/20 h-10 w-10 md:h-12 md:w-12 rounded-xl border-none">
                                             <FileEdit className="h-5 w-5" />
                                           </Button>
                                         </DialogTrigger>
@@ -995,7 +995,7 @@ export function TemplateEditor({
                                   </div>
                                 </Card>
                               ) : (
-                                <Card className="p-6 md:p-8 rounded-[3rem] bg-slate-900 border border-white/5 shadow-xl space-y-6">
+                                <Card className="p-6 md:p-8 rounded-lg bg-slate-900 border border-white/5 space-y-6">
                                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                     <div className="flex items-center gap-4 md:gap-6">
                                       <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/5 text-slate-400 flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
@@ -1017,7 +1017,7 @@ export function TemplateEditor({
                                       
                                       <Dialog>
                                         <DialogTrigger asChild>
-                                          <Button variant="secondary" size="icon" title="Abrir Editor" className="bg-white text-slate-950 hover:bg-emerald-50 h-10 w-10 md:h-12 md:w-12 rounded-xl shadow-xl">
+                                          <Button variant="secondary" size="icon" title="Abrir Editor" className="bg-white text-slate-950 hover:bg-emerald-50 h-10 w-10 md:h-12 md:w-12 rounded-xl">
                                             <FileEdit className="h-5 w-5" />
                                           </Button>
                                         </DialogTrigger>
@@ -1027,16 +1027,16 @@ export function TemplateEditor({
                                             <DialogDescription className="text-slate-400">Edita los textos, escenas y produce el video de tu pieza on-demand.</DialogDescription>
                                           </DialogHeader>
 
-                                          <Card className="p-6 md:p-12 rounded-[4rem] bg-slate-950 border border-white/10 shadow-2xl grid lg:grid-cols-12 gap-8 md:gap-12 mt-4">
+                                          <Card className="p-6 md:p-12 rounded-[4rem] bg-slate-950 border border-white/10 grid lg:grid-cols-12 gap-8 md:gap-12 mt-4">
                                           <div className="lg:col-span-7 space-y-10 z-10">
-                                            <div className="flex items-center justify-between gap-4 bg-white/5 p-5 rounded-[2.5rem] border border-white/10 mb-2 shadow-inner">
+                                            <div className="flex items-center justify-between gap-4 bg-white/5 p-5 rounded-lg border border-white/10 mb-2">
                                               <div className="flex items-center gap-4 flex-1">
                                                 <Button 
                                                   variant="secondary"
                                                   size="sm"
                                                   onClick={() => handleGenerateBreakdown(s, globalIdx, 'socials')}
                                                   disabled={isGeneratingBreakdown === `socials-${globalIdx}`}
-                                                  className="h-11 rounded-2xl bg-white text-slate-950 hover:bg-emerald-50 text-[10px] font-black px-8 transition-all shadow-xl"
+                                                  className="h-11 rounded-2xl bg-white text-slate-950 hover:bg-emerald-50 text-[10px] font-black px-8 transition-all"
                                                 >
                                                   {isGeneratingBreakdown === `socials-${globalIdx}` ? (
                                                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Esquematizando...</>
@@ -1057,7 +1057,7 @@ export function TemplateEditor({
                                                       toast({ title: `ADN ${selectedAdn?.name || val} Seleccionado`, description: "Pulsa 'Re-generar' para ajustar el guion a este estilo." });
                                                     }}
                                                   >
-                                                    <SelectTrigger className="h-11 bg-emerald-600 border-none text-[9px] font-black uppercase text-white tracking-widest shadow-2xl">
+                                                    <SelectTrigger className="h-11 bg-emerald-600 border-none text-[9px] font-black uppercase text-white tracking-widest">
                                                       <div className="flex items-center gap-2">
                                                         <Clapperboard className="h-3.5 w-3.5" />
                                                         <span>ESTILO: <SelectValue placeholder="ADN" /></span>
@@ -1091,7 +1091,7 @@ export function TemplateEditor({
                                                       });
                                                     }}
                                                   >
-                                                    <SelectTrigger className="h-11 bg-white/5 border-white/10 text-[9px] font-black uppercase text-white tracking-widest shadow-2xl">
+                                                    <SelectTrigger className="h-11 bg-white/5 border-white/10 text-[9px] font-black uppercase text-white tracking-widest">
                                                       <div className="flex items-center gap-2">
                                                         <Layout className="h-3.5 w-3.5" />
                                                         <span>TIPO: <SelectValue placeholder="Formato" /></span>
@@ -1112,7 +1112,7 @@ export function TemplateEditor({
                                                     value={s.landingId || 'mentor'}
                                                     onValueChange={(val) => updateAsset('socials', globalIdx, 'landingId', val)}
                                                   >
-                                                    <SelectTrigger className="h-11 bg-slate-900 border-white/10 text-[9px] font-black uppercase text-emerald-400 tracking-widest shadow-2xl">
+                                                    <SelectTrigger className="h-11 bg-slate-900 border-white/10 text-[9px] font-black uppercase text-emerald-400 tracking-widest">
                                                       <div className="flex items-center gap-2">
                                                         <Link2 className="h-3.5 w-3.5" />
                                                         <span>URL <SelectValue placeholder="Destino" /></span>
@@ -1137,7 +1137,7 @@ export function TemplateEditor({
                                               <Input value={s.marketingName} onChange={e => updateAsset('socials', globalIdx, 'marketingName', e.target.value)} className="font-bold border-white/10 bg-white/5 h-16 px-10 text-2xl text-white uppercase" />
                                             </div>
                                             
-                                            <div className="space-y-4 bg-white/5 p-8 rounded-[3rem] border border-white/5 shadow-2xl">
+                                            <div className="space-y-4 bg-white/5 p-8 rounded-lg border border-white/5">
                                               <div className="space-y-2">
                                                 <Label className="text-[8px] font-bold text-emerald-600/60 uppercase ml-1">Gancho (Hook)</Label>
                                                 <Input value={s.hook} onChange={e => updateAsset('socials', globalIdx, 'hook', e.target.value)} className="bg-emerald-500/5 border-emerald-500/10 text-emerald-400 text-xs font-black italic h-10 px-4" />
@@ -1176,7 +1176,7 @@ export function TemplateEditor({
                                             )}
                                           </div>
                                           <div className="lg:col-span-5 relative">
-                                            <div className="sticky top-0 p-4 rounded-[4.5rem] bg-gradient-to-b from-white/10 to-transparent border border-white/10 shadow-2xl">
+                                            <div className="sticky top-0 p-4 rounded-[4.5rem] bg-gradient-to-b from-white/10 to-transparent border border-white/10">
                                               <SocialLivePreview social={s} tokens={blueprintData?.assets?.socials?.[globalIdx]?.designTokens} adn={dynamicAdns[s.production_notes?.adn || '01'] || dynamicAdns['01']} />
                                             </div>
                                           </div>
@@ -1227,7 +1227,7 @@ export function TemplateEditor({
                                                 toast({ title: 'Pieza Sellada', description: 'Archivos temporales purgados. Pieza lista para publicar.' });
                                               }
                                             }}
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 px-10 rounded-2xl text-sm md:text-lg w-full md:w-1/2 shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 px-10 rounded-2xl text-sm md:text-lg w-full md:w-1/2 disabled:opacity-50 disabled:cursor-not-allowed"
                                             title={getPlatformLabels(s.type).isDocument && s.platform === 'linkedin' ? (!s.production_notes?.pdf_url ? 'Debes generar el PDF primero' : '') : (!(s.production_notes?.video_url || renderedVideos[globalIdx]) ? 'Debes generar el video primero' : '')}
                                           >
                                             <Save className="mr-3 h-6 w-6" /> SELLAR PIEZA (Finalizar)
@@ -1279,7 +1279,7 @@ export function TemplateEditor({
             </TabsList>
             {generatedAssets?.ads?.map((a: any, aIdx: number) => (
               <TabsContent key={aIdx} value={aIdx.toString()} className="grid lg:grid-cols-2 gap-12">
-                 <Card className="p-12 rounded-[3.5rem] bg-slate-900 border border-white/10 shadow-2xl space-y-10">
+                 <Card className="p-12 rounded-lg bg-slate-900 border border-white/10 space-y-10">
                     <h3 className="font-black text-2xl text-white uppercase tracking-tighter">Títulos</h3>
                     <div className="space-y-6">
                       {a.headlines?.map((h: string, i: number) => (
@@ -1287,7 +1287,7 @@ export function TemplateEditor({
                       ))}
                     </div>
                  </Card>
-                 <Card className="p-12 rounded-[3.5rem] bg-slate-900 border border-white/10 shadow-2xl space-y-10">
+                 <Card className="p-12 rounded-lg bg-slate-900 border border-white/10 space-y-10">
                     <div className="flex items-center justify-between">
                       <h3 className="font-black text-2xl text-white uppercase tracking-tighter">Descripciones</h3>
                       <div className="w-64">
@@ -1295,7 +1295,7 @@ export function TemplateEditor({
                           value={a.landingId || 'mentor'}
                           onValueChange={(val) => updateAsset('ads', aIdx, 'landingId', val)}
                         >
-                          <SelectTrigger className="h-10 bg-white/5 border-white/5 text-[9px] font-black uppercase text-cyan-400 tracking-widest shadow-2xl">
+                          <SelectTrigger className="h-10 bg-white/5 border-white/5 text-[9px] font-black uppercase text-cyan-400 tracking-widest">
                             <div className="flex items-center gap-2">
                               <Link2 className="h-3.5 w-3.5" />
                               <span>Link: <SelectValue placeholder="Destino" /></span>

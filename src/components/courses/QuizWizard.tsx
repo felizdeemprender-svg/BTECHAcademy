@@ -82,7 +82,7 @@ export function QuizWizard({
           <Button 
             onClick={onSubmit} 
             disabled={isEvaluating}
-            className="h-16 rounded-2xl text-lg font-bold shadow-2xl bg-emerald-600 hover:bg-emerald-700 w-full"
+            className="h-16 rounded-2xl text-lg font-bold bg-emerald-600 hover:bg-emerald-700 w-full"
           >
             {isEvaluating ? <><Loader2 className="animate-spin mr-2" /> Evaluando con IA...</> : <><Send className="mr-2" /> Confirmar y Enviar</>}
           </Button>
@@ -107,7 +107,7 @@ export function QuizWizard({
       </div>
 
       {/* Question Card */}
-      <div className="bg-white rounded-[2.5rem] p-6 md:p-10 shadow-xl border border-slate-100 space-y-8">
+      <div className="bg-white rounded-lg p-6 md:p-10 border border-slate-100 space-y-8">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-lg border border-primary/10">
             <BrainCircuit className="h-4 w-4 text-primary" />
@@ -126,7 +126,7 @@ export function QuizWizard({
             value={userAnswers[currentStep.toString()] || ''}
             onChange={(e) => onAnswerChange(currentStep, e.target.value)}
             placeholder="Escribe tu respuesta aquí..."
-            className="min-h-[200px] md:min-h-[250px] rounded-[1.5rem] p-6 text-base md:text-lg bg-secondary/5 border-none shadow-inner focus-visible:ring-accent"
+            className="min-h-[200px] md:min-h-[250px] rounded-[1.5rem] p-6 text-base md:text-lg bg-secondary/5 border-none focus-visible:ring-accent"
           />
         </div>
 
@@ -153,7 +153,7 @@ export function QuizWizard({
           <Button 
             onClick={() => setShowSummary(true)}
             disabled={!userAnswers[currentStep.toString()]}
-            className="h-14 px-10 rounded-xl font-bold bg-primary shadow-xl"
+            className="h-14 px-10 rounded-xl font-bold bg-primary"
             style={{ backgroundColor: primaryColor }}
           >
             Finalizar <CheckCircle2 className="ml-2 h-4 w-4" />
@@ -162,7 +162,7 @@ export function QuizWizard({
           <Button 
             onClick={() => setCurrentStep(prev => prev + 1)}
             disabled={!userAnswers[currentStep.toString()]}
-            className="h-14 px-10 rounded-xl font-bold bg-primary shadow-xl"
+            className="h-14 px-10 rounded-xl font-bold bg-primary"
             style={{ backgroundColor: primaryColor }}
           >
             Siguiente <ArrowRight className="ml-2 h-4 w-4" />

@@ -263,7 +263,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
   return (
     <div 
       ref={containerRef}
-      className="relative aspect-video bg-slate-950 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white/10 group/video"
+      className="relative aspect-video bg-slate-950 rounded-lg rounded-lg overflow-hidden border-4 border-white/10 group/video"
       onContextMenu={(e) => e.preventDefault()}
     >
       {isLoading && (
@@ -379,7 +379,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
             {!isPlaying && (
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div 
-                        className="w-20 h-20 rounded-full flex items-center justify-center border-2 border-white/30 bg-white/10 backdrop-blur-md shadow-2xl transition-transform group-hover:scale-110"
+                        className="w-20 h-20 rounded-full flex items-center justify-center border-2 border-white/30 bg-white/10 backdrop-blur-md transition-transform group-hover:scale-110"
                         style={{ borderColor: `${primaryColor}40` }}
                     >
                         <Play className="h-8 w-8 text-white fill-white ml-1" />

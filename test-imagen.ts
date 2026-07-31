@@ -18,7 +18,7 @@ async function main() {
     });
     console.log('SUCCESS', media?.url ? 'Got URL' : 'No URL');
   } catch(e) {
-    console.error('ERROR', e.message);
+    console.error('ERROR', e instanceof Error ? e.message : String(e));
   }
 }
 main();

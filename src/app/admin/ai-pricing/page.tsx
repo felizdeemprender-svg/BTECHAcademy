@@ -87,7 +87,7 @@ export default function AiPricingAdminPage() {
         </header>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <Card className="group hover:shadow-2xl transition-all">
+          <Card className="group transition-all">
             <CardHeader className="bg-slate-50 border-b pb-6 relative">
               <div className="absolute top-4 right-4 p-2 bg-indigo-100 rounded-xl text-indigo-600">
                 <BrainCircuit className="w-6 h-6" />
@@ -130,7 +130,7 @@ export default function AiPricingAdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl transition-all">
+          <Card className="group transition-all">
             <CardHeader className="bg-slate-50 border-b pb-6 relative">
               <div className="absolute top-4 right-4 p-2 bg-amber-100 rounded-xl text-amber-600">
                 <Mic className="w-6 h-6" />
@@ -175,7 +175,7 @@ export default function AiPricingAdminPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 mt-6">
-          <Card className="group hover:shadow-2xl transition-all">
+          <Card className="group transition-all">
             <CardHeader className="bg-slate-50 border-b pb-6 relative">
               <div className="absolute top-4 right-4 p-2 bg-rose-100 rounded-xl text-rose-600">
                 <ImageIcon className="w-6 h-6" />
@@ -218,7 +218,7 @@ export default function AiPricingAdminPage() {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-2xl transition-all">
+          <Card className="group transition-all">
             <CardHeader className="bg-slate-50 border-b pb-6 relative">
               <div className="absolute top-4 right-4 p-2 bg-blue-100 rounded-xl text-blue-600">
                 <Film className="w-6 h-6" />
@@ -266,7 +266,7 @@ export default function AiPricingAdminPage() {
           <Button 
             onClick={handleSave} 
             disabled={saving} 
-            className="w-full md:w-auto h-16 rounded-2xl px-12 font-black text-lg bg-slate-900 text-white shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+            className="w-full md:w-auto h-16 rounded-2xl px-12 font-black text-lg bg-slate-900 text-white hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
           >
             {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
             Guardar Configuración Económica

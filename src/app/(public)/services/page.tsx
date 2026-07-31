@@ -132,7 +132,7 @@ export default function ServicesPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link href="/courses">
-                <Button size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">
+                <Button size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-primary/20">
                   Explorar Soluciones
                 </Button>
               </Link>
@@ -173,7 +173,7 @@ export default function ServicesPage() {
           </div>
           <div className="grid lg:grid-cols-3 gap-8">
             {services.map((service, idx) => (
-              <Card key={idx} className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 group overflow-hidden">
+              <Card key={idx} className="border-none transition-all duration-500 group overflow-hidden">
                 <CardHeader className="pb-6">
                   <div className={`w-16 h-16 rounded-2xl ${service.bgColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                     <service.icon className={`h-8 w-8 ${service.color}`} />
@@ -218,7 +218,7 @@ export default function ServicesPage() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {benefits.map((benefit, idx) => (
-              <Card key={idx} className="border-none shadow-lg hover:shadow-xl transition-shadow group text-center">
+              <Card key={idx} className="rounded-lg transition-shadow group text-center">
                 <CardContent className="p-8 space-y-4">
                   <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center mx-auto group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                     <benefit.icon className="h-8 w-8 text-primary group-hover:text-primary-foreground" />
@@ -276,7 +276,7 @@ export default function ServicesPage() {
             </div>
             <div className="relative aspect-square max-w-[500px] mx-auto">
               <div className="absolute inset-0 bg-accent/10 blur-[100px] rounded-full" />
-              <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+              <div className="relative h-full w-full rounded-3xl overflow-hidden border-4 border-white">
                 <Image 
                   src="https://loremflickr.com/600/600/services,digital?lock=usecases" 
                   alt="Casos de Uso"

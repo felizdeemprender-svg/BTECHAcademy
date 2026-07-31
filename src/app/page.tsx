@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,7 @@ export default function LandingPage() {
           <div className="flex-1 relative">
             <div className="relative w-full h-96 lg:h-full min-h-[400px]">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl animate-pulse" />
-              <div className="absolute inset-4 bg-white rounded-2xl shadow-2xl flex items-center justify-center">
+              <div className="absolute inset-4 bg-white rounded-2xl flex items-center justify-center">
                 <div className="text-center space-y-4 p-8">
                   <GraduationCap className="w-16 h-16 text-primary mx-auto" />
                   <h3 className="text-2xl font-bold text-primary">FastoriaAcademy</h3>
@@ -184,7 +184,7 @@ export default function LandingPage() {
                 { icon: ShieldCheck, title: 'Infraestructura Robusta', desc: 'Nube privada escalable que asegura que tu contenido esté siempre disponible.' },
                 { icon: BookOpen, title: 'Multi-formato', desc: 'Desde videos HD hasta documentos complejos y desafíos interactivos en un solo lugar.' },
               ].map((feature, idx) => (
-                <div key={idx} className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-primary/5 transition-all group relative overflow-hidden">
+                <div key={idx} className="bg-white p-10 rounded-lg border border-slate-100 shadow-sm transition-all group relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors" />
                   <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mb-8 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
                     <feature.icon className="h-7 w-7 transition-colors" />

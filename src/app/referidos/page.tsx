@@ -116,7 +116,7 @@ export default function ReferidosDashboard() {
 
         {/* Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-none shadow-xl rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden relative">
             <Users className="absolute -right-4 -bottom-4 h-32 w-32 opacity-10" />
             <CardContent className="p-8">
               <p className="text-indigo-100 font-bold uppercase text-[10px] tracking-widest mb-2">Total Leads</p>
@@ -124,7 +124,7 @@ export default function ReferidosDashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-none shadow-xl rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden relative">
             <Target className="absolute -right-4 -bottom-4 h-32 w-32 opacity-10" />
             <CardContent className="p-8">
               <p className="text-emerald-100 font-bold uppercase text-[10px] tracking-widest mb-2">Ventas Exitosas</p>
@@ -132,7 +132,7 @@ export default function ReferidosDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl rounded-2xl bg-slate-900 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-slate-900 text-white overflow-hidden relative">
             <Percent className="absolute -right-4 -bottom-4 h-32 w-32 opacity-5" />
             <CardContent className="p-8">
               <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-2">Conversión</p>
@@ -160,7 +160,7 @@ export default function ReferidosDashboard() {
                   : true; // If no activeUntil, assume active
                   
                 return (
-                  <Card key={landing.id} className="border-none shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-all">
+                  <Card key={landing.id} className="border-none shadow-lg rounded-2xl overflow-hidden transition-all">
                     <CardHeader className="bg-slate-50 pb-4 border-b border-slate-100">
                       <div className="flex justify-between items-start">
                         <div>
@@ -211,7 +211,7 @@ export default function ReferidosDashboard() {
             Historial de Leads
           </h2>
           
-          <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
+          <Card className="rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-[10px] text-slate-500 uppercase bg-slate-50/80 font-black tracking-widest border-b border-slate-100">

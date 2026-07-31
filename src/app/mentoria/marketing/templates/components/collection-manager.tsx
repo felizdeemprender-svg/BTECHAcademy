@@ -133,7 +133,7 @@ export function CollectionManager({
 
   if (!collections || collections.length === 0) {
     return (
-      <div className="text-center py-20 bg-white/50 rounded-[2.5rem] border border-dashed border-primary/20 backdrop-blur-xl">
+      <div className="text-center py-20 bg-white/50 rounded-lg border border-dashed border-primary/20 backdrop-blur-xl">
         <LayoutTemplate className="mx-auto h-16 w-16 text-muted-foreground/20 mb-6" />
         <h3 className="text-xl font-bold text-foreground mb-2">
           No hay colecciones

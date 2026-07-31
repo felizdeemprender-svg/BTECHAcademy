@@ -337,7 +337,7 @@ export default function MentorInfluencersControl() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-none shadow-xl rounded-2xl bg-white overflow-hidden relative group">
+          <Card className="border-none rounded-2xl bg-white overflow-hidden relative group">
             <Users className="absolute -right-4 -bottom-4 h-24 w-24 text-slate-100 transition-transform group-hover:scale-110" />
             <CardContent className="p-6">
               <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Total Embajadores</p>
@@ -345,7 +345,7 @@ export default function MentorInfluencersControl() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden relative">
             <Users className="absolute -right-4 -bottom-4 h-24 w-24 opacity-10" />
             <CardContent className="p-6">
               <p className="text-indigo-100 font-bold uppercase text-[10px] tracking-widest mb-1">Leads Traídos</p>
@@ -353,7 +353,7 @@ export default function MentorInfluencersControl() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden relative">
             <Target className="absolute -right-4 -bottom-4 h-24 w-24 opacity-10" />
             <CardContent className="p-6">
               <p className="text-emerald-100 font-bold uppercase text-[10px] tracking-widest mb-1">Ventas Exitosas</p>
@@ -361,7 +361,7 @@ export default function MentorInfluencersControl() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl rounded-2xl bg-slate-900 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-slate-900 text-white overflow-hidden relative">
             <Percent className="absolute -right-4 -bottom-4 h-24 w-24 opacity-5" />
             <CardContent className="p-6">
               <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Tasa Global</p>
@@ -377,7 +377,7 @@ export default function MentorInfluencersControl() {
             Tus Embajadores
           </h2>
 
-          <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
+          <Card className="rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-[10px] text-slate-500 uppercase bg-slate-50/80 font-black tracking-widest border-b border-slate-100">

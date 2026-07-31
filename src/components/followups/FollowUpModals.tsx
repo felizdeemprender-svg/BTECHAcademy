@@ -188,7 +188,7 @@ export function FollowUpModals({
             </div>
 
             <DialogFooter className="pt-4">
-              <Button onClick={onCreate} disabled={loading || (!isManualInvite && !formData.studentId) || (isManualInvite && !inviteEmail)} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl">
+              <Button onClick={onCreate} disabled={loading || (!isManualInvite && !formData.studentId) || (isManualInvite && !inviteEmail)} className="w-full h-14 rounded-2xl text-lg font-bold">
                 {loading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} Iniciar Seguimiento
               </Button>
             </DialogFooter>
@@ -257,7 +257,7 @@ export function FollowUpModals({
             </div>
 
             <DialogFooter className="pt-4">
-              <Button onClick={onUpdate} disabled={loading} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl bg-primary">
+              <Button onClick={onUpdate} disabled={loading} className="w-full h-14 rounded-2xl font-bold text-lg bg-primary">
                 {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} Guardar Cambios
               </Button>
             </DialogFooter>

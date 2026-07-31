@@ -114,13 +114,13 @@ export default function AdminCategoriesPage() {
             <p className="text-muted-foreground text-lg font-medium">Define las áreas de conocimiento institucionales para la clasificación de los programas.</p>
           </div>
           <div className="flex gap-3">
-            <Button onClick={() => handleOpenDialog()} className="h-12 px-8 rounded-xl font-bold shadow-xl flex items-center gap-2">
+            <Button onClick={() => handleOpenDialog()} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
               <Plus className="h-5 w-5" /> Nueva Categoría
             </Button>
           </div>
         </header>
 
-        <Card className="border-none shadow-xl rounded-2xl overflow-hidden bg-white">
+        <Card className="border-none rounded-2xl overflow-hidden bg-white">
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-primary/5">
@@ -199,7 +199,7 @@ export default function AdminCategoriesPage() {
                  size="lg" />
               </div>
               <DialogFooter className="mt-8">
-                <Button type="submit" disabled={loading || !formData.name} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl">
+                <Button type="submit" disabled={loading || !formData.name} className="w-full h-14 rounded-2xl text-lg font-bold">
                   {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />} 
                   {editingCategory ? 'Actualizar Categoría' : 'Crear Categoría'}
                 </Button>

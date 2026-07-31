@@ -37,6 +37,13 @@ const VariantContentSchema = z.object({
   hook: z.string().optional().describe('Copy inicial.'),
   caption: z.string().optional().describe('Cuerpo del copy.'),
   hashtags: z.array(z.string()).optional(),
+  production_notes: z.object({
+    visual_style: z.string().optional(),
+    music_vibe: z.string().optional(),
+    watermark_text: z.string().optional(),
+    music_url: z.string().optional(),
+    music_duration: z.number().optional(),
+  }).optional().describe('Notas de producción para la pieza.'),
 });
 
 export async function generateVariantContent(

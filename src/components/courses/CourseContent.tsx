@@ -73,7 +73,7 @@ export function CourseContent({
 
       {/* 2. Resources (Always Visible) */}
       {publicSupportMaterials.length > 0 && (
-        <div className="space-y-4 p-6 md:p-8 bg-slate-50/50 rounded-[2rem] border border-slate-100">
+        <div className="space-y-4 p-6 md:p-8 bg-slate-50/50 rounded-lg border border-slate-100">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="h-5 w-5 text-primary" />
             <h3 className="font-bold text-lg text-slate-800">Recursos y Materiales</h3>
@@ -116,7 +116,7 @@ export function CourseContent({
       {/* 3. Evaluation Results (Show if exists, regardless of completion) */}
       {evaluationResult && (
         <div className={cn(
-          "rounded-[2.5rem] p-6 md:p-8 border shadow-sm space-y-6 animate-in slide-in-from-bottom-4 duration-500",
+          "rounded-lg p-6 md:p-8 border shadow-sm space-y-6 animate-in slide-in-from-bottom-4 duration-500",
           isCompleted ? "bg-emerald-50 border-emerald-100" : "bg-amber-50 border-amber-100"
         )}>
           <div className="flex justify-between items-start">
@@ -161,7 +161,7 @@ export function CourseContent({
 
           {isLastModule && (isCompleted || evaluationResult?.isSupport) ? (
             <div className={cn(
-              "p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] text-center space-y-4 md:space-y-6 animate-in zoom-in duration-500 border-2",
+              "p-6 md:p-10 rounded-lg rounded-lg text-center space-y-4 md:space-y-6 animate-in zoom-in duration-500 border-2",
               isCompleted ? "bg-emerald-500/10 border-emerald-500/20" : "bg-slate-50 border-slate-200"
             )}>
               <div className={cn(
@@ -189,7 +189,7 @@ export function CourseContent({
               <Button 
                 onClick={() => window.location.href = '/my-courses'}
                 className={cn(
-                  "h-14 md:h-16 w-full md:w-auto md:px-12 rounded-2xl text-white font-black text-base md:text-lg shadow-xl transition-all hover:scale-105 active:scale-95",
+                  "h-14 md:h-16 w-full md:w-auto md:px-12 rounded-2xl text-white font-black text-base md:text-lg transition-all hover:scale-105 active:scale-95",
                   isCompleted ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200" : "bg-slate-800 hover:bg-slate-900 shadow-slate-200"
                 )}
               >
@@ -238,7 +238,7 @@ export function CourseContent({
 
       {/* 4. Start Quiz (Only if no previous evaluation exists) */}
       {!evaluationResult && !isCompleted && (
-        <div className="bg-primary/5 rounded-[2.5rem] p-8 md:p-10 border border-primary/10 text-center space-y-6">
+        <div className="bg-primary/5 rounded-lg p-8 md:p-10 border border-primary/10 text-center space-y-6">
           <div className="max-w-md mx-auto space-y-2">
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Trophy className="h-8 w-8 text-primary" />
@@ -250,7 +250,7 @@ export function CourseContent({
           </div>
           <Button 
             onClick={onStartQuiz}
-            className="h-16 px-10 rounded-2xl text-lg font-bold bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 text-white transition-all hover:scale-[1.02]"
+            className="h-16 px-10 rounded-2xl text-lg font-bold bg-primary hover:bg-primary/90 shadow-primary/20 text-white transition-all hover:scale-[1.02]"
           >
             Comenzar Evaluación <BrainCircuit className="ml-2 h-6 w-6" />
           </Button>

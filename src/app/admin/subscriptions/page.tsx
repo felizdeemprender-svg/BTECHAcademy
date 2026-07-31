@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
@@ -704,7 +704,7 @@ export default function AdminSubscriptionsPage() {
                   </TabsContent>
 
                   <TabsContent value="ciclo" className="p-8 space-y-8 max-w-3xl mx-auto m-0 pb-12">
-                    <div className="p-6 bg-blue-50/50 rounded-[2.5rem] border border-blue-100 space-y-8">
+                    <div className="p-6 bg-blue-50/50 rounded-lg border border-blue-100 space-y-8">
                       <div className="flex items-center gap-4 border-b border-blue-100 pb-4">
                         <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600">
                           <Clock className="h-6 w-6" />
@@ -768,7 +768,7 @@ export default function AdminSubscriptionsPage() {
                   </TabsContent>
 
                   <TabsContent value="freno" className="p-8 space-y-8 max-w-3xl mx-auto m-0 pb-12">
-                    <div className="p-6 bg-amber-50/50 rounded-[2.5rem] border border-amber-100 space-y-8">
+                    <div className="p-6 bg-amber-50/50 rounded-lg border border-amber-100 space-y-8">
                       <div className="flex items-center gap-4 border-b border-amber-100 pb-4">
                         <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
                           <Cpu className="h-6 w-6" />

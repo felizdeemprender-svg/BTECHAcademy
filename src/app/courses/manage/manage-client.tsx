@@ -249,10 +249,10 @@ export default function ManageCoursesClient() {
 
   // Firebase hooks (deben estar antes del return)
   const modConfigRef = useMemoFirebase(() => doc(db, 'config', 'moderation'), [db]);
-  const { data: modConfig } = { data: null };
+  const { data: modConfig } = useDoc(modConfigRef);
 
   const termsConfigRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
-  const { data: termsConfig } = { data: null };
+  const { data: termsConfig } = useDoc(termsConfigRef);
 
   // Calcular isAdmin y isMentor antes del return
   const isAdmin = profile?.roles.includes('admin');
@@ -841,7 +841,7 @@ export default function ManageCoursesClient() {
         <header className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div><h1 className="text-2xl font-bold text-foreground">Gestión Académica</h1><p className="text-sm text-muted-foreground">Administración central de programas.</p></div>
           {isMentor && (
-            <Button onClick={handleNewCourse} className="h-12 px-8 rounded-xl font-bold shadow-xl flex items-center gap-2">
+            <Button onClick={handleNewCourse} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
               <Plus className="h-5 w-5" /> Nuevo Curso
             </Button>
           )}
@@ -1072,7 +1072,7 @@ export default function ManageCoursesClient() {
                   <ShieldCheck className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-blue-800 font-medium">Estos cursos aparecerán como "Ruta de Aprendizaje Sugerida" al finalizar el programa actual.</p>
                 </div>
-                <Button onClick={saveAssociations} disabled={isSavingAssociations} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl">
+                <Button onClick={saveAssociations} disabled={isSavingAssociations} className="w-full h-14 rounded-2xl text-lg font-bold">
                   {isSavingAssociations ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-5 w-5" />} 
                   Guardar Recomendaciones
                 </Button>
@@ -1274,7 +1274,7 @@ export default function ManageCoursesClient() {
                         <p className="text-muted-foreground font-bold italic">Obteniendo alumnos...</p>
                       </div>
                     ) : inscriptions.length === 0 ? (
-                      <div className="text-center py-20 bg-secondary/10 rounded-[2rem] border-2 border-dashed">
+                      <div className="text-center py-20 bg-secondary/10 rounded-lg border-2 border-dashed">
                         <Users className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
                         <p className="text-muted-foreground font-bold">No hay alumnos registrados aún.</p>
                       </div>
@@ -1317,7 +1317,7 @@ export default function ManageCoursesClient() {
                     <p className="text-muted-foreground font-bold italic">Consultando registros históricos...</p>
                   </div>
                 ) : moderationLogs.length === 0 ? (
-                  <div className="text-center py-20 bg-secondary/10 rounded-[2rem] border-2 border-dashed">
+                  <div className="text-center py-20 bg-secondary/10 rounded-lg border-2 border-dashed">
                     <ShieldCheck className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
                     <p className="text-muted-foreground font-bold">No existen registros de auditoría previa.</p>
                   </div>
@@ -1348,7 +1348,7 @@ export default function ManageCoursesClient() {
                               <p className="text-[10px] font-black uppercase text-rose-600 tracking-[0.2em] ml-1">Temas de Vigilancia:</p>
                               <div className="flex flex-wrap gap-2">
                                 {log.flaggedTopics?.map((topic: string, i: number) => (
-                                  <Badge key={i} variant="destructive" className="text-xs h-9 px-5 uppercase font-black bg-rose-600 border-none shadow-xl ring-2 ring-white/20">
+                                  <Badge key={i} variant="destructive" className="text-xs h-9 px-5 uppercase font-black bg-rose-600 border-none ring-2 ring-white/20">
                                     {topic}
                                   </Badge>
                                 ))}
@@ -1356,7 +1356,7 @@ export default function ManageCoursesClient() {
                             </div>
                           )}
                         </div>
-                        <div className="bg-white/60 p-5 rounded-2xl border border-black/5 shadow-inner">
+                        <div className="bg-white/60 p-5 rounded-2xl border border-black/5">
                           <p className="text-sm text-slate-700 leading-relaxed italic">"{log.reason}"</p>
                         </div>
                       </Card>

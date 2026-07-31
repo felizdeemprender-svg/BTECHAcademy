@@ -422,7 +422,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const socials = mentorProfile?.profile?.socials || {};
 
   // Theme Modes
-  const themeMode = content.themeMode || 'light';
+  const themeMode = content.themeMode || (content as any)?.designTokens?.styleTokens?.themeMode || 'light';
   const isDark = themeMode === 'dark';
   const isGlass = themeMode === 'glass';
 

@@ -55,6 +55,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-context';
+import { resolveProfileBrand } from '@/lib/landing-styles';
 import { useFirebase, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, serverTimestamp, setDoc, query, where, updateDoc, getDocs, getDoc, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -116,7 +117,7 @@ const initialModule = {
 export default function CreateCoursePage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { firestore: db, storage } = useFirebase();
 
   const [step, setStep] = useState(1);
@@ -141,12 +142,12 @@ export default function CreateCoursePage() {
 
   const classNameInputRef = useRef<HTMLInputElement>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [brandingData, setBrandingData] = useState({
+  const [brandingData, setBrandingData] = useState(() => ({
     bio: '',
     socials: {} as Record<string, string>,
     logoUrl: '',
-    primaryColor: '#0f172a'
-  });
+    primaryColor: resolveProfileBrand(profile?.profile)?.palette?.primary || profile?.profile?.branding?.primaryColor || '#3B2D86'
+  }));
 
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiFlowStep, setAiFlowStep] = useState(1);
@@ -685,7 +686,7 @@ export default function CreateCoursePage() {
 
         {step === 1 && (
           <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
+            <Card className="rounded-lg overflow-hidden bg-white">
               <div className="bg-primary/5 p-10 border-b">
                 <Badge className="bg-primary/10 text-primary border-none mb-2 px-3 py-1 rounded-full uppercase tracking-tighter font-black text-[9px]">Paso 01</Badge>
                 <h2 className="text-2xl font-bold text-primary">Información Institucional</h2>
@@ -726,7 +727,7 @@ export default function CreateCoursePage() {
                           <SelectTrigger id="course-category" size="lg" className="bg-white border-none shadow-sm px-4 font-bold">
                             <SelectValue placeholder="Selecciona una categoría" />
                           </SelectTrigger>
-                          <SelectContent className="border-none shadow-2xl">
+                          <SelectContent className="border-none">
                             {categories?.map((cat: any) => (
                               <SelectItem key={cat.id} value={cat.id} className="font-bold">{cat.name}</SelectItem>
                             ))}
@@ -740,7 +741,7 @@ export default function CreateCoursePage() {
                           <SelectTrigger id="course-level" size="lg" className="bg-white border-none shadow-sm px-4 font-bold">
                             <SelectValue placeholder="Selecciona el nivel" />
                           </SelectTrigger>
-                          <SelectContent className="border-none shadow-2xl">
+                          <SelectContent className="border-none">
                             {levels?.map((lvl: any) => (
                               <SelectItem key={lvl.id} value={lvl.name} className="font-bold">{lvl.name}</SelectItem>
                             ))}
@@ -752,7 +753,7 @@ export default function CreateCoursePage() {
                     <Button 
                       onClick={handleStartCourse} 
                       disabled={!courseData.title || !courseData.categoryId || loading}
-                      className="w-full h-14 rounded-2xl text-lg font-bold bg-primary shadow-xl hover:scale-[1.01] transition-transform"
+                      className="w-full h-14 rounded-2xl text-lg font-bold bg-primary hover:scale-[1.01] transition-transform"
                     >
                       {loading ? <Loader2 className="animate-spin mr-2" /> : <ArrowRight className="mr-2 h-5 w-5" />} INICIAR CREACIÓN
                     </Button>
@@ -778,7 +779,7 @@ export default function CreateCoursePage() {
                 <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({ ...currentModule, contentType: v as any })}>
                   <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full max-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
                   <TabsContent value="text" className="space-y-6">
-                    <div className="p-12 border-2 border-dashed rounded-[3rem] flex flex-col items-center gap-4 relative bg-muted/5 hover:bg-muted/10 transition-all group">
+                    <div className="p-12 border-2 border-dashed rounded-lg flex flex-col items-center gap-4 relative bg-muted/5 hover:bg-muted/10 transition-all group">
                       <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
                       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">{currentModule.isProcessing ? <Loader2 className="animate-spin text-primary" /> : <Upload className="text-primary" />}</div>
                       <div className="text-center"><p className="font-bold text-lg">Cargar Materiales</p><p className="text-sm text-muted-foreground">PDF, Word o TXT.</p></div>
@@ -818,7 +819,7 @@ export default function CreateCoursePage() {
                   </TabsContent>
                 </Tabs>
 
-                <div className="bg-accent/5 p-8 rounded-[2rem] border border-accent/10 space-y-6">
+                <div className="bg-accent/5 p-8 rounded-lg border border-accent/10 space-y-6">
                   <h4 className="font-bold text-accent flex items-center gap-2"><ShieldCheck className="h-5 w-5" /> Reglas de Aprobación</h4>
                   <div className="grid sm:grid-cols-2 gap-8">
                     <div className="space-y-2">
@@ -850,7 +851,7 @@ export default function CreateCoursePage() {
                   <div className="flex justify-between items-center"><h3 className="font-bold text-xl flex items-center gap-2"><CheckCircle2 className="h-6 w-6 text-primary" /> Evaluaciones</h3><div className="flex gap-3"><Button onClick={() => addManualQuestion(false)} variant="outline" className="rounded-2xl gap-2 font-bold h-12 border-2"><Plus className="h-4 w-4" /> Añadir Pregunta</Button><Button onClick={() => { setAiTargetType('main'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-2xl gap-2 bg-accent h-12 text-white"><Sparkles className="h-4 w-4" /> Generar con IA</Button></div></div>
                   <div className="grid gap-4">{currentModule.questions.map((q, idx) => renderQuestionEditor(q, idx, false))}</div>
                 </div>
-                <div className="bg-emerald-50/50 p-8 rounded-[2.5rem] border-2 border-emerald-100 space-y-6">
+                <div className="bg-emerald-50/50 p-8 rounded-lg border-2 border-emerald-100 space-y-6">
                   <div className="flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-emerald-800">Refuerzo Automático</h3></div></div><Switch checked={currentModule.enableSupportQuestions} onCheckedChange={(val) => setCurrentModule({ ...currentModule, enableSupportQuestions: val })} /></div>
                   {currentModule.enableSupportQuestions && (
                     <div className="pt-6 space-y-6 border-t border-emerald-200">
@@ -859,7 +860,7 @@ export default function CreateCoursePage() {
                     </div>
                   )}
                 </div>
-                <Button onClick={handleSaveModule} disabled={loading} className="w-full h-16 rounded-[1.5rem] text-lg font-bold bg-primary shadow-2xl mt-6">{loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />} Guardar Clase #{moduleOrder}</Button>
+                <Button onClick={handleSaveModule} disabled={loading} className="w-full h-16 rounded-[1.5rem] text-lg font-bold bg-primary mt-6">{loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />} Guardar Clase #{moduleOrder}</Button>
               </CardContent>
             </Card>
           </div>
@@ -891,7 +892,7 @@ export default function CreateCoursePage() {
                         value={brandingData.bio}
                         onChange={e => setBrandingData({ ...brandingData, bio: e.target.value })}
                         placeholder="Describe tu trayectoria y enfoque para este programa..."
-                        className="min-h-[200px] rounded-[2rem] bg-secondary/10 border-none p-8 text-base leading-relaxed"
+                        className="min-h-[200px] rounded-lg bg-secondary/10 border-none p-8 text-base leading-relaxed"
                       />
                     </div>
                   </TabsContent>
@@ -924,7 +925,7 @@ export default function CreateCoursePage() {
                     <div className="space-y-4">
                       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logo Institucional del Curso</Label>
                       <div className="flex items-center gap-8">
-                        <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white shadow-xl">
+                        <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white">
                           {brandingData.logoUrl ? (
                             <Image src={brandingData.logoUrl} alt="Logo" fill className="object-contain p-4" unoptimized />
                           ) : (
@@ -953,7 +954,7 @@ export default function CreateCoursePage() {
                             type="color"
                             value={brandingData.primaryColor}
                             onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
-                            className="w-24 h-24 rounded-3xl p-0 border-none cursor-pointer overflow-hidden shadow-xl ring-4 ring-white"
+                            className="w-24 h-24 rounded-3xl p-0 border-none cursor-pointer overflow-hidden ring-4 ring-white"
                           />
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <Maximize className="h-6 w-6 text-white mix-blend-difference opacity-50" />
@@ -971,7 +972,7 @@ export default function CreateCoursePage() {
                   </TabsContent>
                 </Tabs>
                 <div className="p-10 pt-0">
-                  <Button onClick={handleSaveBranding} className="w-full h-16 rounded-[1.5rem] text-lg font-bold shadow-2xl bg-primary" disabled={loading}>
+                  <Button onClick={handleSaveBranding} className="w-full h-16 rounded-[1.5rem] text-lg font-bold bg-primary" disabled={loading}>
                     {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} Aplicar Identidad y Continuar
                   </Button>
                 </div>
@@ -1040,7 +1041,7 @@ export default function CreateCoursePage() {
                     </div>
                   ))}
                 </div>
-                <Button onClick={() => setStep(5)} className="w-full h-16 rounded-[1.5rem] text-lg font-bold shadow-2xl">Continuar a Términos <ArrowRight className="h-5 w-5 ml-2" /></Button>
+                <Button onClick={() => setStep(5)} className="w-full h-16 rounded-[1.5rem] text-lg font-bold">Continuar a Términos <ArrowRight className="h-5 w-5 ml-2" /></Button>
               </CardContent>
             </Card>
           </div>
@@ -1059,7 +1060,7 @@ export default function CreateCoursePage() {
                 </div>
               </CardHeader>
               <CardContent className="p-10 space-y-10">
-                <div className="bg-slate-50 rounded-[2rem] border border-slate-200 p-8">
+                <div className="bg-slate-50 rounded-lg border border-slate-200 p-8">
                   <ScrollArea className="h-[400px] pr-6">
                     <div className="prose prose-sm max-w-none text-slate-600 leading-relaxed whitespace-pre-wrap">
                       {termsConfig?.content || "Cargando protocolo académico..."}
@@ -1074,7 +1075,7 @@ export default function CreateCoursePage() {
 
                 <div className="flex gap-4">
                   <Button variant="outline" onClick={() => setStep(4)} className="h-16 px-8 rounded-[1.5rem] font-bold border-2">Atrás</Button>
-                  <Button onClick={handleAcceptTerms} disabled={!termsAccepted || loading} className="flex-1 h-16 rounded-[1.5rem] text-lg font-bold shadow-2xl bg-primary">Confirmar Aceptación <ArrowRight className="h-5 w-5 ml-2" /></Button>
+                  <Button onClick={handleAcceptTerms} disabled={!termsAccepted || loading} className="flex-1 h-16 rounded-[1.5rem] text-lg font-bold bg-primary">Confirmar Aceptación <ArrowRight className="h-5 w-5 ml-2" /></Button>
                 </div>
               </CardContent>
             </Card>
@@ -1087,7 +1088,7 @@ export default function CreateCoursePage() {
               <div className="absolute top-0 right-0 p-12 opacity-10"><Sparkles className="h-40 w-40" /></div>
               <CardHeader className="p-12 pb-6 relative z-10"><CardTitle className="text-4xl font-bold">6. Registro Final</CardTitle><CardDescription className="text-slate-400 text-lg">Tu programa ha cumplido todos los requisitos.</CardDescription></CardHeader>
               <CardContent className="p-12 pt-6 space-y-10 relative z-10">
-                <div className="p-8 bg-white/5 rounded-[2rem] border border-white/10 flex items-start gap-4">
+                <div className="p-8 bg-white/5 rounded-lg border border-white/10 flex items-start gap-4">
                   <ShieldCheck className="h-8 w-8 text-emerald-400 shrink-0" />
                   <div>
                     <h4 className="text-xl font-bold">Estado: Borrador Protegido</h4>
@@ -1098,7 +1099,7 @@ export default function CreateCoursePage() {
                   <div className="bg-white/5 p-6 rounded-2xl border border-white/10"><div className="flex items-center gap-3 mb-2"><BookOpen className="text-accent h-5 w-5" /><span className="text-xs font-bold uppercase tracking-widest text-slate-400">Estructura</span></div><p className="text-2xl font-bold">{moduleOrder} Clases</p></div>
                   <div className="bg-white/5 p-6 rounded-2xl border border-white/10"><div className="flex items-center gap-3 mb-2"><Users className="text-emerald-400 h-5 w-5" /><span className="text-xs font-bold uppercase tracking-widest text-slate-400">Legal</span></div><p className="text-2xl font-bold">Términos Aceptados</p></div>
                 </div>
-                <Button onClick={handleFinalFinish} disabled={loading} className="w-full h-20 rounded-[2rem] text-2xl font-bold bg-white text-slate-900 hover:bg-slate-100 shadow-2xl transition-all">Finalizar Creación de Programa</Button>
+                <Button onClick={handleFinalFinish} disabled={loading} className="w-full h-20 rounded-lg text-2xl font-bold bg-white text-slate-900 hover:bg-slate-100 transition-all">Finalizar Creación de Programa</Button>
               </CardContent>
             </Card>
           </div>
@@ -1132,7 +1133,7 @@ export default function CreateCoursePage() {
           <div className="space-y-8 px-8 pb-8">
             {aiFlowStep === 1 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="flex flex-col items-center text-center gap-4 py-6 px-10 bg-secondary/10 rounded-[2rem] border-2 border-dashed border-primary/10">
+                <div className="flex flex-col items-center text-center gap-4 py-6 px-10 bg-secondary/10 rounded-lg border-2 border-dashed border-primary/10">
                   <FileText className="h-12 w-12 text-primary/40" />
                   <div className="space-y-1">
                     <h4 className="font-bold text-lg">Procesar Documento Maestro</h4>
@@ -1148,7 +1149,7 @@ export default function CreateCoursePage() {
                   )}
                 </div>
 
-                <Button onClick={handleExtractText} disabled={isExtracting || !currentModule.supportMaterials.find(m => m.isMaster)} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl">
+                <Button onClick={handleExtractText} disabled={isExtracting || !currentModule.supportMaterials.find(m => m.isMaster)} className="w-full h-14 rounded-2xl font-bold text-lg">
                   {isExtracting ? <><Loader2 className="animate-spin mr-2 h-5 w-5" /> Gemini está leyendo...</> : <><Zap className="mr-2 h-5 w-5" /> Iniciar Lectura Profunda</>}
                 </Button>
               </div>
@@ -1199,7 +1200,7 @@ export default function CreateCoursePage() {
 
                 <div className="flex gap-4">
                   <Button variant="ghost" onClick={() => setAiFlowStep(1)} className="rounded-xl font-bold">Atrás</Button>
-                  <Button onClick={handleGenerateQuestions} disabled={loading} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 bg-primary text-white">
+                  <Button onClick={handleGenerateQuestions} disabled={loading} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-primary/20 bg-primary text-white">
                     {loading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : <Sparkles className="h-5 w-5 mr-2" />} Generar Sugerencias
                   </Button>
                 </div>

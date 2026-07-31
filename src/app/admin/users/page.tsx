@@ -355,7 +355,7 @@ export default function AdminUsersPage() {
             <h1 className="text-2xl font-bold text-slate-900">Gestión de Usuarios</h1>
             <p className="text-slate-500 font-medium">Control institucional de accesos y permisos.</p>
           </div>
-          <Button onClick={() => setIsAddUserOpen(true)} className="h-12 px-8 rounded-xl font-bold gap-2 bg-primary text-white shadow-xl">
+          <Button onClick={() => setIsAddUserOpen(true)} className="h-12 px-8 rounded-xl font-bold gap-2 bg-primary text-white">
             <UserPlus className="h-5 w-5" /> Alta Usuario
           </Button>
         </header>
@@ -689,7 +689,7 @@ export default function AdminUsersPage() {
                     </div>
                   )}
                 </div>
-                <Button onClick={handleCreateUser} disabled={loading || !newUserData.email || newUserData.roles.length === 0} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl bg-primary text-white">
+                <Button onClick={handleCreateUser} disabled={loading || !newUserData.email || newUserData.roles.length === 0} className="w-full h-14 rounded-2xl font-bold text-lg bg-primary text-white">
                   {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5 mr-3" />} Registrar Usuario
                 </Button>
               </div>
@@ -709,7 +709,7 @@ export default function AdminUsersPage() {
             <ScrollArea className="max-h-[70vh]">
               <div className="px-10 pb-10 space-y-10">
                 <div className="flex items-center gap-6 p-6 bg-secondary/10 rounded-3xl border border-primary/5">
-                  <Avatar className="h-16 w-16 border-4 border-white shadow-xl">
+                  <Avatar className="h-16 w-16 border-4 border-white">
                     <AvatarImage src={pendingUser?.photoURL || undefined} />
                     <AvatarFallback className="bg-slate-100 text-slate-600 font-bold uppercase text-xl">{pendingUser?.displayName?.[0] || 'U'}</AvatarFallback>
                   </Avatar>
@@ -738,7 +738,7 @@ export default function AdminUsersPage() {
                         )}>
                           <div className="flex items-center gap-4">
                             <div className={cn(
-                              "w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border shadow-inner transition-colors",
+                              "w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border transition-colors",
                               !isProtectedRole && "group-hover:text-primary group-hover:bg-primary/5"
                             )}>
                               <role.icon className="h-5 w-5" />

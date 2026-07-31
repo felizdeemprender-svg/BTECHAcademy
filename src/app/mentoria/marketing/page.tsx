@@ -167,7 +167,7 @@ export default function CampaignsDashboardPage() {
             </Button>
             <Button 
               onClick={() => router.push('/mentoria/marketing/build')} 
-              className="h-14 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2 bg-accent hover:bg-accent/90 transition-all hover:scale-105 active:scale-95"
+              className="h-14 px-8 rounded-2xl font-bold flex items-center gap-2 bg-accent hover:bg-accent/90 transition-all hover:scale-105 active:scale-95"
             >
               <Plus className="h-5 w-5" /> Nueva Coordinación
             </Button>
@@ -176,9 +176,9 @@ export default function CampaignsDashboardPage() {
 
         <div className="grid gap-8">
           {campaignsLoading ? (
-            [1, 2].map(i => <div key={i} className="h-48 bg-muted animate-pulse rounded-[2.5rem]" />)
+            [1, 2].map(i => <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />)
           ) : campaigns?.length === 0 ? (
-            <div className="py-24 text-center bg-secondary/10 rounded-[3rem] border-2 border-dashed">
+            <div className="py-24 text-center bg-secondary/10 rounded-lg border-2 border-dashed">
               <Activity className="h-16 w-16 text-muted-foreground/30 mx-auto mb-6" />
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-slate-600">No hay campañas coordinadas</h3>
@@ -193,7 +193,7 @@ export default function CampaignsDashboardPage() {
                 const currentDay = differenceInDays(new Date(), start) + 1;
                 
                 return (
-                  <Card key={camp.id} className="group hover:shadow-2xl transition-all duration-500">
+                  <Card key={camp.id} className="group transition-all duration-500">
                     <div className="flex flex-col lg:flex-row items-stretch">
                       <div className="bg-slate-900 p-8 lg:w-80 flex flex-col justify-between text-white shrink-0">
                         <div>
@@ -335,7 +335,7 @@ export default function CampaignsDashboardPage() {
                           </div>
                           <div className="flex-1 w-0.5 bg-slate-200 group-last:bg-transparent" />
                         </div>
-                        <Card className="flex-1 p-6 rounded-[2rem] border-2 border-slate-100 shadow-sm bg-white hover:shadow-md transition-all mb-4 relative overflow-hidden">
+                        <Card className="flex-1 p-6 rounded-lg border-2 border-slate-100 shadow-sm bg-white hover:shadow-md transition-all mb-4 relative overflow-hidden">
                           {isEditing && (
                             <Button 
                               variant="ghost" 
@@ -429,7 +429,7 @@ export default function CampaignsDashboardPage() {
             
             <DialogFooter className="p-6 bg-white border-t shrink-0">
               {isEditing ? (
-                <Button onClick={handleSavePlanChanges} disabled={savingPlan} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl bg-primary gap-2">
+                <Button onClick={handleSavePlanChanges} disabled={savingPlan} className="w-full h-14 rounded-2xl font-bold text-lg bg-primary gap-2">
                   {savingPlan ? <Loader2 className="animate-spin" /> : <Save className="h-5 w-5" />} Actualizar Plan Maestro
                 </Button>
               ) : (

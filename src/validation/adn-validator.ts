@@ -8,7 +8,6 @@ import blueprintSchema from './schema/blueprint.json';
 import blueprintInfoSchema from './schema/blueprint-info.json';
 import engineRequirementsSchema from './schema/engine-requirements.json';
 import globalFXSchema from './schema/global-fx.json';
-import type { ADN } from '../types';
 
 // Configurar AJV con módulos
 const ajv = new Ajv({ 
@@ -81,12 +80,12 @@ export class ADNValidator {
     };
   }
 
-  static validateOrThrow(adn: any): ADN {
+  static validateOrThrow(adn: any): any {
     const result = this.validate(adn);
     if (!result.isValid) {
       throw new Error(`ADN inválido:\n${result.errors.join('\n')}`);
     }
-    return adn as ADN;
+    return adn;
   }
 
   static validateArray(adns: any[]): ValidationResult {

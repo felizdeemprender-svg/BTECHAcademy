@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ export function LandingHeader() {
   return (
     <header className="px-6 py-5 flex items-center justify-between border-b bg-white/70 backdrop-blur-xl sticky top-0 z-50 transition-all">
       <Link href="/" className="flex items-center gap-3 group cursor-pointer">
-        <div className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center shadow-xl shadow-primary/25 group-hover:rotate-6 transition-transform">
+        <div className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center shadow-primary/25 group-hover:rotate-6 transition-transform">
           <Sparkles className="text-primary-foreground h-6 w-6" />
         </div>
         <div className="flex flex-col -gap-1">

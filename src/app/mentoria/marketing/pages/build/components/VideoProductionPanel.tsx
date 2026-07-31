@@ -170,7 +170,7 @@ export function VideoProductionPanel({
               });
             }}
           >
-            <SelectTrigger className="w-[140px] h-10 bg-slate-900 border-white/10 text-white text-[10px] font-black focus:ring-violet-500/50 shadow-2xl">
+            <SelectTrigger className="w-[140px] h-10 bg-slate-900 border-white/10 text-white text-[10px] font-black focus:ring-violet-500/50">
               <SelectValue placeholder="Elegir Voz" />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 border-white/10 text-white">

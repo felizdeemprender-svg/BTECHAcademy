@@ -1,31 +1,160 @@
-import { LandingStyle } from '@/lib/landing-styles';
+'use client';
+
+import { useState, type ChangeEvent } from 'react';
+import { LandingStyle, STYLE_GROUP_LABELS, STYLE_GROUP_COLORS, StyleGroup, StyleBrand } from '@/lib/landing-styles';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Layers, Bot, FileText, CheckCircle2, CopyPlus } from 'lucide-react';
+import { Bot, FileText, CheckCircle2, CopyPlus, Palette, ChevronDown, ChevronUp, Upload, Download, Loader2, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useFirebase } from '@/firebase/provider';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { parseBrandFile, brandsToDTCG } from '@/lib/landing-styles/dtcg';
+import type { BrandParseResult } from '@/lib/landing-styles/dtcg';
+import { BrandVisual } from '@/components/landing/brand-visual';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface StyleDetailsProps {
   styleData: LandingStyle;
   onClose: () => void;
 }
 
+const BRAND_JSON_EXAMPLE = `{
+  "$schema": "https://design-tokens.github.io/community-group/format/draft/draft.json",
+  "Profesional": {
+    "$description": "Limpio, confiable y balanceado",
+    "color": {
+      "primary": { "$value": "#1E40AF", "$type": "color" },
+      "secondary": { "$value": "#F1F5F9", "$type": "color" },
+      "accent": { "$value": "#F59E0B", "$type": "color" }
+    },
+    "typography": {
+      "heading-font": { "$value": "Inter", "$type": "fontFamily" },
+      "heading-scale": { "$value": 1.1, "$type": "number" },
+      "body-font": { "$value": "Inter", "$type": "fontFamily" },
+      "body-scale": { "$value": 1, "$type": "number" }
+    },
+    "components": {
+      "radius": { "$value": "6px", "$type": "dimension" },
+      "border": { "$value": "1px solid var(--border)", "$type": "border" },
+      "shadow": { "$value": "none", "$type": "shadow" },
+      "background": { "$value": "var(--surface)", "$type": "color" }
+    },
+    "layout": {
+      "section-padding": { "$value": "96px", "$type": "dimension" },
+      "content-gap": { "$value": "16px", "$type": "dimension" },
+      "transition-duration": { "$value": "150ms", "$type": "duration" }
+    },
+    "theme": {
+      "mode": { "$value": "light", "$type": "string" }
+    }
+  }
+}`;
+
 export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) {
+  const { firestore } = useFirebase();
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importedFileName, setImportedFileName] = useState<string | null>(null);
+  const [parseResult, setParseResult] = useState<BrandParseResult | null>(null);
+  const [brandToDelete, setBrandToDelete] = useState<StyleBrand | null>(null);
+  const [isDeletingBrand, setIsDeletingBrand] = useState(false);
+  const [deleteBrandError, setDeleteBrandError] = useState<string | null>(null);
+
+  const handleDeleteBrand = async () => {
+    if (!firestore || !brandToDelete) return;
+    setIsDeletingBrand(true);
+    setDeleteBrandError(null);
+    try {
+      const remaining = (styleData.brands || []).filter((b) => b.name !== brandToDelete.name);
+      await updateDoc(doc(firestore, 'landingStyles', styleData.id), {
+        brands: remaining,
+      });
+      setBrandToDelete(null);
+    } catch (e: any) {
+      setDeleteBrandError(`Error al eliminar el brand: ${e?.message || 'desconocido'}`);
+    } finally {
+      setIsDeletingBrand(false);
+    }
+  };
+
+  const openImportDialog = () => {
+    setImportError(null);
+    setImportedFileName(null);
+    setParseResult(null);
+    setIsImportOpen(true);
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportedFileName(file.name);
+    setImportError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || '');
+      setParseResult(parseBrandFile(text));
+    };
+    reader.onerror = () => {
+      setImportError('No se pudo leer el archivo seleccionado.');
+      setParseResult(null);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImport = async () => {
+    if (!firestore || !parseResult || parseResult.brands.length === 0) return;
+    setIsImporting(true);
+    setImportError(null);
+    try {
+      await updateDoc(doc(firestore, 'landingStyles', styleData.id), {
+        brands: arrayUnion(...parseResult.brands),
+      });
+      setIsImportOpen(false);
+    } catch (e: any) {
+      setImportError(`Error al guardar: ${e?.message || 'desconocido'}`);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleExportDTCG = () => {
+    if (!styleData.brands || styleData.brands.length === 0) return;
+    const slug = styleData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const blob = new Blob([brandsToDTCG(styleData.brands)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${slug}-brand-tokens.tokens.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="mw-4xl h-[90vh] flex flex-col p-0">
+      <DialogContent className="mw-5xl h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 py-4 border-b bg-slate-50 shrink-0">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-xl bg-white border shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="w-16 h-16 rounded-xl bg-white border shadow-sm flex items-center justify-center shrink-0 overflow-hidden relative">
               {styleData.thumbnail ? (
-                <img src={styleData.thumbnail} alt={styleData.name} className="w-full h-full object-cover" />
-              ) : (
-                <Palette className="w-8 h-8 text-slate-300" />
-              )}
+                <img
+                  src={styleData.thumbnail}
+                  alt={styleData.name}
+                  className="w-full h-full object-cover relative z-10"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              ) : null}
+              <Palette className="w-8 h-8 text-slate-300" />
             </div>
             <div>
               <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-3">
                 Estilo: {styleData.name}
+                <Badge variant="outline" className={`text-[10px] uppercase font-bold px-2 py-0.5 h-5 ${STYLE_GROUP_COLORS[styleData.group as StyleGroup] || 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                  {STYLE_GROUP_LABELS[styleData.group as StyleGroup] || styleData.group}
+                </Badge>
                 <div className="flex gap-1 ml-2">
                   {styleData.allowedSubscriptions?.map(plan => (
                     <Badge key={plan} variant="outline" className={`text-[10px] uppercase font-bold px-2 py-0.5 h-5 
@@ -50,126 +179,105 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
             <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="ai" className="font-bold flex gap-2"><Bot className="h-4 w-4" /> Prompt General (IA)</TabsTrigger>
               <TabsTrigger value="sections" className="font-bold flex gap-2"><FileText className="h-4 w-4" /> Secciones & Prompts</TabsTrigger>
-              <TabsTrigger value="visual" className="font-bold flex gap-2"><Layers className="h-4 w-4" /> Composición Visual</TabsTrigger>
+              <TabsTrigger value="brands" className="font-bold flex gap-2"><Palette className="h-4 w-4" /> Brands</TabsTrigger>
             </TabsList>
 
             <TabsContent value="ai" className="space-y-6">
               <div>
                 <h3 className="text-sm font-bold uppercase text-slate-500 mb-2 tracking-widest">¿Quién habla y cómo se expresa?</h3>
-                <div className="bg-slate-900 text-slate-100 p-6 rounded-xl font-mono text-sm leading-relaxed whitespace-pre-wrap shadow-inner">
+                <div className="bg-slate-900 text-slate-100 p-6 rounded-xl font-mono text-sm leading-relaxed whitespace-pre-wrap">
                   {styleData.aiDirectives || 'No hay directivas globales configuradas para este estilo.'}
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="sections" className="space-y-4">
+            <TabsContent value="sections" className="space-y-3">
               <h3 className="text-sm font-bold uppercase text-slate-500 mb-2 tracking-widest">Secciones disponibles ({styleData.availableSections?.length || 0})</h3>
-              <div className="grid gap-4">
-                {styleData.availableSections?.map((section) => (
-                  <div key={section.id} className="border border-slate-200 rounded-xl p-5 bg-white shadow-sm flex flex-col gap-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="bg-slate-50 uppercase text-[10px] tracking-widest font-black border-slate-300">
-                          ID: {section.id}
-                        </Badge>
-                        <h4 className="font-black text-lg text-slate-800">{section.name}</h4>
-                      </div>
-                      <div className="flex gap-2">
-                        {section.required && (
-                          <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold text-xs gap-1">
-                            <CheckCircle2 className="h-3 w-3" /> Obligatoria
+              <div className="space-y-2">
+                {styleData.availableSections?.map((section) => {
+                  const isExpanded = expandedSection === section.id;
+                  return (
+                    <div key={section.id} className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedSection(isExpanded ? null : section.id)}
+                        className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h4 className="font-bold text-sm text-slate-800 truncate">{section.name}</h4>
+                          <Badge variant="outline" className="bg-slate-50 uppercase text-[9px] tracking-widest font-black border-slate-300 shrink-0">
+                            {section.id}
                           </Badge>
-                        )}
-                        {section.isRepeatable && (
-                          <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none font-bold text-xs gap-1">
-                            <CopyPlus className="h-3 w-3" /> Multi-Instancia
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant="secondary" className="font-bold text-[10px] capitalize">
+                            {section.contentType}
                           </Badge>
-                        )}
-                        <Badge variant="secondary" className="font-bold text-xs capitalize">
-                          Tipo: {section.contentType}
-                        </Badge>
-                      </div>
+                          {section.required && (
+                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold text-[10px] gap-1">
+                              <CheckCircle2 className="h-3 w-3" /> Obligatoria
+                            </Badge>
+                          )}
+                          {section.isRepeatable && (
+                            <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none font-bold text-[10px] gap-1">
+                              <CopyPlus className="h-3 w-3" /> Multi
+                            </Badge>
+                          )}
+                          {isExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                        </div>
+                      </button>
+                      {isExpanded && (
+                        <div className="px-4 pb-4 space-y-3">
+                          <div className="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100/50">
+                            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Prompt Específico de la Sección</p>
+                            <p className="text-xs text-slate-700 font-medium italic leading-relaxed">
+                              "{section.description || 'Sin prompt específico.'}"
+                            </p>
+                          </div>
+                          <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100/50">
+                            <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Estructura Visual (Blueprint)</p>
+                            <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                              {section.blueprint || 'Sin estructura definida.'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    
-                    <div className="bg-indigo-50/50 p-4 rounded-lg border border-indigo-100/50 mt-2">
-                      <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1.5">Prompt Específico de la Sección:</p>
-                      <p className="text-sm text-slate-700 font-medium italic">
-                        "{section.description || 'Sin prompt específico.'}"
-                      </p>
-                    </div>
-
-                    <div className="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100/50">
-                      <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-1.5">Estructura Visual (Blueprint):</p>
-                      <p className="text-sm text-slate-700 font-medium leading-relaxed">
-                        {section.blueprint || 'Sin estructura definida.'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </TabsContent>
 
-            <TabsContent value="visual" className="space-y-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Layout Base</p>
-                  <p className="font-bold text-slate-900 text-lg capitalize">{styleData.layout}</p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Estilos Comp.</p>
-                  <p className="font-bold text-slate-900 text-lg capitalize">{styleData.componentStyle}</p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Espaciado</p>
-                  <p className="font-bold text-slate-900 text-lg capitalize">{styleData.spacing}</p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Animaciones</p>
-                  <p className="font-bold text-slate-900 text-lg capitalize">{styleData.animations}</p>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-bold uppercase text-slate-500 mb-3 tracking-widest flex items-center gap-2">
-                  <span className="w-6 h-[2px] bg-slate-300"></span> Paletas de Color
+            <TabsContent value="brands" className="space-y-3">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-sm font-bold uppercase text-slate-500 tracking-widest">
+                  Brands ({styleData.brands?.length || 0})
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {styleData.colorProposals?.map((palette, i) => (
-                    <div key={i} className="border border-slate-200 rounded-lg p-2.5 bg-white shadow-sm flex flex-col items-center justify-center gap-2 hover:border-slate-300 transition-colors">
-                      <p className="font-bold text-slate-700 text-xs text-center truncate w-full" title={palette.name}>{palette.name}</p>
-                      <div className="flex -space-x-1.5">
-                        <div className="w-6 h-6 rounded-full border border-white shadow-sm z-30" style={{ backgroundColor: palette.primary }} title={`Primary: ${palette.primary}`} />
-                        <div className="w-6 h-6 rounded-full border border-white shadow-sm z-20" style={{ backgroundColor: palette.secondary }} title={`Secondary: ${palette.secondary}`} />
-                        <div className="w-6 h-6 rounded-full border border-white shadow-sm z-10" style={{ backgroundColor: palette.accent }} title={`Accent: ${palette.accent}`} />
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="font-bold gap-1.5" disabled={!styleData.brands || styleData.brands.length === 0} onClick={handleExportDTCG}>
+                    <Download className="h-3.5 w-3.5" /> Exportar DTCG
+                  </Button>
+                  <Button variant="outline" size="sm" className="font-bold gap-1.5" onClick={openImportDialog}>
+                    <Upload className="h-3.5 w-3.5" /> Importar brand
+                  </Button>
                 </div>
               </div>
-
-              <div>
-                <h3 className="text-sm font-bold uppercase text-slate-500 mb-3 tracking-widest flex items-center gap-2">
-                  <span className="w-6 h-[2px] bg-slate-300"></span> Tipografías
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {styleData.typography?.map((typo, i) => (
-                    <div key={i} className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex flex-col justify-between hover:border-slate-200 transition-colors">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="font-bold text-slate-800 text-sm truncate pr-2" title={typo.name}>{typo.name}</p>
-                        <Badge variant="outline" className="bg-white text-[9px] px-1.5 py-0 h-4">T-{i+1}</Badge>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-slate-500 truncate" title={`Heading: ${typo.headingFont}`}>
-                          <span className="font-bold text-slate-400">H:</span> {typo.headingFont} <span className="text-slate-400">({typo.headingScale}x)</span>
-                        </p>
-                        <p className="text-[10px] text-slate-500 truncate" title={`Body: ${typo.bodyFont}`}>
-                          <span className="font-bold text-slate-400">B:</span> {typo.bodyFont} <span className="text-slate-400">({typo.bodyScale}x)</span>
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+              {styleData.brands && styleData.brands.length > 0 ? (
+                <BrandVisual
+                  brands={styleData.brands}
+                  onDelete={(brand) => {
+                    setDeleteBrandError(null);
+                    setBrandToDelete(brand);
+                  }}
+                  emptyMessage="Este estilo no tiene brands configurados. Usá «Importar brand» para cargar uno o más brands desde un archivo JSON."
+                />
+              ) : (
+                <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-100">
+                  <Palette className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-500">Este estilo no tiene brands configurados</p>
+                  <p className="text-sm text-slate-400 mt-1">Usá "Importar brand" para cargar uno o más brands desde un archivo JSON.</p>
                 </div>
-              </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
@@ -178,6 +286,105 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
           <Button variant="outline" onClick={onClose} className="font-bold">Cerrar</Button>
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={isImportOpen} onOpenChange={(open) => !open && !isImporting && setIsImportOpen(false)}>
+        <DialogContent className="mw-lg max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 py-4 border-b shrink-0">
+            <DialogTitle className="text-lg font-bold text-slate-900">Importar Brand — {styleData.name}</DialogTitle>
+            <DialogDescription>
+              Cargá un archivo JSON de brands: formato estándar DTCG/W3C (Design Tokens) o el formato propio del sistema. Se importan tal cual; los campos desconocidos se ignoran.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-4">
+            <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 space-y-1">
+              <p className="font-bold text-amber-950">Requisitos mínimos por brand</p>
+              <p>Para que el brand sea usable (y no se cargue basura), cada brand debe incluir:</p>
+              <ul className="list-disc pl-4 space-y-0.5">
+                <li><span className="font-mono">name</span> (nombre)</li>
+                <li>Paleta con <span className="font-mono">primary</span>, <span className="font-mono">secondary</span> y <span className="font-mono">accent</span> en formato válido (#hex, <span className="font-mono">hsl()</span>/<span className="font-mono">rgb()</span> o <span className="font-mono">var(--...)</span>)</li>
+                <li>Tipografía con <span className="font-mono">heading-font</span> y <span className="font-mono">body-font</span></li>
+              </ul>
+              <p>Los brands que no cumplan se listan como errores y no se importan.</p>
+            </div>
+
+            <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-4 text-sm text-blue-800 space-y-1.5">
+              <p className="font-bold text-blue-900">Formato DTCG/W3C (Design Tokens)</p>
+              <p><span className="font-mono font-bold">.json</span> estándar: cada grupo raíz (sin <span className="font-mono">$</span>) es un brand. Acepta <span className="font-mono">$schema</span> opcional y tokens con <span className="font-mono">$value</span>/<span className="font-mono">$type</span>.</p>
+              <p>Detecta automáticamente <span className="font-mono font-bold">color</span>, <span className="font-mono font-bold">typography</span>, <span className="font-mono font-bold">components</span>, <span className="font-mono font-bold">layout</span> y <span className="font-mono font-bold">theme</span>. Mapea a los tokens del sistema.</p>
+              <p className="font-bold text-blue-900 pt-1">Formato propio del sistema (fallback)</p>
+              <p>También acepta el formato interno: <span className="font-mono font-bold">name</span> (obligatorio), <span className="font-mono font-bold">description</span>, <span className="font-mono font-bold">tokens</span>, <span className="font-mono font-bold">typography</span> y <span className="font-mono font-bold">palette</span>.</p>
+              <p className="text-blue-700">Los campos desconocidos (ej. iconos) se ignoran. Los tokens CSS faltantes (radio, sombra, espaciado, etc.) se completan con los valores por defecto del sistema; la paleta y la tipografía deben venir en el archivo.</p>
+            </div>
+
+            <div className="bg-slate-900 text-slate-100 rounded-xl p-4 font-mono text-[11px] leading-relaxed whitespace-pre overflow-x-auto">
+              <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-2">Ejemplo de formato</p>
+              {BRAND_JSON_EXAMPLE}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <label className="flex-1 cursor-pointer">
+                <span className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm font-bold text-slate-600 hover:border-primary hover:text-primary transition-colors">
+                  <Upload className="h-4 w-4" />
+                  {importedFileName ? `Reemplazar archivo: ${importedFileName}` : 'Seleccionar archivo JSON'}
+                </span>
+                <input type="file" accept=".json,application/json" onChange={handleFileChange} className="hidden" />
+              </label>
+            </div>
+
+            {importedFileName && parseResult && (
+              <div className="rounded-xl border border-slate-200 p-4 space-y-2">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Archivo: {importedFileName}</p>
+                {parseResult.brands.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {parseResult.brands.map((brand, i) => (
+                      <Badge key={i} variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold">
+                        {brand.name}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {parseResult.errors.length > 0 && (
+                  <div className="bg-rose-50 border border-rose-100 rounded-lg p-3 space-y-1">
+                    {parseResult.errors.map((err, i) => (
+                      <p key={i} className="text-xs font-semibold text-rose-600">✕ {err}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {importError && (
+              <p className="text-sm font-bold text-rose-500">{importError}</p>
+            )}
+          </div>
+
+          <DialogFooter className="px-6 py-4 border-t bg-slate-50 shrink-0">
+            <Button variant="outline" onClick={() => setIsImportOpen(false)} disabled={isImporting}>Cancelar</Button>
+            <Button
+              onClick={handleImport}
+              disabled={isImporting || !parseResult || parseResult.brands.length === 0}
+            >
+              {isImporting ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Importando...</> : `Importar ${parseResult && parseResult.brands.length > 0 ? `${parseResult.brands.length} brand${parseResult.brands.length > 1 ? 's' : ''}` : 'brands'}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={!!brandToDelete}
+        onOpenChange={(open) => {
+          if (!isDeletingBrand && !open) setBrandToDelete(null);
+        }}
+        title={`Eliminar brand "${brandToDelete?.name || ''}"`}
+        description={deleteBrandError || 'Esta acción elimina el brand del estilo y no se puede deshacer. Las landings que ya lo usan mantienen sus tokens congelados.'}
+        icon={<Trash2 className="h-6 w-6" />}
+        iconClassName="bg-rose-50 text-rose-500"
+        confirmLabel="Eliminar"
+        variant="destructive"
+        loading={isDeletingBrand}
+        onConfirm={handleDeleteBrand}
+      />
     </Dialog>
   );
 }

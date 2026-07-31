@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -86,7 +86,7 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link href="/services">
-                <Button size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">
+                <Button size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-primary/20">
                   Nuestros Servicios
                 </Button>
               </Link>
@@ -122,7 +122,7 @@ export default function AboutPage() {
             </div>
             <div className="relative aspect-square max-w-[500px] mx-auto">
               <div className="absolute inset-0 bg-accent/10 blur-[100px] rounded-full" />
-              <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+              <div className="relative h-full w-full rounded-3xl overflow-hidden border-4 border-white">
                 <Image 
                   src="https://loremflickr.com/600/600/education,team?lock=mission" 
                   alt="Nuestra Misión"
@@ -143,7 +143,7 @@ export default function AboutPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 relative aspect-square max-w-[500px] mx-auto">
               <div className="absolute inset-0 bg-primary/10 blur-[100px] rounded-full" />
-              <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+              <div className="relative h-full w-full rounded-3xl overflow-hidden border-4 border-white">
                 <Image 
                   src="https://loremflickr.com/600/600/education,vision?lock=vision" 
                   alt="Nuestra Visión"
@@ -184,7 +184,7 @@ export default function AboutPage() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {values.map((value, idx) => (
-              <Card key={idx} className="border-none shadow-lg hover:shadow-xl transition-shadow group">
+              <Card key={idx} className="border-none shadow-lg transition-shadow group">
                 <CardContent className="p-8 text-center space-y-4">
                   <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center mx-auto group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                     <value.icon className="h-8 w-8 text-primary group-hover:text-primary-foreground" />
@@ -209,7 +209,7 @@ export default function AboutPage() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {team.map((member, idx) => (
-              <Card key={idx} className="border-none shadow-lg hover:shadow-xl transition-all group">
+              <Card key={idx} className="rounded-lg transition-all group">
                 <CardContent className="p-8 text-center space-y-6">
                   <div className="relative w-32 h-32 mx-auto">
                     <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-accent/20 transition-colors" />

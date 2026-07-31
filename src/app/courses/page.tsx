@@ -156,7 +156,7 @@ export default function CoursesPage() {
               />
             </div>
             
-            <div className="flex items-center gap-4 bg-secondary/10 px-6 h-14 rounded-[2rem] border border-dashed border-primary/20 shrink-0">
+            <div className="flex items-center gap-4 bg-secondary/10 px-6 h-14 rounded-lg border border-dashed border-primary/20 shrink-0">
               <label htmlFor="course-sort" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Ordenar:</label>
               <select 
                 id="course-sort"
@@ -178,7 +178,7 @@ export default function CoursesPage() {
       <main className="flex-1 container mx-auto px-6 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className="lg:w-64 space-y-6">
-            <Card className="border-none shadow-xl rounded-3xl overflow-hidden">
+            <Card className="rounded-lg overflow-hidden">
               <CardContent className="p-6 space-y-6">
                 <div className="flex items-center gap-2 text-primary font-bold">
                   <Filter className="h-5 w-5" />
@@ -241,11 +241,11 @@ export default function CoursesPage() {
             {loading ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {Array(6).fill(0).map((_, i) => (
-                  <Card key={i} className="h-[400px] animate-pulse bg-slate-50 border-none rounded-3xl" />
+                  <Card key={i} className="h-[400px] animate-pulse bg-slate-50 rounded-lg" />
                 ))}
               </div>
             ) : sortedCourses.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
+              <div className="flex flex-col items-center justify-center py-24 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
                 <BookOpen className="h-20 w-20 text-slate-200 mb-6" />
                 <h3 className="text-xl font-bold text-slate-900 mb-2">No encontramos coincidencias</h3>
                 <p className="text-sm text-slate-500 max-w-xs text-center font-medium">Intenta ajustar los filtros o los términos de tu búsqueda.</p>

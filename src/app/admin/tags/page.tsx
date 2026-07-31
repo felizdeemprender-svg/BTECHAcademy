@@ -182,13 +182,13 @@ export default function AdminTagsPage() {
             >
               <Sparkles className="h-4 w-4" /> Cargar Sugerencias SEO
             </Button>
-            <Button onClick={() => handleOpenDialog()} className="h-12 px-8 rounded-xl font-bold shadow-xl flex items-center gap-2">
+            <Button onClick={() => handleOpenDialog()} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
               <Plus className="h-5 w-5" /> Nueva Etiqueta
             </Button>
           </div>
         </header>
 
-        <Card className="border-none shadow-xl rounded-2xl overflow-hidden bg-white">
+        <Card className="border-none rounded-2xl overflow-hidden bg-white">
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-primary/5">
@@ -267,7 +267,7 @@ export default function AdminTagsPage() {
                  size="lg" />
               </div>
               <DialogFooter className="mt-8">
-                <Button type="submit" disabled={loading || !formData.name} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl">
+                <Button type="submit" disabled={loading || !formData.name} className="w-full h-14 rounded-2xl text-lg font-bold">
                   {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />} 
                   {editingTag ? 'Actualizar Keyword' : 'Crear Keyword'}
                 </Button>
@@ -364,7 +364,7 @@ export default function AdminTagsPage() {
                     <Button 
                       onClick={handleLoadAiSelected} 
                       disabled={loading}
-                      className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl"
+                      className="w-full h-14 rounded-2xl font-bold text-lg"
                     >
                       {loading ? <Loader2 className="animate-spin mr-2" /> : <Check className="mr-2 h-5 w-5" />} 
                       Incorporar {selectedSuggestions.length} Keywords al Sistema

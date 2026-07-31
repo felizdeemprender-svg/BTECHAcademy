@@ -114,7 +114,7 @@ export default function CaseStudiesPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link href="/courses">
-                <Button size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20">
+                <Button size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-primary/20">
                   Explorar Cursos
                 </Button>
               </Link>
@@ -208,7 +208,7 @@ export default function CaseStudiesPage() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="relative aspect-video rounded-2xl overflow-hidden">
                     <Image 
                       src={study.image} 
                       alt={study.title}
@@ -219,7 +219,7 @@ export default function CaseStudiesPage() {
                     />
                   </div>
 
-                  <Card className="border-none shadow-lg">
+                  <Card className="rounded-lg">
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
                         <Quote className="h-8 w-8 text-primary/20 flex-shrink-0 mt-1" />

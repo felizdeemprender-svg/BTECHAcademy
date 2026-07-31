@@ -25,7 +25,7 @@ export function SmartFilterBar({
 }: SmartFilterBarProps) {
   return (
     <div className={cn(
-      "flex flex-col md:flex-row gap-4 justify-between items-center bg-secondary/10 p-4 rounded-[2rem] border border-dashed border-primary/20",
+      "flex flex-col md:flex-row gap-4 justify-between items-center bg-secondary/10 p-4 rounded-lg border border-dashed border-primary/20",
       className
     )}>
       <div className="relative flex-1 w-full">

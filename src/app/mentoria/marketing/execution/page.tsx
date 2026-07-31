@@ -241,7 +241,7 @@ export default function MarketingAutomationEnginePage() {
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Centro de Mando</h1>
             <p className="text-muted-foreground text-lg font-medium">Control de motores para emisión multicanal automática.</p>
           </div>
-          <div className="bg-slate-900 px-6 py-4 rounded-[1.5rem] border border-white/10 shadow-2xl flex items-center gap-6">
+          <div className="bg-slate-900 px-6 py-4 rounded-[1.5rem] border border-white/10 flex items-center gap-6">
             <div className="text-center">
               <p className="text-[8px] font-black uppercase text-white/40 tracking-widest">En Emisión</p>
               <p className="text-2xl font-black text-white">{activeCampaigns.length}</p>
@@ -259,7 +259,7 @@ export default function MarketingAutomationEnginePage() {
         ) : activeCampaigns.length > 0 && (
           <div className="grid gap-8">
             {activeCampaigns.map((camp) => (
-              <Card key={camp.id} className="border-none shadow-xl rounded-[3rem] bg-white overflow-hidden group">
+              <Card key={camp.id} className="rounded-lg bg-white overflow-hidden group">
                 <div className="flex flex-col lg:flex-row">
                   <div className="lg:w-80 bg-slate-900 p-10 text-white shrink-0 flex flex-col justify-between relative overflow-hidden">
                     <BrainCircuit className="absolute -right-10 -top-10 h-48 w-48 opacity-10 pointer-events-none" />
@@ -286,12 +286,12 @@ export default function MarketingAutomationEnginePage() {
 
                     <div className="grid gap-4">
                       {camp.todayActions.length === 0 ? (
-                        <div className="p-10 bg-slate-50 rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center text-center gap-3">
+                        <div className="p-10 bg-slate-50 rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center gap-3">
                           <Clock className="h-8 w-8 text-slate-300" />
                           <p className="font-bold text-slate-500">Sin lanzamientos previstos para hoy</p>
                         </div>
                       ) : camp.todayActions.map((action: any, i: number) => (
-                        <div key={i} className="bg-emerald-50/50 border-2 border-emerald-100 p-6 rounded-[2rem] flex flex-col md:flex-row justify-between items-center gap-6 group/item hover:bg-emerald-50 transition-all">
+                        <div key={i} className="bg-emerald-50/50 border-2 border-emerald-100 p-6 rounded-lg flex flex-col md:flex-row justify-between items-center gap-6 group/item hover:bg-emerald-50 transition-all">
                           <div className="flex items-center gap-6">
                             <div className="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg">
                               <Zap className="h-7 w-7" />
@@ -304,7 +304,7 @@ export default function MarketingAutomationEnginePage() {
                               <p className="font-bold text-lg text-slate-900 leading-tight">{action.action}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 bg-white/60 p-2 rounded-2xl border border-emerald-200 shadow-inner">
+                          <div className="flex items-center gap-4 bg-white/60 p-2 rounded-2xl border border-emerald-200">
                             {action.channels.map((ch: string) => (
                               <div key={ch} title={ch} className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-emerald-100">
                                 {ch === 'Email' ? <Mail className="h-5 w-5" /> : ch === 'Social' ? <Instagram className="h-5 w-5" /> : <Megaphone className="h-5 w-5" />}
@@ -376,7 +376,7 @@ export default function MarketingAutomationEnginePage() {
                         <Button
                           onClick={() => handleManualDispatch(camp)}
                           disabled={executing === camp.id}
-                          className="h-14 px-10 rounded-2xl font-bold text-lg bg-slate-900 shadow-2xl gap-3"
+                          className="h-14 px-10 rounded-2xl font-bold text-lg bg-slate-900 gap-3"
                         >
                           {executing === camp.id ? <Loader2 className="animate-spin h-5 w-5" /> : <Play className="h-5 w-5 fill-current" />}
                           Disparar Automatización

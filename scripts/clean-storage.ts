@@ -56,7 +56,7 @@ async function cleanOrphanedStorage() {
     // Eliminamos en lotes de 10 para no saturar la red/API
     for (let i = 0; i < filesToDelete.length; i += 10) {
       const batch = filesToDelete.slice(i, i + 10);
-      await Promise.all(batch.map(item => item.file.delete().catch(e => console.error(`Error borrando ${item.file.name}:`, e))));
+      await Promise.all(batch.map(item => item.file.delete().catch((e: any) => console.error(`Error borrando ${item.file.name}:`, e))));
       
       for (const item of batch) {
         deletedCount++;

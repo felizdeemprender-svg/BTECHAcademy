@@ -237,9 +237,9 @@ export default function TransfersPage() {
                 <Card
                   key={order.id}
                   className={cn(
-                    'border rounded-[2rem] overflow-hidden transition-all',
+                    'border rounded-lg overflow-hidden transition-all',
                     isPending
-                      ? 'border-amber-200 shadow-xl shadow-amber-50 bg-white'
+                      ? 'border-amber-200 shadow-amber-50 bg-white'
                       : 'border-slate-100 shadow-md bg-white'
                   )}
                 >

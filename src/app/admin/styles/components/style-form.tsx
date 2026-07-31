@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { LandingStyle, LandingStyleSection } from '@/lib/landing-styles';
+import { LandingStyle, LandingStyleSection, StyleGroup, StyleTokens, STYLE_GROUP_LABELS, TOKEN_LABELS, TOKEN_DESCRIPTIONS, StyleBrand, TypographyVariant, ColorPalette } from '@/lib/landing-styles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,16 +41,55 @@ const colorPaletteSchema = z.object({
   accent: z.string()
 });
 
+const styleBrandSchema = z.object({
+  name: z.string().min(1, 'El nombre del brand es requerido'),
+  description: z.string().optional(),
+  tokens: z.object({
+    componentRadius: z.string(),
+    componentBorder: z.string(),
+    componentShadow: z.string(),
+    componentBg: z.string(),
+    sectionPadding: z.string(),
+    contentGap: z.string(),
+    transitionDuration: z.string(),
+    themeMode: z.enum(['light', 'dark', 'glass']),
+  }),
+  typography: z.object({
+    name: z.string(),
+    headingScale: z.number().min(0.5).max(3),
+    bodyScale: z.number().min(0.5).max(3),
+    headingFont: z.string(),
+    bodyFont: z.string()
+  }),
+  palette: z.object({
+    name: z.string(),
+    primary: z.string(),
+    secondary: z.string(),
+    accent: z.string()
+  })
+});
+
 const styleSchema = z.object({
   id: z.string().min(1, 'El ID es requerido').regex(/^[a-z0-9-]+$/, 'Solo minúsculas, números y guiones'),
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string(),
   thumbnail: z.string(),
+  group: z.enum(['storytelling', 'corporate', 'high-ticket', 'promo']),
+  allowedSubscriptions: z.array(z.string()).default(['free']),
+  aiWriterPersona: z.string().default(''),
   layout: z.enum(['centered', 'split', 'full-width', 'grid', 'asymmetric']),
-  componentStyle: z.enum(['borders', 'shadows', 'minimal', 'defined', 'creative']),
-  spacing: z.enum(['compact', 'balanced', 'generous', 'airy']),
-  animations: z.enum(['none', 'minimal', 'hover', 'micro']),
+  tokens: z.object({
+    componentRadius: z.string(),
+    componentBorder: z.string(),
+    componentShadow: z.string(),
+    componentBg: z.string(),
+    sectionPadding: z.string(),
+    contentGap: z.string(),
+    transitionDuration: z.string(),
+    themeMode: z.enum(['light', 'dark', 'glass']),
+  }),
   typography: z.array(typographySchema),
+  brands: z.array(styleBrandSchema).optional(),
   aiDirectives: z.string().min(10, 'Las directivas son importantes para la IA'),
   availableSections: z.array(sectionSchema),
   colorProposals: z.array(colorPaletteSchema)
@@ -71,18 +110,44 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
   // Valores por defecto
   const defaultValues: Partial<StyleFormValues> = initialData ? {
     ...initialData,
-    id: isCloning ? '' : initialData.id // Vaciar el ID si estamos clonando
+    id: isCloning ? '' : initialData.id
   } : {
     id: '',
     name: '',
     description: '',
     thumbnail: '/styles/placeholder.png',
+    group: 'storytelling',
     layout: 'centered',
-    componentStyle: 'borders',
-    spacing: 'balanced',
-    animations: 'minimal',
+    tokens: {
+      componentRadius: '6px',
+      componentBorder: '1px solid var(--border)',
+      componentShadow: 'none',
+      componentBg: 'var(--surface)',
+      sectionPadding: '96px',
+      contentGap: '16px',
+      transitionDuration: '150ms',
+      themeMode: 'light',
+    },
     typography: [
       { name: 'Moderna', headingScale: 1.1, bodyScale: 1, headingFont: 'Inter', bodyFont: 'Inter' }
+    ],
+    brands: [
+      {
+        name: 'Default',
+        description: 'Brand por defecto del estilo',
+        tokens: {
+          componentRadius: '6px',
+          componentBorder: '1px solid var(--border)',
+          componentShadow: 'none',
+          componentBg: 'var(--surface)',
+          sectionPadding: '96px',
+          contentGap: '16px',
+          transitionDuration: '150ms',
+          themeMode: 'light',
+        },
+        typography: { name: 'Moderna', headingScale: 1.1, bodyScale: 1, headingFont: 'Inter', bodyFont: 'Inter' },
+        palette: { name: 'Base', primary: '#000000', secondary: '#ffffff', accent: '#ff0000' }
+      }
     ],
     aiDirectives: 'Eres un experto copywriter...',
     availableSections: [
@@ -103,6 +168,21 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
     name: 'availableSections'
   });
 
+  const { fields: paletteFields, append: appendPalette, remove: removePalette } = useFieldArray({
+    control: form.control,
+    name: 'colorProposals'
+  });
+
+  const { fields: typoFields, append: appendTypography, remove: removeTypography } = useFieldArray({
+    control: form.control,
+    name: 'typography'
+  });
+
+  const { fields: brandFields, append: appendBrand, remove: removeBrand } = useFieldArray({
+    control: form.control,
+    name: 'brands'
+  });
+
   const onSubmit = async (data: StyleFormValues) => {
     if (!firestore) return;
     setIsSubmitting(true);
@@ -113,10 +193,12 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
         defaultVisibility[sec.id] = sec.required;
       });
 
-      const finalData: LandingStyle = {
+      const finalData = {
         ...data,
+        allowedSubscriptions: ['free'],
+        aiWriterPersona: `${data.name}: Tono definido por el administrador`,
         defaultVisibility
-      };
+      } as LandingStyle;
 
       await setDoc(doc(firestore, 'landingStyles', data.id), {
         ...finalData,
@@ -146,9 +228,10 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
         <ScrollArea className="flex-grow px-6 py-4">
           <form id="style-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs defaultValue="general">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="visual">Diseño Visual</TabsTrigger>
+                <TabsTrigger value="brands">Brands</TabsTrigger>
                 <TabsTrigger value="ai">IA & Prompts</TabsTrigger>
                 <TabsTrigger value="sections">Secciones</TabsTrigger>
               </TabsList>
@@ -167,42 +250,155 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                   </div>
                 </div>
                 <div className="space-y-2">
+                  <Label>Grupo de Estilo</Label>
+                  <Select onValueChange={(v) => form.setValue('group', v as StyleGroup)} defaultValue={form.getValues('group')}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="storytelling">Storytelling</SelectItem>
+                      <SelectItem value="corporate">Corporativo</SelectItem>
+                      <SelectItem value="high-ticket">High-Ticket</SelectItem>
+                      <SelectItem value="promo">Promocional</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label>Descripción</Label>
                   <Textarea {...form.register('description')} rows={3} />
                 </div>
               </TabsContent>
 
               <TabsContent value="visual" className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Layout Base</Label>
-                    <Select onValueChange={(v) => form.setValue('layout', v as any)} defaultValue={form.getValues('layout')}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="centered">Centrado</SelectItem>
-                        <SelectItem value="split">Dividido (Split)</SelectItem>
-                        <SelectItem value="full-width">Ancho Completo</SelectItem>
-                        <SelectItem value="grid">Cuadrícula</SelectItem>
-                        <SelectItem value="asymmetric">Asimétrico</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Estilo de Componentes</Label>
-                    <Select onValueChange={(v) => form.setValue('componentStyle', v as any)} defaultValue={form.getValues('componentStyle')}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="borders">Bordes Duros</SelectItem>
-                        <SelectItem value="shadows">Sombras Suaves</SelectItem>
-                        <SelectItem value="minimal">Minimalista</SelectItem>
-                        <SelectItem value="defined">Definido</SelectItem>
-                        <SelectItem value="creative">Creativo</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-2">
+                  <Label>Layout Base</Label>
+                  <Select onValueChange={(v) => form.setValue('layout', v as any)} defaultValue={form.getValues('layout')}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="centered">Centrado</SelectItem>
+                      <SelectItem value="split">Dividido (Split)</SelectItem>
+                      <SelectItem value="full-width">Ancho Completo</SelectItem>
+                      <SelectItem value="grid">Cuadrícula</SelectItem>
+                      <SelectItem value="asymmetric">Asimétrico</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="border rounded-lg p-4 bg-slate-50 space-y-3">
+                  <Label className="font-bold text-sm flex items-center gap-2">
+                    <span className="w-6 h-[2px] bg-slate-300"></span> Tokens CSS
+                  </Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.keys(TOKEN_LABELS).map((key) => {
+                      const tokenKey = key as keyof StyleTokens;
+                      return (
+                        <div key={key} className="space-y-1">
+                          <Label className="text-xs font-medium">{TOKEN_LABELS[tokenKey]}</Label>
+                          {tokenKey === 'themeMode' ? (
+                            <Select onValueChange={(v) => form.setValue(`tokens.themeMode`, v as any)} defaultValue={form.getValues('tokens.themeMode')}>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="light">Light</SelectItem>
+                                <SelectItem value="dark">Dark</SelectItem>
+                                <SelectItem value="glass">Glass</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input {...form.register(`tokens.${tokenKey}`)} className="h-8 text-xs font-mono" placeholder={TOKEN_DESCRIPTIONS[tokenKey]} />
+                          )}
+                          <p className="text-[9px] text-slate-400">{TOKEN_DESCRIPTIONS[tokenKey]}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                {/* Simplified visual controls for MVP */}
-                <p className="text-sm text-muted-foreground italic mt-4">Nota: Opciones de Tipografía y Colores requieren configuración JSON avanzada en esta versión.</p>
+                <Tabs defaultValue="palettes" className="mt-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="palettes">Paletas de Color</TabsTrigger>
+                    <TabsTrigger value="typography">Tipografías</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="palettes" className="space-y-4 pt-4">
+                    <div className="flex justify-between items-center">
+                      <Label>Paletas de Color (5)</Label>
+                      <Button type="button" variant="outline" size="sm" onClick={() => appendPalette({ name: '', primary: '#000000', secondary: '#ffffff', accent: '#ff0000' })}>
+                        + Paleta
+                      </Button>
+                    </div>
+                    {paletteFields.map((field, i) => (
+                      <div key={field.id} className="p-4 border rounded-lg bg-slate-50 relative">
+                        <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-red-500" onClick={() => removePalette(i)}>Eliminar</Button>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Nombre</Label>
+                            <Input {...form.register(`colorProposals.${i}.name`)} placeholder="Océano" />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Primary</Label>
+                              <div className="flex gap-1">
+                                <input type="color" value={form.watch(`colorProposals.${i}.primary`)} onChange={(e) => form.setValue(`colorProposals.${i}.primary`, e.target.value)} className="w-8 h-8 p-0 border rounded cursor-pointer" />
+                                <Input {...form.register(`colorProposals.${i}.primary`)} className="font-mono text-xs" placeholder="#000000" />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Secondary</Label>
+                              <div className="flex gap-1">
+                                <input type="color" value={form.watch(`colorProposals.${i}.secondary`)} onChange={(e) => form.setValue(`colorProposals.${i}.secondary`, e.target.value)} className="w-8 h-8 p-0 border rounded cursor-pointer" />
+                                <Input {...form.register(`colorProposals.${i}.secondary`)} className="font-mono text-xs" placeholder="#ffffff" />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Accent</Label>
+                              <div className="flex gap-1">
+                                <input type="color" value={form.watch(`colorProposals.${i}.accent`)} onChange={(e) => form.setValue(`colorProposals.${i}.accent`, e.target.value)} className="w-8 h-8 p-0 border rounded cursor-pointer" />
+                                <Input {...form.register(`colorProposals.${i}.accent`)} className="font-mono text-xs" placeholder="#ff0000" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </TabsContent>
+
+                  <TabsContent value="typography" className="space-y-4 pt-4">
+                    <div className="flex justify-between items-center">
+                      <Label>Variantes de Tipografía (5)</Label>
+                      <Button type="button" variant="outline" size="sm" onClick={() => appendTypography({ name: '', headingScale: 1, bodyScale: 1, headingFont: 'Inter', bodyFont: 'Inter' })}>
+                        + Variante
+                      </Button>
+                    </div>
+                    {typoFields.map((field, i) => (
+                      <div key={field.id} className="p-4 border rounded-lg bg-slate-50 relative">
+                        <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-red-500" onClick={() => removeTypography(i)}>Eliminar</Button>
+                        <div className="grid grid-cols-2 gap-3 mb-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Nombre</Label>
+                            <Input {...form.register(`typography.${i}.name`)} placeholder="Moderna" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Heading Font</Label>
+                              <Input {...form.register(`typography.${i}.headingFont`)} placeholder="Inter" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Body Font</Label>
+                              <Input {...form.register(`typography.${i}.bodyFont`)} placeholder="Inter" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Heading Scale ({form.watch(`typography.${i}.headingScale`)}x)</Label>
+                            <input type="range" min="0.5" max="2" step="0.05" value={form.watch(`typography.${i}.headingScale`)} onChange={(e) => form.setValue(`typography.${i}.headingScale`, parseFloat(e.target.value))} className="w-full" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Body Scale ({form.watch(`typography.${i}.bodyScale`)}x)</Label>
+                            <input type="range" min="0.5" max="2" step="0.05" value={form.watch(`typography.${i}.bodyScale`)} onChange={(e) => form.setValue(`typography.${i}.bodyScale`, parseFloat(e.target.value))} className="w-full" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
 
               <TabsContent value="ai" className="space-y-4 pt-4">
@@ -263,8 +459,160 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                   ))}
                 </div>
               </TabsContent>
-            </Tabs>
-          </form>
+
+              <TabsContent value="brands" className="space-y-4 pt-4">
+                <div className="flex justify-between items-center">
+                  <Label>Brands ({brandFields.length})</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={() => appendBrand({
+                    name: '',
+                    description: '',
+                    tokens: {
+                      componentRadius: '6px',
+                      componentBorder: '1px solid var(--border)',
+                      componentShadow: 'none',
+                      componentBg: 'var(--surface)',
+                      sectionPadding: '96px',
+                      contentGap: '16px',
+                      transitionDuration: '150ms',
+                      themeMode: 'light',
+                    },
+                    typography: { name: 'Moderna', headingScale: 1.1, bodyScale: 1, headingFont: 'Inter', bodyFont: 'Inter' },
+                    palette: { name: 'Base', primary: '#000000', secondary: '#ffffff', accent: '#ff0000' }
+                  })}>
+                    + Brand
+                  </Button>
+                </div>
+                {brandFields.map((field, i) => (
+                  <div key={field.id} className="p-4 border rounded-lg bg-slate-50 relative space-y-4">
+                    <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-red-500" onClick={() => removeBrand(i)}>Eliminar</Button>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Nombre del Brand</Label>
+                        <Input {...form.register(`brands.${i}.name`)} placeholder="Ej: Profesional, Corporativo, Premium" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Descripción</Label>
+                        <Input {...form.register(`brands.${i}.description`)} placeholder="Ej: Limpio, confiable y balanceado" />
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-200 pt-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="font-bold text-sm flex items-center gap-2">
+                          <span className="w-6 h-[2px] bg-slate-300"></span> Tokens
+                        </Label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {Object.keys(TOKEN_LABELS).map((key) => {
+                          const tokenKey = key as keyof StyleTokens;
+                          return (
+                            <div key={key} className="space-y-1">
+                              <Label className="text-xs font-medium">{TOKEN_LABELS[tokenKey]}</Label>
+                              {tokenKey === 'themeMode' ? (
+                                <Select onValueChange={(v) => form.setValue(`brands.${i}.tokens.${tokenKey}`, v as any)} defaultValue={form.watch(`brands.${i}.tokens.${tokenKey}`)}>
+                                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="light">Light</SelectItem>
+                                    <SelectItem value="dark">Dark</SelectItem>
+                                    <SelectItem value="glass">Glass</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Input {...form.register(`brands.${i}.tokens.${tokenKey}`)} className="h-8 text-xs font-mono" placeholder={TOKEN_DESCRIPTIONS[tokenKey]} />
+                              )}
+                              <p className="text-[9px] text-slate-400">{TOKEN_DESCRIPTIONS[tokenKey]}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-200 pt-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="font-bold text-sm flex items-center gap-2">
+                          <span className="w-6 h-[2px] bg-slate-300"></span> Tipografía
+                        </Label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Nombre</Label>
+                          <Input {...form.register(`brands.${i}.typography.name`)} placeholder="Moderna" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Heading Font</Label>
+                            <Input {...form.register(`brands.${i}.typography.headingFont`)} placeholder="Inter" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Body Font</Label>
+                            <Input {...form.register(`brands.${i}.typography.bodyFont`)} placeholder="Inter" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Heading Scale ({form.watch(`brands.${i}.typography.headingScale`)}x)</Label>
+                            <input type="range" min="0.5" max="2" step="0.05" value={form.watch(`brands.${i}.typography.headingScale`)} onChange={(e) => form.setValue(`brands.${i}.typography.headingScale`, parseFloat(e.target.value))} className="w-full" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Body Scale ({form.watch(`brands.${i}.typography.bodyScale`)}x)</Label>
+                            <input type="range" min="0.5" max="2" step="0.05" value={form.watch(`brands.${i}.typography.bodyScale`)} onChange={(e) => form.setValue(`brands.${i}.typography.bodyScale`, parseFloat(e.target.value))} className="w-full" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Heading Font</Label>
+                            <Input {...form.register(`brands.${i}.typography.headingFont`)} placeholder="Inter" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Body Font</Label>
+                            <Input {...form.register(`brands.${i}.typography.bodyFont`)} placeholder="Inter" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-200 pt-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="font-bold text-sm flex items-center gap-2">
+                          <span className="w-6 h-[2px] bg-slate-300"></span> Paleta
+                        </Label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Nombre</Label>
+                          <Input {...form.register(`brands.${i}.palette.name`)} placeholder="Base" />
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Primary</Label>
+                            <div className="flex gap-1">
+                              <input type="color" value={form.watch(`brands.${i}.palette.primary`)} onChange={(e) => form.setValue(`brands.${i}.palette.primary`, e.target.value)} className="w-8 h-8 p-0 border rounded cursor-pointer" />
+                              <Input {...form.register(`brands.${i}.palette.primary`)} className="font-mono text-xs" placeholder="#000000" />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Secondary</Label>
+                            <div className="flex gap-1">
+                              <input type="color" value={form.watch(`brands.${i}.palette.secondary`)} onChange={(e) => form.setValue(`brands.${i}.palette.secondary`, e.target.value)} className="w-8 h-8 p-0 border rounded cursor-pointer" />
+                              <Input {...form.register(`brands.${i}.palette.secondary`)} className="font-mono text-xs" placeholder="#ffffff" />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Accent</Label>
+                            <div className="flex gap-1">
+                              <input type="color" value={form.watch(`brands.${i}.palette.accent`)} onChange={(e) => form.setValue(`brands.${i}.palette.accent`, e.target.value)} className="w-8 h-8 p-0 border rounded cursor-pointer" />
+                              <Input {...form.register(`brands.${i}.palette.accent`)} className="font-mono text-xs" placeholder="#ff0000" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+</TabsContent>
+              </Tabs>
+            </form>
         </ScrollArea>
 
         <DialogFooter className="px-6 py-4 border-t bg-slate-50 mt-auto">

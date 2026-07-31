@@ -8,8 +8,14 @@ async function run() {
     const result = await generateTemplateCollection({
       directives: "Campaña de lanzamiento agresiva para el Black Friday de mi academia de ventas B2B.",
       mentorName: "Mentor VIP",
-      enabledChannels: { landings: true, emails: true, socials: true, ads: true },
-      platforms: { twitter: true, instagram: true, tiktok: true, linkedin: true }
+      designTokens: {
+        primary: "#0F172A",
+        secondary: "#F8FAFC",
+        accent: "#FACC15",
+        fontHeading: "Inter",
+        fontBody: "Inter",
+      },
+      enabledChannels: { landings: true, emails: true, ads: true },
     });
     console.log("ÉXITO!");
   } catch (error: any) {

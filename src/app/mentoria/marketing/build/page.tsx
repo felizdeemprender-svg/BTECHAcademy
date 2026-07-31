@@ -347,7 +347,7 @@ export default function CampaignOrchestratorPage() {
                 <Button 
                   onClick={() => setStep(2)} 
                   disabled={!selectedPageId || !campaignTitle} 
-                  className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl mt-4"
+                  className="w-full h-14 rounded-2xl font-bold text-lg mt-4"
                 >
                   Siguiente: Estrategia <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -443,7 +443,7 @@ export default function CampaignOrchestratorPage() {
                 <Button 
                   onClick={handleGeneratePlan} 
                   disabled={isGenerating} 
-                  className="w-full h-20 rounded-[2rem] font-bold text-2xl shadow-3xl bg-slate-900"
+                  className="w-full h-20 rounded-lg font-bold text-2xl bg-slate-900"
                 >
                   {isGenerating ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <Sparkles className="mr-3 h-8 w-8 text-accent" />}
                   Generar Plan Maestro
@@ -455,7 +455,7 @@ export default function CampaignOrchestratorPage() {
 
         {step === 3 && coordinationPlan && (
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-            <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
+            <Card className="rounded-lg bg-white overflow-hidden">
               <CardHeader className="bg-emerald-500 p-10 text-white relative">
                 <TrendingUp className="absolute right-10 top-10 h-20 w-20 opacity-10" />
                 <div className="flex items-center gap-4">
@@ -468,7 +468,7 @@ export default function CampaignOrchestratorPage() {
               </CardHeader>
               
               <CardContent className="p-10 space-y-10">
-                <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-200">
+                <div className="bg-slate-50 p-8 rounded-lg border border-slate-200">
                   <h4 className="text-xs font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2"><Zap className="h-4 w-4 text-accent" /> Lógica de la Campaña</h4>
                   <p className="text-slate-600 leading-relaxed italic font-medium">"{coordinationPlan.logic}"</p>
                 </div>
@@ -484,7 +484,7 @@ export default function CampaignOrchestratorPage() {
                   <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-1/2 before:bg-slate-200">
                     {coordinationPlan.timeline.map((event, i) => (
                       <div key={i} className="relative flex items-start gap-10 group">
-                        <div className="absolute left-0 flex h-10 w-10 items-center justify-center rounded-full bg-white border-4 border-emerald-500 shadow-xl z-10 shrink-0">
+                        <div className="absolute left-0 flex h-10 w-10 items-center justify-center rounded-full bg-white border-4 border-emerald-500 z-10 shrink-0">
                           <input 
                             type="number" 
                             value={event.day} 
@@ -492,7 +492,7 @@ export default function CampaignOrchestratorPage() {
                             className="w-full text-center text-xs font-black text-emerald-600 border-none bg-transparent outline-none"
                           />
                         </div>
-                        <Card className="ml-14 flex-1 p-6 rounded-[2rem] border-2 border-slate-100 bg-white hover:border-emerald-200 transition-all group/card relative">
+                        <Card className="ml-14 flex-1 p-6 rounded-lg border-2 border-slate-100 bg-white hover:border-emerald-200 transition-all group/card relative">
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -724,7 +724,7 @@ export default function CampaignOrchestratorPage() {
                 </div>
 
                 <div className="pt-10 border-t flex flex-col gap-6">
-                  <Button onClick={handleFinalPublish} disabled={loading} className="w-full h-20 rounded-[2rem] text-2xl font-bold bg-primary shadow-3xl">
+                  <Button onClick={handleFinalPublish} disabled={loading} className="w-full h-20 rounded-lg text-2xl font-bold bg-primary">
                     {loading ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <Rocket className="mr-3 h-8 w-8 text-accent" />}
                     Confirmar y Activar Lanzamiento
                   </Button>

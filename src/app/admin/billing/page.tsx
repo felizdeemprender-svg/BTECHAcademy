@@ -56,7 +56,7 @@ function KpiCard({
   iconBg: string;
 }) {
   return (
-    <Card className="border-none shadow-md bg-white/60 backdrop-blur-sm hover:shadow-lg transition-shadow">
+    <Card className="rounded-lg bg-white/60 backdrop-blur-sm transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -64,7 +64,7 @@ function KpiCard({
             <p className={cn('text-3xl font-headline font-bold tracking-tight', color)}>{value}</p>
             {sub && <p className="text-xs text-muted-foreground font-medium">{sub}</p>}
           </div>
-          <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner', iconBg)}>
+          <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center', iconBg)}>
             <Icon className={cn('h-6 w-6', color)} />
           </div>
         </div>
@@ -225,7 +225,7 @@ export default function BillingPage() {
 
         {/* ── TABLA RESUMEN POR TIPO ── */}
         {!loading && report && (
-          <Card className="border-none shadow-md bg-white/80 backdrop-blur-sm overflow-hidden rounded-3xl">
+          <Card className="rounded-lg bg-white/80 backdrop-blur-sm overflow-hidden">
             <div className="px-8 py-5 border-b flex items-center gap-3">
               <BarChart3 className="h-5 w-5 text-indigo-500" />
               <h2 className="font-headline font-bold text-lg text-primary">Desglose por Tipo de Abono</h2>
@@ -272,7 +272,7 @@ export default function BillingPage() {
         )}
 
         {/* ── TABLA DETALLE POR TUTOR ── */}
-        <Card className="border-none shadow-md bg-white/80 backdrop-blur-sm overflow-hidden rounded-3xl">
+        <Card className="rounded-lg bg-white/80 backdrop-blur-sm overflow-hidden">
           <div className="px-8 py-5 border-b flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Users className="h-5 w-5 text-indigo-500" />

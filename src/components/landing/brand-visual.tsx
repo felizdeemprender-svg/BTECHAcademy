@@ -1,0 +1,184 @@
+"use client"
+
+import { useState } from "react"
+import { cn } from "@/lib/utils"
+import { CheckCircle2, Palette, Type, Trash2 } from "lucide-react"
+import { StyleBrand, TOKEN_LABELS, TOKEN_DESCRIPTIONS } from "@/lib/landing-styles"
+import { expandColorGamut, tokenSummary } from "@/lib/landing-styles/palette-gamut"
+
+interface BrandVisualProps {
+  brands: StyleBrand[]
+  activeName?: string | null
+  onSelect?: (brand: StyleBrand) => void
+  onDelete?: (brand: StyleBrand) => void
+  emptyMessage?: string
+}
+
+function GamutStrip({ color }: { color?: string }) {
+  const gamut = color ? expandColorGamut(color) : []
+  if (gamut.length === 0) return null
+  return (
+    <div className="flex h-6 gap-[2px] overflow-hidden rounded-md border border-slate-200">
+      {gamut.map((c, i) => (
+        <div key={i} className="flex-1" style={{ backgroundColor: c }} title={c} />
+      ))}
+    </div>
+  )
+}
+
+function BrandDetail({ brand }: { brand: StyleBrand }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start gap-3">
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-white shadow-sm" style={{ backgroundColor: brand.palette?.primary }}>
+          <Palette className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <p className="font-bold text-slate-800">{brand.name}</p>
+          {brand.description && <p className="text-xs text-slate-500">{brand.description}</p>}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Paleta: {brand.palette?.name}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold text-slate-500">Primario</p>
+            <GamutStrip color={brand.palette?.primary} />
+            <p className="font-mono text-[10px] text-slate-500">{brand.palette?.primary}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold text-slate-500">Secundario</p>
+            <GamutStrip color={brand.palette?.secondary} />
+            <p className="font-mono text-[10px] text-slate-500">{brand.palette?.secondary}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold text-slate-500">Acento</p>
+            <GamutStrip color={brand.palette?.accent} />
+            <p className="font-mono text-[10px] text-slate-500">{brand.palette?.accent}</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Tipografía: {brand.typography?.name}</p>
+        <div className="flex items-center gap-2 flex-wrap text-xs text-slate-600">
+          <span className="inline-flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1">
+            <Type className="h-3.5 w-3.5 text-slate-400" />
+            Títulos: <span className="font-bold text-slate-700">{brand.typography?.headingFont}</span>
+            <span className="text-slate-400">({brand.typography?.headingScale}x)</span>
+          </span>
+          <span className="inline-flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1">
+            <Type className="h-3.5 w-3.5 text-slate-400" />
+            Cuerpo: <span className="font-bold text-slate-700">{brand.typography?.bodyFont}</span>
+            <span className="text-slate-400">({brand.typography?.bodyScale}x)</span>
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Tokens</p>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+          {Object.keys(TOKEN_LABELS).map((key) => {
+            const tokenKey = key as keyof StyleBrand['tokens']
+            const value = brand.tokens?.[tokenKey]
+            return (
+              <div key={key} className="flex items-center justify-between gap-2 text-xs">
+                <span className="text-slate-500" title={TOKEN_DESCRIPTIONS[tokenKey]}>{TOKEN_LABELS[tokenKey]}</span>
+                <span className="font-mono text-slate-700 truncate text-right max-w-[180px]" title={value ? String(value) : undefined}>
+                  {tokenSummary(value ? String(value) : '')}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function BrandVisual({
+  brands,
+  activeName,
+  onSelect,
+  onDelete,
+  emptyMessage = 'Este estilo no tiene brands configurados.',
+}: BrandVisualProps) {
+  const [selectedName, setSelectedName] = useState<string | null>(null)
+
+  const resolvedName = selectedName ?? activeName ?? null
+  const active = brands.find((b) => b.name === resolvedName) || brands[0] || null
+
+  if (brands.length === 0) {
+    return <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {brands.map((brand) => {
+          const isActive = active?.name === brand.name
+          return (
+            <div
+              key={brand.name}
+              onClick={() => {
+                setSelectedName(brand.name)
+                onSelect?.(brand)
+              }}
+              className={cn(
+                "p-3 rounded-xl border-2 text-left transition-all relative cursor-pointer",
+                isActive ? "border-primary bg-primary/5 shadow-md" : "border-slate-200 bg-white hover:border-primary/30"
+              )}
+            >
+              {isActive && (
+                <div className="absolute top-3 right-3 text-primary pointer-events-none">
+                  <CheckCircle2 className="w-4 h-4 fill-primary text-white" />
+                </div>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(brand)
+                  }}
+                  className="absolute top-2 right-2 z-10 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full p-1"
+                  title={`Eliminar brand "${brand.name}"`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              <div className="flex items-center gap-2 mb-2 pr-8">
+                <div className="w-5 h-5 rounded-md flex-shrink-0 shadow-sm" style={{ backgroundColor: brand.palette?.primary }} />
+                <span className="font-bold text-sm text-slate-800 truncate">{brand.name}</span>
+              </div>
+              <GamutStrip color={brand.palette?.primary} />
+              <div className="flex gap-[2px] mt-1">
+                <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: brand.palette?.secondary }} />
+                <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: brand.palette?.accent }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {active && (
+        <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Detalle del brand</p>
+            {onSelect && (
+              <button
+                type="button"
+                onClick={() => onSelect(active)}
+                className="text-[10px] font-bold text-primary hover:underline"
+              >
+                Aplicar a la landing
+              </button>
+            )}
+          </div>
+          <BrandDetail brand={active} />
+        </div>
+      )}
+    </div>
+  )
+}

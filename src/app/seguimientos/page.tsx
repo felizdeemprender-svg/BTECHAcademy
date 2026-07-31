@@ -282,7 +282,7 @@ export default function FollowUpsPage() {
             <Button onClick={() => {
               setFormData({ title: '', goal: '', studentId: '', totalSessions: 4, startDate: '', endDate: '' });
               setIsCreateOpen(true);
-            }} className="h-12 px-8 rounded-xl font-bold shadow-xl flex items-center gap-2">
+            }} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
               <Plus className="h-5 w-5" /> Nuevo Seguimiento
             </Button>
           )}

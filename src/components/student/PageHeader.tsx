@@ -58,7 +58,7 @@ export function StudentPageHeader({
               variant={badge.variant || 'default'}
               className={cn(
                 "px-4 py-1.5 rounded-xl font-bold uppercase tracking-widest text-[9px] shadow-sm",
-                badge.variant === 'default' && !badge.className && "bg-slate-900 text-white border-none shadow-xl",
+                badge.variant === 'default' && !badge.className && "bg-slate-900 text-white border-none",
                 badge.className
               )}
             >

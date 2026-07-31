@@ -541,7 +541,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                 <div className="grid gap-4">
                   {sortedSessions.map((session) => (
                     <Card key={session.id} className={cn(
-                      "border-none shadow-md rounded-[2rem] overflow-hidden transition-all",
+                      "border-none shadow-md rounded-lg overflow-hidden transition-all",
                       session.isCompleted ? "bg-white" : "bg-slate-50 border-2 border-dashed opacity-70",
                       session.isAdditional && !session.isCompleted && "bg-amber-50 border-amber-200"
                     )}>
@@ -687,7 +687,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                         </div>
                       )}
 
-                      <Button onClick={handleCreateTask} disabled={loading || (taskForm.type === 'free' && !taskForm.description) || (taskForm.type === 'course' && !taskForm.courseId)} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 bg-primary">
+                      <Button onClick={handleCreateTask} disabled={loading || (taskForm.type === 'free' && !taskForm.description) || (taskForm.type === 'course' && !taskForm.courseId)} className="w-full h-14 rounded-2xl font-bold text-lg shadow-primary/20 bg-primary">
                         {loading ? <Loader2 className="animate-spin mr-2" /> : <Plus className="mr-2" />} Asignar Tarea de Seguimiento
                       </Button>
                     </CardContent>
@@ -797,7 +797,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
               </TabsContent>
 
               <TabsContent value="report" className="space-y-8">
-                <Card className="border-none shadow-2xl rounded-[3rem] bg-slate-900 text-white overflow-hidden p-12 relative">
+                <Card className="border-none rounded-lg bg-slate-900 text-white overflow-hidden p-12 relative">
                   <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none"><Sparkles className="h-64 w-64" /></div>
                   <header className="flex justify-between items-start mb-12 relative z-10">
                     <div>
@@ -824,7 +824,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Progreso General</p>
                       <p className="text-4xl font-black text-emerald-400">{Math.round(avgProgress)}%</p>
                     </div>
-                    <div className="p-6 bg-emerald-500 text-slate-900 rounded-3xl shadow-xl shadow-emerald-500/20 text-center transform hover:scale-105 transition-transform">
+                    <div className="p-6 bg-emerald-500 text-slate-900 rounded-3xl shadow-emerald-500/20 text-center transform hover:scale-105 transition-transform">
                       <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest mb-2">Estado del Plan</p>
                       <p className="text-2xl font-black uppercase">Consistente</p>
                     </div>
@@ -876,7 +876,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                 <CardTitle className="text-lg font-bold flex items-center gap-3 relative z-10"><Target className="h-5 w-5 text-accent" /> Objetivo del Programa</CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
-                <div className="bg-secondary/10 p-6 rounded-3xl border-l-4 border-primary shadow-inner">
+                <div className="bg-secondary/10 p-6 rounded-3xl border-l-4 border-primary">
                   <p className="text-sm leading-relaxed text-slate-700 font-medium italic">"{followUp?.goal}"</p>
                 </div>
 
@@ -975,7 +975,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Minuta / Conclusiones Académicas</Label>
-              <Textarea value={sessionForm.minutes} onChange={e => setSessionData({...sessionForm, minutes: e.target.value})} placeholder="Registra las conclusiones una vez terminada la sesión..." className="min-h-[150px] p-6 shadow-inner bg-secondary/10 border-none leading-relaxed text-sm" />
+              <Textarea value={sessionForm.minutes} onChange={e => setSessionData({...sessionForm, minutes: e.target.value})} placeholder="Registra las conclusiones una vez terminada la sesión..." className="min-h-[150px] p-6 bg-secondary/10 border-none leading-relaxed text-sm" />
             </div>
 
             <DialogFooter className="flex flex-col sm:flex-row gap-3">
@@ -984,7 +984,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                   <CalendarDays className="h-5 w-5" /> Agendar en Google Calendar
                 </Button>
               )}
-              <Button onClick={() => handleSaveSession(false)} disabled={loading || !sessionForm.date || !sessionForm.time} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 bg-primary">
+              <Button onClick={() => handleSaveSession(false)} disabled={loading || !sessionForm.date || !sessionForm.time} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-primary/20 bg-primary">
                 {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} {sessionForm.minutes ? 'Finalizar Sesión' : 'Guardar Datos'}
               </Button>
             </DialogFooter>
@@ -1004,7 +1004,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             <BrainCircuit className="absolute -right-4 -top-4 h-32 w-32 opacity-10 pointer-events-none" />
           </div>
           <div className="space-y-6 px-8 pb-8">
-            <div className="bg-accent/5 p-6 rounded-2xl border border-accent/10 shadow-inner">
+            <div className="bg-accent/5 p-6 rounded-2xl border border-accent/10">
               <p className="text-xs font-black text-accent uppercase tracking-[0.2em] mb-2">Consigna Académica:</p>
               <p className="text-sm font-medium italic text-slate-700 leading-relaxed">"{tasks?.find(t => t.id === answeringTaskId)?.description}"</p>
             </div>
@@ -1015,7 +1015,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                 value={studentAnswer} 
                 onChange={e => setStudentAnswer(e.target.value)} 
                 placeholder="Escribe aquí tu respuesta detallada, reflexiones y hallazgos..." 
-                className="min-h-[200px] rounded-2xl p-6 bg-secondary/10 border-none shadow-inner leading-relaxed text-sm" 
+                className="min-h-[200px] rounded-2xl p-6 bg-secondary/10 border-none leading-relaxed text-sm" 
               />
             </div>
 
@@ -1051,7 +1051,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             )}
 
             <DialogFooter className="pt-4">
-              <Button onClick={() => handleSubmitStudentTask(answeringTaskId!)} disabled={isSubmittingTask || !studentAnswer.trim()} className="w-full h-16 rounded-[1.5rem] font-bold text-xl shadow-2xl bg-accent hover:bg-accent/90 transition-all hover:scale-[1.01]">
+              <Button onClick={() => handleSubmitStudentTask(answeringTaskId!)} disabled={isSubmittingTask || !studentAnswer.trim()} className="w-full h-16 rounded-[1.5rem] font-bold text-xl bg-accent hover:bg-accent/90 transition-all hover:scale-[1.01]">
                 {isSubmittingTask ? <><Loader2 className="animate-spin mr-2 h-6 w-6" /> Procesando con Gemini...</> : <><Send className="mr-3 h-6 w-6" /> Enviar para Evaluación IA</>}
               </Button>
             </DialogFooter>

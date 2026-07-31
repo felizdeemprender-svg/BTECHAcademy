@@ -46,6 +46,8 @@ export interface TemplateMetadata {
   headlines?: string[];
   descriptions?: string[];
   keywords?: string[];
+  landingId?: string;
+  production_notes?: { music_url?: string; music_duration?: number };
 }
 
 /**

@@ -15,8 +15,8 @@ export async function POST(req: NextRequest) {
           const html = await webRes.text();
           // Extraer texto básico (eliminando scripts y estilos)
           const textContent = html
-            .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gms, '')
-            .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gms, '')
+            .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, '')
+            .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gm, '')
             .replace(/<[^>]+>/g, ' ')
             .replace(/\s+/g, ' ')
             .substring(0, 3000); // Tomar los primeros 3k caracteres

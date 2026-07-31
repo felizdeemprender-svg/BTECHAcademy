@@ -3,7 +3,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { readFileSync } from 'fs';
 
 // Intentar cargar credenciales si existen
-let db;
+let db: FirebaseFirestore.Firestore;
 try {
   const serviceAccount = JSON.parse(readFileSync('c:/FelizdeEmprender/studio/service-account.json', 'utf8'));
   initializeApp({ credential: cert(serviceAccount) });
@@ -24,7 +24,7 @@ async function findUser() {
   
   const courses = await db.collection('courses').where('mentorId', '==', user.id).get();
   console.log(`COURSES_COUNT:${courses.size}`);
-  courses.docs.forEach(c => {
+  courses.docs.forEach((c: any) => {
     console.log(`COURSE:${c.id} - ${c.data().title} - Active: ${c.data().isActive} - Status: ${c.data().status}`);
   });
 }

@@ -9,7 +9,7 @@ export default function TutorAccessDenied() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="max-w-md w-full space-y-8">
-        <Card className="border-none shadow-xl">
+        <Card className="border-none">
           <CardContent className="p-8 text-center space-y-6">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
               <Lock className="h-8 w-8 text-red-600" />

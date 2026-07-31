@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCollection, useMemoFirebase } from '@/firebase';
 import { LandingStyle } from '@/lib/landing-styles';
 import { Button } from '@/components/ui/button';
-import { Info, Trash2, Copy, Eye } from 'lucide-react';
+import { Info, Trash2, Copy, Eye, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { collection, query, deleteDoc, doc } from 'firebase/firestore';
 import { useFirebase } from '@/firebase/provider';
 import StyleDetails from './components/style-details';
@@ -14,25 +14,52 @@ import Link from 'next/link';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Palette, Lock } from 'lucide-react';
+import { Palette, Lock, Tags } from 'lucide-react';
+import { STYLE_GROUP_LABELS, STYLE_GROUP_COLORS, StyleGroup } from '@/lib/landing-styles';
 
 export default function AdminStylesPage() {
   const { firestore } = useFirebase();
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
-  const [activeStyle, setActiveStyle] = useState<LandingStyle | null>(null);
+  const [activeStyleId, setActiveStyleId] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   
   const stylesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'landingStyles')) : null, [firestore]);
   const { data: styles, isLoading: loading, error } = useCollection<LandingStyle>(stylesQuery);
 
+  const activeStyle = useMemo(
+    () => styles?.find(s => s.id === activeStyleId) || null,
+    [styles, activeStyleId]
+  );
+
   const handleViewDetails = (style: LandingStyle) => {
-    setActiveStyle(style);
+    setActiveStyleId(style.id);
     setIsDetailsOpen(true);
   };
 
   const handleManageAccess = (style: LandingStyle) => {
-    setActiveStyle(style);
+    setActiveStyleId(style.id);
     setIsAccessModalOpen(true);
+  };
+
+  const handleSync = async () => {
+    if (!confirm('¿Sincronizar los estilos desde el sistema? Esto sobreescribe los documentos de Firestore con las definiciones del código (incluye los brands por defecto).')) return;
+    setIsSyncing(true);
+    setSyncMessage(null);
+    try {
+      const res = await fetch('/api/seed-styles');
+      const data = await res.json();
+      if (data.success) {
+        setSyncMessage(data.message);
+      } else {
+        setSyncMessage(`Error: ${data.error || 'desconocido'}`);
+      }
+    } catch (e) {
+      setSyncMessage('Error al sincronizar: no se pudo conectar con la API.');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -52,6 +79,23 @@ export default function AdminStylesPage() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Estilos de Landing</h1>
             <p className="text-slate-500 font-medium">Visualiza los estilos disponibles. Los estilos son inmutables y son creados mediante ingeniería inversa.</p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {syncMessage && (
+              <p className="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5" /> {syncMessage}
+              </p>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="font-bold gap-2"
+              onClick={handleSync}
+              disabled={isSyncing}
+            >
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Sincronizando...' : 'Sincronizar estilos del sistema'}
+            </Button>
           </div>
         </header>
 
@@ -76,16 +120,23 @@ export default function AdminStylesPage() {
                   <TableRow key={style.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
                     <TableCell className="px-6 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0 relative">
                           {style.thumbnail ? (
-                            <img src={style.thumbnail} alt={style.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <Palette className="w-5 h-5 text-slate-400" />
-                          )}
+                            <img
+                              src={style.thumbnail}
+                              alt={style.name}
+                              className="w-full h-full object-cover relative z-10"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            />
+                          ) : null}
+                          <Palette className="w-5 h-5 text-slate-400" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <p className="font-bold text-slate-900 leading-tight">{style.name}</p>
+                            <Badge variant="outline" className={`text-[9px] uppercase font-bold px-1.5 py-0 h-4 ${(STYLE_GROUP_COLORS[style.group as StyleGroup] || 'bg-slate-50 text-slate-600 border-slate-200')}`}>
+                              {STYLE_GROUP_LABELS[style.group as StyleGroup] || style.group}
+                            </Badge>
                             {style.allowedSubscriptions?.map(plan => (
                               <Badge key={plan} variant="outline" className={`text-[9px] uppercase font-bold px-1.5 py-0 h-4 
                                 ${plan === 'premium' ? 'bg-amber-50 text-amber-600 border-amber-200' : ''}
@@ -107,7 +158,7 @@ export default function AdminStylesPage() {
                             Layout: {style.layout}
                           </Badge>
                           <Badge variant="outline" className="text-[9px] uppercase font-bold px-2 py-0 h-5 border-slate-200 text-slate-600 bg-slate-50">
-                            Comp: {style.componentStyle}
+                            Modo: {style.tokens?.themeMode || 'light'}
                           </Badge>
                         </div>
                         <p className="text-[8px] font-bold text-primary uppercase mt-1">

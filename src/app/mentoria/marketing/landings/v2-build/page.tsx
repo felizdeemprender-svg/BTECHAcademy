@@ -36,7 +36,7 @@ import { generateBuyerPersonas } from '@/ai/flows/generate-buyer-personas';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { LandingStyle, LandingStyleSection } from '@/lib/landing-styles';
+import { LandingStyle, LandingStyleSection, StyleGroup, STYLE_GROUP_LABELS, STYLE_GROUP_COLORS, StyleBrand } from '@/lib/landing-styles';
 import { uploadPendingImagesInObject } from '@/lib/upload-base64';
 
 const STRATEGIC_SEGMENTS = [
@@ -82,6 +82,7 @@ function V2LandingBuilderContent() {
   const [generatedData, setGeneratedData] = useState<any>(null);
   const [colorPaletteName, setColorPaletteName] = useState('');
   const [typographyVariantName, setTypographyVariantName] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState<StyleBrand | null>(null);
   
   // Lista de secciones solicitadas a la IA
   const [requestedSections, setRequestedSections] = useState<{id: string; title: string; required: boolean}[]>([]);
@@ -206,7 +207,19 @@ function V2LandingBuilderContent() {
         return section;
       });
 
-      const finalData = { ...result, sections: finalSections };
+      const finalData = {
+        ...result,
+        sections: finalSections,
+        designTokens: {
+          ...((result as any).designTokens || {}),
+          styleTokens: selectedBrand?.tokens ? { ...selectedBrand.tokens } : (selectedStyle?.tokens ? { ...selectedStyle.tokens } : undefined),
+          typography: selectedBrand?.typography || (result as any).designTokens?.typography,
+          primary: selectedBrand?.palette?.primary || (result as any).designTokens?.primary,
+          secondary: selectedBrand?.palette?.secondary || (result as any).designTokens?.secondary,
+          accent: selectedBrand?.palette?.accent || (result as any).designTokens?.accent,
+          brandApplied: selectedBrand?.name
+        }
+      };
 
       // 4. Armar el payload para guardar directamente en salesPages
       const payload = {
@@ -256,6 +269,7 @@ function V2LandingBuilderContent() {
 
   const handleStyleSelect = (style: LandingStyle) => {
     setSelectedStyleId(style.id);
+    setSelectedBrand(null); // Reset brand when style changes
     setColorPaletteName(style.colorProposals?.[0]?.name || '');
     setTypographyVariantName(style.typography?.[0]?.name || '');
     
@@ -309,7 +323,12 @@ function V2LandingBuilderContent() {
                           )}
                         </div>
                         <div>
-                          <p className={cn("font-bold", selectedStyleId === s.id ? "text-accent" : "text-slate-800")}>{s.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className={cn("font-bold", selectedStyleId === s.id ? "text-accent" : "text-slate-800")}>{s.name}</p>
+                            <Badge variant="outline" className={`text-[8px] uppercase font-bold px-1.5 py-0 h-4 ${STYLE_GROUP_COLORS[s.group as StyleGroup] || ''}`}>
+                              {STYLE_GROUP_LABELS[s.group as StyleGroup] || s.group}
+                            </Badge>
+                          </div>
                           <p className="text-xs text-slate-500 mt-1 line-clamp-2">{s.description}</p>
                         </div>
                       </div>
@@ -321,10 +340,10 @@ function V2LandingBuilderContent() {
               <Button disabled={!selectedCourseId || !selectedStyleId} onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold">Continuar al Enfoque <ArrowRight className="ml-2 h-5 w-5" /></Button>
             </Card>
             
-            <div className="bg-slate-50 rounded-[3rem] border-2 border-dashed flex flex-col items-center justify-center p-12 text-center relative overflow-hidden">
+            <div className="bg-slate-50 rounded-lg border-2 border-dashed flex flex-col items-center justify-center p-12 text-center relative overflow-hidden">
               {selectedStyleId ? (
                   <div className="max-w-sm space-y-6 z-10">
-                    <div className="w-24 h-24 mx-auto bg-white rounded-3xl p-2 shadow-xl border-4 border-slate-100 overflow-hidden relative">
+                    <div className="w-24 h-24 mx-auto bg-white rounded-3xl p-2 border-4 border-slate-100 overflow-hidden relative">
                       {selectedStyle?.thumbnail ? (
                         <img src={selectedStyle.thumbnail} alt={selectedStyle.name} className="w-full h-full object-cover rounded-xl" />
                       ) : (
@@ -346,6 +365,49 @@ function V2LandingBuilderContent() {
                       </p>
                     </div>
                     
+                    {/* Brand Selector */}
+                    {selectedStyle?.brands && selectedStyle.brands.length > 0 && (
+                      <div className="space-y-3 pt-3 border-t border-slate-200">
+                        <p className="text-[10px] font-black uppercase text-slate-400">Brand Visual</p>
+                        <p className="text-xs text-muted-foreground">Elige el pack completo (tokens + tipografía + paleta)</p>
+                        <div className="grid gap-2">
+                          {selectedStyle.brands.map((brand: StyleBrand, i: number) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => setSelectedBrand(brand)}
+                              className={cn(
+                                "flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all",
+                                selectedBrand?.name === brand.name ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-primary/20"
+                              )}
+                            >
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brand.palette.primary }}>
+                                <Palette className="h-5 w-5 text-white" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={cn("font-bold text-sm", selectedBrand?.name === brand.name ? "text-primary" : "text-slate-800")}>{brand.name}</p>
+                                <p className="text-[10px] text-slate-500 truncate">{brand.description}</p>
+                                <div className="flex gap-1 mt-1 text-[9px]">
+                                  <span className="w-5 h-5 rounded-full border" style={{ backgroundColor: brand.palette.primary }} title="Primary" />
+                                  <span className="w-5 h-5 rounded-full border" style={{ backgroundColor: brand.palette.secondary }} title="Secondary" />
+                                  <span className="w-5 h-5 rounded-full border" style={{ backgroundColor: brand.palette.accent }} title="Accent" />
+                                </div>
+                              </div>
+                              <Badge variant={selectedBrand?.name === brand.name ? "default" : "outline"} className="text-[9px] font-bold">
+                                {selectedBrand?.name === brand.name ? 'Activo' : 'Aplicar'}
+                              </Badge>
+                            </button>
+                          ))}
+                        </div>
+                        {selectedBrand && (
+                          <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
+                            <p className="text-[10px] font-bold uppercase text-primary mb-1">Brand Activo: {selectedBrand.name}</p>
+                            <p className="text-[10px] text-slate-600">Tokens: {selectedBrand.tokens.themeMode} · {selectedBrand.tokens.componentRadius} · {selectedBrand.typography.name} · Paleta: {selectedBrand.palette.name}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
                     <div className="pt-4 border-t border-slate-200">
                       <Button variant="outline" className="w-full rounded-2xl font-bold border-2" onClick={() => window.open(`/preview-style/${selectedStyleId}`, '_blank')}>
                         <Layout className="mr-2 h-4 w-4" /> Ver Demo del Diseño
@@ -354,7 +416,7 @@ function V2LandingBuilderContent() {
                   </div>
                 ) : (
                 <div className="max-w-xs space-y-4">
-                  <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary shadow-inner"><Rocket className="h-10 w-10" /></div>
+                  <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary"><Rocket className="h-10 w-10" /></div>
                   <h3 className="text-2xl font-black text-slate-800">Motor Atómico V2</h3>
                   <p className="text-sm text-muted-foreground font-medium">Selecciona un Estilo Visual a la izquierda para ver su ADN estratégico y previsualizar su diseño.</p>
                 </div>
@@ -364,7 +426,7 @@ function V2LandingBuilderContent() {
         )}
 
         {step === 2 && (
-          <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden max-w-4xl mx-auto animate-in slide-in-from-right-8">
+          <Card className="rounded-lg bg-white overflow-hidden max-w-4xl mx-auto animate-in slide-in-from-right-8">
             <CardHeader className="bg-primary/5 p-10">
               <CardTitle className="text-2xl font-bold">Configuración Estratégica (Paso 2)</CardTitle>
               <CardDescription>Define la estrategia para guiar la pluma del Copywriter AI.</CardDescription>
@@ -647,7 +709,7 @@ function V2LandingBuilderContent() {
                               isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
                             )}
                           >
-                            <div className="w-full h-8 rounded-lg flex overflow-hidden shadow-inner" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+                            <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
                               <div className="flex-1" style={{ backgroundColor: color.primary }}></div>
                               <div className="flex-1" style={{ backgroundColor: color.secondary }}></div>
                               <div className="flex-1" style={{ backgroundColor: color.accent }}></div>
@@ -756,7 +818,7 @@ function V2LandingBuilderContent() {
               </div>
               
               <div className="pt-6">
-                <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience || (basePrice > 0 && allowedPaymentMethods.length === 0)} className="w-full h-24 rounded-[2.5rem] font-bold text-2xl shadow-3xl bg-slate-900 group transition-all">
+                <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience || (basePrice > 0 && allowedPaymentMethods.length === 0)} className="w-full h-24 rounded-lg font-bold text-2xl bg-slate-900 group transition-all">
                 {isGenerating ? <Loader2 className="animate-spin mr-3 h-10 w-10" /> : <Wand2 className="mr-3 h-10 w-10 text-accent group-hover:rotate-12 transition-transform" />}
                 {isGenerating ? "Generando y Guardando..." : "Autogenerar Landing y Guardar"}
               </Button>

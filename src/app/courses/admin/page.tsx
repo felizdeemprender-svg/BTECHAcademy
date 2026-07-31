@@ -65,7 +65,7 @@ export default function AdminCursosPage() {
       );
       
       const snapshot = await getDocs(coursesQuery);
-      const coursesData = snapshot.docs.map(doc => ({
+      const coursesData: any[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));

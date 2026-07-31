@@ -132,7 +132,7 @@ export function useCourseProgressV3(courseId: string) {
       const evaluation = evaluations[mod.id];
       const hasEvaluation = !!evaluation;
       const allowsRetries = mod.allowRetries !== false;
-      const needsSupport = mod.enableSupportQuestions && mod.supportQuestions?.length > 0;
+      const needsSupport = !!mod.enableSupportQuestions && (mod.supportQuestions?.length ?? 0) > 0;
       
       if (isCompleted) {
         // Si ya aprobó, cuenta como procesado
@@ -161,7 +161,7 @@ export function useCourseProgressV3(courseId: string) {
     activeModuleIndex,
     setActiveModuleIndex,
     userAnswers,
-    setUserAnswers: function(a) {
+    setUserAnswers: function(a: Record<string, any>) {
       setUserAnswers(a);
       saveQuizDraft(a);
     },

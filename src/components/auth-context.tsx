@@ -5,6 +5,7 @@ import {
   onAuthStateChanged, 
   User as FirebaseUser, 
   signInWithPopup, 
+  signInWithRedirect,
   GoogleAuthProvider, 
   signOut,
   signInWithEmailAndPassword,
@@ -35,6 +36,7 @@ interface AuthContextType {
   isLoading: boolean;
   isRedirecting: boolean;
   loginWithGoogle: () => Promise<void>;
+  loginWithGoogleRedirect: () => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (email: string, pass: string) => Promise<FirebaseUser>;
   refreshProfile: () => Promise<void>;
@@ -212,6 +214,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) { throw e; }
   };
 
+  const loginWithGoogleRedirect = async () => {
+    const provider = new GoogleAuthProvider();
+    await setPersistence(auth, browserSessionPersistence);
+    await signInWithRedirect(auth, provider);
+  };
+
   const loginWithEmail = async (email: string, pass: string) => {
     await signInWithEmailAndPassword(auth, email, pass);
   };
@@ -244,7 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{ 
       user, profile, isLoading, isRedirecting,
-      loginWithGoogle, loginWithEmail, registerWithEmail, refreshProfile, logout 
+      loginWithGoogle, loginWithGoogleRedirect, loginWithEmail, registerWithEmail, refreshProfile, logout 
     }}>
       {children}
     </AuthContext.Provider>

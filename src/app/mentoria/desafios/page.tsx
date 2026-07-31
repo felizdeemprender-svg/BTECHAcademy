@@ -52,7 +52,7 @@ function toDate(value: any): Date | null {
 const ChallengeTable = ({ list, setSelectedGroup }: { list: any[], setSelectedGroup: (g: any) => void }) => (
   <div className="space-y-4">
     {/* Vista Desktop: Tabla */}
-    <Card className="hidden md:block border rounded-[2rem] overflow-hidden bg-white shadow-xl">
+    <Card className="hidden md:block border rounded-lg overflow-hidden bg-white">
       <CardContent className="p-0">
         <Table>
           <TableHeader className="bg-secondary/50 border-b">
@@ -138,7 +138,7 @@ const ChallengeTable = ({ list, setSelectedGroup }: { list: any[], setSelectedGr
       ) : list.map((group, idx) => {
         const percent = Math.round((group.completed / group.total) * 100);
         return (
-          <Card key={idx} className="rounded-3xl border-none shadow-md overflow-hidden">
+          <Card key={idx} className="rounded-lg overflow-hidden">
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
@@ -570,7 +570,7 @@ export default function MentorChallengesPage() {
                 <Trash2 className="h-4 w-4" /> Limpiar
               </Button>
             )}
-            <Button onClick={() => setIsCreateOpen(true)} className="h-12 px-8 rounded-xl font-bold shadow-xl flex items-center gap-2">
+            <Button onClick={() => setIsCreateOpen(true)} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
               <Plus className="h-5 w-5" /> Nuevo Desafío
             </Button>
           </div>
@@ -596,7 +596,7 @@ export default function MentorChallengesPage() {
 
           <TabsContent value="recent" className="animate-in fade-in duration-500">
             {tasksLoading ? (
-              <div className="h-60 bg-muted animate-pulse rounded-[2.5rem]" />
+              <div className="h-60 bg-muted animate-pulse rounded-lg" />
             ) : (
               <ChallengeTable list={filteredAndCategorized.recent} setSelectedGroup={setSelectedGroup} />
             )}
@@ -714,7 +714,7 @@ export default function MentorChallengesPage() {
                   <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                     <FileText className="h-4 w-4" /> Respuesta del Alumno
                   </h4>
-                  <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-200 shadow-inner">
+                  <div className="bg-slate-50 p-8 rounded-lg border border-slate-200">
                     <p className="text-slate-700 leading-relaxed font-medium">{selectedTaskDetail?.answer}</p>
                     {selectedTaskDetail?.fileUrl && (
                       <Button 
@@ -733,7 +733,7 @@ export default function MentorChallengesPage() {
                   <h4 className="text-xs font-black uppercase text-emerald-600 tracking-widest flex items-center gap-2">
                     <BrainCircuit className="h-4 w-4" /> Análisis de la IA (Gemini 2.5 Pro)
                   </h4>
-                  <div className="bg-emerald-50 p-8 rounded-[2rem] border-2 border-emerald-100 relative overflow-hidden">
+                  <div className="bg-emerald-50 p-8 rounded-lg border-2 border-emerald-100 relative overflow-hidden">
                     <Zap className="absolute -right-4 -top-4 h-24 w-24 opacity-5 text-emerald-600" />
                     <div className="flex justify-between items-center mb-6">
                       <Badge className="bg-emerald-500 text-white border-none h-6 px-3 text-[10px] font-black uppercase">Nota: {selectedTaskDetail?.score}%</Badge>
@@ -976,7 +976,7 @@ export default function MentorChallengesPage() {
                   <Button 
                     onClick={handleCreateChallenges} 
                     disabled={loading || selectedStudentIds.length === 0 || !taskData.title}
-                    className="flex-1 md:flex-none h-12 px-10 rounded-xl font-bold bg-primary shadow-xl gap-2"
+                    className="flex-1 md:flex-none h-12 px-10 rounded-xl font-bold bg-primary gap-2"
                   >
                     {loading ? <Loader2 className="animate-spin" /> : <Send className="h-4 w-4" />} Asignar Desafío Masivo
                   </Button>

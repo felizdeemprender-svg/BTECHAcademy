@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -211,7 +211,7 @@ export default function PricingPage() {
                 <Card key={i} className="h-[600px] animate-pulse" />
               ))
             ) : (plans || []).length === 0 ? (
-              <div className="col-span-full text-center py-20 bg-card rounded-[3rem] shadow-xl border-2 border-dashed border-border">
+              <div className="col-span-full text-center py-20 bg-card rounded-lg border-2 border-dashed border-border">
                 <ShieldCheck className="h-20 w-20 text-muted mx-auto mb-6" />
                 <h3 className="text-xl font-bold text-muted-foreground/70 italic">No hay planes activos disponibles en este momento.</h3>
               </div>
@@ -224,7 +224,7 @@ export default function PricingPage() {
                 <Card 
                   key={plan.id} 
                   className={cn(
-                    "relative flex flex-col h-full border-none shadow-2xl rounded-[3rem] transition-all duration-500 hover:-translate-y-2 overflow-hidden",
+                    "relative flex flex-col h-full border-none rounded-lg transition-all duration-500 hover:-translate-y-2 overflow-hidden",
                     plan.isEnterprise ? "bg-foreground text-background ring-4 ring-primary/20" : "bg-card",
                     isCurrent && "ring-4 ring-[hsl(var(--success))]/30",
                     isDowngrade && "opacity-80 grayscale-[0.5]"
@@ -261,7 +261,7 @@ export default function PricingPage() {
 
                     {/* Features & Quotas */}
                     <div className={cn(
-                      "p-6 rounded-[2rem] mb-8 flex items-center justify-between",
+                      "p-6 rounded-lg mb-8 flex items-center justify-between",
                       plan.isEnterprise ? "bg-white/5 border border-white/10" : "bg-muted border border-border"
                     )}>
                       <div className="flex items-center gap-3">
@@ -305,7 +305,7 @@ export default function PricingPage() {
                       onClick={() => openCheckout(plan)}
                       disabled={isCurrent || isDowngrade}
                       className={cn(
-                        "w-full h-14 rounded-2xl text-lg font-black shadow-xl transition-all active:scale-95",
+                        "w-full h-14 rounded-2xl text-lg font-black transition-all active:scale-95",
                         isCurrent 
                           ? "bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-2 border-[hsl(var(--success))]/20 cursor-default shadow-none" 
                           : isDowngrade
@@ -418,7 +418,7 @@ export default function PricingPage() {
                       className={cn(
                         "flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
                         selectedMethodId === method.id 
-                          ? "border-primary bg-primary/5 shadow-inner" 
+                          ? "border-primary bg-primary/5" 
                           : "border-border hover:border-muted-foreground/30"
                       )}
                     >

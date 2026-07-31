@@ -306,7 +306,7 @@ export default function TutorCoursesPage({ params }: { params: Promise<{ usernam
 
         {/* Courses Grid */}
         {sortedCourses.length === 0 ? (
-          <div className="text-center py-20 bg-secondary/10 rounded-[3rem] border-2 border-dashed">
+          <div className="text-center py-20 bg-secondary/10 rounded-lg border-2 border-dashed">
             <BookOpen className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-muted-foreground mb-2">
               No se encontraron cursos
@@ -318,7 +318,7 @@ export default function TutorCoursesPage({ params }: { params: Promise<{ usernam
         ) : (
           <div className="grid lg:grid-cols-2 gap-8">
             {sortedCourses.map((course) => (
-              <Card key={course.id} className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden">
+              <Card key={course.id} className="group border-none shadow-lg transition-all duration-500 overflow-hidden">
                 <div className="flex flex-col lg:flex-row">
                   {/* Image */}
                   <div className="relative lg:w-2/5 aspect-video lg:aspect-square overflow-hidden">

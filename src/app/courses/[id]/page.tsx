@@ -16,6 +16,7 @@ import { EvaluationData, StudentAchievement } from '@/types/student';
 
 // Hooks
 import { useCourseProgressV3 } from '@/hooks/student/useCourseProgressV3';
+import { resolveCoursePrimaryColor } from '@/lib/landing-styles';
 
 // Components
 import { VideoPlayer } from '@/components/courses/VideoPlayer';
@@ -298,7 +299,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
   if (isLoading) return <DashboardLayout><div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary h-12 w-12" /></div></DashboardLayout>;
   if (!course || !enrollment) return <DashboardLayout><div className="p-20 text-center"><p className="text-muted-foreground font-bold">No tienes acceso a este curso.</p></div></DashboardLayout>;
 
-  const primaryColor = course?.brandingOverride?.primaryColor || mentorProfile?.profile?.branding?.primaryColor || '#3B2D86';
+  const primaryColor = resolveCoursePrimaryColor(course?.brandingOverride, mentorProfile?.profile);
 
   return (
     <DashboardLayout>
@@ -332,7 +333,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* 2. Lessons Content & Resources or Quiz */}
-            <div className="bg-white rounded-[2.5rem] p-6 md:p-10 shadow-xl border border-slate-100">
+            <div className="bg-white rounded-lg p-6 md:p-10 border border-slate-100">
                {showQuiz ? (
                  <QuizWizard 
                     questions={currentQuestions}

@@ -186,7 +186,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
           </h1>
           <p className="text-slate-500 text-lg font-medium">{description}</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="h-14 px-8 rounded-2xl font-bold bg-slate-900 text-white shadow-xl flex items-center gap-2 hover:scale-105 transition-all">
+        <Button onClick={() => handleOpenDialog()} className="h-14 px-8 rounded-2xl font-bold bg-slate-900 text-white flex items-center gap-2 hover:scale-105 transition-all">
           <Plus className="h-5 w-5" /> Añadir Método
         </Button>
       </header>
@@ -209,7 +209,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
         })}
       </div>
 
-      <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
+      <Card className="rounded-lg overflow-hidden bg-white">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-slate-50/80">
@@ -244,7 +244,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   <TableCell className="px-10 py-8">
                     <div className="flex items-center gap-5">
                       <div className={cn(
-                        "w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner transition-colors",
+                        "w-14 h-14 rounded-2xl flex items-center justify-center transition-colors",
                         method.isActive ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-400"
                       )}>
                         {method.type === 'mercadopago' ? <Wallet className="h-7 w-7" /> : <CreditCard className="h-7 w-7" />}
@@ -335,7 +335,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   <SelectTrigger size="xl" className="bg-slate-50 border-none px-6 font-bold text-slate-800">
                     <SelectValue placeholder="Seleccionar plataforma" />
                   </SelectTrigger>
-                  <SelectContent className="border-none shadow-2xl">
+                  <SelectContent className="border-none">
                     <SelectItem value="mercadopago" className="font-bold py-3">Mercado Pago</SelectItem>
                     <SelectItem value="getnet" className="font-bold py-3">Getnet (Santander)</SelectItem>
                     <SelectItem value="transfer" className="font-bold py-3">Transferencia Bancaria</SelectItem>
@@ -346,7 +346,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
             </div>
 
             {formData.type === 'mercadopago' ? (
-              <div className="p-8 bg-indigo-50/50 rounded-[2.5rem] border border-indigo-100 space-y-6">
+              <div className="p-8 bg-indigo-50/50 rounded-lg border border-indigo-100 space-y-6">
                 <div className="flex items-center gap-3 mb-2">
                   <ShieldCheck className="h-5 w-5 text-indigo-600" />
                   <span className="text-xs font-black uppercase tracking-widest text-indigo-900">Credenciales Mercado Pago</span>
@@ -390,7 +390,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                 </div>
               </div>
             ) : formData.type === 'getnet' ? (
-              <div className="p-8 bg-rose-50/50 rounded-[2.5rem] border border-rose-100 space-y-6">
+              <div className="p-8 bg-rose-50/50 rounded-lg border border-rose-100 space-y-6">
                 <div className="flex items-center gap-3 mb-2">
                   <ShieldCheck className="h-5 w-5 text-rose-600" />
                   <span className="text-xs font-black uppercase tracking-widest text-rose-900">Credenciales Getnet (API Global)</span>
@@ -446,7 +446,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                 </div>
               </div>
             ) : (
-              <div className="p-8 bg-emerald-50/50 rounded-[2.5rem] border border-emerald-100 space-y-6">
+              <div className="p-8 bg-emerald-50/50 rounded-lg border border-emerald-100 space-y-6">
                 <div className="flex items-center gap-3 mb-2">
                   <ShieldCheck className="h-5 w-5 text-emerald-600" />
                   <span className="text-xs font-black uppercase tracking-widest text-emerald-900">Datos Bancarios</span>
@@ -509,7 +509,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
             <Button 
               type="submit" 
               disabled={loading || !formData.name} 
-              className="w-full h-16 rounded-[1.5rem] text-xl font-black bg-slate-900 text-white shadow-2xl hover:scale-[1.02] transition-all"
+              className="w-full h-16 rounded-[1.5rem] text-xl font-black bg-slate-900 text-white hover:scale-[1.02] transition-all"
             >
               {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <Save className="h-6 w-6 mr-3" />} 
               {editingMethod ? 'Actualizar Pasarela' : 'Guardar Método'}

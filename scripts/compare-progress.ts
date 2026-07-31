@@ -28,7 +28,7 @@ async function compareProgress() {
     .orderBy('order', 'asc')
     .get();
 
-  const modules = modulesSnapshot.docs.map(doc => ({
+  const modules: any[] = modulesSnapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
   }));

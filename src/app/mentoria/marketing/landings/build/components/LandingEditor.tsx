@@ -109,7 +109,7 @@ export function LandingEditor({
 
   if (!generatedAssets) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
+      <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
         <div className="text-center">
           <h3 className="text-xl font-bold text-slate-700">Cargando editor de landings...</h3>
@@ -131,7 +131,7 @@ export function LandingEditor({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button onClick={handleSaveIntercept} disabled={loading} className="h-16 px-12 rounded-2xl font-bold text-xl shadow-2xl bg-primary gap-3">
+          <Button onClick={handleSaveIntercept} disabled={loading} className="h-16 px-12 rounded-2xl font-bold text-xl bg-primary gap-3">
             {loading ? <Loader2 className="animate-spin" /> : <Save className="h-6 w-6" />} Guardar Landings
           </Button>
         </div>
@@ -149,7 +149,7 @@ export function LandingEditor({
           
           {generatedAssets?.landings?.map((l: any, lIdx: number) => (
             <TabsContent key={lIdx} value={lIdx.toString()} className="space-y-8">
-              <Card className="p-10 rounded-[2.5rem] bg-slate-900 border border-white/10 shadow-xl overflow-hidden relative">
+              <Card className="p-10 rounded-lg bg-slate-900 border border-white/10 overflow-hidden relative">
                 {/* Botón de IA */}
                 <div className="absolute top-6 right-6 z-20">
                   <Button 
@@ -157,7 +157,7 @@ export function LandingEditor({
                     size="sm" 
                     onClick={() => handleRegenerate(lIdx)}
                     disabled={isRegenerating === lIdx}
-                    className="h-10 px-6 rounded-xl bg-white text-slate-950 font-black text-[10px] uppercase tracking-wider hover:bg-emerald-50 transition-all shadow-xl"
+                    className="h-10 px-6 rounded-xl bg-white text-slate-950 font-black text-[10px] uppercase tracking-wider hover:bg-emerald-50 transition-all"
                   >
                     {isRegenerating === lIdx ? (
                       <><Loader2 className="h-3 w-3 mr-2 animate-spin" /> REGENERANDO...</>
@@ -187,7 +187,7 @@ export function LandingEditor({
                 </div>
               </Card>
 
-              <Card className="p-10 rounded-[2.5rem] bg-slate-900 border border-white/10 shadow-xl space-y-6">
+              <Card className="p-10 rounded-lg bg-slate-900 border border-white/10 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
@@ -239,7 +239,7 @@ export function LandingEditor({
 
               <div className="space-y-8">
                 {l.sections?.map((section: any, sIdx: number) => (
-                  <Card key={sIdx} className="p-12 rounded-[3.5rem] bg-slate-900 border border-white/10 shadow-2xl">
+                  <Card key={sIdx} className="p-12 rounded-lg bg-slate-900 border border-white/10">
                     <div className="grid lg:grid-cols-2 gap-12">
                       <div className="space-y-8">
                         <div className="space-y-2">
@@ -280,7 +280,7 @@ export function LandingEditor({
                 ))}
               </div>
 
-              <Card className="p-12 rounded-[4rem] bg-slate-900 border border-white/5 shadow-2xl space-y-12">
+              <Card className="p-12 rounded-[4rem] bg-slate-900 border border-white/5 space-y-12">
                 <div className="grid lg:grid-cols-2 gap-16">
                   <div className="space-y-6">
                     <div className="flex items-center justify-between ml-4">
@@ -345,7 +345,7 @@ export function LandingEditor({
                     <Textarea 
                       value={l.aboutMentor || ''} 
                       onChange={e => updateAsset('landings', lIdx, 'aboutMentor', e.target.value)} 
-                      className="min-h-[200px] bg-white/5 border-white/5 rounded-[2.5rem] p-8 text-base font-medium leading-relaxed text-slate-300 focus-visible:ring-violet-500/50" 
+                      className="min-h-[200px] bg-white/5 border-white/5 rounded-lg p-8 text-base font-medium leading-relaxed text-slate-300 focus-visible:ring-violet-500/50" 
                       placeholder="Describe la autoridad del mentor..."
                     />
                   </div>
@@ -353,7 +353,7 @@ export function LandingEditor({
               </Card>
 
               {/* FAQs Card */}
-              <Card className="p-12 rounded-[4rem] bg-slate-900 border border-white/5 shadow-2xl space-y-12 mt-8">
+              <Card className="p-12 rounded-[4rem] bg-slate-900 border border-white/5 space-y-12 mt-8">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between ml-4">
                     <div className="flex items-center gap-3">
@@ -420,7 +420,7 @@ export function LandingEditor({
               </Card>
 
               {/* ─── Ajustes de Blueprint ─── */}
-              <Card className="p-10 rounded-[3rem] bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/20 shadow-2xl space-y-8 mt-8">
+              <Card className="p-10 rounded-lg bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/20 space-y-8 mt-8">
                 <div className="flex items-center gap-4 border-b border-white/5 pb-8">
                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
                     <Sparkles className="h-6 w-6" />
@@ -453,7 +453,7 @@ export function LandingEditor({
                               : 'border-white/10 opacity-50 hover:opacity-80 hover:border-white/20'
                           )}
                         >
-                          <div className={cn('w-10 h-10 rounded-xl border-2 shadow-inner', bg, border)} />
+                          <div className={cn('w-10 h-10 rounded-xl border-2', bg, border)} />
                           <p className={cn('text-xs font-bold', text, isActive ? 'opacity-100' : 'opacity-70')}>{label}</p>
                           <p className="text-[9px] text-slate-500">{desc}</p>
                         </button>

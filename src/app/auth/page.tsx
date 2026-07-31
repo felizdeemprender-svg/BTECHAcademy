@@ -109,7 +109,7 @@ export default function AuthPage() {
   if (isRedirecting || (authLoading && !user)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] p-6 text-center space-y-6">
-        <div className="w-16 h-16 bg-white rounded-3xl shadow-xl flex items-center justify-center">
+        <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center">
           <Loader2 className="animate-spin text-primary h-8 w-8" />
         </div>
         <div>
@@ -131,7 +131,7 @@ export default function AuthPage() {
           <p className="text-slate-500 font-medium">Plataforma Institucional de Formación</p>
         </div>
 
-        <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+        <Card className="rounded-lg overflow-hidden bg-white">
           <CardContent className="p-8 pt-10 space-y-6">
             {showPopupWarning && (
               <div className="space-y-4 animate-in slide-in-from-top-2">

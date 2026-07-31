@@ -1,22 +1,92 @@
-import { LandingStyle } from './types';
+import { LandingStyle, StyleBrand, StyleTokens, TypographyVariant, ColorPalette } from './types';
+
+const classicBaseTokens: StyleTokens = {
+  componentRadius: '6px',
+  componentBorder: '1px solid var(--border)',
+  componentShadow: 'none',
+  componentBg: 'var(--surface)',
+  sectionPadding: '96px',
+  contentGap: '16px',
+  transitionDuration: '150ms',
+  themeMode: 'light',
+};
+
+const classicTypography: TypographyVariant[] = [
+  { name: 'Moderna', headingScale: 1.1, bodyScale: 1, headingFont: 'Inter', bodyFont: 'Inter' },
+  { name: 'Elegante', headingScale: 1.2, bodyScale: 1, headingFont: 'Playfair Display', bodyFont: 'Lora' },
+  { name: 'Audaz', headingScale: 1.15, bodyScale: 1.05, headingFont: 'Montserrat', bodyFont: 'Open Sans' },
+  { name: 'Geométrica', headingScale: 1.0, bodyScale: 0.95, headingFont: 'Poppins', bodyFont: 'Roboto' },
+  { name: 'Creativa', headingScale: 1.2, bodyScale: 1.1, headingFont: 'Outfit', bodyFont: 'Nunito' }
+];
+
+const classicColorProposals: ColorPalette[] = [
+  { name: 'Océano', primary: '#1E40AF', secondary: '#F1F5F9', accent: '#F59E0B' },
+  { name: 'Corporativo', primary: '#3B2D86', secondary: '#F8FAFC', accent: '#FACC15' },
+  { name: 'Bosque', primary: '#065F46', secondary: '#ECFDF5', accent: '#10B981' },
+  { name: 'Monocromo', primary: '#18181B', secondary: '#FAFAFA', accent: '#A1A1AA' },
+  { name: 'Púrpura Vibrante', primary: '#7C3AED', secondary: '#F5F3FF', accent: '#D946EF' }
+];
 
 export const classicStyle: LandingStyle = {
   id: 'classic',
   name: 'Classic',
   description: 'El estilo original, balanceado y profesional',
-  thumbnail: '/styles/classic-thumb.png',
+  thumbnail: '/styles/classic-thumb.svg',
+  group: 'storytelling',
   allowedSubscriptions: ['free', 'pro', 'premium'],
   layout: 'centered',
-  componentStyle: 'borders',
-  typography: [
-    { name: 'Moderna', headingScale: 1.1, bodyScale: 1, headingFont: 'Inter', bodyFont: 'Inter' },
-    { name: 'Elegante', headingScale: 1.2, bodyScale: 1, headingFont: 'Playfair Display', bodyFont: 'Lora' },
-    { name: 'Audaz', headingScale: 1.15, bodyScale: 1.05, headingFont: 'Montserrat', bodyFont: 'Open Sans' },
-    { name: 'Geométrica', headingScale: 1.0, bodyScale: 0.95, headingFont: 'Poppins', bodyFont: 'Roboto' },
-    { name: 'Creativa', headingScale: 1.2, bodyScale: 1.1, headingFont: 'Outfit', bodyFont: 'Nunito' }
+  tokens: classicBaseTokens,
+  typography: classicTypography,
+  brands: [
+    {
+      name: 'Profesional',
+      description: 'Limpio, confiable y balanceado — ideal para cursos profesionales',
+      tokens: {
+        componentRadius: '6px',
+        componentBorder: '1px solid var(--border)',
+        componentShadow: 'none',
+        componentBg: 'var(--surface)',
+        sectionPadding: '96px',
+        contentGap: '16px',
+        transitionDuration: '150ms',
+        themeMode: 'light',
+      },
+      typography: { name: 'Moderna', headingScale: 1.1, bodyScale: 1, headingFont: 'Inter', bodyFont: 'Inter' },
+      palette: { name: 'Océano', primary: '#1E40AF', secondary: '#F1F5F9', accent: '#F59E0B' }
+    },
+    {
+      name: 'Corporativo',
+      description: 'Estructurado y autoritario — para programas de certificación',
+      tokens: {
+        componentRadius: '4px',
+        componentBorder: '2px solid var(--border)',
+        componentShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        componentBg: 'var(--surface)',
+        sectionPadding: '80px',
+        contentGap: '12px',
+        transitionDuration: '200ms',
+        themeMode: 'light',
+      },
+      typography: { name: 'Geométrica', headingScale: 1.0, bodyScale: 0.95, headingFont: 'Poppins', bodyFont: 'Roboto' },
+      palette: { name: 'Corporativo', primary: '#3B2D86', secondary: '#F8FAFC', accent: '#FACC15' }
+    },
+    {
+      name: 'Natural',
+      description: 'Cálido y cercano — para cursos de bienestar y crecimiento personal',
+      tokens: {
+        componentRadius: '12px',
+        componentBorder: 'none',
+        componentShadow: '0 8px 24px rgba(0,0,0,0.1)',
+        componentBg: 'var(--muted)',
+        sectionPadding: '112px',
+        contentGap: '20px',
+        transitionDuration: '250ms',
+        themeMode: 'light',
+      },
+      typography: { name: 'Elegante', headingScale: 1.2, bodyScale: 1, headingFont: 'Playfair Display', bodyFont: 'Lora' },
+      palette: { name: 'Bosque', primary: '#065F46', secondary: '#ECFDF5', accent: '#10B981' }
+    }
   ],
-  spacing: 'balanced',
-  animations: 'minimal',
   availableSections: [
     { id: 'heroVideo', name: 'Video Principal', description: 'Redacta un titular impactante y persuasivo que ataque el mayor dolor del cliente, seguido de un texto secundario que presente la solución como la única opción lógica. La llamada a la acción debe ser imperativa y enfocada al beneficio inmediato.', blueprint: 'Diseño en 2 columnas (Split). Izquierda: Título grande, subtítulo y Botón CTA primario. Derecha: Contenedor de Video (aspect-video) con sombra definida. Fondo: Color primario del estilo.', required: true, isRepeatable: false, contentType: 'video' },
     { id: 'narrativeSections', name: 'Secciones Narrativas', description: 'Redacta un texto persuasivo usando el esquema problema-agitación-solución. Empatiza profundamente con la frustración del usuario, hazle sentir que entiendes su situación, y luego presenta el curso como el puente hacia la transformación deseada. OBLIGATORIO: Propón siempre exactamente 4 viñetas (bullets) al final, donde cada viñeta tenga un máximo estricto de 4 palabras.', blueprint: 'Diseño de ancho completo (Full-width), centrado. Texto contenido en un bloque estrecho para máxima legibilidad. Sin imágenes, solo tipografía destacada sobre fondo secundario o blanco puro.', required: true, isRepeatable: true, contentType: 'text' },

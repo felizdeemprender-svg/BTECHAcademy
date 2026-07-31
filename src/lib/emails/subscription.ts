@@ -10,7 +10,7 @@ export async function sendTrialEndingEmail(
   planName: string
 ): Promise<void> {
   const subject = `⏰ Tu período de prueba de Fastoria termina en ${daysLeft} días`;
-  const header = solidHeader('⏰ Tu trial está por vencer', 'linear-gradient(135deg, #6366f1, #8b5cf6)');
+  const header = solidHeader('⏰ Tu trial está por vencer', 'linear-gradient(135deg, #3B2D86, #8b5cf6)');
   const body = `
     <p style="font-size: 16px; color: #374151;">Hola <strong>${tutorName}</strong>,</p>
     <p style="font-size: 16px; color: #374151; line-height: 1.6;">
@@ -104,7 +104,7 @@ export async function sendNewSubscriptionEmail(
   nextBillingDate: Date
 ): Promise<void> {
   const subject = `✅ ¡Bienvenido! Tu cuenta de Mentor está activa — Plan ${planName}`;
-  const header = solidHeader('🚀 ¡Cuenta de Mentor Activa!', 'linear-gradient(135deg, #6366f1, #8b5cf6)');
+  const header = solidHeader('🚀 ¡Cuenta de Mentor Activa!', 'linear-gradient(135deg, #3B2D86, #8b5cf6)');
   const body = `
     <p style="font-size: 16px; color: #374151;">¡Hola <strong>${tutorName}</strong>!</p>
     <p style="font-size: 16px; color: #374151; line-height: 1.6;">

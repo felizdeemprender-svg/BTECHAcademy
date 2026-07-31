@@ -2,9 +2,10 @@
 
 import * as React from "react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Loader2 } from "lucide-react"
+import { AlertCircle, Loader2 } from "lucide-react"
 
 interface FormDialogProps {
   open: boolean
@@ -16,6 +17,8 @@ interface FormDialogProps {
   submitLabel?: string
   onSubmit?: () => void | Promise<void>
   loading?: boolean
+  error?: string | null
+  onErrorClear?: () => void
   maxWidth?: string
   disabled?: boolean
 }
@@ -30,18 +33,35 @@ function FormDialog({
   submitLabel = "Guardar",
   onSubmit,
   loading: externalLoading,
+  error: externalError,
+  onErrorClear,
   maxWidth,
   disabled,
 }: FormDialogProps) {
   const [internalLoading, setInternalLoading] = React.useState(false)
+  const [internalError, setInternalError] = React.useState<string | null>(null)
   const loading = externalLoading ?? internalLoading
+  const error = externalError ?? internalError
+
+  React.useEffect(() => {
+    if (open) {
+      setInternalError(null)
+      onErrorClear?.()
+    }
+  }, [open, onErrorClear])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!onSubmit) return
+    setInternalError(null)
+    onErrorClear?.()
     setInternalLoading(true)
     try {
       await onSubmit()
+    } catch (err) {
+      setInternalError(
+        err instanceof Error ? err.message : "Ocurrió un error inesperado. Intentá de nuevo."
+      )
     } finally {
       setInternalLoading(false)
     }
@@ -61,6 +81,12 @@ function FormDialog({
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
           <div className="space-y-6">{children}</div>
+          {error && (
+            <Alert variant="destructive" className="mt-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           {onSubmit && (
             <DialogFooter className="mt-8">
               <Button

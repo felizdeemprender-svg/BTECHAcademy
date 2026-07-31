@@ -18,6 +18,7 @@ export async function POST(req: Request) {
       },
       targetAudience: "Emprendedores, coaches, tutores y creadores de contenido que quieren monetizar sus conocimientos sin conocimientos técnicos.",
       courseTags: ["no-code", "negocios digitales", "SaaS", "marca blanca"],
+      templateDirectives: "",
       styleId: "classic"
     });
 

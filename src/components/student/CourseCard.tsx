@@ -39,7 +39,7 @@ export function StudentCourseCard({
 
   if (variant === 'list') {
     return (
-      <Card className="border-none shadow-lg rounded-3xl bg-white overflow-hidden group hover:shadow-xl transition-all">
+      <Card className="border-none shadow-lg rounded-3xl bg-white overflow-hidden group transition-all">
         <div className="p-4 md:p-6 flex flex-col lg:flex-row justify-between items-center gap-4 md:gap-6">
           <div className="flex items-center gap-4 flex-1 min-w-0 w-full lg:w-auto">
             <div className="w-12 h-12 md:w-14 md:h-14 relative rounded-2xl overflow-hidden shrink-0 border-2 border-white shadow-md">
@@ -87,7 +87,7 @@ export function StudentCourseCard({
   }
 
   return (
-    <Card className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col rounded-3xl bg-white">
+    <Card className="group border-none shadow-lg transition-all duration-500 overflow-hidden flex flex-col rounded-3xl bg-white">
       <div className="relative aspect-video overflow-hidden">
         <Image 
           src={thumbnail || defaultImage} 

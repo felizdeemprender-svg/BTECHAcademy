@@ -81,8 +81,8 @@ export default function PlansSection() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {plans.map((plan) => (
             <Card key={plan.id} className={cn(
-              "relative border-2 border-border/50 bg-card/50 backdrop-blur-xl rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 group",
-              plan.type === 'percentage' && "border-accent/40 shadow-xl shadow-accent/5 ring-1 ring-accent/20"
+              "relative border-2 border-border/50 bg-card/50 backdrop-blur-xl rounded-lg overflow-hidden transition-all duration-500 group",
+              plan.type === 'percentage' && "border-accent/40 shadow-accent/5 ring-1 ring-accent/20"
             )}>
               {plan.type === 'percentage' && (
                 <div className="absolute top-0 right-0 p-6">

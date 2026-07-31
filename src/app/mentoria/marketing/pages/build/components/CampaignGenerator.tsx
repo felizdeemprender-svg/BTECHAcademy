@@ -184,14 +184,14 @@ export function CampaignGenerator({
                       key={m.id}
                       onClick={() => setCampaignMission(m.id as any)}
                       className={cn(
-                        "flex flex-col items-center text-center p-6 rounded-[2rem] border-2 transition-all duration-300 gap-3 group",
+                        "flex flex-col items-center text-center p-6 rounded-lg border-2 transition-all duration-300 gap-3 group",
                         isActive 
                           ? `${m.bg} ${m.border} shadow-lg scale-[1.02]` 
                           : "bg-white border-slate-100 hover:border-slate-300"
                       )}
                     >
                       <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shadow-inner",
+                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
                         isActive ? "bg-white" : "bg-slate-50 group-hover:bg-slate-100"
                       )}>
                         <Icon className={cn("h-6 w-6", m.color)} />
@@ -238,7 +238,7 @@ export function CampaignGenerator({
                   value={targetAudience} 
                   onChange={e => setTargetAudience(e.target.value)} 
                   placeholder="Ej: Médicos interesados en optimizar su consulta con IA o Programadores buscando especialización hard-skill..." 
-                  className="min-h-[120px] rounded-[2rem] bg-secondary/10 border-none p-6 text-base font-medium leading-relaxed" 
+                  className="min-h-[120px] rounded-lg bg-secondary/10 border-none p-6 text-base font-medium leading-relaxed" 
                 />
               </div>
 
@@ -281,7 +281,7 @@ export function CampaignGenerator({
                   value={templateDirectives} 
                   onChange={e => setTemplateDirectives(e.target.value)} 
                   placeholder="Ej: Enfócate en la autoridad técnica del mentor, resalta el ROI del 300% en la primera campaña..." 
-                  className="min-h-[120px] rounded-[2rem] bg-secondary/10 border-none p-6 text-sm font-medium leading-relaxed" 
+                  className="min-h-[120px] rounded-lg bg-secondary/10 border-none p-6 text-sm font-medium leading-relaxed" 
                 />
                 <p className="text-[9px] text-muted-foreground px-2">
                   * Este texto define el estilo de persuasión. Edítalo para corregir o mejorar el enfoque de la IA.
@@ -307,7 +307,7 @@ export function CampaignGenerator({
               <Button 
                 onClick={onGenerate} 
                 disabled={isGenerating || !targetAudience} 
-                className="w-full h-20 rounded-[2rem] font-bold text-2xl shadow-3xl bg-slate-900 group transition-all"
+                className="w-full h-20 rounded-lg font-bold text-2xl bg-slate-900 group transition-all"
               >
                 {isGenerating ? (
                   <Loader2 className="animate-spin mr-3 h-8 w-8" />

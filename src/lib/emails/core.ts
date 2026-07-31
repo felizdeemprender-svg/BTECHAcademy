@@ -1,7 +1,7 @@
 import { getAdminFirestore } from '@/firebase/admin';
 
 export const PLATFORM_URL = 'https://felizdeemprender.com'; // O el dominio que uses
-export const BRAND_COLOR = '#6366f1';
+export const BRAND_COLOR = '#3B2D86';
 export const BRAND_NAME = 'Feliz de Emprender';
 export const ADMIN_SENDER_NAME = 'Equipo de Feliz de Emprender';
 export const SUPPORT_EMAIL = 'supervisor.felizdeemprender@gmail.com';
@@ -71,7 +71,7 @@ export function ctaButton(label: string, href: string, color: string = BRAND_COL
       <a href="${href}"
          style="background-color: ${color}; color: #ffffff; padding: 14px 28px; text-decoration: none;
                 border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;
-                box-shadow: 0 4px 6px -1px rgba(99,102,241,0.4);">
+                box-shadow: 0 4px 6px -1px rgba(59,45,134,0.4);">
         ${label}
       </a>
     </div>

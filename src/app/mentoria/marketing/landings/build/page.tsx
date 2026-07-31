@@ -425,9 +425,9 @@ function LandingBuilderContent() {
 
               <Button disabled={!selectedCourseId || !selectedCollectionId} onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold">Continuar al Enfoque <ArrowRight className="ml-2 h-5 w-5" /></Button>
             </Card>
-            <div className="bg-slate-50 rounded-[3rem] border-2 border-dashed flex items-center justify-center p-12 text-center">
+            <div className="bg-slate-50 rounded-lg border-2 border-dashed flex items-center justify-center p-12 text-center">
                <div className="max-w-xs space-y-4">
-                  <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary shadow-inner"><Layout className="h-10 w-10" /></div>
+                  <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary"><Layout className="h-10 w-10" /></div>
                   <h3 className="text-2xl font-black text-slate-800">Cerebro Atómico</h3>
                   <p className="text-sm text-muted-foreground font-medium">Al generar solo la Landing, la IA puede profundizar en los argumentos técnicos y el cierre de venta sin distracciones.</p>
                </div>
@@ -436,7 +436,7 @@ function LandingBuilderContent() {
         )}
 
         {step === 2 && (
-          <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden max-w-4xl mx-auto animate-in slide-in-from-right-8">
+          <Card className="rounded-lg bg-white overflow-hidden max-w-4xl mx-auto animate-in slide-in-from-right-8">
             <CardHeader className="bg-primary/5 p-10">
               <CardTitle className="text-2xl font-bold">Configuración Estratégica de la Landing</CardTitle>
               <CardDescription>Define el alma de tu página de venta para que la IA sea precisa.</CardDescription>
@@ -451,8 +451,8 @@ function LandingBuilderContent() {
                     const Icon = m.icon;
                     const isActive = mission === m.id;
                     return (
-                      <button key={m.id} onClick={() => setMission(m.id as any)} className={cn("flex flex-col items-center text-center p-6 rounded-[2rem] border-2 transition-all duration-300 gap-3 group", isActive ? `${m.bg} ${m.border} shadow-lg scale-[1.02]` : "bg-white border-slate-100 hover:border-slate-300")}>
-                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shadow-inner", isActive ? "bg-white" : "bg-slate-50 group-hover:bg-slate-100")}><Icon className={cn("h-6 w-6", m.color)} /></div>
+                      <button key={m.id} onClick={() => setMission(m.id as any)} className={cn("flex flex-col items-center text-center p-6 rounded-lg border-2 transition-all duration-300 gap-3 group", isActive ? `${m.bg} ${m.border} shadow-lg scale-[1.02]` : "bg-white border-slate-100 hover:border-slate-300")}>
+                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-colors", isActive ? "bg-white" : "bg-slate-50 group-hover:bg-slate-100")}><Icon className={cn("h-6 w-6", m.color)} /></div>
                         <div className="space-y-1">
                           <p className={cn("font-black text-xs uppercase transition-colors", isActive ? "text-slate-900" : "text-slate-500")}>{m.label}</p>
                           <p className="text-[9px] text-muted-foreground font-medium leading-tight">{m.desc}</p>
@@ -642,7 +642,7 @@ function LandingBuilderContent() {
               </div>
               )}
 
-              <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience || (price > 0 && allowedPaymentMethods.length === 0)} className="w-full h-24 rounded-[2.5rem] font-bold text-2xl shadow-3xl bg-slate-900 group transition-all">
+              <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience || (price > 0 && allowedPaymentMethods.length === 0)} className="w-full h-24 rounded-lg font-bold text-2xl bg-slate-900 group transition-all">
                 {isGenerating ? <Loader2 className="animate-spin mr-3 h-10 w-10" /> : <Sparkles className="mr-3 h-10 w-10 text-accent group-hover:rotate-12 transition-transform" />}
                 Lanzar Generación Atómica
               </Button>

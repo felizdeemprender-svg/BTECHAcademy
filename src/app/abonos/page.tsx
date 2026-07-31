@@ -106,12 +106,12 @@ export default function AbonosPage() {
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Gestión de Abonos</h1>
             <p className="text-muted-foreground text-lg font-medium">Control institucional de planes y capacidades para mentores.</p>
           </div>
-          <Button onClick={() => handleOpenDialog()} className="h-12 px-8 rounded-xl font-bold shadow-xl flex items-center gap-2">
+          <Button onClick={() => handleOpenDialog()} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
             <Plus className="h-5 w-5" /> Nuevo Abono
           </Button>
         </header>
 
-        <Card className="border-none shadow-2xl rounded-2xl overflow-hidden bg-white/50 backdrop-blur-xl">
+        <Card className="border-none rounded-2xl overflow-hidden bg-white/50 backdrop-blur-xl">
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-primary/5">
@@ -261,7 +261,7 @@ export default function AbonosPage() {
                 />
               </div>
               <DialogFooter className="mt-8">
-                <Button type="submit" disabled={loading || !formData.name} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl">
+                <Button type="submit" disabled={loading || !formData.name} className="w-full h-14 rounded-2xl text-lg font-bold">
                   {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />} 
                   {editingPlan ? 'Actualizar Abono' : 'Publicar Plan'}
                 </Button>

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Obtener UID de las cookies
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const uid = cookieStore.get('btech_uid')?.value;
 
     if (!uid) {

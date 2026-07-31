@@ -285,7 +285,7 @@ export default function AdminAdnsPage() {
           </div>
         </div>
 
-        <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white/50 backdrop-blur-xl">
+        <Card className="rounded-lg overflow-hidden bg-white/50 backdrop-blur-xl">
           <CardHeader className="bg-primary/5 px-10 py-8 border-b border-border/30">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl font-headline font-bold text-primary flex items-center gap-2">
@@ -295,7 +295,7 @@ export default function AdminAdnsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   placeholder="Filtrar por nombre o ID..." 
-                  className="pl-10 rounded-xl bg-white/80 border-none shadow-inner h-10"
+                  className="pl-10 rounded-xl bg-white/80 border-none h-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -421,7 +421,7 @@ export default function AdminAdnsPage() {
                         variant="outline"
                         className={cn(
                           "h-16 rounded-2xl border-2 flex flex-col gap-1 transition-all",
-                          isSmokeTesting === (isFullMode ? 'FULL' : fmt) ? "border-emerald-500 bg-emerald-50 shadow-inner" : "hover:border-emerald-500 hover:bg-emerald-50"
+                          isSmokeTesting === (isFullMode ? 'FULL' : fmt) ? "border-emerald-500 bg-emerald-50" : "hover:border-emerald-500 hover:bg-emerald-50"
                         )}
                         onClick={() => handleSmokeTest(fmt, isFullMode)}
                         disabled={!!isSmokeTesting}
@@ -441,7 +441,7 @@ export default function AdminAdnsPage() {
                   </div>
 
                   {isSmokeTesting && (
-                    <div className="mt-4 p-4 bg-slate-900 rounded-2xl flex items-center gap-4 animate-pulse border border-slate-800 shadow-xl">
+                    <div className="mt-4 p-4 bg-slate-900 rounded-2xl flex items-center gap-4 animate-pulse border border-slate-800">
                       <div className="relative">
                         <div className="h-2 w-2 bg-emerald-500 rounded-full animate-ping absolute -top-1 -right-1" />
                         <Rocket className="h-6 w-6 text-emerald-500" />
@@ -470,7 +470,7 @@ export default function AdminAdnsPage() {
                       <p className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
                         <Video className="h-4 w-4 text-emerald-500" /> Resultado de la Certificación
                       </p>
-                      <div className="relative rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-black aspect-[9/16] max-h-[400px] mx-auto">
+                      <div className="relative rounded-lg overflow-hidden border-4 border-white bg-black aspect-[9/16] max-h-[400px] mx-auto">
                         <video 
                           src={smokeTestPreviewUrl} 
                           controls 
@@ -503,7 +503,7 @@ export default function AdminAdnsPage() {
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold mb-2 text-center w-full">¿Eliminar ADN Maestro?</DialogTitle>
             </DialogHeader>
-            <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 mt-4">
+            <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center mx-auto mb-6 mt-4">
               <Trash2 className="h-10 w-10" />
             </div>
             <p className="text-muted-foreground mb-8">Esta acción es irreversible y eliminará todos los archivos de la carpeta <span className="font-mono font-bold text-rose-600">{confirmDeleteId}</span>.</p>

@@ -86,7 +86,7 @@ export function TermsUsageModal() {
             onClick={handleAccept} 
             disabled={!accepted || loading} 
             size="xl" 
-            className="w-full font-bold shadow-xl"
+            className="w-full font-bold"
           >
             {loading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} 
             Confirmar y Entrar

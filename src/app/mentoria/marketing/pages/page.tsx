@@ -171,7 +171,7 @@ export default function SalesPagesDashboardPage() {
           </div>
           <Button 
             onClick={() => router.push('/mentoria/marketing/pages/build')} 
-            className="h-14 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white transition-all hover:scale-105 active:scale-95"
+            className="h-14 px-8 rounded-2xl font-bold flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white transition-all hover:scale-105 active:scale-95"
           >
             <Plus className="h-5 w-5" /> Crear Nueva Campaña
           </Button>

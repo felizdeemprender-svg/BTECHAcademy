@@ -33,7 +33,7 @@ export function CourseNavigation({
   primaryColor = '#3B2D86'
 }: CourseNavigationProps) {
   return (
-    <div className="bg-white rounded-[2rem] border shadow-xl flex flex-col h-full overflow-hidden">
+    <div className="bg-white rounded-lg border flex flex-col h-full overflow-hidden">
       {/* Header with Progress */}
       <div className="p-6 border-b space-y-4 bg-secondary/10">
         <div className="flex items-center gap-3">

@@ -130,12 +130,12 @@ export default function AdminTermsPage() {
                     value={usageContent}
                     onChange={(e) => setUsageContent(e.target.value)}
                     placeholder="Normas de convivencia, privacidad de datos..."
-                    className="min-h-[400px] rounded-2xl bg-secondary/10 border-none font-medium p-8 leading-relaxed focus:bg-white transition-all shadow-inner"
+                    className="min-h-[400px] rounded-2xl bg-secondary/10 border-none font-medium p-8 leading-relaxed focus:bg-white transition-all"
                   />
                   <Button 
                     onClick={() => handleSave('usage')} 
                     disabled={loading || !usageContent.trim()} 
-                    className="w-full h-14 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2"
+                    className="w-full h-14 rounded-2xl font-bold flex items-center justify-center gap-2"
                   >
                     {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />} Publicar Términos de Uso
                   </Button>
@@ -168,12 +168,12 @@ export default function AdminTermsPage() {
                     value={coursesContent}
                     onChange={(e) => setCoursesContent(e.target.value)}
                     placeholder="Propiedad intelectual, calidad de video, veracidad de contenidos..."
-                    className="min-h-[400px] rounded-2xl bg-secondary/10 border-none font-medium p-8 leading-relaxed focus:bg-white transition-all shadow-inner"
+                    className="min-h-[400px] rounded-2xl bg-secondary/10 border-none font-medium p-8 leading-relaxed focus:bg-white transition-all"
                   />
                   <Button 
                     onClick={() => handleSave('courses')} 
                     disabled={loading || !coursesContent.trim()} 
-                    className="w-full h-14 rounded-2xl font-bold shadow-xl bg-slate-900 flex items-center justify-center gap-2"
+                    className="w-full h-14 rounded-2xl font-bold bg-slate-900 flex items-center justify-center gap-2"
                   >
                     {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />} Publicar Términos Académicos
                   </Button>

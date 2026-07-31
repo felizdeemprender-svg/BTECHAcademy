@@ -79,6 +79,22 @@ interface TutorData {
     layoutMode?: 'light' | 'dark';
     primaryColor?: string;
   };
+  brand?: {
+    name: string;
+    palette: {
+      primary: string;
+      secondary: string;
+      accent: string;
+    };
+    typography?: {
+      headingFont?: string;
+      bodyFont?: string;
+    };
+    tokens?: {
+      themeMode?: 'light' | 'dark' | 'glass';
+    };
+  };
+  styleId?: string;
   websiteConfig?: {
     headline: string;
     subheadline: string;
@@ -87,6 +103,8 @@ interface TutorData {
     badges: { label: string; description: string }[];
     showStats: boolean;
     theme: string;
+    styleId?: string;
+    brandName?: string;
   };
 }
 
@@ -194,7 +212,7 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="max-w-2xl w-full space-y-8">
-          <Card className="border-none shadow-xl">
+          <Card className="border-none">
             <CardContent className="p-8 text-center space-y-6">
               <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
                 <AlertCircle className="h-8 w-8 text-amber-600" />
@@ -274,8 +292,13 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
     );
   }
 
-  const primaryColor = tutorData.branding?.primaryColor || '#3B2D86';
-  const isDark = tutorData.branding?.layoutMode === 'dark';
+  const primaryColor = tutorData.brand?.palette?.primary || tutorData.branding?.primaryColor || '#3B2D86';
+  const secondaryColor = tutorData.brand?.palette?.secondary || '#F1F5F9';
+  const accentColor = tutorData.brand?.palette?.accent || '#F59E0B';
+  const headingFont = tutorData.brand?.typography?.headingFont || 'inherit';
+  const bodyFont = tutorData.brand?.typography?.bodyFont || 'inherit';
+  const brandThemeMode = tutorData.brand?.tokens?.themeMode || 'light';
+  const isDark = brandThemeMode === 'dark' || brandThemeMode === 'glass' || tutorData.branding?.layoutMode === 'dark';
 
   return (
     <div 
@@ -284,11 +307,15 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
         isDark ? "bg-slate-950 text-slate-50 dark" : "bg-[#FAFAFA] text-slate-900"
       )}
       style={{
+        fontFamily: bodyFont,
         '--brand-color': primaryColor,
-        '--brand-color-alpha': `${primaryColor}20`
+        '--brand-color-alpha': `${primaryColor}20`,
+        '--brand-secondary': secondaryColor,
+        '--brand-accent': accentColor
       } as React.CSSProperties}
     >
-      <style>{`
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=${headingFont.replace(/\s+/g, '+')}&family=${bodyFont.replace(/\s+/g, '+')}&display=swap');
         ::selection { background: var(--brand-color-alpha); }
         .text-brand { color: var(--brand-color); }
         .bg-brand { background-color: var(--brand-color); }
@@ -297,6 +324,8 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
         :root {
           --brand-color-rgb: ${hexToRgb(primaryColor)};
         }
+        .font-headline { font-family: ${headingFont}, sans-serif !important; }
+        .font-body { font-family: ${bodyFont}, sans-serif !important; }
       `}</style>
       
       {/* Top Contact Bar */}
@@ -371,10 +400,10 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
             <div className="flex flex-col lg:flex-row items-center gap-12">
               <div className="relative group shrink-0">
                 <div 
-                  className="absolute -inset-4 rounded-[2.5rem] blur-2xl opacity-40 animate-pulse" 
+                  className="absolute -inset-4 rounded-lg blur-2xl opacity-40 animate-pulse" 
                   style={{ backgroundColor: primaryColor }}
                 />
-                <div className={cn("relative w-48 h-48 lg:w-64 lg:h-64 rounded-[2.5rem] overflow-hidden border-8 shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]", isDark ? "border-slate-800" : "border-white")}>
+                <div className={cn("relative w-48 h-48 lg:w-64 lg:h-64 rounded-lg overflow-hidden border-8 transition-transform duration-500 group-hover:scale-[1.02]", isDark ? "border-slate-800" : "border-white")}>
                   <Image 
                     src={tutorData.photo || `https://api.dicebear.com/7.x/adventurer/svg?seed=${tutorData.displayName || 'tutor'}`} 
                     alt={tutorData.displayName}
@@ -406,7 +435,7 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
                   <Button 
                     size="lg" 
-                    className="h-14 px-10 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 font-black text-lg shadow-2xl"
+                    className="h-14 px-10 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 font-black text-lg"
                     onClick={() => {
                       const el = document.getElementById('programas');
                       el?.scrollIntoView({ behavior: 'smooth' });
@@ -510,7 +539,7 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
             <div className="grid lg:grid-cols-3 gap-12">
               <div className="lg:col-span-2 space-y-20">
                 {/* Bio Section */}
-                <div className={cn("p-10 lg:p-16 rounded-[3.5rem] border relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-brand/5", isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-slate-100 shadow-xl shadow-slate-200/50")}>
+                <div className={cn("p-10 lg:p-16 rounded-lg border relative overflow-hidden transition-all duration-500 hover:shadow-brand/5", isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-slate-100 shadow-slate-200/50")}>
                   <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
                   <div className="space-y-2 mb-10">
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand/80">Historia & Visión</p>
@@ -538,7 +567,7 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
                         <div 
                           key={i} 
                           className={cn(
-                            "group p-8 lg:p-10 rounded-[3rem] border transition-all duration-700 hover:shadow-2xl hover:-translate-y-2 relative overflow-hidden",
+                            "group p-8 lg:p-10 rounded-lg border transition-all duration-700 hover:-translate-y-2 relative overflow-hidden",
                             isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-100 shadow-sm shadow-slate-200/40"
                           )}
                         >
@@ -627,7 +656,7 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
                     <div 
                       key={i} 
                       className={cn(
-                        "p-10 rounded-[3rem] border flex flex-col gap-6 transition-all duration-500 hover:border-brand/30 hover:bg-brand/[0.02]",
+                        "p-10 rounded-lg border flex flex-col gap-6 transition-all duration-500 hover:border-brand/30 hover:bg-brand/[0.02]",
                         isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-100 shadow-sm"
                       )}
                     >
@@ -640,7 +669,7 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
                       </div>
                     </div>
                   ))}
-                  <div className={cn("p-10 rounded-[3rem] border border-dashed border-brand/20 flex items-center justify-center text-center", isDark ? "bg-slate-900/30" : "bg-brand/5")}>
+                  <div className={cn("p-10 rounded-lg border border-dashed border-brand/20 flex items-center justify-center text-center", isDark ? "bg-slate-900/30" : "bg-brand/5")}>
                     <div className="space-y-2">
                       <Trophy className="h-10 w-10 text-brand/30 mx-auto" />
                       <p className="text-xs font-bold text-brand/50 uppercase tracking-widest">Testimonios y Casos de Éxito en Auditoría</p>

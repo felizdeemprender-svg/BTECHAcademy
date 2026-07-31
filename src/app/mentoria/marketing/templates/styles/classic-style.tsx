@@ -115,7 +115,7 @@ export const ClassicMockup = ({
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border shadow-inner">
+            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border">
               <div className="w-4 h-4 bg-blue-500 rounded" />
             </div>
             <div>
@@ -133,7 +133,7 @@ export const ClassicMockup = ({
         </div>
       </div>
       
-      <div className="relative mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white bg-slate-100 aspect-[16/10] max-w-[800px]">
+      <div className="relative mx-auto rounded-lg overflow-hidden border-8 border-white bg-slate-100 aspect-[16/10] max-w-[800px]">
         <div className="h-full w-full overflow-y-auto">
           {/* Hero Section */}
           <div className="p-8 bg-white">

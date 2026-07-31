@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useFirebase } from '@/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Save, Loader2, Video, ImageIcon, FileText, Settings, Eye, ArrowLeft, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Save, Loader2, Video, ImageIcon, FileText, Settings, Eye, ArrowLeft, Sparkles } from 'lucide-react';
 import { ImageEditor } from '@/components/courses/ImageEditor';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -18,7 +19,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { regenerateSectionV2 } from '@/ai/flows/generate-landing-v2';
 import { useAuth } from '@/components/auth-context';
-import { getLandingStyle } from '@/lib/landing-styles';
+import { buildSectionPrompt, buildContextHint, getSectionsNeedingImages } from '@/lib/landing-images';
+import { getLandingStyle, TOKEN_LABELS, TOKEN_DESCRIPTIONS, StyleTokens, StyleBrand } from '@/lib/landing-styles';
+import { BrandVisual } from '@/components/landing/brand-visual';
 
 export default function V2LandingEditorPage() {
   const { id } = useParams() as { id: string };
@@ -26,10 +29,13 @@ export default function V2LandingEditorPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const { profile } = useAuth();
+  const { storage } = useFirebase();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [imageGenProgress, setImageGenProgress] = useState('');
   const [landingData, setLandingData] = useState<any>(null);
   const [styleData, setStyleData] = useState<any>(null);
   const [courseData, setCourseData] = useState<any>(null);
@@ -45,16 +51,35 @@ export default function V2LandingEditorPage() {
           setLandingData(data);
           
           const currentStyleId = data.styleId || 'classic'; // Fallback a classic
+          let loadedStyle: any = null;
           if (currentStyleId) {
-            const staticStyle = getLandingStyle(currentStyleId);
-            if (staticStyle) {
-              setStyleData(staticStyle);
+            // Firestore es la fuente de verdad (los admins editan estilos ahí).
+            // Si no existe en Firestore, se usa el estático como fallback.
+            const styleSnap = await getDoc(doc(db, 'landingStyles', currentStyleId));
+            if (styleSnap.exists()) {
+              loadedStyle = styleSnap.data();
+              setStyleData(loadedStyle);
             } else {
-              const styleSnap = await getDoc(doc(db, 'landingStyles', currentStyleId));
-              if (styleSnap.exists()) {
-                setStyleData(styleSnap.data());
+              const staticStyle = getLandingStyle(currentStyleId);
+              if (staticStyle) {
+                loadedStyle = staticStyle;
+                setStyleData(staticStyle);
               }
             }
+          }
+
+          // Si la landing no tiene styleTokens propios, copiar los del estilo
+          if (loadedStyle?.tokens && !data.content?.designTokens?.styleTokens) {
+            setLandingData((prev: any) => ({
+              ...prev,
+              content: {
+                ...(prev.content || {}),
+                designTokens: {
+                  ...(prev.content?.designTokens || {}),
+                  styleTokens: { ...loadedStyle.tokens }
+                }
+              }
+            }));
           }
 
           if (data.courseId) {
@@ -140,6 +165,86 @@ export default function V2LandingEditorPage() {
     }
   };
 
+  const handleGenerateAllImages = async () => {
+    if (!landingData?.content?.sections || !courseData || !storage) return;
+    setIsGeneratingImages(true);
+    try {
+      const pendingSections = getSectionsNeedingImages(landingData.content.sections, styleData);
+      if (pendingSections.length === 0) {
+        toast({ title: 'Sin imágenes pendientes', description: 'Todas las secciones ya tienen imagen.' });
+        return;
+      }
+
+      const ctx = {
+        styleName: styleData?.name || 'Classic',
+        styleDescription: styleData?.description || '',
+        palette: {
+          primary: landingData.content.designTokens?.primary || '#3B2D86',
+          accent: landingData.content.designTokens?.accent || '#FACC15',
+          secondary: landingData.content.designTokens?.secondary || '#F8FAFC',
+        },
+        courseTitle: courseData.title,
+      };
+
+      const updatedSections = [...landingData.content.sections];
+
+      for (let i = 0; i < pendingSections.length; i++) {
+        const sec = pendingSections[i];
+        setImageGenProgress(`${i + 1}/${pendingSections.length}: ${sec.baseType}`);
+
+        const prompt = buildSectionPrompt(sec, ctx);
+        const contextHint = buildContextHint(sec, ctx);
+        const keywords = sec.title || sec.content || sec.baseType;
+
+        const res = await fetch('/api/ai/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: '',
+            keywords,
+            courseTitle: ctx.courseTitle,
+            contextHint,
+            engine: 'free',
+            channel: 'landing',
+          }),
+        });
+
+        if (!res.ok) {
+          console.warn(`[Images] Failed section ${sec.id}: ${res.status}`);
+          continue;
+        }
+
+        const data = await res.json();
+        if (!data.imageDataUrl) {
+          console.warn(`[Images] No image data for ${sec.id}`);
+          continue;
+        }
+
+        const storagePath = `campaigns/${landingData.courseId}/landing/ai_${sec.id}_${Date.now()}.jpg`;
+        const sRef = ref(storage, storagePath);
+        await uploadString(sRef, data.imageDataUrl, 'data_url');
+        const downloadUrl = await getDownloadURL(sRef);
+
+        const idx = updatedSections.findIndex((s: any) => s.id === sec.id);
+        if (idx >= 0) {
+          updatedSections[idx] = { ...updatedSections[idx], imageUrl: downloadUrl };
+        }
+      }
+
+      setLandingData({
+        ...landingData,
+        content: { ...landingData.content, sections: updatedSections },
+      });
+
+      toast({ title: 'Imágenes generadas', description: `Se procesaron ${pendingSections.length} secciones.` });
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
+    } finally {
+      setIsGeneratingImages(false);
+      setImageGenProgress('');
+    }
+  };
+
   const updateActiveSection = (updates: any) => {
     if (!landingData || !activeSectionId) return;
     const sections = [...(landingData.content?.sections || [])];
@@ -171,6 +276,17 @@ export default function V2LandingEditorPage() {
     }));
   };
 
+  const applyBrand = (brand: StyleBrand) => {
+    updateDesignTokens({
+      styleTokens: { ...brand.tokens },
+      typography: brand.typography,
+      primary: brand.palette.primary,
+      secondary: brand.palette.secondary,
+      accent: brand.palette.accent,
+      brandApplied: brand.name
+    });
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -182,6 +298,13 @@ export default function V2LandingEditorPage() {
   }
 
   const activeSection = landingData?.content?.sections?.find((s: any) => s.id === activeSectionId) || (activeSectionId === 'footer_0' ? { id: 'footer_0', title: 'Sígueme en mis Redes', content: '', bullets: [] } : undefined);
+
+  const brands = styleData?.brands || [];
+  const appliedBrandName = landingData?.content?.designTokens?.brandApplied;
+  const activeBrand: StyleBrand | undefined =
+    (appliedBrandName && brands.find((b: StyleBrand) => b.name === appliedBrandName)) ||
+    brands.find((b: StyleBrand) => b.palette?.primary === landingData?.content?.designTokens?.primary && b.typography?.name === landingData?.content?.designTokens?.typography?.name) ||
+    undefined;
 
   return (
     <DashboardLayout>
@@ -197,6 +320,15 @@ export default function V2LandingEditorPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              onClick={handleGenerateAllImages}
+              disabled={isGeneratingImages}
+              variant="outline"
+              className="rounded-full font-bold border-violet-300 text-violet-600 hover:bg-violet-50"
+            >
+              {isGeneratingImages ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ImageIcon className="w-4 h-4 mr-2" />}
+              {isGeneratingImages ? imageGenProgress || 'Generando...' : 'Generar Imágenes'}
+            </Button>
             <Button variant="outline" onClick={() => window.open(`/v/${id}`, '_blank')} className="rounded-full font-bold">
               <Eye className="w-4 h-4 mr-2" />
               Previsualizar
@@ -301,64 +433,54 @@ export default function V2LandingEditorPage() {
                 <div className="max-w-2xl space-y-6">
                   {activeSectionId === 'global_settings' ? (
                     <div className="space-y-8">
-                      {/* COLORES */}
+                      {/* BRANDS */}
                       <div className="space-y-4">
-                        <Label className="text-lg font-bold text-slate-800">Paleta de Colores</Label>
-                        <p className="text-sm text-muted-foreground">Selecciona la paleta principal recomendada para este estilo.</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {styleData?.colorProposals?.map((palette: any, i: number) => {
-                            const isSelected = landingData?.content?.designTokens?.primary === palette.primary;
-                            return (
-                              <div 
-                                key={i}
-                                onClick={() => updateDesignTokens({ primary: palette.primary, secondary: palette.secondary, accent: palette.accent })}
-                                className={cn(
-                                  "p-4 rounded-xl border-2 cursor-pointer transition-all hover:scale-[1.02] relative",
-                                  isSelected ? "border-primary bg-primary/5 shadow-md" : "border-slate-200 bg-white"
-                                )}
-                              >
-                                {isSelected && (
-                                  <div className="absolute top-4 right-4 text-primary">
-                                    <CheckCircle2 className="w-5 h-5 fill-primary text-white" />
-                                  </div>
-                                )}
-                                <div className="font-bold text-slate-700 mb-3 pr-8">{palette.name}</div>
-                                <div className="flex gap-2 h-8">
-                                  <div className="w-1/3 rounded-md shadow-sm" style={{ backgroundColor: palette.primary }} title="Primario"></div>
-                                  <div className="w-1/3 rounded-md shadow-sm border border-black/10" style={{ backgroundColor: palette.secondary }} title="Secundario"></div>
-                                  <div className="w-1/3 rounded-md shadow-sm" style={{ backgroundColor: palette.accent }} title="Acento"></div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                        <Label className="text-lg font-bold text-slate-800">Brand Visual</Label>
+                        <p className="text-sm text-muted-foreground">Pack completo: tokens + tipografía + paleta. El brand activo es el que aplica la landing; seleccioná uno para ver su gama completa.</p>
+                        <BrandVisual
+                          brands={brands}
+                          activeName={activeBrand?.name}
+                          onSelect={applyBrand}
+                        />
                       </div>
 
-                      {/* FUENTES */}
+                      {/* TOKENS CSS */}
                       <div className="space-y-4 pt-6 border-t border-slate-100">
-                        <Label className="text-lg font-bold text-slate-800">Tipografía</Label>
-                        <p className="text-sm text-muted-foreground">Selecciona las familias de fuentes para encabezados y textos.</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {styleData?.typography?.map((fontInfo: any, i: number) => {
-                            const isSelected = landingData?.content?.designTokens?.typography?.name === fontInfo.name;
+                        <div className="flex items-center justify-between">
+                          <Label className="text-lg font-bold text-slate-800">Tokens CSS</Label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-slate-400 hover:text-slate-600"
+                            onClick={() => {
+                              const updated = { ...landingData };
+                              if (activeBrand) {
+                                updated.content.designTokens.styleTokens = { ...activeBrand.tokens };
+                              } else if (updated.content?.designTokens?.styleTokens) {
+                                delete updated.content.designTokens.styleTokens;
+                              }
+                              setLandingData(updated);
+                            }}
+                          >
+                            Restaurar valores del estilo
+                          </Button>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Valores del brand activo. Se aplican al renderizar la landing; para cambiarlos, seleccioná otro brand arriba.</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {styleData?.tokens && Object.entries(TOKEN_LABELS).map(([key, label]) => {
+                            const tokenKey = key as keyof StyleTokens;
+                            const styleVal = styleData.tokens[tokenKey];
+                            const overrideVal = landingData?.content?.designTokens?.styleTokens?.[tokenKey];
+                            const currentVal = overrideVal ?? styleVal;
                             return (
-                              <div 
-                                key={i}
-                                onClick={() => updateDesignTokens({ typography: fontInfo })}
-                                className={cn(
-                                  "p-4 rounded-xl border-2 cursor-pointer transition-all relative",
-                                  isSelected ? "border-primary bg-primary/5 shadow-md" : "border-slate-200 bg-white"
-                                )}
-                              >
-                                {isSelected && (
-                                  <div className="absolute top-4 right-4 text-primary">
-                                    <CheckCircle2 className="w-5 h-5 fill-primary text-white" />
-                                  </div>
-                                )}
-                                <div className="font-bold text-slate-700 mb-2 pr-8">{fontInfo.name}</div>
-                                <div className="text-sm space-y-1">
-                                  <div><span className="font-semibold text-slate-500">Títulos:</span> {fontInfo.headingFont}</div>
-                                  <div><span className="font-semibold text-slate-500">Cuerpo:</span> {fontInfo.bodyFont}</div>
+                              <div key={key} className="space-y-1">
+                                <label className="text-xs font-medium text-slate-600">{label}</label>
+                                <div
+                                  className="flex h-8 w-full items-center rounded-md border border-input bg-slate-50 px-3 py-1 text-xs font-mono text-slate-700"
+                                  title={TOKEN_DESCRIPTIONS[tokenKey]}
+                                >
+                                  {currentVal}
                                 </div>
                               </div>
                             );

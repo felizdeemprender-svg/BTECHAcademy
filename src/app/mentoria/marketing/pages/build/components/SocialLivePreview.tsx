@@ -99,7 +99,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
 
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border shadow-inner">
+          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border">
             <PlatformIcon platform={social.platform || 'Instagram'} className="h-4 w-4 text-slate-500" />
           </div>
           <div>
@@ -111,15 +111,15 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
       </div>
 
       <div className={cn(
-          "relative mx-auto rounded-[3.5rem] overflow-hidden shadow-2xl border-[12px] border-white bg-slate-100 transition-all duration-500 group/mockup",
+          "relative mx-auto rounded-lg overflow-hidden border-[12px] border-white bg-slate-100 transition-all duration-500 group/mockup",
           isVertical ? "aspect-[9/16] w-full max-w-[320px]" : 
           isPortrait ? "aspect-[4/5] w-full max-w-[360px]" : "aspect-square w-full"
         )}
       >
         {isCarousel && (
           <>
-            <div className="absolute inset-0 translate-x-3 translate-y-3 bg-slate-200 rounded-[2rem] z-0 shadow-sm border border-slate-300" />
-            <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 bg-slate-300 rounded-[2rem] z-0 shadow-sm border border-slate-400" />
+            <div className="absolute inset-0 translate-x-3 translate-y-3 bg-slate-200 rounded-lg z-0 shadow-sm border border-slate-300" />
+            <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 bg-slate-300 rounded-lg z-0 shadow-sm border border-slate-400" />
           </>
         )}
 
@@ -218,7 +218,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
             <div 
               key={`${currentSlideIdx}-${segmentKey}`}
               className={cn(
-                "p-6 rounded-3xl flex flex-col items-center justify-center min-h-[140px] shadow-2xl transition-all duration-500",
+                "p-6 rounded-3xl flex flex-col items-center justify-center min-h-[140px] transition-all duration-500",
                 activeRules.animation === 'typewriter' ? "animate-typewriter" : 
                 activeRules.animation === 'kinetic_in' ? "animate-kinetic" :
                 activeRules.animation === 'slide_in' ? "animate-slide-custom" : "animate-in fade-in duration-700"
@@ -262,7 +262,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
                 <span className="text-[8px] font-bold uppercase tracking-widest opacity-80 drop-shadow-md">@{social.handle || 'tu_cuenta'}</span>
               </div>
               <button 
-                className="h-9 px-5 rounded-2xl text-[10px] font-black uppercase shadow-2xl truncate max-w-[150px] transition-transform hover:scale-105 active:scale-95" 
+                className="h-9 px-5 rounded-2xl text-[10px] font-black uppercase truncate max-w-[150px] transition-transform hover:scale-105 active:scale-95" 
                 style={{ 
                     backgroundColor: tokens?.accent || '#8b5cf6',
                     color: '#fff'
@@ -275,7 +275,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         </div>
       </div>
       
-      <div className="p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-xl text-sm text-slate-600 line-clamp-4 leading-relaxed relative overflow-hidden transition-all hover:shadow-2xl">
+      <div className="p-8 rounded-lg bg-white border border-slate-100 text-sm text-slate-600 line-clamp-4 leading-relaxed relative overflow-hidden transition-all">
         <div className="absolute left-0 top-0 w-1.5 h-full bg-slate-100" />
         <span className="font-bold text-slate-900 mr-2">@{social.handle || 'tu_cuenta'}</span>
         {social.caption || 'Aquí irá el cuerpo de la publicación...'}

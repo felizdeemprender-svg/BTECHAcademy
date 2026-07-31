@@ -39,11 +39,11 @@
     --ring: 330 80% 60%;
     --radius: 0.5rem;
 
-    /* Card tokens */
-    --card-radius: 2.5rem;
+    /* Card tokens (editorial-plano) */
+    --card-radius: 0.75rem;
     --card-bg: #ffffff;
-    --card-shadow: 0 20px 60px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.03);
-    --card-border: none;
+    --card-shadow: none;
+    --card-border: 1px solid var(--border);
     --card-bg-muted: oklch(98.5% 0 0 / 0.5);
 
     /* Modal tokens */

@@ -1,10 +1,12 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
-import { useFirestore, useFirebase } from '@/firebase';
+import { useFirestore, useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, getDocs, query, where, collection } from 'firebase/firestore';
+import { LandingStyle, StyleBrand, resolveStyleBrand } from '@/lib/landing-styles';
+import { parseBrandFile } from '@/lib/landing-styles/dtcg';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +40,6 @@ import {
   Zap,
   Layers,
   CheckCircle2,
-  Maximize,
   Layout,
   LayoutDashboard,
   Shield,
@@ -105,8 +106,12 @@ export default function SettingsPage() {
       ] as { titulo: string; descripcion: string }[],
       badges: [] as { label: string; description: string }[],
       showStats: true,
-      theme: 'professional-light'
-    }
+      theme: 'professional-light',
+      styleId: '',
+      brandName: ''
+    },
+    myBrands: [] as StyleBrand[],
+    activeBrandName: ''
   });
   const [origin, setOrigin] = useState('');
 
@@ -154,8 +159,12 @@ export default function SettingsPage() {
             description: b.description || ''
           })),
           showStats: config?.showStats ?? true,
-          theme: config?.theme || 'professional-light'
-        }
+          theme: config?.theme || 'professional-light',
+          styleId: config?.styleId || '',
+          brandName: config?.brandName || ''
+        },
+        myBrands: profile.profile?.brands || [],
+        activeBrandName: profile.profile?.activeBrandName || ''
       });
       hasLoadedProfile.current = true;
     }
@@ -199,6 +208,7 @@ export default function SettingsPage() {
       setFormData(prev => ({
         ...prev,
         websiteConfig: {
+          ...prev.websiteConfig,
           headline: data.headline || '',
           subheadline: data.subheadline || '',
           mission: data.mission || '',
@@ -277,10 +287,12 @@ export default function SettingsPage() {
           calendly: formData.calendly,
         },
         branding: {
-          primaryColor: formData.primaryColor,
+          primaryColor: activeBrand?.palette?.primary || formData.primaryColor,
           logoUrl: formData.logoUrl,
-          layoutMode: formData.layoutMode,
+          layoutMode: activeBrand?.tokens?.themeMode === 'dark' || activeBrand?.tokens?.themeMode === 'glass' ? 'dark' : formData.layoutMode,
         },
+        brands: formData.myBrands,
+        activeBrandName: formData.activeBrandName,
         publicProfile: {
           enabled: formData.publicProfileEnabled
         },
@@ -331,6 +343,57 @@ export default function SettingsPage() {
     toast({ title: `${type === 'avatar' ? 'Foto de perfil' : 'Logo'} marcado para eliminación` });
   };
 
+  const brandFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBrandFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const result = parseBrandFile(String(reader.result || ''));
+        if (result.errors.length > 0) {
+          toast({ variant: 'destructive', title: 'Brand inválido', description: result.errors[0] });
+          return;
+        }
+        setFormData(prev => {
+          const existing = new Set(prev.myBrands.map(b => b.name));
+          const newBrands = result.brands.filter(b => !existing.has(b.name));
+          if (newBrands.length === 0) {
+            toast({ title: 'Sin cambios', description: 'Ese brand ya está cargado.' });
+            return prev;
+          }
+          toast({ title: `${newBrands.length} brand(s) cargado(s)`, description: newBrands.map(b => b.name).join(', ') });
+          return {
+            ...prev,
+            myBrands: [...prev.myBrands, ...newBrands],
+            activeBrandName: prev.activeBrandName || newBrands[0].name
+          };
+        });
+      } catch (err: any) {
+        toast({ variant: 'destructive', title: 'Error de parsing', description: err?.message || 'JSON inválido' });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleActivateBrand = (name: string) => {
+    setFormData(prev => ({ ...prev, activeBrandName: name }));
+    toast({ title: `Brand activo: ${name}` });
+  };
+
+  const handleRemoveBrand = (name: string) => {
+    setFormData(prev => {
+      const myBrands = prev.myBrands.filter(b => b.name !== name);
+      const activeBrandName = prev.activeBrandName === name
+        ? (myBrands[0]?.name || '')
+        : prev.activeBrandName;
+      return { ...prev, myBrands, activeBrandName };
+    });
+    toast({ title: 'Brand eliminado' });
+  };
+
   const sub = profile?.subscription;
   
   const safeDate = (dateVal: any) => {
@@ -352,6 +415,16 @@ export default function SettingsPage() {
   
   const isMentorOrAdmin = profile?.roles?.some((role: string) => role === 'mentor' || role === 'admin');
   const previewUsername = formData.username || profile?.username;
+
+  const stylesQuery = useMemoFirebase(() => db ? query(collection(db, 'landingStyles')) : null, [db]);
+  const { data: landingStyles } = useCollection<LandingStyle>(stylesQuery);
+
+  const selectedStyle = landingStyles?.find(s => s.id === formData.websiteConfig.styleId) || null;
+
+  const activeOwnBrand = formData.myBrands.find(b => b.name === formData.activeBrandName) || formData.myBrands[0] || null;
+  const systemBrand = resolveStyleBrand(selectedStyle as any) || landingStyles?.find(s => s.id === 'classic')?.brands?.[0] || null;
+  const activeBrand = activeOwnBrand || systemBrand;
+
   const RESERVED_PATHS = [
     'admin', 'api', 'auth', 'courses', 'dashboard', 'mentoria', 
     'my-courses', 'seguimientos', 'settings', 'tasks', 'v', 
@@ -391,10 +464,10 @@ export default function SettingsPage() {
       <div className="max-w-5xl mx-auto space-y-8 pb-20">
         <header><h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Configuración</h1></header>
 
-        <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden">
+        <Card className="border-none rounded-lg bg-white overflow-hidden">
           <div className="p-10 bg-primary/5 flex flex-col md:flex-row items-center gap-10 border-b">
             <div className="relative">
-              <Avatar className="w-32 h-32 border-4 border-white shadow-2xl">
+              <Avatar className="w-32 h-32 border-4 border-white">
                 <AvatarImage src={formData.photoURL || undefined} />
                 <AvatarFallback className="text-3xl font-bold">{formData.displayName?.[0]}</AvatarFallback>
               </Avatar>
@@ -468,12 +541,12 @@ export default function SettingsPage() {
                       name="bio"
                       value={formData.bio || ''} 
                       onChange={e => setFormData({...formData, bio: e.target.value})} 
-                      className="min-h-[200px] rounded-[2rem] bg-secondary/10 border-none p-8 text-base leading-relaxed" 
+                      className="min-h-[200px] rounded-lg bg-secondary/10 border-none p-8 text-base leading-relaxed" 
                     />
                   </div>
                   <div className="flex items-center justify-between p-6 bg-secondary/5 rounded-3xl border border-primary/5 shadow-sm">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
                         <ShieldCheck className="h-6 w-6" />
                       </div>
                       <div>
@@ -509,7 +582,7 @@ export default function SettingsPage() {
                     {formData.username ? (
                       <div className="p-6 bg-white rounded-3xl border border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
+                          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                             <Globe className="h-6 w-6" />
                           </div>
                           <div>
@@ -551,7 +624,7 @@ export default function SettingsPage() {
 
               <TabsContent value="web" className="m-0 space-y-10">
                 {/* Cabecera de Generación IA */}
-                <div className="relative overflow-hidden p-8 rounded-[2rem] bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-2xl">
+                <div className="relative overflow-hidden p-8 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-700 text-white">
                   <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="space-y-2 text-center md:text-left">
                       <h3 className="text-2xl font-black flex items-center justify-center md:justify-start gap-2">
@@ -564,7 +637,7 @@ export default function SettingsPage() {
                     <Button 
                       onClick={handleGenerateWeb}
                       disabled={isGeneratingWeb}
-                      className="h-16 px-10 rounded-2xl bg-white text-indigo-600 hover:bg-indigo-50 font-black text-lg shadow-xl transition-all hover:scale-105 active:scale-95 group"
+                      className="h-16 px-10 rounded-2xl bg-white text-indigo-600 hover:bg-indigo-50 font-black text-lg transition-all hover:scale-105 active:scale-95 group"
                     >
                       {isGeneratingWeb ? (
                         <Loader2 className="animate-spin mr-2 h-6 w-6" />
@@ -631,7 +704,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="grid md:grid-cols-3 gap-6">
                         {formData.websiteConfig.pilares.map((pilar, idx) => (
-                          <div key={idx} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
+                          <div key={idx} className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm space-y-4">
                             <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-xs">
                               {idx + 1}
                             </div>
@@ -756,7 +829,7 @@ export default function SettingsPage() {
 
                 {!formData.websiteConfig.headline && (
                   <div className="py-20 text-center space-y-6">
-                    <div className="w-24 h-24 rounded-[2.5rem] bg-slate-100 flex items-center justify-center mx-auto text-slate-300">
+                    <div className="w-24 h-24 rounded-lg bg-slate-100 flex items-center justify-center mx-auto text-slate-300">
                       <LayoutDashboard className="h-12 w-12" />
                     </div>
                     <div className="space-y-2">
@@ -832,74 +905,108 @@ export default function SettingsPage() {
 
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color Primario Institucional</Label>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-[10px] font-bold uppercase tracking-tighter"
-                          onClick={() => setFormData({...formData, primaryColor: '#3B2D86'})}
-                        >
-                          <Zap className="h-3 w-3 mr-1" /> Usar Color del Sistema
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mis brands (web personal)</Label>
+                        <Button variant="outline" size="sm" className="rounded-full font-bold" onClick={() => brandFileInputRef.current?.click()}>
+                          <Upload className="h-4 w-4 mr-1.5" /> Cargar brand (.json)
                         </Button>
+                        <input type="file" ref={brandFileInputRef} className="hidden" accept=".json,application/json" onChange={handleBrandFile} />
                       </div>
-                      <div className="flex flex-col sm:flex-row items-center gap-8 bg-secondary/10 p-6 rounded-3xl">
-                        <div className="relative">
-                          <input 
-                            type="color" 
-                            value={formData.primaryColor || '#3B2D86'} 
-                            onChange={e => setFormData({...formData, primaryColor: e.target.value})}
-                            className="w-24 h-24 rounded-3xl p-0 border-none cursor-pointer overflow-hidden shadow-xl ring-4 ring-white"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <Maximize className="h-6 w-6 text-white mix-blend-difference opacity-50" />
-                          </div>
+                      <p className="text-xs text-slate-500 -mt-3">
+                        Tus brands son privados y solo se usan en tu página personal. Formato DTCG/W3C o el formato del sistema.
+                      </p>
+                      {formData.myBrands.length > 0 ? (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {formData.myBrands.map((brand) => {
+                            const isActive = formData.activeBrandName === brand.name;
+                            return (
+                              <div
+                                key={brand.name}
+                                className={cn(
+                                  "border-2 rounded-xl p-4 transition-all",
+                                  isActive ? "border-emerald-400 bg-emerald-50/60" : "border-slate-200 bg-white"
+                                )}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex -space-x-1.5">
+                                    <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-30" style={{ backgroundColor: brand.palette.primary }} />
+                                    <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-20" style={{ backgroundColor: brand.palette.secondary }} />
+                                    <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-10" style={{ backgroundColor: brand.palette.accent }} />
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleActivateBrand(brand.name)}
+                                      disabled={isActive}
+                                      className={cn(
+                                        "text-[10px] font-black uppercase tracking-widest rounded-full px-2.5 py-1 transition-colors",
+                                        isActive
+                                          ? "bg-emerald-500 text-white cursor-default"
+                                          : "bg-slate-100 text-slate-500 hover:bg-emerald-100 hover:text-emerald-700"
+                                      )}
+                                    >
+                                      {isActive ? 'Activo' : 'Activar'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveBrand(brand.name)}
+                                      className="text-[10px] font-black text-slate-300 hover:text-red-500 transition-colors px-1"
+                                      title="Eliminar brand"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                                <p className="font-bold text-sm text-slate-800 mt-2">{brand.name}</p>
+                                <p className="text-[10px] text-slate-500 truncate">{brand.description || 'Sin descripción'}</p>
+                                <p className="text-[10px] font-mono text-slate-400 mt-1">
+                                  {brand.typography?.headingFont} · {brand.palette.primary} · modo {brand.tokens?.themeMode}
+                                </p>
+                              </div>
+                            );
+                          })}
                         </div>
-                        <div className="flex-1 space-y-4">
-                          <Input 
-                            value={formData.primaryColor || ''} 
-                            onChange={e => setFormData({...formData, primaryColor: e.target.value})}
-                            className="text-2xl font-mono font-bold text-center bg-white border-none shadow-sm"
-                           size="xl" />
-                          <div className="flex gap-2">
-                             {['#3B2D86', '#4F46E5', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444'].map(color => (
-                               <button 
-                                 key={color}
-                                 type="button"
-                                 className="w-8 h-8 rounded-full border-2 border-white shadow-sm transition-transform hover:scale-125"
-                                 style={{ backgroundColor: color }}
-                                 onClick={() => setFormData({...formData, primaryColor: color})}
-                               />
-                             ))}
-                          </div>
-                        </div>
-                      </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => brandFileInputRef.current?.click()}
+                          className="w-full border-2 border-dashed border-slate-300 bg-slate-50 rounded-2xl p-8 text-center hover:border-primary hover:text-primary transition-colors"
+                        >
+                          <Upload className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                          <p className="font-bold text-slate-500">No tenés brands cargados</p>
+                          <p className="text-xs text-slate-400 mt-1">Cargá un archivo .json (DTCG/W3C) para tu web personal.</p>
+                        </button>
+                      )}
                     </div>
+
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tema Visual de Landing Page</Label>
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Brand del sistema</Label>
                       </div>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div 
-                          className={cn("cursor-pointer border-2 rounded-2xl p-6 transition-all", formData.layoutMode === 'light' ? "border-primary bg-primary/5" : "border-slate-200 bg-white hover:border-slate-300")}
-                          onClick={() => setFormData({...formData, layoutMode: 'light'})}
-                        >
-                          <div className="h-24 rounded-lg bg-[#FAFAFA] border border-slate-200 mb-4 flex flex-col p-3 shadow-inner">
-                            <div className="w-full h-8 bg-slate-200 rounded animate-pulse" />
-                            <div className="w-1/2 h-3 bg-slate-300 rounded mt-auto" />
+                      {activeOwnBrand ? (
+                        <p className="text-xs text-slate-500">
+                          Tu brand activo <span className="font-bold">{formData.activeBrandName || activeOwnBrand.name}</span> tiene prioridad sobre el del sistema.
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-500">
+                          Sin brands propios, tu web usa el brand activo del sistema ({systemBrand?.name || 'Classic'}). No se pueden elegir otros.
+                        </p>
+                      )}
+                      {systemBrand && (
+                        <div className="border-2 border-slate-200 bg-white rounded-xl px-4 py-3 flex items-center gap-4">
+                          <div className="flex -space-x-1.5">
+                            <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-30" style={{ backgroundColor: systemBrand.palette.primary }} />
+                            <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-20" style={{ backgroundColor: systemBrand.palette.secondary }} />
+                            <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-10" style={{ backgroundColor: systemBrand.palette.accent }} />
                           </div>
-                          <p className="font-bold text-center text-slate-800">Modo Claro</p>
-                        </div>
-                        <div 
-                          className={cn("cursor-pointer border-2 rounded-2xl p-6 transition-all", formData.layoutMode === 'dark' ? "border-primary bg-primary/5" : "border-slate-200 bg-white hover:border-slate-300")}
-                          onClick={() => setFormData({...formData, layoutMode: 'dark'})}
-                        >
-                          <div className="h-24 rounded-lg bg-slate-950 border border-slate-800 mb-4 flex flex-col p-3 shadow-inner">
-                            <div className="w-full h-8 bg-slate-800 rounded animate-pulse" />
-                            <div className="w-1/2 h-3 bg-slate-700 rounded mt-auto" />
+                          <div className="flex-1">
+                            <p className="font-bold text-xs text-slate-800">{systemBrand.name}</p>
+                            <p className="text-[10px] text-slate-400">Brand activo del sistema · usado por la plataforma</p>
                           </div>
-                          <p className="font-bold text-center text-slate-800">Modo Oscuro</p>
+                          <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                            Fijo
+                          </Badge>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </TabsContent>
                 </>
@@ -909,7 +1016,7 @@ export default function SettingsPage() {
                 <Button 
                   onClick={handleSave} 
                   disabled={loading} 
-                  className="h-20 px-16 rounded-[2rem] text-2xl font-bold bg-primary shadow-3xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-20 px-16 rounded-lg text-2xl font-bold bg-primary transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {loading ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <Save className="h-8 w-8 mr-3" />} Guardar Cambios
                 </Button>

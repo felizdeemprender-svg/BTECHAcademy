@@ -14,6 +14,7 @@ const EvoAssistantInputSchema = z.object({
   userDisplayName: z.string().optional().describe('Nombre visible del usuario.'),
   userEmail: z.string().optional().describe('Correo del usuario.'),
   permissions: z.array(z.string()).optional().describe('Lista de permisos o capacidades relevantes del usuario.'),
+  userObjects: z.string().optional().describe('Resumen de objetos del usuario (cursos, progreso, pendientes) para dar respuestas contextuales.'),
 });
 
 export type EvoAssistantInput = z.infer<typeof EvoAssistantInputSchema>;
@@ -43,6 +44,10 @@ Contexto del usuario:
 - Nombre: {{#if userDisplayName}}{{{userDisplayName}}}{{else}}Usuario{{/if}}
 - Correo: {{#if userEmail}}{{{userEmail}}}{{else}}No disponible{{/if}}
 - Permisos relevantes: {{#if permissions}}{{{permissions}}}{{else}}Sin permisos especiales{{/if}}
+{{#if userObjects}}
+Objetos del usuario:
+{{{userObjects}}}
+{{/if}}
 
 Pregunta del usuario:
 {{{message}}}

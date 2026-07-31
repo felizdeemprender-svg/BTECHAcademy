@@ -157,7 +157,7 @@ export default function AdminModerationPage() {
             >
               <Sparkles className="h-5 w-5" /> Sugerencias IA
             </Button>
-            <Button onClick={handleSaveModeration} disabled={loading} className="h-14 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2">
+            <Button onClick={handleSaveModeration} disabled={loading} className="h-14 px-8 rounded-2xl font-bold flex items-center gap-2">
               {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />} Guardar Protocolo
             </Button>
           </div>
@@ -209,7 +209,7 @@ export default function AdminModerationPage() {
               <div className="flex flex-wrap gap-3">
                 {topics.length === 0 ? (
                   <div className="w-full space-y-6">
-                    <div className="w-full py-12 text-center border-2 border-dashed rounded-[2rem] bg-amber-50/30 border-amber-200">
+                    <div className="w-full py-12 text-center border-2 border-dashed rounded-lg bg-amber-50/30 border-amber-200">
                       <BrainCircuit className="h-10 w-10 text-amber-500/40 mx-auto mb-3" />
                       <p className="text-amber-800 font-bold text-sm px-10 uppercase">Modo Proactivo Activado</p>
                       <p className="text-[10px] text-amber-600 font-medium px-10 mt-1 uppercase tracking-tighter">Al no haber una lista manual, Gemini aplicará automáticamente los siguientes criterios de vigilancia ética:</p>
@@ -332,7 +332,7 @@ export default function AdminModerationPage() {
                   {selectedSuggestions.length > 0 && (
                     <Button 
                       onClick={handleApplyAiSelection} 
-                      className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl bg-slate-900"
+                      className="w-full h-14 rounded-2xl font-bold text-lg bg-slate-900"
                     >
                       <Check className="mr-2 h-5 w-5" /> 
                       Incorporar {selectedSuggestions.length} Temas al Protocolo

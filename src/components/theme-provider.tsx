@@ -237,7 +237,7 @@ function loadFromCache(): any | null {
 
 const DEFAULT_THEME: ThemeConfig = {
   primaryColor: '#3B2D86',
-  secondaryColor: '#6366f1',
+  secondaryColor: '#3B2D86',
   accentColor: '#ec4899',
   themeType: 'institucional',
   logoType: 'arc'
@@ -304,7 +304,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
       setTheme({
         primaryColor: config.primaryColor || '#3B2D86',
-        secondaryColor: config.secondaryColor || '#6366f1',
+        secondaryColor: config.secondaryColor || '#3B2D86',
         accentColor: config.accentColor || '#ec4899',
         themeType: config.themeType || 'institucional',
         logoType: config.logoType || 'arc',

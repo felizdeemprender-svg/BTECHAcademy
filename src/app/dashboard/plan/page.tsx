@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 export const dynamic = 'force-dynamic';
 
@@ -309,7 +309,7 @@ function PlanContentInner() {
             </div>
 
             {/* Nueva Tarjeta de Créditos IA */}
-            <Card className="md:col-span-3 border-none shadow-xl rounded-[3rem] bg-white p-10 overflow-hidden relative">
+            <Card className="md:col-span-3 rounded-lg bg-white p-10 overflow-hidden relative">
               <div className="absolute top-0 right-0 p-10 opacity-5">
                 <Sparkles className="w-40 h-40" />
               </div>
@@ -347,7 +347,7 @@ function PlanContentInner() {
                   {currentPlan?.rechargeOptions?.some((opt: any) => opt.credits > 0 && opt.price > 0) && (
                     <Button 
                       onClick={() => document.getElementById('credits-section')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="h-14 px-8 rounded-2xl font-bold bg-slate-900 text-white shadow-xl hover:scale-105 transition-all"
+                      className="h-14 px-8 rounded-2xl font-bold bg-slate-900 text-white hover:scale-105 transition-all"
                     >
                       Comprar Créditos
                     </Button>
@@ -421,7 +421,7 @@ function PlanContentInner() {
                   .map((opt: any, idx: number) => (
                     <Card 
                       key={idx}
-                      className="group relative p-8 transition-all hover:-translate-y-2 hover:shadow-2xl"
+                      className="group relative p-8 transition-all hover:-translate-y-2"
                     >
                       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Sparkles className="w-20 h-20" />
@@ -472,7 +472,7 @@ function PlanContentInner() {
                   <Card 
                     key={plan.id}
                     className={cn(
-                      "relative flex flex-col h-full border-none shadow-2xl rounded-[3rem] transition-all duration-500 hover:-translate-y-2 overflow-hidden",
+                      "relative flex flex-col h-full border-none rounded-lg transition-all duration-500 hover:-translate-y-2 overflow-hidden",
                       plan.isEnterprise ? "bg-slate-900 text-white" : "bg-white",
                       isCurrent && "ring-4 ring-emerald-500/30"
                     )}
@@ -487,7 +487,7 @@ function PlanContentInner() {
                       </div>
 
                       <div className={cn(
-                        "p-6 rounded-[2rem] mb-8 flex items-center justify-between",
+                        "p-6 rounded-lg mb-8 flex items-center justify-between",
                         plan.isEnterprise ? "bg-white/5 border border-white/10" : "bg-slate-50 border border-slate-100"
                       )}>
                         <div className="flex items-center gap-3">
@@ -529,7 +529,7 @@ function PlanContentInner() {
                         }}
                         disabled={isCurrent || isDowngrade}
                         className={cn(
-                          "w-full h-14 rounded-2xl text-lg font-black shadow-xl transition-all active:scale-95",
+                          "w-full h-14 rounded-2xl text-lg font-black transition-all active:scale-95",
                           isCurrent 
                             ? "bg-emerald-50 text-emerald-600 border-2 border-emerald-100 cursor-default shadow-none" 
                             : isDowngrade
@@ -551,7 +551,7 @@ function PlanContentInner() {
         </div>
 
         {/* FAQ o Tips */}
-        <section className="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100 flex flex-col md:flex-row items-center gap-10">
+        <section className="bg-white rounded-lg p-10 border border-slate-100 flex flex-col md:flex-row items-center gap-10">
           <div className="w-20 h-20 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
             <Info className="h-10 w-10" />
           </div>
@@ -637,7 +637,7 @@ function PlanContentInner() {
               type="submit"
               disabled={isProcessing}
               className={cn(
-                "w-full h-14 rounded-2xl text-lg font-black text-white shadow-xl",
+                "w-full h-14 rounded-2xl text-lg font-black text-white",
                 selectedPlan?.isCreditPack ? "bg-amber-600 shadow-amber-600/20" : "bg-indigo-600 shadow-indigo-600/20"
               )}
             >

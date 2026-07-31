@@ -36,13 +36,14 @@ import {
   Check,
   Trash2,
   Zap,
-  Maximize
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { resolveProfileBrand } from '@/lib/landing-styles';
+import type { StyleBrand } from '@/lib/landing-styles';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 
@@ -68,18 +69,31 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
 
   const [formData, setFormData] = useState({
     bio: '',
+    brandName: '',
     primaryColor: '#3B2D86',
     logoUrl: '',
     socials: {} as Record<string, string>,
   });
 
+  const ownBrands: StyleBrand[] = Array.isArray(mentorProfile?.profile?.brands) ? mentorProfile.profile.brands : [];
+  const activeBrand = resolveProfileBrand(mentorProfile?.profile);
+  const selectedBrand = formData.brandName
+    ? ownBrands.find(b => b.name === formData.brandName) || null
+    : activeBrand;
+  const primaryColor = selectedBrand?.palette?.primary || formData.primaryColor;
+
   useEffect(() => {
     if (course && mentorProfile) {
       const override = course.brandingOverride || {};
       const mentorSocials = mentorProfile.profile?.socials || {};
+      const overrideBrandName = override.brandName || '';
+      const brandPrimary = overrideBrandName
+        ? (ownBrands.find(b => b.name === overrideBrandName)?.palette?.primary)
+        : activeBrand?.palette?.primary;
       setFormData({
         bio: override.bio || mentorProfile.profile?.bio || '',
-        primaryColor: override.primaryColor || mentorProfile.profile?.branding?.primaryColor || '#3B2D86',
+        brandName: overrideBrandName,
+        primaryColor: override.primaryColor || brandPrimary || mentorProfile.profile?.branding?.primaryColor || '#3B2D86',
         logoUrl: override.logoUrl || mentorProfile.profile?.branding?.logoUrl || '',
         socials: {
           linkedin: override.socials?.linkedin || mentorSocials.linkedin || '',
@@ -100,7 +114,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
     if (!id) return;
     setLoading(true);
     const ref = doc(db, 'courses', id);
-    const updateData = { brandingOverride: { ...formData }, updatedAt: serverTimestamp() };
+    const updateData = { brandingOverride: { ...formData, primaryColor }, updatedAt: serverTimestamp() };
     updateDoc(ref, updateData).then(() => toast({ title: 'Identidad Visual Actualizada' }))
       .catch(e => errorEmitter.emit('permission-error', new FirestorePermissionError({ path: ref.path, operation: 'update', requestResourceData: updateData })))
       .finally(() => setLoading(false));
@@ -186,7 +200,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                   <div className="space-y-4">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logo del Programa</Label>
                     <div className="flex items-center gap-8">
-                      <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white shadow-xl">
+                      <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white">
                         {(formData.logoUrl && typeof formData.logoUrl === 'string') ? (
                           <Image 
                             src={formData.logoUrl} 
@@ -214,25 +228,86 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                   </div>
 
                   <div className="space-y-6">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color Primario Académico</Label>
-                    <div className="flex flex-col sm:flex-row items-center gap-8 bg-secondary/10 p-6 rounded-3xl">
-                      <div className="relative">
-                        <input 
-                          type="color" 
-                          value={formData.primaryColor} 
-                          onChange={e => setFormData({...formData, primaryColor: e.target.value})}
-                          className="w-24 h-24 rounded-3xl p-0 border-none cursor-pointer overflow-hidden shadow-xl ring-4 ring-white"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <Maximize className="h-6 w-6 text-white mix-blend-difference opacity-50" />
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Brand visual del curso (hereda el DTCG de tu marca)</Label>
+                    <div className="bg-secondary/10 p-6 rounded-3xl space-y-4">
+                      {ownBrands.length === 0 ? (
+                        <div className="flex flex-col gap-4">
+                          <div className="space-y-1">
+                            <p className="font-bold text-primary">Usa tu brand activo</p>
+                            <p className="text-sm text-muted-foreground">
+                              El curso hereda automáticamente el color de tu marca activa ({activeBrand?.palette?.primary || mentorProfile?.profile?.branding?.primaryColor || '#3B2D86'}).
+                              Sube tus brands DTCG en <span className="font-bold">Ajustes → Mis brands</span> para personalizar este curso.
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            {(activeBrand?.palette?.primary || mentorProfile?.profile?.branding?.primaryColor) && (
+                              <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow" style={{ backgroundColor: activeBrand?.palette?.primary || mentorProfile?.profile?.branding?.primaryColor }} />
+                            )}
+                            <span className="text-xs text-muted-foreground font-bold">{activeBrand?.name || 'Brand activo'}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1 space-y-4">
-                        <Input 
-                          value={formData.primaryColor} 
-                          onChange={e => setFormData({...formData, primaryColor: e.target.value})}
-                          className="text-2xl font-mono font-bold text-center bg-white border-none shadow-sm"
-                         size="xl" />
+                      ) : (
+                        <>
+                          <div className="flex flex-col gap-1">
+                            <p className="font-bold text-primary">Selecciona un brand DTCG</p>
+                            <p className="text-sm text-muted-foreground">El color, tipografía y tokens se heredan automáticamente de tu marca. El brand activo se marca en verde.</p>
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ ...formData, brandName: '', primaryColor: activeBrand?.palette?.primary || formData.primaryColor })}
+                              className={cn(
+                                'flex items-center gap-4 rounded-2xl border-2 bg-white p-4 text-left transition-colors',
+                                formData.brandName === '' ? 'border-emerald-400 ring-2 ring-emerald-200' : 'border-transparent hover:border-primary/40'
+                              )}
+                            >
+                              <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow shrink-0" style={{ backgroundColor: activeBrand?.palette?.primary || '#3B2D86' }} />
+                              <div className="min-w-0">
+                                <p className="font-bold truncate">{activeBrand?.name || 'Brand activo'}</p>
+                                <p className="text-xs text-muted-foreground">{formData.brandName === '' ? 'Usando este brand' : 'Heredar brand activo'}</p>
+                              </div>
+                              {formData.brandName === '' && <Check className="h-5 w-5 text-emerald-500 ml-auto shrink-0" />}
+                            </button>
+                            {ownBrands.map((brand) => {
+                              const isSelected = formData.brandName === brand.name;
+                              const isActive = activeBrand?.name === brand.name;
+                              return (
+                                <button
+                                  key={brand.name}
+                                  type="button"
+                                  onClick={() => setFormData({ ...formData, brandName: brand.name, primaryColor: brand.palette?.primary || formData.primaryColor })}
+                                  className={cn(
+                                    'flex items-center gap-4 rounded-2xl border-2 bg-white p-4 text-left transition-colors',
+                                    isSelected ? 'border-emerald-400 ring-2 ring-emerald-200' : 'border-transparent hover:border-primary/40'
+                                  )}
+                                >
+                                  <div className="flex flex-col gap-1 shrink-0">
+                                    <div className="h-6 w-6 rounded-lg ring-2 ring-white shadow" style={{ backgroundColor: brand.palette?.primary || '#3B2D86' }} />
+                                    <div className="h-6 w-6 rounded-lg ring-2 ring-white shadow" style={{ backgroundColor: brand.palette?.secondary || brand.palette?.primary || '#3B2D86' }} />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-bold truncate">{brand.name}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {isActive ? 'Brand activo en tu web' : brand.tokens?.themeMode || 'light'}
+                                    </p>
+                                  </div>
+                                  {isSelected && <Check className="h-5 w-5 text-emerald-500 ml-auto shrink-0" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color primario resultante</Label>
+                      <div className="flex items-center gap-4 bg-white rounded-2xl border p-4">
+                        <div className="h-12 w-12 rounded-xl ring-4 ring-white shadow" style={{ backgroundColor: primaryColor }} />
+                        <div className="flex-1 space-y-1">
+                          <p className="text-lg font-mono font-bold">{primaryColor}</p>
+                          <p className="text-xs text-muted-foreground">Se aplicará al curso automáticamente. Para elegir un color libre, cambia el brand en Ajustes.</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -241,14 +316,14 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
             </TabsContent>
           </Tabs>
 
-          <Button onClick={handleSaveStyle} className="w-full h-20 rounded-[2.5rem] text-2xl font-bold shadow-3xl bg-primary" disabled={loading}>
+          <Button onClick={handleSaveStyle} className="w-full h-20 rounded-lg text-2xl font-bold bg-primary" disabled={loading}>
             {loading ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <Save className="mr-3 h-8 w-8" />} Guardar Configuración del Curso
           </Button>
 
           <div className="pt-10 space-y-6">
             <h2 className="text-xl font-bold flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Simulador de Experiencia del Alumno</h2>
-            <Card className="rounded-[3rem] overflow-hidden border-none shadow-3xl bg-slate-50 p-12">
-              <header className="flex items-end justify-between bg-white p-8 rounded-[2.5rem] shadow-xl border-4 border-white mb-10">
+            <Card className="rounded-lg overflow-hidden border-none bg-slate-50 p-12">
+              <header className="flex items-end justify-between bg-white p-8 rounded-lg border-4 border-white mb-10">
                 <div className="flex items-end gap-4">
                   {Object.entries(formData.socials).map(([key, val]) => val && (
                     <div key={key} className="w-10 h-10 rounded-xl bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors cursor-pointer">
@@ -265,7 +340,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
                 <div className="flex items-end gap-6 text-right">
-                  <div><h3 className="font-bold text-2xl" style={{ color: formData.primaryColor }}>{course?.title}</h3><p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.3em]">Módulo Actual: Introducción</p></div>
+                  <div><h3 className="font-bold text-2xl" style={{ color: primaryColor }}>{course?.title}</h3><p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.3em]">Módulo Actual: Introducción</p></div>
                   <div className="w-16 h-16 relative bg-secondary/10 rounded-2xl overflow-hidden flex items-center justify-center">
                     {(formData.logoUrl && typeof formData.logoUrl === 'string') ? (
                       <Image 
@@ -283,16 +358,16 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
               </header>
               <div className="grid lg:grid-cols-3 gap-10">
                 <div className="lg:col-span-2 space-y-8">
-                  <div className="aspect-video rounded-[3rem] bg-black shadow-2xl flex items-center justify-center border-8 border-white"><Play className="h-20 w-20 text-white/20" /></div>
+                  <div className="aspect-video rounded-lg bg-black flex items-center justify-center border-8 border-white"><Play className="h-20 w-20 text-white/20" /></div>
                   <div className="space-y-4">
-                    <h1 className="text-4xl font-bold" style={{ color: formData.primaryColor }}>1. Bienvenido al Programa</h1>
+                    <h1 className="text-4xl font-bold" style={{ color: primaryColor }}>1. Bienvenido al Programa</h1>
                     <p className="text-muted-foreground leading-relaxed text-lg">{formData.bio || 'Tu biografía aparecerá aquí...'}</p>
                   </div>
 
                   <div className="pt-12 space-y-8 border-t border-dashed">
                     <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Pre-visualización de Módulos y Evaluaciones</h4>
                     
-                    <Card className="p-8 rounded-[2rem] border-none shadow-md bg-white">
+                    <Card className="p-8 rounded-lg border-none shadow-md bg-white">
                       <div className="flex items-center gap-3 mb-6">
                         <Badge variant="secondary" className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest">Opción Múltiple</Badge>
                       </div>
@@ -300,7 +375,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                       <div className="grid gap-4">
                         <Button 
                           className="justify-start h-auto py-4 px-6 rounded-xl text-left border-2 whitespace-normal font-bold shadow-lg" 
-                          style={{ backgroundColor: formData.primaryColor, borderColor: formData.primaryColor }}
+                          style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
                         >
                           Definir las bases teóricas del programa
                         </Button>
@@ -310,7 +385,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                       </div>
                     </Card>
 
-                    <div className="bg-emerald-50 border-2 border-emerald-200 p-6 rounded-[2.5rem] flex items-center gap-4 animate-pulse">
+                    <div className="bg-emerald-50 border-2 border-emerald-200 p-6 rounded-lg flex items-center gap-4 animate-pulse">
                       <Zap className="h-8 w-8 text-emerald-600" />
                       <div>
                         <p className="font-bold text-emerald-800 text-lg">Modo Refuerzo Activado</p>
@@ -318,7 +393,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                       </div>
                     </div>
 
-                    <Card className="p-8 rounded-[2rem] border-none shadow-md bg-white opacity-80 grayscale-[0.5]">
+                    <Card className="p-8 rounded-lg border-none shadow-md bg-white opacity-80 grayscale-[0.5]">
                       <div className="flex items-center gap-3 mb-6">
                         <Badge variant="secondary" className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest bg-emerald-100 text-emerald-700 border-none">Pregunta de Soporte</Badge>
                       </div>
@@ -328,13 +403,13 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
                 <div className="space-y-8">
-                  <Card className="p-10 rounded-[3rem] text-white shadow-2xl border-none" style={{ backgroundColor: formData.primaryColor }}>
+                  <Card className="p-10 rounded-lg text-white border-none" style={{ backgroundColor: primaryColor }}>
                     <Trophy className="h-12 w-12 mb-6 opacity-50" />
                     <p className="text-[10px] uppercase font-bold tracking-widest opacity-70 mb-2">Tu Progreso</p>
                     <p className="text-5xl font-bold">0%</p>
                     <Progress value={10} className="mt-6 bg-white/20 h-2" />
                   </Card>
-                  <Card className="p-10 rounded-[3rem] bg-white shadow-xl border-none space-y-6">
+                  <Card className="p-10 rounded-lg bg-white border-none space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-2xl relative overflow-hidden shadow-md">
                         <Image 

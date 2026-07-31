@@ -75,7 +75,7 @@ export class EnhancedCampaignGenerator {
       return {
         templates: {},
         metadata: {},
-        validationResults: { isValid: false, errors: [error.message] },
+        validationResults: { isValid: false, errors: [error instanceof Error ? error.message : String(error)] },
         generationTime: new Date().toISOString()
       };
     }

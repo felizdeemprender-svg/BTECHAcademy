@@ -43,7 +43,7 @@ export default function TutorCreditsDashboard() {
             <p className="text-muted-foreground mt-2">Monitorea la cuota de generación de tu Plan Mensual.</p>
           </div>
           <Link href="/dashboard/plan">
-            <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11 px-6 shadow-xl shadow-primary/20">
+            <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl h-11 px-6 shadow-primary/20">
               <ArrowUpCircle className="w-4 h-4 mr-2" /> Mejorar Plan
             </Button>
           </Link>
@@ -51,7 +51,7 @@ export default function TutorCreditsDashboard() {
 
         <div className="grid md:grid-cols-3 gap-6">
           {/* Main Balance Widget */}
-          <Card className="md:col-span-2 border-none shadow-2xl rounded-[2rem] bg-gradient-to-br from-primary to-indigo-900 text-white overflow-hidden relative">
+          <Card className="md:col-span-2 border-none rounded-lg bg-gradient-to-br from-primary to-indigo-900 text-white overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Zap className="w-32 h-32" />
             </div>
@@ -86,7 +86,7 @@ export default function TutorCreditsDashboard() {
           </Card>
 
           {/* Quick Stats */}
-          <Card className="border-none shadow-xl rounded-[2rem] bg-white">
+          <Card className="border-none rounded-lg bg-white">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2"><Activity className="w-4 h-4 text-emerald-500" /> Resumen del Mes</CardTitle>
             </CardHeader>
@@ -123,7 +123,7 @@ export default function TutorCreditsDashboard() {
         </div>
 
         {/* Transactions List */}
-        <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden bg-white">
+        <Card className="border-none rounded-lg overflow-hidden bg-white">
           <CardHeader className="border-b bg-slate-50/50 p-6">
             <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5 text-slate-400" /> Últimos Movimientos (10 días)</CardTitle>
             <CardDescription>Historial de consumo automático de IA.</CardDescription>

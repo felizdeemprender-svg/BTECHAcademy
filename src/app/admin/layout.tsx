@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useAuth } from '@/components/auth-context';
 import { useRouter } from 'next/navigation';
@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="space-y-4 w-full max-w-md">
           <Skeleton className="h-12 w-full rounded-2xl" />
           <Skeleton className="h-8 w-3/4 rounded-xl" />
-          <Skeleton className="h-40 w-full rounded-[2.5rem]" />
+          <Skeleton className="h-40 w-full rounded-lg" />
         </div>
       </div>
     );
@@ -34,7 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isLoading && profile && !profile.roles.includes('admin')) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 text-center">
-        <div className="w-20 h-20 bg-rose-100 rounded-[2rem] flex items-center justify-center text-rose-600 mb-8 shadow-inner animate-in zoom-in duration-500">
+        <div className="w-20 h-20 bg-rose-100 rounded-lg flex items-center justify-center text-rose-600 mb-8 animate-in zoom-in duration-500">
           <ShieldAlert className="h-10 w-10" />
         </div>
         

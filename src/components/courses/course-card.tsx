@@ -63,7 +63,7 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
   };
 
   return (
-    <Card className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col rounded-2xl bg-white">
+    <Card className="group border-none shadow-lg transition-all duration-500 overflow-hidden flex flex-col rounded-2xl bg-white">
       <div className="relative aspect-video overflow-hidden">
         <Image 
           src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'} 
@@ -117,7 +117,7 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
         
         {showTutor && course.tutor && (
           <div className="flex items-center gap-3 pt-2">
-            <div className="relative w-10 h-10 rounded-full overflow-hidden shadow-inner">
+            <div className="relative w-10 h-10 rounded-full overflow-hidden">
               <Image 
                 src={course.tutor.photo || `https://api.dicebear.com/7.x/adventurer/svg?seed=${course.tutor.displayName || 'tutor'}`} 
                 alt={course.tutor.displayName}

@@ -65,7 +65,7 @@ export default function StyleDemoPage() {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline">{style.layout}</Badge>
-              <Badge variant="outline">{style.componentStyle}</Badge>
+              <Badge variant="outline">{style.tokens?.themeMode || 'light'}</Badge>
             </div>
           </div>
         </div>
@@ -86,26 +86,25 @@ export default function StyleDemoPage() {
                 </div>
                 
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Component Style</p>
-                  <p className="text-sm text-gray-600">{style.componentStyle}</p>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Tokens CSS</p>
+                  {style.tokens && Object.entries(style.tokens).map(([key, value]) => (
+                    <div key={key} className="flex justify-between text-xs py-0.5 border-b border-dashed border-gray-100 last:border-0">
+                      <span className="text-gray-500 font-mono">{key}</span>
+                      <span className="text-gray-700 font-mono">{value}</span>
+                    </div>
+                  ))}
                 </div>
                 
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-1">Tipografía</p>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p>Headings: {style.typography.headingFont} (x{style.typography.headingScale})</p>
-                    <p>Body: {style.typography.bodyFont} (x{style.typography.bodyScale})</p>
+                    {style.typography.map((t) => (
+                      <p key={t.name}>
+                        {t.name}: Headings {t.headingFont} (x{t.headingScale}) · Body{" "}
+                        {t.bodyFont} (x{t.bodyScale})
+                      </p>
+                    ))}
                   </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Espaciado</p>
-                  <p className="text-sm text-gray-600">{style.spacing}</p>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Animaciones</p>
-                  <p className="text-sm text-gray-600">{style.animations}</p>
                 </div>
               </div>
             </div>
@@ -114,45 +113,30 @@ export default function StyleDemoPage() {
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-semibold mb-4">Paleta de Colores</h2>
               <div className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Primary</p>
-                  <div className="flex gap-2">
-                    {style.colorProposals.primary.map((color, i) => (
+                {style.colorProposals.map((palette, i) => (
+                  <div key={i}>
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      {palette.name || `Paleta ${i + 1}`}
+                    </p>
+                    <div className="flex gap-2">
                       <div
-                        key={i}
                         className="w-10 h-10 rounded border border-gray-200"
-                        style={{ backgroundColor: color }}
-                        title={color}
+                        style={{ backgroundColor: palette.primary }}
+                        title={`Primary: ${palette.primary}`}
                       />
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Secondary</p>
-                  <div className="flex gap-2">
-                    {style.colorProposals.secondary.map((color, i) => (
                       <div
-                        key={i}
                         className="w-10 h-10 rounded border border-gray-200"
-                        style={{ backgroundColor: color }}
-                        title={color}
+                        style={{ backgroundColor: palette.secondary }}
+                        title={`Secondary: ${palette.secondary}`}
                       />
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Accent</p>
-                  <div className="flex gap-2">
-                    {style.colorProposals.accent.map((color, i) => (
                       <div
-                        key={i}
                         className="w-10 h-10 rounded border border-gray-200"
-                        style={{ backgroundColor: color }}
-                        title={color}
+                        style={{ backgroundColor: palette.accent }}
+                        title={`Accent: ${palette.accent}`}
                       />
-                    ))}
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
             </div>
 

@@ -74,7 +74,7 @@ export function SceneNarrativeEditor({
                 )}
               </div>
               
-              <div className="aspect-[4/5] rounded-[2rem] overflow-hidden bg-slate-800 border-2 border-white/5 shadow-2xl group-hover:scale-[1.01] transition-all duration-500">
+              <div className="aspect-[4/5] rounded-lg overflow-hidden bg-slate-800 border-2 border-white/5 group-hover:scale-[1.01] transition-all duration-500">
                 <ImageEditor 
                   url={sl.imageUrl}
                   onUpdate={(val) => {
@@ -131,7 +131,7 @@ export function SceneNarrativeEditor({
                           updateAsset('socials', sIdx, 'slides', newItems);
                         }}
                         placeholder="Frase corta para resaltar..."
-                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[60px] text-sm font-black uppercase focus-visible:ring-1 focus-visible:ring-cyan-500/50 rounded-2xl p-4 shadow-inner"
+                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[60px] text-sm font-black uppercase focus-visible:ring-1 focus-visible:ring-cyan-500/50 rounded-2xl p-4"
                       />
                     </div>
                     <div className="space-y-2">

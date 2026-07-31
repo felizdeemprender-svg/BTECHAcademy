@@ -16,6 +16,7 @@ import { validateAndPreconformTemplates, TemplateMetadata } from '@/lib/template
 import { validateAndAdjustDesignForAPIs } from '@/lib/platform-protocols';
 import { generateExportPacks, ExportOptions } from '@/lib/content-exporter';
 import { uploadPendingImagesInObject } from '@/lib/upload-base64';
+import { resolveProfileBrand } from '@/lib/landing-styles';
 import {
   Sparkles,
   ArrowRight,
@@ -951,7 +952,10 @@ function BuilderContent() {
         },
         exportUrls: exportUrls,
         slug: (pageTitle || course?.title || 'lanzamiento').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''),
-        branding: course?.brandingOverride || profile.profile?.branding || { primary: '#8B5CF6' },
+        branding: {
+          primaryColor: resolveProfileBrand(profile.profile)?.palette?.primary || course?.brandingOverride?.primaryColor || profile.profile?.branding?.primaryColor || '#8B5CF6',
+          logoUrl: course?.brandingOverride?.logoUrl || profile.profile?.branding?.logoUrl || '',
+        },
         isActive: true,
         updatedAt: serverTimestamp(),
       };

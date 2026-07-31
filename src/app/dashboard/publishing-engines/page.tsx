@@ -370,7 +370,7 @@ export default function PublishingEnginesPage() {
           </div>
         </header>
 
-        <div className="bg-slate-50/50 border border-slate-100 p-8 rounded-[2rem] space-y-6">
+        <div className="bg-slate-50/50 border border-slate-100 p-8 rounded-lg space-y-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary shrink-0 border border-slate-200/50">
               <Settings2 className="h-6 w-6 text-primary" />
@@ -394,7 +394,7 @@ export default function PublishingEnginesPage() {
               <TabsContent key={group} value={group} className="m-0">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {MOTORS.filter(m => m.group === group).map(motor => (
-                    <Card key={motor.id} className="border-none shadow-lg rounded-[2rem] bg-white p-8 space-y-6 group hover:shadow-xl transition-all border-2 border-transparent hover:border-primary/5">
+                    <Card key={motor.id} className="border-none shadow-lg rounded-lg bg-white p-8 space-y-6 group transition-all border-2 border-transparent hover:border-primary/5">
                       <div className="flex justify-between items-start">
                         <div className={cn("w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg transition-transform group-hover:rotate-6", motor.color === 'emerald' ? 'bg-emerald-500' : motor.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500')}>
                           <motor.icon className="h-6 w-6" />
@@ -493,7 +493,7 @@ export default function PublishingEnginesPage() {
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200 flex items-center justify-between">
+                    <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <ShieldCheck className="h-5 w-5 text-emerald-500" />
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Validación de Túnel</p>
@@ -512,7 +512,7 @@ export default function PublishingEnginesPage() {
                   </TabsContent>
 
                   <TabsContent value="help" className="m-0 space-y-6 animate-in fade-in">
-                    <div className="p-6 bg-slate-900 rounded-[2rem] text-white relative overflow-hidden">
+                    <div className="p-6 bg-slate-900 rounded-lg text-white relative overflow-hidden">
                       <Sparkles className="absolute -right-4 -top-4 h-24 w-24 opacity-10" />
                       <div className="flex items-center gap-3 relative z-10 mb-4">
                         <BookOpen className="h-5 w-5 text-accent" />
@@ -535,7 +535,7 @@ export default function PublishingEnginesPage() {
 
               <DialogFooter className="p-8 bg-slate-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
                 <Button variant="ghost" onClick={() => setIsConfigOpen(false)} className="rounded-xl font-bold h-12 px-8">Cerrar</Button>
-                <Button onClick={handleSaveConfig} className="flex-1 h-12 rounded-xl font-bold bg-primary shadow-xl">Guardar Credenciales</Button>
+                <Button onClick={handleSaveConfig} className="flex-1 h-12 rounded-xl font-bold bg-primary">Guardar Credenciales</Button>
               </DialogFooter>
             </Tabs>
           </DialogContent>

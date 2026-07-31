@@ -501,7 +501,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
       <div className="space-y-8 pb-20">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-8">
           <div className="flex items-center gap-6">
-            <Avatar className="w-24 h-24 border-4 border-white shadow-2xl">
+            <Avatar className="w-24 h-24 border-4 border-white">
               <AvatarImage src={studentData?.photoURL || undefined} />
               <AvatarFallback className="text-2xl font-bold bg-primary text-white">
                 {studentData?.displayName?.[0] || 'A'}
@@ -542,7 +542,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
                     <div className="space-y-4">
                       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Biografía Académica</Label>
-                      <div className="bg-secondary/10 p-6 rounded-[2rem] border-none italic text-slate-700 leading-relaxed min-h-[100px]">
+                      <div className="bg-secondary/10 p-6 rounded-lg border-none italic text-slate-700 leading-relaxed min-h-[100px]">
                         {studentData?.profile?.bio || 'Sin biografía registrada.'}
                       </div>
                     </div>
@@ -577,7 +577,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                     <div className="space-y-4">
                       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Estado de Abono Institucional</Label>
                       {sub ? (
-                        <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 grid sm:grid-cols-2 gap-6">
+                        <div className="bg-primary/5 p-6 rounded-lg border border-primary/10 grid sm:grid-cols-2 gap-6">
                           <div className="space-y-3">
                             <Badge className="bg-emerald-500 text-white border-none h-5 text-[8px] font-black uppercase tracking-widest">Activo: {sub.planName}</Badge>
                             <div className="flex items-center gap-4">
@@ -598,7 +598,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-secondary/10 p-10 rounded-[2rem] text-center">
+                        <div className="bg-secondary/10 p-10 rounded-lg text-center">
                           <CreditCard className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
                           <p className="text-sm font-bold text-muted-foreground">Sin abono activo registrado en el perfil.</p>
                         </div>
@@ -674,7 +674,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
               <TabsContent value="courses" className="space-y-6">
                 {enrollments.length === 0 ? (
-                  <Card className="p-20 text-center border-2 border-dashed bg-muted/5 rounded-[3rem]">
+                  <Card className="p-20 text-center border-2 border-dashed bg-muted/5 rounded-lg">
                     <p className="text-muted-foreground font-bold italic">No hay cursos compartidos con este mentor.</p>
                   </Card>
                 ) : !selectedCourseId ? (
@@ -758,7 +758,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
                       return (
                         <div className="space-y-6">
-                          <header className="flex items-center justify-between gap-4 bg-primary/5 p-6 rounded-[2rem] border border-primary/10">
+                          <header className="flex items-center justify-between gap-4 bg-primary/5 p-6 rounded-lg border border-primary/10">
                             <div className="flex items-center gap-4">
                               <Button 
                                 variant="ghost" 
@@ -779,7 +779,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                             </div>
                           </header>
 
-                          <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden bg-white">
+                          <Card className="border-none rounded-lg overflow-hidden bg-white">
                             <CardContent className="p-0">
                               <Table>
                                 <TableHeader className="bg-slate-50 border-b">
@@ -803,7 +803,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                                         <TableCell className="px-8 py-5">
                                           <div className="flex items-center gap-3">
                                             <div className={cn(
-                                              "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black shadow-inner",
+                                              "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black",
                                               moduleAttempts.length > 0 ? (isPassing ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600") : "bg-slate-50 text-slate-300"
                                             )}>
                                               {index + 1}
@@ -1241,7 +1241,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
             <div className="space-y-10 pb-8">
               <div className="bg-primary/5 p-8 border border-primary/10 flex items-start gap-6">
                 <div className={cn(
-                  "w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-black text-white shadow-xl shrink-0",
+                  "w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-black text-white shrink-0",
                   (selectedAttempt?.score || 0) >= 70 ? "bg-emerald-500" : "bg-rose-500"
                 )}>
                   {selectedAttempt?.score}%
@@ -1314,7 +1314,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-16 bg-muted/5 rounded-[2rem] border-2 border-dashed">
+                  <div className="text-center py-16 bg-muted/5 rounded-lg border-2 border-dashed">
                     <FileSearch className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4" />
                     <p className="text-muted-foreground font-bold italic">Recuperando detalle de respuestas...</p>
                   </div>
@@ -1399,7 +1399,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                 <>
                   <div className="space-y-4">
                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2"><User className="h-4 w-4" /> Respuesta del Alumno</h4>
-                    <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10">
+                    <div className="p-6 bg-primary/5 rounded-lg border border-primary/10">
                       <p className="text-sm leading-relaxed">{selectedTask.answer}</p>
                       {selectedTask.fileUrl && (
                         <Button 
@@ -1416,7 +1416,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
                   <div className="space-y-4">
                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2"><BrainCircuit className="h-4 w-4" /> Evaluación IA</h4>
-                    <div className="p-6 bg-emerald-50/50 rounded-[2rem] border border-emerald-100 relative overflow-hidden">
+                    <div className="p-6 bg-emerald-50/50 rounded-lg border border-emerald-100 relative overflow-hidden">
                       <div className="flex justify-between items-start mb-4">
                         <Badge className="bg-emerald-500 text-white border-none h-6 px-3 font-black text-xs">Puntaje: {selectedTask.score}%</Badge>
                         <span className="text-[9px] font-bold text-muted-foreground uppercase">{format(selectedTask.completedAt?.toDate?.() || new Date(selectedTask.completedAt), 'dd/MM/yyyy HH:mm')}</span>
@@ -1426,7 +1426,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </div>
                 </>
               ) : (
-                <div className="p-10 text-center bg-muted/5 rounded-[2rem] border-2 border-dashed">
+                <div className="p-10 text-center bg-muted/5 rounded-lg border-2 border-dashed">
                   <Clock className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4" />
                   <p className="text-muted-foreground font-bold italic">Esperando entrega del alumno...</p>
                 </div>

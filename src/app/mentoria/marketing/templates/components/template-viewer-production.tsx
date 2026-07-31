@@ -320,7 +320,7 @@ export const TemplateViewerProduction = ({
                               value={`landing-${lIdx}`}
                               className="mt-6"
                             >
-                              <Card className="overflow-hidden border-none shadow-2xl rounded-[2rem] bg-white">
+                              <Card className="overflow-hidden border-none rounded-lg bg-white">
                                 <CardContent className="p-0">
                                   <div className="flex justify-center w-full h-[600px] overflow-hidden bg-gray-50 rounded-b-[2rem]">
                                     <iframe 
@@ -396,7 +396,7 @@ export const TemplateViewerProduction = ({
                               value={`email-${eIdx}`}
                               className="mt-6"
                             >
-                              <Card className="overflow-hidden border-none shadow-2xl rounded-[2rem] bg-white">
+                              <Card className="overflow-hidden border-none rounded-lg bg-white">
                                 <CardContent className="p-0">
                                   <EmailMockup template={e} index={eIdx} />
                                 </CardContent>
@@ -465,7 +465,7 @@ export const TemplateViewerProduction = ({
                               value={`ad-${aIdx}`}
                               className="mt-6"
                             >
-                              <Card className="overflow-hidden border-none shadow-2xl rounded-[2rem] bg-white">
+                              <Card className="overflow-hidden border-none rounded-lg bg-white">
                                 <CardContent className="p-0">
                                   <AdMockup template={a} index={aIdx} />
                                 </CardContent>
@@ -1091,7 +1091,7 @@ export const TemplateViewerProduction = ({
               <Button
                 onClick={handleSaveEdit}
                 disabled={isSavingEdit}
-                className="w-full h-16 rounded-[1.5rem] font-bold text-xl shadow-2xl bg-primary"
+                className="w-full h-16 rounded-[1.5rem] font-bold text-xl bg-primary"
               >
                 {isSavingEdit ? (
                   <Loader2 className="animate-spin mr-2" />

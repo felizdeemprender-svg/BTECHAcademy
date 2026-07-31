@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore, hasAdminCredentials } from '@/firebase/admin';
 import { getFirebaseServer } from '@/firebase/server';
-import { collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, limit, getDocs, getDoc, doc } from 'firebase/firestore';
 import { SubscriptionStatus } from '@/types/subscription';
+import { getLandingStyle, resolveStyleBrand } from '@/lib/landing-styles';
 
 export async function GET(
   request: Request,
@@ -55,7 +56,10 @@ export async function GET(
 
       return NextResponse.json({
         available: true,
-        tutor: buildTutorResponse(tutorId, tutor, coursesCount)
+        tutor: await buildTutorResponse(tutorId, tutor, coursesCount, async (styleId) => {
+          const snap = await firestore.collection('landingStyles').doc(styleId).get();
+          return snap.exists ? snap.data() : null;
+        })
       });
 
     } else {
@@ -83,7 +87,10 @@ export async function GET(
 
         return NextResponse.json({
           available: true,
-          tutor: buildTutorResponse(tutorId, tutor, tutor.stats?.totalCourses || 0)
+          tutor: await buildTutorResponse(tutorId, tutor, tutor.stats?.totalCourses || 0, async (styleId) => {
+            const snap = await getDoc(doc(clientDb, 'landingStyles', styleId));
+            return snap.exists() ? snap.data() : null;
+          })
         });
 
       } catch (clientError: any) {
@@ -105,7 +112,35 @@ export async function GET(
   }
 }
 
-function buildTutorResponse(tutorId: string, tutor: any, coursesCount: number) {
+async function buildTutorResponse(
+  tutorId: string,
+  tutor: any,
+  coursesCount: number,
+  fetchStyle: (styleId: string) => Promise<any | null>
+) {
+  const websiteConfig = tutor.profile?.websiteConfig || null;
+  const styleId = websiteConfig?.styleId || 'classic';
+  const brandName = websiteConfig?.brandName || null;
+
+  // Brands propios del tutor (privados, solo para su web personal)
+  const ownBrands: any[] = Array.isArray(tutor.profile?.brands) ? tutor.profile.brands : [];
+  const activeOwnBrand = ownBrands.find((b: any) => b?.name === tutor.profile?.activeBrandName) || ownBrands[0] || null;
+
+  // Resolver style + brand desde el sistema landingStyles (DTCG)
+  let style: any = getLandingStyle(styleId) || null;
+  if (!style) {
+    try {
+      style = await fetchStyle(styleId);
+    } catch { /* no-critical */ }
+  }
+  const systemBrand = resolveStyleBrand(style as any, brandName);
+
+  const brand = activeOwnBrand || systemBrand;
+
+  const layoutMode = brand?.tokens?.themeMode === 'dark' || brand?.tokens?.themeMode === 'glass'
+    ? 'dark'
+    : (tutor.profile?.branding?.layoutMode || 'light');
+
   return {
     id: tutorId,
     username: tutor.username,
@@ -140,10 +175,14 @@ function buildTutorResponse(tutorId: string, tutor: any, coursesCount: number) {
       allowPublicCourses: true
     },
     branding: {
-      primaryColor: tutor.profile?.branding?.primaryColor || '#3B2D86',
+      primaryColor: brand?.palette?.primary || tutor.profile?.branding?.primaryColor || '#3B2D86',
       logoUrl: tutor.profile?.branding?.logoUrl || '',
-      layoutMode: tutor.profile?.branding?.layoutMode || 'light'
+      layoutMode
     },
-    websiteConfig: tutor.profile?.websiteConfig || null
+    brand: brand || null,
+    ownBrands,
+    activeBrandName: tutor.profile?.activeBrandName || (ownBrands[0]?.name || ''),
+    styleId,
+    websiteConfig: websiteConfig
   };
 }

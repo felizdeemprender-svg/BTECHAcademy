@@ -128,7 +128,7 @@ export default function AltaInfluencerPage() {
           
           {/* Columna de Búsqueda */}
           <div className="md:col-span-3 space-y-6">
-            <Card className="border-none shadow-xl rounded-2xl overflow-hidden bg-white">
+            <Card className="border-none rounded-2xl overflow-hidden bg-white">
               <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-6">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Search className="h-5 w-5 text-accent" />
@@ -214,7 +214,7 @@ export default function AltaInfluencerPage() {
 
           {/* Columna de Ayuda */}
           <div className="md:col-span-2 space-y-6">
-            <Card className="border-none shadow-lg rounded-2xl bg-indigo-50/50">
+            <Card className="rounded-lg bg-indigo-50/50">
               <CardContent className="p-6">
                 <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center mb-4">
                   <UserPlus className="h-5 w-5 text-indigo-600" />

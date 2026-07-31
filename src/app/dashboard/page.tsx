@@ -80,7 +80,7 @@ function DashboardInner() {
       toast({
         title: "¡Bienvenido, Mentor! 🚀",
         description: "Tu suscripción ha sido activada con éxito. Ya tienes acceso a todas las herramientas de IA.",
-        className: "bg-indigo-600 text-white border-none shadow-2xl",
+        className: "bg-indigo-600 text-white border-none",
       });
       
       // Limpiar la URL
@@ -269,7 +269,7 @@ const DashboardContent = ({
 
         <div className="space-y-8 md:space-y-10">
           {(isMentor || isAdmin) && todayAutomationActions.length > 0 && (
-            <Card className="border-none shadow-2xl rounded-[2rem] md:rounded-[2.5rem] bg-slate-900 text-white overflow-hidden relative group">
+            <Card className="rounded-lg bg-slate-900 text-white overflow-hidden relative group">
               <Cpu className="absolute -right-4 -top-4 h-24 md:h-32 w-24 md:w-32 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700" />
               <CardHeader className="p-6 md:p-8 pb-4">
                 <div className="flex items-center gap-3">
@@ -293,7 +293,7 @@ const DashboardContent = ({
                   ))}
                 </div>
                 <Link href="/mentoria/marketing/execution" className="w-full md:w-auto">
-                  <Button className="w-full h-12 md:h-14 px-8 rounded-xl md:rounded-2xl font-bold bg-accent hover:bg-accent/90 shadow-2xl gap-2">
+                  <Button className="w-full h-12 md:h-14 px-8 rounded-xl md:rounded-2xl font-bold bg-accent hover:bg-accent/90 gap-2">
                     Ir al Centro de Mando <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
@@ -374,7 +374,7 @@ const DashboardContent = ({
                 ) : mentorCourses?.map((course: any) => {
                   const courseInscriptions = mentorInscriptions.filter((e: any) => e.courseId === course.id);
                   return (
-                    <Card key={course.id} className="border-none shadow-lg overflow-hidden rounded-2xl md:rounded-3xl bg-white group hover:shadow-xl transition-all duration-500">
+                    <Card key={course.id} className="border-none shadow-lg overflow-hidden rounded-2xl md:rounded-3xl bg-white group transition-all duration-500">
                       <div className="flex flex-col lg:flex-row items-stretch">
                         <div className="relative w-full lg:w-32 h-24 lg:h-auto bg-slate-100 overflow-hidden shrink-0">
                           <Image 
@@ -455,7 +455,7 @@ const DashboardContent = ({
                   const isMassive = group.total > 1;
                   const percent = Math.round((group.completed / group.total) * 100);
                   return (
-                    <Card key={gIdx} className="border-none shadow-lg rounded-2xl md:rounded-3xl bg-white overflow-hidden group hover:shadow-xl transition-all">
+                    <Card key={gIdx} className="rounded-lg bg-white overflow-hidden group transition-all">
                       <div className="p-6 flex flex-col lg:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-4 flex-1 min-w-0 w-full lg:w-auto">
                           <div className={cn("w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-sm shrink-0", isMassive ? "bg-accent" : "bg-primary")}>

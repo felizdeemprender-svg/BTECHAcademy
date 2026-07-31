@@ -60,15 +60,15 @@ export default function StylePreviewPage({ params }: { params: Promise<{ id: str
   if (!styleData) return <div className="flex h-screen items-center justify-center"><p className="font-bold text-muted-foreground uppercase tracking-widest">Estilo no encontrado.</p></div>;
 
   // Set tokens from style
-  const primaryColor = styleData.colorProposals?.primary?.[0] || '#3B2D86';
-  const secondaryColor = styleData.colorProposals?.secondary?.[0] || '#F1F5F9';
-  const accentColor = styleData.colorProposals?.accent?.[0] || '#FACC15';
-  const fontHeading = styleData.typography?.headingFont || 'Inter';
-  const fontBody = styleData.typography?.bodyFont || 'Inter';
+  const primaryColor = styleData.colorProposals?.[0]?.primary || '#3B2D86';
+  const secondaryColor = styleData.colorProposals?.[0]?.secondary || '#F1F5F9';
+  const accentColor = styleData.colorProposals?.[0]?.accent || '#FACC15';
+  const fontHeading = styleData.typography?.[0]?.headingFont || 'Inter';
+  const fontBody = styleData.typography?.[0]?.bodyFont || 'Inter';
 
-  // Apply layout config (Mocking theme mode based on componentStyle or just keeping it light for now, real engine uses AI output for themeMode)
-  const isDark = styleData.componentStyle === 'creative';
-  const isGlass = styleData.componentStyle === 'minimal';
+  // Apply layout config (Mocking theme mode based on tokens or just keeping it light for now, real engine uses AI output for themeMode)
+  const isDark = styleData.tokens?.themeMode === 'dark';
+  const isGlass = styleData.tokens?.themeMode === 'glass';
 
   const bgBase    = isDark ? 'bg-slate-950' : isGlass ? 'bg-indigo-950' : 'bg-slate-50';
   const textBase  = isDark ? 'text-slate-100' : isGlass ? 'text-indigo-50' : 'text-slate-900';
@@ -127,7 +127,7 @@ export default function StylePreviewPage({ params }: { params: Promise<{ id: str
             {content.subheadline}
           </p>
 
-          <div className="max-w-4xl mx-auto aspect-video rounded-[3rem] overflow-hidden shadow-3xl border-[12px] border-slate-50 bg-slate-800 relative group/video-container flex items-center justify-center">
+          <div className="max-w-4xl mx-auto aspect-video rounded-lg overflow-hidden border-[12px] border-slate-50 bg-slate-800 relative group/video-container flex items-center justify-center">
             <div className="text-slate-500 font-bold uppercase tracking-widest text-sm flex flex-col items-center gap-4">
               <Play className="h-16 w-16" />
               Simulador de Video
@@ -137,7 +137,7 @@ export default function StylePreviewPage({ params }: { params: Promise<{ id: str
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
             <Button
               size="lg"
-              className="h-16 px-12 text-xl font-bold rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95"
+              className="h-16 px-12 text-xl font-bold rounded-2xl transition-all hover:scale-105 active:scale-95"
               style={{ backgroundColor: primaryColor }}
             >
               {content.ctaText}
@@ -166,7 +166,7 @@ export default function StylePreviewPage({ params }: { params: Promise<{ id: str
                   ))}
                 </div>
               </div>
-              <div className={cn("flex-1 w-full aspect-[4/3] rounded-[3rem] border-[12px] shadow-2xl relative overflow-hidden group", isDark ? 'border-slate-800 bg-slate-800' : isGlass ? 'border-indigo-800 bg-indigo-900' : 'border-white bg-slate-100')}>
+              <div className={cn("flex-1 w-full aspect-[4/3] rounded-lg border-[12px] relative overflow-hidden group", isDark ? 'border-slate-800 bg-slate-800' : isGlass ? 'border-indigo-800 bg-indigo-900' : 'border-white bg-slate-100')}>
                 <div className="absolute inset-0 flex items-center justify-center text-slate-400 font-bold uppercase tracking-widest text-sm">
                   Simulador de Imagen
                 </div>
@@ -221,7 +221,7 @@ export default function StylePreviewPage({ params }: { params: Promise<{ id: str
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {content.benefits.map((benefit: string, bIdx: number) => (
-              <div key={bIdx} className={cn("p-8 rounded-[2.5rem] border shadow-xl hover:shadow-2xl transition-all group", bgSurface, borderSubtle)}>
+              <div key={bIdx} className={cn("p-8 rounded-lg border transition-all group", bgSurface, borderSubtle)}>
                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
@@ -238,7 +238,7 @@ export default function StylePreviewPage({ params }: { params: Promise<{ id: str
           <div className="flex flex-col lg:flex-row items-center gap-16">
              <div className="relative w-64 h-64 lg:w-80 lg:h-80 shrink-0">
                <div className="absolute inset-0 bg-primary/5 rounded-[4rem] rotate-6" />
-               <div className={cn("absolute inset-0 rounded-[4rem] -rotate-3 overflow-hidden border-[10px] shadow-2xl", isDark ? 'border-slate-800 bg-slate-900' : 'border-white bg-slate-100')}>
+               <div className={cn("absolute inset-0 rounded-[4rem] -rotate-3 overflow-hidden border-[10px]", isDark ? 'border-slate-800 bg-slate-900' : 'border-white bg-slate-100')}>
                  <Image
                     src={mentorProfile.photoURL}
                     alt="Mentor"
@@ -309,7 +309,7 @@ export default function StylePreviewPage({ params }: { params: Promise<{ id: str
           <Rocket className="h-96 w-96 text-white" />
         </div>
         <div className="container mx-auto px-6 max-w-5xl relative z-10 text-center space-y-12">
-          <Card className={cn("max-w-md mx-auto rounded-[3rem] p-12 space-y-8 border-none shadow-3xl transform hover:scale-105 transition-transform", isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900')}>
+          <Card className={cn("max-w-md mx-auto rounded-lg p-12 space-y-8 border-none transform hover:scale-105 transition-transform", isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900')}>
             <div className="space-y-2">
               <p className={cn("text-xs font-black uppercase tracking-[0.3em]", isDark ? 'text-slate-400' : 'text-slate-400')}>Inversión Única</p>
               <p className="text-6xl font-black tracking-tighter" style={{ color: primaryColor }}>
@@ -322,7 +322,7 @@ export default function StylePreviewPage({ params }: { params: Promise<{ id: str
             </div>
             <Button
               size="lg"
-              className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all"
+              className="w-full h-16 text-xl font-bold rounded-2xl transition-all"
               style={{ backgroundColor: primaryColor, color: '#FFFFFF' }}
             >
               {content.ctaText}

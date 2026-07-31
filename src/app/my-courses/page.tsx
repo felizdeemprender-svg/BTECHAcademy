@@ -31,7 +31,7 @@ export default function MyCoursesPage() {
             <p className="text-muted-foreground font-medium animate-pulse text-sm md:text-base">Sincronizando tu progreso académico...</p>
           </div>
         ) : isEmpty ? (
-          <div className="text-center py-16 md:py-32 bg-secondary/10 rounded-[2rem] md:rounded-[3rem] border-2 border-dashed border-muted-foreground/20 space-y-6 mx-2 md:mx-0">
+          <div className="text-center py-16 md:py-32 bg-secondary/10 rounded-lg rounded-lg border-2 border-dashed border-muted-foreground/20 space-y-6 mx-2 md:mx-0">
             <div className="w-16 h-16 md:w-20 md:h-20 bg-muted rounded-full flex items-center justify-center mx-auto opacity-30">
               <Library className="h-8 w-8 md:h-10 md:h-10" />
             </div>

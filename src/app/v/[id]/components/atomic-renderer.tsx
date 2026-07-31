@@ -21,8 +21,28 @@ const XIcon = ({ className }: { className?: string }) => (
 );
 
 export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any; onPurchase: () => void; mentorProfile?: any }) {
-  const primaryColor = page.content?.designTokens?.primary || page.branding?.primaryColor || '#3B2D86';
-  const accentColor = page.content?.designTokens?.accent || '#FACC15';
+  const designTokens = page.content?.designTokens || {};
+  const styleTokens = designTokens.styleTokens || {};
+  const primaryColor = designTokens.primary || page.branding?.primaryColor || '#3B2D86';
+  const secondaryColor = designTokens.secondary || page.branding?.secondaryColor || '#F1F5F9';
+  const accentColor = designTokens.accent || '#FACC15';
+  const themeMode = styleTokens.themeMode || designTokens.themeMode || 'light';
+  const isDark = themeMode === 'dark';
+  const isGlass = themeMode === 'glass';
+  const componentRadius = styleTokens.componentRadius || '12px';
+  const componentBorder = styleTokens.componentBorder || '1px solid rgba(0,0,0,0.05)';
+  const componentShadow = styleTokens.componentShadow || 'none';
+  const componentBg = styleTokens.componentBg || '#ffffff';
+  const sectionPadding = styleTokens.sectionPadding || '96px';
+  const contentGap = styleTokens.contentGap || '24px';
+  const transitionDuration = styleTokens.transitionDuration || '300ms';
+  const surfaceMuted = isDark ? 'rgba(255,255,255,0.06)' : isGlass ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
+  const cardStyle = {
+    background: componentBg,
+    border: componentBorder,
+    boxShadow: componentShadow,
+    borderRadius: componentRadius,
+  } as React.CSSProperties;
   
   // Sort sections based on the template's defined order
   const styleDefinition = getLandingStyle(page.styleId || 'classic');
@@ -41,16 +61,31 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
   });
 
   return (
-    <div className="w-full flex flex-col font-body">
+    <div
+      className={cn("w-full flex flex-col font-body", isDark ? "bg-slate-950 text-slate-100" : isGlass ? "bg-indigo-950 text-indigo-50" : "bg-slate-50 text-slate-900")}
+      style={{
+        ['--primary' as any]: primaryColor,
+        ['--secondary' as any]: secondaryColor,
+        ['--accent' as any]: accentColor,
+        ['--component-radius' as any]: componentRadius,
+        ['--component-border' as any]: componentBorder,
+        ['--component-shadow' as any]: componentShadow,
+        ['--component-bg' as any]: componentBg,
+        ['--section-padding' as any]: sectionPadding,
+        ['--content-gap' as any]: contentGap,
+        ['--transition-duration' as any]: transitionDuration,
+        ['--surface-muted' as any]: surfaceMuted,
+      }}
+    >
       {sections.map((sec: any, index: number) => {
         const baseId = sec.id.split('_')[0];
 
         switch (baseId) {
           case 'heroVideo':
             return (
-              <section key={sec.id} className="relative py-24 lg:py-32 overflow-hidden flex flex-col items-center text-center px-6">
+              <section key={sec.id} className="relative py-[var(--section-padding)] overflow-hidden flex flex-col items-center text-center px-6">
                 <div className="max-w-4xl mx-auto space-y-8 relative z-10">
-                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-black font-headline tracking-tight leading-[1.1] text-inherit">
+                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-black font-headline tracking-tight leading-[1.1]" style={{ color: primaryColor }}>
                     {sec.title}
                   </h1>
                   {sec.subtitle && (
@@ -66,7 +101,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                   <div className="pt-8">
                     <Button
                       onClick={onPurchase}
-                      className="h-16 px-12 text-xl font-bold rounded-2xl shadow-xl hover:scale-105 transition-transform"
+                      className="h-16 px-12 text-xl font-bold rounded-[var(--component-radius)] hover:scale-105 transition-transform"
                       style={{ backgroundColor: primaryColor, color: '#fff' }}
                     >
                       {sec.ctaText || 'Inscribirme Ahora'}
@@ -83,13 +118,13 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                 {sec.imageUrl ? (
                   <div className={cn("max-w-7xl mx-auto flex flex-col gap-12 lg:gap-20 items-center", isEven ? "md:flex-row" : "md:flex-row-reverse")}>
                     <div className="w-full md:w-1/2">
-                      <div className="w-full aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-2xl relative bg-black/5 dark:bg-white/5 border-[8px] border-white dark:border-slate-800">
+                      <div className="w-full aspect-[4/3] rounded-[var(--component-radius)] overflow-hidden relative bg-[var(--surface-muted)]" style={{ border: 'var(--component-border)' }}>
                         <img src={sec.imageUrl} alt={sec.title || "Imagen narrativa"} className="w-full h-full object-cover" />
                       </div>
                     </div>
                     <div className="w-full md:w-1/2 space-y-8">
-                      {sec.title && <h2 className="text-4xl md:text-5xl font-black font-headline leading-[1.1]">{sec.title}</h2>}
-                      <div className="prose prose-lg dark:prose-invert prose-p:leading-relaxed max-w-none text-opacity-90 whitespace-pre-wrap">
+                      {sec.title && <h2 className="text-4xl md:text-5xl font-black font-headline leading-[1.1]" style={{ color: primaryColor }}>{sec.title}</h2>}
+                      <div className={cn("prose prose-lg prose-p:leading-relaxed max-w-none text-opacity-90 whitespace-pre-wrap", isDark && "prose-invert")}>
                         {sec.content}
                       </div>
                       
@@ -98,7 +133,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 text-left">
                           {sec.bullets.slice(0, 4).map((bullet: string, i: number) => (
                             <div key={i} className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-white shadow-sm mt-0.5" style={{ backgroundColor: primaryColor }}>
+                              <div className="w-8 h-8 rounded-[var(--component-radius)] flex-shrink-0 flex items-center justify-center text-white shadow-sm mt-0.5" style={{ backgroundColor: primaryColor }}>
                                 ✓
                               </div>
                               <span className="text-sm md:text-base text-opacity-80 leading-relaxed font-medium">{bullet}</span>
@@ -110,8 +145,8 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                   </div>
                 ) : (
                   <div className="max-w-4xl mx-auto space-y-8 text-center md:text-left">
-                    {sec.title && <h2 className="text-4xl md:text-5xl font-black font-headline leading-[1.1]">{sec.title}</h2>}
-                    <div className="prose prose-lg dark:prose-invert prose-p:leading-relaxed max-w-none text-opacity-90 whitespace-pre-wrap">
+                    {sec.title && <h2 className="text-4xl md:text-5xl font-black font-headline leading-[1.1]" style={{ color: primaryColor }}>{sec.title}</h2>}
+                    <div className={cn("prose prose-lg prose-p:leading-relaxed max-w-none text-opacity-90 whitespace-pre-wrap", isDark && "prose-invert")}>
                       {sec.content}
                     </div>
                     
@@ -120,7 +155,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 text-left">
                         {sec.bullets.slice(0, 4).map((bullet: string, i: number) => (
                           <div key={i} className="flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-white shadow-sm mt-0.5" style={{ backgroundColor: primaryColor }}>
+                            <div className="w-8 h-8 rounded-[var(--component-radius)] flex-shrink-0 flex items-center justify-center text-white shadow-sm mt-0.5" style={{ backgroundColor: primaryColor }}>
                               ✓
                             </div>
                             <span className="text-sm md:text-base text-opacity-80 leading-relaxed font-medium">{bullet}</span>
@@ -132,7 +167,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                     {/* Botón de Acción Opcional */}
                     {sec.ctaText && (
                       <div className="flex justify-center md:justify-start pt-8 mt-8 w-full">
-                        <Button onClick={onPurchase} className="h-16 px-10 text-lg md:text-xl font-bold rounded-2xl shadow-xl transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
+                        <Button onClick={onPurchase} className="h-16 px-10 text-lg md:text-xl font-bold rounded-[var(--component-radius)] transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
                           {sec.ctaText}
                         </Button>
                       </div>
@@ -144,15 +179,15 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
 
           case 'syllabus':
             return (
-              <section key={sec.id} className="py-24 px-6 bg-black/5 dark:bg-white/5">
+              <section key={sec.id} className="py-[var(--section-padding)] px-6 bg-[var(--surface-muted)]">
                 <div className="max-w-6xl mx-auto">
-                  {sec.title && <h2 className="text-3xl md:text-5xl font-black font-headline mb-12 text-center">{sec.title}</h2>}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {sec.title && <h2 className="text-3xl md:text-5xl font-black font-headline mb-12 text-center" style={{ color: primaryColor }}>{sec.title}</h2>}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-[var(--content-gap)]">
                     {sec.bullets?.map((bullet: string, i: number) => {
                       const [bTitle, ...bDescArr] = bullet.split(':');
                       const bDesc = bDescArr.join(':');
                       return (
-                        <div key={i} className="p-8 rounded-3xl bg-white dark:bg-slate-900 shadow-xl border border-black/5">
+                        <div key={i} className="p-8 rounded-[var(--component-radius)] bg-[var(--component-bg)]" style={cardStyle}>
                           <h3 className="text-xl font-bold mb-3">{bTitle.replace(/\*\*/g, '')}</h3>
                           <p className="text-opacity-70 leading-relaxed">{bDesc}</p>
                         </div>
@@ -163,7 +198,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                   {/* Botón de Acción Opcional */}
                   {sec.ctaText && (
                     <div className="flex justify-center pt-16 w-full">
-                      <Button onClick={onPurchase} className="h-16 px-12 text-lg md:text-xl font-bold rounded-2xl shadow-xl transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
+                      <Button onClick={onPurchase} className="h-16 px-12 text-lg md:text-xl font-bold rounded-[var(--component-radius)] transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
                         {sec.ctaText}
                       </Button>
                     </div>
@@ -174,10 +209,10 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
 
           case 'benefits':
             return (
-              <section key={sec.id} className="py-24 px-6">
+              <section key={sec.id} className="py-[var(--section-padding)] px-6">
                 <div className="max-w-6xl mx-auto text-center space-y-16">
-                  {sec.title && <h2 className="text-3xl md:text-5xl font-black font-headline">{sec.title}</h2>}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-left">
+                  {sec.title && <h2 className="text-3xl md:text-5xl font-black font-headline" style={{ color: primaryColor }}>{sec.title}</h2>}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-[var(--content-gap)] text-left">
                     {sec.bullets?.map((bullet: string, i: number) => (
                       <div key={i} className="space-y-4">
                         <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg" style={{ backgroundColor: primaryColor, color: '#fff' }}>
@@ -191,7 +226,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                   {/* Botón de Acción Opcional */}
                   {sec.ctaText && (
                     <div className="flex pt-8 mt-auto w-full">
-                      <Button onClick={onPurchase} className="h-16 px-10 text-lg md:text-xl font-bold rounded-2xl shadow-xl transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
+                      <Button onClick={onPurchase} className="h-16 px-10 text-lg md:text-xl font-bold rounded-[var(--component-radius)] transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
                         {sec.ctaText}
                       </Button>
                     </div>
@@ -202,14 +237,14 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
 
           case 'faqs':
             return (
-              <section key={sec.id} className="py-24 px-6">
+              <section key={sec.id} className="py-[var(--section-padding)] px-6">
                 <div className="max-w-4xl mx-auto">
-                  {sec.title && <h2 className="text-3xl md:text-5xl font-black font-headline mb-12 text-center">{sec.title}</h2>}
+                  {sec.title && <h2 className="text-3xl md:text-5xl font-black font-headline mb-12 text-center" style={{ color: primaryColor }}>{sec.title}</h2>}
                   <div className="space-y-6">
                     {sec.bullets?.map((bullet: string, i: number) => {
                       const [q, ...a] = bullet.split('?');
                       return (
-                        <div key={i} className="p-6 rounded-2xl bg-black/5 dark:bg-white/5">
+                        <div key={i} className="p-6 rounded-[var(--component-radius)] bg-[var(--surface-muted)]">
                           <h4 className="font-bold text-xl mb-3">{q}?</h4>
                           <p className="text-opacity-70">{a.join('?')}</p>
                         </div>
@@ -220,7 +255,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                   {/* Botón de Acción Opcional */}
                   {sec.ctaText && (
                     <div className="flex justify-center pt-12 w-full">
-                      <Button onClick={onPurchase} className="h-16 px-12 text-lg md:text-xl font-bold rounded-2xl shadow-xl transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
+                      <Button onClick={onPurchase} className="h-16 px-12 text-lg md:text-xl font-bold rounded-[var(--component-radius)] transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
                         {sec.ctaText}
                       </Button>
                     </div>
@@ -231,25 +266,25 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
 
           case 'mentorProfile':
             return (
-              <section key={sec.id} className="py-24 px-6 overflow-hidden">
+              <section key={sec.id} className="py-[var(--section-padding)] px-6 overflow-hidden">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 lg:gap-20">
                   {sec.imageUrl && (
                     <div className="w-full md:w-1/2">
-                      <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white/10 bg-black/5 dark:bg-white/5">
+                      <div className="relative aspect-[4/5] rounded-[var(--component-radius)] overflow-hidden bg-[var(--surface-muted)]" style={{ border: 'var(--component-border)' }}>
                         <img src={sec.imageUrl} alt={sec.title || "Mentor Profile"} className="w-full h-full object-cover" />
                       </div>
                     </div>
                   )}
                   <div className={cn("w-full space-y-8", sec.imageUrl ? "md:w-1/2" : "text-center")}>
-                    {sec.title && <h2 className="text-4xl md:text-6xl font-black font-headline leading-tight">{sec.title}</h2>}
-                    <div className="prose prose-lg dark:prose-invert prose-p:leading-relaxed max-w-none text-opacity-80 whitespace-pre-wrap">
+                    {sec.title && <h2 className="text-4xl md:text-6xl font-black font-headline leading-tight" style={{ color: primaryColor }}>{sec.title}</h2>}
+                    <div className={cn("prose prose-lg prose-p:leading-relaxed max-w-none text-opacity-80 whitespace-pre-wrap", isDark && "prose-invert")}>
                       {sec.content}
                     </div>
                     
                     {/* Botón de Acción Opcional */}
                     {sec.ctaText && (
                       <div className="flex justify-center md:justify-start pt-8 mt-8 w-full">
-                        <Button onClick={onPurchase} className="h-16 px-10 text-lg md:text-xl font-bold rounded-2xl shadow-xl transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
+                        <Button onClick={onPurchase} className="h-16 px-10 text-lg md:text-xl font-bold rounded-[var(--component-radius)] transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
                           {sec.ctaText}
                         </Button>
                       </div>
@@ -261,26 +296,26 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
 
           case 'testimonials':
             return (
-              <section key={sec.id} className="py-24 px-6 bg-black/5 dark:bg-white/5">
+              <section key={sec.id} className="py-[var(--section-padding)] px-6 bg-[var(--surface-muted)]">
                 <div className="max-w-6xl mx-auto text-center space-y-16">
-                  {sec.title && <h2 className="text-4xl md:text-5xl font-black font-headline">{sec.title}</h2>}
-                  {sec.content && <div className="prose prose-lg dark:prose-invert mx-auto text-opacity-90">{sec.content}</div>}
+                  {sec.title && <h2 className="text-4xl md:text-5xl font-black font-headline" style={{ color: primaryColor }}>{sec.title}</h2>}
+                  {sec.content && <div className={cn("prose prose-lg mx-auto text-opacity-90", isDark && "prose-invert")}>{sec.content}</div>}
                   
                   {sec.imageUrl && (
-                    <div className="max-w-4xl mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl border-[8px] border-white dark:border-slate-800">
+                    <div className="max-w-4xl mx-auto rounded-[var(--component-radius)] overflow-hidden" style={{ border: 'var(--component-border)' }}>
                       <img src={sec.imageUrl} alt="Testimonios" className="w-full h-auto object-cover" />
                     </div>
                   )}
 
                   {sec.bullets && sec.bullets.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-left mt-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[var(--content-gap)] text-left mt-12">
                       {sec.bullets.map((bullet: string, i: number) => {
                         const hasColon = bullet.includes(':');
                         const [name, ...quoteArr] = hasColon ? bullet.split(':') : ['', bullet];
                         const quote = hasColon ? quoteArr.join(':') : bullet;
                         
                         return (
-                          <div key={i} className="p-8 rounded-3xl bg-white dark:bg-slate-900 shadow-xl border border-black/5 flex flex-col gap-5">
+                          <div key={i} className="p-8 rounded-[var(--component-radius)] bg-[var(--component-bg)] flex flex-col gap-5" style={cardStyle}>
                             <div className="flex gap-1 text-xl" style={{ color: accentColor }}>
                               {'★'.repeat(5)}
                             </div>
@@ -295,7 +330,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                   {/* Botón de Acción Opcional */}
                   {sec.ctaText && (
                     <div className="flex justify-center pt-12 w-full">
-                      <Button onClick={onPurchase} className="h-16 px-12 text-lg md:text-xl font-bold rounded-2xl shadow-xl transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
+                      <Button onClick={onPurchase} className="h-16 px-12 text-lg md:text-xl font-bold rounded-[var(--component-radius)] transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
                         {sec.ctaText}
                       </Button>
                     </div>
@@ -306,17 +341,17 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
 
           case 'bonuses':
             return (
-              <section key={sec.id} className="py-24 px-6">
+              <section key={sec.id} className="py-[var(--section-padding)] px-6">
                 <div className="max-w-5xl mx-auto space-y-16">
                   <div className="text-center space-y-6">
                     {sec.title && <h2 className="text-4xl md:text-5xl font-black font-headline" style={{ color: accentColor }}>{sec.title}</h2>}
-                    {sec.content && <div className="prose prose-lg dark:prose-invert mx-auto text-opacity-90">{sec.content}</div>}
+                    {sec.content && <div className={cn("prose prose-lg mx-auto text-opacity-90", isDark && "prose-invert")}>{sec.content}</div>}
                   </div>
                   
-                  <div className="flex flex-col md:flex-row items-center gap-12 p-8 md:p-12 rounded-[3rem] bg-gradient-to-br from-black/5 to-black/10 dark:from-white/5 dark:to-white/10 shadow-2xl border border-white/20">
+                  <div className="flex flex-col md:flex-row items-center gap-12 p-8 md:p-12 rounded-[var(--component-radius)] bg-[var(--surface-muted)]" style={{ border: 'var(--component-border)' }}>
                     {sec.imageUrl && (
                       <div className="w-full md:w-5/12 flex-shrink-0">
-                        <div className="relative aspect-square rounded-[2rem] overflow-hidden shadow-xl border-4 border-white dark:border-slate-800 transform -rotate-3 hover:rotate-0 transition-all duration-500">
+                        <div className="relative aspect-square rounded-[var(--component-radius)] overflow-hidden transform -rotate-3 hover:rotate-0 transition-all duration-500" style={{ border: 'var(--component-border)' }}>
                           <img src={sec.imageUrl} alt={sec.title || "Bonus"} className="w-full h-full object-cover" />
                         </div>
                       </div>
@@ -341,7 +376,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                   {/* Botón de Acción Opcional */}
                   {sec.ctaText && (
                     <div className="flex justify-center pt-8 w-full">
-                      <Button onClick={onPurchase} className="h-16 px-12 text-lg md:text-xl font-bold rounded-2xl shadow-xl transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
+                      <Button onClick={onPurchase} className="h-16 px-12 text-lg md:text-xl font-bold rounded-[var(--component-radius)] transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
                         {sec.ctaText}
                       </Button>
                     </div>
@@ -356,7 +391,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
               <div 
                 key={sec.id}
                 onClick={onPurchase}
-                className="fixed top-1/2 right-4 -translate-y-1/2 z-[100] w-64 md:w-72 rounded-[2rem] overflow-hidden shadow-2xl cursor-pointer group transition-transform hover:scale-105"
+                className="fixed top-1/2 right-4 -translate-y-1/2 z-[100] w-64 md:w-72 rounded-[var(--component-radius)] overflow-hidden cursor-pointer group transition-transform hover:scale-105"
               >
                 {sec.imageUrl ? (
                   <div className="absolute inset-0">
@@ -367,7 +402,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                   <div className="absolute inset-0 opacity-95" style={{ backgroundColor: primaryColor }}></div>
                 )}
                 
-                <div className="relative z-10 p-6 flex flex-col items-center text-center text-white border border-white/10 rounded-[2rem]">
+                <div className="relative z-10 p-6 flex flex-col items-center text-center text-white border border-white/10 rounded-[var(--component-radius)]">
                   <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mb-4 animate-pulse border border-red-500/30">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   </div>
@@ -377,7 +412,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                   <CountdownTimer activeUntil={page.activeUntil} />
                   
                   <Button 
-                    className="w-full mt-6 bg-white text-black hover:bg-slate-100 font-bold shadow-lg"
+                    className="w-full mt-6 bg-white text-black hover:bg-slate-100 font-bold"
                   >
                     {sec.ctaText || 'Acceder Ahora'}
                   </Button>
@@ -389,12 +424,12 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
             return (
               <section key={sec.id} className="py-20 px-6 text-center">
                 <div className="max-w-3xl mx-auto space-y-6">
-                  {sec.title && <h2 className="text-3xl md:text-5xl font-black font-headline mb-8">{sec.title}</h2>}
+                  {sec.title && <h2 className="text-3xl md:text-5xl font-black font-headline mb-8" style={{ color: primaryColor }}>{sec.title}</h2>}
                   <div className="whitespace-pre-wrap">{sec.content}</div>
                   {sec.ctaText && (
                     <Button
                       onClick={onPurchase}
-                      className="mt-8 h-14 px-8 text-lg font-bold rounded-xl"
+                      className="mt-8 h-14 px-8 text-lg font-bold rounded-[var(--component-radius)]"
                       style={{ backgroundColor: primaryColor, color: '#fff' }}
                     >
                       {sec.ctaText}
@@ -517,22 +552,22 @@ function CountdownTimer({ activeUntil }: { activeUntil: any }) {
   return (
     <div className="flex items-center gap-1 mt-2 justify-center w-full">
       <div className="flex flex-col items-center flex-1">
-        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono">{pad(timeLeft.d)}</div>
+        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-[var(--component-radius)] flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono">{pad(timeLeft.d)}</div>
         <span className="text-[9px] md:text-[10px] uppercase font-bold tracking-wider mt-1.5 opacity-80 text-white">Días</span>
       </div>
       <div className="text-lg font-bold text-white/40 -mt-5">:</div>
       <div className="flex flex-col items-center flex-1">
-        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono">{pad(timeLeft.h)}</div>
+        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-[var(--component-radius)] flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono">{pad(timeLeft.h)}</div>
         <span className="text-[9px] md:text-[10px] uppercase font-bold tracking-wider mt-1.5 opacity-80 text-white">Hrs</span>
       </div>
       <div className="text-lg font-bold text-white/40 -mt-5">:</div>
       <div className="flex flex-col items-center flex-1">
-        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono">{pad(timeLeft.m)}</div>
+        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-[var(--component-radius)] flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono">{pad(timeLeft.m)}</div>
         <span className="text-[9px] md:text-[10px] uppercase font-bold tracking-wider mt-1.5 opacity-80 text-white">Min</span>
       </div>
       <div className="text-lg font-bold text-white/40 -mt-5">:</div>
       <div className="flex flex-col items-center flex-1">
-        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono text-red-300">{pad(timeLeft.s)}</div>
+        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-[var(--component-radius)] flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono text-red-300">{pad(timeLeft.s)}</div>
         <span className="text-[9px] md:text-[10px] uppercase font-bold tracking-wider mt-1.5 opacity-80 text-white">Seg</span>
       </div>
     </div>
@@ -575,7 +610,7 @@ function SecureVideoPlayer({ videoUrl }: { videoUrl: string }) {
 
   return (
     <div
-      className="aspect-video rounded-[3rem] overflow-hidden shadow-3xl border-[12px] border-slate-50 dark:border-slate-800 bg-black relative group/video-container select-none"
+      className="aspect-video rounded-[var(--component-radius)] overflow-hidden bg-black relative group/video-container select-none" style={{ border: 'var(--component-border)' }}
       onContextMenu={(e) => e.preventDefault()}
     >
       <iframe
@@ -600,7 +635,7 @@ function SecureVideoPlayer({ videoUrl }: { videoUrl: string }) {
 
         {!isPlaying && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/20 transition-colors">
-            <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white/20 shadow-2xl transition-transform hover:scale-110">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 transition-transform hover:scale-110">
               <Play className="h-8 w-8 text-white fill-white ml-1" />
             </div>
           </div>
@@ -608,7 +643,7 @@ function SecureVideoPlayer({ videoUrl }: { videoUrl: string }) {
       </div>
 
       {/* Marca de Agua */}
-      <div className="absolute top-6 left-6 z-40 flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 opacity-0 group-hover/video-container:opacity-100 transition-opacity">
+      <div className="absolute top-6 left-6 z-40 flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-[var(--component-radius)] border border-white/10 opacity-0 group-hover/video-container:opacity-100 transition-opacity">
         <ShieldCheck className="h-3 w-3 text-emerald-400" />
         <span className="text-[8px] font-black uppercase text-white tracking-widest">Contenido Protegido • Evolución Académica</span>
       </div>

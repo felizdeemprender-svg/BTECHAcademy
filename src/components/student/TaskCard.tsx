@@ -24,7 +24,7 @@ export function StudentTaskCard({
   const isCompleted = status === 'completed';
 
   return (
-    <Card className="border-none shadow-lg rounded-3xl bg-white overflow-hidden group hover:shadow-xl transition-all">
+    <Card className="border-none shadow-lg rounded-3xl bg-white overflow-hidden group transition-all">
       <div className="p-5 md:p-6 flex flex-col lg:flex-row justify-between items-center gap-6">
         <div className="flex items-center gap-4 flex-1 min-w-0 w-full lg:w-auto">
           <div className={cn(

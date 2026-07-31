@@ -35,7 +35,7 @@ export function PdfProductionPanel({
   const pdfUrl = s.production_notes?.pdf_url;
 
   return (
-    <div className="p-8 rounded-[2.5rem] border-2 border-dashed space-y-8 bg-slate-900/40 backdrop-blur-md" 
+    <div className="p-8 rounded-lg border-2 border-dashed space-y-8 bg-slate-900/40 backdrop-blur-md" 
          style={{ borderColor: isGenerating ? '#10b981' : 'rgba(255,255,255,0.05)' }}>
 
       <div className="flex items-center gap-4 mb-2">
@@ -76,7 +76,7 @@ export function PdfProductionPanel({
       {/* Botones de Acción */}
       {!pdfUrl ? (
         <Button 
-          className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-sm gap-3 shadow-xl transition-all active:scale-95 disabled:opacity-50"
+          className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-sm gap-3 transition-all active:scale-95 disabled:opacity-50"
           onClick={() => onGeneratePdf(s, sIdx)}
           disabled={isGenerating}
         >
@@ -90,7 +90,7 @@ export function PdfProductionPanel({
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row gap-3">
             <Button 
-              className="flex-1 h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-sm gap-3 shadow-xl transition-all active:scale-95"
+              className="flex-1 h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-sm gap-3 transition-all active:scale-95"
               onClick={() => window.open(pdfUrl, '_blank')}
             >
               <Download className="h-6 w-6" /> Descargar PDF Final

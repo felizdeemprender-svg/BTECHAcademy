@@ -61,8 +61,7 @@ export async function generateIdentityDesign(input: DesignInput): Promise<Identi
     const result = await generateIdentityDesignFlow(input);
     return result;
   } catch (error: any) {
-    console.error("[Flow Error: GenerateIdentityDesign]", error);
-    // En caso de error, devolver un diseño por defecto en lugar de null
+    console.error("[Flow Error: GenerateIdentityDesign]", error);    // En caso de error, devolver un diseño por defecto en lugar de null
     return {
       designTokens: {
         primary: "#3B82F6",
@@ -108,8 +107,7 @@ export async function generateIdentityDesignBatch(input: DesignInput): Promise<I
     const result = await generateIdentityDesignBatchFlow(input);
     return result;
   } catch (error: any) {
-    console.error("[Flow Error: GenerateIdentityDesignBatch]", error);
-    // En caso de error, devolver 5 diseños por defecto
+    console.error("[Flow Error: GenerateIdentityDesignBatch]", error);    // En caso de error, devolver 5 diseños por defecto
     return Array(5).fill(null).map((_, index) => ({
       designTokens: {
         primary: "#3B82F6",
@@ -146,13 +144,49 @@ export async function generateIdentityDesignBatch(input: DesignInput): Promise<I
   }
 }
 
+const generateIdentityDesignFlow = ai.defineFlow(
+  {
+    name: 'generateIdentityDesignFlow',
+    inputSchema: DesignInputSchema,
+    outputSchema: IdentityDesignSchema,
+  },
+  async (input): Promise<IdentityDesign> => {
+    const { output } = await ai.generate({
+      prompt: `Actúa como un Director de Arte y Diseñador Gráfico experto. Tu tarea es generar una identidad visual profesional basada en las directivas del usuario.
+
+DIRECTIVAS DEL USUARIO:
+${input.directives}
+
+INSTRUCCIONES DE DISEÑO:
+1. Genera una paleta de colores coherente basada en las directivas
+2. Selecciona tipografías modernas y apropiadas
+3. Proporciona justificaciones claras para el diseño
+
+REQUISITOS TÉCNICOS:
+- Colores en formato HEX (ej: #3B82F6)
+- Tipografías web modernas (Inter, Roboto, Poppins, Montserrat, Open Sans, Lato, Nunito, Raleway)
+- La paleta debe incluir: primario, secundario, acento, 4 neutros, 2 complementarios
+- Justificaciones específicas y profesionales`,
+      output: {
+        schema: IdentityDesignSchema,
+      },
+    });
+
+    if (!output) {
+      throw new Error('El modelo no devolvió ningún diseño de identidad.');
+    }
+
+    return output;
+  }
+);
+
 const generateIdentityDesignBatchFlow = ai.defineFlow(
   {
     name: 'generateIdentityDesignBatchFlow',
     inputSchema: DesignInputSchema,
     outputSchema: IdentityDesignArraySchema,
   },
-  async (input) => {
+  async (input): Promise<IdentityDesignArray> => {
     const { output } = await ai.generate({
       prompt: `Actúa como un Director de Arte y Diseñador Gráfico experto. Tu tarea es generar 5 identidades visuales únicas y profesionales basadas en las directivas del usuario.
 
@@ -179,6 +213,10 @@ Genera exactamente 5 identidades visuales completamente nuevas y únicas para es
       },
     });
 
-    return output;
+    if (!output) {
+      throw new Error('El modelo no devolvió ninguna identidad visual.');
+    }
+
+    return output as unknown as IdentityDesignArray;
   }
 );

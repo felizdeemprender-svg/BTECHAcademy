@@ -375,7 +375,7 @@ export default function SalesLandingsDashboardPage() {
           </div>
           <Button
             onClick={() => router.push('/mentoria/marketing/landings/v2-build')}
-            className="h-12 px-8 rounded-2xl font-bold shadow-xl flex items-center gap-2 bg-primary hover:bg-primary/90 transition-all"
+            className="h-12 px-8 rounded-2xl font-bold flex items-center gap-2 bg-primary hover:bg-primary/90 transition-all"
           >
             <Plus className="h-4 w-4" /> Nueva Landing
           </Button>

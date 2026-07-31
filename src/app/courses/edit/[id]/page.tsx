@@ -91,6 +91,7 @@ interface ModuleData {
   minPassingScore: number;
   allowRetries: boolean;
   enableSupportQuestions: boolean;
+  duration?: string;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
@@ -497,7 +498,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   };
 
   const renderQuestionEditor = (q: Question, qIdx: number, isSupport: boolean) => (
-    <Card key={q.id} className={`p-6 ${isSupport ? 'bg-emerald-50/30' : 'bg-muted/10'} rounded-[2rem] relative border-none shadow-sm`}>
+    <Card key={q.id} className={`p-6 ${isSupport ? 'bg-emerald-50/30' : 'bg-muted/10'} rounded-lg relative border-none shadow-sm`}>
       <Button 
         variant="ghost" size="icon" 
         onClick={() => { 
@@ -584,7 +585,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       className="flex-1 border-none outline-none text-xs bg-transparent" 
                       placeholder={`Opción ${String.fromCharCode(65 + optIdx)}`} 
                     />
-                    {q.options.length > 2 && (
+                    {q.options && q.options.length > 2 && (
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -606,7 +607,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                   </div>
                 ))}
               </div>
-              {q.options.length < 6 && (
+              {q.options && q.options.length < 6 && (
                 <div className="flex justify-end pt-1">
                   <Button 
                     type="button" 
@@ -686,7 +687,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           </TabsList>
 
           <TabsContent value="general">
-            <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden bg-white">
+            <Card className="border-none rounded-lg overflow-hidden bg-white">
               <CardContent className="p-8 space-y-8">
                 <div className="grid gap-6">
                   <div className="space-y-4">
@@ -722,7 +723,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         <SelectTrigger size="lg" className="bg-secondary/5 border-none font-bold">
                           <SelectValue placeholder="Selecciona una categoría" />
                         </SelectTrigger>
-                        <SelectContent className="border-none shadow-xl">
+                        <SelectContent className="border-none">
                           {categories?.map(cat => (
                             <SelectItem key={cat.id} value={cat.id} className="font-bold">
                               {cat.name}
@@ -741,7 +742,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         <SelectTrigger size="lg" className="bg-secondary/5 border-none font-bold">
                           <SelectValue placeholder="Selecciona el nivel" />
                         </SelectTrigger>
-                        <SelectContent className="border-none shadow-xl">
+                        <SelectContent className="border-none">
                           {levels?.map(lvl => (
                             <SelectItem key={lvl.id} value={lvl.name} className="font-bold">
                               {lvl.name}
@@ -752,7 +753,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </div>
                   </div>
                 </div>
-                <Button onClick={handleSaveGeneral} className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl" disabled={loading}>{loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} Guardar Cambios</Button>
+                <Button onClick={handleSaveGeneral} className="w-full h-14 rounded-2xl text-lg font-bold" disabled={loading}>{loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} Guardar Cambios</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -923,7 +924,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </TabsContent>
                   </Tabs>
 
-                  <div className="bg-accent/5 p-8 rounded-[2rem] border border-accent/10 space-y-6">
+                  <div className="bg-accent/5 p-8 rounded-lg border border-accent/10 space-y-6">
                     <h4 className="font-bold text-accent flex items-center gap-2"><ShieldCheck className="h-5 w-5" /> Reglas de Aprobación</h4>
                     <div className="grid sm:grid-cols-2 gap-8">
                       <div className="space-y-2">
@@ -964,7 +965,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </div>
                   </div>
 
-                  <div className="bg-emerald-50/50 p-8 rounded-[3rem] border-2 border-dashed border-emerald-200/50 space-y-6">
+                  <div className="bg-emerald-50/50 p-8 rounded-lg border-2 border-dashed border-emerald-200/50 space-y-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-emerald-700">Refuerzo Académico</h3><p className="text-[10px] text-emerald-600 font-medium">Se activa si el alumno reprueba.</p></div></div>
                       <Switch checked={currentModule.enableSupportQuestions} onCheckedChange={(val) => {
@@ -1039,7 +1040,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     )}
                   </div>
 
-                  <Button onClick={handleExtractText} disabled={isExtracting || !currentModule?.supportMaterials.find(m => m.isMaster)} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl">
+                  <Button onClick={handleExtractText} disabled={isExtracting || !currentModule?.supportMaterials.find(m => m.isMaster)} className="w-full h-14 rounded-2xl font-bold text-lg">
                     {isExtracting ? <><Loader2 className="animate-spin mr-2 h-5 w-5" /> Leyendo...</> : <><Zap className="mr-2 h-5 w-5" /> Iniciar Lectura Profunda</>}
                   </Button>
                 </div>
@@ -1090,7 +1091,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
                   <div className="flex gap-4">
                     <Button variant="ghost" onClick={() => setAiFlowStep(1)} className="rounded-xl font-bold">Atrás</Button>
-                    <Button onClick={handleGenerateQuestions} disabled={loading} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 bg-primary text-white">
+                    <Button onClick={handleGenerateQuestions} disabled={loading} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-primary/20 bg-primary text-white">
                       {loading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : <Sparkles className="h-5 w-5 mr-2" />} Generar Sugerencias</Button>
                   </div>
                 </div>

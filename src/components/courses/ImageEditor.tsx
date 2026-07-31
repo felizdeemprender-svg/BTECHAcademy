@@ -202,7 +202,7 @@ export function ImageEditor({
           Procesando con Motor IA Inteligente...
         </div>
       )}
-      <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50 shadow-inner">
+      <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50">
         {(url && typeof url === 'string') ? (
           <Image src={url} alt="Preview" fill className="object-cover" unoptimized />
         ) : (

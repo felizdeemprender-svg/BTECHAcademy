@@ -52,6 +52,7 @@ export interface CourseDetails {
   mentorId?: string;
   brandingOverride?: {
     primaryColor?: string;
+    brandName?: string;
     [key: string]: any;
   };
   modules?: Module[];

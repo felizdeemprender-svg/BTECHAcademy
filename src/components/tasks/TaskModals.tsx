@@ -1,4 +1,4 @@
-﻿
+
 'use client';
 
 import { 
@@ -84,7 +84,7 @@ export function TaskModals({
                 value={answer} 
                 onChange={e => setAnswer(e.target.value)}
                 placeholder="Escribe tu análisis o respuesta aquí..."
-                className="min-h-[150px] md:min-h-[180px] rounded-2xl p-4 md:p-6 text-sm md:text-base shadow-inner border-none bg-secondary/10 focus-visible:ring-accent"
+                className="min-h-[150px] md:min-h-[180px] rounded-2xl p-4 md:p-6 text-sm md:text-base border-none bg-secondary/10 focus-visible:ring-accent"
               />
             </div>
 
@@ -118,7 +118,7 @@ export function TaskModals({
               <Button 
                 onClick={() => onSubmit(selectedTask)} 
                 disabled={loading || !answer.trim()} 
-                className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl bg-accent hover:bg-accent/90"
+                className="w-full h-14 rounded-2xl text-lg font-bold bg-accent hover:bg-accent/90"
               >
                 {loading ? <><Loader2 className="animate-spin mr-2" /> Evaluando...</> : <><Send className="mr-2" /> Enviar para Evaluación</>}
               </Button>
