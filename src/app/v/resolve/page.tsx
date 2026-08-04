@@ -66,13 +66,13 @@ function ResolverContent() {
 
   if (error || !landingId) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-muted">
         <div className="text-center space-y-6 p-8 max-w-md">
-          <div className="w-20 h-20 bg-rose-100 rounded-3xl flex items-center justify-center mx-auto text-rose-500">
+          <div className="w-20 h-20 bg-danger/15 rounded-3xl flex items-center justify-center mx-auto text-danger">
             <span className="text-3xl font-bold">!</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">{error || 'No disponible'}</h1>
-          <p className="text-slate-500">Parece que la página que buscas ya no existe o el enlace es incorrecto.</p>
+          <h1 className="text-2xl font-bold text-foreground">{error || 'No disponible'}</h1>
+          <p className="text-muted-foreground">Parece que la página que buscas ya no existe o el enlace es incorrecto.</p>
           <button 
             onClick={() => router.push('/')}
             className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"

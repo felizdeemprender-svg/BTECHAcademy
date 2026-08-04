@@ -115,14 +115,14 @@ export const ClassicMockup = ({
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border">
+            <div className="w-8 h-8 rounded-full bg-border flex items-center justify-center border">
               <div className="w-4 h-4 bg-blue-500 rounded" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase text-slate-900 leading-none">
+              <p className="text-[10px] font-black uppercase text-foreground leading-none">
                 Classic Style
               </p>
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
+              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter">
                 Variante {index + 1}
               </p>
             </div>
@@ -133,14 +133,14 @@ export const ClassicMockup = ({
         </div>
       </div>
       
-      <div className="relative mx-auto rounded-lg overflow-hidden border-8 border-white bg-slate-100 aspect-[16/10] max-w-[800px]">
+      <div className="relative mx-auto rounded-lg overflow-hidden border-8 border-white bg-muted aspect-[16/10] max-w-[800px]">
         <div className="h-full w-full overflow-y-auto">
           {/* Hero Section */}
           <div className="p-8 bg-white">
             <h3 className="text-2xl font-bold mb-2" style={{ color: tokens.primary }}>
               {template.headline || "Historia Universal: Un Viaje Épico"}
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {template.subheadline || "Descubre cómo el pasado configura nuestro futuro"}
             </p>
           </div>
@@ -149,10 +149,10 @@ export const ClassicMockup = ({
           {dynamicSections && dynamicSections.map((section: ClassicSectionType, sectionIndex: number) => {
             const isImageRight = sectionIndex % 2 === 0;
             return (
-              <div key={sectionIndex} className={`p-8 ${sectionIndex % 2 === 0 ? "bg-white" : "bg-gray-50"} relative z-10 group`}>
+              <div key={sectionIndex} className={`p-8 ${sectionIndex % 2 === 0 ? "bg-white" : "bg-muted"} relative z-10 group`}>
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-xs bg-white/80 px-2 py-1 rounded shadow-sm">✏️ Editable</span>
-                  <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded shadow-sm">🗑️ Eliminar</span>
+                  <span className="text-xs bg-danger/15 text-danger px-2 py-1 rounded shadow-sm">🗑️ Eliminar</span>
                 </div>
                 <div className="flex gap-8 mb-6">
                   {isImageRight ? (

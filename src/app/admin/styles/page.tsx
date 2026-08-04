@@ -77,12 +77,12 @@ export default function AdminStylesPage() {
       <div className="space-y-8 pb-10 max-w-7xl mx-auto p-4 md:p-8">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Estilos de Landing</h1>
-            <p className="text-slate-500 font-medium">Visualiza los estilos disponibles. Los estilos son inmutables y son creados mediante ingeniería inversa.</p>
+            <h1 className="text-2xl font-bold text-foreground">Estilos de Landing</h1>
+            <p className="text-muted-foreground font-medium">Visualiza los estilos disponibles. Los estilos son inmutables y son creados mediante ingeniería inversa.</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             {syncMessage && (
-              <p className="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+              <p className="text-xs font-bold text-success flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5" /> {syncMessage}
               </p>
             )}
@@ -99,28 +99,28 @@ export default function AdminStylesPage() {
           </div>
         </header>
 
-        <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+        <div className="border border-border rounded-2xl overflow-hidden bg-white shadow-sm">
           <div className="p-0">
             <Table>
-              <TableHeader className="bg-slate-50/80 border-b">
+              <TableHeader className="bg-muted/80 border-b">
                 <TableRow className="border-none hover:bg-transparent">
-                  <TableHead className="font-bold py-4 px-6 text-slate-500 text-[10px] uppercase tracking-widest">Estilo</TableHead>
-                  <TableHead className="font-bold py-4 text-slate-500 text-[10px] uppercase tracking-widest text-center">Configuración</TableHead>
-                  <TableHead className="font-bold py-4 px-6 text-slate-500 text-[10px] uppercase tracking-widest text-right">Acciones</TableHead>
+                  <TableHead className="font-bold py-4 px-6 text-muted-foreground text-[10px] uppercase tracking-widest">Estilo</TableHead>
+                  <TableHead className="font-bold py-4 text-muted-foreground text-[10px] uppercase tracking-widest text-center">Configuración</TableHead>
+                  <TableHead className="font-bold py-4 px-6 text-muted-foreground text-[10px] uppercase tracking-widest text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={3} className="text-center py-20 animate-pulse text-slate-400">Cargando estilos...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center py-20 animate-pulse text-muted-foreground">Cargando estilos...</TableCell></TableRow>
                 ) : error ? (
-                  <TableRow><TableCell colSpan={3} className="text-center py-20 text-rose-500">Error: {error.message}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center py-20 text-danger">Error: {error.message}</TableCell></TableRow>
                 ) : styles?.length === 0 ? (
-                  <TableRow><TableCell colSpan={3} className="text-center py-20 italic text-slate-400">No hay estilos configurados. Ejecuta el seeder para cargar las plantillas base.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center py-20 italic text-muted-foreground">No hay estilos configurados. Ejecuta el seeder para cargar las plantillas base.</TableCell></TableRow>
                 ) : styles?.map((style) => (
-                  <TableRow key={style.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                  <TableRow key={style.id} className="hover:bg-muted/50 transition-colors border-b border-muted last:border-0">
                     <TableCell className="px-6 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0 relative">
+                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0 relative">
                           {style.thumbnail ? (
                             <img
                               src={style.thumbnail}
@@ -129,35 +129,35 @@ export default function AdminStylesPage() {
                               onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
                           ) : null}
-                          <Palette className="w-5 h-5 text-slate-400" />
+                          <Palette className="w-5 h-5 text-muted-foreground" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-bold text-slate-900 leading-tight">{style.name}</p>
-                            <Badge variant="outline" className={`text-[9px] uppercase font-bold px-1.5 py-0 h-4 ${(STYLE_GROUP_COLORS[style.group as StyleGroup] || 'bg-slate-50 text-slate-600 border-slate-200')}`}>
+                            <p className="font-bold text-foreground leading-tight">{style.name}</p>
+                            <Badge variant="outline" className={`text-[9px] uppercase font-bold px-1.5 py-0 h-4 ${(STYLE_GROUP_COLORS[style.group as StyleGroup] || 'bg-muted text-muted-foreground border-border')}`}>
                               {STYLE_GROUP_LABELS[style.group as StyleGroup] || style.group}
                             </Badge>
                             {style.allowedSubscriptions?.map(plan => (
                               <Badge key={plan} variant="outline" className={`text-[9px] uppercase font-bold px-1.5 py-0 h-4 
-                                ${plan === 'premium' ? 'bg-amber-50 text-amber-600 border-amber-200' : ''}
-                                ${plan === 'pro' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : ''}
-                                ${plan === 'free' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : ''}
+                                ${plan === 'premium' ? 'bg-warn/10 text-warn border-warn/20' : ''}
+                                ${plan === 'pro' ? 'bg-primary/10 text-primary border-primary/20' : ''}
+                                ${plan === 'free' ? 'bg-success/10 text-success border-success/20' : ''}
                               `}>
                                 {plan}
                               </Badge>
                             ))}
                           </div>
-                          <p className="text-xs text-slate-500 font-medium line-clamp-1">{style.description}</p>
+                          <p className="text-xs text-muted-foreground font-medium line-clamp-1">{style.description}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col items-center gap-1">
                         <div className="flex flex-wrap justify-center gap-1.5">
-                          <Badge variant="outline" className="text-[9px] uppercase font-bold px-2 py-0 h-5 border-slate-200 text-slate-600 bg-slate-50">
+                          <Badge variant="outline" className="text-[9px] uppercase font-bold px-2 py-0 h-5 border-border text-muted-foreground bg-muted">
                             Layout: {style.layout}
                           </Badge>
-                          <Badge variant="outline" className="text-[9px] uppercase font-bold px-2 py-0 h-5 border-slate-200 text-slate-600 bg-slate-50">
+                          <Badge variant="outline" className="text-[9px] uppercase font-bold px-2 py-0 h-5 border-border text-muted-foreground bg-muted">
                             Modo: {style.tokens?.themeMode || 'light'}
                           </Badge>
                         </div>
@@ -169,14 +169,14 @@ export default function AdminStylesPage() {
                     <TableCell className="px-6 text-right">
                       <div className="flex justify-end items-center gap-2">
                         <Link href={`/preview-style/${style.id}`} target="_blank">
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-slate-400 hover:text-indigo-500 hover:bg-indigo-50" title="Ver Ejemplo Fiel">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" title="Ver Ejemplo Fiel">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-9 w-9 rounded-full text-slate-400 hover:text-amber-500 hover:bg-amber-50" 
+                          className="h-9 w-9 rounded-full text-muted-foreground hover:text-warn hover:bg-warn/10" 
                           onClick={() => handleManageAccess(style)}
                           title="Gestionar Accesos"
                         >
@@ -185,7 +185,7 @@ export default function AdminStylesPage() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-9 w-9 rounded-full text-slate-400 hover:text-primary hover:bg-primary/10" 
+                          className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" 
                           onClick={() => handleViewDetails(style)}
                           title="Ver Detalles"
                         >
@@ -194,7 +194,7 @@ export default function AdminStylesPage() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-9 w-9 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50" 
+                          className="h-9 w-9 rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10" 
                           onClick={() => handleDelete(style.id)}
                           title="Eliminar"
                         >

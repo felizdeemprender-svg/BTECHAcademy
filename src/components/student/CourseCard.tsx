@@ -52,11 +52,11 @@ export function StudentCourseCard({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-bold text-base md:text-lg text-slate-900 line-clamp-1 group-hover:text-primary transition-colors">
+              <h3 className="font-bold text-base md:text-lg text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                 {title}
               </h3>
-              <p className="text-[10px] md:text-xs font-medium text-slate-500 flex items-center gap-1.5 mt-0.5">
-                <ShieldCheck className={cn("h-3 w-3", isFinished ? "text-emerald-500" : "text-accent")} /> 
+              <p className="text-[10px] md:text-xs font-medium text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                <ShieldCheck className={cn("h-3 w-3", isFinished ? "text-success" : "text-accent")} /> 
                 {isFinished ? 'Programa Completado' : `Acceso: ${status === 'active' ? 'Autorizado' : 'Pendiente'}`}
               </p>
             </div>
@@ -64,7 +64,7 @@ export function StudentCourseCard({
           
           <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-8 shrink-0 w-full lg:w-auto">
             <div className="w-full sm:w-48 space-y-1.5 md:space-y-2">
-              <div className="flex justify-between items-center text-[9px] md:text-[10px] font-bold uppercase text-slate-400">
+              <div className="flex justify-between items-center text-[9px] md:text-[10px] font-bold uppercase text-muted-foreground">
                 <span>Progreso</span>
                 <span className="text-primary">{completedModulesCount} / {totalModules} módulos</span>
               </div>
@@ -74,7 +74,7 @@ export function StudentCourseCard({
             <Link href={`/courses/${courseId}`} className="w-full sm:w-auto">
               <Button className={cn(
                 "w-full sm:w-auto rounded-xl font-bold h-10 md:h-11 px-6 shadow-md gap-2", 
-                isFinished ? "bg-emerald-600 hover:bg-emerald-700" : "bg-primary"
+                isFinished ? "bg-success hover:bg-success" : "bg-primary"
               )}>
                 {isFinished ? <CheckCircle2 className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
                 {isFinished ? 'Ver Finalizado' : 'Continuar'}
@@ -100,7 +100,7 @@ export function StudentCourseCard({
         <div className="absolute top-4 left-4">
           <Badge className={cn(
             "font-bold border-none shadow-md",
-            isActive ? "bg-green-500 text-white" : "bg-orange-500 text-white"
+            isActive ? "bg-success text-white" : "bg-orange-500 text-white"
           )}>
             {isActive ? <CheckCircle2 className="h-3 w-3 mr-1" /> : isApproved ? <AlertCircle className="h-3 w-3 mr-1" /> : <ShieldAlert className="h-3 w-3 mr-1" />}
             {isActive ? 'Acceso Activo' : !isApproved ? 'En Auditoría' : 'Acceso Suspendido'}

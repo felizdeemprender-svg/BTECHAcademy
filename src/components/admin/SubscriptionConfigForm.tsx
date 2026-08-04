@@ -164,9 +164,9 @@ export default function SubscriptionConfigForm({
               <Label>Estado Actual</Label>
               <div className="mt-1">
                 <Badge className={
-                  config.status === 'active' ? 'bg-green-500' :
+                  config.status === 'active' ? 'bg-success' :
                   config.status === 'trial' ? 'bg-blue-500' :
-                  config.status === 'inactive' ? 'bg-gray-500' : 'bg-red-500'
+                  config.status === 'inactive' ? 'bg-muted-foreground' : 'bg-danger'
                 }>
                   {config.status === 'active' ? 'Activo' :
                    config.status === 'trial' ? 'Prueba' :
@@ -203,8 +203,8 @@ export default function SubscriptionConfigForm({
             />
           </div>
           {config.hasCustomPage && (
-            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-              <p className="text-sm text-green-700">
+            <div className="p-3 bg-success/10 rounded-lg border border-success/20">
+              <p className="text-sm text-success">
                 ✅ El tutor podrá acceder a su página personalizada en: <code>/tutor/[username]</code>
               </p>
             </div>
@@ -236,8 +236,8 @@ export default function SubscriptionConfigForm({
             />
           </div>
 
-          <div className="flex flex-col gap-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tipo de Perfil</Label>
+          <div className="flex flex-col gap-2 p-4 bg-muted rounded-xl border border-border">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Tipo de Perfil</Label>
             <RadioGroup 
               value={config.isEnterprise ? 'enterprise' : 'tutor'} 
               onValueChange={(v) => {
@@ -252,7 +252,7 @@ export default function SubscriptionConfigForm({
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="enterprise" id="config-type-enterprise" />
-                <Label htmlFor="config-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-indigo-600">Empresa</Label>
+                <Label htmlFor="config-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-primary">Empresa</Label>
               </div>
             </RadioGroup>
             <p className="text-xs text-muted-foreground mt-2 italic">
@@ -306,10 +306,10 @@ export default function SubscriptionConfigForm({
                   }))
                 }
                 placeholder="29.99"
-                className={errors.fixedAmount ? 'border-red-500' : ''}
+                className={errors.fixedAmount ? 'border-danger' : ''}
               />
               {errors.fixedAmount && (
-                <p className="text-sm text-red-500 mt-1">{errors.fixedAmount}</p>
+                <p className="text-sm text-danger mt-1">{errors.fixedAmount}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Ingrese el monto mensual que el tutor pagará (ej: 29.99)
@@ -334,10 +334,10 @@ export default function SubscriptionConfigForm({
                   }))
                 }
                 placeholder="15.5"
-                className={errors.percentageRate ? 'border-red-500' : ''}
+                className={errors.percentageRate ? 'border-danger' : ''}
               />
               {errors.percentageRate && (
-                <p className="text-sm text-red-500 mt-1">{errors.percentageRate}</p>
+                <p className="text-sm text-danger mt-1">{errors.percentageRate}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Ingrese el porcentaje de ingresos que el tutor pagará (ej: 15.5)
@@ -398,10 +398,10 @@ export default function SubscriptionConfigForm({
                     freeCoursesCount: parseInt(e.target.value) || 1 
                   }))
                 }
-                className={errors.freeCoursesCount ? 'border-red-500' : ''}
+                className={errors.freeCoursesCount ? 'border-danger' : ''}
               />
               {errors.freeCoursesCount && (
-                <p className="text-sm text-red-500 mt-1">{errors.freeCoursesCount}</p>
+                <p className="text-sm text-danger mt-1">{errors.freeCoursesCount}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 El tutor debe mantener al menos {config.freeCoursesCount || 1} curso(s) gratuito(s) activo(s)
@@ -434,10 +434,10 @@ export default function SubscriptionConfigForm({
                   invitationsPerCourse: parseInt(e.target.value) || 10 
                 }))
               }
-              className={errors.invitationsPerCourse ? 'border-red-500' : ''}
+              className={errors.invitationsPerCourse ? 'border-danger' : ''}
             />
             {errors.invitationsPerCourse && (
-              <p className="text-sm text-red-500 mt-1">{errors.invitationsPerCourse}</p>
+              <p className="text-sm text-danger mt-1">{errors.invitationsPerCourse}</p>
             )}
             <p className="text-xs text-muted-foreground mt-1">
               Número máximo de estudiantes que pueden solicitar acceso a cada curso (ej: 50)

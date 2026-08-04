@@ -352,30 +352,30 @@ export default function AdminUsersPage() {
       <div className="space-y-8 pb-10">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Gestión de Usuarios</h1>
-            <p className="text-slate-500 font-medium">Control institucional de accesos y permisos.</p>
+            <h1 className="text-2xl font-bold text-foreground">Gestión de Usuarios</h1>
+            <p className="text-muted-foreground font-medium">Control institucional de accesos y permisos.</p>
           </div>
           <Button onClick={() => setIsAddUserOpen(true)} className="h-12 px-8 rounded-xl font-bold gap-2 bg-primary text-white">
             <UserPlus className="h-5 w-5" /> Alta Usuario
           </Button>
         </header>
 
-        <Card className="border border-slate-200 rounded-2xl bg-white shadow-sm">
+        <Card className="border border-border rounded-2xl bg-white shadow-sm">
           <CardContent className="p-4 space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar por nombre o email..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-10 h-10 rounded-xl border-slate-200"
+                  className="pl-10 h-10 rounded-xl border-border"
                 />
               </div>
 
               <div className="flex gap-3 flex-wrap">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-200">
-                  <span className="text-[10px] font-bold uppercase text-slate-500">Rol</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-xl border border-border">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">Rol</span>
                   {['alumno', 'mentor', 'marketing', 'admin'].map(role => (
                     <button
                       key={role}
@@ -388,7 +388,7 @@ export default function AdminUsersPage() {
                         "text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg border transition-all",
                         roleFilter.includes(role)
                           ? "bg-primary text-white border-primary"
-                          : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                          : "bg-white text-muted-foreground border-border hover:border-border"
                       )}
                     >
                       {role}
@@ -397,7 +397,7 @@ export default function AdminUsersPage() {
                   {roleFilter.length > 0 && (
                     <button
                       onClick={() => setRoleFilter([])}
-                      className="text-[9px] text-rose-500 font-bold hover:underline ml-1"
+                      className="text-[9px] text-danger font-bold hover:underline ml-1"
                     >
                       Limpiar
                     </button>
@@ -405,7 +405,7 @@ export default function AdminUsersPage() {
                 </div>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-9 w-[130px] border-slate-200 text-xs">
+                  <SelectTrigger className="h-9 w-[130px] border-border text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -417,7 +417,7 @@ export default function AdminUsersPage() {
 
                 {(roleFilter.length === 0 || roleFilter.includes('mentor')) && (
                   <Select value={planFilter} onValueChange={setPlanFilter}>
-                    <SelectTrigger className="h-9 w-[150px] border-slate-200 text-xs">
+                    <SelectTrigger className="h-9 w-[150px] border-border text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -433,44 +433,44 @@ export default function AdminUsersPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+        <Card className="border border-border rounded-2xl overflow-hidden bg-white shadow-sm">
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-slate-50/80 border-b">
+              <TableHeader className="bg-muted/80 border-b">
                 <TableRow className="border-none hover:bg-transparent">
-                  <TableHead className="font-bold py-4 px-6 text-slate-500 text-[10px] uppercase tracking-widest">Identidad</TableHead>
-                  <TableHead className="font-bold py-4 text-slate-500 text-[10px] uppercase tracking-widest text-center">Permisos Asignados</TableHead>
+                  <TableHead className="font-bold py-4 px-6 text-muted-foreground text-[10px] uppercase tracking-widest">Identidad</TableHead>
+                  <TableHead className="font-bold py-4 text-muted-foreground text-[10px] uppercase tracking-widest text-center">Permisos Asignados</TableHead>
                   {(roleFilter.length === 0 || roleFilter.includes('mentor')) && (
-                    <TableHead className="font-bold py-4 text-slate-500 text-[10px] uppercase tracking-widest text-center">Plan</TableHead>
+                    <TableHead className="font-bold py-4 text-muted-foreground text-[10px] uppercase tracking-widest text-center">Plan</TableHead>
                   )}
                   {(roleFilter.length === 0 || roleFilter.includes('alumno')) && (
-                    <TableHead className="font-bold py-4 text-slate-500 text-[10px] uppercase tracking-widest text-center">Inscripciones</TableHead>
+                    <TableHead className="font-bold py-4 text-muted-foreground text-[10px] uppercase tracking-widest text-center">Inscripciones</TableHead>
                   )}
-                  <TableHead className="font-bold py-4 text-slate-500 text-[10px] uppercase tracking-widest text-center">Estado</TableHead>
-                  <TableHead className="font-bold py-4 px-6 text-slate-500 text-[10px] uppercase tracking-widest text-right">Acciones</TableHead>
+                  <TableHead className="font-bold py-4 text-muted-foreground text-[10px] uppercase tracking-widest text-center">Estado</TableHead>
+                  <TableHead className="font-bold py-4 px-6 text-muted-foreground text-[10px] uppercase tracking-widest text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-20 animate-pulse text-slate-400">Sincronizando identidades...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-20 animate-pulse text-muted-foreground">Sincronizando identidades...</TableCell></TableRow>
                 ) : filteredUsers?.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-20 italic text-slate-400">No se encontraron registros.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-20 italic text-muted-foreground">No se encontraron registros.</TableCell></TableRow>
                 ) : filteredUsers?.map((user) => {
                   const isGoogleUser = user.signInProvider === 'google.com';
                   const isSuperAdminAccount = user.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
                   const isInvitation = user.id.includes('_');
                   
                   return (
-                    <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                    <TableRow key={user.id} className="hover:bg-muted/50 transition-colors border-b border-muted last:border-0">
                       <TableCell className="px-6 py-5">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-10 w-10 border shadow-sm">
                             <AvatarImage src={user.photoURL || undefined} />
-                            <AvatarFallback className="bg-slate-100 text-slate-600 font-bold uppercase">{user.displayName?.[0] || 'U'}</AvatarFallback>
+                            <AvatarFallback className="bg-muted text-muted-foreground font-bold uppercase">{user.displayName?.[0] || 'U'}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="flex items-center gap-2">
-                              <p className="font-bold text-slate-900 leading-tight">{user.displayName}</p>
+                              <p className="font-bold text-foreground leading-tight">{user.displayName}</p>
                               {user.roles?.includes('mentor') && (
                                 <button
                                   onClick={() => window.location.href = `/admin/users/tutores/${user.id}`}
@@ -485,11 +485,11 @@ export default function AdminUsersPage() {
                                   <Globe className="h-3 w-3 text-accent" />
                                 </span>
                               )}
-                              {isSuperAdminAccount && <Badge className="bg-slate-900 text-[7px] text-white h-4 px-1.5 border-none">SYSTEM</Badge>}
-                              {isInvitation && <Badge className="bg-amber-100 text-amber-700 text-[7px] h-4 px-1.5 border-none font-black uppercase tracking-tighter">Invitación</Badge>}
+                              {isSuperAdminAccount && <Badge className="bg-foreground text-[7px] text-white h-4 px-1.5 border-none">SYSTEM</Badge>}
+                              {isInvitation && <Badge className="bg-warn/15 text-warn text-[7px] h-4 px-1.5 border-none font-black uppercase tracking-tighter">Invitación</Badge>}
                             </div>
                             <div className="flex items-center gap-2">
-                              <p className="text-xs text-slate-500 font-medium">{user.email}</p>
+                              <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
                               <div className="flex items-center gap-1 opacity-20 hover:opacity-100 transition-opacity" title={`Internal ID: ${user.id}`}>
                                 <Fingerprint className="h-2.5 w-2.5" />
                                 <span className="text-[8px] font-mono">{user.id.substring(0, 8)}...</span>
@@ -502,7 +502,7 @@ export default function AdminUsersPage() {
                         <div className="flex flex-col items-center gap-1">
                           <div className="flex flex-wrap justify-center gap-1.5">
                             {(user.roles || []).map((role: string) => (
-                              <Badge key={role} variant="outline" className="text-[9px] uppercase font-bold px-2 py-0 h-5 border-slate-200 text-slate-600 bg-slate-50">
+                              <Badge key={role} variant="outline" className="text-[9px] uppercase font-bold px-2 py-0 h-5 border-border text-muted-foreground bg-muted">
                                 {role}
                               </Badge>
                             ))}
@@ -521,8 +521,8 @@ export default function AdminUsersPage() {
                             <div className="flex flex-col items-center gap-0.5">
                               <Badge className={cn(
                                 "text-[8px] uppercase font-bold px-2 h-4 border-none",
-                                user.subscription.type === 'free' ? "bg-slate-100 text-slate-600" :
-                                user.subscription.type === 'fixed' ? "bg-emerald-100 text-emerald-700" :
+                                user.subscription.type === 'free' ? "bg-muted text-muted-foreground" :
+                                user.subscription.type === 'fixed' ? "bg-success/15 text-success" :
                                 "bg-blue-100 text-blue-700"
                               )}>
                                 {user.subscription.type === 'free' ? 'Gratis' :
@@ -531,23 +531,23 @@ export default function AdminUsersPage() {
                               </Badge>
                               <span className={cn(
                                 "text-[7px] font-bold uppercase",
-                                user.subscription.status === 'active' ? "text-emerald-500" :
-                                user.subscription.status === 'trial' ? "text-blue-500" : "text-slate-400"
+                                user.subscription.status === 'active' ? "text-success" :
+                                user.subscription.status === 'trial' ? "text-blue-500" : "text-muted-foreground"
                               )}>
                                 {user.subscription.status}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-[10px] text-slate-300">—</span>
+                            <span className="text-[10px] text-border">—</span>
                           )}
                         </TableCell>
                       )}
                       {(roleFilter.length === 0 || roleFilter.includes('alumno')) && (
                         <TableCell className="text-center">
                           {user.roles?.includes('alumno') && !user.roles?.includes('mentor') ? (
-                            <span className="text-[10px] text-slate-400 italic">—</span>
+                            <span className="text-[10px] text-muted-foreground italic">—</span>
                           ) : (
-                            <span className="text-[10px] text-slate-300">—</span>
+                            <span className="text-[10px] text-border">—</span>
                           )}
                         </TableCell>
                       )}
@@ -555,7 +555,7 @@ export default function AdminUsersPage() {
                         <div className="flex items-center justify-center gap-3">
                           <Badge className={cn(
                             "text-[9px] uppercase tracking-widest px-2 h-5 border-none",
-                            user.isActive !== false ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                            user.isActive !== false ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
                           )}>
                             {user.isActive !== false ? 'Activo' : 'Suspendido'}
                           </Badge>
@@ -572,7 +572,7 @@ export default function AdminUsersPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-9 w-9 rounded-full text-slate-400 hover:text-primary hover:bg-primary/10" 
+                            className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" 
                             onClick={() => { 
                               setUserForPermissions(user); 
                               setPendingUser(JSON.parse(JSON.stringify(user))); // Deep copy for pending changes
@@ -584,7 +584,7 @@ export default function AdminUsersPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-9 w-9 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50" 
+                            className="h-9 w-9 rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10" 
                             disabled={isSuperAdminAccount}
                             onClick={() => { setUserToDelete(user); setIsDeleteDialogOpen(true); }}
                           >
@@ -611,17 +611,17 @@ export default function AdminUsersPage() {
               <div className="px-8 pb-8 space-y-8">
                 <div className="grid gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="new-user-email" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Correo Electrónico</Label>
-                    <Input id="new-user-email" name="email" type="email" value={newUserData.email} onChange={e => setNewUserData({...newUserData, email: e.target.value})} placeholder="ejemplo@correo.com" className="border-slate-200"  size="lg" />
+                    <Label htmlFor="new-user-email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Correo Electrónico</Label>
+                    <Input id="new-user-email" name="email" type="email" value={newUserData.email} onChange={e => setNewUserData({...newUserData, email: e.target.value})} placeholder="ejemplo@correo.com" className="border-border"  size="lg" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="new-user-name" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Nombre (Opcional)</Label>
-                    <Input id="new-user-name" name="displayName" value={newUserData.displayName} onChange={e => setNewUserData({...newUserData, displayName: e.target.value})} placeholder="Nombre del usuario" className="border-slate-200"  size="lg" />
+                    <Label htmlFor="new-user-name" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nombre (Opcional)</Label>
+                    <Input id="new-user-name" name="displayName" value={newUserData.displayName} onChange={e => setNewUserData({...newUserData, displayName: e.target.value})} placeholder="Nombre del usuario" className="border-border"  size="lg" />
                   </div>
                   
                   <div className="space-y-4">
-                    <Label className="text-[10px] font-bold uppercase text-slate-500 ml-1">Roles Principales</Label>
-                    <div className="flex flex-wrap gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Roles Principales</Label>
+                    <div className="flex flex-wrap gap-4 p-4 bg-muted rounded-xl border border-muted">
                       {['alumno', 'mentor', 'marketing', 'admin'].map(role => (
                         <div key={role} className="flex items-center gap-2">
                           <Checkbox 
@@ -638,7 +638,7 @@ export default function AdminUsersPage() {
                               setNewUserData({...newUserData, roles, mentorPermissions: perms});
                             }} 
                           />
-                          <Label htmlFor={`new-role-${role}`} className="text-[10px] font-bold uppercase text-slate-600 cursor-pointer">{role}</Label>
+                          <Label htmlFor={`new-role-${role}`} className="text-[10px] font-bold uppercase text-muted-foreground cursor-pointer">{role}</Label>
                         </div>
                       ))}
                     </div>
@@ -659,7 +659,7 @@ export default function AdminUsersPage() {
                         {MENTOR_SUB_PERMISSIONS.map((perm) => (
                           <div key={perm.id} className={cn(
                             "flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer",
-                            newUserData.mentorPermissions.includes(perm.id) ? "bg-primary/5 border-primary/20 shadow-sm" : "bg-white border-slate-100 hover:border-slate-200"
+                            newUserData.mentorPermissions.includes(perm.id) ? "bg-primary/5 border-primary/20 shadow-sm" : "bg-white border-muted hover:border-border"
                           )} onClick={() => {
                             const isIncluded = newUserData.mentorPermissions.includes(perm.id);
                             const perms = isIncluded ? newUserData.mentorPermissions.filter(p => p !== perm.id) : [...newUserData.mentorPermissions, perm.id];
@@ -668,18 +668,18 @@ export default function AdminUsersPage() {
                             <div className="flex items-center gap-3">
                               <div className={cn(
                                 "w-8 h-8 rounded-lg flex items-center justify-center border",
-                                newUserData.mentorPermissions.includes(perm.id) ? "bg-primary text-white" : "bg-slate-50 text-slate-400"
+                                newUserData.mentorPermissions.includes(perm.id) ? "bg-primary text-white" : "bg-muted text-muted-foreground"
                               )}>
                                 <perm.icon className="h-4 w-4" />
                               </div>
                               <div className="min-w-0">
                                 <p className="text-xs font-bold leading-none">{perm.label}</p>
-                                <p className="text-[8px] text-slate-400 mt-1">{perm.desc}</p>
+                                <p className="text-[8px] text-muted-foreground mt-1">{perm.desc}</p>
                               </div>
                             </div>
                             <div className={cn(
                               "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all",
-                              newUserData.mentorPermissions.includes(perm.id) ? "bg-primary border-primary" : "border-slate-200"
+                              newUserData.mentorPermissions.includes(perm.id) ? "bg-primary border-primary" : "border-border"
                             )}>
                               {newUserData.mentorPermissions.includes(perm.id) && <Check className="h-2.5 w-2.5 text-white" strokeWidth={4} />}
                             </div>
@@ -711,16 +711,16 @@ export default function AdminUsersPage() {
                 <div className="flex items-center gap-6 p-6 bg-secondary/10 rounded-3xl border border-primary/5">
                   <Avatar className="h-16 w-16 border-4 border-white">
                     <AvatarImage src={pendingUser?.photoURL || undefined} />
-                    <AvatarFallback className="bg-slate-100 text-slate-600 font-bold uppercase text-xl">{pendingUser?.displayName?.[0] || 'U'}</AvatarFallback>
+                    <AvatarFallback className="bg-muted text-muted-foreground font-bold uppercase text-xl">{pendingUser?.displayName?.[0] || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="font-bold text-slate-900 text-xl leading-tight truncate">{pendingUser?.displayName}</p>
-                    <p className="text-sm text-slate-500 font-medium truncate">{pendingUser?.email}</p>
+                    <p className="font-bold text-foreground text-xl leading-tight truncate">{pendingUser?.displayName}</p>
+                    <p className="text-sm text-muted-foreground font-medium truncate">{pendingUser?.email}</p>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Roles Principales</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Roles Principales</Label>
                   <div className="grid gap-4">
                     {[
                       { id: 'alumno', label: 'Alumno', icon: UserIcon, desc: 'Acceso al catálogo y progreso educativo.' },
@@ -734,18 +734,18 @@ export default function AdminUsersPage() {
                       return (
                         <div key={role.id} className={cn(
                           "flex items-center justify-between p-5 rounded-2xl border transition-all group",
-                          isProtectedRole ? "bg-slate-50 border-slate-100 opacity-60" : "bg-white border-slate-100 hover:border-primary/20 hover:shadow-md"
+                          isProtectedRole ? "bg-muted border-muted opacity-60" : "bg-white border-muted hover:border-primary/20 hover:shadow-md"
                         )}>
                           <div className="flex items-center gap-4">
                             <div className={cn(
-                              "w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border transition-colors",
+                              "w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground border transition-colors",
                               !isProtectedRole && "group-hover:text-primary group-hover:bg-primary/5"
                             )}>
                               <role.icon className="h-5 w-5" />
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-slate-900">{role.label}</p>
-                              <p className="text-[10px] text-slate-400 uppercase font-bold leading-tight">{role.desc}</p>
+                              <p className="text-sm font-bold text-foreground">{role.label}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold leading-tight">{role.desc}</p>
                             </div>
                           </div>
                           <Switch 
@@ -766,9 +766,9 @@ export default function AdminUsersPage() {
                       <Badge className="bg-primary/5 text-primary border-none text-[8px] font-black uppercase px-2 h-4">Control de Límites</Badge>
                     </div>
                     
-                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+                    <div className="p-6 bg-muted rounded-3xl border border-muted space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase text-slate-500">Seleccionar Plan para el Mentor</Label>
+                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">Seleccionar Plan para el Mentor</Label>
                         <Select 
                           value={pendingUser?.subscription?.name || ''} 
                           onValueChange={(planName) => {
@@ -776,7 +776,7 @@ export default function AdminUsersPage() {
                             if (selectedPlan) updateSubscriptionPlan(selectedPlan);
                           }}
                         >
-                          <SelectTrigger size="lg" className="bg-white border-slate-200">
+                          <SelectTrigger size="lg" className="bg-white border-border">
                             <SelectValue placeholder="Elegir un plan de suscripción..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -795,8 +795,8 @@ export default function AdminUsersPage() {
                       </div>
 
                       {/* Selector de Tipo de Perfil (Tutor vs Empresa) */}
-                      <div className="space-y-2 p-4 bg-white rounded-2xl border border-slate-200">
-                        <Label className="text-[10px] font-bold uppercase text-slate-500">Tipo de Perfil Institucional</Label>
+                      <div className="space-y-2 p-4 bg-white rounded-2xl border border-border">
+                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">Tipo de Perfil Institucional</Label>
                         <RadioGroup 
                           value={pendingUser?.subscription?.isEnterprise ? 'enterprise' : 'tutor'} 
                           onValueChange={(v) => {
@@ -820,17 +820,17 @@ export default function AdminUsersPage() {
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="enterprise" id="user-type-enterprise" />
-                            <Label htmlFor="user-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-indigo-600">Empresa</Label>
+                            <Label htmlFor="user-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-primary">Empresa</Label>
                           </div>
                         </RadioGroup>
-                        <p className="text-[9px] text-slate-400 italic mt-1">
+                        <p className="text-[9px] text-muted-foreground italic mt-1">
                           * Los perfiles de Empresa no se muestran en el catálogo público general.
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
-                        <div className="space-y-1.5 p-4 bg-amber-50 rounded-2xl border border-amber-100 shadow-sm flex flex-col justify-center items-center">
-                           <Label htmlFor="limit-ai" className="text-[9px] font-black uppercase text-amber-700">IA Premium</Label>
+                        <div className="space-y-1.5 p-4 bg-warn/10 rounded-2xl border border-warn/15 shadow-sm flex flex-col justify-center items-center">
+                           <Label htmlFor="limit-ai" className="text-[9px] font-black uppercase text-warn">IA Premium</Label>
                            <Switch 
                              id="limit-ai"
                              checked={pendingUser?.subscription?.hasPremiumAI === true}
@@ -846,15 +846,15 @@ export default function AdminUsersPage() {
                                  subscription: { ...currentSub, hasPremiumAI: c }
                                });
                              }}
-                             className="data-[state=checked]:bg-amber-500 scale-90 my-1"
+                             className="data-[state=checked]:bg-warn scale-90 my-1"
                            />
-                           <p className="text-[7px] text-amber-600/70 font-bold uppercase mt-1 text-center leading-tight">Motor Imagen 3</p>
+                           <p className="text-[7px] text-warn/70 font-bold uppercase mt-1 text-center leading-tight">Motor Imagen 3</p>
                         </div>
                         
                         {pendingUser?.subscription && (
                           <>
-                            <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                            <Label htmlFor="limit-courses" className="text-[9px] font-black uppercase text-slate-400">Máx. Publicados</Label>
+                            <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-muted shadow-sm">
+                            <Label htmlFor="limit-courses" className="text-[9px] font-black uppercase text-muted-foreground">Máx. Publicados</Label>
                             <Input 
                               id="limit-courses"
                               name="limit-courses"
@@ -870,13 +870,13 @@ export default function AdminUsersPage() {
                                   }
                                 });
                               }}
-                              className="h-9 font-black text-primary border-none bg-slate-50/50 focus-visible:ring-1"
+                              className="h-9 font-black text-primary border-none bg-muted/50 focus-visible:ring-1"
                             />
-                            <p className="text-[7px] text-slate-400 font-bold uppercase mt-1">Cursos Activos</p>
+                            <p className="text-[7px] text-muted-foreground font-bold uppercase mt-1">Cursos Activos</p>
                           </div>
                           
-                            <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                            <Label htmlFor="limit-students" className="text-[9px] font-black uppercase text-slate-400">Máx. Estudiantes</Label>
+                            <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-muted shadow-sm">
+                            <Label htmlFor="limit-students" className="text-[9px] font-black uppercase text-muted-foreground">Máx. Estudiantes</Label>
                             <Input 
                               id="limit-students"
                               name="limit-students"
@@ -892,13 +892,13 @@ export default function AdminUsersPage() {
                                   }
                                 });
                               }}
-                              className="h-9 font-black text-primary border-none bg-slate-50/50 focus-visible:ring-1"
+                              className="h-9 font-black text-primary border-none bg-muted/50 focus-visible:ring-1"
                             />
-                            <p className="text-[7px] text-slate-400 font-bold uppercase mt-1">Límite de alumnos</p>
+                            <p className="text-[7px] text-muted-foreground font-bold uppercase mt-1">Límite de alumnos</p>
                           </div>
 
-                          <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                            <Label htmlFor="limit-credits" className="text-[9px] font-black uppercase text-slate-400">Créditos IA</Label>
+                          <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-muted shadow-sm">
+                            <Label htmlFor="limit-credits" className="text-[9px] font-black uppercase text-muted-foreground">Créditos IA</Label>
                             <Input 
                               id="limit-credits"
                               name="limit-credits"
@@ -917,13 +917,13 @@ export default function AdminUsersPage() {
                                   }
                                 });
                               }}
-                              className="h-9 font-black text-primary border-none bg-slate-50/50 focus-visible:ring-1"
+                              className="h-9 font-black text-primary border-none bg-muted/50 focus-visible:ring-1"
                             />
-                            <p className="text-[7px] text-slate-400 font-bold uppercase mt-1">Saldo del abono</p>
+                            <p className="text-[7px] text-muted-foreground font-bold uppercase mt-1">Saldo del abono</p>
                           </div>
 
-                          <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                            <Label htmlFor="limit-invitations" className="text-[9px] font-black uppercase text-slate-400">Invitaciones</Label>
+                          <div className="space-y-1.5 p-4 bg-white rounded-2xl border border-muted shadow-sm">
+                            <Label htmlFor="limit-invitations" className="text-[9px] font-black uppercase text-muted-foreground">Invitaciones</Label>
                             <Input 
                               id="limit-invitations"
                               name="limit-invitations"
@@ -939,9 +939,9 @@ export default function AdminUsersPage() {
                                   }
                                 });
                               }}
-                              className="h-9 font-black text-primary border-none bg-slate-50/50 focus-visible:ring-1"
+                              className="h-9 font-black text-primary border-none bg-muted/50 focus-visible:ring-1"
                             />
-                            <p className="text-[7px] text-slate-400 font-bold uppercase mt-1">Por cada curso</p>
+                            <p className="text-[7px] text-muted-foreground font-bold uppercase mt-1">Por cada curso</p>
                           </div>
                           </>
                         )}
@@ -958,17 +958,17 @@ export default function AdminUsersPage() {
                     </div>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {MENTOR_SUB_PERMISSIONS.map((perm) => (
-                        <div key={perm.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50/50 group/perm hover:border-primary/10 transition-colors">
+                        <div key={perm.id} className="flex items-center justify-between p-4 rounded-2xl border border-muted bg-muted/50 group/perm hover:border-primary/10 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center border shadow-sm transition-colors",
-                              (pendingUser?.mentorPermissions || []).includes(perm.id) ? "bg-primary text-white" : "bg-white text-slate-400"
+                              (pendingUser?.mentorPermissions || []).includes(perm.id) ? "bg-primary text-white" : "bg-white text-muted-foreground"
                             )}>
                               <perm.icon className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-slate-900 truncate">{perm.label}</p>
-                              <p className="text-[9px] text-slate-400 font-medium leading-none mt-0.5">{perm.desc}</p>
+                              <p className="text-xs font-bold text-foreground truncate">{perm.label}</p>
+                              <p className="text-[9px] text-muted-foreground font-medium leading-none mt-0.5">{perm.desc}</p>
                             </div>
                           </div>
                           <Switch 
@@ -984,7 +984,7 @@ export default function AdminUsersPage() {
               </div>
             </ScrollArea>
 
-            <DialogFooter className="px-10 py-6 bg-slate-50 border-t shrink-0">
+            <DialogFooter className="px-10 py-6 bg-muted border-t shrink-0">
               <Button 
                 onClick={handleSaveAllChanges} 
                 disabled={loading}
@@ -1001,12 +1001,12 @@ export default function AdminUsersPage() {
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent className="">
             <AlertDialogHeader className="items-center text-center">
-              <div className="w-14 h-14 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-4"><Trash2 className="h-7 w-7" /></div>
+              <div className="w-14 h-14 bg-danger/10 rounded-full flex items-center justify-center text-danger mb-4"><Trash2 className="h-7 w-7" /></div>
               <AlertDialogTitle className="text-xl font-bold">¿Borrar Registro?</AlertDialogTitle>
               <AlertDialogDescription className="text-sm">Se eliminará permanentemente el perfil de <strong>{userToDelete?.displayName}</strong>. Esta acción es irreversible.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-col sm:flex-row gap-3 pt-6">
-              <AlertDialogCancel className="flex-1 h-11 rounded-xl font-bold border-slate-200">Cancelar</AlertDialogCancel>
+              <AlertDialogCancel className="flex-1 h-11 rounded-xl font-bold border-border">Cancelar</AlertDialogCancel>
               <AlertDialogAction onClick={() => { 
                 if (userToDelete?.id === profile?.uid) return;
                 const userRef = doc(db, 'users', userToDelete.id);
@@ -1014,7 +1014,7 @@ export default function AdminUsersPage() {
                   .then(() => toast({ title: 'Perfil eliminado' }))
                   .catch(e => errorEmitter.emit('permission-error', new FirestorePermissionError({ path: userRef.path, operation: 'delete' })));
                 setIsDeleteDialogOpen(false);
-              }} className="flex-1 h-11 bg-rose-500 hover:bg-rose-600 rounded-xl font-bold text-white shadow-lg">Confirmar</AlertDialogAction>
+              }} className="flex-1 h-11 bg-danger hover:bg-danger rounded-xl font-bold text-white shadow-lg">Confirmar</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

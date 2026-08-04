@@ -163,7 +163,7 @@ export default function SalesPagesDashboardPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight flex items-center gap-3">
-              <Megaphone className="h-8 w-8 text-emerald-500" /> Productor de Campañas ADN
+              <Megaphone className="h-8 w-8 text-success" /> Productor de Campañas ADN
             </h1>
             <p className="text-muted-foreground font-medium text-lg">
               Gestiona el contenido omnicanal, guiones y videos generados con el Motor V2
@@ -171,7 +171,7 @@ export default function SalesPagesDashboardPage() {
           </div>
           <Button 
             onClick={() => router.push('/mentoria/marketing/pages/build')} 
-            className="h-14 px-8 rounded-2xl font-bold flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white transition-all hover:scale-105 active:scale-95"
+            className="h-14 px-8 rounded-2xl font-bold flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-all hover:scale-105 active:scale-95"
           >
             <Plus className="h-5 w-5" /> Crear Nueva Campaña
           </Button>
@@ -204,7 +204,7 @@ export default function SalesPagesDashboardPage() {
                     <TableCell colSpan={4} className="h-64 text-center border-b-0">
                       <div className="flex flex-col items-center justify-center space-y-4 py-12">
                         <FileBox className="h-16 w-16 text-muted-foreground/30" />
-                        <h3 className="text-xl font-bold text-slate-600">Sin contenido generado</h3>
+                        <h3 className="text-xl font-bold text-muted-foreground">Sin contenido generado</h3>
                         <p className="text-muted-foreground max-w-sm mx-auto">Comienza tu primera campaña omnicanal.</p>
                       </div>
                     </TableCell>
@@ -216,7 +216,7 @@ export default function SalesPagesDashboardPage() {
                         <span className="font-bold text-foreground text-sm">{page.title}</span>
                         <span className="text-[10px] text-muted-foreground uppercase mt-1 flex items-center gap-2">
                           {page.createdAt?.toDate ? format(page.createdAt.toDate(), 'dd MMM yyyy') : '-'}
-                          <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                          <span className="w-1 h-1 rounded-full bg-border"></span>
                           <span className="truncate max-w-[300px]">Pack Multicanal</span>
                         </span>
                       </div>
@@ -248,15 +248,15 @@ export default function SalesPagesDashboardPage() {
                         </Button>
                         {confirmDeleteId === page.id ? (
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => setConfirmDeleteId(null)} className="text-[10px] h-8 px-3 hover:bg-slate-100 rounded-lg font-bold">
+                            <Button size="sm" variant="ghost" onClick={() => setConfirmDeleteId(null)} className="text-[10px] h-8 px-3 hover:bg-muted rounded-lg font-bold">
                               Cancelar
                             </Button>
-                            <Button size="sm" onClick={(e) => handleDelete(e, page.id)} className="text-[10px] h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold">
+                            <Button size="sm" onClick={(e) => handleDelete(e, page.id)} className="text-[10px] h-8 px-3 bg-danger hover:bg-danger text-white rounded-lg font-bold">
                               Confirmar
                             </Button>
                           </div>
                         ) : (
-                          <Button size="icon" variant="ghost" onClick={(e) => handleDelete(e, page.id)} className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg" disabled={deletingIds[page.id]}>
+                          <Button size="icon" variant="ghost" onClick={(e) => handleDelete(e, page.id)} className="h-8 w-8 text-danger hover:text-danger hover:bg-danger/10 rounded-lg" disabled={deletingIds[page.id]}>
                             {deletingIds[page.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                           </Button>
                         )}

@@ -222,11 +222,11 @@ export default function CoursesPage() {
                   <div className="space-y-2">
                     {['all', 'free', 'paid'].map((val) => (
                       <label key={val} className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${priceFilter === val ? 'border-primary bg-primary shadow-lg shadow-primary/20' : 'border-slate-200 group-hover:border-primary/40'}`}>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${priceFilter === val ? 'border-primary bg-primary shadow-lg shadow-primary/20' : 'border-border group-hover:border-primary/40'}`}>
                           {priceFilter === val && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </div>
                         <input type="radio" className="hidden" checked={priceFilter === val} onChange={() => setPriceFilter(val as any)} />
-                        <span className={`text-xs font-bold transition-colors ${priceFilter === val ? 'text-slate-900' : 'text-slate-500'}`}>
+                        <span className={`text-xs font-bold transition-colors ${priceFilter === val ? 'text-foreground' : 'text-muted-foreground'}`}>
                           {val === 'all' ? 'Todos' : val === 'free' ? 'Gratuitos' : 'Inversión'}
                         </span>
                       </label>
@@ -241,14 +241,14 @@ export default function CoursesPage() {
             {loading ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {Array(6).fill(0).map((_, i) => (
-                  <Card key={i} className="h-[400px] animate-pulse bg-slate-50 rounded-lg" />
+                  <Card key={i} className="h-[400px] animate-pulse bg-muted rounded-lg" />
                 ))}
               </div>
             ) : sortedCourses.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
-                <BookOpen className="h-20 w-20 text-slate-200 mb-6" />
-                <h3 className="text-xl font-bold text-slate-900 mb-2">No encontramos coincidencias</h3>
-                <p className="text-sm text-slate-500 max-w-xs text-center font-medium">Intenta ajustar los filtros o los términos de tu búsqueda.</p>
+              <div className="flex flex-col items-center justify-center py-24 bg-muted rounded-lg border-2 border-dashed border-border">
+                <BookOpen className="h-20 w-20 text-border mb-6" />
+                <h3 className="text-xl font-bold text-foreground mb-2">No encontramos coincidencias</h3>
+                <p className="text-sm text-muted-foreground max-w-xs text-center font-medium">Intenta ajustar los filtros o los términos de tu búsqueda.</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

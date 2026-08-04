@@ -136,7 +136,7 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="mw-5xl h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 py-4 border-b bg-slate-50 shrink-0">
+        <DialogHeader className="px-6 py-4 border-b bg-muted shrink-0">
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 rounded-xl bg-white border shadow-sm flex items-center justify-center shrink-0 overflow-hidden relative">
               {styleData.thumbnail ? (
@@ -147,27 +147,27 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               ) : null}
-              <Palette className="w-8 h-8 text-slate-300" />
+              <Palette className="w-8 h-8 text-border" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-3">
+              <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-3">
                 Estilo: {styleData.name}
-                <Badge variant="outline" className={`text-[10px] uppercase font-bold px-2 py-0.5 h-5 ${STYLE_GROUP_COLORS[styleData.group as StyleGroup] || 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                <Badge variant="outline" className={`text-[10px] uppercase font-bold px-2 py-0.5 h-5 ${STYLE_GROUP_COLORS[styleData.group as StyleGroup] || 'bg-muted text-muted-foreground border-border'}`}>
                   {STYLE_GROUP_LABELS[styleData.group as StyleGroup] || styleData.group}
                 </Badge>
                 <div className="flex gap-1 ml-2">
                   {styleData.allowedSubscriptions?.map(plan => (
                     <Badge key={plan} variant="outline" className={`text-[10px] uppercase font-bold px-2 py-0.5 h-5 
-                      ${plan === 'premium' ? 'bg-amber-500 text-white border-amber-600' : ''}
-                      ${plan === 'pro' ? 'bg-indigo-500 text-white border-indigo-600' : ''}
-                      ${plan === 'free' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : ''}
+                      ${plan === 'premium' ? 'bg-warn text-white border-warn' : ''}
+                      ${plan === 'pro' ? 'bg-primary text-white border-primary' : ''}
+                      ${plan === 'free' ? 'bg-success/10 text-success border-success/20' : ''}
                     `}>
                       {plan}
                     </Badge>
                   ))}
                 </div>
               </DialogTitle>
-              <DialogDescription className="text-sm mt-1 text-slate-500">
+              <DialogDescription className="text-sm mt-1 text-muted-foreground">
                 {styleData.description}
               </DialogDescription>
             </div>
@@ -184,28 +184,28 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
 
             <TabsContent value="ai" className="space-y-6">
               <div>
-                <h3 className="text-sm font-bold uppercase text-slate-500 mb-2 tracking-widest">¿Quién habla y cómo se expresa?</h3>
-                <div className="bg-slate-900 text-slate-100 p-6 rounded-xl font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                <h3 className="text-sm font-bold uppercase text-muted-foreground mb-2 tracking-widest">¿Quién habla y cómo se expresa?</h3>
+                <div className="bg-foreground text-muted p-6 rounded-xl font-mono text-sm leading-relaxed whitespace-pre-wrap">
                   {styleData.aiDirectives || 'No hay directivas globales configuradas para este estilo.'}
                 </div>
               </div>
             </TabsContent>
 
             <TabsContent value="sections" className="space-y-3">
-              <h3 className="text-sm font-bold uppercase text-slate-500 mb-2 tracking-widest">Secciones disponibles ({styleData.availableSections?.length || 0})</h3>
+              <h3 className="text-sm font-bold uppercase text-muted-foreground mb-2 tracking-widest">Secciones disponibles ({styleData.availableSections?.length || 0})</h3>
               <div className="space-y-2">
                 {styleData.availableSections?.map((section) => {
                   const isExpanded = expandedSection === section.id;
                   return (
-                    <div key={section.id} className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                    <div key={section.id} className="border border-border rounded-xl bg-white shadow-sm overflow-hidden">
                       <button
                         type="button"
                         onClick={() => setExpandedSection(isExpanded ? null : section.id)}
-                        className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left"
+                        className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <h4 className="font-bold text-sm text-slate-800 truncate">{section.name}</h4>
-                          <Badge variant="outline" className="bg-slate-50 uppercase text-[9px] tracking-widest font-black border-slate-300 shrink-0">
+                          <h4 className="font-bold text-sm text-foreground truncate">{section.name}</h4>
+                          <Badge variant="outline" className="bg-muted uppercase text-[9px] tracking-widest font-black border-border shrink-0">
                             {section.id}
                           </Badge>
                         </div>
@@ -214,7 +214,7 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
                             {section.contentType}
                           </Badge>
                           {section.required && (
-                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold text-[10px] gap-1">
+                            <Badge className="bg-success/15 text-success hover:bg-success/15 border-none font-bold text-[10px] gap-1">
                               <CheckCircle2 className="h-3 w-3" /> Obligatoria
                             </Badge>
                           )}
@@ -223,20 +223,20 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
                               <CopyPlus className="h-3 w-3" /> Multi
                             </Badge>
                           )}
-                          {isExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                          {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                         </div>
                       </button>
                       {isExpanded && (
                         <div className="px-4 pb-4 space-y-3">
-                          <div className="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100/50">
-                            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Prompt Específico de la Sección</p>
-                            <p className="text-xs text-slate-700 font-medium italic leading-relaxed">
+                          <div className="bg-primary/10/50 p-3 rounded-lg border border-primary/15/50">
+                            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Prompt Específico de la Sección</p>
+                            <p className="text-xs text-foreground font-medium italic leading-relaxed">
                               "{section.description || 'Sin prompt específico.'}"
                             </p>
                           </div>
-                          <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100/50">
-                            <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Estructura Visual (Blueprint)</p>
-                            <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                          <div className="bg-success/10/50 p-3 rounded-lg border border-success/15/50">
+                            <p className="text-[10px] font-bold text-success uppercase tracking-widest mb-1">Estructura Visual (Blueprint)</p>
+                            <p className="text-xs text-foreground font-medium leading-relaxed">
                               {section.blueprint || 'Sin estructura definida.'}
                             </p>
                           </div>
@@ -250,7 +250,7 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
 
             <TabsContent value="brands" className="space-y-3">
               <div className="flex items-center justify-between mb-1">
-                <h3 className="text-sm font-bold uppercase text-slate-500 tracking-widest">
+                <h3 className="text-sm font-bold uppercase text-muted-foreground tracking-widest">
                   Brands ({styleData.brands?.length || 0})
                 </h3>
                 <div className="flex gap-2">
@@ -272,17 +272,17 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
                   emptyMessage="Este estilo no tiene brands configurados. Usá «Importar brand» para cargar uno o más brands desde un archivo JSON."
                 />
               ) : (
-                <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-100">
-                  <Palette className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-500">Este estilo no tiene brands configurados</p>
-                  <p className="text-sm text-slate-400 mt-1">Usá "Importar brand" para cargar uno o más brands desde un archivo JSON.</p>
+                <div className="text-center py-10 bg-muted rounded-xl border border-muted">
+                  <Palette className="h-10 w-10 text-border mx-auto mb-3" />
+                  <p className="text-muted-foreground">Este estilo no tiene brands configurados</p>
+                  <p className="text-sm text-muted-foreground mt-1">Usá "Importar brand" para cargar uno o más brands desde un archivo JSON.</p>
                 </div>
               )}
             </TabsContent>
           </Tabs>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t bg-slate-50 shrink-0">
+        <DialogFooter className="px-6 py-4 border-t bg-muted shrink-0">
           <Button variant="outline" onClick={onClose} className="font-bold">Cerrar</Button>
         </DialogFooter>
       </DialogContent>
@@ -290,15 +290,15 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
       <Dialog open={isImportOpen} onOpenChange={(open) => !open && !isImporting && setIsImportOpen(false)}>
         <DialogContent className="mw-lg max-h-[90vh] flex flex-col p-0">
           <DialogHeader className="px-6 py-4 border-b shrink-0">
-            <DialogTitle className="text-lg font-bold text-slate-900">Importar Brand — {styleData.name}</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-foreground">Importar Brand — {styleData.name}</DialogTitle>
             <DialogDescription>
               Cargá un archivo JSON de brands: formato estándar DTCG/W3C (Design Tokens) o el formato propio del sistema. Se importan tal cual; los campos desconocidos se ignoran.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-4">
-            <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 space-y-1">
-              <p className="font-bold text-amber-950">Requisitos mínimos por brand</p>
+            <div className="bg-warn/10/70 border border-warn/20 rounded-xl p-3 text-xs text-warn space-y-1">
+              <p className="font-bold text-foreground">Requisitos mínimos por brand</p>
               <p>Para que el brand sea usable (y no se cargue basura), cada brand debe incluir:</p>
               <ul className="list-disc pl-4 space-y-0.5">
                 <li><span className="font-mono">name</span> (nombre)</li>
@@ -317,14 +317,14 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
               <p className="text-blue-700">Los campos desconocidos (ej. iconos) se ignoran. Los tokens CSS faltantes (radio, sombra, espaciado, etc.) se completan con los valores por defecto del sistema; la paleta y la tipografía deben venir en el archivo.</p>
             </div>
 
-            <div className="bg-slate-900 text-slate-100 rounded-xl p-4 font-mono text-[11px] leading-relaxed whitespace-pre overflow-x-auto">
-              <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-2">Ejemplo de formato</p>
+            <div className="bg-foreground text-muted rounded-xl p-4 font-mono text-[11px] leading-relaxed whitespace-pre overflow-x-auto">
+              <p className="text-[9px] text-muted-foreground uppercase tracking-widest mb-2">Ejemplo de formato</p>
               {BRAND_JSON_EXAMPLE}
             </div>
 
             <div className="flex items-center gap-3">
               <label className="flex-1 cursor-pointer">
-                <span className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm font-bold text-slate-600 hover:border-primary hover:text-primary transition-colors">
+                <span className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted px-4 py-4 text-sm font-bold text-muted-foreground hover:border-primary hover:text-primary transition-colors">
                   <Upload className="h-4 w-4" />
                   {importedFileName ? `Reemplazar archivo: ${importedFileName}` : 'Seleccionar archivo JSON'}
                 </span>
@@ -333,21 +333,21 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
             </div>
 
             {importedFileName && parseResult && (
-              <div className="rounded-xl border border-slate-200 p-4 space-y-2">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Archivo: {importedFileName}</p>
+              <div className="rounded-xl border border-border p-4 space-y-2">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Archivo: {importedFileName}</p>
                 {parseResult.brands.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {parseResult.brands.map((brand, i) => (
-                      <Badge key={i} variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold">
+                      <Badge key={i} variant="outline" className="bg-success/10 text-success border-success/20 font-bold">
                         {brand.name}
                       </Badge>
                     ))}
                   </div>
                 )}
                 {parseResult.errors.length > 0 && (
-                  <div className="bg-rose-50 border border-rose-100 rounded-lg p-3 space-y-1">
+                  <div className="bg-danger/10 border border-danger/15 rounded-lg p-3 space-y-1">
                     {parseResult.errors.map((err, i) => (
-                      <p key={i} className="text-xs font-semibold text-rose-600">✕ {err}</p>
+                      <p key={i} className="text-xs font-semibold text-danger">✕ {err}</p>
                     ))}
                   </div>
                 )}
@@ -355,11 +355,11 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
             )}
 
             {importError && (
-              <p className="text-sm font-bold text-rose-500">{importError}</p>
+              <p className="text-sm font-bold text-danger">{importError}</p>
             )}
           </div>
 
-          <DialogFooter className="px-6 py-4 border-t bg-slate-50 shrink-0">
+          <DialogFooter className="px-6 py-4 border-t bg-muted shrink-0">
             <Button variant="outline" onClick={() => setIsImportOpen(false)} disabled={isImporting}>Cancelar</Button>
             <Button
               onClick={handleImport}
@@ -379,7 +379,7 @@ export default function StyleDetails({ styleData, onClose }: StyleDetailsProps) 
         title={`Eliminar brand "${brandToDelete?.name || ''}"`}
         description={deleteBrandError || 'Esta acción elimina el brand del estilo y no se puede deshacer. Las landings que ya lo usan mantienen sus tokens congelados.'}
         icon={<Trash2 className="h-6 w-6" />}
-        iconClassName="bg-rose-50 text-rose-500"
+        iconClassName="bg-danger/10 text-danger"
         confirmLabel="Eliminar"
         variant="destructive"
         loading={isDeletingBrand}

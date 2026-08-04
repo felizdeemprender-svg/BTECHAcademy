@@ -132,7 +132,7 @@ export function AIGenerator({
     switch (aiHealth.status) {
       case "healthy":
         return (
-          <Badge className="bg-green-100 text-green-800">
+          <Badge className="bg-success/15 text-success">
             <ShieldCheck className="h-3 w-3 mr-1" />
             Saludable
           </Badge>
@@ -146,14 +146,14 @@ export function AIGenerator({
         );
       case "error":
         return (
-          <Badge className="bg-red-100 text-red-800">
+          <Badge className="bg-danger/15 text-danger">
             <AlertTriangle className="h-3 w-3 mr-1" />
             Error
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-gray-100 text-gray-800">
+          <Badge className="bg-muted text-foreground">
             <Circle className="h-3 w-3 mr-1" />
             Desconocido
           </Badge>
@@ -214,7 +214,7 @@ export function AIGenerator({
                 <Palette className="h-4 w-4" />
                 Diseño Visual
                 {identityDesign && (
-                  <CheckCircle2 className="h-3 w-3 text-green-600" />
+                  <CheckCircle2 className="h-3 w-3 text-success" />
                 )}
               </TabsTrigger>
               <TabsTrigger
@@ -235,13 +235,13 @@ export function AIGenerator({
                   className={cn(
                     "p-4 rounded-lg",
                     aiHealth.status === "error"
-                      ? "bg-red-50 border border-red-200"
+                      ? "bg-danger/10 border border-danger/20"
                       : "bg-blue-50 border border-blue-200",
                   )}
                 >
                   <div className="flex items-center gap-2">
                     {aiHealth.status === "error" ? (
-                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                      <AlertTriangle className="h-4 w-4 text-danger" />
                     ) : (
                       <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
                     )}
@@ -249,7 +249,7 @@ export function AIGenerator({
                       className={cn(
                         "text-sm font-medium",
                         aiHealth.status === "error"
-                          ? "text-red-800"
+                          ? "text-danger"
                           : "text-blue-800",
                       )}
                     >
@@ -290,12 +290,12 @@ export function AIGenerator({
                 <Label className="text-base font-medium">
                   Estilo de Landing
                 </Label>
-                <p className="text-xs text-gray-600 mt-1 mb-4">
+                <p className="text-xs text-muted-foreground mt-1 mb-4">
                   Estilo Classic seleccionado por defecto.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
                   <div className="rounded-xl border-2 border-blue-500 ring-2 ring-blue-200 transition-all overflow-hidden">
-                    <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                    <div className="aspect-video bg-muted relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
                         <div className="text-white text-center p-4">
                           <div className="w-16 h-16 mx-auto mb-2 bg-white/20 rounded-lg" />
@@ -309,7 +309,7 @@ export function AIGenerator({
                         <span className="font-semibold text-sm">Classic</span>
                         <CheckCircle2 className="h-4 w-4 text-blue-500" />
                       </div>
-                      <p className="text-xs text-gray-600 line-clamp-2 mb-3">
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
                         El estilo original, balanceado y profesional
                       </p>
                       <Button 
@@ -443,7 +443,7 @@ export function AIGenerator({
                         key={index}
                         className={`w-2 h-2 rounded-full transition-colors ${index === currentDesignIndex
                             ? "bg-blue-600"
-                            : "bg-gray-300"
+                            : "bg-border"
                           }`}
                       />
                     ))}
@@ -458,46 +458,46 @@ export function AIGenerator({
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="text-center">
                         <div
-                          className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
+                          className="w-full h-20 rounded-lg border-2 border-border mb-2"
                           style={{
                             backgroundColor:
                               identityDesign.colorPalette.primary,
                           }}
                         />
                         <p className="text-sm font-medium">Primario</p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted-foreground">
                           {identityDesign.colorPalette.primary}
                         </p>
                       </div>
                       <div className="text-center">
                         <div
-                          className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
+                          className="w-full h-20 rounded-lg border-2 border-border mb-2"
                           style={{
                             backgroundColor:
                               identityDesign.colorPalette.secondary,
                           }}
                         />
                         <p className="text-sm font-medium">Secundario</p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted-foreground">
                           {identityDesign.colorPalette.secondary}
                         </p>
                       </div>
                       <div className="text-center">
                         <div
-                          className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
+                          className="w-full h-20 rounded-lg border-2 border-border mb-2"
                           style={{
                             backgroundColor: identityDesign.colorPalette.accent,
                           }}
                         />
                         <p className="text-sm font-medium">Acento</p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted-foreground">
                           {identityDesign.colorPalette.accent}
                         </p>
                       </div>
                       <div className="text-center">
-                        <div className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2 bg-gradient-to-r from-gray-100 to-gray-300" />
+                        <div className="w-full h-20 rounded-lg border-2 border-border mb-2 bg-gradient-to-r from-muted to-border" />
                         <p className="text-sm font-medium">Neutros</p>
-                        <p className="text-xs text-gray-600">4 tonos</p>
+                        <p className="text-xs text-muted-foreground">4 tonos</p>
                       </div>
                     </div>
                   </div>
@@ -565,7 +565,7 @@ export function AIGenerator({
                     <Button
                       onClick={onApproveDesign}
                       disabled={isDesigning}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-success hover:bg-success"
                     >
                       {isDesignApproved ? (
                         <>
@@ -583,11 +583,11 @@ export function AIGenerator({
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Palette className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <Palette className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
                     Sin Diseño Generado
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-muted-foreground mb-6">
                     Primero completa la configuración y genera la identidad
                     visual
                   </p>
@@ -602,20 +602,20 @@ export function AIGenerator({
             <TabsContent value="generate" className="space-y-6">
               <div className="text-center py-8">
                 <div className="flex justify-center mb-4">
-                  <div className="p-4 bg-green-50 rounded-full">
-                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                  <div className="p-4 bg-success/10 rounded-full">
+                    <CheckCircle2 className="h-8 w-8 text-success" />
                   </div>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-foreground mb-2">
                   Listo para Generar Planos Omnicanal
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-muted-foreground mb-6">
                   Con la identidad visual aprobada, podemos generar los planos
                   para todos los canales configurados
                 </p>
 
                 {/* Resumen de la configuración */}
-                <div className="bg-gray-50 p-6 rounded-lg text-left mb-6">
+                <div className="bg-muted p-6 rounded-lg text-left mb-6">
                   <h4 className="font-medium mb-4">Resumen de la Campaña:</h4>
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
                     <div>
@@ -669,7 +669,7 @@ export function AIGenerator({
                     <span className="text-sm font-medium">
                       Generando Planos...
                     </span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-muted-foreground">
                       {generationProgress.current} / {generationProgress.total}
                     </span>
                   </div>
@@ -680,7 +680,7 @@ export function AIGenerator({
                     }
                     className="w-full"
                   />
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {generationProgress.label}
                   </p>
                 </div>
@@ -702,13 +702,13 @@ export function AIGenerator({
           
           {examplesLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : examples.length > 0 ? (
             <div className="space-y-6 mt-4">
               {examples.map((example: any, index: number) => (
                 <div key={example.variant || index} className="border rounded-lg overflow-hidden">
-                  <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                  <div className="aspect-video bg-muted relative overflow-hidden">
                     {example.imageUrl && (
                       <img 
                         src={example.imageUrl} 
@@ -726,19 +726,19 @@ export function AIGenerator({
                     <h3 className="font-semibold text-sm mb-2">
                       {example.marketingName || `Variante ${index + 1}`}
                     </h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 mb-3">
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
                       {example.headline || 'Ejemplo generado por IA'}
                     </p>
                     {example.sections && example.sections.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-semibold text-gray-700">Secciones:</p>
+                        <p className="text-xs font-semibold text-foreground">Secciones:</p>
                         {example.sections.slice(0, 2).map((section: any, sIndex: number) => (
-                          <div key={sIndex} className="text-xs text-gray-600">
+                          <div key={sIndex} className="text-xs text-muted-foreground">
                             • {section.title}
                           </div>
                         ))}
                         {example.sections.length > 2 && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-muted-foreground">
                             +{example.sections.length - 2} secciones más...
                           </div>
                         )}
@@ -749,7 +749,7 @@ export function AIGenerator({
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500 text-sm">
+            <div className="text-center py-8 text-muted-foreground text-sm">
               No hay ejemplos disponibles
             </div>
           )}

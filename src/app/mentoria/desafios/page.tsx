@@ -91,23 +91,23 @@ const ChallengeTable = ({ list, setSelectedGroup }: { list: any[], setSelectedGr
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center font-bold text-slate-500 text-[11px]">
+                  <TableCell className="text-center font-bold text-muted-foreground text-[11px]">
                     {group.createdAt?.toDate ? format(group.createdAt.toDate(), 'dd/MM/yyyy') : '-'}
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge variant="outline" className="font-bold text-[10px] bg-slate-50">{group.total} Alumnos</Badge>
+                    <Badge variant="outline" className="font-bold text-[10px] bg-muted">{group.total} Alumnos</Badge>
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex flex-col items-center gap-1.5">
                       <span className="text-[10px] font-black text-primary">{percent}%</span>
-                      <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
                         <div className="h-full bg-primary" style={{ width: `${percent}%` }} />
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="inline-flex flex-col items-center">
-                      <span className="text-lg font-black text-emerald-600 leading-none">{avg}%</span>
+                      <span className="text-lg font-black text-success leading-none">{avg}%</span>
                       <span className="text-[8px] font-bold uppercase text-muted-foreground tracking-widest mt-1">Media</span>
                     </div>
                   </TableCell>
@@ -152,7 +152,7 @@ const ChallengeTable = ({ list, setSelectedGroup }: { list: any[], setSelectedGr
                 </div>
                 <Badge className="bg-primary/10 text-primary border-none text-[10px]">{group.total} Alum.</Badge>
               </div>
-              <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl">
+              <div className="flex items-center justify-between bg-muted p-3 rounded-2xl">
                 <div className="flex flex-col gap-1">
                   <span className="text-[9px] font-black uppercase text-muted-foreground">Cumplimiento</span>
                   <span className="text-sm font-black text-primary">{percent}%</span>
@@ -566,7 +566,7 @@ export default function MentorChallengesPage() {
           </div>
           <div className="flex gap-3">
             {allTasks && allTasks.length > 0 && (
-              <Button variant="outline" onClick={() => setIsPurgeOpen(true)} className="h-12 px-6 rounded-xl font-bold border-rose-200 text-rose-600 hover:bg-rose-50 gap-2">
+              <Button variant="outline" onClick={() => setIsPurgeOpen(true)} className="h-12 px-6 rounded-xl font-bold border-danger/20 text-danger hover:bg-danger/10 gap-2">
                 <Trash2 className="h-4 w-4" /> Limpiar
               </Button>
             )}
@@ -590,7 +590,7 @@ export default function MentorChallengesPage() {
             </TabsTrigger>
             <TabsTrigger value="old" className="rounded-xl font-bold text-sm px-8 data-[state=active]:shadow-lg">
               📦 Archivo Histórico
-              <Badge className="ml-2 bg-slate-100 text-slate-500 border-none shadow-none text-[10px]">{filteredAndCategorized.old.length}</Badge>
+              <Badge className="ml-2 bg-muted text-muted-foreground border-none shadow-none text-[10px]">{filteredAndCategorized.old.length}</Badge>
             </TabsTrigger>
           </TabsList>
 
@@ -625,11 +625,11 @@ export default function MentorChallengesPage() {
             </div>
             
             <div className="flex-1 overflow-hidden flex flex-col">
-              <div className="p-6 bg-slate-50 border-b flex items-center justify-between">
+              <div className="p-6 bg-muted border-b flex items-center justify-between">
                 <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest px-2">Alumnos Asignados</h4>
                 <div className="flex items-center gap-4 text-[10px] font-bold uppercase">
-                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /> Entregado</div>
-                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500" /> Pendiente</div>
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-success" /> Entregado</div>
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-warn" /> Pendiente</div>
                 </div>
               </div>
               <ScrollArea className="flex-1 p-6">
@@ -640,12 +640,12 @@ export default function MentorChallengesPage() {
                         <div className="flex items-center gap-4">
                           <div className={cn(
                             "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white shadow-sm",
-                            task.status === 'completed' ? "bg-emerald-500" : "bg-amber-500"
+                            task.status === 'completed' ? "bg-success" : "bg-warn"
                           )}>
                             {task.studentName?.[0] || 'A'}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{task.studentName}</p>
+                            <p className="font-bold text-foreground">{task.studentName}</p>
                             <p className="text-[10px] text-muted-foreground">{task.studentEmail}</p>
                           </div>
                         </div>
@@ -654,7 +654,7 @@ export default function MentorChallengesPage() {
                           {task.status === 'completed' ? (
                             <div className="flex items-center gap-4">
                               <div className="text-right">
-                                <p className="text-lg font-black text-emerald-600 leading-none">{task.score}%</p>
+                                <p className="text-lg font-black text-success leading-none">{task.score}%</p>
                                 <p className="text-[8px] font-bold uppercase text-muted-foreground">Calificación</p>
                               </div>
                               <Button 
@@ -668,7 +668,7 @@ export default function MentorChallengesPage() {
                             </div>
                           ) : (
                             <div className="flex items-center gap-3">
-                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 uppercase text-[9px] font-bold">Pendiente</Badge>
+                              <Badge variant="outline" className="bg-warn/10 text-warn border-warn/20 uppercase text-[9px] font-bold">Pendiente</Badge>
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -686,7 +686,7 @@ export default function MentorChallengesPage() {
                 </div>
               </ScrollArea>
             </div>
-            <DialogFooter className="p-6 bg-slate-50 border-t">
+            <DialogFooter className="p-6 bg-muted border-t">
               <Button onClick={() => setSelectedGroup(null)} variant="secondary" className="rounded-xl font-bold h-12 px-8">Cerrar Tablero</Button>
             </DialogFooter>
           </DialogContent>
@@ -711,16 +711,16 @@ export default function MentorChallengesPage() {
             <ScrollArea className="flex-1 px-8">
               <div className="space-y-10 pb-8">
                 <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                  <h4 className="text-xs font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
                     <FileText className="h-4 w-4" /> Respuesta del Alumno
                   </h4>
-                  <div className="bg-slate-50 p-8 rounded-lg border border-slate-200">
-                    <p className="text-slate-700 leading-relaxed font-medium">{selectedTaskDetail?.answer}</p>
+                  <div className="bg-muted p-8 rounded-lg border border-border">
+                    <p className="text-foreground leading-relaxed font-medium">{selectedTaskDetail?.answer}</p>
                     {selectedTaskDetail?.fileUrl && (
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="mt-6 rounded-xl font-bold gap-2 h-10 px-6 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        className="mt-6 rounded-xl font-bold gap-2 h-10 px-6 border-success/20 text-success hover:bg-success/10"
                         onClick={() => window.open(selectedTaskDetail.fileUrl, '_blank')}
                       >
                         <Download className="h-4 w-4" /> Descargar Material Adjunto
@@ -730,21 +730,21 @@ export default function MentorChallengesPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase text-emerald-600 tracking-widest flex items-center gap-2">
+                  <h4 className="text-xs font-black uppercase text-success tracking-widest flex items-center gap-2">
                     <BrainCircuit className="h-4 w-4" /> Análisis de la IA (Gemini 2.5 Pro)
                   </h4>
-                  <div className="bg-emerald-50 p-8 rounded-lg border-2 border-emerald-100 relative overflow-hidden">
-                    <Zap className="absolute -right-4 -top-4 h-24 w-24 opacity-5 text-emerald-600" />
+                  <div className="bg-success/10 p-8 rounded-lg border-2 border-success/15 relative overflow-hidden">
+                    <Zap className="absolute -right-4 -top-4 h-24 w-24 opacity-5 text-success" />
                     <div className="flex justify-between items-center mb-6">
-                      <Badge className="bg-emerald-500 text-white border-none h-6 px-3 text-[10px] font-black uppercase">Nota: {selectedTaskDetail?.score}%</Badge>
-                      <span className="text-[10px] font-bold text-emerald-600/60 uppercase">{selectedTaskDetail?.completedAt ? format(new Date(selectedTaskDetail.completedAt), 'dd/MM/yyyy HH:mm') : '-'}</span>
+                      <Badge className="bg-success text-white border-none h-6 px-3 text-[10px] font-black uppercase">Nota: {selectedTaskDetail?.score}%</Badge>
+                      <span className="text-[10px] font-bold text-success/60 uppercase">{selectedTaskDetail?.completedAt ? format(new Date(selectedTaskDetail.completedAt), 'dd/MM/yyyy HH:mm') : '-'}</span>
                     </div>
-                    <p className="text-emerald-900 leading-relaxed font-medium italic text-lg">"{selectedTaskDetail?.aiFeedback}"</p>
+                    <p className="text-success leading-relaxed font-medium italic text-lg">"{selectedTaskDetail?.aiFeedback}"</p>
                   </div>
                 </div>
               </div>
             </ScrollArea>
-            <DialogFooter className="p-6 bg-slate-50 border-t">
+            <DialogFooter className="p-6 bg-muted border-t">
               <Button onClick={() => setSelectedTaskDetail(null)} className="rounded-xl font-bold h-12 px-8">Cerrar Análisis</Button>
             </DialogFooter>
           </DialogContent>
@@ -839,7 +839,7 @@ export default function MentorChallengesPage() {
                                          className={cn(
                                            'flex-1 h-10 rounded-xl text-xs font-bold border-2 transition-all',
                                            filterCompleted === val
-                                             ? val === 'yes' ? 'bg-emerald-500 text-white border-emerald-500 shadow-md'
+                                             ? val === 'yes' ? 'bg-success text-white border-success shadow-md'
                                              : 'bg-blue-500 text-white border-blue-500 shadow-md'
                                              : 'bg-white text-muted-foreground border-border hover:border-primary/40'
                                          )}
@@ -850,20 +850,20 @@ export default function MentorChallengesPage() {
 
                                  {/* Paso 2a: Sub-filtros para COMPLETADO */}
                                  {filterCompleted === 'yes' && (
-                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 animate-in fade-in duration-300">
+                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-success/10 rounded-2xl border border-success/15 animate-in fade-in duration-300">
                                      <div className="space-y-2">
-                                       <Label className="text-[10px] font-bold uppercase text-emerald-700">Nota de Aprobación (%)</Label>
+                                       <Label className="text-[10px] font-bold uppercase text-success">Nota de Aprobación (%)</Label>
                                        <div className="flex items-center gap-2">
                                          <Input type="number" min="0" max="100" placeholder="Mín" value={filterScoreMin} onChange={e => setFilterScoreMin(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
-                                         <span className="text-slate-400">-</span>
+                                         <span className="text-muted-foreground">-</span>
                                          <Input type="number" min="0" max="100" placeholder="Máx" value={filterScoreMax} onChange={e => setFilterScoreMax(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
                                        </div>
                                      </div>
                                      <div className="space-y-2">
-                                       <Label className="text-[10px] font-bold uppercase text-emerald-700 flex items-center gap-1"><Clock className="h-3 w-3" /> Terminó hace menos de</Label>
+                                       <Label className="text-[10px] font-bold uppercase text-success flex items-center gap-1"><Clock className="h-3 w-3" /> Terminó hace menos de</Label>
                                        <div className="flex items-center gap-2">
                                          <Input type="number" min="0" placeholder="Ej: 14" value={filterCompletedDays} onChange={e => setFilterCompletedDays(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
-                                         <span className="text-sm font-medium text-slate-500">días</span>
+                                         <span className="text-sm font-medium text-muted-foreground">días</span>
                                        </div>
                                      </div>
                                    </div>
@@ -876,14 +876,14 @@ export default function MentorChallengesPage() {
                                        <Label className="text-[10px] font-bold uppercase text-blue-700 flex items-center gap-1"><Clock className="h-3 w-3" /> Última unidad hace menos de</Label>
                                        <div className="flex items-center gap-2">
                                          <Input type="number" min="0" placeholder="Ej: 7" value={filterLastInteractionDays} onChange={e => setFilterLastInteractionDays(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
-                                         <span className="text-sm font-medium text-slate-500">días</span>
+                                         <span className="text-sm font-medium text-muted-foreground">días</span>
                                        </div>
                                      </div>
                                      <div className="space-y-2">
                                        <Label className="text-[10px] font-bold uppercase text-blue-700">Progreso del Curso (%)</Label>
                                        <div className="flex items-center gap-2">
                                          <Input type="number" min="0" max="100" placeholder="Mín" value={filterProgressMin} onChange={e => setFilterProgressMin(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
-                                         <span className="text-slate-400">-</span>
+                                         <span className="text-muted-foreground">-</span>
                                          <Input type="number" min="0" max="100" placeholder="Máx" value={filterProgressMax} onChange={e => setFilterProgressMax(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
                                        </div>
                                      </div>
@@ -903,18 +903,18 @@ export default function MentorChallengesPage() {
                                Último login en la academia hace <span title="Días desde que el alumno ingresó a la plataforma por última vez"><Info className="h-3 w-3" /></span>
                             </Label>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-slate-500">Menos de</span>
+                              <span className="text-sm font-medium text-muted-foreground">Menos de</span>
                               <Input type="number" min="0" placeholder="Ej: 7" value={filterLastInteractionDays} onChange={e => setFilterLastInteractionDays(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
-                              <span className="text-sm font-medium text-slate-500">días</span>
+                              <span className="text-sm font-medium text-muted-foreground">días</span>
                             </div>
                           </div>
 
                           <div className="space-y-2">
                             <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1 flex gap-1 items-center">Antigüedad (Nuevos en la academia)</Label>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-slate-500">Ingresó hace menos de</span>
+                              <span className="text-sm font-medium text-muted-foreground">Ingresó hace menos de</span>
                               <Input type="number" min="0" placeholder="Ej: 30" value={filterNewStudentsDays} onChange={e => setFilterNewStudentsDays(e.target.value)} className="h-10 bg-white shadow-sm text-center" />
-                              <span className="text-sm font-medium text-slate-500">días</span>
+                              <span className="text-sm font-medium text-muted-foreground">días</span>
                             </div>
                           </div>
                         </>
@@ -927,7 +927,7 @@ export default function MentorChallengesPage() {
                         <Input placeholder="Buscar alumno..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 h-11 bg-secondary/5 border-none" />
                       </div>
 
-                      <div className="border rounded-2xl overflow-hidden bg-slate-50">
+                      <div className="border rounded-2xl overflow-hidden bg-muted">
                         <div className="p-3 bg-white border-b flex justify-between items-center">
                           <span className="text-[10px] font-bold uppercase text-muted-foreground ml-2">Candidatos ({filteredStudents.length})</span>
                           <Button variant="ghost" size="sm" onClick={() => setSelectedStudentIds(filteredStudents.map(s => s.id))} className="text-[10px] font-bold h-7 uppercase">Marcar Todos</Button>
@@ -966,9 +966,9 @@ export default function MentorChallengesPage() {
               </ScrollArea>
             </div>
 
-            <DialogFooter className="p-8 bg-slate-50 border-t shrink-0">
+            <DialogFooter className="p-8 bg-muted border-t shrink-0">
               <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="text-sm font-medium text-slate-500">
+                <div className="text-sm font-medium text-muted-foreground">
                   <span className="font-bold text-primary">{selectedStudentIds.length}</span> alumnos seleccionados para envío.
                 </div>
                 <div className="flex gap-3 w-full md:w-auto">
@@ -990,17 +990,17 @@ export default function MentorChallengesPage() {
         <AlertDialog open={isPurgeOpen} onOpenChange={(open) => { setIsPurgeOpen(open); if(!open) clearUILocks(); }}>
           <AlertDialogContent className="mw-md">
             <AlertDialogHeader className="items-center text-center">
-              <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-6">
+              <div className="w-20 h-20 bg-danger/10 rounded-full flex items-center justify-center text-danger mb-6">
                 <AlertTriangle className="h-10 w-10" />
               </div>
               <AlertDialogTitle className="text-2xl font-bold">¿Vaciar Todo el Historial?</AlertDialogTitle>
-              <AlertDialogDescription className="text-slate-500 leading-relaxed">
+              <AlertDialogDescription className="text-muted-foreground leading-relaxed">
                 Esta acción eliminará <strong>definitivamente</strong> todos los desafíos asignados que se muestran en tu tablero actual. Esta operación no se puede deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-col sm:flex-row gap-3 pt-6">
               <AlertDialogCancel className="flex-1 h-12 rounded-xl font-bold border-2">Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handlePurgeTasks} disabled={loading} className="flex-1 h-12 rounded-xl font-bold bg-rose-600 hover:bg-rose-700 shadow-lg text-white">
+              <AlertDialogAction onClick={handlePurgeTasks} disabled={loading} className="flex-1 h-12 rounded-xl font-bold bg-danger hover:bg-danger shadow-lg text-white">
                 {loading ? <Loader2 className="animate-spin mr-2" /> : <Trash2 className="mr-2 h-4 w-4" />} Confirmar Purga
               </AlertDialogAction>
             </AlertDialogFooter>

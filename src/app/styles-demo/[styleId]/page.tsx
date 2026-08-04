@@ -29,10 +29,10 @@ export default function StyleDemoPage() {
 
   if (!style) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-muted flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Estilo no encontrado</h1>
-          <p className="text-gray-600 mb-4">El estilo solicitado no existe.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Estilo no encontrado</h1>
+          <p className="text-muted-foreground mb-4">El estilo solicitado no existe.</p>
           <Link href="/mentoria/marketing/templates">
             <Button>Volver a Templates</Button>
           </Link>
@@ -44,7 +44,7 @@ export default function StyleDemoPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       {/* Header */}
       <div className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -57,10 +57,10 @@ export default function StyleDemoPage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">
+                <h1 className="text-xl font-bold text-foreground">
                   Demo: {style.name}
                 </h1>
-                <p className="text-sm text-gray-600">{style.description}</p>
+                <p className="text-sm text-muted-foreground">{style.description}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -81,23 +81,23 @@ export default function StyleDemoPage() {
               
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Layout</p>
-                  <p className="text-sm text-gray-600">{style.layout}</p>
+                  <p className="text-sm font-medium text-foreground mb-1">Layout</p>
+                  <p className="text-sm text-muted-foreground">{style.layout}</p>
                 </div>
                 
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Tokens CSS</p>
+                  <p className="text-sm font-medium text-foreground mb-1">Tokens CSS</p>
                   {style.tokens && Object.entries(style.tokens).map(([key, value]) => (
-                    <div key={key} className="flex justify-between text-xs py-0.5 border-b border-dashed border-gray-100 last:border-0">
-                      <span className="text-gray-500 font-mono">{key}</span>
-                      <span className="text-gray-700 font-mono">{value}</span>
+                    <div key={key} className="flex justify-between text-xs py-0.5 border-b border-dashed border-muted last:border-0">
+                      <span className="text-muted-foreground font-mono">{key}</span>
+                      <span className="text-foreground font-mono">{value}</span>
                     </div>
                   ))}
                 </div>
                 
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Tipografía</p>
-                  <div className="text-sm text-gray-600 space-y-1">
+                  <p className="text-sm font-medium text-foreground mb-1">Tipografía</p>
+                  <div className="text-sm text-muted-foreground space-y-1">
                     {style.typography.map((t) => (
                       <p key={t.name}>
                         {t.name}: Headings {t.headingFont} (x{t.headingScale}) · Body{" "}
@@ -115,22 +115,22 @@ export default function StyleDemoPage() {
               <div className="space-y-3">
                 {style.colorProposals.map((palette, i) => (
                   <div key={i}>
-                    <p className="text-sm font-medium text-gray-700 mb-2">
+                    <p className="text-sm font-medium text-foreground mb-2">
                       {palette.name || `Paleta ${i + 1}`}
                     </p>
                     <div className="flex gap-2">
                       <div
-                        className="w-10 h-10 rounded border border-gray-200"
+                        className="w-10 h-10 rounded border border-border"
                         style={{ backgroundColor: palette.primary }}
                         title={`Primary: ${palette.primary}`}
                       />
                       <div
-                        className="w-10 h-10 rounded border border-gray-200"
+                        className="w-10 h-10 rounded border border-border"
                         style={{ backgroundColor: palette.secondary }}
                         title={`Secondary: ${palette.secondary}`}
                       />
                       <div
-                        className="w-10 h-10 rounded border border-gray-200"
+                        className="w-10 h-10 rounded border border-border"
                         style={{ backgroundColor: palette.accent }}
                         title={`Accent: ${palette.accent}`}
                       />
@@ -149,13 +149,13 @@ export default function StyleDemoPage() {
                 {style.availableSections.map((section) => (
                   <div
                     key={section.id}
-                    className="flex items-center justify-between p-2 rounded bg-gray-50"
+                    className="flex items-center justify-between p-2 rounded bg-muted"
                   >
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-foreground">
                         {section.name}
                       </p>
-                      <p className="text-xs text-gray-600">{section.contentType}</p>
+                      <p className="text-xs text-muted-foreground">{section.contentType}</p>
                     </div>
                     <Badge
                       variant={section.required ? "default" : "outline"}
@@ -163,7 +163,7 @@ export default function StyleDemoPage() {
                         "text-xs",
                         section.required
                           ? "bg-blue-100 text-blue-700"
-                          : "text-gray-600"
+                          : "text-muted-foreground"
                       )}
                     >
                       {section.required ? "Requerido" : "Opcional"}
@@ -185,7 +185,7 @@ export default function StyleDemoPage() {
                     <Badge
                       key={section.id}
                       variant="outline"
-                      className="text-xs text-green-600 border-green-200"
+                      className="text-xs text-success border-success/20"
                     >
                       {section.name}
                     </Badge>
@@ -196,14 +196,14 @@ export default function StyleDemoPage() {
             {/* Directivas IA */}
             <div className="bg-white rounded-xl border p-6">
               <h2 className="text-lg font-semibold mb-4">Directivas para IA</h2>
-              <p className="text-sm text-gray-600">{style.aiDirectives}</p>
+              <p className="text-sm text-muted-foreground">{style.aiDirectives}</p>
             </div>
           </div>
 
           {/* Preview del mockup */}
           <div className="lg:col-span-2 space-y-6">
             {examples.length === 0 ? (
-              <div className="bg-white rounded-xl border p-12 text-center text-gray-500">
+              <div className="bg-white rounded-xl border p-12 text-center text-muted-foreground">
                 Cargando ejemplos generados por IA...
               </div>
             ) : (
@@ -220,7 +220,7 @@ export default function StyleDemoPage() {
                       Abrir Landing Real en nueva pestaña
                     </Button>
                   </div>
-                  <div className="flex justify-center w-full h-[600px] rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                  <div className="flex justify-center w-full h-[600px] rounded-xl overflow-hidden border border-border bg-muted">
                     <iframe 
                       src={`/v/demo-${styleId}-style?v=${index}&preview=true`} 
                       className="w-[1280px] h-[calc(600px*1.28)] origin-top-left"

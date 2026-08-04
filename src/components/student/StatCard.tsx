@@ -18,11 +18,11 @@ export function StudentStatCard({
 }: StatCardProps) {
   const colors = {
     accent: "bg-accent/10 text-accent",
-    emerald: "bg-emerald-100 text-emerald-700",
-    slate: "bg-slate-100 text-slate-700",
+    emerald: "bg-success/15 text-success",
+    slate: "bg-muted text-foreground",
     blue: "bg-blue-100 text-blue-700",
-    amber: "bg-amber-100 text-amber-700",
-    purple: "bg-purple-100 text-purple-700"
+    amber: "bg-warn/15 text-warn",
+    purple: "bg-primary/15 text-primary"
   };
 
   return (
@@ -35,11 +35,11 @@ export function StudentStatCard({
           )}>
             <Icon className="h-5 w-5 md:h-6 md:w-6" />
           </div>
-          <span className="text-2xl md:text-3xl font-headline font-bold text-slate-900 tracking-tighter">
+          <span className="text-2xl md:text-3xl font-headline font-bold text-foreground tracking-tighter">
             {value}
           </span>
         </div>
-        <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-500 leading-tight">
+        <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-tight">
           {label}
         </p>
       </CardContent>

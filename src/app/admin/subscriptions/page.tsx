@@ -432,10 +432,10 @@ export default function AdminSubscriptionsPage() {
         {/* Global KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Total Planes', value: (plans || []).length, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-            { label: 'Planes de Pago', value: (plans || []).filter(p => p.type !== 'free').length, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Activos', value: (plans || []).filter(p => p.isActive).length, icon: ShieldCheck, color: 'text-purple-600', bg: 'bg-purple-50' },
-            { label: 'Ingresos MRR Pot.', value: `$${(plans || []).reduce((sum, p) => sum + (p.price || 0), 0).toFixed(2)}`, icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: 'Total Planes', value: (plans || []).length, icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
+            { label: 'Planes de Pago', value: (plans || []).filter(p => p.type !== 'free').length, icon: TrendingUp, color: 'text-success', bg: 'bg-success/10' },
+            { label: 'Activos', value: (plans || []).filter(p => p.isActive).length, icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/10' },
+            { label: 'Ingresos MRR Pot.', value: `$${(plans || []).reduce((sum, p) => sum + (p.price || 0), 0).toFixed(2)}`, icon: DollarSign, color: 'text-warn', bg: 'bg-warn/10' },
           ].map((kpi, i) => (
             <Card key={i} className="border-none shadow-sm bg-white/50 backdrop-blur-sm overflow-hidden group">
               <CardContent className="p-6 relative">
@@ -447,8 +447,8 @@ export default function AdminSubscriptionsPage() {
                     <kpi.icon className={cn("h-5 w-5", kpi.color)} />
                   </div>
                 </div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{kpi.label}</p>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">{kpi.value}</h3>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{kpi.label}</p>
+                <h3 className="text-2xl font-bold text-foreground mt-1">{kpi.value}</h3>
               </CardContent>
             </Card>
           ))}
@@ -477,9 +477,9 @@ export default function AdminSubscriptionsPage() {
                     <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center border font-bold text-xs uppercase shrink-0 transition-transform", 
-                            plan.type === 'free' ? "bg-slate-50 text-slate-600 border-slate-200" :
-                            plan.type === 'fixed' ? "bg-indigo-50 text-indigo-600 border-indigo-200" :
-                            "bg-emerald-50 text-emerald-600 border-emerald-200"
+                            plan.type === 'free' ? "bg-muted text-muted-foreground border-border" :
+                            plan.type === 'fixed' ? "bg-primary/10 text-primary border-primary/20" :
+                            "bg-success/10 text-success border-success/20"
                           )}>
                           {plan.name.charAt(0)}
                         </div>
@@ -487,7 +487,7 @@ export default function AdminSubscriptionsPage() {
                           <p className="font-bold text-sm text-foreground line-clamp-1">{plan.name}</p>
                           <div className="flex flex-wrap gap-1 mt-1">
                             <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-primary/20 text-primary/70">{plan.durationMonths} meses</Badge>
-                            {plan.type === 'free' && <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-slate-200 text-slate-500">Gratuita</Badge>}
+                            {plan.type === 'free' && <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-border text-muted-foreground">Gratuita</Badge>}
                             {plan.hasPremiumAI && <span className="ml-1 text-[10px]" title="Incluye Motor IA Premium">🌟</span>}
                           </div>
                         </div>
@@ -496,14 +496,14 @@ export default function AdminSubscriptionsPage() {
                     
                     <TableCell className="text-center">
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-xs font-bold text-slate-700">{plan.limits.maxCourses === -1 ? '∞' : plan.limits.maxCourses} cursos</span>
+                        <span className="text-xs font-bold text-foreground">{plan.limits.maxCourses === -1 ? '∞' : plan.limits.maxCourses} cursos</span>
                         <span className="text-[10px] text-muted-foreground font-semibold">{plan.limits.maxStudents === -1 ? '∞' : plan.limits.maxStudents} alumnos</span>
                       </div>
                     </TableCell>
                     
                     <TableCell className="text-center">
                       <div className="flex flex-col items-center">
-                        <span className="font-bold text-slate-900">
+                        <span className="font-bold text-foreground">
                           {plan.type === 'free' ? 'Gratis' : plan.type === 'fixed' ? `$${plan.price}/m` : `${plan.percentageRate}%`}
                         </span>
                         {plan.type === 'percentage' && <span className="text-[9px] uppercase text-muted-foreground font-bold">Por Ventas</span>}
@@ -512,16 +512,16 @@ export default function AdminSubscriptionsPage() {
 
                     <TableCell className="text-center">
                       <div className="flex flex-col items-center gap-1">
-                        <Badge variant={plan.isEnterprise ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", plan.isEnterprise ? "bg-indigo-50 text-indigo-700" : "bg-slate-50 text-slate-500 uppercase")}>
+                        <Badge variant={plan.isEnterprise ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", plan.isEnterprise ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground uppercase")}>
                           {plan.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
                         </Badge>
-                        <div className="text-[8px] text-slate-400 mt-1">
+                        <div className="text-[8px] text-muted-foreground mt-1">
                           {plan.isEnterprise ? 'Para organizaciones con múltiples usuarios' : 'Para tutores independientes y mentores'}
                         </div>
                         <Badge variant="outline" className="text-[9px] opacity-70 px-0 h-3 border-none bg-transparent">
                           {plan.isActive ? '✓ Disponible' : '✗ Oculto'}
                         </Badge>
-                        <div className="text-[8px] text-slate-400 mt-1">
+                        <div className="text-[8px] text-muted-foreground mt-1">
                           {plan.isActive ? 'Visible para nuevos suscriptores' : 'No disponible para nuevos suscriptores'}
                         </div>
                       </div>
@@ -553,32 +553,32 @@ export default function AdminSubscriptionsPage() {
         {/* Dialog Formulario de Creación/Edición */}
         <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
           <DialogContent className="mw-4xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="px-8 pt-8 bg-indigo-600 text-white shrink-0 relative">
+            <DialogHeader className="px-8 pt-8 bg-primary text-white shrink-0 relative">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
               <DialogTitle className="text-2xl font-bold">{editingPlan ? 'Editar Configuración del Plan' : 'Definir Nuevo Plan Comercial'}</DialogTitle>
-              <DialogDescription className="text-indigo-100 font-medium text-base">Especifica permisos, topes y regalías del nivel de suscripción.</DialogDescription>
+              <DialogDescription className="text-primary/15 font-medium text-base">Especifica permisos, topes y regalías del nivel de suscripción.</DialogDescription>
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto">
               <form id="plan-form" onSubmit={handleSubmit}>
                 <Tabs defaultValue="comercial" className="w-full">
-                  <div className="px-8 pt-4 pb-2 bg-white border-b border-slate-100 sticky top-0 z-10">
-                    <TabsList className="bg-slate-100/50 p-1 rounded-xl w-full justify-start h-12 gap-2">
-                      <TabsTrigger value="comercial" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">🏷️ Comercial</TabsTrigger>
-                      <TabsTrigger value="permisos" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">🛡️ Límites y Permisos</TabsTrigger>
-                      <TabsTrigger value="ciclo" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">⏱️ Ciclo de Vida</TabsTrigger>
-                      <TabsTrigger value="freno" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">⚡ Freno de Mano (IA)</TabsTrigger>
+                  <div className="px-8 pt-4 pb-2 bg-white border-b border-muted sticky top-0 z-10">
+                    <TabsList className="bg-muted/50 p-1 rounded-xl w-full justify-start h-12 gap-2">
+                      <TabsTrigger value="comercial" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">🏷️ Comercial</TabsTrigger>
+                      <TabsTrigger value="permisos" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">🛡️ Límites y Permisos</TabsTrigger>
+                      <TabsTrigger value="ciclo" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">⏱️ Ciclo de Vida</TabsTrigger>
+                      <TabsTrigger value="freno" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">⚡ Freno de Mano (IA)</TabsTrigger>
                     </TabsList>
                   </div>
 
                   <TabsContent value="comercial" className="p-8 space-y-8 max-w-3xl mx-auto m-0">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
-                        <Label htmlFor="planName" className="text-xs font-bold uppercase tracking-widest text-slate-500">Nombre del Nivel</Label>
-                        <Input id="planName" name="planName" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Plan Profesional" className="border-slate-200" required  size="lg" />
+                        <Label htmlFor="planName" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Nombre del Nivel</Label>
+                        <Input id="planName" name="planName" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ej: Plan Profesional" className="border-border" required  size="lg" />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="planType" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tipo de Contrato</Label>
+                        <Label htmlFor="planType" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tipo de Contrato</Label>
                           <Select 
                             value={formData.type} 
                             onValueChange={(value) => {
@@ -596,7 +596,7 @@ export default function AdminSubscriptionsPage() {
                               setFormData({...formData, type: newType});
                             }}
                           >
-                            <SelectTrigger size="lg" className="border-slate-200">
+                            <SelectTrigger size="lg" className="border-border">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="font-sans">
@@ -609,34 +609,34 @@ export default function AdminSubscriptionsPage() {
                     </div>
 
                     <div className={cn(
-                      "grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-white rounded-2xl border border-slate-100 shadow-sm",
+                      "grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-white rounded-2xl border border-muted shadow-sm",
                       formData.type === 'free' && "opacity-50 pointer-events-none"
                     )}>
                       {formData.type !== 'percentage' && (
                         <div className="space-y-2">
-                          <Label htmlFor="planPrice" className="text-xs font-bold uppercase tracking-widest text-slate-500">Fijo (USD/mes)</Label>
-                          <Input id="planPrice" name="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free'} className="bg-slate-50"  size="lg" />
+                          <Label htmlFor="planPrice" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Fijo (USD/mes)</Label>
+                          <Input id="planPrice" name="planPrice" type="number" min="0" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} disabled={formData.type === 'free'} className="bg-muted"  size="lg" />
                         </div>
                       )}
                       {formData.type === 'percentage' && (
                         <div className="space-y-2">
-                          <Label htmlFor="planPercentage" className="text-xs font-bold uppercase tracking-widest text-slate-500">Regalía (%)</Label>
-                          <Input id="planPercentage" name="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} className="bg-slate-50"  size="lg" />
+                          <Label htmlFor="planPercentage" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Regalía (%)</Label>
+                          <Input id="planPercentage" name="planPercentage" type="number" min="0" max="100" step="0.1" value={formData.percentageRate} onChange={(e) => setFormData({...formData, percentageRate: parseFloat(e.target.value)})} className="bg-muted"  size="lg" />
                         </div>
                       )}
                       <div className="space-y-2">
-                        <Label htmlFor="planDuration" className="text-xs font-bold uppercase tracking-widest text-slate-500">Duración mínima (m)</Label>
-                        <Input id="planDuration" name="planDuration" type="number" min="1" value={formData.durationMonths} onChange={(e) => setFormData({...formData, durationMonths: parseInt(e.target.value)})} className="bg-slate-50"  size="lg" />
+                        <Label htmlFor="planDuration" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Duración mínima (m)</Label>
+                        <Input id="planDuration" name="planDuration" type="number" min="1" value={formData.durationMonths} onChange={(e) => setFormData({...formData, durationMonths: parseInt(e.target.value)})} className="bg-muted"  size="lg" />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="planFeatures" className="text-xs font-bold uppercase tracking-widest text-slate-500">Propuesta de Valor (1 línea = 1 viñeta)</Label>
-                      <Textarea id="planFeatures" name="planFeatures" rows={4} value={formData.features?.join('\n') || ''} onChange={(e) => setFormData({...formData, features: e.target.value.split('\n')})} placeholder="Perfil premium&#10;Analytics avanzadas&#10;API" className="border-slate-200" required />
+                      <Label htmlFor="planFeatures" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Propuesta de Valor (1 línea = 1 viñeta)</Label>
+                      <Textarea id="planFeatures" name="planFeatures" rows={4} value={formData.features?.join('\n') || ''} onChange={(e) => setFormData({...formData, features: e.target.value.split('\n')})} placeholder="Perfil premium&#10;Analytics avanzadas&#10;API" className="border-border" required />
                     </div>
 
-                    <div className="flex flex-col gap-2 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Tipo de Perfil</Label>
+                    <div className="flex flex-col gap-2 p-4 bg-muted rounded-xl border border-border">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Tipo de Perfil</Label>
                       <RadioGroup 
                         value={formData.isEnterprise ? 'enterprise' : 'tutor'} 
                         onValueChange={(v) => {
@@ -655,7 +655,7 @@ export default function AdminSubscriptionsPage() {
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="enterprise" id="plan-type-enterprise" />
-                          <Label htmlFor="plan-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-indigo-600">Empresa</Label>
+                          <Label htmlFor="plan-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-primary">Empresa</Label>
                         </div>
                       </RadioGroup>
                     </div>
@@ -664,22 +664,22 @@ export default function AdminSubscriptionsPage() {
                   <TabsContent value="permisos" className="p-8 space-y-8 max-w-3xl mx-auto m-0">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       <div className="space-y-2">
-                        <Label htmlFor="planMaxCourses" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Cursos Publicados</Label>
-                        <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val, limits: { ...formData.limits, maxCourses: isNaN(val) ? 0 : val } as any}); }} placeholder="10 (-1 = ∞)" className="border-slate-200"  size="lg" />
+                        <Label htmlFor="planMaxCourses" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tope de Cursos Publicados</Label>
+                        <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, maxSimultaneousCourses: isNaN(val) ? 0 : val, limits: { ...formData.limits, maxCourses: isNaN(val) ? 0 : val } as any}); }} placeholder="10 (-1 = ∞)" className="border-border"  size="lg" />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-slate-500">Tope de Alumnos (Base)</Label>
-                        <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, limits: { ...formData.limits, maxStudents: isNaN(val) ? 0 : val } as any}); }} placeholder="200 (-1 = ∞)" className="border-slate-200"  size="lg" />
+                        <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tope de Alumnos (Base)</Label>
+                        <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, limits: { ...formData.limits, maxStudents: isNaN(val) ? 0 : val } as any}); }} placeholder="200 (-1 = ∞)" className="border-border"  size="lg" />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="planInvitationsPerCourse" className="text-xs font-bold uppercase tracking-widest text-slate-500">Alumnos Invitados por Curso</Label>
-                        <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, invitationsPerCourse: isNaN(val) ? 0 : val}); }} placeholder="5" className="border-slate-200"  size="lg" />
+                        <Label htmlFor="planInvitationsPerCourse" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Alumnos Invitados por Curso</Label>
+                        <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({...formData, invitationsPerCourse: isNaN(val) ? 0 : val}); }} placeholder="5" className="border-border"  size="lg" />
                       </div>
                     </div>
 
-                    <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-6">
-                      <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-4">Derechos Administrativos (RBAC)</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium text-slate-700">
+                    <div className="p-6 bg-white rounded-2xl border border-muted shadow-sm space-y-6">
+                      <h3 className="font-bold text-foreground border-b border-muted pb-4">Derechos Administrativos (RBAC)</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium text-foreground">
                         {[
                           { k: 'academic_management', l: 'Gestión de Cursos Ppios', i: GraduationCap },
                           { k: 'students_view', l: 'Exportar Lead Alumnos', i: Users },
@@ -687,9 +687,9 @@ export default function AdminSubscriptionsPage() {
                           { k: 'followups_management', l: 'Tickets de Seguimiento', i: ClipboardList },
                           { k: 'mentor_challenges', l: 'Emitir Desafíos', i: Target }
                         ].map(perm => (
-                          <div key={perm.k} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
+                          <div key={perm.k} className="flex items-center justify-between p-3 rounded-xl bg-muted border border-muted hover:bg-muted transition-colors">
                             <div className="flex items-center gap-3">
-                              <perm.i className="h-4 w-4 text-indigo-500" />
+                              <perm.i className="h-4 w-4 text-primary" />
                               <Label htmlFor={`perm-${perm.k}`} className="cursor-pointer">{perm.l}</Label>
                             </div>
                             <Switch 
@@ -768,45 +768,45 @@ export default function AdminSubscriptionsPage() {
                   </TabsContent>
 
                   <TabsContent value="freno" className="p-8 space-y-8 max-w-3xl mx-auto m-0 pb-12">
-                    <div className="p-6 bg-amber-50/50 rounded-lg border border-amber-100 space-y-8">
-                      <div className="flex items-center gap-4 border-b border-amber-100 pb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
+                    <div className="p-6 bg-warn/10/50 rounded-lg border border-warn/15 space-y-8">
+                      <div className="flex items-center gap-4 border-b border-warn/15 pb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-warn/15 flex items-center justify-center text-warn">
                           <Cpu className="h-6 w-6" />
                         </div>
                         <div>
-                          <h3 className="font-bold text-amber-900">Cuotas de Consumo Mensual</h3>
-                          <p className="text-xs text-amber-700/60 font-medium">Define el límite de recursos IA incluidos en el abono.</p>
+                          <h3 className="font-bold text-warn">Cuotas de Consumo Mensual</h3>
+                          <p className="text-xs text-warn/60 font-medium">Define el límite de recursos IA incluidos en el abono.</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-amber-800/50 ml-1">Fastoria Credits / mes (Abono)</Label>
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-warn/50 ml-1">Fastoria Credits / mes (Abono)</Label>
                           <div className="relative">
                             <Input 
                               type="number" 
                               value={formData.aiQuotas?.totalCredits || 0} 
                               onChange={(e) => setFormData({...formData, aiQuotas: { totalCredits: parseInt(e.target.value) }})}
-                              className="bg-white border-amber-100 font-black text-amber-900 text-xl pl-12"
+                              className="bg-white border-warn/15 font-black text-warn text-xl pl-12"
                              size="xl" />
-                            <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-500" />
+                            <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-warn" />
                           </div>
                         </div>
-                        <div className="p-4 bg-white/40 rounded-2xl border border-amber-100/50">
-                          <p className="text-[10px] text-amber-700/60 font-medium leading-relaxed">
+                        <div className="p-4 bg-white/40 rounded-2xl border border-warn/15/50">
+                          <p className="text-[10px] text-warn/60 font-medium leading-relaxed">
                             Estos créditos se consumen por cada imagen, video o análisis generado. 1 video puede equivaler a N créditos.
                           </p>
                         </div>
                       </div>
 
                       {/* Regla de Negocio de Créditos */}
-                      <div className="p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 flex gap-4 items-start">
-                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
+                      <div className="p-5 bg-primary/10/50 rounded-2xl border border-primary/15/50 flex gap-4 items-start">
+                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm shrink-0">
                           <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div className="space-y-1">
-                          <h4 className="text-xs font-black uppercase tracking-widest text-indigo-900">Regla de Negocio de Créditos</h4>
-                          <p className="text-[10px] text-indigo-700/70 font-medium leading-relaxed">
+                          <h4 className="text-xs font-black uppercase tracking-widest text-foreground">Regla de Negocio de Créditos</h4>
+                          <p className="text-[10px] text-primary/70 font-medium leading-relaxed">
                             Los créditos del **abono mensual** expiran al final de cada ciclo (no son acumulativos). 
                             Los créditos de **recarga (packs)** no expiran. El orden de consumo es: primero el cupo del abono y luego las recargas compradas.
                           </p>
@@ -815,15 +815,15 @@ export default function AdminSubscriptionsPage() {
 
                       <div className="space-y-4 pt-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <TrendingUp className="h-4 w-4 text-amber-600" />
-                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800/50">Opciones de Recarga (Reposición de Cuota)</span>
+                          <TrendingUp className="h-4 w-4 text-warn" />
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-warn/50">Opciones de Recarga (Reposición de Cuota)</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                           {[0, 1, 2, 3, 4].map((idx) => (
-                            <div key={idx} className="space-y-3 p-4 bg-white rounded-2xl border border-amber-100 shadow-sm">
-                              <p className="text-[9px] font-black text-amber-800/40 text-center uppercase tracking-widest">Pack {idx + 1}</p>
+                            <div key={idx} className="space-y-3 p-4 bg-white rounded-2xl border border-warn/15 shadow-sm">
+                              <p className="text-[9px] font-black text-warn/40 text-center uppercase tracking-widest">Pack {idx + 1}</p>
                               <div className="space-y-1">
-                                <Label className="text-[8px] font-bold text-slate-400 ml-1">Precio (USD)</Label>
+                                <Label className="text-[8px] font-bold text-muted-foreground ml-1">Precio (USD)</Label>
                                 <Input 
                                   type="number"
                                   placeholder="0.00"
@@ -833,11 +833,11 @@ export default function AdminSubscriptionsPage() {
                                     newOptions[idx] = { ...newOptions[idx], price: parseFloat(e.target.value) };
                                     setFormData({...formData, rechargeOptions: newOptions});
                                   }}
-                                  className="h-9 rounded-lg bg-slate-50 border-none text-center font-bold text-xs"
+                                  className="h-9 rounded-lg bg-muted border-none text-center font-bold text-xs"
                                 />
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-[8px] font-bold text-slate-400 ml-1">Créditos</Label>
+                                <Label className="text-[8px] font-bold text-muted-foreground ml-1">Créditos</Label>
                                 <Input 
                                   type="number"
                                   placeholder="0"
@@ -847,7 +847,7 @@ export default function AdminSubscriptionsPage() {
                                     newOptions[idx] = { ...newOptions[idx], credits: parseInt(e.target.value) };
                                     setFormData({...formData, rechargeOptions: newOptions});
                                   }}
-                                  className="h-9 rounded-lg bg-amber-50 border-none text-center font-bold text-xs text-amber-700"
+                                  className="h-9 rounded-lg bg-warn/10 border-none text-center font-bold text-xs text-warn"
                                 />
                               </div>
                             </div>
@@ -855,19 +855,19 @@ export default function AdminSubscriptionsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20">
+                      <div className="flex items-center justify-between p-4 bg-warn/10 rounded-2xl border border-warn/20">
                         <div className="flex items-center gap-3">
-                          <Sparkles className="h-5 w-5 text-amber-600" />
+                          <Sparkles className="h-5 w-5 text-warn" />
                           <div className="space-y-0.5">
-                            <Label htmlFor="plan-has-ai-tab" className="font-bold text-sm text-amber-900">✨ IA Premium (Imagen 3)</Label>
-                            <p className="text-[10px] text-amber-800/60 font-medium">Habilita el motor de generación de alta fidelidad.</p>
+                            <Label htmlFor="plan-has-ai-tab" className="font-bold text-sm text-warn">✨ IA Premium (Imagen 3)</Label>
+                            <p className="text-[10px] text-warn/60 font-medium">Habilita el motor de generación de alta fidelidad.</p>
                           </div>
                         </div>
                         <Switch 
                           id="plan-has-ai-tab" 
                           checked={formData.hasPremiumAI} 
                           onCheckedChange={(c) => setFormData({...formData, hasPremiumAI: c})} 
-                          className="data-[state=checked]:bg-amber-600" 
+                          className="data-[state=checked]:bg-warn" 
                         />
                       </div>
                     </div>
@@ -876,16 +876,16 @@ export default function AdminSubscriptionsPage() {
               </form>
             </div>
 
-            <div className="px-8 py-6 bg-white border-t border-slate-100 shrink-0 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="px-8 py-6 bg-white border-t border-muted shrink-0 flex flex-col md:flex-row gap-4 justify-between items-center">
               <div className="flex gap-2 items-center">
-                <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-emerald-500" />
-                <Label htmlFor="plan-is-active" className="font-bold text-[10px] uppercase tracking-widest text-slate-500 cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>
+                <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-success" />
+                <Label htmlFor="plan-is-active" className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>
               </div>
               <div className="flex gap-3 mt-4 md:mt-0 w-full md:w-auto">
                 <Button type="button" variant="outline" className="flex-1 md:flex-auto rounded-xl h-12 px-6 font-bold" onClick={() => setShowCreateForm(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" form="plan-form" className="flex-1 md:flex-auto rounded-xl h-12 px-8 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 font-bold text-white">
+                <Button type="submit" form="plan-form" className="flex-1 md:flex-auto rounded-xl h-12 px-8 bg-primary hover:bg-primary shadow-md shadow-primary/20 font-bold text-white">
                   {editingPlan ? 'Guardar Cambios' : 'Emitir Plan'}
                 </Button>
               </div>

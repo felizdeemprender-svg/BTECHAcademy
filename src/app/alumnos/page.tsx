@@ -182,7 +182,7 @@ export default function AlumnosPage() {
                     <TableCell className="text-center">
                       <Badge className={cn(
                         "px-3 py-1 border-none font-bold text-[10px] uppercase tracking-wider",
-                        student.status === 'active' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                        student.status === 'active' ? "bg-success/15 text-success" : "bg-warn/15 text-warn"
                       )}>
                         {student.status === 'active' ? 'Acceso OK' : 'Pendiente / Bloqueado'}
                       </Badge>

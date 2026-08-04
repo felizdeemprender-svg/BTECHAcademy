@@ -109,10 +109,10 @@ export function LandingEditor({
 
   if (!generatedAssets) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
+      <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-muted rounded-lg border-2 border-dashed border-border">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
         <div className="text-center">
-          <h3 className="text-xl font-bold text-slate-700">Cargando editor de landings...</h3>
+          <h3 className="text-xl font-bold text-foreground">Cargando editor de landings...</h3>
         </div>
       </div>
     );
@@ -122,12 +122,12 @@ export function LandingEditor({
     <div className="space-y-10 animate-in fade-in">
       <header className="flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-3xl bg-emerald-500 text-white flex items-center justify-center shadow-lg">
+          <div className="w-14 h-14 rounded-3xl bg-success text-white flex items-center justify-center shadow-lg">
             <Layout className="h-8 w-8" />
           </div>
           <div>
             <h2 className="text-3xl font-bold">Editor de Landings</h2>
-            <p className="text-slate-500">Refina el copy de tus 3 variantes estratégicas.</p>
+            <p className="text-muted-foreground">Refina el copy de tus 3 variantes estratégicas.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -139,9 +139,9 @@ export function LandingEditor({
 
       <div className="space-y-8">
         <Tabs value={activeLandingIdx.toString()} onValueChange={v => setActiveLandingIdx(parseInt(v))}>
-          <TabsList className="bg-slate-100 p-1 h-12 justify-start gap-1 rounded-xl mb-8 border border-slate-200 shadow-sm flex-wrap w-fit">
+          <TabsList className="bg-muted p-1 h-12 justify-start gap-1 rounded-xl mb-8 border border-border shadow-sm flex-wrap w-fit">
             {generatedAssets?.landings?.map((l: any, i: number) => (
-              <TabsTrigger key={i} value={i.toString()} className="rounded-lg px-6 h-10 text-[10px] font-black uppercase tracking-tight data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-slate-900 text-slate-400">
+              <TabsTrigger key={i} value={i.toString()} className="rounded-lg px-6 h-10 text-[10px] font-black uppercase tracking-tight data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-foreground text-muted-foreground">
                 {l.marketingName || `Ruta ${i + 1}`}
               </TabsTrigger>
             ))}
@@ -149,7 +149,7 @@ export function LandingEditor({
           
           {generatedAssets?.landings?.map((l: any, lIdx: number) => (
             <TabsContent key={lIdx} value={lIdx.toString()} className="space-y-8">
-              <Card className="p-10 rounded-lg bg-slate-900 border border-white/10 overflow-hidden relative">
+              <Card className="p-10 rounded-lg bg-foreground border border-white/10 overflow-hidden relative">
                 {/* Botón de IA */}
                 <div className="absolute top-6 right-6 z-20">
                   <Button 
@@ -157,49 +157,49 @@ export function LandingEditor({
                     size="sm" 
                     onClick={() => handleRegenerate(lIdx)}
                     disabled={isRegenerating === lIdx}
-                    className="h-10 px-6 rounded-xl bg-white text-slate-950 font-black text-[10px] uppercase tracking-wider hover:bg-emerald-50 transition-all"
+                    className="h-10 px-6 rounded-xl bg-white text-foreground font-black text-[10px] uppercase tracking-wider hover:bg-success/10 transition-all"
                   >
                     {isRegenerating === lIdx ? (
                       <><Loader2 className="h-3 w-3 mr-2 animate-spin" /> REGENERANDO...</>
                     ) : (
-                      <><Brain className="h-3 w-3 mr-2 text-emerald-600" /> RE-GENERAR CON IA</>
+                      <><Brain className="h-3 w-3 mr-2 text-success" /> RE-GENERAR CON IA</>
                     )}
                   </Button>
                 </div>
 
                 <div className="space-y-6 relative z-10 pt-8">
                   <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Nombre Comercial</Label>
-                     <Input value={l.marketingName || ''} onChange={e => updateAsset('landings', lIdx, 'marketingName', e.target.value)} className="bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-emerald-500/50"  size="xl" />
+                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-4 tracking-widest">Nombre Comercial</Label>
+                     <Input value={l.marketingName || ''} onChange={e => updateAsset('landings', lIdx, 'marketingName', e.target.value)} className="bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-success/50"  size="xl" />
                   </div>
                   <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Titular Principal (Hero)</Label>
-                     <Textarea value={l.headline || ''} onChange={e => updateAsset('landings', lIdx, 'headline', e.target.value)} className="text-3xl font-black text-white border-none bg-white/5 rounded-3xl p-8 min-h-[120px] focus-visible:ring-emerald-500/50" />
+                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-4 tracking-widest">Titular Principal (Hero)</Label>
+                     <Textarea value={l.headline || ''} onChange={e => updateAsset('landings', lIdx, 'headline', e.target.value)} className="text-3xl font-black text-white border-none bg-white/5 rounded-3xl p-8 min-h-[120px] focus-visible:ring-success/50" />
                   </div>
                   <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Subtítulo de Apoyo (Hero)</Label>
-                     <Textarea value={l.subheadline || ''} onChange={e => updateAsset('landings', lIdx, 'subheadline', e.target.value)} className="text-lg font-medium text-slate-300 border-none bg-white/5 rounded-3xl p-8 min-h-[100px] focus-visible:ring-emerald-500/50" />
+                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-4 tracking-widest">Subtítulo de Apoyo (Hero)</Label>
+                     <Textarea value={l.subheadline || ''} onChange={e => updateAsset('landings', lIdx, 'subheadline', e.target.value)} className="text-lg font-medium text-border border-none bg-white/5 rounded-3xl p-8 min-h-[100px] focus-visible:ring-success/50" />
                   </div>
                   <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest">Texto del Botón de Compra (CTA)</Label>
-                     <Input value={l.ctaText || ''} onChange={e => updateAsset('landings', lIdx, 'ctaText', e.target.value)} className="bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-emerald-500/50"  size="xl" />
+                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-4 tracking-widest">Texto del Botón de Compra (CTA)</Label>
+                     <Input value={l.ctaText || ''} onChange={e => updateAsset('landings', lIdx, 'ctaText', e.target.value)} className="bg-white/5 border-white/5 px-8 font-bold text-white focus-visible:ring-success/50"  size="xl" />
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-10 rounded-lg bg-slate-900 border border-white/10 space-y-6">
+              <Card className="p-10 rounded-lg bg-foreground border border-white/10 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                    <div className="w-12 h-12 rounded-xl bg-success/10 text-success flex items-center justify-center border border-success/20">
                       <Video className="h-6 w-6" />
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Video de Venta / Introducción</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">Elige si quieres incluir un video explicativo en tu landing page.</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Elige si quieres incluir un video explicativo en tu landing page.</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Label htmlFor={`show-video-${lIdx}`} className="text-xs font-bold text-slate-300 cursor-pointer">
+                    <Label htmlFor={`show-video-${lIdx}`} className="text-xs font-bold text-border cursor-pointer">
                       {(l.showVideo !== undefined ? l.showVideo : !!l.videoUrl?.trim()) ? "Video Habilitado" : "Sin Video"}
                     </Label>
                     <Switch
@@ -217,20 +217,20 @@ export function LandingEditor({
 
                 {(l.showVideo !== undefined ? l.showVideo : !!l.videoUrl?.trim()) ? (
                   <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                    <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-widest flex items-center gap-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-4 tracking-widest flex items-center gap-2">
                       <span>URL del Video de Venta</span>
-                      <span className="text-red-400 font-bold text-[9px] lowercase tracking-normal">(obligatorio)</span>
+                      <span className="text-danger font-bold text-[9px] lowercase tracking-normal">(obligatorio)</span>
                     </Label>
                     <Input 
                       placeholder="https://www.youtube.com/watch?v=... o https://vimeo.com/..." 
                       value={l.videoUrl || ''} 
                       onChange={e => updateAsset('landings', lIdx, 'videoUrl', e.target.value)} 
-                      className="bg-white/5 border-white/5 px-8 font-mono text-xs text-emerald-400 focus-visible:ring-emerald-500/50" 
+                      className="bg-white/5 border-white/5 px-8 font-mono text-xs text-success focus-visible:ring-success/50" 
                      size="xl" />
                   </div>
                 ) : (
-                  <div className="p-4 bg-slate-950/40 rounded-2xl border border-dashed border-white/5 text-center">
-                    <p className="text-xs text-slate-400 italic">
+                  <div className="p-4 bg-foreground/40 rounded-2xl border border-dashed border-white/5 text-center">
+                    <p className="text-xs text-muted-foreground italic">
                       El video está desactivado para esta variante. No se mostrará ningún video en la landing page y el campo no es obligatorio.
                     </p>
                   </div>
@@ -239,16 +239,16 @@ export function LandingEditor({
 
               <div className="space-y-8">
                 {l.sections?.map((section: any, sIdx: number) => (
-                  <Card key={sIdx} className="p-12 rounded-lg bg-slate-900 border border-white/10">
+                  <Card key={sIdx} className="p-12 rounded-lg bg-foreground border border-white/10">
                     <div className="grid lg:grid-cols-2 gap-12">
                       <div className="space-y-8">
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black text-slate-500 ml-4 tracking-[0.3em]">TÍTULO DE SECCIÓN</Label>
+                          <Label className="text-[9px] font-black text-muted-foreground ml-4 tracking-[0.3em]">TÍTULO DE SECCIÓN</Label>
                           <Input value={section.title || ''} onChange={e => { const s = [...l.sections]; s[sIdx].title = e.target.value; updateAsset('landings', lIdx, 'sections', s); }} className="font-black text-xl border-none bg-white/5 text-white px-8"  size="xl" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black text-slate-500 ml-4 tracking-[0.3em]">CUERPO DE TEXTO</Label>
-                          <Textarea value={section.paragraph || ''} onChange={e => { const s = [...l.sections]; s[sIdx].paragraph = e.target.value; updateAsset('landings', lIdx, 'sections', s); }} className="min-h-[180px] border-none bg-white/5 text-slate-300 p-8 text-base font-medium leading-relaxed" />
+                          <Label className="text-[9px] font-black text-muted-foreground ml-4 tracking-[0.3em]">CUERPO DE TEXTO</Label>
+                          <Textarea value={section.paragraph || ''} onChange={e => { const s = [...l.sections]; s[sIdx].paragraph = e.target.value; updateAsset('landings', lIdx, 'sections', s); }} className="min-h-[180px] border-none bg-white/5 text-border p-8 text-base font-medium leading-relaxed" />
                         </div>
                       </div>
                       <ImageEditor label={`Imagen ${sIdx + 1}`} url={section.imageUrl || ''} onUpdate={u => { const s = [...l.sections]; s[sIdx].imageUrl = u; updateAsset('landings', lIdx, 'sections', s); }} courseId={selectedCourseId || ''} channel="landing" keywords={section.title} description={section.paragraph} />
@@ -256,8 +256,8 @@ export function LandingEditor({
 
                     <div className="mt-10 pt-10 border-t border-white/5 space-y-4">
                       <div className="flex items-center gap-2 ml-4">
-                        <Sparkles className="h-3 w-3 text-emerald-500" />
-                        <Label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Viñetas Potentes por Sección</Label>
+                        <Sparkles className="h-3 w-3 text-success" />
+                        <Label className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">Viñetas Potentes por Sección</Label>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {section.microBullets?.map((bullet: string, bIdx: number) => (
@@ -269,7 +269,7 @@ export function LandingEditor({
                                 s[sIdx].microBullets[bIdx] = e.target.value; 
                                 updateAsset('landings', lIdx, 'sections', s); 
                               }} 
-                              className="bg-white/5 border-none pl-6 pr-4 text-sm text-slate-300 focus-visible:ring-emerald-500/30 transition-all group-hover:bg-white/[0.07]"
+                              className="bg-white/5 border-none pl-6 pr-4 text-sm text-border focus-visible:ring-success/30 transition-all group-hover:bg-white/[0.07]"
                               placeholder="Escribe un beneficio clave..."
                              size="lg" />
                           </div>
@@ -280,15 +280,15 @@ export function LandingEditor({
                 ))}
               </div>
 
-              <Card className="p-12 rounded-[4rem] bg-slate-900 border border-white/5 space-y-12">
+              <Card className="p-12 rounded-[4rem] bg-foreground border border-white/5 space-y-12">
                 <div className="grid lg:grid-cols-2 gap-16">
                   <div className="space-y-6">
                     <div className="flex items-center justify-between ml-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                        <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+                          <CheckCircle2 className="h-4 w-4 text-success" />
                         </div>
-                        <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Resumen de Beneficios</Label>
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Resumen de Beneficios</Label>
                       </div>
                       <Button 
                         variant="ghost" 
@@ -298,7 +298,7 @@ export function LandingEditor({
                           b.push("Nuevo Beneficio Clave...");
                           updateAsset('landings', lIdx, 'benefits', b);
                         }}
-                        className="h-8 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-[10px] font-bold px-3"
+                        className="h-8 rounded-lg bg-success/10 text-success hover:bg-success/20 text-[10px] font-bold px-3"
                       >
                         <Plus className="h-3 w-3 mr-1" /> AGREGAR
                       </Button>
@@ -313,7 +313,7 @@ export function LandingEditor({
                               b[bIdx] = e.target.value; 
                               updateAsset('landings', lIdx, 'benefits', b); 
                             }} 
-                            className="bg-white/5 border-white/5 px-6 font-medium text-slate-300 focus-visible:ring-emerald-500/50 flex-1"
+                            className="bg-white/5 border-white/5 px-6 font-medium text-border focus-visible:ring-success/50 flex-1"
                            size="xl" />
                           <Button 
                             variant="ghost" 
@@ -322,14 +322,14 @@ export function LandingEditor({
                               const b = (l.benefits || []).filter((_: any, i: number) => i !== bIdx);
                               updateAsset('landings', lIdx, 'benefits', b);
                             }}
-                            className="h-10 w-10 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 hover:bg-red-500/10 transition-all rounded-xl"
+                            className="h-10 w-10 opacity-0 group-hover:opacity-100 text-danger hover:text-danger hover:bg-danger/10 transition-all rounded-xl"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       )) : (
                         <div className="p-8 border-2 border-dashed border-white/5 rounded-3xl text-center">
-                          <p className="text-sm text-slate-500 mb-4">No se han definido beneficios específicos aún.</p>
+                          <p className="text-sm text-muted-foreground mb-4">No se han definido beneficios específicos aún.</p>
                         </div>
                       )}
                     </div>
@@ -337,15 +337,15 @@ export function LandingEditor({
 
                   <div className="space-y-6">
                     <div className="flex items-center gap-3 ml-4">
-                      <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                        <Mic2 className="h-4 w-4 text-violet-400" />
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Mic2 className="h-4 w-4 text-primary" />
                       </div>
-                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Sobre el Mentor</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Sobre el Mentor</Label>
                     </div>
                     <Textarea 
                       value={l.aboutMentor || ''} 
                       onChange={e => updateAsset('landings', lIdx, 'aboutMentor', e.target.value)} 
-                      className="min-h-[200px] bg-white/5 border-white/5 rounded-lg p-8 text-base font-medium leading-relaxed text-slate-300 focus-visible:ring-violet-500/50" 
+                      className="min-h-[200px] bg-white/5 border-white/5 rounded-lg p-8 text-base font-medium leading-relaxed text-border focus-visible:ring-primary/50" 
                       placeholder="Describe la autoridad del mentor..."
                     />
                   </div>
@@ -353,14 +353,14 @@ export function LandingEditor({
               </Card>
 
               {/* FAQs Card */}
-              <Card className="p-12 rounded-[4rem] bg-slate-900 border border-white/5 space-y-12 mt-8">
+              <Card className="p-12 rounded-[4rem] bg-foreground border border-white/5 space-y-12 mt-8">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between ml-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
                         <MessageCircle className="h-4 w-4 text-orange-400" />
                       </div>
-                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Preguntas Frecuentes (FAQs)</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Preguntas Frecuentes (FAQs)</Label>
                     </div>
                     <Button 
                       variant="ghost" 
@@ -385,7 +385,7 @@ export function LandingEditor({
                             f[fIdx].question = e.target.value; 
                             updateAsset('landings', lIdx, 'faqs', f); 
                           }} 
-                          className="bg-white/5 border-none px-4 font-bold text-slate-200 focus-visible:ring-orange-500/50"
+                          className="bg-white/5 border-none px-4 font-bold text-border focus-visible:ring-orange-500/50"
                           placeholder="Pregunta frecuente..."
                          size="lg" />
                         <Textarea 
@@ -395,7 +395,7 @@ export function LandingEditor({
                             f[fIdx].answer = e.target.value; 
                             updateAsset('landings', lIdx, 'faqs', f); 
                           }} 
-                          className="min-h-[100px] bg-white/5 border-none rounded-2xl p-4 font-medium text-slate-400 focus-visible:ring-orange-500/50"
+                          className="min-h-[100px] bg-white/5 border-none rounded-2xl p-4 font-medium text-muted-foreground focus-visible:ring-orange-500/50"
                           placeholder="Respuesta detallada..."
                         />
                         <Button 
@@ -405,14 +405,14 @@ export function LandingEditor({
                             const f = (l.faqs || []).filter((_: any, i: number) => i !== fIdx);
                             updateAsset('landings', lIdx, 'faqs', f);
                           }}
-                          className="absolute -top-3 -right-3 h-8 w-8 opacity-0 group-hover:opacity-100 bg-red-500 text-white hover:bg-red-600 transition-all rounded-full shadow-lg"
+                          className="absolute -top-3 -right-3 h-8 w-8 opacity-0 group-hover:opacity-100 bg-danger text-white hover:bg-danger transition-all rounded-full shadow-lg"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     )) : (
                       <div className="col-span-1 md:col-span-2 p-8 border-2 border-dashed border-white/5 rounded-3xl text-center">
-                        <p className="text-sm text-slate-500 mb-4">No hay preguntas frecuentes definidas.</p>
+                        <p className="text-sm text-muted-foreground mb-4">No hay preguntas frecuentes definidas.</p>
                       </div>
                     )}
                   </div>
@@ -420,25 +420,25 @@ export function LandingEditor({
               </Card>
 
               {/* ─── Ajustes de Blueprint ─── */}
-              <Card className="p-10 rounded-lg bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/20 space-y-8 mt-8">
+              <Card className="p-10 rounded-lg bg-gradient-to-br from-foreground to-foreground border border-primary/20 space-y-8 mt-8">
                 <div className="flex items-center gap-4 border-b border-white/5 pb-8">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
                     <Sparkles className="h-6 w-6" />
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-white">Ajustes de Blueprint</h4>
-                    <p className="text-xs text-slate-400 mt-0.5">Personaliza el estilo visual y las secciones de esta variante.</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Personaliza el estilo visual y las secciones de esta variante.</p>
                   </div>
                 </div>
 
                 {/* Selector de Tema */}
                 <div className="space-y-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estilo Visual (Tema)</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estilo Visual (Tema)</p>
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { value: 'light', label: '☀️ Claro',  desc: 'Fondo blanco',     bg: 'bg-white',       text: 'text-slate-900', border: 'border-white/30' },
-                      { value: 'dark',  label: '🌑 Oscuro', desc: 'Fondo negro',      bg: 'bg-slate-950',   text: 'text-white',     border: 'border-slate-700' },
-                      { value: 'glass', label: '💎 Glass',  desc: 'Glassmorphism',    bg: 'bg-indigo-950',  text: 'text-indigo-100',border: 'border-indigo-500/40' },
+                      { value: 'light', label: '☀️ Claro',  desc: 'Fondo blanco',     bg: 'bg-white',       text: 'text-foreground', border: 'border-white/30' },
+                      { value: 'dark',  label: '🌑 Oscuro', desc: 'Fondo negro',      bg: 'bg-foreground',   text: 'text-white',     border: 'border-foreground' },
+                      { value: 'glass', label: '💎 Glass',  desc: 'Glassmorphism',    bg: 'bg-foreground',  text: 'text-primary/15',border: 'border-primary/40' },
                     ].map(({ value, label, desc, bg, text, border }) => {
                       const isActive = (l.themeMode || 'light') === value;
                       return (
@@ -449,13 +449,13 @@ export function LandingEditor({
                           className={cn(
                             'flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all text-center',
                             isActive
-                              ? 'border-indigo-400 shadow-lg shadow-indigo-500/20 scale-[1.03]'
+                              ? 'border-primary shadow-lg shadow-primary/20 scale-[1.03]'
                               : 'border-white/10 opacity-50 hover:opacity-80 hover:border-white/20'
                           )}
                         >
                           <div className={cn('w-10 h-10 rounded-xl border-2', bg, border)} />
                           <p className={cn('text-xs font-bold', text, isActive ? 'opacity-100' : 'opacity-70')}>{label}</p>
-                          <p className="text-[9px] text-slate-500">{desc}</p>
+                          <p className="text-[9px] text-muted-foreground">{desc}</p>
                         </button>
                       );
                     })}
@@ -469,14 +469,14 @@ export function LandingEditor({
                   const isGlass = currentTheme === 'glass';
                   const primaryColor = l.designTokens?.primary || '#3B2D86';
 
-                  const bgBase = isDark ? 'bg-slate-950 border-slate-800' : isGlass ? 'bg-indigo-950 border-indigo-500/30' : 'bg-slate-50 border-slate-200';
-                  const bgSurface = isDark ? 'bg-slate-900' : isGlass ? 'bg-indigo-900/60 backdrop-blur-md' : 'bg-white';
-                  const textBase = isDark ? 'text-slate-100' : isGlass ? 'text-indigo-50' : 'text-slate-900';
-                  const textMuted = isDark ? 'text-slate-400' : isGlass ? 'text-indigo-200' : 'text-slate-600';
+                  const bgBase = isDark ? 'bg-foreground border-foreground' : isGlass ? 'bg-foreground border-primary/30' : 'bg-muted border-border';
+                  const bgSurface = isDark ? 'bg-foreground' : isGlass ? 'bg-foreground/60 backdrop-blur-md' : 'bg-white';
+                  const textBase = isDark ? 'text-muted' : isGlass ? 'text-primary/10' : 'text-foreground';
+                  const textMuted = isDark ? 'text-muted-foreground' : isGlass ? 'text-primary/20' : 'text-muted-foreground';
 
                   return (
                     <div className="space-y-3">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vista Previa (Tiempo Real)</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vista Previa (Tiempo Real)</p>
                       <div className={cn("rounded-2xl border p-6 overflow-hidden relative transition-colors duration-500", bgBase)}>
                         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none" style={{ color: primaryColor }}>
                           <Sparkles className="h-32 w-32" />
@@ -504,7 +504,7 @@ export function LandingEditor({
 
                 {/* Switches de Visibilidad */}
                 <div className="space-y-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secciones Visibles</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Secciones Visibles</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
                       { key: 'showNarrative',  label: 'Secciones Narrativas',  desc: 'Bloques de texto persuasivo con viñetas.' },
@@ -524,7 +524,7 @@ export function LandingEditor({
                         >
                           <div className="space-y-0.5">
                             <p className="text-sm font-bold text-white">{label}</p>
-                            <p className="text-[10px] text-slate-500">{desc}</p>
+                            <p className="text-[10px] text-muted-foreground">{desc}</p>
                           </div>
                           <Switch
                             id={`vis-${key}-${lIdx}`}

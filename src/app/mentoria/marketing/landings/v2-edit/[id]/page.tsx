@@ -341,13 +341,13 @@ export default function V2LandingEditorPage() {
   return (
     <DashboardLayout>
       <div className="max-w-[1600px] mx-auto pb-20 space-y-6">
-        <header className="flex items-center justify-between sticky top-0 bg-slate-50/80 backdrop-blur-md z-10 py-4 border-b border-border/50">
+        <header className="flex items-center justify-between sticky top-0 bg-muted/80 backdrop-blur-md z-10 py-4 border-b border-border/50">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => router.push('/mentoria/marketing/landings')} className="rounded-full">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-headline font-bold text-slate-800">Editor V2: {landingData?.title}</h1>
+              <h1 className="text-2xl font-headline font-bold text-foreground">Editor V2: {landingData?.title}</h1>
               <p className="text-xs text-muted-foreground">Modifica los contenidos de cada sección en tiempo real.</p>
             </div>
           </div>
@@ -356,7 +356,7 @@ export default function V2LandingEditorPage() {
               onClick={handleGenerateAllImages}
               disabled={isGeneratingImages}
               variant="outline"
-              className="rounded-full font-bold border-violet-300 text-violet-600 hover:bg-violet-50"
+              className="rounded-full font-bold border-primary/30 text-primary hover:bg-primary/10"
             >
               {isGeneratingImages ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ImageIcon className="w-4 h-4 mr-2" />}
               {isGeneratingImages ? imageGenProgress || 'Generando...' : 'Generar Imágenes'}
@@ -365,7 +365,7 @@ export default function V2LandingEditorPage() {
               <Eye className="w-4 h-4 mr-2" />
               Previsualizar
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="rounded-full font-bold bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleSave} disabled={saving} className="rounded-full font-bold bg-success hover:bg-success">
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Guardar Cambios
             </Button>
@@ -375,8 +375,8 @@ export default function V2LandingEditorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 items-start h-[calc(100vh-140px)]">
           {/* Panel Izquierdo: Lista de Secciones */}
           <Card className="shadow-none border-border/50 bg-white/50 h-full overflow-hidden flex flex-col rounded-2xl">
-            <div className="p-4 border-b border-border/50 bg-slate-50/50">
-              <h3 className="font-bold text-sm text-slate-700">Diseño y Configuración</h3>
+            <div className="p-4 border-b border-border/50 bg-muted/50">
+              <h3 className="font-bold text-sm text-foreground">Diseño y Configuración</h3>
             </div>
             <div className="p-3">
               <button
@@ -384,8 +384,8 @@ export default function V2LandingEditorPage() {
                 className={cn(
                   "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors",
                   activeSectionId === 'global_settings' 
-                    ? "bg-violet-600 text-white shadow-sm"
-                    : "hover:bg-slate-100 text-slate-600 bg-slate-50 border border-slate-200"
+                    ? "bg-primary text-white shadow-sm"
+                    : "hover:bg-muted text-muted-foreground bg-muted border border-border"
                 )}
               >
                 🎨 Paleta y Tipografía
@@ -395,15 +395,15 @@ export default function V2LandingEditorPage() {
                 className={cn(
                   "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors mt-2",
                   activeSectionId === 'footer_0' 
-                    ? "bg-slate-800 text-white shadow-sm"
-                    : "hover:bg-slate-100 text-slate-600 bg-slate-50 border border-slate-200"
+                    ? "bg-foreground text-white shadow-sm"
+                    : "hover:bg-muted text-muted-foreground bg-muted border border-border"
                 )}
               >
                 🔗 Pie de Página (Links)
               </button>
             </div>
-            <div className="p-4 border-y border-border/50 bg-slate-50/50">
-              <h3 className="font-bold text-sm text-slate-700">Estructura de la Página</h3>
+            <div className="p-4 border-y border-border/50 bg-muted/50">
+              <h3 className="font-bold text-sm text-foreground">Estructura de la Página</h3>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-3 space-y-1">
@@ -426,7 +426,7 @@ export default function V2LandingEditorPage() {
                         "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors",
                         activeSectionId === sec.id 
                           ? "bg-primary text-primary-foreground shadow-sm"
-                          : "hover:bg-slate-100 text-slate-600"
+                          : "hover:bg-muted text-muted-foreground"
                       )}
                     >
                       {displayTitle}
@@ -441,7 +441,7 @@ export default function V2LandingEditorPage() {
           {activeSection || activeSectionId === 'global_settings' ? (
             <Card className="shadow-sm border-border/50 h-full overflow-hidden flex flex-col rounded-2xl bg-white">
               <div className="p-6 border-b border-border/50 flex items-center justify-between">
-                <h2 className="text-xl font-black text-slate-800">
+                <h2 className="text-xl font-black text-foreground">
                   {activeSectionId === 'global_settings' ? 'Configuración Visual Global' : `Editando: ${(() => {
                     const baseId = activeSection.id?.split('_')[0];
                     const styleSec = styleData?.availableSections?.find((s: any) => s.id === baseId);
@@ -454,7 +454,7 @@ export default function V2LandingEditorPage() {
                     disabled={isRegenerating}
                     size="sm" 
                     variant="outline" 
-                    className="ml-auto font-bold text-violet-600 border-violet-200 bg-violet-50 hover:bg-violet-100"
+                    className="ml-auto font-bold text-primary border-primary/20 bg-primary/10 hover:bg-primary/15"
                   >
                     {isRegenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
                     Re-escribir con IA
@@ -467,11 +467,11 @@ export default function V2LandingEditorPage() {
                     <div className="space-y-8">
                       {/* PRECIO Y VENCIMIENTO */}
                       <div className="space-y-4">
-                        <Label className="text-lg font-bold text-slate-800">Precio y Vencimiento</Label>
+                        <Label className="text-lg font-bold text-foreground">Precio y Vencimiento</Label>
                         <p className="text-sm text-muted-foreground">Precio actual, precio ancla (tachado) y cuándo caduca la oferta. El countdown cuenta el tiempo real hasta el vencimiento.</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
-                            <Label className="text-xs text-slate-600">Precio actual ($)</Label>
+                            <Label className="text-xs text-muted-foreground">Precio actual ($)</Label>
                             <Input
                               type="number"
                               value={landingData?.price ?? ''}
@@ -480,7 +480,7 @@ export default function V2LandingEditorPage() {
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-xs text-slate-600">Precio anterior / ancla (tachado $)</Label>
+                            <Label className="text-xs text-muted-foreground">Precio anterior / ancla (tachado $)</Label>
                             <Input
                               type="number"
                               value={landingData?.oldPrice ?? ''}
@@ -491,7 +491,7 @@ export default function V2LandingEditorPage() {
                           </div>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-slate-600">Caducidad de la oferta (countdown)</Label>
+                          <Label className="text-xs text-muted-foreground">Caducidad de la oferta (countdown)</Label>
                           <Input
                             type="datetime-local"
                             value={activeUntilStr}
@@ -505,7 +505,7 @@ export default function V2LandingEditorPage() {
 
                       {/* BRANDS */}
                       <div className="space-y-4">
-                        <Label className="text-lg font-bold text-slate-800">Brand Visual</Label>
+                        <Label className="text-lg font-bold text-foreground">Brand Visual</Label>
                         <p className="text-sm text-muted-foreground">Pack completo: tokens + tipografía + paleta. El brand activo es el que aplica la landing; seleccioná uno para ver su gama completa.</p>
                         <BrandVisual
                           brands={brands}
@@ -515,14 +515,14 @@ export default function V2LandingEditorPage() {
                       </div>
 
                       {/* TOKENS CSS */}
-                      <div className="space-y-4 pt-6 border-t border-slate-100">
+                      <div className="space-y-4 pt-6 border-t border-muted">
                         <div className="flex items-center justify-between">
-                          <Label className="text-lg font-bold text-slate-800">Tokens CSS</Label>
+                          <Label className="text-lg font-bold text-foreground">Tokens CSS</Label>
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="text-xs text-slate-400 hover:text-slate-600"
+                            className="text-xs text-muted-foreground hover:text-muted-foreground"
                             onClick={() => {
                               const updated = { ...landingData };
                               if (activeBrand) {
@@ -545,9 +545,9 @@ export default function V2LandingEditorPage() {
                             const currentVal = overrideVal ?? styleVal;
                             return (
                               <div key={key} className="space-y-1">
-                                <label className="text-xs font-medium text-slate-600">{label}</label>
+                                <label className="text-xs font-medium text-muted-foreground">{label}</label>
                                 <div
-                                  className="flex h-8 w-full items-center rounded-md border border-input bg-slate-50 px-3 py-1 text-xs font-mono text-slate-700"
+                                  className="flex h-8 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-xs font-mono text-foreground"
                                   title={TOKEN_DESCRIPTIONS[tokenKey]}
                                 >
                                   {currentVal}
@@ -564,10 +564,10 @@ export default function V2LandingEditorPage() {
                         <p className="font-bold mb-1">📌 Pie de Página automático</p>
                         <p>Los íconos de redes sociales (Instagram, TikTok, YouTube, etc.) se muestran automáticamente desde tu <strong>perfil de tutor</strong>. No necesitas configurarlos aquí.</p>
                       </div>
-                      <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                      <div className="flex items-center justify-between p-4 bg-muted border border-muted rounded-xl">
                         <div>
-                          <Label className="font-bold text-slate-700 text-base">Mostrar Pie de Página</Label>
-                          <p className="text-sm text-slate-500">Muestra u oculta las redes sociales y el copyright en la landing.</p>
+                          <Label className="font-bold text-foreground text-base">Mostrar Pie de Página</Label>
+                          <p className="text-sm text-muted-foreground">Muestra u oculta las redes sociales y el copyright en la landing.</p>
                         </div>
                         <Switch 
                           checked={activeSection.isVisible !== false} 
@@ -585,10 +585,10 @@ export default function V2LandingEditorPage() {
                     if (!activeSectionStyle) return null;
 
                     return (
-                      <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                      <div className="flex items-center justify-between p-4 bg-muted border border-muted rounded-xl">
                         <div>
-                          <Label className="font-bold text-slate-700 text-base">Sección Visible</Label>
-                          <p className="text-sm text-slate-500">
+                          <Label className="font-bold text-foreground text-base">Sección Visible</Label>
+                          <p className="text-sm text-muted-foreground">
                             {activeSectionStyle.required 
                               ? "Esta sección es obligatoria para este diseño." 
                               : "Muestra u oculta esta sección en la landing page."}
@@ -606,7 +606,7 @@ export default function V2LandingEditorPage() {
                   {/* Inputs de Texto Generales */}
                   {activeSection.title !== undefined && (
                     <div className="space-y-2">
-                      <Label className="font-bold text-slate-700">Título Principal</Label>
+                      <Label className="font-bold text-foreground">Título Principal</Label>
                       <Input 
                         value={activeSection.title}
                         onChange={(e) => updateActiveSection({ title: e.target.value })}
@@ -616,7 +616,7 @@ export default function V2LandingEditorPage() {
                   )}
                   {activeSection.subtitle !== undefined && (
                     <div className="space-y-2">
-                      <Label className="font-bold text-slate-700">Subtítulo</Label>
+                      <Label className="font-bold text-foreground">Subtítulo</Label>
                       <Textarea 
                         value={activeSection.subtitle}
                         onChange={(e) => updateActiveSection({ subtitle: e.target.value })}
@@ -625,10 +625,10 @@ export default function V2LandingEditorPage() {
                     </div>
                   )}
                   {activeSection.id.startsWith('heroVideo') && (
-                    <div className="space-y-3 pt-4 border-t border-slate-100">
-                      <Label className="font-bold text-slate-700">Oferta Relámpago (Hero)</Label>
+                    <div className="space-y-3 pt-4 border-t border-muted">
+                      <Label className="font-bold text-foreground">Oferta Relámpago (Hero)</Label>
                       <div className="space-y-2">
-                        <Label className="text-xs text-slate-600">Sello / Badge superior</Label>
+                        <Label className="text-xs text-muted-foreground">Sello / Badge superior</Label>
                         <Input
                           value={activeSection.badge || ''}
                           onChange={(e) => updateActiveSection({ badge: e.target.value })}
@@ -636,7 +636,7 @@ export default function V2LandingEditorPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs text-slate-600">Micro prueba social (debajo del precio)</Label>
+                        <Label className="text-xs text-muted-foreground">Micro prueba social (debajo del precio)</Label>
                         <Input
                           value={activeSection.micro || ''}
                           onChange={(e) => updateActiveSection({ micro: e.target.value })}
@@ -644,7 +644,7 @@ export default function V2LandingEditorPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs text-slate-600">Nota junto al countdown</Label>
+                        <Label className="text-xs text-muted-foreground">Nota junto al countdown</Label>
                         <Input
                           value={activeSection.timerNote || ''}
                           onChange={(e) => updateActiveSection({ timerNote: e.target.value })}
@@ -655,7 +655,7 @@ export default function V2LandingEditorPage() {
                   )}
                   {(activeSection.content !== undefined || activeSection.body !== undefined) && (
                     <div className="space-y-2">
-                      <Label className="font-bold text-slate-700">Cuerpo de Texto</Label>
+                      <Label className="font-bold text-foreground">Cuerpo de Texto</Label>
                       <Textarea 
                         value={activeSection.content || activeSection.body || ''}
                         onChange={(e) => updateActiveSection({ content: e.target.value })}
@@ -664,15 +664,15 @@ export default function V2LandingEditorPage() {
                     </div>
                   )}
                   {activeSection.id.startsWith('syllabus') ? (
-                    <div className="space-y-3 pt-4 border-t border-slate-100">
-                      <Label className="font-bold text-slate-700">Módulos del Temario</Label>
+                    <div className="space-y-3 pt-4 border-t border-muted">
+                      <Label className="font-bold text-foreground">Módulos del Temario</Label>
                       <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
                         Los módulos de esta sección se sincronizan automáticamente con el contenido de tu curso. Solo puedes editar el título y la descripción principal.
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-3 pt-4 border-t border-slate-100">
-                      <Label className="font-bold text-slate-700 flex items-center justify-between">
+                    <div className="space-y-3 pt-4 border-t border-muted">
+                      <Label className="font-bold text-foreground flex items-center justify-between">
                         Viñetas / Puntos Clave
                         <Button 
                           variant="ghost" 
@@ -697,7 +697,7 @@ export default function V2LandingEditorPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-red-400 hover:text-red-500 hover:bg-red-50"
+                            className="text-danger hover:text-danger hover:bg-danger/10"
                             onClick={() => {
                               const newB = [...(activeSection.bullets || [])];
                               newB.splice(i, 1);
@@ -727,9 +727,9 @@ export default function V2LandingEditorPage() {
                     return (
                       <>
                         {acceptsVideo && (
-                          <div className="space-y-2 pt-4 border-t border-slate-100">
-                            <Label className="flex items-center gap-2 font-bold text-slate-700">
-                              <Video className="w-4 h-4 text-violet-500" />
+                          <div className="space-y-2 pt-4 border-t border-muted">
+                            <Label className="flex items-center gap-2 font-bold text-foreground">
+                              <Video className="w-4 h-4 text-primary" />
                               URL del Video (Vimeo, YouTube)
                             </Label>
                             <Input 
@@ -740,8 +740,8 @@ export default function V2LandingEditorPage() {
                           </div>
                         )}
                         {acceptsImage && (
-                          <div className="space-y-4 pt-4 border-t border-slate-100">
-                            <Label className="flex items-center gap-2 font-bold text-slate-700">
+                          <div className="space-y-4 pt-4 border-t border-muted">
+                            <Label className="flex items-center gap-2 font-bold text-foreground">
                               <ImageIcon className="w-4 h-4 text-blue-500" />
                               Imagen de la Sección
                             </Label>
@@ -763,8 +763,8 @@ export default function V2LandingEditorPage() {
                   })()}
 
                   {/* CTA para toda sección (Opcional) */}
-                  <div className="space-y-4 pt-4 border-t border-slate-100">
-                    <Label className="font-bold text-slate-700">Botón de Compra al final de la sección</Label>
+                  <div className="space-y-4 pt-4 border-t border-muted">
+                    <Label className="font-bold text-foreground">Botón de Compra al final de la sección</Label>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5 col-span-2">
                         <Label className="text-xs text-muted-foreground">Texto del botón (Deja vacío si no quieres botón en esta sección)</Label>
@@ -782,7 +782,7 @@ export default function V2LandingEditorPage() {
           </ScrollArea>
         </Card>
       ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground bg-slate-50 rounded-2xl border border-dashed border-border/50">
+            <div className="flex items-center justify-center h-full text-muted-foreground bg-muted rounded-2xl border border-dashed border-border/50">
               Selecciona una sección a la izquierda para editarla
             </div>
           )}

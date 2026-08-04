@@ -5,39 +5,48 @@
 @layer base {
   :root {
     /* Fastoria brand tokens (OKLCH) — paleta oficial: rosa #ec4899, foreground #1a1a2e */
-    --bg: oklch(98.5% 0 0);
-    --surface: oklch(100% 0 0);
-    --fg: oklch(14.5% 0.035 290);
-    --fg-2: oklch(32% 0.025 290);
-    --muted: oklch(46% 0.015 290);
-    --border: oklch(82.5% 0.02 295);
-    --border-soft: oklch(92% 0.01 290);
-    --accent: oklch(58% 0.19 340);
+    --bg: oklch(97.5% 0 0);
+    --surface: oklch(97.5% 0 0);
+    --fg: oklch(10% 0.02 260);
+    --fg-2: oklch(25% 0.02 260);
+    --muted: oklch(88% 0.04 280);
+    --border: oklch(82% 0.03 280);
+    --border-soft: oklch(90% 0.02 280);
+    --accent: oklch(60% 0.20 340);
     --accent-muted: oklch(75% 0.10 335);
     --accent-light: oklch(90% 0.04 330);
     --accent-on: oklch(100% 0 0);
+    --success: oklch(50% 0.12 145);
+    --warn: oklch(62% 0.12 85);
+    --danger: oklch(45% 0.16 30);
 
     /* shadcn/ui Tailwind variables (HSL) — Fastoria rosa/púrpura */
     --background: 0 0% 98%;
-    --foreground: 240 28% 14%;
+    --foreground: 260 28% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 240 28% 14%;
+    --card-foreground: 260 28% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 28% 14%;
-    --primary: 249 50% 35%;
+    --popover-foreground: 260 28% 10%;
+    --primary: 340 80% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 260 20% 92%;
-    --secondary-foreground: 240 28% 14%;
-    --muted: 260 20% 92%;
-    --muted-foreground: 260 10% 46%;
+    --secondary: 270 20% 92%;
+    --secondary-foreground: 260 28% 10%;
+    --muted: 270 20% 92%;
+    --muted-foreground: 270 10% 46%;
     --accent: 330 80% 60%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
-    --border: 260 18% 83%;
-    --input: 260 18% 83%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warn: 38 92% 50%;
+    --warn-foreground: 0 0% 100%;
+    --danger: 0 72% 48%;
+    --danger-foreground: 0 0% 100%;
+    --border: 270 18% 82%;
+    --input: 270 18% 82%;
     --ring: 330 80% 60%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Card tokens (editorial-plano) */
     --card-radius: 0.75rem;

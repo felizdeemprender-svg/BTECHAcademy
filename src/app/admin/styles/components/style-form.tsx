@@ -241,12 +241,12 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                   <div className="space-y-2">
                     <Label>ID del Estilo (único)</Label>
                     <Input {...form.register('id')} disabled={!!initialData && !isCloning} placeholder="ej. classic-v2" />
-                    {form.formState.errors.id && <span className="text-sm text-red-500">{form.formState.errors.id.message}</span>}
+                    {form.formState.errors.id && <span className="text-sm text-danger">{form.formState.errors.id.message}</span>}
                   </div>
                   <div className="space-y-2">
                     <Label>Nombre Público</Label>
                     <Input {...form.register('name')} placeholder="Classic V2" />
-                    {form.formState.errors.name && <span className="text-sm text-red-500">{form.formState.errors.name.message}</span>}
+                    {form.formState.errors.name && <span className="text-sm text-danger">{form.formState.errors.name.message}</span>}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -282,9 +282,9 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                   </Select>
                 </div>
 
-                <div className="border rounded-lg p-4 bg-slate-50 space-y-3">
+                <div className="border rounded-lg p-4 bg-muted space-y-3">
                   <Label className="font-bold text-sm flex items-center gap-2">
-                    <span className="w-6 h-[2px] bg-slate-300"></span> Tokens CSS
+                    <span className="w-6 h-[2px] bg-border"></span> Tokens CSS
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
                     {Object.keys(TOKEN_LABELS).filter((k) => k !== 'extraTokens').map((key) => {
@@ -304,7 +304,7 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                           ) : (
                             <Input {...form.register(`tokens.${tokenKey}`)} className="h-8 text-xs font-mono" placeholder={TOKEN_DESCRIPTIONS[tokenKey]} />
                           )}
-                          <p className="text-[9px] text-slate-400">{TOKEN_DESCRIPTIONS[tokenKey]}</p>
+                          <p className="text-[9px] text-muted-foreground">{TOKEN_DESCRIPTIONS[tokenKey]}</p>
                         </div>
                       );
                     })}
@@ -324,8 +324,8 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                       </Button>
                     </div>
                     {paletteFields.map((field, i) => (
-                      <div key={field.id} className="p-4 border rounded-lg bg-slate-50 relative">
-                        <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-red-500" onClick={() => removePalette(i)}>Eliminar</Button>
+                      <div key={field.id} className="p-4 border rounded-lg bg-muted relative">
+                        <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-danger" onClick={() => removePalette(i)}>Eliminar</Button>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <Label className="text-xs">Nombre</Label>
@@ -367,8 +367,8 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                       </Button>
                     </div>
                     {typoFields.map((field, i) => (
-                      <div key={field.id} className="p-4 border rounded-lg bg-slate-50 relative">
-                        <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-red-500" onClick={() => removeTypography(i)}>Eliminar</Button>
+                      <div key={field.id} className="p-4 border rounded-lg bg-muted relative">
+                        <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-danger" onClick={() => removeTypography(i)}>Eliminar</Button>
                         <div className="grid grid-cols-2 gap-3 mb-2">
                           <div className="space-y-1">
                             <Label className="text-xs">Nombre</Label>
@@ -406,7 +406,7 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                   <Label>Prompt Global de IA (Tono y Persona)</Label>
                   <p className="text-xs text-muted-foreground">Define QUIÉN habla y CÓMO habla en toda la landing page.</p>
                   <Textarea {...form.register('aiDirectives')} rows={8} className="font-mono text-sm" />
-                  {form.formState.errors.aiDirectives && <span className="text-sm text-red-500">{form.formState.errors.aiDirectives.message}</span>}
+                  {form.formState.errors.aiDirectives && <span className="text-sm text-danger">{form.formState.errors.aiDirectives.message}</span>}
                 </div>
               </TabsContent>
 
@@ -419,8 +419,8 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                 </div>
                 <div className="space-y-4">
                   {sectionFields.map((field, index) => (
-                    <div key={field.id} className="p-4 border rounded-lg bg-slate-50 relative">
-                      <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-red-500" onClick={() => removeSection(index)}>
+                    <div key={field.id} className="p-4 border rounded-lg bg-muted relative">
+                      <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-danger" onClick={() => removeSection(index)}>
                         Eliminar
                       </Button>
                       <div className="grid grid-cols-2 gap-4 mb-2 pr-12">
@@ -428,14 +428,14 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                         <Input {...form.register(`availableSections.${index}.name`)} placeholder="Nombre Público" />
                       </div>
                       <div className="grid gap-2 mb-2">
-                        <Label className="text-xs text-slate-500 uppercase tracking-wider font-bold">Prompt IA para Copywriting</Label>
-                        <Textarea {...form.register(`availableSections.${index}.description`)} placeholder='Ej: Redacta un título persuasivo...' className="h-20 resize-none text-sm bg-indigo-50/30 border-indigo-100" />
+                        <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Prompt IA para Copywriting</Label>
+                        <Textarea {...form.register(`availableSections.${index}.description`)} placeholder='Ej: Redacta un título persuasivo...' className="h-20 resize-none text-sm bg-primary/10/30 border-primary/15" />
                       </div>
                       <div className="grid gap-2 mb-2">
-                        <Label className="text-xs text-slate-500 uppercase tracking-wider font-bold">Estructura del Componente (Blueprint)</Label>
-                        <Textarea {...form.register(`availableSections.${index}.blueprint`)} placeholder='Ej: Grilla de 3 tarjetas. Título arriba, icono centrado...' className="h-20 resize-none text-sm bg-emerald-50/30 border-emerald-100" />
+                        <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Estructura del Componente (Blueprint)</Label>
+                        <Textarea {...form.register(`availableSections.${index}.blueprint`)} placeholder='Ej: Grilla de 3 tarjetas. Título arriba, icono centrado...' className="h-20 resize-none text-sm bg-success/10/30 border-success/15" />
                       </div>
-                      <div className="flex items-center gap-6 mt-2 pt-4 border-t border-slate-100">
+                      <div className="flex items-center gap-6 mt-2 pt-4 border-t border-muted">
                         <Select onValueChange={(v) => form.setValue(`availableSections.${index}.contentType`, v as any)} defaultValue={field.contentType}>
                           <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -483,8 +483,8 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                   </Button>
                 </div>
                 {brandFields.map((field, i) => (
-                  <div key={field.id} className="p-4 border rounded-lg bg-slate-50 relative space-y-4">
-                    <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-red-500" onClick={() => removeBrand(i)}>Eliminar</Button>
+                  <div key={field.id} className="p-4 border rounded-lg bg-muted relative space-y-4">
+                    <Button type="button" variant="ghost" size="sm" className="absolute top-2 right-2 text-danger" onClick={() => removeBrand(i)}>Eliminar</Button>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -497,10 +497,10 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                       </div>
                     </div>
 
-                    <div className="border-t border-slate-200 pt-4 space-y-4">
+                    <div className="border-t border-border pt-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <Label className="font-bold text-sm flex items-center gap-2">
-                          <span className="w-6 h-[2px] bg-slate-300"></span> Tokens
+                          <span className="w-6 h-[2px] bg-border"></span> Tokens
                         </Label>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -521,17 +521,17 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                               ) : (
                                 <Input {...form.register(`brands.${i}.tokens.${tokenKey}`)} className="h-8 text-xs font-mono" placeholder={TOKEN_DESCRIPTIONS[tokenKey]} />
                               )}
-                              <p className="text-[9px] text-slate-400">{TOKEN_DESCRIPTIONS[tokenKey]}</p>
+                              <p className="text-[9px] text-muted-foreground">{TOKEN_DESCRIPTIONS[tokenKey]}</p>
                             </div>
                           );
                         })}
                       </div>
                     </div>
 
-                    <div className="border-t border-slate-200 pt-4 space-y-4">
+                    <div className="border-t border-border pt-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <Label className="font-bold text-sm flex items-center gap-2">
-                          <span className="w-6 h-[2px] bg-slate-300"></span> Tipografía
+                          <span className="w-6 h-[2px] bg-border"></span> Tipografía
                         </Label>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -572,10 +572,10 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                       </div>
                     </div>
 
-                    <div className="border-t border-slate-200 pt-4 space-y-4">
+                    <div className="border-t border-border pt-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <Label className="font-bold text-sm flex items-center gap-2">
-                          <span className="w-6 h-[2px] bg-slate-300"></span> Paleta
+                          <span className="w-6 h-[2px] bg-border"></span> Paleta
                         </Label>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -615,7 +615,7 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
             </form>
         </ScrollArea>
 
-        <DialogFooter className="px-6 py-4 border-t bg-slate-50 mt-auto">
+        <DialogFooter className="px-6 py-4 border-t bg-muted mt-auto">
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Cancelar</Button>
           <Button type="submit" form="style-form" disabled={isSubmitting}>
             {isSubmitting ? 'Guardando...' : 'Guardar Estilo'}

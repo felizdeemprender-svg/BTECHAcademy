@@ -104,12 +104,12 @@ const OptimizedValidationReport = ({ generatedAssets }: { generatedAssets: any }
   
   if (allErrors.length === 0 && allWarnings.length === 0) {
     return (
-      <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+      <div className="flex items-center justify-between p-4 bg-success/10 border border-success/20 rounded-xl">
         <div className="flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <span className="font-bold text-emerald-800">✅ Todo compatible con APIs</span>
+          <CheckCircle2 className="h-5 w-5 text-success" />
+          <span className="font-bold text-success">✅ Todo compatible con APIs</span>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => setShowDetails(!showDetails)} className="text-emerald-600 hover:bg-emerald-100">
+        <Button variant="ghost" size="sm" onClick={() => setShowDetails(!showDetails)} className="text-success hover:bg-success/15">
           {showDetails ? 'Ocultar' : 'Ver'} detalles
         </Button>
       </div>
@@ -119,12 +119,12 @@ const OptimizedValidationReport = ({ generatedAssets }: { generatedAssets: any }
   if (allErrors.length > 0) {
     return (
       <div className="space-y-4">
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+        <div className="p-4 bg-danger/10 border border-danger/20 rounded-xl">
           <div className="flex items-center gap-3 mb-2">
-            <AlertCircle className="h-5 w-5 text-red-600" />
-            <span className="font-bold text-red-800">❌ {allErrors.length} errores críticos no corregibles</span>
+            <AlertCircle className="h-5 w-5 text-danger" />
+            <span className="font-bold text-danger">❌ {allErrors.length} errores críticos no corregibles</span>
           </div>
-          <div className="text-sm text-red-700">Estos errores deben ser corregidos manualmente para asegurar compatibilidad.</div>
+          <div className="text-sm text-danger">Estos errores deben ser corregidos manualmente para asegurar compatibilidad.</div>
         </div>
         <Button variant="outline" onClick={() => setShowDetails(!showDetails)} className="w-full">
           {showDetails ? 'Ocultar' : 'Ver'} reporte completo
@@ -135,12 +135,12 @@ const OptimizedValidationReport = ({ generatedAssets }: { generatedAssets: any }
   
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+      <div className="p-4 bg-warn/10 border border-warn/20 rounded-xl">
         <div className="flex items-center gap-3 mb-2">
-          <AlertTriangle className="h-5 w-5 text-amber-600" />
-          <span className="font-bold text-amber-800">⚠️ {allWarnings.length} advertencias (corregidas automáticamente)</span>
+          <AlertTriangle className="h-5 w-5 text-warn" />
+          <span className="font-bold text-warn">⚠️ {allWarnings.length} advertencias (corregidas automáticamente)</span>
         </div>
-        <div className="text-sm text-amber-700">El sistema aplicó las adaptaciones necesarias para mantener la compatibilidad.</div>
+        <div className="text-sm text-warn">El sistema aplicó las adaptaciones necesarias para mantener la compatibilidad.</div>
       </div>
       <Button variant="outline" onClick={() => setShowDetails(!showDetails)} className="w-full">
         {showDetails ? 'Ocultar' : 'Ver'} detalles de adaptación
@@ -656,10 +656,10 @@ export function TemplateEditor({
 
   if (!generatedAssets) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
+      <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-muted rounded-lg border-2 border-dashed border-border">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
         <div className="text-center">
-          <h3 className="text-xl font-bold text-slate-700">Cargando contenidos del Pack...</h3>
+          <h3 className="text-xl font-bold text-foreground">Cargando contenidos del Pack...</h3>
         </div>
       </div>
     );
@@ -669,12 +669,12 @@ export function TemplateEditor({
     <div className="space-y-10 animate-in fade-in">
       <header className="flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-3xl bg-emerald-500 text-white flex items-center justify-center shadow-lg">
+          <div className="w-14 h-14 rounded-3xl bg-success text-white flex items-center justify-center shadow-lg">
             <CheckCircle2 className="h-8 w-8" />
           </div>
           <div>
             <h2 className="text-3xl font-bold">Edición Final del Contenido</h2>
-            <p className="text-slate-500">Ajusta los detalles de las 3 rutas propuestas.</p>
+            <p className="text-muted-foreground">Ajusta los detalles de las 3 rutas propuestas.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -685,7 +685,7 @@ export function TemplateEditor({
                 onSave(null, false);
               }
             }}
-            className="h-16 px-8 rounded-2xl font-bold border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all"
+            className="h-16 px-8 rounded-2xl font-bold border-danger/20 text-danger hover:bg-danger/10 transition-all"
           >
             Eliminar Pack
           </Button>
@@ -696,46 +696,46 @@ export function TemplateEditor({
       </header>
 
       <Tabs defaultValue="email" className="w-full">
-        <TabsList className="bg-slate-950 p-1.5 h-14 w-full justify-start gap-2 px-6 rounded-2xl border border-white/10 mb-8">
-          <TabsTrigger value="email" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-violet-600 data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Mail className="h-4 w-4" /> Emails</TabsTrigger>
-          <TabsTrigger value="social" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Instagram className="h-4 w-4" /> Redes Sociales</TabsTrigger>
+        <TabsList className="bg-foreground p-1.5 h-14 w-full justify-start gap-2 px-6 rounded-2xl border border-white/10 mb-8">
+          <TabsTrigger value="email" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-primary data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Mail className="h-4 w-4" /> Emails</TabsTrigger>
+          <TabsTrigger value="social" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-success data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Instagram className="h-4 w-4" /> Redes Sociales</TabsTrigger>
           <TabsTrigger value="ads" className="rounded-xl gap-2 font-black px-8 h-11 text-[11px] uppercase tracking-wider data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-white/40 hover:text-white/80 transition-all"><Megaphone className="h-4 w-4" /> Ads</TabsTrigger>
         </TabsList>
 
         <TabsContent value="email">
           <Tabs value={activeEmailIdx.toString()} onValueChange={v => setActiveEmailIdx(parseInt(v))}>
-            <TabsList className="bg-slate-950 p-1.5 h-12 justify-start gap-1 rounded-xl mb-8 border border-white/10 w-fit">
+            <TabsList className="bg-foreground p-1.5 h-12 justify-start gap-1 rounded-xl mb-8 border border-white/10 w-fit">
               {generatedAssets?.emails?.map((e: any, i: number) => (
-                <TabsTrigger key={i} value={i.toString()} className="px-6 h-9 font-black text-[10px] tracking-widest uppercase data-[state=active]:bg-violet-600 data-[state=active]:text-white text-white/40 hover:text-white/60">
+                <TabsTrigger key={i} value={i.toString()} className="px-6 h-9 font-black text-[10px] tracking-widest uppercase data-[state=active]:bg-primary data-[state=active]:text-white text-white/40 hover:text-white/60">
                   {e.marketingName || `Email ${i + 1}`}
                 </TabsTrigger>
               ))}
             </TabsList>
             {generatedAssets?.emails?.map((e: any, eIdx: number) => (
               <TabsContent key={eIdx} value={eIdx.toString()} className="space-y-8 max-w-4xl mx-auto">
-                <Card className="p-12 rounded-lg bg-slate-900 border border-white/10 space-y-10">
+                <Card className="p-12 rounded-lg bg-foreground border border-white/10 space-y-10">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-[0.2em]">Asunto del Correo</Label>
-                    <Input value={e.subject} onChange={v => updateAsset('emails', eIdx, 'subject', v.target.value)} className="h-16 rounded-3xl border-white/5 bg-white/5 px-8 font-black text-2xl text-white focus-visible:ring-violet-500/50" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-4 tracking-[0.2em]">Asunto del Correo</Label>
+                    <Input value={e.subject} onChange={v => updateAsset('emails', eIdx, 'subject', v.target.value)} className="h-16 rounded-3xl border-white/5 bg-white/5 px-8 font-black text-2xl text-white focus-visible:ring-primary/50" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-500 ml-4 tracking-[0.2em]">Cuerpo Narrativo</Label>
-                    <Textarea value={e.body} onChange={v => updateAsset('emails', eIdx, 'body', v.target.value)} className="min-h-[500px] border-white/5 bg-white/5 p-12 leading-relaxed text-lg font-medium text-slate-200 focus-visible:ring-violet-500/50" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-4 tracking-[0.2em]">Cuerpo Narrativo</Label>
+                    <Textarea value={e.body} onChange={v => updateAsset('emails', eIdx, 'body', v.target.value)} className="min-h-[500px] border-white/5 bg-white/5 p-12 leading-relaxed text-lg font-medium text-border focus-visible:ring-primary/50" />
                   </div>
 
                   <div className="pt-6 border-t border-white/5">
-                    <Label className="text-[10px] font-black uppercase text-violet-400 ml-4 tracking-widest mb-4 block">Destino del CTA (Botón)</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary ml-4 tracking-widest mb-4 block">Destino del CTA (Botón)</Label>
                     <Select
                       value={e.landingId || 'mentor'}
                       onValueChange={(val) => updateAsset('emails', eIdx, 'landingId', val)}
                     >
                       <SelectTrigger size="xl" className="bg-white/5 border-white/5 text-xs font-bold text-white px-8">
                         <div className="flex items-center gap-3">
-                          <Link2 className="h-4 w-4 text-violet-500" />
+                          <Link2 className="h-4 w-4 text-primary" />
                           <span>Vincular con: <SelectValue placeholder="Seleccionar Landing" /></span>
                         </div>
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-white/10 text-white">
+                      <SelectContent className="bg-foreground border-white/10 text-white">
                         <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-white/10">URL del Mentor</SelectItem>
                         {availableLandings?.map((pack: any) => (
                           pack.aiContent?.landings?.map((l: any, vIdx: number) => (
@@ -760,24 +760,24 @@ export function TemplateEditor({
               .filter(p => p !== 'linkedin') as string[];
             if (rawSocials.length === 0 || showSocialConfigurator) {
               return (
-                <div className="flex flex-col items-center justify-center p-12 space-y-8 bg-slate-950 border-2 border-dashed border-white/10 rounded-[4rem] max-w-4xl mx-auto relative">
+                <div className="flex flex-col items-center justify-center p-12 space-y-8 bg-foreground border-2 border-dashed border-white/10 rounded-[4rem] max-w-4xl mx-auto relative">
                   {rawSocials.length > 0 && (
                     <Button onClick={() => setShowSocialConfigurator(false)} variant="ghost" className="absolute top-6 right-6 text-white/40 hover:text-white">
                       Cancelar
                     </Button>
                   )}
-                  <div className="w-20 h-20 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-lg bg-success/10 text-success flex items-center justify-center">
                     <Video className="h-10 w-10" />
                   </div>
                   
                   <div className="text-center space-y-2">
                     <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Configurador de Video On-Demand</h3>
-                    <p className="text-slate-400 text-sm font-medium">Define el formato y estilo antes de empezar la producción.</p>
+                    <p className="text-muted-foreground text-sm font-medium">Define el formato y estilo antes de empezar la producción.</p>
                   </div>
 
                   <div className="w-full max-w-3xl space-y-6">
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">Nombre Interno de la Pieza (Opcional)</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">Nombre Interno de la Pieza (Opcional)</Label>
                       <Input 
                         placeholder="Ej. Reel Venta Navidad" 
                         value={newPieceConfig.name} 
@@ -787,7 +787,7 @@ export function TemplateEditor({
                     </div>
                     <div className="grid md:grid-cols-3 gap-6 w-full">
                       <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">1. Red Social</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">1. Red Social</Label>
                       <Select 
                         value={newPieceConfig.platform} 
                         onValueChange={(v) => {
@@ -800,7 +800,7 @@ export function TemplateEditor({
                         <SelectTrigger size="xl" className="bg-white/5 border-white/10 text-xs font-bold text-white px-6">
                           <SelectValue placeholder="Plataforma" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-white/10 text-white">
+                        <SelectContent className="bg-foreground border-white/10 text-white">
                           <SelectItem value="instagram">Instagram</SelectItem>
                           <SelectItem value="tiktok">TikTok</SelectItem>
                           <SelectItem value="twitter">Twitter / X</SelectItem>
@@ -809,12 +809,12 @@ export function TemplateEditor({
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">2. Formato</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">2. Formato</Label>
                       <Select value={newPieceConfig.type} onValueChange={(v) => setNewPieceConfig(prev => ({ ...prev, type: v }))}>
                         <SelectTrigger size="xl" className="bg-white/5 border-white/10 text-xs font-bold text-white px-6">
                           <SelectValue placeholder="Tipo" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-white/10 text-white">
+                        <SelectContent className="bg-foreground border-white/10 text-white">
                           {newPieceConfig.platform === 'instagram' && (
                             <>
                               <SelectItem value="story">Story / Reel (9:16)</SelectItem>
@@ -840,12 +840,12 @@ export function TemplateEditor({
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">3. ADN Maestro</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-2 tracking-widest">3. ADN Maestro</Label>
                       <Select value={newPieceConfig.adnId} onValueChange={(v) => setNewPieceConfig(prev => ({ ...prev, adnId: v }))}>
-                        <SelectTrigger size="xl" className="bg-emerald-600 border-none text-xs font-black uppercase text-white px-6">
+                        <SelectTrigger size="xl" className="bg-success border-none text-xs font-black uppercase text-white px-6">
                           <SelectValue placeholder="Estilo ADN" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-white/10 text-white">
+                        <SelectContent className="bg-foreground border-white/10 text-white">
                           {Object.values(dynamicAdns).map((adn: any) => (
                             <SelectItem key={adn.id} value={adn.id} className="text-[10px] uppercase font-bold">ADN: {adn.name}</SelectItem>
                           ))}
@@ -888,7 +888,7 @@ export function TemplateEditor({
                       setShowSocialConfigurator(false);
                       toast({ title: "Pieza Creada", description: `Cargadas ${initialSlides.length} placas desde el ADN.` });
                     }}
-                    className="h-16 px-16 rounded-lg bg-white text-slate-950 hover:bg-emerald-50 font-black text-lg gap-3 transition-all hover:scale-105 active:scale-95 mt-4"
+                    className="h-16 px-16 rounded-lg bg-card text-foreground hover:bg-success/10 font-black text-lg gap-3 transition-all hover:scale-105 active:scale-95 mt-4 border border-border"
                   >
                     <Plus className="h-6 w-6" /> {rawSocials.length === 0 ? 'Crear Primera Pieza' : 'Crear Nueva Pieza'}
                   </Button>
@@ -899,14 +899,14 @@ export function TemplateEditor({
             return (
               <Tabs defaultValue={platforms[0]}>
                 <div className="flex items-center justify-between mb-10 w-full gap-4 flex-wrap">
-                  <TabsList className="bg-slate-950 p-1.5 h-12 justify-start gap-1 rounded-xl border border-white/10 w-fit">
+                  <TabsList className="bg-foreground p-1.5 h-12 justify-start gap-1 rounded-xl border border-white/10 w-fit">
                     {platforms.map(p => (
-                      <TabsTrigger key={p} value={p} className="capitalize gap-2 font-black text-[10px] px-6 h-9 tracking-widest uppercase data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-white/40 hover:text-white/60">
+                      <TabsTrigger key={p} value={p} className="capitalize gap-2 font-black text-[10px] px-6 h-9 tracking-widest uppercase data-[state=active]:bg-success data-[state=active]:text-white text-white/40 hover:text-white/60">
                         <PlatformIcon platform={p} className="h-4 w-4" /> {p}
                       </TabsTrigger>
                     ))}
                   </TabsList>
-                  <Button onClick={() => setShowSocialConfigurator(true)} variant="outline" className="bg-emerald-600/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-600/20 h-12 px-6 rounded-xl font-bold tracking-widest text-[10px] uppercase">
+                  <Button onClick={() => setShowSocialConfigurator(true)} variant="outline" className="bg-success/10 text-success border-success/20 hover:bg-success/20 h-12 px-6 rounded-xl font-bold tracking-widest text-[10px] uppercase">
                     <Plus className="h-4 w-4 mr-2" /> Nueva Pieza ADN
                   </Button>
                 </div>
@@ -922,13 +922,13 @@ export function TemplateEditor({
                           return (
                             <div key={globalIdx} className="space-y-4 animate-in zoom-in-95 duration-500">
                               {isLocked ? (
-                                <Card className="p-6 md:p-8 rounded-lg bg-emerald-950/20 border border-emerald-500/20 space-y-6">
+                                <Card className="p-6 md:p-8 rounded-lg bg-foreground/20 border border-success/20 space-y-6">
                                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                     <div className="flex items-center gap-4 md:gap-6">
-                                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
+                                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-success/20 text-success flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
                                       <div>
                                         <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest">{s.marketingName || `${getPlatformLabels(s.type).badge} ${globalIdx + 1}`}</h3>
-                                        <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none mt-1 md:mt-2 text-[10px] md:text-xs">Publicación Lista</Badge>
+                                        <Badge className="bg-success hover:bg-success text-white border-none mt-1 md:mt-2 text-[10px] md:text-xs">Publicación Lista</Badge>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -937,7 +937,7 @@ export function TemplateEditor({
                                         size="icon"
                                         title="Descargar Video"
                                         onClick={() => handleDownloadVideo(s.production_notes?.video_url || renderedVideos[globalIdx] || s.exportUrls?.socialExportUrl, `${s.marketingName || 'Video_Sellado'}.mp4`, s.production_notes?.video_drive_id)} 
-                                        className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-emerald-600/10 border-emerald-500/20 hover:bg-emerald-500 hover:text-white text-emerald-400"
+                                        className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-success/10 border-success/20 hover:bg-success hover:text-white text-success"
                                       >
                                         <Download className="h-5 w-5" />
                                       </Button>
@@ -951,23 +951,23 @@ export function TemplateEditor({
                                          <DialogContent className="mw-xl w-full modal-inverse">
                                           <DialogHeader>
                                             <DialogTitle className="text-xl md:text-2xl font-black text-white uppercase tracking-widest">Editar Textos de Publicación</DialogTitle>
-                                            <DialogDescription className="text-slate-400">Edita el gancho y la descripción de la pieza.</DialogDescription>
+                                            <DialogDescription className="text-muted-foreground">Edita el gancho y la descripción de la pieza.</DialogDescription>
                                           </DialogHeader>
                                           
                                           <div className="space-y-6 mt-4">
                                             <div className="space-y-2">
-                                              <Label className="text-[10px] font-bold text-emerald-600/60 uppercase ml-1">Gancho (Hook)</Label>
-                                              <Input value={s.hook} onChange={e => updateAsset('socials', globalIdx, 'hook', e.target.value)} className="bg-emerald-500/5 border-emerald-500/10 text-emerald-400 text-sm font-black italic px-4"  size="lg" />
+                                              <Label className="text-[10px] font-bold text-success/60 uppercase ml-1">Gancho (Hook)</Label>
+                                              <Input value={s.hook} onChange={e => updateAsset('socials', globalIdx, 'hook', e.target.value)} className="bg-success/5 border-success/10 text-success text-sm font-black italic px-4"  size="lg" />
                                             </div>
                                             <div className="space-y-2">
-                                              <Label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Cuerpo (Caption)</Label>
-                                              <Textarea value={s.caption} onChange={e => updateAsset('socials', globalIdx, 'caption', e.target.value)} size="lg" className="border-white/10 bg-white/[0.02] p-4 text-sm font-medium text-slate-300" />
+                                              <Label className="text-[10px] font-bold text-muted-foreground uppercase ml-1">Cuerpo (Caption)</Label>
+                                              <Textarea value={s.caption} onChange={e => updateAsset('socials', globalIdx, 'caption', e.target.value)} size="lg" className="border-white/10 bg-white/[0.02] p-4 text-sm font-medium text-border" />
                                             </div>
                                           </div>
                                           
                                           <DialogFooter className="mt-6">
                                             <DialogClose asChild>
-                                              <Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-12 rounded-xl">
+                                              <Button className="w-full bg-success hover:bg-success text-white font-bold h-12 rounded-xl">
                                                 <CheckCircle2 className="h-5 w-5 mr-2" /> Listo
                                               </Button>
                                             </DialogClose>
@@ -979,7 +979,7 @@ export function TemplateEditor({
                                         variant="ghost" 
                                         size="icon"
                                         title="Eliminar Pieza"
-                                        className="h-10 w-10 md:h-12 md:w-12 rounded-xl text-rose-400 hover:text-rose-500 hover:bg-rose-500/10"
+                                        className="h-10 w-10 md:h-12 md:w-12 rounded-xl text-danger hover:text-danger hover:bg-danger/10"
                                         onClick={() => {
                                           const confirmDelete = window.confirm('¿Seguro que deseas eliminar esta pieza?');
                                           if (confirmDelete) {
@@ -995,13 +995,13 @@ export function TemplateEditor({
                                   </div>
                                 </Card>
                               ) : (
-                                <Card className="p-6 md:p-8 rounded-lg bg-slate-900 border border-white/5 space-y-6">
+                                <Card className="p-6 md:p-8 rounded-lg bg-foreground border border-white/5 space-y-6">
                                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                     <div className="flex items-center gap-4 md:gap-6">
-                                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/5 text-slate-400 flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
+                                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/5 text-muted-foreground flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
                                       <div>
                                         <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-widest">{s.marketingName || `${getPlatformLabels(s.type).badge} ${globalIdx + 1}`}</h3>
-                                        <Badge variant="secondary" className="mt-1 md:mt-2 text-slate-300 bg-white/10 hover:bg-white/20 border-none text-[10px] md:text-xs">Borrador / Producción</Badge>
+                                        <Badge variant="secondary" className="mt-1 md:mt-2 text-border bg-white/10 hover:bg-white/20 border-none text-[10px] md:text-xs">Borrador / Producción</Badge>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -1010,24 +1010,24 @@ export function TemplateEditor({
                                         size="icon"
                                         title="Descargar Video Temporal"
                                         onClick={() => handleDownloadVideo(s.production_notes?.video_url || renderedVideos[globalIdx] || s.exportUrls?.socialExportUrl, `${s.marketingName || 'Video_Temporal'}.mp4`, s.production_notes?.video_drive_id)} 
-                                        className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-emerald-600/10 border-emerald-500/20 hover:bg-emerald-500 hover:text-white text-emerald-400"
+                                        className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-success/10 border-success/20 hover:bg-success hover:text-white text-success"
                                       >
                                         <Download className="h-5 w-5" />
                                       </Button>
                                       
                                       <Dialog>
                                         <DialogTrigger asChild>
-                                          <Button variant="secondary" size="icon" title="Abrir Editor" className="bg-white text-slate-950 hover:bg-emerald-50 h-10 w-10 md:h-12 md:w-12 rounded-xl">
+                                          <Button variant="secondary" size="icon" title="Abrir Editor" className="bg-card text-foreground hover:bg-success/10 h-10 w-10 md:h-12 md:w-12 rounded-xl border border-border">
                                             <FileEdit className="h-5 w-5" />
                                           </Button>
                                         </DialogTrigger>
-                                         <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-y-auto modal-inverse">
+                                         <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-y-auto modal-inverse flex flex-col">
                                           <DialogHeader>
                                             <DialogTitle className="text-2xl md:text-3xl font-black text-white uppercase tracking-widest">{s.marketingName || 'Editor de Pieza'}</DialogTitle>
-                                            <DialogDescription className="text-slate-400">Edita los textos, escenas y produce el video de tu pieza on-demand.</DialogDescription>
+                                            <DialogDescription className="text-muted-foreground">Edita los textos, escenas y produce el video de tu pieza on-demand.</DialogDescription>
                                           </DialogHeader>
 
-                                          <Card className="p-6 md:p-12 rounded-[4rem] bg-slate-950 border border-white/10 grid lg:grid-cols-12 gap-8 md:gap-12 mt-4">
+                                          <Card className="p-6 md:p-12 rounded-[4rem] bg-foreground border border-white/10 grid lg:grid-cols-12 gap-8 md:gap-12 mt-4">
                                           <div className="lg:col-span-7 space-y-10 z-10">
                                             <div className="flex items-center justify-between gap-4 bg-white/5 p-5 rounded-lg border border-white/10 mb-2">
                                               <div className="flex items-center gap-4 flex-1">
@@ -1036,7 +1036,7 @@ export function TemplateEditor({
                                                   size="sm"
                                                   onClick={() => handleGenerateBreakdown(s, globalIdx, 'socials')}
                                                   disabled={isGeneratingBreakdown === `socials-${globalIdx}`}
-                                                  className="h-11 rounded-2xl bg-white text-slate-950 hover:bg-emerald-50 text-[10px] font-black px-8 transition-all"
+                                                  className="h-11 rounded-2xl bg-white text-foreground hover:bg-success/10 text-[10px] font-black px-8 transition-all"
                                                 >
                                                   {isGeneratingBreakdown === `socials-${globalIdx}` ? (
                                                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Esquematizando...</>
@@ -1057,13 +1057,13 @@ export function TemplateEditor({
                                                       toast({ title: `ADN ${selectedAdn?.name || val} Seleccionado`, description: "Pulsa 'Re-generar' para ajustar el guion a este estilo." });
                                                     }}
                                                   >
-                                                    <SelectTrigger className="h-11 bg-emerald-600 border-none text-[9px] font-black uppercase text-white tracking-widest">
+                                                    <SelectTrigger className="h-11 bg-success border-none text-[9px] font-black uppercase text-white tracking-widest">
                                                       <div className="flex items-center gap-2">
                                                         <Clapperboard className="h-3.5 w-3.5" />
                                                         <span>ESTILO: <SelectValue placeholder="ADN" /></span>
                                                       </div>
                                                     </SelectTrigger>
-                                                    <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                                    <SelectContent className="bg-foreground border-white/10 text-white">
                                                       {Object.values(dynamicAdns).map((adn: any) => (
                                                         <SelectItem key={adn.id} value={adn.id} className="text-[10px] uppercase font-bold hover:bg-white/10">
                                                           🎬 {adn.name}
@@ -1097,7 +1097,7 @@ export function TemplateEditor({
                                                         <span>TIPO: <SelectValue placeholder="Formato" /></span>
                                                       </div>
                                                     </SelectTrigger>
-                                                    <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                                    <SelectContent className="bg-foreground border-white/10 text-white">
                                                       <SelectItem value="story" className="text-[10px] uppercase font-bold">Story / Reel (9:16)</SelectItem>
                                                       <SelectItem value="short_video" className="text-[10px] uppercase font-bold">Short Video (9:16)</SelectItem>
                                                       <SelectItem value="portrait_post" className="text-[10px] uppercase font-bold">Post Vertical (4:5)</SelectItem>
@@ -1112,13 +1112,13 @@ export function TemplateEditor({
                                                     value={s.landingId || 'mentor'}
                                                     onValueChange={(val) => updateAsset('socials', globalIdx, 'landingId', val)}
                                                   >
-                                                    <SelectTrigger className="h-11 bg-slate-900 border-white/10 text-[9px] font-black uppercase text-emerald-400 tracking-widest">
+                                                    <SelectTrigger className="h-11 bg-foreground border-white/10 text-[9px] font-black uppercase text-success tracking-widest">
                                                       <div className="flex items-center gap-2">
                                                         <Link2 className="h-3.5 w-3.5" />
                                                         <span>URL <SelectValue placeholder="Destino" /></span>
                                                       </div>
                                                     </SelectTrigger>
-                                                    <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                                    <SelectContent className="bg-foreground border-white/10 text-white">
                                                       <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-white/10">URL del Mentor</SelectItem>
                                                       {availableLandings?.map((pack: any) => (
                                                         pack.aiContent?.landings?.map((l: any, vIdx: number) => (
@@ -1139,12 +1139,12 @@ export function TemplateEditor({
                                             
                                             <div className="space-y-4 bg-white/5 p-8 rounded-lg border border-white/5">
                                               <div className="space-y-2">
-                                                <Label className="text-[8px] font-bold text-emerald-600/60 uppercase ml-1">Gancho (Hook)</Label>
-                                                <Input value={s.hook} onChange={e => updateAsset('socials', globalIdx, 'hook', e.target.value)} className="bg-emerald-500/5 border-emerald-500/10 text-emerald-400 text-xs font-black italic h-10 px-4" />
+                                                <Label className="text-[8px] font-bold text-success/60 uppercase ml-1">Gancho (Hook)</Label>
+                                                <Input value={s.hook} onChange={e => updateAsset('socials', globalIdx, 'hook', e.target.value)} className="bg-success/5 border-success/10 text-success text-xs font-black italic h-10 px-4" />
                                               </div>
                                               <div className="space-y-2">
-                                                <Label className="text-[8px] font-bold text-slate-500 uppercase ml-1">Cuerpo (Caption)</Label>
-                                                <Textarea value={s.caption} onChange={e => updateAsset('socials', globalIdx, 'caption', e.target.value)} className="min-h-[140px] border-none bg-white/[0.02] p-4 text-sm font-medium text-slate-300" />
+                                                <Label className="text-[8px] font-bold text-muted-foreground uppercase ml-1">Cuerpo (Caption)</Label>
+                                                <Textarea value={s.caption} onChange={e => updateAsset('socials', globalIdx, 'caption', e.target.value)} className="min-h-[140px] border-none bg-white/[0.02] p-4 text-sm font-medium text-border" />
                                               </div>
                                             </div>
 
@@ -1227,7 +1227,7 @@ export function TemplateEditor({
                                                 toast({ title: 'Pieza Sellada', description: 'Archivos temporales purgados. Pieza lista para publicar.' });
                                               }
                                             }}
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-black h-16 px-10 rounded-2xl text-sm md:text-lg w-full md:w-1/2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="bg-success hover:bg-success text-white font-black h-16 px-10 rounded-2xl text-sm md:text-lg w-full md:w-1/2 disabled:opacity-50 disabled:cursor-not-allowed"
                                             title={getPlatformLabels(s.type).isDocument && s.platform === 'linkedin' ? (!s.production_notes?.pdf_url ? 'Debes generar el PDF primero' : '') : (!(s.production_notes?.video_url || renderedVideos[globalIdx]) ? 'Debes generar el video primero' : '')}
                                           >
                                             <Save className="mr-3 h-6 w-6" /> SELLAR PIEZA (Finalizar)
@@ -1240,7 +1240,7 @@ export function TemplateEditor({
                                       variant="ghost" 
                                       size="icon"
                                       title="Eliminar Pieza"
-                                      className="h-10 w-10 md:h-12 md:w-12 rounded-xl text-rose-400 hover:text-rose-500 hover:bg-rose-500/10"
+                                      className="h-10 w-10 md:h-12 md:w-12 rounded-xl text-danger hover:text-danger hover:bg-danger/10"
                                       onClick={() => {
                                         const confirmDelete = window.confirm('¿Seguro que deseas eliminar esta pieza?');
                                         if (confirmDelete) {
@@ -1270,7 +1270,7 @@ export function TemplateEditor({
 
         <TabsContent value="ads">
           <Tabs value={activeAdsIdx.toString()} onValueChange={v => setActiveAdsIdx(parseInt(v))}>
-            <TabsList className="bg-slate-950 p-1.5 h-12 justify-start gap-1 rounded-xl mb-10 border border-white/10 w-fit">
+            <TabsList className="bg-foreground p-1.5 h-12 justify-start gap-1 rounded-xl mb-10 border border-white/10 w-fit">
               {generatedAssets?.ads?.map((a: any, i: number) => (
                 <TabsTrigger key={i} value={i.toString()} className="px-8 h-9 font-black text-[10px] tracking-widest uppercase data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-white/40 hover:text-white/60">
                   {a.marketingName || `Ads ${i+1}`}
@@ -1279,7 +1279,7 @@ export function TemplateEditor({
             </TabsList>
             {generatedAssets?.ads?.map((a: any, aIdx: number) => (
               <TabsContent key={aIdx} value={aIdx.toString()} className="grid lg:grid-cols-2 gap-12">
-                 <Card className="p-12 rounded-lg bg-slate-900 border border-white/10 space-y-10">
+                 <Card className="p-12 rounded-lg bg-foreground border border-white/10 space-y-10">
                     <h3 className="font-black text-2xl text-white uppercase tracking-tighter">Títulos</h3>
                     <div className="space-y-6">
                       {a.headlines?.map((h: string, i: number) => (
@@ -1287,7 +1287,7 @@ export function TemplateEditor({
                       ))}
                     </div>
                  </Card>
-                 <Card className="p-12 rounded-lg bg-slate-900 border border-white/10 space-y-10">
+                 <Card className="p-12 rounded-lg bg-foreground border border-white/10 space-y-10">
                     <div className="flex items-center justify-between">
                       <h3 className="font-black text-2xl text-white uppercase tracking-tighter">Descripciones</h3>
                       <div className="w-64">
@@ -1301,7 +1301,7 @@ export function TemplateEditor({
                               <span>Link: <SelectValue placeholder="Destino" /></span>
                             </div>
                           </SelectTrigger>
-                          <SelectContent className="bg-slate-900 border-white/10 text-white">
+                          <SelectContent className="bg-foreground border-white/10 text-white">
                             <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-white/10">URL del Mentor</SelectItem>
                             {availableLandings?.map((pack: any) => (
                               pack.aiContent?.landings?.map((l: any, vIdx: number) => (
@@ -1316,7 +1316,7 @@ export function TemplateEditor({
                     </div>
                     <div className="space-y-8">
                       {a.descriptions?.map((d: string, i: number) => (
-                        <Textarea key={i} value={d} onChange={e => updateAsset('ads', aIdx, 'descriptions', e.target.value, i)} className="min-h-[140px] bg-white/5 border-white/5 text-slate-200 p-8" />
+                        <Textarea key={i} value={d} onChange={e => updateAsset('ads', aIdx, 'descriptions', e.target.value, i)} className="min-h-[140px] bg-white/5 border-white/5 text-border p-8" />
                       ))}
                     </div>
                  </Card>

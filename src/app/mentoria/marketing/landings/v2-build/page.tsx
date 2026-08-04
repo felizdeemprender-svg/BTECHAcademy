@@ -328,10 +328,10 @@ function V2LandingBuilderContent() {
             <Card className="p-8 space-y-8">
               <div className="space-y-4">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">1. Programa Académico</Label>
-                <ScrollArea className="h-64 rounded-2xl border p-2 bg-slate-50">
+                <ScrollArea className="h-64 rounded-2xl border p-2 bg-muted">
                   <div className="space-y-2">
                     {courses?.map(c => (
-                      <div key={c.id} onClick={() => handleCourseSelect(c.id)} className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer font-bold text-sm", selectedCourseId === c.id ? "bg-white border-primary shadow-sm text-primary" : "bg-white border-transparent text-slate-700 hover:border-primary/20")}>
+                      <div key={c.id} onClick={() => handleCourseSelect(c.id)} className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer font-bold text-sm", selectedCourseId === c.id ? "bg-white border-primary shadow-sm text-primary" : "bg-white border-transparent text-foreground hover:border-primary/20")}>
                         {c.title}
                       </div>
                     ))}
@@ -341,25 +341,25 @@ function V2LandingBuilderContent() {
 
               <div className="space-y-4">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">2. Estilo Visual Atómico</Label>
-                <ScrollArea className="h-64 rounded-2xl border p-2 bg-slate-50">
+                <ScrollArea className="h-64 rounded-2xl border p-2 bg-muted">
                   <div className="space-y-2">
                     {styles?.map(s => (
                       <div key={s.id} onClick={() => handleStyleSelect(s)} className={cn("flex gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer", selectedStyleId === s.id ? "bg-white border-accent shadow-sm" : "bg-white border-transparent hover:border-accent/20")}>
-                        <div className="w-16 h-16 rounded-lg bg-slate-100 shrink-0 overflow-hidden">
+                        <div className="w-16 h-16 rounded-lg bg-muted shrink-0 overflow-hidden">
                           {s.thumbnail ? (
                             <img src={s.thumbnail} alt={s.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-300"><Palette /></div>
+                            <div className="w-full h-full flex items-center justify-center text-border"><Palette /></div>
                           )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className={cn("font-bold", selectedStyleId === s.id ? "text-accent" : "text-slate-800")}>{s.name}</p>
+                            <p className={cn("font-bold", selectedStyleId === s.id ? "text-accent" : "text-foreground")}>{s.name}</p>
                             <Badge variant="outline" className={`text-[8px] uppercase font-bold px-1.5 py-0 h-4 ${STYLE_GROUP_COLORS[s.group as StyleGroup] || ''}`}>
                               {STYLE_GROUP_LABELS[s.group as StyleGroup] || s.group}
                             </Badge>
                           </div>
-                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">{s.description}</p>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.description}</p>
                         </div>
                       </div>
                     ))}
@@ -370,35 +370,35 @@ function V2LandingBuilderContent() {
               <Button disabled={!selectedCourseId || !selectedStyleId} onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold">Continuar al Enfoque <ArrowRight className="ml-2 h-5 w-5" /></Button>
             </Card>
             
-            <div className="bg-slate-50 rounded-lg border-2 border-dashed flex flex-col items-center justify-center p-12 text-center relative overflow-hidden">
+            <div className="bg-muted rounded-lg border-2 border-dashed flex flex-col items-center justify-center p-12 text-center relative overflow-hidden">
               {selectedStyleId ? (
                   <div className="max-w-sm space-y-6 z-10">
-                    <div className="w-24 h-24 mx-auto bg-white rounded-3xl p-2 border-4 border-slate-100 overflow-hidden relative">
+                    <div className="w-24 h-24 mx-auto bg-white rounded-3xl p-2 border-4 border-muted overflow-hidden relative">
                       {selectedStyle?.thumbnail ? (
                         <img src={selectedStyle.thumbnail} alt={selectedStyle.name} className="w-full h-full object-cover rounded-xl" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-300"><Layout className="h-10 w-10" /></div>
+                        <div className="w-full h-full flex items-center justify-center text-border"><Layout className="h-10 w-10" /></div>
                       )}
                     </div>
                     <div>
                       <Badge className="mb-3 bg-accent text-white">{selectedStyle?.name}</Badge>
-                      <h3 className="text-2xl font-black text-slate-800 mb-3">ADN del Estilo</h3>
-                      <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                      <h3 className="text-2xl font-black text-foreground mb-3">ADN del Estilo</h3>
+                      <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                         {selectedStyle?.description || 'Estilo enfocado en alta conversión, guiando al usuario desde el problema hasta la solución.'}
                       </p>
                     </div>
 
                     <div className="bg-primary/5 p-4 rounded-2xl text-left border border-primary/10">
                       <p className="text-[10px] font-black uppercase text-primary mb-1">Cerebro de la IA para este estilo</p>
-                      <p className="text-xs text-slate-700 font-medium">
+                      <p className="text-xs text-foreground font-medium">
                         {selectedStyle?.aiWriterPersona || 'Tono directo, persuasivo y enfocado en la conversión.'}
                       </p>
                     </div>
                     
                     {/* Brand Selector */}
                     {selectedStyle?.brands && selectedStyle.brands.length > 0 && (
-                      <div className="space-y-3 pt-3 border-t border-slate-200">
-                        <p className="text-[10px] font-black uppercase text-slate-400">Brand Visual</p>
+                      <div className="space-y-3 pt-3 border-t border-border">
+                        <p className="text-[10px] font-black uppercase text-muted-foreground">Brand Visual</p>
                         <p className="text-xs text-muted-foreground">Elige el pack completo (tokens + tipografía + paleta)</p>
                         <div className="grid gap-2">
                           {selectedStyle.brands.map((brand: StyleBrand, i: number) => (
@@ -408,15 +408,15 @@ function V2LandingBuilderContent() {
                               onClick={() => setSelectedBrand(brand)}
                               className={cn(
                                 "flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all",
-                                selectedBrand?.name === brand.name ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-primary/20"
+                                selectedBrand?.name === brand.name ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-primary/20"
                               )}
                             >
                               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brand.palette.primary }}>
                                 <Palette className="h-5 w-5 text-white" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className={cn("font-bold text-sm", selectedBrand?.name === brand.name ? "text-primary" : "text-slate-800")}>{brand.name}</p>
-                                <p className="text-[10px] text-slate-500 truncate">{brand.description}</p>
+                                <p className={cn("font-bold text-sm", selectedBrand?.name === brand.name ? "text-primary" : "text-foreground")}>{brand.name}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{brand.description}</p>
                                 <div className="flex gap-1 mt-1 text-[9px]">
                                   <span className="w-5 h-5 rounded-full border" style={{ backgroundColor: brand.palette.primary }} title="Primary" />
                                   <span className="w-5 h-5 rounded-full border" style={{ backgroundColor: brand.palette.secondary }} title="Secondary" />
@@ -432,13 +432,13 @@ function V2LandingBuilderContent() {
                         {selectedBrand && (
                           <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
                             <p className="text-[10px] font-bold uppercase text-primary mb-1">Brand Activo: {selectedBrand.name}</p>
-                            <p className="text-[10px] text-slate-600">Tokens: {selectedBrand.tokens.themeMode} · {selectedBrand.tokens.componentRadius} · {selectedBrand.typography.name} · Paleta: {selectedBrand.palette.name}</p>
+                            <p className="text-[10px] text-muted-foreground">Tokens: {selectedBrand.tokens.themeMode} · {selectedBrand.tokens.componentRadius} · {selectedBrand.typography.name} · Paleta: {selectedBrand.palette.name}</p>
                           </div>
                         )}
                       </div>
                     )}
                     
-                    <div className="pt-4 border-t border-slate-200">
+                    <div className="pt-4 border-t border-border">
                       <Button variant="outline" className="w-full rounded-2xl font-bold border-2" onClick={() => window.open(`/preview-style/${selectedStyleId}`, '_blank')}>
                         <Layout className="mr-2 h-4 w-4" /> Ver Demo del Diseño
                       </Button>
@@ -447,7 +447,7 @@ function V2LandingBuilderContent() {
                 ) : (
                 <div className="max-w-xs space-y-4">
                   <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary"><Rocket className="h-10 w-10" /></div>
-                  <h3 className="text-2xl font-black text-slate-800">Motor Atómico V2</h3>
+                  <h3 className="text-2xl font-black text-foreground">Motor Atómico V2</h3>
                   <p className="text-sm text-muted-foreground font-medium">Selecciona un Estilo Visual a la izquierda para ver su ADN estratégico y previsualizar su diseño.</p>
                 </div>
               )}
@@ -464,7 +464,7 @@ function V2LandingBuilderContent() {
             <CardContent className="p-10">
               <div className="space-y-4 pt-2">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Título de la Página</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Título de la Página</Label>
                   <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-secondary/10 border-none px-6 font-bold"  size="xl" />
                 </div>
                 
@@ -494,7 +494,7 @@ function V2LandingBuilderContent() {
                       value={anchorPrice || ''} 
                       placeholder="Precio anterior (tachado) — vacío = automático (precio × 2.94)"
                       onChange={e => setAnchorPrice(e.target.value === '' ? 0 : Number(e.target.value))} 
-                      className="bg-accent/5 border-none pl-12 font-semibold text-slate-500" 
+                      className="bg-accent/5 border-none pl-12 font-semibold text-muted-foreground" 
                      size="xl" />
                   </div>
                   <p className="text-[9px] text-muted-foreground font-medium">Este precio se usará para redactar los textos. Abajo puedes desglosar el precio real por método de pago.</p>
@@ -504,36 +504,36 @@ function V2LandingBuilderContent() {
               {/* MEDIOS DE PAGO PERMITIDOS Y PRECIOS ESPECÍFICOS */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Medios de Pago y Precios Finales</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Medios de Pago y Precios Finales</Label>
                   <Badge variant="outline" className="text-[8px] font-bold text-accent border-accent/20 h-5 px-2">Checkout</Badge>
                 </div>
                 
                 <div className="grid md:grid-cols-2 gap-4">
                   {isMercadoPagoActive && (
-                    <div className={cn("p-4 rounded-2xl border-2 transition-all", allowedPaymentMethods.includes('mercadopago') ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200')}>
+                    <div className={cn("p-4 rounded-2xl border-2 transition-all", allowedPaymentMethods.includes('mercadopago') ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white border-border')}>
                       <div className="flex items-center gap-3 mb-4">
                         <button
                           onClick={() => setAllowedPaymentMethods(prev => prev.includes('mercadopago') ? prev.filter(m => m !== 'mercadopago') : [...prev, 'mercadopago'])}
-                          className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors", allowedPaymentMethods.includes('mercadopago') ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'bg-slate-100 text-slate-400 hover:bg-slate-200')}
+                          className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors", allowedPaymentMethods.includes('mercadopago') ? 'bg-primary text-white hover:bg-primary' : 'bg-muted text-muted-foreground hover:bg-border')}
                         >
                           💳
                         </button>
                         <div>
-                          <p className={cn("font-black text-sm", allowedPaymentMethods.includes('mercadopago') ? 'text-indigo-900' : 'text-slate-600')}>Mercado Pago</p>
+                          <p className={cn("font-black text-sm", allowedPaymentMethods.includes('mercadopago') ? 'text-foreground' : 'text-muted-foreground')}>Mercado Pago</p>
                           <p className="text-[10px] text-muted-foreground mt-0.5">Tarjetas, saldo, cuotas.</p>
                         </div>
                       </div>
                       
                       {allowedPaymentMethods.includes('mercadopago') && (
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold text-indigo-700 uppercase">Precio Cobro MP</Label>
+                          <Label className="text-[9px] font-bold text-primary uppercase">Precio Cobro MP</Label>
                           <div className="relative">
-                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500" />
+                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
                             <Input 
                               type="number" 
                               value={priceMercadoPago} 
                               onChange={e => setPriceMercadoPago(Number(e.target.value))} 
-                              className="h-10 rounded-xl bg-white border-indigo-200 pl-9 font-bold text-indigo-900 focus-visible:ring-indigo-500" 
+                              className="h-10 rounded-xl bg-white border-primary/20 pl-9 font-bold text-foreground focus-visible:ring-primary" 
                             />
                           </div>
                         </div>
@@ -542,30 +542,30 @@ function V2LandingBuilderContent() {
                   )}
 
                   {isTransferActive && (
-                    <div className={cn("p-4 rounded-2xl border-2 transition-all", allowedPaymentMethods.includes('transfer') ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200')}>
+                    <div className={cn("p-4 rounded-2xl border-2 transition-all", allowedPaymentMethods.includes('transfer') ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white border-border')}>
                       <div className="flex items-center gap-3 mb-4">
                         <button
                           onClick={() => setAllowedPaymentMethods(prev => prev.includes('transfer') ? prev.filter(m => m !== 'transfer') : [...prev, 'transfer'])}
-                          className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors", allowedPaymentMethods.includes('transfer') ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'bg-slate-100 text-slate-400 hover:bg-slate-200')}
+                          className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors", allowedPaymentMethods.includes('transfer') ? 'bg-primary text-white hover:bg-primary' : 'bg-muted text-muted-foreground hover:bg-border')}
                         >
                           🏦
                         </button>
                         <div>
-                          <p className={cn("font-black text-sm", allowedPaymentMethods.includes('transfer') ? 'text-indigo-900' : 'text-slate-600')}>Transferencia</p>
+                          <p className={cn("font-black text-sm", allowedPaymentMethods.includes('transfer') ? 'text-foreground' : 'text-muted-foreground')}>Transferencia</p>
                           <p className="text-[10px] text-muted-foreground mt-0.5">Aprobación manual</p>
                         </div>
                       </div>
 
                       {allowedPaymentMethods.includes('transfer') && (
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold text-indigo-700 uppercase">Precio Transferencia</Label>
+                          <Label className="text-[9px] font-bold text-primary uppercase">Precio Transferencia</Label>
                           <div className="relative">
-                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500" />
+                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
                             <Input 
                               type="number" 
                               value={priceTransfer} 
                               onChange={e => setPriceTransfer(Number(e.target.value))} 
-                              className="h-10 rounded-xl bg-white border-indigo-200 pl-9 font-bold text-indigo-900 focus-visible:ring-indigo-500" 
+                              className="h-10 rounded-xl bg-white border-primary/20 pl-9 font-bold text-foreground focus-visible:ring-primary" 
                             />
                           </div>
                         </div>
@@ -575,12 +575,12 @@ function V2LandingBuilderContent() {
                 </div>
               </div>
                 {(!isMercadoPagoActive && !isTransferActive) && (
-                  <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1">
+                  <p className="text-xs text-danger font-bold mt-2 flex items-center gap-1">
                     <AlertTriangle className="h-4 w-4" /> No tienes métodos de cobro configurados. Configúralos en tu Perfil de Mentor.
                   </p>
                 )}
                 {allowedPaymentMethods.length === 0 && (
-                  <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1">
+                  <p className="text-xs text-danger font-bold mt-2 flex items-center gap-1">
                     <AlertTriangle className="h-4 w-4" /> Debes seleccionar al menos un medio de pago (si el precio es mayor a 0).
                   </p>
                 )}
@@ -588,7 +588,7 @@ function V2LandingBuilderContent() {
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Segmentación Estratégica (Buyer Persona)</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Segmentación Estratégica (Buyer Persona)</Label>
                     <p className="text-xs text-muted-foreground">Describe a quién va dirigida esta landing, o elige un perfil.</p>
                   </div>
                   <Button onClick={handleGeneratePersonas} disabled={isGeneratingPersonas} variant="outline" size="sm" className="h-9 rounded-xl font-bold bg-primary/5 border-primary/20 text-primary hover:bg-primary/10">
@@ -620,11 +620,11 @@ function V2LandingBuilderContent() {
                         onClick={handleToggle} 
                         className={cn(
                           "relative p-4 rounded-2xl border-2 transition-all text-left group overflow-hidden", 
-                          isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-primary/20 hover:bg-slate-50"
+                          isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-primary/20 hover:bg-muted"
                         )}
                       >
                         <div className="flex justify-between items-start mb-1">
-                          <p className={cn("font-bold text-xs pr-6", isSelected ? "text-primary" : "text-slate-700 group-hover:text-primary")}>{seg.label}</p>
+                          <p className={cn("font-bold text-xs pr-6", isSelected ? "text-primary" : "text-foreground group-hover:text-primary")}>{seg.label}</p>
                           {isSelected && <CheckCircle2 className="h-4 w-4 text-primary absolute top-4 right-4" />}
                         </div>
                         <p className="text-[9px] text-muted-foreground line-clamp-3 pr-4">{seg.desc}</p>
@@ -636,60 +636,60 @@ function V2LandingBuilderContent() {
 
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Directivas Extras de Copy (Opcional)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Directivas Extras de Copy (Opcional)</Label>
                   <Badge variant="outline" className="text-[8px] font-bold text-primary border-primary/20 h-5 px-2">Cerebro de Marketing</Badge>
                 </div>
                 <Textarea value={templateDirectives} onChange={e => setTemplateDirectives(e.target.value)} placeholder="Ej: Usa un tono muy técnico, enfócate en el ROI..." size="lg" className="bg-secondary/10 border-none p-6 text-sm font-medium" />
               </div>
 
               {/* ─── VIGENCIA DE LA LANDING ─── */}
-              <div className="space-y-4 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-4">
+              <div className="space-y-4 pt-6 border-t border-muted animate-in fade-in slide-in-from-top-4">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center">
-                    <CalendarDays className="h-5 w-5 text-indigo-500" />
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <CalendarDays className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <Label className="text-[10px] font-black uppercase text-indigo-500 tracking-widest block">Vigencia de la Promoción (Opcional)</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary tracking-widest block">Vigencia de la Promoción (Opcional)</Label>
                     <p className="text-[9px] text-muted-foreground font-medium">La landing se bloqueará automáticamente fuera de este rango.</p>
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Inicio (Desde)</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Inicio (Desde)</Label>
                     <Input
                       type="datetime-local"
                       value={activeFrom}
                       onChange={e => setActiveFrom(e.target.value)}
-                      className="bg-indigo-50/50 border-none px-6 font-bold text-slate-700"
+                      className="bg-primary/10/50 border-none px-6 font-bold text-foreground"
                      size="xl" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Fin (Hasta)</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Fin (Hasta)</Label>
                     <Input
                       type="datetime-local"
                       value={activeUntil}
                       onChange={e => setActiveUntil(e.target.value)}
-                      className="bg-rose-50/50 border-none px-6 font-bold text-slate-700"
+                      className="bg-danger/10/50 border-none px-6 font-bold text-foreground"
                      size="xl" />
                   </div>
                 </div>
               </div>
 
               {/* ─── ASIGNACIÓN DE REFERIDO ─── */}
-              <div className="space-y-4 pt-6 border-t border-slate-100">
+              <div className="space-y-4 pt-6 border-t border-muted">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <UserPlus className="h-5 w-5 text-emerald-500" />
+                  <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center">
+                    <UserPlus className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <Label className="text-[10px] font-black uppercase text-emerald-600 tracking-widest block">Asignar a un Referido (Embajador)</Label>
+                    <Label className="text-[10px] font-black uppercase text-success tracking-widest block">Asignar a un Referido (Embajador)</Label>
                     <p className="text-[9px] text-muted-foreground font-medium">Opcional. Todos los leads de esta landing se atribuirán a este referido.</p>
                   </div>
                 </div>
 
                 {referidos.length === 0 ? (
-                  <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center">
-                    <p className="text-xs text-muted-foreground font-medium">No hay usuarios con rol <span className="font-black text-slate-600">'referido'</span> en el sistema aún.</p>
+                  <div className="p-6 rounded-2xl bg-muted border border-dashed border-border text-center">
+                    <p className="text-xs text-muted-foreground font-medium">No hay usuarios con rol <span className="font-black text-muted-foreground">'referido'</span> en el sistema aún.</p>
                     <p className="text-[9px] text-muted-foreground mt-1">Puedes asignar el rol 'referido' a cualquier usuario desde el panel de administración.</p>
                   </div>
                 ) : (
@@ -699,11 +699,11 @@ function V2LandingBuilderContent() {
                       onClick={() => setReferidoId('')}
                       className={cn(
                         'flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
-                        !referidoId ? 'bg-slate-100 border-slate-400' : 'bg-white border-slate-100 hover:border-slate-300'
+                        !referidoId ? 'bg-muted border-muted-foreground' : 'bg-white border-muted hover:border-border'
                       )}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-black">—</div>
-                      <span className="text-xs font-bold text-slate-500">Sin referido (landing general)</span>
+                      <div className="w-8 h-8 rounded-lg bg-border flex items-center justify-center text-muted-foreground text-xs font-black">—</div>
+                      <span className="text-xs font-bold text-muted-foreground">Sin referido (landing general)</span>
                     </button>
                     {referidos.map(r => (
                       <button
@@ -711,33 +711,33 @@ function V2LandingBuilderContent() {
                         onClick={() => setReferidoId(r.id)}
                         className={cn(
                           'flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
-                          referidoId === r.id ? 'bg-emerald-50 border-emerald-400 shadow-sm' : 'bg-white border-slate-100 hover:border-emerald-200'
+                          referidoId === r.id ? 'bg-success/10 border-success shadow-sm' : 'bg-white border-muted hover:border-success/20'
                         )}
                       >
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-black">
+                        <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center text-success text-xs font-black">
                           {(r.displayName || r.email).charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-black text-slate-800 truncate">{r.displayName}</p>
+                          <p className="text-xs font-black text-foreground truncate">{r.displayName}</p>
                           <p className="text-[9px] text-muted-foreground truncate">{r.email}</p>
                         </div>
-                        {referidoId === r.id && <CheckCircle2 className="h-4 w-4 text-emerald-500 ml-auto shrink-0" />}
+                        {referidoId === r.id && <CheckCircle2 className="h-4 w-4 text-success ml-auto shrink-0" />}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
               {/* ─── ESTÉTICA VISUAL (Movido del Paso 3 al Paso 2) ─── */}
-              <div className="space-y-6 pt-6 border-t border-slate-100">
+              <div className="space-y-6 pt-6 border-t border-muted">
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Estética Visual</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Estética Visual</Label>
                   <p className="text-xs text-muted-foreground">Elige la personalidad visual que se usará para el renderizado.</p>
                 </div>
 
                 {styleBrands.length > 0 ? (
                   <>
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Packs por Brand</label>
+                      <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Packs por Brand</label>
                       <p className="text-xs text-muted-foreground">Cada brand agrupa su paleta de colores y su tipografía. Al elegirlo se aplica el pack completo (tokens + tipografía + paleta).</p>
                       <div className="grid sm:grid-cols-2 gap-3">
                         {styleBrands.map((brand: StyleBrand) => {
@@ -755,7 +755,7 @@ function V2LandingBuilderContent() {
                               }}
                               className={cn(
                                 "text-left p-4 rounded-2xl border-2 transition-all",
-                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
                               )}
                             >
                               <div className="flex items-start gap-3">
@@ -765,20 +765,20 @@ function V2LandingBuilderContent() {
                                     <div className="flex-1" style={{ backgroundColor: brand.palette.secondary }}></div>
                                     <div className="flex-1" style={{ backgroundColor: brand.palette.accent }}></div>
                                   </div>
-                                  <p className={cn("mt-2 text-[10px] font-bold leading-tight truncate", paletteIsActive ? "text-primary" : "text-slate-500")}>
+                                  <p className={cn("mt-2 text-[10px] font-bold leading-tight truncate", paletteIsActive ? "text-primary" : "text-muted-foreground")}>
                                     Paleta: {brand.palette.name}
                                   </p>
                                 </div>
                                 <div className="w-20 shrink-0">
-                                  <div className={cn("flex flex-col items-center justify-center text-center p-2 rounded-xl border-2", typoIsActive ? "border-primary bg-primary/5" : "border-slate-100 bg-white")}>
-                                    <span className="text-lg font-black text-slate-800 leading-none mb-1" style={{ fontFamily: brand.typography.headingFont }}>Aa</span>
-                                    <span className={cn("text-[8px] font-bold leading-tight text-center line-clamp-2", typoIsActive ? "text-primary" : "text-slate-500")}>{brand.typography.name}</span>
+                                  <div className={cn("flex flex-col items-center justify-center text-center p-2 rounded-xl border-2", typoIsActive ? "border-primary bg-primary/5" : "border-muted bg-white")}>
+                                    <span className="text-lg font-black text-foreground leading-none mb-1" style={{ fontFamily: brand.typography.headingFont }}>Aa</span>
+                                    <span className={cn("text-[8px] font-bold leading-tight text-center line-clamp-2", typoIsActive ? "text-primary" : "text-muted-foreground")}>{brand.typography.name}</span>
                                   </div>
                                 </div>
                               </div>
-                              <p className={cn("mt-2 font-bold text-sm", isActive ? "text-primary" : "text-slate-800")}>{brand.name}</p>
-                              {brand.description && <p className="text-[10px] text-slate-500 mt-0.5">{brand.description}</p>}
-                              <p className="text-[9px] text-slate-400 mt-1.5 font-medium">Tokens: {brand.tokens.themeMode} · {brand.tokens.componentRadius} · Sombra: {brand.tokens.componentShadow}</p>
+                              <p className={cn("mt-2 font-bold text-sm", isActive ? "text-primary" : "text-foreground")}>{brand.name}</p>
+                              {brand.description && <p className="text-[10px] text-muted-foreground mt-0.5">{brand.description}</p>}
+                              <p className="text-[9px] text-muted-foreground mt-1.5 font-medium">Tokens: {brand.tokens.themeMode} · {brand.tokens.componentRadius} · Sombra: {brand.tokens.componentShadow}</p>
                             </button>
                           );
                         })}
@@ -786,12 +786,12 @@ function V2LandingBuilderContent() {
                     </div>
 
                     {(extraPalettes.length > 0 || extraTypography.length > 0) && (
-                      <div className="space-y-4 pt-4 border-t border-slate-100">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Otras opciones</label>
+                      <div className="space-y-4 pt-4 border-t border-muted">
+                        <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Otras opciones</label>
                         <div className="grid md:grid-cols-2 gap-8">
                           {extraPalettes.length > 0 && (
                             <div className="space-y-3">
-                              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Paleta de Colores</label>
+                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Paleta de Colores</label>
                               <div className="grid grid-cols-4 gap-2">
                                 {extraPalettes.map((color: any) => {
                                   const isActive = colorPaletteName === color.name;
@@ -802,7 +802,7 @@ function V2LandingBuilderContent() {
                                       onClick={() => { setColorPaletteName(color.name); setSelectedBrand(null); }}
                                       className={cn(
                                         "flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all group",
-                                        isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                                        isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
                                       )}
                                     >
                                       <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
@@ -810,7 +810,7 @@ function V2LandingBuilderContent() {
                                         <div className="flex-1" style={{ backgroundColor: color.secondary }}></div>
                                         <div className="flex-1" style={{ backgroundColor: color.accent }}></div>
                                       </div>
-                                      <span className={cn("text-[9px] font-bold text-center leading-tight line-clamp-2", isActive ? "text-primary" : "text-slate-500")}>
+                                      <span className={cn("text-[9px] font-bold text-center leading-tight line-clamp-2", isActive ? "text-primary" : "text-muted-foreground")}>
                                         {color.name}
                                       </span>
                                     </button>
@@ -821,7 +821,7 @@ function V2LandingBuilderContent() {
                           )}
                           {extraTypography.length > 0 && (
                             <div className="space-y-3">
-                              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipografías</label>
+                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Tipografías</label>
                               <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                                 {extraTypography.map((typo: any) => {
                                   const isActive = typographyVariantName === typo.name;
@@ -832,11 +832,11 @@ function V2LandingBuilderContent() {
                                       onClick={() => { setTypographyVariantName(typo.name); setSelectedBrand(null); }}
                                       className={cn(
                                         "flex flex-col items-center justify-center text-center p-3 rounded-xl border-2 transition-all",
-                                        isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                                        isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
                                       )}
                                     >
-                                      <span className="text-lg font-black text-slate-800 leading-none mb-1" style={{ fontFamily: typo.headingFont }}>Aa</span>
-                                      <span className={cn("text-[9px] font-bold leading-tight", isActive ? "text-primary" : "text-slate-500")}>{typo.name}</span>
+                                      <span className="text-lg font-black text-foreground leading-none mb-1" style={{ fontFamily: typo.headingFont }}>Aa</span>
+                                      <span className={cn("text-[9px] font-bold leading-tight", isActive ? "text-primary" : "text-muted-foreground")}>{typo.name}</span>
                                     </button>
                                   );
                                 })}
@@ -850,7 +850,7 @@ function V2LandingBuilderContent() {
                 ) : (
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Paleta de Colores</label>
+                      <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Paleta de Colores</label>
                       <div className="grid grid-cols-5 gap-2">
                         {selectedStyle?.colorProposals?.map((color: any, idx: number) => {
                           const isActive = colorPaletteName === color.name || (!colorPaletteName && idx === 0);
@@ -861,7 +861,7 @@ function V2LandingBuilderContent() {
                               onClick={() => setColorPaletteName(color.name)}
                               className={cn(
                                 "flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all group",
-                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
                               )}
                             >
                               <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
@@ -869,7 +869,7 @@ function V2LandingBuilderContent() {
                                 <div className="flex-1" style={{ backgroundColor: color.secondary }}></div>
                                 <div className="flex-1" style={{ backgroundColor: color.accent }}></div>
                               </div>
-                              <span className={cn("text-[9px] font-bold text-center leading-tight line-clamp-2", isActive ? "text-primary" : "text-slate-500")}>
+                              <span className={cn("text-[9px] font-bold text-center leading-tight line-clamp-2", isActive ? "text-primary" : "text-muted-foreground")}>
                                 {color.name}
                               </span>
                             </button>
@@ -879,7 +879,7 @@ function V2LandingBuilderContent() {
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipografías</label>
+                      <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Tipografías</label>
                       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
                         {selectedStyle?.typography?.map((typo: any, idx: number) => {
                           const isActive = typographyVariantName === typo.name || (!typographyVariantName && idx === 0);
@@ -890,11 +890,11 @@ function V2LandingBuilderContent() {
                               onClick={() => setTypographyVariantName(typo.name)}
                               className={cn(
                                 "flex flex-col items-center justify-center text-center p-3 rounded-xl border-2 transition-all",
-                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
                               )}
                             >
-                              <span className="text-lg font-black text-slate-800 leading-none mb-1" style={{ fontFamily: typo.headingFont }}>Aa</span>
-                              <span className={cn("text-[9px] font-bold leading-tight", isActive ? "text-primary" : "text-slate-500")}>{typo.name}</span>
+                              <span className="text-lg font-black text-foreground leading-none mb-1" style={{ fontFamily: typo.headingFont }}>Aa</span>
+                              <span className={cn("text-[9px] font-bold leading-tight", isActive ? "text-primary" : "text-muted-foreground")}>{typo.name}</span>
                             </button>
                           );
                         })}
@@ -905,9 +905,9 @@ function V2LandingBuilderContent() {
               </div>
 
               {/* ─── ESTRUCTURA DE LA LANDING ─── */}
-              <div className="space-y-6 pt-6 border-t border-slate-100">
+              <div className="space-y-6 pt-6 border-t border-muted">
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Estructura de la Landing (Secciones)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Estructura de la Landing (Secciones)</Label>
                   <p className="text-xs text-muted-foreground">Configura los bloques que quieres que la IA escriba. Lo que no actives aquí, no será generado.</p>
                 </div>
                 
@@ -917,19 +917,19 @@ function V2LandingBuilderContent() {
                     const isActive = instances.length > 0;
                     
                     return (
-                      <div key={sec.id} className={cn("flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border-2 transition-all gap-4", isActive ? "border-primary/30 bg-white shadow-sm" : "border-slate-100 bg-slate-50/50")}>
+                      <div key={sec.id} className={cn("flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border-2 transition-all gap-4", isActive ? "border-primary/30 bg-white shadow-sm" : "border-muted bg-muted/50")}>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className={cn("font-bold text-sm", isActive ? "text-slate-800" : "text-slate-500")}>{sec.name}</p>
-                            {sec.required && <Badge variant="secondary" className="text-[8px] uppercase tracking-widest bg-amber-100 text-amber-700">Obligatoria</Badge>}
-                            {sec.isRepeatable && <Badge variant="outline" className="text-[8px] uppercase tracking-widest text-slate-500">Multi-Instancia</Badge>}
+                            <p className={cn("font-bold text-sm", isActive ? "text-foreground" : "text-muted-foreground")}>{sec.name}</p>
+                            {sec.required && <Badge variant="secondary" className="text-[8px] uppercase tracking-widest bg-warn/15 text-warn">Obligatoria</Badge>}
+                            {sec.isRepeatable && <Badge variant="outline" className="text-[8px] uppercase tracking-widest text-muted-foreground">Multi-Instancia</Badge>}
                           </div>
                           <p className="text-[10px] text-muted-foreground leading-relaxed">{sec.description}</p>
                         </div>
                         
                         <div className="flex items-center gap-3 shrink-0">
                           {sec.isRepeatable && isActive && (
-                            <div className="flex items-center gap-2 mr-4 bg-slate-100 p-1 rounded-lg">
+                            <div className="flex items-center gap-2 mr-4 bg-muted p-1 rounded-lg">
                               <button 
                                 onClick={() => {
                                   // Remove one instance
@@ -941,12 +941,12 @@ function V2LandingBuilderContent() {
                                   }
                                 }}
                                 disabled={instances.length <= 1}
-                                className="w-6 h-6 flex items-center justify-center rounded bg-white text-slate-600 disabled:opacity-50 shadow-sm"
+                                className="w-6 h-6 flex items-center justify-center rounded bg-white text-muted-foreground disabled:opacity-50 shadow-sm"
                               >-</button>
-                              <span className="text-xs font-bold text-slate-700 w-4 text-center">{instances.length}</span>
+                              <span className="text-xs font-bold text-foreground w-4 text-center">{instances.length}</span>
                               <button 
                                 onClick={() => setRequestedSections([...requestedSections, { id: sec.id, title: sec.name, required: sec.required }])}
-                                className="w-6 h-6 flex items-center justify-center rounded bg-white text-slate-600 shadow-sm"
+                                className="w-6 h-6 flex items-center justify-center rounded bg-white text-muted-foreground shadow-sm"
                               >+</button>
                             </div>
                           )}
@@ -962,7 +962,7 @@ function V2LandingBuilderContent() {
                             }}
                             className={cn(
                               "w-12 h-6 rounded-full transition-colors relative flex items-center px-1",
-                              isActive ? (sec.required ? "bg-primary/50 cursor-not-allowed" : "bg-primary") : "bg-slate-300",
+                              isActive ? (sec.required ? "bg-primary/50 cursor-not-allowed" : "bg-primary") : "bg-border",
                             )}
                           >
                             <div className={cn("w-4 h-4 rounded-full bg-white transition-transform", isActive ? "translate-x-6" : "translate-x-0")} />
@@ -975,7 +975,7 @@ function V2LandingBuilderContent() {
               </div>
               
               <div className="pt-6">
-                <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience || (basePrice > 0 && allowedPaymentMethods.length === 0)} className="w-full h-24 rounded-lg font-bold text-2xl bg-slate-900 group transition-all">
+                <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience || (basePrice > 0 && allowedPaymentMethods.length === 0)} className="w-full h-24 rounded-lg font-bold text-2xl bg-foreground group transition-all">
                 {isGenerating ? <Loader2 className="animate-spin mr-3 h-10 w-10" /> : <Wand2 className="mr-3 h-10 w-10 text-accent group-hover:rotate-12 transition-transform" />}
                 {isGenerating ? "Generando y Guardando..." : "Autogenerar Landing y Guardar"}
               </Button>

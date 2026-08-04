@@ -164,9 +164,9 @@ export default function AdminModerationPage() {
         </header>
 
         <div className="grid gap-8">
-          <div className="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-2xl flex items-start gap-4 shadow-sm">
-            <BrainCircuit className="h-6 w-6 text-amber-500 shrink-0" />
-            <div className="text-sm text-amber-800 space-y-1">
+          <div className="bg-warn/10 border-l-4 border-warn p-6 rounded-r-2xl flex items-start gap-4 shadow-sm">
+            <BrainCircuit className="h-6 w-6 text-warn shrink-0" />
+            <div className="text-sm text-warn space-y-1">
               <p className="font-bold">¿Cómo funciona la moderación profunda?</p>
               <p>La IA de Evolución Académica analiza cada curso comparándolo con esta lista. El análisis incluye:</p>
               <ul className="list-disc list-inside ml-2 opacity-80">
@@ -174,7 +174,7 @@ export default function AdminModerationPage() {
                 <li>Documentos maestros cargados por el mentor.</li>
                 <li><strong>Todas las preguntas de evaluación (Quizzes).</strong></li>
               </ul>
-              <p className="mt-2 text-rose-700 font-bold">Si hay coincidencia, el curso se bloquea hasta tu aprobación manual.</p>
+              <p className="mt-2 text-danger font-bold">Si hay coincidencia, el curso se bloquea hasta tu aprobación manual.</p>
             </div>
           </div>
 
@@ -204,15 +204,15 @@ export default function AdminModerationPage() {
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                   <ShieldAlert className="h-4 w-4" /> Temas bajo vigilancia ({topics.length})
                 </Label>
-                {topics.length > 0 && <p className="text-[10px] font-bold text-amber-600 uppercase animate-pulse">Cambios sin guardar</p>}
+                {topics.length > 0 && <p className="text-[10px] font-bold text-warn uppercase animate-pulse">Cambios sin guardar</p>}
               </div>
               <div className="flex flex-wrap gap-3">
                 {topics.length === 0 ? (
                   <div className="w-full space-y-6">
-                    <div className="w-full py-12 text-center border-2 border-dashed rounded-lg bg-amber-50/30 border-amber-200">
-                      <BrainCircuit className="h-10 w-10 text-amber-500/40 mx-auto mb-3" />
-                      <p className="text-amber-800 font-bold text-sm px-10 uppercase">Modo Proactivo Activado</p>
-                      <p className="text-[10px] text-amber-600 font-medium px-10 mt-1 uppercase tracking-tighter">Al no haber una lista manual, Gemini aplicará automáticamente los siguientes criterios de vigilancia ética:</p>
+                    <div className="w-full py-12 text-center border-2 border-dashed rounded-lg bg-warn/10/30 border-warn/20">
+                      <BrainCircuit className="h-10 w-10 text-warn/40 mx-auto mb-3" />
+                      <p className="text-warn font-bold text-sm px-10 uppercase">Modo Proactivo Activado</p>
+                      <p className="text-[10px] text-warn font-medium px-10 mt-1 uppercase tracking-tighter">Al no haber una lista manual, Gemini aplicará automáticamente los siguientes criterios de vigilancia ética:</p>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {[
@@ -223,9 +223,9 @@ export default function AdminModerationPage() {
                         "Privacidad de Datos", 
                         "Ética Pedagógica"
                       ].map(t => (
-                        <div key={t} className="p-3 rounded-xl bg-white border border-amber-100 flex items-center gap-2 shadow-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                          <span className="text-[10px] font-bold text-amber-800 uppercase tracking-tighter">{t}</span>
+                        <div key={t} className="p-3 rounded-xl bg-white border border-warn/15 flex items-center gap-2 shadow-sm">
+                          <div className="w-1.5 h-1.5 rounded-full bg-warn animate-pulse" />
+                          <span className="text-[10px] font-bold text-warn uppercase tracking-tighter">{t}</span>
                         </div>
                       ))}
                     </div>
@@ -299,8 +299,8 @@ export default function AdminModerationPage() {
                           className={cn(
                             "p-4 rounded-2xl border-2 transition-all cursor-pointer group",
                             selectedSuggestions.includes(suggestion.topic) 
-                              ? "bg-rose-50 border-rose-200 shadow-sm" 
-                              : "bg-white border-border/50 hover:border-rose-100"
+                              ? "bg-danger/10 border-danger/20 shadow-sm" 
+                              : "bg-white border-border/50 hover:border-danger/15"
                           )}
                           onClick={() => {
                             if (selectedSuggestions.includes(suggestion.topic)) {
@@ -312,7 +312,7 @@ export default function AdminModerationPage() {
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div className="space-y-1">
-                              <p className="font-bold text-slate-900">{suggestion.topic}</p>
+                              <p className="font-bold text-foreground">{suggestion.topic}</p>
                               <p className="text-xs text-muted-foreground leading-relaxed italic">"{suggestion.reason}"</p>
                             </div>
                             <Checkbox 
@@ -332,7 +332,7 @@ export default function AdminModerationPage() {
                   {selectedSuggestions.length > 0 && (
                     <Button 
                       onClick={handleApplyAiSelection} 
-                      className="w-full h-14 rounded-2xl font-bold text-lg bg-slate-900"
+                      className="w-full h-14 rounded-2xl font-bold text-lg bg-foreground"
                     >
                       <Check className="mr-2 h-5 w-5" /> 
                       Incorporar {selectedSuggestions.length} Temas al Protocolo

@@ -145,17 +145,17 @@ export default function CampaignTrackingPage() {
               <TrendingUp className="h-3 w-3" />
               Inteligencia de Datos
             </div>
-            <h1 className="text-4xl font-headline font-bold tracking-tight text-slate-900">Track de Campañas</h1>
-            <p className="text-slate-500 max-w-xl">
+            <h1 className="text-4xl font-headline font-bold tracking-tight text-foreground">Track de Campañas</h1>
+            <p className="text-muted-foreground max-w-xl">
               Monitorea el rendimiento de tus lanzamientos en tiempo real y optimiza tu estrategia de conversión.
             </p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="rounded-xl border-slate-200 shadow-sm">
-              <Calendar className="mr-2 h-4 w-4 text-slate-400" />
+            <Button variant="outline" className="rounded-xl border-border shadow-sm">
+              <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
               Últimos 30 días
             </Button>
-            <Button className="rounded-xl bg-slate-900 shadow-lg shadow-slate-900/20 hover:bg-slate-800">
+            <Button className="rounded-xl bg-foreground shadow-lg shadow-foreground/20 hover:bg-foreground">
               <Filter className="mr-2 h-4 w-4" />
               Filtrar
             </Button>
@@ -165,10 +165,10 @@ export default function CampaignTrackingPage() {
         {/* Global KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Impacto Total', value: aggregateStats.impressions.toLocaleString(), icon: Rocket, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+12%' },
+            { label: 'Impacto Total', value: aggregateStats.impressions.toLocaleString(), icon: Rocket, color: 'text-primary', bg: 'bg-primary/10', trend: '+12%' },
             { label: 'Clicks Únicos', value: aggregateStats.clicks.toLocaleString(), icon: MousePointer2, color: 'text-pink-600', bg: 'bg-pink-50', trend: '+8%' },
-            { label: 'Conversiones', value: aggregateStats.conversions.toLocaleString(), icon: Target, color: 'text-amber-600', bg: 'bg-amber-50', trend: '+15%' },
-            { label: 'CR Promedio', value: `${((aggregateStats.conversions / aggregateStats.clicks) * 100 || 0).toFixed(1)}%`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+2%' },
+            { label: 'Conversiones', value: aggregateStats.conversions.toLocaleString(), icon: Target, color: 'text-warn', bg: 'bg-warn/10', trend: '+15%' },
+            { label: 'CR Promedio', value: `${((aggregateStats.conversions / aggregateStats.clicks) * 100 || 0).toFixed(1)}%`, icon: TrendingUp, color: 'text-success', bg: 'bg-success/10', trend: '+2%' },
           ].map((kpi, i) => (
             <Card key={i} className="border-none shadow-sm bg-white/50 backdrop-blur-sm overflow-hidden group">
               <CardContent className="p-6 relative">
@@ -179,12 +179,12 @@ export default function CampaignTrackingPage() {
                   <div className={cn("p-2 rounded-xl mb-4", kpi.bg)}>
                     <kpi.icon className={cn("h-5 w-5", kpi.color)} />
                   </div>
-                  <Badge variant="secondary" className="bg-white/80 text-[10px] font-bold text-emerald-600 border-none shadow-sm">
+                  <Badge variant="secondary" className="bg-white/80 text-[10px] font-bold text-success border-none shadow-sm">
                     {kpi.trend}
                   </Badge>
                 </div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{kpi.label}</p>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">{kpi.value}</h3>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{kpi.label}</p>
+                <h3 className="text-2xl font-bold text-foreground mt-1">{kpi.value}</h3>
               </CardContent>
             </Card>
           ))}
@@ -221,15 +221,15 @@ export default function CampaignTrackingPage() {
           {/* Channel Mix */}
           <Card className="border-none shadow-sm bg-white overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-lg font-bold text-slate-900">Mix de Canales</CardTitle>
+              <CardTitle className="text-lg font-bold text-foreground">Mix de Canales</CardTitle>
               <CardDescription>Distribución de tráfico por medio.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 {[
-                  { name: 'Instagram / TikTok', clicks: channelData[0].value, convs: aggregateStats.channelConvs?.social || 0, icon: Instagram, color: 'bg-indigo-500', pct: 65 },
+                  { name: 'Instagram / TikTok', clicks: channelData[0].value, convs: aggregateStats.channelConvs?.social || 0, icon: Instagram, color: 'bg-primary', pct: 65 },
                   { name: 'Email Marketing', clicks: channelData[1].value, convs: aggregateStats.channelConvs?.email || 0, icon: Mail, color: 'bg-pink-500', pct: 20 },
-                  { name: 'Ads (Meta/Google)', clicks: channelData[2].value, convs: aggregateStats.channelConvs?.ads || 0, icon: Megaphone, color: 'bg-amber-500', pct: 15 },
+                  { name: 'Ads (Meta/Google)', clicks: channelData[2].value, convs: aggregateStats.channelConvs?.ads || 0, icon: Megaphone, color: 'bg-warn', pct: 15 },
                 ].map((channel, i) => (
                   <div key={i} className="space-y-2">
                     <div className="flex justify-between items-center text-sm">
@@ -237,24 +237,24 @@ export default function CampaignTrackingPage() {
                         <div className={cn("p-1.5 rounded-lg text-white", channel.color)}>
                           <channel.icon className="h-3 w-3" />
                         </div>
-                        <span className="font-bold text-slate-700">{channel.name}</span>
+                        <span className="font-bold text-foreground">{channel.name}</span>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-slate-900 leading-none">{channel.clicks.toLocaleString()} clicks</p>
-                        <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{channel.convs} ventas</p>
+                        <p className="font-bold text-foreground leading-none">{channel.clicks.toLocaleString()} clicks</p>
+                        <p className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-tighter">{channel.convs} ventas</p>
                       </div>
                     </div>
                     <Progress value={channel.pct} className="h-1.5" />
                   </div>
                 ))}
               </div>
-              <div className="mt-8 p-4 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center gap-4">
+              <div className="mt-8 p-4 rounded-2xl bg-primary/10 border border-primary/15 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                  <TrendingUp className="h-5 w-5 text-indigo-600" />
+                  <TrendingUp className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-none">Insight IA</p>
-                  <p className="text-xs text-indigo-900 font-bold mt-1">
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest leading-none">Insight IA</p>
+                  <p className="text-xs text-foreground font-bold mt-1">
                     Instagram es tu canal con mejor ROI (+22%)
                   </p>
                 </div>
@@ -280,7 +280,7 @@ export default function CampaignTrackingPage() {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-[10px] uppercase tracking-widest font-bold text-slate-400 bg-slate-50/50 border-y border-slate-100">
+                <thead className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground bg-muted/50 border-y border-muted">
                   <tr>
                     <th className="px-6 py-4">Campaña / Mentor</th>
                     <th className="px-6 py-4 text-center">Impacto</th>
@@ -290,41 +290,41 @@ export default function CampaignTrackingPage() {
                     <th className="px-6 py-4 text-right">Estado</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-muted">
                   {enrichedCampaigns
                     .filter(c => c.title?.toLowerCase().includes(searchTerm.toLowerCase()))
                     .map((campaign, i) => (
-                    <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
+                    <tr key={i} className="group hover:bg-muted/50 transition-colors">
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs ring-2 ring-white shadow-sm group-hover:scale-110 transition-transform">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs ring-2 ring-white shadow-sm group-hover:scale-110 transition-transform">
                             {campaign.title?.[0] || 'C'}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 line-clamp-1">{campaign.title}</p>
-                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-0.5">
+                            <p className="font-bold text-foreground line-clamp-1">{campaign.title}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5">
                               Creado: {campaign.createdAt?.toDate ? format(campaign.createdAt.toDate(), 'dd MMM yyyy', { locale: es }) : 'Hoy'}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-center font-bold text-slate-600">
+                      <td className="px-6 py-5 text-center font-bold text-muted-foreground">
                         {campaign.stats.totalImpressions.toLocaleString()}
                       </td>
-                      <td className="px-6 py-5 text-center font-bold text-slate-600">
+                      <td className="px-6 py-5 text-center font-bold text-muted-foreground">
                         {campaign.stats.totalClicks.toLocaleString()}
                       </td>
-                      <td className="px-6 py-5 text-center font-bold text-slate-900">
+                      <td className="px-6 py-5 text-center font-bold text-foreground">
                         {campaign.stats.conversions.toLocaleString()}
                       </td>
                       <td className="px-6 py-5 text-center">
-                        <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold">
+                        <Badge className="bg-success/10 text-success border-none font-bold">
                           {campaign.cr}%
                         </Badge>
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Badge variant="outline" className="rounded-full border-slate-200 text-slate-500 font-bold text-[10px] uppercase px-3">
+                          <Badge variant="outline" className="rounded-full border-border text-muted-foreground font-bold text-[10px] uppercase px-3">
                             Activa
                           </Badge>
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
@@ -339,12 +339,12 @@ export default function CampaignTrackingPage() {
             </div>
             {enrichedCampaigns.length === 0 && (
               <div className="py-20 flex flex-col items-center gap-4 text-center">
-                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-border">
                   <Activity className="h-8 w-8" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-bold text-slate-900">Sin estadísticas aún</h3>
-                  <p className="text-sm text-slate-500 max-w-sm">Genera y publica tu primera campaña para empezar a recibir métricas de rendimiento real.</p>
+                  <h3 className="font-bold text-foreground">Sin estadísticas aún</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm">Genera y publica tu primera campaña para empezar a recibir métricas de rendimiento real.</p>
                 </div>
                 <Button variant="outline" className="rounded-xl mt-2" onClick={() => window.location.href='/mentoria/marketing/pages'}>
                   Ir a Generación

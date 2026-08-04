@@ -62,9 +62,9 @@ export function TermsUsageModal() {
         </DialogHeader>
 
         <div className="px-8 pb-8 space-y-6">
-          <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6">
+          <div className="bg-muted rounded-2xl border border-border p-6">
             <ScrollArea className="h-[300px] pr-4">
-              <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+              <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {termsConfig?.content || "Cargando términos institucionales..."}
               </div>
             </ScrollArea>

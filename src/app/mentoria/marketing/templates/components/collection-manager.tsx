@@ -75,14 +75,14 @@ export function CollectionManager({
     switch (status) {
       case "completed":
         return (
-          <Badge className="bg-green-100 text-green-800">Completado</Badge>
+          <Badge className="bg-success/15 text-success">Completado</Badge>
         );
       case "generating":
         return <Badge className="bg-blue-100 text-blue-800">Generando</Badge>;
       case "error":
-        return <Badge className="bg-red-100 text-red-800">Error</Badge>;
+        return <Badge className="bg-danger/15 text-danger">Error</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800">Desconocido</Badge>;
+        return <Badge className="bg-muted text-foreground">Desconocido</Badge>;
     }
   };
 
@@ -119,11 +119,11 @@ export function CollectionManager({
         {[1, 2, 3].map((i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-border rounded w-1/4"></div>
+              <div className="h-3 bg-border rounded w-1/2"></div>
             </CardHeader>
             <CardContent>
-              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-3 bg-border rounded w-3/4"></div>
             </CardContent>
           </Card>
         ))}
@@ -211,7 +211,7 @@ export function CollectionManager({
                           collection.createdAt?.toDate?.() || new Date(),
                           "dd MMM yyyy",
                         )}
-                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                        <span className="w-1 h-1 rounded-full bg-border"></span>
                         <span
                           className="truncate max-w-[300px]"
                           title={collection.directives || ""}
@@ -271,7 +271,7 @@ export function CollectionManager({
                               size="sm"
                               variant="ghost"
                               onClick={() => setConfirmDeleteId(null)}
-                              className="text-[10px] h-8 px-3 hover:bg-slate-100 rounded-lg font-bold"
+                              className="text-[10px] h-8 px-3 hover:bg-muted rounded-lg font-bold"
                             >
                               Cancelar
                             </Button>
@@ -281,7 +281,7 @@ export function CollectionManager({
                                 onDeleteCollection(collection.id);
                                 setConfirmDeleteId(null);
                               }}
-                              className="text-[10px] h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold"
+                              className="text-[10px] h-8 px-3 bg-danger hover:bg-danger text-white rounded-lg font-bold"
                             >
                               Confirmar
                             </Button>
@@ -294,7 +294,7 @@ export function CollectionManager({
                               e.stopPropagation();
                               setConfirmDeleteId(collection.id);
                             }}
-                            className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
+                            className="h-8 w-8 text-danger hover:text-danger hover:bg-danger/10 rounded-lg"
                             title="Eliminar colección"
                           >
                             <Trash2 className="h-4 w-4" />

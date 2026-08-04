@@ -172,21 +172,21 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
   };
 
   const colorStyles = {
-    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-100', iconBg: 'bg-emerald-500', iconShadow: 'shadow-emerald-500/20', textHeading: 'text-emerald-900', textMuted: 'text-emerald-700' },
-    indigo: { bg: 'bg-indigo-50', border: 'border-indigo-100', iconBg: 'bg-indigo-600', iconShadow: 'shadow-indigo-600/20', textHeading: 'text-indigo-900', textMuted: 'text-indigo-700' },
-    amber: { bg: 'bg-amber-50', border: 'border-amber-100', iconBg: 'bg-amber-500', iconShadow: 'shadow-amber-500/20', textHeading: 'text-amber-900', textMuted: 'text-amber-700' },
+    emerald: { bg: 'bg-success/10', border: 'border-success/15', iconBg: 'bg-success', iconShadow: 'shadow-success/20', textHeading: 'text-success', textMuted: 'text-success' },
+    indigo: { bg: 'bg-primary/10', border: 'border-primary/15', iconBg: 'bg-primary', iconShadow: 'shadow-primary/20', textHeading: 'text-foreground', textMuted: 'text-primary' },
+    amber: { bg: 'bg-warn/10', border: 'border-warn/15', iconBg: 'bg-warn', iconShadow: 'shadow-warn/20', textHeading: 'text-warn', textMuted: 'text-warn' },
   };
 
   return (
     <div className="space-y-8 pb-20">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+          <h1 className="text-4xl font-black text-foreground tracking-tight flex items-center gap-3">
             {title}
           </h1>
-          <p className="text-slate-500 text-lg font-medium">{description}</p>
+          <p className="text-muted-foreground text-lg font-medium">{description}</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="h-14 px-8 rounded-2xl font-bold bg-slate-900 text-white flex items-center gap-2 hover:scale-105 transition-all">
+        <Button onClick={() => handleOpenDialog()} className="h-14 px-8 rounded-2xl font-bold bg-foreground text-white flex items-center gap-2 hover:scale-105 transition-all">
           <Plus className="h-5 w-5" /> Añadir Método
         </Button>
       </header>
@@ -212,46 +212,46 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
       <Card className="rounded-lg overflow-hidden bg-white">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-slate-50/80">
+            <TableHeader className="bg-muted/80">
               <TableRow className="border-none">
-                <TableHead className="py-6 px-10 text-slate-400 uppercase tracking-widest text-[10px] font-black">Plataforma / Nombre</TableHead>
-                <TableHead className="py-6 text-slate-400 uppercase tracking-widest text-[10px] font-black">Estado</TableHead>
-                <TableHead className="py-6 text-slate-400 uppercase tracking-widest text-[10px] font-black">Detalles</TableHead>
-                <TableHead className="py-6 px-10 text-slate-400 uppercase tracking-widest text-[10px] font-black text-right">Acciones</TableHead>
+                <TableHead className="py-6 px-10 text-muted-foreground uppercase tracking-widest text-[10px] font-black">Plataforma / Nombre</TableHead>
+                <TableHead className="py-6 text-muted-foreground uppercase tracking-widest text-[10px] font-black">Estado</TableHead>
+                <TableHead className="py-6 text-muted-foreground uppercase tracking-widest text-[10px] font-black">Detalles</TableHead>
+                <TableHead className="py-6 px-10 text-muted-foreground uppercase tracking-widest text-[10px] font-black text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {methodsLoading ? (
                 <TableRow><TableCell colSpan={4} className="py-24 text-center">
-                  <Loader2 className="animate-spin h-10 w-10 text-indigo-600 mx-auto mb-4" />
-                  <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Sincronizando pasarelas...</p>
+                  <Loader2 className="animate-spin h-10 w-10 text-primary mx-auto mb-4" />
+                  <p className="font-black text-muted-foreground uppercase tracking-widest text-xs">Sincronizando pasarelas...</p>
                 </TableCell></TableRow>
               ) : methods?.length === 0 ? (
                 <TableRow><TableCell colSpan={4} className="py-24 text-center">
                   <div className="max-w-xs mx-auto space-y-4">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                    <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto text-border">
                       <CreditCard className="h-10 w-10" />
                     </div>
                     <div>
-                      <p className="font-black text-slate-900">No hay métodos configurados</p>
-                      <p className="text-xs text-slate-400 font-medium leading-relaxed">Configura al menos un método de cobro.</p>
+                      <p className="font-black text-foreground">No hay métodos configurados</p>
+                      <p className="text-xs text-muted-foreground font-medium leading-relaxed">Configura al menos un método de cobro.</p>
                     </div>
                     <Button onClick={() => handleOpenDialog()} variant="outline" className="rounded-xl font-bold border-2">Añadir el primero</Button>
                   </div>
                 </TableCell></TableRow>
               ) : methods?.map((method) => (
-                <TableRow key={method.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100">
+                <TableRow key={method.id} className="hover:bg-muted/50 transition-colors border-b border-muted">
                   <TableCell className="px-10 py-8">
                     <div className="flex items-center gap-5">
                       <div className={cn(
                         "w-14 h-14 rounded-2xl flex items-center justify-center transition-colors",
-                        method.isActive ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-400"
+                        method.isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                       )}>
                         {method.type === 'mercadopago' ? <Wallet className="h-7 w-7" /> : <CreditCard className="h-7 w-7" />}
                       </div>
                       <div>
-                        <p className="font-black text-lg text-slate-900">{method.name}</p>
-                        <Badge variant="outline" className="text-[9px] uppercase font-black text-slate-400 mt-1 border-slate-200">
+                        <p className="font-black text-lg text-foreground">{method.name}</p>
+                        <Badge variant="outline" className="text-[9px] uppercase font-black text-muted-foreground mt-1 border-border">
                           {method.type === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'}
                         </Badge>
                       </div>
@@ -265,13 +265,13 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                       />
                       <span className={cn(
                         "text-[10px] font-black uppercase tracking-widest",
-                        method.isActive ? "text-emerald-600" : "text-slate-400"
+                        method.isActive ? "text-success" : "text-muted-foreground"
                       )}>
                         {method.isActive ? 'Activo' : 'Inactivo'}
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-[10px] text-slate-400 font-bold">
+                  <TableCell className="font-mono text-[10px] text-muted-foreground font-bold">
                     {method.type === 'mercadopago' ? (
                       <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1"><KeyRound className="h-3 w-3" /> {method.config?.publicKey?.substring(0, 15)}...</span>
@@ -282,10 +282,10 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   </TableCell>
                   <TableCell className="px-10 text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(method)} className="h-12 w-12 rounded-2xl hover:bg-slate-100 text-slate-600">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(method)} className="h-12 w-12 rounded-2xl hover:bg-muted text-muted-foreground">
                         <Pencil className="h-5 w-5" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)} className="h-12 w-12 rounded-2xl hover:bg-rose-50 text-rose-500">
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteMethod(method.id)} className="h-12 w-12 rounded-2xl hover:bg-danger/10 text-danger">
                         <Trash2 className="h-5 w-5" />
                       </Button>
                     </div>
@@ -318,21 +318,21 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
           <form onSubmit={(e) => { e.preventDefault(); handleSaveMethod(); }} className="p-10 space-y-8 bg-white max-h-[70vh] overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nombre Descriptivo</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nombre Descriptivo</Label>
                 <Input 
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
                   placeholder="Ej: Mercado Pago Personal" 
-                  className="bg-slate-50 border-none px-6 font-bold text-slate-800"
+                  className="bg-muted border-none px-6 font-bold text-foreground"
                  size="xl" />
               </div>
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pasarela / Plataforma</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Pasarela / Plataforma</Label>
                 <Select 
                   value={formData.type} 
                   onValueChange={(val) => setFormData({...formData, type: val})}
                 >
-                  <SelectTrigger size="xl" className="bg-slate-50 border-none px-6 font-bold text-slate-800">
+                  <SelectTrigger size="xl" className="bg-muted border-none px-6 font-bold text-foreground">
                     <SelectValue placeholder="Seleccionar plataforma" />
                   </SelectTrigger>
                   <SelectContent className="border-none">
@@ -346,14 +346,14 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
             </div>
 
             {formData.type === 'mercadopago' ? (
-              <div className="p-8 bg-indigo-50/50 rounded-lg border border-indigo-100 space-y-6">
+              <div className="p-8 bg-primary/10/50 rounded-lg border border-primary/15 space-y-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <ShieldCheck className="h-5 w-5 text-indigo-600" />
-                  <span className="text-xs font-black uppercase tracking-widest text-indigo-900">Credenciales Mercado Pago</span>
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <span className="text-xs font-black uppercase tracking-widest text-foreground">Credenciales Mercado Pago</span>
                 </div>
                 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">Public Key</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">Public Key</Label>
                   <Input 
                     value={formData.config.publicKey} 
                     onChange={e => setFormData({...formData, config: { ...formData.config, publicKey: e.target.value }})} 
@@ -363,7 +363,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                 </div>
 
                 <div className="space-y-3 relative">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">Access Token (Privado)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">Access Token (Privado)</Label>
                   <div className="relative">
                     <Input 
                       type={showSecret ? "text" : "password"}
@@ -375,29 +375,29 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                     <button 
                       type="button"
                       onClick={() => setShowSecret(!showSecret)}
-                      className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                     >
                       {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-indigo-100">
-                  <Info className="h-4 w-4 text-indigo-600 shrink-0" />
-                  <p className="text-[10px] text-indigo-800 leading-relaxed font-medium">
+                <div className="flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-primary/15">
+                  <Info className="h-4 w-4 text-primary shrink-0" />
+                  <p className="text-[10px] text-foreground leading-relaxed font-medium">
                     Consigue estas credenciales en el <a href="https://www.mercadopago.com.ar/developers/panel/credentials" target="_blank" className="font-bold underline">Panel de Desarrolladores</a> de Mercado Pago.
                   </p>
                 </div>
               </div>
             ) : formData.type === 'getnet' ? (
-              <div className="p-8 bg-rose-50/50 rounded-lg border border-rose-100 space-y-6">
+              <div className="p-8 bg-danger/10/50 rounded-lg border border-danger/15 space-y-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <ShieldCheck className="h-5 w-5 text-rose-600" />
-                  <span className="text-xs font-black uppercase tracking-widest text-rose-900">Credenciales Getnet (API Global)</span>
+                  <ShieldCheck className="h-5 w-5 text-danger" />
+                  <span className="text-xs font-black uppercase tracking-widest text-danger">Credenciales Getnet (API Global)</span>
                 </div>
                 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">Seller ID</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">Seller ID</Label>
                   <Input 
                     value={formData.config.sellerId} 
                     onChange={e => setFormData({...formData, config: { ...formData.config, sellerId: e.target.value }})} 
@@ -408,7 +408,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">Client ID</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">Client ID</Label>
                     <Input 
                       value={formData.config.clientId} 
                       onChange={e => setFormData({...formData, config: { ...formData.config, clientId: e.target.value }})} 
@@ -418,7 +418,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   </div>
 
                   <div className="space-y-3 relative">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">Client Secret</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">Client Secret</Label>
                     <div className="relative">
                       <Input 
                         type={showSecret ? "text" : "password"}
@@ -430,7 +430,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                       <button 
                         type="button"
                         onClick={() => setShowSecret(!showSecret)}
-                        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-600 transition-colors"
+                        className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-danger transition-colors"
                       >
                         {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -438,23 +438,23 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-rose-100">
-                  <Info className="h-4 w-4 text-rose-600 shrink-0" />
-                  <p className="text-[10px] text-rose-800 leading-relaxed font-medium">
+                <div className="flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-danger/15">
+                  <Info className="h-4 w-4 text-danger shrink-0" />
+                  <p className="text-[10px] text-danger leading-relaxed font-medium">
                     Encuentra estas credenciales en el <a href="https://developers.globalgetnet.com/" target="_blank" className="font-bold underline">Developer Portal</a> de Getnet.
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="p-8 bg-emerald-50/50 rounded-lg border border-emerald-100 space-y-6">
+              <div className="p-8 bg-success/10/50 rounded-lg border border-success/15 space-y-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <ShieldCheck className="h-5 w-5 text-emerald-600" />
-                  <span className="text-xs font-black uppercase tracking-widest text-emerald-900">Datos Bancarios</span>
+                  <ShieldCheck className="h-5 w-5 text-success" />
+                  <span className="text-xs font-black uppercase tracking-widest text-success">Datos Bancarios</span>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Titular de la Cuenta</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Titular de la Cuenta</Label>
                     <Input 
                       value={formData.config.titularName} 
                       onChange={e => setFormData({...formData, config: { ...formData.config, titularName: e.target.value }})} 
@@ -463,7 +463,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                      size="xl" />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Banco / Entidad</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Banco / Entidad</Label>
                     <Input 
                       value={formData.config.bankName} 
                       onChange={e => setFormData({...formData, config: { ...formData.config, bankName: e.target.value }})} 
@@ -474,7 +474,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">CBU / CVU</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">CBU / CVU</Label>
                   <Input 
                     value={formData.config.cbu} 
                     onChange={e => setFormData({...formData, config: { ...formData.config, cbu: e.target.value }})} 
@@ -484,7 +484,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Alias de la Cuenta</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Alias de la Cuenta</Label>
                   <Input 
                     value={formData.config.alias} 
                     onChange={e => setFormData({...formData, config: { ...formData.config, alias: e.target.value }})} 
@@ -495,10 +495,10 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
               </div>
             )}
 
-            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100">
+            <div className="flex items-center justify-between p-6 bg-muted rounded-3xl border border-muted">
               <div className="space-y-1">
-                <Label className="text-sm font-black text-slate-800">Estado del Método</Label>
-                <p className="text-[10px] text-slate-400 font-medium tracking-tight">Los métodos inactivos no se utilizarán.</p>
+                <Label className="text-sm font-black text-foreground">Estado del Método</Label>
+                <p className="text-[10px] text-muted-foreground font-medium tracking-tight">Los métodos inactivos no se utilizarán.</p>
               </div>
               <Switch 
                 checked={formData.isActive}
@@ -509,7 +509,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
             <Button 
               type="submit" 
               disabled={loading || !formData.name} 
-              className="w-full h-16 rounded-[1.5rem] text-xl font-black bg-slate-900 text-white hover:scale-[1.02] transition-all"
+              className="w-full h-16 rounded-[1.5rem] text-xl font-black bg-foreground text-white hover:scale-[1.02] transition-all"
             >
               {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <Save className="h-6 w-6 mr-3" />} 
               {editingMethod ? 'Actualizar Pasarela' : 'Guardar Método'}

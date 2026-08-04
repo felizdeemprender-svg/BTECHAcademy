@@ -123,14 +123,14 @@ export function ImageEditor({
 
   return (
     <div className="space-y-3">
-      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{label}</Label>
+      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">{label}</Label>
       <div className="flex gap-2">
         <div className="flex-1 flex items-center">
           {url && (
             <Button
               variant="outline"
               size="sm"
-              className="h-10 border-emerald-300 text-emerald-600 hover:bg-emerald-50 gap-2 font-bold text-[10px] uppercase tracking-widest"
+              className="h-10 border-success/30 text-success hover:bg-success/10 gap-2 font-bold text-[10px] uppercase tracking-widest"
               onClick={() => {
                 const link = document.createElement('a');
                 link.href = url;
@@ -152,7 +152,7 @@ export function ImageEditor({
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 shrink-0 border-slate-200 text-violet-500 hover:bg-violet-50" 
+          className="h-10 w-10 shrink-0 border-border text-primary hover:bg-primary/10" 
           onClick={() => handleGenerateAi('free')}
           disabled={isBusy}
           title="Regenerar con IA Free (Gemini)"
@@ -164,7 +164,7 @@ export function ImageEditor({
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 shrink-0 border-violet-300 text-violet-600 hover:bg-violet-100" 
+          className="h-10 w-10 shrink-0 border-primary/30 text-primary hover:bg-primary/15" 
           onClick={() => handleGenerateAi('premium')}
           disabled={isBusy}
           title="Generar con IA Premium"
@@ -176,7 +176,7 @@ export function ImageEditor({
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 shrink-0 border-slate-200" 
+          className="h-10 w-10 shrink-0 border-border" 
           onClick={() => fileRef.current?.click()}
           disabled={isBusy}
           title="Subir imagen local"
@@ -197,16 +197,16 @@ export function ImageEditor({
         <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleUpload} />
       </div>
       {generatingAi && (
-        <div className="flex items-center gap-2 text-[10px] font-bold text-violet-500 animate-pulse px-1">
+        <div className="flex items-center gap-2 text-[10px] font-bold text-primary animate-pulse px-1">
           <Sparkles className="h-3 w-3" />
           Procesando con Motor IA Inteligente...
         </div>
       )}
-      <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50">
+      <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-muted bg-muted">
         {(url && typeof url === 'string') ? (
           <Image src={url} alt="Preview" fill className="object-cover" unoptimized />
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 gap-2">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-border gap-2">
             <ImageIcon className="h-8 w-8 opacity-20" />
             <span className="text-[9px] font-bold uppercase tracking-widest opacity-40">Sin imagen</span>
           </div>

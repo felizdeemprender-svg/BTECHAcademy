@@ -119,7 +119,7 @@ export const TemplateViewerProduction = ({
                 {collection && (
                   <div className="flex gap-8 text-sm">
                     <span className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-success rounded-full"></div>
                       {collection.assets?.landings?.length || 0} Landings
                     </span>
                     <span className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export const TemplateViewerProduction = ({
                       {collection.assets?.emails?.length || 0} Emails
                     </span>
                     <span className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-primary rounded-full"></div>
                       {collection.assets?.socials?.length || 0} Social
                     </span>
                     <span className="flex items-center gap-2">
@@ -170,7 +170,7 @@ export const TemplateViewerProduction = ({
                       (l: any, lIdx: number) => (
                         <Card key={lIdx} className="overflow-hidden">
                           <CardContent className="p-0">
-                          <div className="flex justify-center w-full h-[600px] overflow-hidden bg-gray-50 rounded-b-3xl">
+                          <div className="flex justify-center w-full h-[600px] overflow-hidden bg-muted rounded-b-3xl">
                             <iframe 
                               src={`/v/${collection.id}?v=${lIdx}&preview=true`} 
                               className="w-[1280px] h-[calc(600px*1.28)] origin-top-left"
@@ -221,7 +221,7 @@ export const TemplateViewerProduction = ({
                     <h3 className="text-lg font-bold">Emails</h3>
                     <Badge
                       variant="secondary"
-                      className="bg-red-100 text-red-800 border-red-200"
+                      className="bg-danger/15 text-danger border-danger/20"
                     >
                       {collection.assets?.emails?.length || 0} Emails
                     </Badge>
@@ -274,7 +274,7 @@ export const TemplateViewerProduction = ({
                     <div className="flex gap-4">
                       <Badge
                         variant="secondary"
-                        className="bg-purple-100 text-purple-800 border-purple-200"
+                        className="bg-primary/15 text-foreground border-primary/20"
                       >
                         {collection.assets?.socials?.filter(
                           (s: any) => s.platform === "instagram",
@@ -301,7 +301,7 @@ export const TemplateViewerProduction = ({
                       </Badge>
                       <Badge
                         variant="secondary"
-                        className="bg-black text-white border-gray-600"
+                        className="bg-black text-white border-muted-foreground"
                       >
                         {collection.assets?.socials?.filter(
                           (s: any) => s.platform === "tiktok",

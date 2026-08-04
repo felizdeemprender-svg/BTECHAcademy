@@ -105,37 +105,37 @@ export default function ReferidosDashboard() {
         
         {/* Header */}
         <div>
-          <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl md:text-4xl font-black text-foreground tracking-tight flex items-center gap-3">
             Panel de Referidos
             <Badge className="bg-accent/10 text-accent border-none rounded-full px-3 py-1">Embajador</Badge>
           </h1>
-          <p className="text-sm md:text-base text-slate-500 mt-2 font-medium">
+          <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium">
             Gestiona tus enlaces asignados y monitorea en tiempo real los leads generados y tus conversiones.
           </p>
         </div>
 
         {/* Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-none rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-primary to-primary text-white overflow-hidden relative">
             <Users className="absolute -right-4 -bottom-4 h-32 w-32 opacity-10" />
             <CardContent className="p-8">
-              <p className="text-indigo-100 font-bold uppercase text-[10px] tracking-widest mb-2">Total Leads</p>
+              <p className="text-primary/15 font-bold uppercase text-[10px] tracking-widest mb-2">Total Leads</p>
               <p className="text-5xl font-black">{totalLeads}</p>
             </CardContent>
           </Card>
           
-          <Card className="border-none rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-success to-teal-600 text-white overflow-hidden relative">
             <Target className="absolute -right-4 -bottom-4 h-32 w-32 opacity-10" />
             <CardContent className="p-8">
-              <p className="text-emerald-100 font-bold uppercase text-[10px] tracking-widest mb-2">Ventas Exitosas</p>
+              <p className="text-success/15 font-bold uppercase text-[10px] tracking-widest mb-2">Ventas Exitosas</p>
               <p className="text-5xl font-black">{convertedLeads}</p>
             </CardContent>
           </Card>
 
-          <Card className="border-none rounded-2xl bg-slate-900 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-foreground text-white overflow-hidden relative">
             <Percent className="absolute -right-4 -bottom-4 h-32 w-32 opacity-5" />
             <CardContent className="p-8">
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-2">Conversión</p>
+              <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest mb-2">Conversión</p>
               <p className="text-5xl font-black text-accent">{conversionRate}%</p>
             </CardContent>
           </Card>
@@ -143,14 +143,14 @@ export default function ReferidosDashboard() {
 
         {/* Landings Asignadas */}
         <div className="space-y-6">
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <LinkIcon className="h-5 w-5 text-accent" />
             Mis Enlaces (Landings Asignadas)
           </h2>
           
           {landings.length === 0 ? (
-            <div className="bg-slate-50 rounded-2xl p-10 border border-dashed border-slate-200 text-center">
-              <p className="text-slate-500">No tienes landings asignadas actualmente.</p>
+            <div className="bg-muted rounded-2xl p-10 border border-dashed border-border text-center">
+              <p className="text-muted-foreground">No tienes landings asignadas actualmente.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -161,22 +161,22 @@ export default function ReferidosDashboard() {
                   
                 return (
                   <Card key={landing.id} className="border-none shadow-lg rounded-2xl overflow-hidden transition-all">
-                    <CardHeader className="bg-slate-50 pb-4 border-b border-slate-100">
+                    <CardHeader className="bg-muted pb-4 border-b border-muted">
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg text-slate-800 line-clamp-1">{landing.title}</CardTitle>
+                          <CardTitle className="text-lg text-foreground line-clamp-1">{landing.title}</CardTitle>
                           <CardDescription className="text-xs mt-1">
                             {landing.courseName || 'Programa General'}
                           </CardDescription>
                         </div>
-                        <Badge className={isActive ? 'bg-emerald-500' : 'bg-red-500'}>
+                        <Badge className={isActive ? 'bg-success' : 'bg-danger'}>
                           {isActive ? 'Activa' : 'Expirada'}
                         </Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="p-6">
                       <div className="flex flex-col gap-4">
-                        <div className="bg-slate-100/50 p-3 rounded-xl border border-slate-200/60 font-mono text-xs text-slate-600 truncate">
+                        <div className="bg-muted/50 p-3 rounded-xl border border-border/60 font-mono text-xs text-muted-foreground truncate">
                           {`${window.location.origin}/v/${landing.id}?ref=${profile?.uid}`}
                         </div>
                         <div className="flex items-center gap-3">
@@ -206,7 +206,7 @@ export default function ReferidosDashboard() {
 
         {/* Historial de Leads */}
         <div className="space-y-6">
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Users className="h-5 w-5 text-accent" />
             Historial de Leads
           </h2>
@@ -214,17 +214,17 @@ export default function ReferidosDashboard() {
           <Card className="rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-[10px] text-slate-500 uppercase bg-slate-50/80 font-black tracking-widest border-b border-slate-100">
+                <thead className="text-[10px] text-muted-foreground uppercase bg-muted/80 font-black tracking-widest border-b border-muted">
                   <tr>
                     <th className="px-6 py-4">Estudiante</th>
                     <th className="px-6 py-4">Fecha</th>
                     <th className="px-6 py-4">Estado</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                   {leads.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-6 py-10 text-center text-slate-500 italic">
+                      <td colSpan={3} className="px-6 py-10 text-center text-muted-foreground italic">
                         Aún no tienes leads registrados. Comparte tus enlaces para comenzar.
                       </td>
                     </tr>
@@ -235,21 +235,21 @@ export default function ReferidosDashboard() {
                         : 'Reciente';
                       
                       return (
-                        <tr key={lead.id} className="hover:bg-slate-50/50 transition-colors">
+                        <tr key={lead.id} className="hover:bg-muted/50 transition-colors">
                           <td className="px-6 py-4">
-                            <div className="font-bold text-slate-800">{lead.studentName}</div>
-                            <div className="text-xs text-slate-500">{lead.studentEmail}</div>
+                            <div className="font-bold text-foreground">{lead.studentName}</div>
+                            <div className="text-xs text-muted-foreground">{lead.studentEmail}</div>
                           </td>
-                          <td className="px-6 py-4 text-slate-500 text-xs font-medium">
+                          <td className="px-6 py-4 text-muted-foreground text-xs font-medium">
                             {date}
                           </td>
                           <td className="px-6 py-4">
                             {lead.status === 'converted' ? (
-                              <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-md text-[11px] font-bold">
+                              <div className="inline-flex items-center gap-1.5 bg-success/10 text-success px-2.5 py-1 rounded-md text-[11px] font-bold">
                                 <CheckCircle2 className="h-3.5 w-3.5" /> Pago Confirmado
                               </div>
                             ) : (
-                              <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-md text-[11px] font-bold">
+                              <div className="inline-flex items-center gap-1.5 bg-warn/10 text-warn px-2.5 py-1 rounded-md text-[11px] font-bold">
                                 <Clock className="h-3.5 w-3.5" /> Pendiente de Pago
                               </div>
                             )}

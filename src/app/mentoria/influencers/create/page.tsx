@@ -84,7 +84,7 @@ export default function AltaInfluencerPage() {
       toast({
         title: "¡Embajador Dado de Alta!",
         description: `${foundUser.displayName || foundUser.email} ahora es tu embajador y aparece en tu panel de Control de Embajadores.`,
-        className: "bg-emerald-600 text-white border-none"
+        className: "bg-success text-white border-none"
       });
 
     } catch (err) {
@@ -115,11 +115,11 @@ export default function AltaInfluencerPage() {
         
         {/* Header */}
         <div>
-          <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl md:text-4xl font-black text-foreground tracking-tight flex items-center gap-3">
             Alta de Embajador
-            <Badge className="bg-indigo-100 text-indigo-700 border-none rounded-full px-3 py-1">Gestión de Red</Badge>
+            <Badge className="bg-primary/15 text-primary border-none rounded-full px-3 py-1">Gestión de Red</Badge>
           </h1>
-          <p className="text-sm md:text-base text-slate-500 mt-2 font-medium max-w-2xl">
+          <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium max-w-2xl">
             Convierte a cualquier usuario o alumno existente en la plataforma en un embajador (referido) para que pueda promocionar tus cursos.
           </p>
         </div>
@@ -129,7 +129,7 @@ export default function AltaInfluencerPage() {
           {/* Columna de Búsqueda */}
           <div className="md:col-span-3 space-y-6">
             <Card className="border-none rounded-2xl overflow-hidden bg-white">
-              <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-6">
+              <CardHeader className="bg-muted/80 border-b border-muted pb-6">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Search className="h-5 w-5 text-accent" />
                   Buscar Usuario
@@ -147,21 +147,21 @@ export default function AltaInfluencerPage() {
                       required
                       value={searchEmail}
                       onChange={e => setSearchEmail(e.target.value)}
-                      className="pl-12 bg-slate-50 border-slate-200"
+                      className="pl-12 bg-muted border-border"
                      size="lg" />
-                    <Search className="h-5 w-5 text-slate-400 absolute left-4 top-3.5" />
+                    <Search className="h-5 w-5 text-muted-foreground absolute left-4 top-3.5" />
                   </div>
                   <Button 
                     type="submit" 
                     disabled={isSearching}
-                    className="h-12 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold"
+                    className="h-12 px-6 rounded-xl bg-foreground hover:bg-foreground text-white font-bold"
                   >
                     {isSearching ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Buscar'}
                   </Button>
                 </form>
 
                 {searchError && (
-                  <div className="mt-6 flex items-start gap-3 bg-rose-50 text-rose-600 p-4 rounded-xl">
+                  <div className="mt-6 flex items-start gap-3 bg-danger/10 text-danger p-4 rounded-xl">
                     <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                     <div className="text-sm font-medium">{searchError}</div>
                   </div>
@@ -169,21 +169,21 @@ export default function AltaInfluencerPage() {
 
                 {foundUser && (
                   <div className="mt-8 animate-in fade-in slide-in-from-bottom-2">
-                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Resultado</h3>
-                    <div className="flex flex-col sm:flex-row items-center gap-6 p-6 rounded-2xl border-2 border-slate-100 bg-white shadow-sm">
+                    <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-4">Resultado</h3>
+                    <div className="flex flex-col sm:flex-row items-center gap-6 p-6 rounded-2xl border-2 border-muted bg-white shadow-sm">
                       <Avatar className="h-16 w-16 shadow-lg">
                         <AvatarImage src={foundUser.photoURL} />
-                        <AvatarFallback className="bg-indigo-100 text-indigo-700 text-xl font-black">
+                        <AvatarFallback className="bg-primary/15 text-primary text-xl font-black">
                           {(foundUser.displayName || foundUser.email).charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       
                       <div className="flex-1 text-center sm:text-left">
-                        <h4 className="text-lg font-bold text-slate-900">{foundUser.displayName || 'Usuario sin nombre'}</h4>
-                        <p className="text-sm text-slate-500 mb-2">{foundUser.email}</p>
+                        <h4 className="text-lg font-bold text-foreground">{foundUser.displayName || 'Usuario sin nombre'}</h4>
+                        <p className="text-sm text-muted-foreground mb-2">{foundUser.email}</p>
                         
                         <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                          <Badge variant="secondary" className="text-[10px] uppercase font-bold bg-slate-100 text-slate-600">
+                          <Badge variant="secondary" className="text-[10px] uppercase font-bold bg-muted text-muted-foreground">
                             Usuario Registrado
                           </Badge>
                         </div>
@@ -191,7 +191,7 @@ export default function AltaInfluencerPage() {
 
                       <div className="shrink-0 w-full sm:w-auto mt-4 sm:mt-0">
                         {(foundUser.roles || []).includes('referido') ? (
-                          <div className="flex items-center justify-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-3 rounded-xl text-sm font-bold w-full">
+                          <div className="flex items-center justify-center gap-2 bg-success/10 text-success px-4 py-3 rounded-xl text-sm font-bold w-full">
                             <CheckCircle2 className="h-5 w-5" /> Ya es Embajador
                           </div>
                         ) : (
@@ -214,27 +214,27 @@ export default function AltaInfluencerPage() {
 
           {/* Columna de Ayuda */}
           <div className="md:col-span-2 space-y-6">
-            <Card className="rounded-lg bg-indigo-50/50">
+            <Card className="rounded-lg bg-primary/10/50">
               <CardContent className="p-6">
-                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center mb-4">
-                  <UserPlus className="h-5 w-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center mb-4">
+                  <UserPlus className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="font-bold text-slate-800 mb-2">¿Cómo funciona?</h3>
-                <ul className="space-y-3 text-sm text-slate-600 font-medium">
+                <h3 className="font-bold text-foreground mb-2">¿Cómo funciona?</h3>
+                <ul className="space-y-3 text-sm text-muted-foreground font-medium">
                   <li className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0 mt-0.5">1</div>
+                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-0.5">1</div>
                     Pídele al embajador que se registre gratuitamente en la plataforma.
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0 mt-0.5">2</div>
+                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-0.5">2</div>
                     Busca aquí su correo electrónico de registro.
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0 mt-0.5">3</div>
+                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-0.5">3</div>
                     Haz clic en "Convertir en Embajador" para habilitarle su panel.
                   </li>
                   <li className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0 mt-0.5">4</div>
+                    <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-0.5">4</div>
                     Ya podrás asignarle Landings desde el Creador de Campañas.
                   </li>
                 </ul>

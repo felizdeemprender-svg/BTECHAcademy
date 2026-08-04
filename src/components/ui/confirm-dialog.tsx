@@ -54,7 +54,7 @@ function ConfirmDialog({
           {icon && (
             <div className={cn(
               "w-14 h-14 rounded-full flex items-center justify-center mb-4",
-              isDestructive ? "bg-rose-50 text-rose-500" : "bg-primary/10 text-primary",
+              isDestructive ? "bg-danger/10 text-danger" : "bg-primary/10 text-primary",
               iconClassName
             )}>
               {icon}

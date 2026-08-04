@@ -94,12 +94,12 @@ export function AudioUploader({ pageId, onUploadComplete, currentAudioUrl }: Aud
     <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-400">
+          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
             <Music className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-black uppercase text-slate-400 tracking-widest">Banda Sonora Personalizada</p>
-            <p className="text-[10px] font-bold text-slate-500 italic">Sincronización automática con la duración del video</p>
+            <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">Banda Sonora Personalizada</p>
+            <p className="text-[10px] font-bold text-muted-foreground italic">Sincronización automática con la duración del video</p>
           </div>
         </div>
         
@@ -107,7 +107,7 @@ export function AudioUploader({ pageId, onUploadComplete, currentAudioUrl }: Aud
           <Button 
             variant="secondary" 
             size="sm" 
-            className="rounded-xl bg-white text-slate-950 hover:bg-slate-200 transition-all h-10 px-6 font-black text-[10px] uppercase tracking-wider shadow-lg"
+            className="rounded-xl bg-white text-foreground hover:bg-border transition-all h-10 px-6 font-black text-[10px] uppercase tracking-wider shadow-lg"
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="h-4 w-4 mr-2" />
@@ -127,7 +127,7 @@ export function AudioUploader({ pageId, onUploadComplete, currentAudioUrl }: Aud
       {uploading && (
         <div className="space-y-2 animate-in fade-in">
           <div className="flex justify-between text-[10px] font-black uppercase">
-            <span className="text-violet-400 flex items-center gap-2">
+            <span className="text-primary flex items-center gap-2">
               <Loader2 className="h-3 w-3 animate-spin" /> Subiendo Assets...
             </span>
             <span className="text-white">{Math.round(progress)}%</span>
@@ -138,20 +138,20 @@ export function AudioUploader({ pageId, onUploadComplete, currentAudioUrl }: Aud
 
       {currentAudioUrl && !uploading && (
         <div className="flex items-center gap-4 p-3 bg-white/5 rounded-2xl border border-white/10 animate-in slide-in-from-top-2">
-          <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-success/10 text-success flex items-center justify-center">
             <CheckCircle2 className="h-4 w-4" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold text-white truncate">Audio Sincronizado</p>
-            <audio src={currentAudioUrl} controls className="h-6 w-full mt-1 accent-violet-500 invert brightness-200" />
+            <audio src={currentAudioUrl} controls className="h-6 w-full mt-1 accent-primary invert brightness-200" />
           </div>
         </div>
       )}
 
       {!currentAudioUrl && !uploading && (
-        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-amber-500/20 border-dashed">
-          <AlertCircle className="h-4 w-4 text-amber-500" />
-          <p className="text-[10px] font-medium text-amber-500/80">No hay música asignada. El video se generará sin audio o con un loop genérico.</p>
+        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-warn/20 border-dashed">
+          <AlertCircle className="h-4 w-4 text-warn" />
+          <p className="text-[10px] font-medium text-warn/80">No hay música asignada. El video se generará sin audio o con un loop genérico.</p>
         </div>
       )}
     </div>

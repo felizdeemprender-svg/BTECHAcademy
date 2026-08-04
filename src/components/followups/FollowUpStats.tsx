@@ -65,11 +65,11 @@ export function FollowUpStats({ followUpId, totalPlanned }: FollowUpStatsProps) 
         ) : (
           <div className="flex justify-center">
             {stats.pendingTasks > 0 ? (
-              <Badge className="bg-amber-500 text-white border-none h-6 gap-1 px-2 font-bold shadow-sm animate-pulse">
+              <Badge className="bg-warn text-white border-none h-6 gap-1 px-2 font-bold shadow-sm animate-pulse">
                 <Zap className="h-3 w-3" /> {stats.pendingTasks} Pend.
               </Badge>
             ) : (
-              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 h-6 gap-1 px-2 font-bold">
+              <Badge variant="outline" className="bg-success/10 text-success border-success/20 h-6 gap-1 px-2 font-bold">
                 <CheckCircle2 className="h-3 w-3" /> Al Día
               </Badge>
             )}

@@ -23,8 +23,8 @@ export default function LandingPage() {
         {/* Modern Hero Section */}
         <section className="relative container mx-auto px-6 py-24 lg:py-40 flex flex-col lg:flex-row items-center gap-20 overflow-hidden">
           <div className="flex-1 space-y-10 text-center lg:text-left z-10">
-            <div className="inline-flex items-center px-5 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-primary text-xs font-bold uppercase tracking-widest animate-in fade-in slide-in-from-top-4 duration-1000">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 mr-3 animate-ping" />
+            <div className="inline-flex items-center px-5 py-2 rounded-full bg-white border border-border shadow-sm text-primary text-xs font-bold uppercase tracking-widest animate-in fade-in slide-in-from-top-4 duration-1000">
+              <span className="w-2 h-2 rounded-full bg-success mr-3 animate-ping" />
               Gemini 2.5 Pro Integration Active
             </div>
             
@@ -147,7 +147,7 @@ export default function LandingPage() {
         </section>
 
         {/* Global KPIs / Trust Indicators */}
-        <section className="bg-slate-50 py-24 border-y border-slate-200/60">
+        <section className="bg-muted py-24 border-y border-border/60">
           <div className="container mx-auto px-6 grid md:grid-cols-4 gap-12 text-center">
             {[
               { icon: Users, label: 'Mentores Activos', value: '1,200+' },
@@ -160,7 +160,7 @@ export default function LandingPage() {
                   <stat.icon className="h-6 w-6" />
                 </div>
                 <h3 className="text-3xl font-black text-primary">{stat.value}</h3>
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{stat.label}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -184,13 +184,13 @@ export default function LandingPage() {
                 { icon: ShieldCheck, title: 'Infraestructura Robusta', desc: 'Nube privada escalable que asegura que tu contenido esté siempre disponible.' },
                 { icon: BookOpen, title: 'Multi-formato', desc: 'Desde videos HD hasta documentos complejos y desafíos interactivos en un solo lugar.' },
               ].map((feature, idx) => (
-                <div key={idx} className="bg-white p-10 rounded-lg border border-slate-100 shadow-sm transition-all group relative overflow-hidden">
+                <div key={idx} className="bg-white p-10 rounded-lg border border-muted shadow-sm transition-all group relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors" />
-                  <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mb-8 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                  <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-8 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
                     <feature.icon className="h-7 w-7 transition-colors" />
                   </div>
                   <h3 className="font-bold text-2xl mb-4 text-primary">{feature.title}</h3>
-                  <p className="text-slate-500 leading-relaxed font-medium">{feature.desc}</p>
+                  <p className="text-muted-foreground leading-relaxed font-medium">{feature.desc}</p>
                 </div>
               ))}
             </div>
@@ -206,7 +206,7 @@ export default function LandingPage() {
               Planes flexibles para mentores en diferentes etapas de crecimiento
             </p>
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              <div className="bg-white p-8 rounded-2xl border border-slate-200">
+              <div className="bg-white p-8 rounded-2xl border border-border">
                 <h3 className="text-xl font-bold text-primary mb-4">Básico</h3>
                 <p className="text-3xl font-bold mb-4">Gratis</p>
                 <p className="text-muted-foreground mb-6">Perfecto para comenzar</p>
@@ -220,11 +220,11 @@ export default function LandingPage() {
                 <p className="text-primary-foreground mb-6">Para mentores activos</p>
                 <Button variant="secondary" className="w-full">Prueba Gratuita</Button>
               </div>
-              <div className="bg-slate-900 text-white p-8 rounded-2xl">
+              <div className="bg-foreground text-white p-8 rounded-2xl">
                 <h3 className="text-xl font-bold mb-4">Enterprise</h3>
                 <p className="text-3xl font-bold mb-4">$99/mes</p>
-                <p className="text-slate-300 mb-6">Para instituciones</p>
-                <Button variant="outline" className="w-full border-white text-white hover:bg-white hover:text-slate-900">Contactar</Button>
+                <p className="text-border mb-6">Para instituciones</p>
+                <Button variant="outline" className="w-full border-white text-white hover:bg-white hover:text-foreground">Contactar</Button>
               </div>
             </div>
           </div>

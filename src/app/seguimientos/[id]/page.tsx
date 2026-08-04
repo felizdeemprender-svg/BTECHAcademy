@@ -494,7 +494,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                 <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">{followUp?.title}</h1>
                 <Badge variant="outline" className={cn(
                   "border-none px-3 py-1",
-                  isSuspended ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  isSuspended ? "bg-danger/10 text-danger" : "bg-success/10 text-success border-success/20"
                 )}>
                   {isSuspended ? <PauseCircle className="h-3 w-3 mr-1" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
                   {isSuspended ? 'Suspendido' : 'En Curso'}
@@ -512,9 +512,9 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         </header>
 
         {isSuspended && (
-          <div className="bg-rose-50 border-l-4 border-rose-400 p-6 rounded-r-2xl flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2">
-            <AlertCircle className="h-6 w-6 text-rose-500 shrink-0 mt-0.5" />
-            <div className="text-sm text-rose-800 space-y-1">
+          <div className="bg-danger/10 border-l-4 border-danger p-6 rounded-r-2xl flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2">
+            <AlertCircle className="h-6 w-6 text-danger shrink-0 mt-0.5" />
+            <div className="text-sm text-danger space-y-1">
               <p className="font-bold">Seguimiento Suspendido Institucionalmente</p>
               <p>Este programa de acompañamiento se encuentra pausado. Las tareas y el registro de sesiones han sido inhabilitados temporalmente.</p>
             </div>
@@ -542,8 +542,8 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                   {sortedSessions.map((session) => (
                     <Card key={session.id} className={cn(
                       "border-none shadow-md rounded-lg overflow-hidden transition-all",
-                      session.isCompleted ? "bg-white" : "bg-slate-50 border-2 border-dashed opacity-70",
-                      session.isAdditional && !session.isCompleted && "bg-amber-50 border-amber-200"
+                      session.isCompleted ? "bg-white" : "bg-muted border-2 border-dashed opacity-70",
+                      session.isAdditional && !session.isCompleted && "bg-warn/10 border-warn/20"
                     )}>
                       <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div className="flex items-center gap-4">
@@ -552,7 +552,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                             session.isCompleted 
                               ? "bg-primary text-white" 
                               : session.isAdditional 
-                                ? "bg-amber-500 text-white" 
+                                ? "bg-warn text-white" 
                                 : "bg-muted text-muted-foreground"
                           )}>
                             {session.isAdditional ? <Plus className="h-5 w-5" /> : session.orderIndex}
@@ -567,7 +567,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                                     : session.isAdditional ? 'Sesión Extra - Por Programar' : `Sesión ${session.orderIndex} - Pendiente`
                                 }
                               </h3>
-                              {session.isAdditional && <Badge className="bg-amber-100 text-amber-700 border-none text-[8px] uppercase tracking-widest font-black">Adicional</Badge>}
+                              {session.isAdditional && <Badge className="bg-warn/15 text-warn border-none text-[8px] uppercase tracking-widest font-black">Adicional</Badge>}
                             </div>
                             <p className="text-xs font-medium text-muted-foreground">
                               {session.isCompleted ? `${session.duration} min • ${session.topics.length} temas tratados` : 'Agenda tu próximo encuentro'}
@@ -607,7 +607,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                             </>
                           )}
                           {!isMentor && session.isCompleted && (
-                            <Badge className="bg-emerald-50 text-emerald-700 border-none font-bold">Realizada</Badge>
+                            <Badge className="bg-success/10 text-success border-none font-bold">Realizada</Badge>
                           )}
                         </div>
                       </div>
@@ -616,7 +616,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                           <div className="flex flex-wrap gap-2">
                             {session.topics.map((t: string, i: number) => <Badge key={i} className="bg-primary/10 text-primary border-none text-[9px] uppercase font-bold">{t}</Badge>)}
                           </div>
-                          <p className="text-sm text-slate-600 italic line-clamp-2 bg-muted/20 p-4 rounded-xl border border-black/5 leading-relaxed">"{session.minutes}"</p>
+                          <p className="text-sm text-muted-foreground italic line-clamp-2 bg-muted/20 p-4 rounded-xl border border-black/5 leading-relaxed">"{session.minutes}"</p>
                         </div>
                       )}
                     </Card>
@@ -734,7 +734,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                           </div>
                           <Badge className={cn(
                             "px-3 py-1 rounded-full text-[10px] font-bold uppercase border-none shadow-sm",
-                            displayStatus === 'completed' ? "bg-emerald-500 text-white" : displayStatus === 'in_progress' ? "bg-blue-500 text-white" : "bg-amber-500 text-white"
+                            displayStatus === 'completed' ? "bg-success text-white" : displayStatus === 'in_progress' ? "bg-blue-500 text-white" : "bg-warn text-white"
                           )}>
                             {displayStatus === 'completed' ? 'Completada' : displayStatus === 'in_progress' ? 'En Progreso' : 'Pendiente'}
                           </Badge>
@@ -745,9 +745,9 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                             <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest">Estado de Avance: {displayProgress}%</span>
                             {isMentor && !isLinkedCourse && !isSuspended && (
                               <div className="flex gap-1">
-                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 hover:bg-slate-100" onClick={() => handleUpdateTaskProgress(task.id, 0, 'pending')}>Reset</Button>
+                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 hover:bg-muted" onClick={() => handleUpdateTaskProgress(task.id, 0, 'pending')}>Reset</Button>
                                 <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 text-blue-600 hover:bg-blue-50" onClick={() => handleUpdateTaskProgress(task.id, 50, 'in_progress')}>50%</Button>
-                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 text-emerald-600 hover:bg-emerald-50" onClick={() => handleUpdateTaskProgress(task.id, 100, 'completed')}>Listo</Button>
+                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 text-success hover:bg-success/10" onClick={() => handleUpdateTaskProgress(task.id, 100, 'completed')}>Listo</Button>
                               </div>
                             )}
                             {isStudent && !isLinkedCourse && task.status !== 'completed' && !isSuspended && (
@@ -764,7 +764,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                             {!isLinkedCourse && task.answer && (
                               <div className="bg-secondary/10 p-4 rounded-xl border border-black/5">
                                 <span className="text-[9px] font-bold uppercase text-muted-foreground block mb-1">Respuesta del Alumno</span>
-                                <p className="text-sm font-medium text-slate-700 leading-relaxed">{task.answer}</p>
+                                <p className="text-sm font-medium text-foreground leading-relaxed">{task.answer}</p>
                                 {task.fileUrl && (
                                   <Button variant="link" size="sm" className="h-auto p-0 text-[10px] font-bold mt-2 text-primary" onClick={() => window.open(task.fileUrl, '_blank')}>
                                     <FileText className="h-3 w-3 mr-1" /> Ver Documento Adjunto
@@ -773,16 +773,16 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                               </div>
                             )}
                             {(displayScore !== undefined || displayFeedback) && (
-                              <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 relative overflow-hidden">
-                                <BrainCircuit className="absolute -right-2 -top-2 h-16 w-16 opacity-5 text-emerald-500" />
-                                <h5 className="text-[10px] font-bold uppercase text-emerald-600 mb-2 flex items-center gap-2">
+                              <div className="bg-success/10/50 p-4 rounded-xl border border-success/15 relative overflow-hidden">
+                                <BrainCircuit className="absolute -right-2 -top-2 h-16 w-16 opacity-5 text-success" />
+                                <h5 className="text-[10px] font-bold uppercase text-success mb-2 flex items-center gap-2">
                                   {isLinkedCourse ? <CheckCircle2 className="h-3 w-3" /> : <BrainCircuit className="h-3 w-3" />} 
                                   {isLinkedCourse ? 'Resultado Académico' : 'Evaluación IA'}
                                 </h5>
-                                {displayFeedback && <p className="text-sm italic text-emerald-800 leading-relaxed font-medium">"{displayFeedback}"</p>}
+                                {displayFeedback && <p className="text-sm italic text-success leading-relaxed font-medium">"{displayFeedback}"</p>}
                                 {displayScore !== undefined && (
                                   <div className="mt-3 flex justify-between items-center">
-                                    <Badge className="bg-emerald-500 text-white border-none h-5 text-[9px] font-black">Puntaje: {displayScore}%</Badge>
+                                    <Badge className="bg-success text-white border-none h-5 text-[9px] font-black">Puntaje: {displayScore}%</Badge>
                                     {task.completedAt && <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-tighter">{format(new Date(task.completedAt), 'dd/MM/yyyy HH:mm')}</span>}
                                   </div>
                                 )}
@@ -797,34 +797,34 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
               </TabsContent>
 
               <TabsContent value="report" className="space-y-8">
-                <Card className="border-none rounded-lg bg-slate-900 text-white overflow-hidden p-12 relative">
+                <Card className="border-none rounded-lg bg-foreground text-white overflow-hidden p-12 relative">
                   <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none"><Sparkles className="h-64 w-64" /></div>
                   <header className="flex justify-between items-start mb-12 relative z-10">
                     <div>
                       <h2 className="text-3xl font-headline font-bold text-white tracking-tight">Informe de Evolución</h2>
-                      <p className="text-slate-400 font-medium">Análisis de acompañamiento institucional</p>
+                      <p className="text-muted-foreground font-medium">Análisis de acompañamiento institucional</p>
                     </div>
                     <Badge className="bg-white/10 text-white border-white/20 h-8 px-4 font-bold uppercase tracking-widest text-[10px]">REPORTE MENTORED v1.5</Badge>
                   </header>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6 mb-12 relative z-10">
                     <div className="p-6 bg-white/5 rounded-3xl border border-white/10 text-center backdrop-blur-md">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Plan Original</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Plan Original</p>
                       <p className="text-4xl font-black text-white">{completedPlanned} / {totalPlanned}</p>
                     </div>
-                    <div className="p-6 bg-amber-500/10 rounded-3xl border border-amber-500/20 text-center backdrop-blur-md">
-                      <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2">Sesiones Extras</p>
-                      <p className="text-4xl font-black text-amber-400">{completedExtra} / {totalExtra}</p>
+                    <div className="p-6 bg-warn/10 rounded-3xl border border-warn/20 text-center backdrop-blur-md">
+                      <p className="text-[10px] font-bold text-warn uppercase tracking-widest mb-2">Sesiones Extras</p>
+                      <p className="text-4xl font-black text-warn">{completedExtra} / {totalExtra}</p>
                     </div>
                     <div className="p-6 bg-white/5 rounded-3xl border border-white/10 text-center backdrop-blur-md">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tareas Completadas</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Tareas Completadas</p>
                       <p className="text-4xl font-black text-white">{completedTasks} / {totalTasks}</p>
                     </div>
                     <div className="p-6 bg-white/5 rounded-3xl border border-white/10 text-center backdrop-blur-md">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Progreso General</p>
-                      <p className="text-4xl font-black text-emerald-400">{Math.round(avgProgress)}%</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Progreso General</p>
+                      <p className="text-4xl font-black text-success">{Math.round(avgProgress)}%</p>
                     </div>
-                    <div className="p-6 bg-emerald-500 text-slate-900 rounded-3xl shadow-emerald-500/20 text-center transform hover:scale-105 transition-transform">
+                    <div className="p-6 bg-success text-foreground rounded-3xl shadow-success/20 text-center transform hover:scale-105 transition-transform">
                       <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest mb-2">Estado del Plan</p>
                       <p className="text-2xl font-black uppercase">Consistente</p>
                     </div>
@@ -832,14 +832,14 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
                   <div className="space-y-10 relative z-10">
                     <div className="space-y-4">
-                      <h3 className="font-bold text-xl flex items-center gap-3 text-white"><Zap className="h-6 w-6 text-emerald-400" /> Logros Académicos</h3>
+                      <h3 className="font-bold text-xl flex items-center gap-3 text-white"><Zap className="h-6 w-6 text-success" /> Logros Académicos</h3>
                       <div className="grid gap-4">
                         {tasks?.filter(t => t.status === 'completed').length === 0 ? (
-                          <p className="text-slate-500 italic text-sm py-4">Aún no se han registrado hitos completados.</p>
+                          <p className="text-muted-foreground italic text-sm py-4">Aún no se han registrado hitos completados.</p>
                         ) : tasks?.filter(t => t.status === 'completed').map(t => (
                           <div key={t.id} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
-                            <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-                            <span className="font-medium text-slate-200 line-clamp-1">{t.title || t.description}</span>
+                            <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
+                            <span className="font-medium text-border line-clamp-1">{t.title || t.description}</span>
                           </div>
                         ))}
                       </div>
@@ -850,14 +850,14 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                       <ScrollArea className="h-[250px] pr-4">
                         <div className="space-y-4">
                           {sessions?.filter(s => s.isCompleted).length === 0 ? (
-                            <p className="text-slate-500 italic text-sm">No hay minutas registradas para este periodo.</p>
+                            <p className="text-muted-foreground italic text-sm">No hay minutas registradas para este periodo.</p>
                           ) : sessions?.filter(s => s.isCompleted).map(s => (
                             <div key={s.id} className="p-6 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/8 transition-colors">
                               <div className="flex justify-between items-center mb-3">
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sesión {s.isAdditional ? 'Extra' : s.orderIndex} • {format(new Date(s.date + 'T' + s.time), 'dd/MM/yyyy')}</p>
-                                {s.isAdditional && <Badge className="bg-amber-500/20 text-amber-400 border-none h-4 text-[8px]">Adicional</Badge>}
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sesión {s.isAdditional ? 'Extra' : s.orderIndex} • {format(new Date(s.date + 'T' + s.time), 'dd/MM/yyyy')}</p>
+                                {s.isAdditional && <Badge className="bg-warn/20 text-warn border-none h-4 text-[8px]">Adicional</Badge>}
                               </div>
-                              <p className="text-sm text-slate-300 italic leading-relaxed">"{s.minutes}"</p>
+                              <p className="text-sm text-border italic leading-relaxed">"{s.minutes}"</p>
                             </div>
                           ))}
                         </div>
@@ -877,13 +877,13 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 <div className="bg-secondary/10 p-6 rounded-3xl border-l-4 border-primary">
-                  <p className="text-sm leading-relaxed text-slate-700 font-medium italic">"{followUp?.goal}"</p>
+                  <p className="text-sm leading-relaxed text-foreground font-medium italic">"{followUp?.goal}"</p>
                 </div>
 
                 {followUp?.planGuideUrl ? (
                   <Button 
                     onClick={() => window.open(followUp.planGuideUrl, '_blank')}
-                    className="w-full h-12 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02]"
+                    className="w-full h-12 rounded-xl font-bold bg-success hover:bg-success text-white gap-2 shadow-lg shadow-success/20 transition-all hover:scale-[1.02]"
                   >
                     <Download className="h-4 w-4" /> Ver Guía del Plan
                   </Button>
@@ -916,8 +916,8 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                   <Progress value={(completedPlanned/(totalPlanned || 1))*100} className="h-2 bg-secondary/50" />
                   <div className="flex flex-col gap-2 text-[10px] font-bold text-muted-foreground uppercase mt-4">
-                    <p className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-black/5"><Calendar className="h-3.5 w-3.5 text-primary/40" /> Inicio: {followUp?.startDate ? format(new Date(followUp.startDate), 'dd/MM/yyyy') : '-'}</p>
-                    <p className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-black/5"><Clock className="h-3.5 w-3.5 text-primary/40" /> Fin Previsto: {followUp?.endDate ? format(new Date(followUp.endDate), 'dd/MM/yyyy') : '-'}</p>
+                    <p className="flex items-center gap-2 bg-muted p-2 rounded-lg border border-black/5"><Calendar className="h-3.5 w-3.5 text-primary/40" /> Inicio: {followUp?.startDate ? format(new Date(followUp.startDate), 'dd/MM/yyyy') : '-'}</p>
+                    <p className="flex items-center gap-2 bg-muted p-2 rounded-lg border border-black/5"><Clock className="h-3.5 w-3.5 text-primary/40" /> Fin Previsto: {followUp?.endDate ? format(new Date(followUp.endDate), 'dd/MM/yyyy') : '-'}</p>
                   </div>
                 </div>
               </CardContent>
@@ -929,7 +929,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       {/* Session Editor Dialog */}
       <Dialog open={!!editingSession} onOpenChange={open => !open && setEditingSession(null)}>
         <DialogContent className="mw-3xl">
-          <div className={cn("text-white flex justify-between items-center relative px-8 pt-8", editingSession?.isAdditional ? "bg-amber-500" : "bg-primary")}>
+          <div className={cn("text-white flex justify-between items-center relative px-8 pt-8", editingSession?.isAdditional ? "bg-warn" : "bg-primary")}>
             <div className="relative z-10">
               <DialogTitle className="text-2xl font-bold text-white">
                 {editingSession?.isAdditional ? 'Sesión Extraordinaria' : `Sesión ${editingSession?.orderIndex}`}
@@ -1006,7 +1006,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
           <div className="space-y-6 px-8 pb-8">
             <div className="bg-accent/5 p-6 rounded-2xl border border-accent/10">
               <p className="text-xs font-black text-accent uppercase tracking-[0.2em] mb-2">Consigna Académica:</p>
-              <p className="text-sm font-medium italic text-slate-700 leading-relaxed">"{tasks?.find(t => t.id === answeringTaskId)?.description}"</p>
+              <p className="text-sm font-medium italic text-foreground leading-relaxed">"{tasks?.find(t => t.id === answeringTaskId)?.description}"</p>
             </div>
 
             <div className="space-y-2">
@@ -1033,7 +1033,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                     {studentFile ? <FileText className="text-accent h-7 w-7" /> : <Upload className="text-accent h-7 w-7" />}
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-bold text-slate-700">{studentFile ? studentFile.name : 'Seleccionar Archivo PDF'}</p>
+                    <p className="text-sm font-bold text-foreground">{studentFile ? studentFile.name : 'Seleccionar Archivo PDF'}</p>
                     <p className="text-[10px] text-muted-foreground mt-1 max-w-[200px]">El archivo será leído por Gemini para integrarlo a tu feedback.</p>
                   </div>
                   {studentFile && (

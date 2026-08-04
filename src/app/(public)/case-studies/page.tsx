@@ -187,7 +187,7 @@ export default function CaseStudiesPage() {
                       <div className="grid grid-cols-2 gap-4">
                         {study.results.map((result, resultIdx) => (
                           <div key={resultIdx} className="flex items-center gap-3">
-                            <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                            <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
                             <div>
                               <div className="font-bold text-primary">{result.metric}</div>
                               <div className="text-sm text-muted-foreground">{result.description}</div>

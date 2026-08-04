@@ -43,7 +43,7 @@ export function SceneNarrativeEditor({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 mb-2">
-        <p className="text-[10px] text-slate-400 font-medium leading-relaxed max-w-md italic">
+        <p className="text-[10px] text-muted-foreground font-medium leading-relaxed max-w-md italic">
           * Cada placa visual representa un segmento de tu video o carrusel.
         </p>
       </div>
@@ -62,7 +62,7 @@ export function SceneNarrativeEditor({
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-6 w-6 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    className="h-6 w-6 text-border hover:text-danger hover:bg-danger/10 rounded-full transition-colors"
                     onClick={() => {
                       const newSlides = [...items];
                       newSlides.splice(i, 1);
@@ -74,7 +74,7 @@ export function SceneNarrativeEditor({
                 )}
               </div>
               
-              <div className="aspect-[4/5] rounded-lg overflow-hidden bg-slate-800 border-2 border-white/5 group-hover:scale-[1.01] transition-all duration-500">
+              <div className="aspect-[4/5] rounded-lg overflow-hidden bg-foreground border-2 border-white/5 group-hover:scale-[1.01] transition-all duration-500">
                 <ImageEditor 
                   url={sl.imageUrl}
                   onUpdate={(val) => {
@@ -98,7 +98,7 @@ export function SceneNarrativeEditor({
               <div className={`grid ${s.type === 'carousel' ? 'md:grid-cols-2' : 'grid-cols-1'} gap-4`}>
                 {/* Mostrar Voiceover Individual en todos los formatos para Narrativa Dual */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-violet-300 flex items-center gap-2 mb-1">
+                  <Label className="text-[10px] font-black uppercase text-primary/30 flex items-center gap-2 mb-1">
                     <Mic2 className="h-3 w-3" /> Guion Narrativo (Voz de IA)
                   </Label>
                   <Textarea 
@@ -109,10 +109,10 @@ export function SceneNarrativeEditor({
                       updateAsset('socials', sIdx, 'slides', newItems);
                     }}
                     placeholder="Escribe lo que la voz de IA dirá en esta escena..."
-                    className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[100px] text-sm font-medium focus-visible:ring-1 focus-visible:ring-violet-500/50 rounded-2xl p-4"
+                    className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[100px] text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
                   />
                   {i === 0 && !sl.voiceover && (s.production_notes?.voiceover || s.voiceover) && (
-                    <p className="text-[9px] text-amber-400/80 italic font-medium">
+                    <p className="text-[9px] text-warn/80 italic font-medium">
                       * Usando guion maestro como base.
                     </p>
                   )}
@@ -135,7 +135,7 @@ export function SceneNarrativeEditor({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-2 mb-1 opacity-60">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2 mb-1 opacity-60">
                         <Sparkles className="h-3 w-3" /> Subtítulo / Apoyo
                       </Label>
                       <Input 
@@ -146,7 +146,7 @@ export function SceneNarrativeEditor({
                           updateAsset('socials', sIdx, 'slides', newItems);
                         }}
                         placeholder="Texto secundario opcional..."
-                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 text-xs font-medium focus-visible:ring-1 focus-visible:ring-slate-500/50 px-4"
+                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 text-xs font-medium focus-visible:ring-1 focus-visible:ring-muted-foreground/50 px-4"
                        size="lg" />
                     </div>
                   </div>
@@ -165,7 +165,7 @@ export function SceneNarrativeEditor({
                           newItems[i] = { ...newItems[i], duration: e.target.value };
                           updateAsset('socials', sIdx, 'slides', newItems);
                        }}
-                       className="w-20 h-8 bg-slate-900 text-xs font-black border-white/10 text-white rounded-xl shadow-lg"
+                       className="w-20 h-8 bg-foreground text-xs font-black border-white/10 text-white rounded-xl shadow-lg"
                     />
                  </div>
                  <div className="flex flex-col gap-1.5 flex-1 max-w-[200px]">
@@ -178,12 +178,12 @@ export function SceneNarrativeEditor({
                           updateAsset('socials', sIdx, 'slides', newItems);
                        }}
                        placeholder="@cuenta"
-                       className="h-8 bg-slate-900 text-xs font-bold border-white/10 text-emerald-400 rounded-xl px-3 shadow-lg"
+                       className="h-8 bg-foreground text-xs font-bold border-white/10 text-success rounded-xl px-3 shadow-lg"
                     />
                  </div>
                  <div className="flex flex-col gap-1.5">
                     <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Segmento</span>
-                    <Badge variant="secondary" className="text-[9px] h-8 px-4 bg-violet-500/20 border border-violet-500/30 text-violet-300 font-bold uppercase">
+                    <Badge variant="secondary" className="text-[9px] h-8 px-4 bg-primary/20 border border-primary/30 text-primary/30 font-bold uppercase">
                       {sl.segment || 'VALOR'}
                     </Badge>
                  </div>
@@ -192,7 +192,7 @@ export function SceneNarrativeEditor({
 
             {/* Decoración lateral de línea de tiempo */}
             {i < items.length - 1 && (
-              <div className="hidden md:block absolute left-[16.6%] bottom-[-48px] w-0.5 h-12 bg-gradient-to-b from-slate-100 to-transparent" />
+              <div className="hidden md:block absolute left-[16.6%] bottom-[-48px] w-0.5 h-12 bg-gradient-to-b from-muted to-transparent" />
             )}
           </div>
         ))}

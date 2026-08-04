@@ -670,7 +670,7 @@ export default function CreateCoursePage() {
       <div className="max-w-5xl mx-auto space-y-6 pb-20">
         <header className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
-            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg", step < 5 ? "bg-primary" : step === 5 ? "bg-amber-500" : "bg-emerald-500")}>
+            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg", step < 5 ? "bg-primary" : step === 5 ? "bg-warn" : "bg-success")}>
               {step < 5 ? <Settings2 /> : step === 5 ? <Scale /> : <CheckCircle2 />}
             </div>
             <div>
@@ -851,11 +851,11 @@ export default function CreateCoursePage() {
                   <div className="flex justify-between items-center"><h3 className="font-bold text-xl flex items-center gap-2"><CheckCircle2 className="h-6 w-6 text-primary" /> Evaluaciones</h3><div className="flex gap-3"><Button onClick={() => addManualQuestion(false)} variant="outline" className="rounded-2xl gap-2 font-bold h-12 border-2"><Plus className="h-4 w-4" /> Añadir Pregunta</Button><Button onClick={() => { setAiTargetType('main'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-2xl gap-2 bg-accent h-12 text-white"><Sparkles className="h-4 w-4" /> Generar con IA</Button></div></div>
                   <div className="grid gap-4">{currentModule.questions.map((q, idx) => renderQuestionEditor(q, idx, false))}</div>
                 </div>
-                <div className="bg-emerald-50/50 p-8 rounded-lg border-2 border-emerald-100 space-y-6">
-                  <div className="flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-emerald-800">Refuerzo Automático</h3></div></div><Switch checked={currentModule.enableSupportQuestions} onCheckedChange={(val) => setCurrentModule({ ...currentModule, enableSupportQuestions: val })} /></div>
+                <div className="bg-success/10/50 p-8 rounded-lg border-2 border-success/15 space-y-6">
+                  <div className="flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-2xl bg-success text-white flex items-center justify-center"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-success">Refuerzo Automático</h3></div></div><Switch checked={currentModule.enableSupportQuestions} onCheckedChange={(val) => setCurrentModule({ ...currentModule, enableSupportQuestions: val })} /></div>
                   {currentModule.enableSupportQuestions && (
-                    <div className="pt-6 space-y-6 border-t border-emerald-200">
-                      <div className="flex justify-between items-center"><h4 className="font-bold text-emerald-800">Evaluación de Soporte</h4><div className="flex gap-2"><Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={() => addManualQuestion(true)}><Plus className="h-3 w-3 mr-1" /> Añadir Manual</Button><Button size="sm" className="bg-emerald-600 text-white rounded-xl font-bold" onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }}><Sparkles className="h-3 w-3 mr-1" /> Generar Soporte con IA</Button></div></div>
+                    <div className="pt-6 space-y-6 border-t border-success/20">
+                      <div className="flex justify-between items-center"><h4 className="font-bold text-success">Evaluación de Soporte</h4><div className="flex gap-2"><Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={() => addManualQuestion(true)}><Plus className="h-3 w-3 mr-1" /> Añadir Manual</Button><Button size="sm" className="bg-success text-white rounded-xl font-bold" onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }}><Sparkles className="h-3 w-3 mr-1" /> Generar Soporte con IA</Button></div></div>
                       <div className="grid gap-4">{currentModule.supportQuestions.map((q, idx) => renderQuestionEditor(q, idx, true))}</div>
                     </div>
                   )}
@@ -993,7 +993,7 @@ export default function CreateCoursePage() {
                       <div className="text-right">
                         <Badge className={cn(
                           "text-[9px] px-2 h-5 border-none shadow-none uppercase font-black tracking-widest mb-0.5",
-                          isInvitation ? "bg-amber-100 text-amber-700 hover:bg-amber-100" : "bg-primary text-white hover:bg-primary"
+                          isInvitation ? "bg-warn/15 text-warn hover:bg-warn/15" : "bg-primary text-white hover:bg-primary"
                         )}>
                           {isInvitation ? 'Cortesía' : 'Facturable'}
                         </Badge>
@@ -1015,21 +1015,21 @@ export default function CreateCoursePage() {
                   {invitedStudents.map((stu, i) => (
                     <div key={i} className={cn(
                       "flex items-center justify-between p-4 rounded-2xl border transition-all",
-                      stu.isInvited ? "bg-amber-50/30 border-amber-200/50" : "bg-secondary/10 border-border"
+                      stu.isInvited ? "bg-warn/10/30 border-warn/20/50" : "bg-secondary/10 border-border"
                     )}>
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           "w-10 h-10 rounded-full flex items-center justify-center border-2 border-white shadow-sm",
-                          stu.isInvited ? "bg-amber-100/50" : "bg-primary/10"
+                          stu.isInvited ? "bg-warn/15/50" : "bg-primary/10"
                         )}>
-                          <Mail className={cn("h-4 w-4", stu.isInvited ? "text-amber-600" : "text-primary")} />
+                          <Mail className={cn("h-4 w-4", stu.isInvited ? "text-warn" : "text-primary")} />
                         </div>
                         <div>
                           <p className="font-bold text-sm flex items-center gap-2">
                             {stu.studentName}
                             <Badge className={cn(
                               "text-[8px] px-1.5 h-4 border-none shadow-none uppercase tracking-widest font-black",
-                              stu.isInvited ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                              stu.isInvited ? "bg-warn/15 text-warn" : "bg-blue-100 text-blue-700"
                             )}>
                               {stu.isInvited ? 'Cortesía' : 'Facturable'}
                             </Badge>
@@ -1037,7 +1037,7 @@ export default function CreateCoursePage() {
                           <p className="text-[10px] text-muted-foreground">{stu.inviteEmail}</p>
                         </div>
                       </div>
-                      <Badge className="bg-emerald-50 text-emerald-700 border-none">Activo</Badge>
+                      <Badge className="bg-success/10 text-success border-none">Activo</Badge>
                     </div>
                   ))}
                 </div>
@@ -1050,19 +1050,19 @@ export default function CreateCoursePage() {
         {step === 5 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
             <Card>
-              <CardHeader className="bg-amber-50 p-10 border-b border-amber-100">
+              <CardHeader className="bg-warn/10 p-10 border-b border-warn/15">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg"><Scale className="h-6 w-6" /></div>
+                  <div className="w-12 h-12 rounded-2xl bg-warn text-white flex items-center justify-center shadow-lg"><Scale className="h-6 w-6" /></div>
                   <div>
-                    <CardTitle className="text-2xl font-bold text-amber-900">5. Marco Legal Académico</CardTitle>
-                    <CardDescription className="text-amber-700">Protocolo de creación y autoría para mentores.</CardDescription>
+                    <CardTitle className="text-2xl font-bold text-warn">5. Marco Legal Académico</CardTitle>
+                    <CardDescription className="text-warn">Protocolo de creación y autoría para mentores.</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-10 space-y-10">
-                <div className="bg-slate-50 rounded-lg border border-slate-200 p-8">
+                <div className="bg-muted rounded-lg border border-border p-8">
                   <ScrollArea className="h-[400px] pr-6">
-                    <div className="prose prose-sm max-w-none text-slate-600 leading-relaxed whitespace-pre-wrap">
+                    <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
                       {termsConfig?.content || "Cargando protocolo académico..."}
                     </div>
                   </ScrollArea>
@@ -1084,22 +1084,22 @@ export default function CreateCoursePage() {
 
         {step === 6 && (
           <div className="space-y-8 animate-in fade-in">
-            <Card className="bg-slate-900 text-white relative">
+            <Card className="bg-foreground text-white relative">
               <div className="absolute top-0 right-0 p-12 opacity-10"><Sparkles className="h-40 w-40" /></div>
-              <CardHeader className="p-12 pb-6 relative z-10"><CardTitle className="text-4xl font-bold">6. Registro Final</CardTitle><CardDescription className="text-slate-400 text-lg">Tu programa ha cumplido todos los requisitos.</CardDescription></CardHeader>
+              <CardHeader className="p-12 pb-6 relative z-10"><CardTitle className="text-4xl font-bold">6. Registro Final</CardTitle><CardDescription className="text-muted-foreground text-lg">Tu programa ha cumplido todos los requisitos.</CardDescription></CardHeader>
               <CardContent className="p-12 pt-6 space-y-10 relative z-10">
                 <div className="p-8 bg-white/5 rounded-lg border border-white/10 flex items-start gap-4">
-                  <ShieldCheck className="h-8 w-8 text-emerald-400 shrink-0" />
+                  <ShieldCheck className="h-8 w-8 text-success shrink-0" />
                   <div>
                     <h4 className="text-xl font-bold">Estado: Borrador Protegido</h4>
-                    <p className="text-sm text-slate-400 mt-1">Una vez finalizado, deberás solicitar la publicación en el panel de Gestión Académica. En ese momento se realizará la auditoría IA automática.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Una vez finalizado, deberás solicitar la publicación en el panel de Gestión Académica. En ese momento se realizará la auditoría IA automática.</p>
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-6">
-                  <div className="bg-white/5 p-6 rounded-2xl border border-white/10"><div className="flex items-center gap-3 mb-2"><BookOpen className="text-accent h-5 w-5" /><span className="text-xs font-bold uppercase tracking-widest text-slate-400">Estructura</span></div><p className="text-2xl font-bold">{moduleOrder} Clases</p></div>
-                  <div className="bg-white/5 p-6 rounded-2xl border border-white/10"><div className="flex items-center gap-3 mb-2"><Users className="text-emerald-400 h-5 w-5" /><span className="text-xs font-bold uppercase tracking-widest text-slate-400">Legal</span></div><p className="text-2xl font-bold">Términos Aceptados</p></div>
+                  <div className="bg-white/5 p-6 rounded-2xl border border-white/10"><div className="flex items-center gap-3 mb-2"><BookOpen className="text-accent h-5 w-5" /><span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Estructura</span></div><p className="text-2xl font-bold">{moduleOrder} Clases</p></div>
+                  <div className="bg-white/5 p-6 rounded-2xl border border-white/10"><div className="flex items-center gap-3 mb-2"><Users className="text-success h-5 w-5" /><span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Legal</span></div><p className="text-2xl font-bold">Términos Aceptados</p></div>
                 </div>
-                <Button onClick={handleFinalFinish} disabled={loading} className="w-full h-20 rounded-lg text-2xl font-bold bg-white text-slate-900 hover:bg-slate-100 transition-all">Finalizar Creación de Programa</Button>
+                <Button onClick={handleFinalFinish} disabled={loading} className="w-full h-20 rounded-lg text-2xl font-bold bg-white text-foreground hover:bg-muted transition-all">Finalizar Creación de Programa</Button>
               </CardContent>
             </Card>
           </div>
@@ -1118,7 +1118,7 @@ export default function CreateCoursePage() {
             <div className="mt-8 flex items-center justify-between relative px-0">
               <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-primary/10 -translate-y-1/2 z-0 mx-8" />
               <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 1 ? "text-primary" : "text-muted-foreground/30")}>
-                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-green-500 border-green-500" : "bg-primary/10 border-primary/20")}>
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-success border-success" : "bg-primary/10 border-primary/20")}>
                   {aiFlowStep > 1 ? <Check className="h-4 w-4" /> : "1"}
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-widest">Lectura</span>
@@ -1157,9 +1157,9 @@ export default function CreateCoursePage() {
 
             {aiFlowStep === 2 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center"><ClipboardCheck className="h-6 w-6" /></div>
-                  <div><p className="text-xs font-bold text-green-700">Contenido Preparado</p><p className="text-[10px] text-green-600">Base de conocimiento cargada con éxito.</p></div>
+                <div className="bg-success/10 border border-success/20 p-4 rounded-2xl flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-success text-white flex items-center justify-center"><ClipboardCheck className="h-6 w-6" /></div>
+                  <div><p className="text-xs font-bold text-success">Contenido Preparado</p><p className="text-[10px] text-success">Base de conocimiento cargada con éxito.</p></div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">

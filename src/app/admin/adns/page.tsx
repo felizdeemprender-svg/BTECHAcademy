@@ -257,7 +257,7 @@ export default function AdminAdnsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'verified':
-        return <Badge className="bg-emerald-500 text-white border-none gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"><CheckCircle className="h-3.5 w-3.5" /> Verificado</Badge>;
+        return <Badge className="bg-success text-white border-none gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"><CheckCircle className="h-3.5 w-3.5" /> Verificado</Badge>;
       case 'error':
         return <Badge variant="destructive" className="gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider"><XCircle className="h-3.5 w-3.5" /> Error</Badge>;
       default:
@@ -271,7 +271,7 @@ export default function AdminAdnsPage() {
         <div className="flex flex-col gap-2 border-b border-border/30 pb-8">
           <div className="flex items-center justify-between">
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight flex items-center gap-3">
-              <Rocket className="h-8 w-8 text-emerald-500" /> Gestión de ADNs Maestros
+              <Rocket className="h-8 w-8 text-success" /> Gestión de ADNs Maestros
             </h1>
             <div className="flex gap-3">
               <Button onClick={fetchAdns} variant="outline" className="rounded-xl h-11 px-6 font-bold gap-2 border-2">
@@ -289,7 +289,7 @@ export default function AdminAdnsPage() {
           <CardHeader className="bg-primary/5 px-10 py-8 border-b border-border/30">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl font-headline font-bold text-primary flex items-center gap-2">
-                <Video className="h-6 w-6 text-emerald-500" /> Catálogo de Motores de Producción
+                <Video className="h-6 w-6 text-success" /> Catálogo de Motores de Producción
               </CardTitle>
               <div className="relative w-72">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -304,7 +304,7 @@ export default function AdminAdnsPage() {
           </CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-slate-50/50">
+              <TableHeader className="bg-muted/50">
                 <TableRow className="border-none">
                   <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-black">ADN / Master</TableHead>
                   <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-black text-center">Estado</TableHead>
@@ -324,15 +324,15 @@ export default function AdminAdnsPage() {
                     <TableCell className="px-10 py-6 text-right">
                       <div className="flex justify-end gap-2 items-center">
                         <Button variant="ghost" size="sm" className="h-10 px-4 rounded-xl font-bold gap-2 text-primary hover:bg-primary/10" onClick={() => handleVerify(adn.id)}>
-                          <ShieldCheck className="h-4 w-4 text-emerald-500" /> Verificar
+                          <ShieldCheck className="h-4 w-4 text-success" /> Verificar
                         </Button>
                         <Button variant="ghost" size="icon" className="h-10 w-10 text-blue-500 hover:bg-blue-50 rounded-xl" onClick={() => handleViewDetail(adn.id)}>
                           <Eye className="h-5 w-5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-500 hover:bg-slate-100 rounded-xl">
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:bg-muted rounded-xl">
                           <Upload className="h-5 w-5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-rose-500 hover:bg-rose-50 rounded-xl" onClick={() => setConfirmDeleteId(adn.id)}>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-danger hover:bg-danger/10 rounded-xl" onClick={() => setConfirmDeleteId(adn.id)}>
                           <Trash2 className="h-5 w-5" />
                         </Button>
                       </div>
@@ -357,11 +357,11 @@ export default function AdminAdnsPage() {
             ) : selectedAdnSummary && (
               <div className="space-y-8 py-4">
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="bg-slate-50 p-6 rounded-3xl space-y-1">
+                  <div className="bg-muted p-6 rounded-3xl space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total Slices</p>
                     <p className="text-3xl font-bold">{selectedAdnSummary.totalSlices}</p>
                   </div>
-                  <div className="bg-slate-50 p-6 rounded-3xl space-y-1">
+                  <div className="bg-muted p-6 rounded-3xl space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Duración Est.</p>
                     <p className="text-3xl font-bold">{selectedAdnSummary.totalDuration}s</p>
                   </div>
@@ -381,24 +381,49 @@ export default function AdminAdnsPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <Badge className={cn("rounded-xl px-4 py-2 font-bold", selectedAdnSummary.hasHook ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400")}>
+                  <Badge className={cn("rounded-xl px-4 py-2 font-bold", selectedAdnSummary.hasHook ? "bg-success/15 text-success" : "bg-muted text-muted-foreground")}>
                     {selectedAdnSummary.hasHook ? "✓ Gancho Detectado" : "✗ Sin Gancho"}
                   </Badge>
-                  <Badge className={cn("rounded-xl px-4 py-2 font-bold", selectedAdnSummary.hasCTA ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400")}>
+                  <Badge className={cn("rounded-xl px-4 py-2 font-bold", selectedAdnSummary.hasCTA ? "bg-success/15 text-success" : "bg-muted text-muted-foreground")}>
                     {selectedAdnSummary.hasCTA ? "✓ CTA Detectado" : "✗ Sin CTA"}
                   </Badge>
                 </div>
 
-                <div className="pt-6 border-t border-slate-100">
+                {/* Generación de Video — apartado nuevo */}
+                <div className="pt-4 border-t border-muted">
+                  <p className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2 mb-3">
+                    <Video className="h-4 w-4 text-blue-500" /> Generación de Video
+                  </p>
+                  <div className="bg-muted/50 p-4 rounded-2xl border border-border/30 space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Mood:</span>
+                      <span className="font-bold text-foreground">{selectedAdnSummary.description}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Escenas:</span>
+                      <span className="font-bold text-foreground">{selectedAdnSummary.totalSlices} slices · {selectedAdnSummary.totalDuration}s</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Secuencia:</span>
+                      <div className="flex gap-1">
+                        {selectedAdnSummary.narrative.map((label, i) => (
+                          <Badge key={i} variant="outline" className="font-bold text-[10px]">{label}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-muted">
                   <div className="flex items-center justify-between mb-4">
                     <p className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
-                      <Rocket className="h-4 w-4 text-emerald-500" /> Certificación de Motor
+                      <Rocket className="h-4 w-4 text-success" /> Certificación de Motor
                     </p>
-                    <div className="bg-slate-100 p-1 rounded-xl flex gap-1">
+                    <div className="bg-muted p-1 rounded-xl flex gap-1">
                       <Button 
                         variant={!isFullMode ? "secondary" : "ghost"} 
                         size="sm" 
-                        className={cn("h-7 px-3 rounded-lg text-[9px] uppercase font-black transition-all", !isFullMode ? "shadow-sm bg-white text-emerald-600" : "text-slate-500")}
+                        className={cn("h-7 px-3 rounded-lg text-[9px] uppercase font-black transition-all", !isFullMode ? "shadow-sm bg-white text-success" : "text-muted-foreground")}
                         onClick={() => setIsFullMode(false)}
                       >
                         Rápido (3s)
@@ -406,7 +431,7 @@ export default function AdminAdnsPage() {
                       <Button 
                         variant={isFullMode ? "secondary" : "ghost"} 
                         size="sm" 
-                        className={cn("h-7 px-3 rounded-lg text-[9px] uppercase font-black transition-all", isFullMode ? "shadow-sm bg-white text-emerald-600" : "text-slate-500")}
+                        className={cn("h-7 px-3 rounded-lg text-[9px] uppercase font-black transition-all", isFullMode ? "shadow-sm bg-white text-success" : "text-muted-foreground")}
                         onClick={() => setIsFullMode(true)}
                       >
                         Completo
@@ -421,13 +446,13 @@ export default function AdminAdnsPage() {
                         variant="outline"
                         className={cn(
                           "h-16 rounded-2xl border-2 flex flex-col gap-1 transition-all",
-                          isSmokeTesting === (isFullMode ? 'FULL' : fmt) ? "border-emerald-500 bg-emerald-50" : "hover:border-emerald-500 hover:bg-emerald-50"
+                          isSmokeTesting === (isFullMode ? 'FULL' : fmt) ? "border-success bg-success/10" : "hover:border-success hover:bg-success/10"
                         )}
                         onClick={() => handleSmokeTest(fmt, isFullMode)}
                         disabled={!!isSmokeTesting}
                       >
                         {isSmokeTesting === (isFullMode ? 'FULL' : fmt) ? (
-                          <RefreshCw className="h-6 w-6 animate-spin text-emerald-600" />
+                          <RefreshCw className="h-6 w-6 animate-spin text-success" />
                         ) : (
                           <>
                             <span className="text-lg font-bold">{fmt}</span>
@@ -441,18 +466,18 @@ export default function AdminAdnsPage() {
                   </div>
 
                   {isSmokeTesting && (
-                    <div className="mt-4 p-4 bg-slate-900 rounded-2xl flex items-center gap-4 animate-pulse border border-slate-800">
+                    <div className="mt-4 p-4 bg-foreground rounded-2xl flex items-center gap-4 animate-pulse border border-foreground">
                       <div className="relative">
-                        <div className="h-2 w-2 bg-emerald-500 rounded-full animate-ping absolute -top-1 -right-1" />
-                        <Rocket className="h-6 w-6 text-emerald-500" />
+                        <div className="h-2 w-2 bg-success rounded-full animate-ping absolute -top-1 -right-1" />
+                        <Rocket className="h-6 w-6 text-success" />
                       </div>
                       <div className="flex-1">
                         <p className="text-white text-xs font-bold">
                           {isFullMode ? 'Ejecutando renderizado completo' : 'Certificando motor'} en {isSmokeTesting === 'FULL' ? 'todas las escenas' : isSmokeTesting}...
                         </p>
-                        <p className="text-emerald-500/60 text-[9px] uppercase font-black tracking-widest">FFmpeg 6.1: {isFullMode ? 'Producción' : 'Smoke Test'}</p>
+                        <p className="text-success/60 text-[9px] uppercase font-black tracking-widest">FFmpeg 6.1: {isFullMode ? 'Producción' : 'Smoke Test'}</p>
                       </div>
-                      <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />
+                      <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
                     </div>
                   )}
 
@@ -468,7 +493,7 @@ export default function AdminAdnsPage() {
                   {smokeTestPreviewUrl && (
                     <div className="mt-8 space-y-4 animate-in zoom-in-95 duration-300">
                       <p className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
-                        <Video className="h-4 w-4 text-emerald-500" /> Resultado de la Certificación
+                        <Video className="h-4 w-4 text-success" /> Resultado de la Certificación
                       </p>
                       <div className="relative rounded-lg overflow-hidden border-4 border-white bg-black aspect-[9/16] max-h-[400px] mx-auto">
                         <video 
@@ -503,13 +528,13 @@ export default function AdminAdnsPage() {
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold mb-2 text-center w-full">¿Eliminar ADN Maestro?</DialogTitle>
             </DialogHeader>
-            <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center mx-auto mb-6 mt-4">
+            <div className="w-20 h-20 bg-danger/15 text-danger rounded-lg flex items-center justify-center mx-auto mb-6 mt-4">
               <Trash2 className="h-10 w-10" />
             </div>
-            <p className="text-muted-foreground mb-8">Esta acción es irreversible y eliminará todos los archivos de la carpeta <span className="font-mono font-bold text-rose-600">{confirmDeleteId}</span>.</p>
+            <p className="text-muted-foreground mb-8">Esta acción es irreversible y eliminará todos los archivos de la carpeta <span className="font-mono font-bold text-danger">{confirmDeleteId}</span>.</p>
             <div className="flex gap-4">
               <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold" onClick={() => setConfirmDeleteId(null)}>Cancelar</Button>
-              <Button className="flex-1 h-12 rounded-xl font-bold bg-rose-600 hover:bg-rose-700 text-white" onClick={handleDelete}>Confirmar Borrado</Button>
+              <Button className="flex-1 h-12 rounded-xl font-bold bg-danger hover:bg-danger text-white" onClick={handleDelete}>Confirmar Borrado</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -519,11 +544,11 @@ export default function AdminAdnsPage() {
           <DialogContent className="mw-md">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Upload className="text-emerald-500" /> Cargar ADN Maestro
+                <Upload className="text-success" /> Cargar ADN Maestro
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 mb-8">
-              <div className="p-8 border-2 border-dashed border-slate-200 rounded-3xl text-center hover:border-emerald-500/50 transition-colors bg-slate-50/50">
+              <div className="p-8 border-2 border-dashed border-border rounded-3xl text-center hover:border-success/50 transition-colors bg-muted/50">
                 <Input 
                   id="adn-zip"
                   type="file" 
@@ -533,7 +558,7 @@ export default function AdminAdnsPage() {
                 />
                 <label htmlFor="adn-zip" className="cursor-pointer space-y-4 block">
                   <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto">
-                    <FileCode className={cn("h-8 w-8", selectedFile ? "text-emerald-500" : "text-slate-400")} />
+                    <FileCode className={cn("h-8 w-8", selectedFile ? "text-success" : "text-muted-foreground")} />
                   </div>
                   <div className="space-y-1">
                     <p className="font-bold text-sm">{selectedFile ? selectedFile.name : 'Seleccionar archivo .zip'}</p>
@@ -545,11 +570,11 @@ export default function AdminAdnsPage() {
               </div>
 
               {selectedFile && (
-                <div className="bg-emerald-50 p-4 rounded-2xl flex items-start gap-3 border border-emerald-100">
-                  <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="bg-success/10 p-4 rounded-2xl flex items-start gap-3 border border-success/15">
+                  <ShieldCheck className="h-5 w-5 text-success shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <p className="text-xs font-bold text-emerald-900">Listo para validar</p>
-                    <p className="text-[10px] text-emerald-700 leading-relaxed">
+                    <p className="text-xs font-bold text-success">Listo para validar</p>
+                    <p className="text-[10px] text-success leading-relaxed">
                       El sistema verificará la integridad de la estructura modular antes de realizar el despliegue.
                     </p>
                   </div>

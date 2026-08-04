@@ -21,8 +21,8 @@ export default function Error({
     <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full text-center space-y-8">
         <div className="space-y-4">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-            <AlertTriangle className="w-10 h-10 text-red-600" />
+          <div className="w-20 h-20 bg-danger/15 rounded-full flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-10 h-10 text-danger" />
           </div>
           <h1 className="text-4xl font-bold text-primary">Algo salió mal</h1>
           <p className="text-lg text-muted-foreground">
@@ -58,7 +58,7 @@ export default function Error({
             <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
               Detalles del error (desarrollo)
             </summary>
-            <pre className="mt-2 p-4 bg-slate-100 rounded-lg text-xs overflow-auto">
+            <pre className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-auto">
               {error.message}
               {error.stack}
             </pre>

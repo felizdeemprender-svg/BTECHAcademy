@@ -69,14 +69,14 @@ export function CourseNavigation({
                 "w-full text-left p-4 rounded-2xl transition-all group relative",
                 isActive 
                   ? "bg-primary text-white shadow-lg ring-4 ring-primary/10" 
-                  : "hover:bg-secondary/20 text-slate-600"
+                  : "hover:bg-secondary/20 text-muted-foreground"
               )}
               style={isActive ? { backgroundColor: primaryColor } : {}}
             >
               <div className="flex items-start gap-4">
                 <div className={cn(
                   "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                  isActive ? "bg-white/20 text-white" : "bg-secondary/50 text-slate-400 group-hover:text-primary"
+                  isActive ? "bg-white/20 text-white" : "bg-secondary/50 text-muted-foreground group-hover:text-primary"
                 )}>
                   {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <Play className={cn("h-4 w-4", isActive && "fill-white")} />}
                 </div>
@@ -85,7 +85,7 @@ export function CourseNavigation({
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60 mb-0.5">Módulo {idx + 1}</p>
                   <p className={cn(
                     "text-xs font-bold truncate leading-snug",
-                    isActive ? "text-white" : "text-slate-700"
+                    isActive ? "text-white" : "text-foreground"
                   )}>
                     {module.title}
                   </p>
@@ -97,7 +97,7 @@ export function CourseNavigation({
 
                 <ChevronRight className={cn(
                     "h-4 w-4 mt-4 transition-transform",
-                    isActive ? "text-white/50 translate-x-1" : "text-slate-300 group-hover:text-primary group-hover:translate-x-1"
+                    isActive ? "text-white/50 translate-x-1" : "text-border group-hover:text-primary group-hover:translate-x-1"
                 )} />
               </div>
             </button>

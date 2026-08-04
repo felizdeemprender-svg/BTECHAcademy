@@ -11,8 +11,8 @@ export default function UpgradeRequired() {
       <div className="max-w-md w-full space-y-8">
         <Card className="border-none">
           <CardContent className="p-8 text-center space-y-6">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-              <TrendingUp className="h-8 w-8 text-amber-600" />
+            <div className="w-16 h-16 bg-warn/15 rounded-full flex items-center justify-center mx-auto">
+              <TrendingUp className="h-8 w-8 text-warn" />
             </div>
             
             <div>
@@ -28,11 +28,11 @@ export default function UpgradeRequired() {
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <h3 className="font-semibold text-amber-800 mb-2">
+              <div className="p-4 bg-warn/10 rounded-lg border border-warn/20">
+                <h3 className="font-semibold text-warn mb-2">
                   Características del Plan Superior:
                 </h3>
-                <ul className="text-sm text-amber-700 space-y-1 text-left">
+                <ul className="text-sm text-warn space-y-1 text-left">
                   <li>• Página personalizada ilimitada</li>
                   <li>• Más cursos y estudiantes</li>
                   <li>• Branding personalizado</li>

@@ -226,10 +226,10 @@ export function FollowUpModals({
                     <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGuideFile(null); }} className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive z-10"><X className="h-4 w-4" /></Button>
                   </div>
                 ) : selectedFollowUp?.planGuideUrl ? (
-                  <div className="flex items-center justify-between w-full p-2 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div className="flex items-center justify-between w-full p-2 bg-success/10 rounded-xl border border-success/15">
                     <div className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-emerald-600" />
-                      <span className="text-xs font-bold text-emerald-700">Guía actual cargada</span>
+                      <FileText className="h-5 w-5 text-success" />
+                      <span className="text-xs font-bold text-success">Guía actual cargada</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm" onClick={() => window.open(selectedFollowUp.planGuideUrl, '_blank')} className="text-[10px] h-7 font-bold">Ver</Button>
@@ -269,11 +269,11 @@ export function FollowUpModals({
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent className="mw-md overflow-hidden text-center">
           <DialogHeader>
-            <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mx-auto mb-6">
+            <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center text-danger mx-auto mb-6">
               <AlertTriangle className="h-8 w-8" />
             </div>
             <DialogTitle className="text-2xl font-bold mb-2">¿Eliminar Seguimiento?</DialogTitle>
-            <DialogDescription className="text-sm text-slate-500 leading-relaxed mb-8">
+            <DialogDescription className="text-sm text-muted-foreground leading-relaxed mb-8">
               Esta acción borrará el programa y todas sus sesiones asociadas. 
               <br/><strong>Nota:</strong> Solo se permite borrar si no existen tareas o compromisos registrados.
             </DialogDescription>

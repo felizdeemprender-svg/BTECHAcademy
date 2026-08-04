@@ -66,17 +66,17 @@ export function CourseContent({
             <div className="w-1 h-5 rounded-full" style={{ backgroundColor: primaryColor }} />
             <h3 className="font-bold text-xl text-primary">Descripción de la Clase</h3>
         </div>
-        <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+        <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
           {activeModule?.description || 'En esta sesión aprenderás los fundamentos estratégicos necesarios para avanzar en el programa BTECH.'}
         </p>
       </div>
 
       {/* 2. Resources (Always Visible) */}
       {publicSupportMaterials.length > 0 && (
-        <div className="space-y-4 p-6 md:p-8 bg-slate-50/50 rounded-lg border border-slate-100">
+        <div className="space-y-4 p-6 md:p-8 bg-muted/50 rounded-lg border border-muted">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="h-5 w-5 text-primary" />
-            <h3 className="font-bold text-lg text-slate-800">Recursos y Materiales</h3>
+            <h3 className="font-bold text-lg text-foreground">Recursos y Materiales</h3>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             {publicSupportMaterials.map((m: any, idx: number) => (
@@ -89,7 +89,7 @@ export function CourseContent({
                     <Download className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{m.title || m.name || 'Recurso'}</p>
+                    <p className="text-xs font-bold text-foreground truncate max-w-[150px]">{m.title || m.name || 'Recurso'}</p>
                     <p className="text-[10px] text-muted-foreground uppercase font-medium">Material de Apoyo</p>
                   </div>
                 </div>
@@ -117,19 +117,19 @@ export function CourseContent({
       {evaluationResult && (
         <div className={cn(
           "rounded-lg p-6 md:p-8 border shadow-sm space-y-6 animate-in slide-in-from-bottom-4 duration-500",
-          isCompleted ? "bg-emerald-50 border-emerald-100" : "bg-amber-50 border-amber-100"
+          isCompleted ? "bg-success/10 border-success/15" : "bg-warn/10 border-warn/15"
         )}>
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <Badge className={cn(
                 "text-white border-none px-3 py-1 rounded-full font-black text-[10px] uppercase tracking-widest",
-                isCompleted ? "bg-emerald-500" : "bg-amber-500"
+                isCompleted ? "bg-success" : "bg-warn"
               )}>
                 {isCompleted ? 'Módulo Completado' : 'Revisión Necesaria'}
               </Badge>
               <h3 className={cn(
                 "text-2xl font-black",
-                isCompleted ? "text-emerald-900" : "text-amber-900"
+                isCompleted ? "text-success" : "text-warn"
               )}>
                 {isCompleted ? 'Tu Desempeño' : 'Feedback de la IA'}
               </h3>
@@ -137,11 +137,11 @@ export function CourseContent({
             <div className="text-right">
               <span className={cn(
                 "text-4xl font-black leading-none",
-                isCompleted ? "text-emerald-600" : "text-amber-600"
+                isCompleted ? "text-success" : "text-warn"
               )}>{evaluationResult.score}%</span>
               <p className={cn(
                 "text-[10px] font-bold uppercase tracking-widest mt-1",
-                isCompleted ? "text-emerald-700" : "text-amber-700"
+                isCompleted ? "text-success" : "text-warn"
               )}>Score Final</p>
             </div>
           </div>
@@ -149,11 +149,11 @@ export function CourseContent({
           <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl border relative overflow-hidden">
              <BrainCircuit className={cn(
                "absolute -right-4 -top-4 h-20 w-20 opacity-5",
-               isCompleted ? "text-emerald-500" : "text-amber-500"
+               isCompleted ? "text-success" : "text-warn"
              )} />
              <p className={cn(
                "text-sm italic leading-relaxed relative z-10 font-medium",
-               isCompleted ? "text-emerald-800" : "text-amber-800"
+               isCompleted ? "text-success" : "text-warn"
              )}>
                "{evaluationResult.feedback}"
              </p>
@@ -162,24 +162,24 @@ export function CourseContent({
           {isLastModule && (isCompleted || evaluationResult?.isSupport) ? (
             <div className={cn(
               "p-6 md:p-10 rounded-lg rounded-lg text-center space-y-4 md:space-y-6 animate-in zoom-in duration-500 border-2",
-              isCompleted ? "bg-emerald-500/10 border-emerald-500/20" : "bg-slate-50 border-slate-200"
+              isCompleted ? "bg-success/10 border-success/20" : "bg-muted border-border"
             )}>
               <div className={cn(
                 "w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center mx-auto shadow-lg",
-                isCompleted ? "bg-emerald-50 shadow-emerald-200" : "bg-slate-500 shadow-slate-200"
+                isCompleted ? "bg-success/10 shadow-success/20" : "bg-muted-foreground shadow-border"
               )}>
                 <Trophy className="text-white h-8 w-8 md:h-10 md:h-10" />
               </div>
               <div className="space-y-2">
                 <h3 className={cn(
                   "text-2xl md:text-3xl font-black",
-                  isCompleted ? "text-emerald-900" : "text-slate-900"
+                  isCompleted ? "text-success" : "text-foreground"
                 )}>
                   {isCompleted ? '¡Felicitaciones!' : 'Entrenamiento Finalizado'}
                 </h3>
                 <p className={cn(
                   "text-sm md:text-base font-medium max-w-md mx-auto",
-                  isCompleted ? "text-emerald-700" : "text-slate-600"
+                  isCompleted ? "text-success" : "text-muted-foreground"
                 )}>
                   {isCompleted 
                     ? 'Has aprobado con éxito todos los módulos de este entrenamiento. ¡Tu dedicación ha dado frutos!'
@@ -190,7 +190,7 @@ export function CourseContent({
                 onClick={() => window.location.href = '/my-courses'}
                 className={cn(
                   "h-14 md:h-16 w-full md:w-auto md:px-12 rounded-2xl text-white font-black text-base md:text-lg transition-all hover:scale-105 active:scale-95",
-                  isCompleted ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200" : "bg-slate-800 hover:bg-slate-900 shadow-slate-200"
+                  isCompleted ? "bg-success hover:bg-success shadow-success/20" : "bg-foreground hover:bg-foreground shadow-border"
                 )}
               >
                 Volver al Dashboard
@@ -199,18 +199,18 @@ export function CourseContent({
           ) : isCompleted ? (
             <Button 
               onClick={onContinue}
-              className="w-full h-14 rounded-2xl text-lg font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg text-white"
+              className="w-full h-14 rounded-2xl text-lg font-bold bg-success hover:bg-success shadow-lg text-white"
             >
               Siguiente Módulo <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           ) : (
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <p className="text-sm text-amber-700 font-black uppercase tracking-wider">
+                <p className="text-sm text-warn font-black uppercase tracking-wider">
                   {allowRetries ? 'Debes alcanzar al menos un 70% para continuar' : (isSupportNext ? 'Refuerzo académico requerido' : 'No se permiten reintentos en este módulo')}
                 </p>
                 {(!allowRetries || isSupportNext) && (
-                  <p className="text-xs text-amber-600 font-medium max-w-xs mx-auto leading-relaxed">
+                  <p className="text-xs text-warn font-medium max-w-xs mx-auto leading-relaxed">
                     Te recomendamos volver a ver el video, revisar detenidamente los documentos anexados y contestar las preguntas de refuerzo para consolidar tu aprendizaje.
                   </p>
                 )}
@@ -219,14 +219,14 @@ export function CourseContent({
               {(allowRetries || isSupportNext) ? (
                 <Button 
                   onClick={onStartQuiz}
-                  className="w-full h-14 rounded-2xl text-lg font-bold bg-amber-600 hover:bg-amber-700 shadow-lg text-white"
+                  className="w-full h-14 rounded-2xl text-lg font-bold bg-warn hover:bg-warn shadow-lg text-white"
                 >
                   {isSupportNext ? 'Contestar Preguntas de Refuerzo' : 'Reintentar Desafío'} <BrainCircuit className="ml-2 h-5 w-5" />
                 </Button>
               ) : (
                 <Button 
                   onClick={onContinue}
-                  className="w-full h-14 rounded-2xl text-lg font-bold bg-slate-800 hover:bg-slate-900 shadow-lg text-white"
+                  className="w-full h-14 rounded-2xl text-lg font-bold bg-foreground hover:bg-foreground shadow-lg text-white"
                 >
                   Continuar al Siguiente Módulo <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -244,7 +244,7 @@ export function CourseContent({
               <Trophy className="h-8 w-8 text-primary" />
             </div>
             <h3 className="text-2xl font-black text-primary uppercase tracking-tight">¿Listo para el Desafío?</h3>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Pon a prueba lo aprendido en esta clase para desbloquear el siguiente nivel de tu formación académica.
             </p>
           </div>

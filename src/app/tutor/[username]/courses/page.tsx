@@ -331,7 +331,7 @@ export default function TutorCoursesPage({ params }: { params: Promise<{ usernam
                       unoptimized={!!course.thumbnail} 
                     />
                     <div className="absolute top-4 right-4">
-                      <Badge className={course.price === 0 ? "bg-green-500 text-white" : "bg-blue-500 text-white"}>
+                      <Badge className={course.price === 0 ? "bg-success text-white" : "bg-blue-500 text-white"}>
                         {course.price === 0 ? 'Gratis' : `$${course.price}`}
                       </Badge>
                     </div>
@@ -356,7 +356,7 @@ export default function TutorCoursesPage({ params }: { params: Promise<{ usernam
                         {course.duration}h
                       </span>
                       <span className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" /> 
+                        <Star className="h-3.5 w-3.5 text-warn fill-warn" /> 
                         {course.rating}
                       </span>
                       <span className="flex items-center gap-1">

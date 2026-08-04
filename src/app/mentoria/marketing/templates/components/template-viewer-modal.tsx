@@ -175,7 +175,7 @@ export function TemplateViewerModal({
           <div className="space-y-4">
             <div>
               <h4 className="font-semibold text-lg">{template.headline}</h4>
-              <p className="text-gray-600">{template.subheadline}</p>
+              <p className="text-muted-foreground">{template.subheadline}</p>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{template.ctaText}</Badge>
@@ -208,11 +208,11 @@ export function TemplateViewerModal({
           <div className="space-y-3">
             <div>
               <h4 className="font-semibold">{template.subject}</h4>
-              <p className="text-sm text-gray-600 italic">
+              <p className="text-sm text-muted-foreground italic">
                 {template.preheader}
               </p>
             </div>
-            <div className="bg-gray-50 p-3 rounded text-sm max-h-32 overflow-y-auto">
+            <div className="bg-muted p-3 rounded text-sm max-h-32 overflow-y-auto">
               {template.body}
             </div>
           </div>
@@ -255,7 +255,7 @@ export function TemplateViewerModal({
                 {template.headlines
                   .slice(0, 2)
                   .map((headline: string, i: number) => (
-                    <p key={i} className="text-sm bg-gray-50 p-2 rounded">
+                    <p key={i} className="text-sm bg-muted p-2 rounded">
                       {headline}
                     </p>
                   ))}
@@ -267,7 +267,7 @@ export function TemplateViewerModal({
                 {template.descriptions
                   .slice(0, 2)
                   .map((desc: string, i: number) => (
-                    <p key={i} className="text-sm bg-gray-50 p-2 rounded">
+                    <p key={i} className="text-sm bg-muted p-2 rounded">
                       {desc}
                     </p>
                   ))}
@@ -341,7 +341,7 @@ export function TemplateViewerModal({
               <DialogTitle className="text-2xl font-bold">
                 {collection.name}
               </DialogTitle>
-              <p className="text-gray-600 mt-1">{collection.directives}</p>
+              <p className="text-muted-foreground mt-1">{collection.directives}</p>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -351,7 +351,7 @@ export function TemplateViewerModal({
 
         <div className="flex h-[calc(90vh-8rem)]">
           {/* Sidebar - Lista de Templates */}
-          <div className="w-1/3 border-r bg-gray-50">
+          <div className="w-1/3 border-r bg-muted">
             <div className="p-4 space-y-4">
               {/* Estadísticas */}
               <div className="grid grid-cols-2 gap-2">
@@ -359,24 +359,24 @@ export function TemplateViewerModal({
                   <div className="text-lg font-bold text-blue-600">
                     {templateCounts.total}
                   </div>
-                  <div className="text-xs text-gray-600">Templates</div>
+                  <div className="text-xs text-muted-foreground">Templates</div>
                 </div>
                 <div className="bg-white p-3 rounded text-center">
-                  <div className="text-lg font-bold text-green-600">
+                  <div className="text-lg font-bold text-success">
                     {
                       Object.entries(templateCounts).filter(
                         ([key, count]) => key !== "total" && count > 0,
                       ).length
                     }
                   </div>
-                  <div className="text-xs text-gray-600">Canales</div>
+                  <div className="text-xs text-muted-foreground">Canales</div>
                 </div>
               </div>
 
               {/* Filtros */}
               <div className="space-y-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar templates..."
                     value={searchTerm}
@@ -509,9 +509,9 @@ export function TemplateViewerModal({
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-500">
+              <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
-                  <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <Eye className="h-12 w-12 mx-auto mb-4 text-border" />
                   <p>Selecciona un template para ver su contenido</p>
                 </div>
               </div>

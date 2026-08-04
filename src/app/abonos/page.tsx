@@ -150,7 +150,7 @@ export default function AbonosPage() {
                         Hasta {plan.maxSimultaneousCourses}
                       </div>
                       {plan.hasPremiumAI && (
-                        <div className="text-[8px] text-amber-500 uppercase tracking-widest mt-1 flex justify-center items-center gap-1">
+                        <div className="text-[8px] text-warn uppercase tracking-widest mt-1 flex justify-center items-center gap-1">
                           ✨ IA Premium
                         </div>
                       )}
@@ -158,7 +158,7 @@ export default function AbonosPage() {
                     <TableCell className="text-center">
                       <Badge className={cn(
                         "px-3 py-1 border-none",
-                        plan.isActive !== false ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                        plan.isActive !== false ? "bg-success/15 text-success" : "bg-danger/15 text-danger"
                       )}>
                         {plan.isActive !== false ? <CheckCircle2 className="h-3 w-3 mr-1" /> : <Ban className="h-3 w-3 mr-1" />}
                         {plan.isActive !== false ? 'Activo' : 'Inactivo'}
@@ -232,10 +232,10 @@ export default function AbonosPage() {
                    size="lg" />
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4 bg-amber-50 rounded-2xl border border-amber-100">
+              <div className="flex items-center justify-between p-4 bg-warn/10 rounded-2xl border border-warn/15">
                 <div className="flex items-center gap-2">
-                  <span className="text-amber-500 font-bold">✨</span>
-                  <Label htmlFor="plan-ai" className="font-bold text-sm cursor-pointer text-amber-900">Incluye Motor IA Premium (Imagen 3)</Label>
+                  <span className="text-warn font-bold">✨</span>
+                  <Label htmlFor="plan-ai" className="font-bold text-sm cursor-pointer text-warn">Incluye Motor IA Premium (Imagen 3)</Label>
                 </div>
                 <input 
                   id="plan-ai"
@@ -243,7 +243,7 @@ export default function AbonosPage() {
                   type="checkbox" 
                   checked={formData.hasPremiumAI} 
                   onChange={e => setFormData({...formData, hasPremiumAI: e.target.checked})}
-                  className="h-5 w-5 accent-amber-500 cursor-pointer"
+                  className="h-5 w-5 accent-warn cursor-pointer"
                 />
               </div>
               <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">

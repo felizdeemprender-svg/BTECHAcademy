@@ -38,17 +38,17 @@ type TransferStatus = 'pending' | 'approved' | 'rejected';
 const STATUS_CONFIG: Record<TransferStatus, { label: string; color: string; icon: React.ReactNode }> = {
   pending: {
     label: 'Pendiente',
-    color: 'bg-amber-50 text-amber-700 border-amber-200',
+    color: 'bg-warn/10 text-warn border-warn/20',
     icon: <Clock className="h-3.5 w-3.5" />,
   },
   approved: {
     label: 'Aprobada',
-    color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    color: 'bg-success/10 text-success border-success/20',
     icon: <CheckCircle2 className="h-3.5 w-3.5" />,
   },
   rejected: {
     label: 'Rechazada',
-    color: 'bg-rose-50 text-rose-700 border-rose-200',
+    color: 'bg-danger/10 text-danger border-danger/20',
     icon: <XCircle className="h-3.5 w-3.5" />,
   },
 };
@@ -154,26 +154,26 @@ export default function TransfersPage() {
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-              <ArrowLeftRight className="h-10 w-10 text-indigo-600" />
+            <h1 className="text-4xl font-black text-foreground tracking-tight flex items-center gap-3">
+              <ArrowLeftRight className="h-10 w-10 text-primary" />
               Transferencias
             </h1>
-            <p className="text-slate-500 text-lg font-medium mt-1">
+            <p className="text-muted-foreground text-lg font-medium mt-1">
               Aprobá las inscripciones de alumnos que pagaron por transferencia bancaria.
             </p>
             {/* DEBUG INFO */}
-            <div className="mt-2 text-xs text-slate-400">
+            <div className="mt-2 text-xs text-muted-foreground">
               Debug: {user?.email} | isAdmin = {isAdmin ? 'YES' : 'NO'} | roles = {profile?.roles?.join(', ')} | allOrders = {allOrders?.length ?? 0}
             </div>
           </div>
           {pendingCount > 0 && (
-            <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4">
-              <AlertTriangle className="h-6 w-6 text-amber-500" />
+            <div className="flex items-center gap-3 bg-warn/10 border border-warn/20 rounded-2xl px-6 py-4">
+              <AlertTriangle className="h-6 w-6 text-warn" />
               <div>
-                <p className="font-black text-amber-900 text-sm">
+                <p className="font-black text-warn text-sm">
                   {pendingCount} {pendingCount === 1 ? 'transferencia pendiente' : 'transferencias pendientes'}
                 </p>
-                <p className="text-xs text-amber-600 font-medium">Revisalas y aprobá el acceso</p>
+                <p className="text-xs text-warn font-medium">Revisalas y aprobá el acceso</p>
               </div>
             </div>
           )}
@@ -188,13 +188,13 @@ export default function TransfersPage() {
               className={cn(
                 'px-5 py-2.5 rounded-2xl font-black text-sm transition-all',
                 filter === f
-                  ? 'bg-slate-900 text-white shadow-lg'
-                  : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'
+                  ? 'bg-foreground text-white shadow-lg'
+                  : 'bg-white text-muted-foreground border border-border hover:border-border'
               )}
             >
               {f === 'all' ? 'Todas' : STATUS_CONFIG[f].label}
               {f === 'pending' && pendingCount > 0 && (
-                <span className="ml-2 bg-amber-500 text-white text-[10px] font-black rounded-full px-2 py-0.5">
+                <span className="ml-2 bg-warn text-white text-[10px] font-black rounded-full px-2 py-0.5">
                   {pendingCount}
                 </span>
               )}
@@ -205,17 +205,17 @@ export default function TransfersPage() {
         {/* Lista de órdenes */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <Loader2 className="animate-spin h-10 w-10 text-indigo-600" />
-            <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Cargando órdenes...</p>
+            <Loader2 className="animate-spin h-10 w-10 text-primary" />
+            <p className="font-black text-muted-foreground uppercase tracking-widest text-xs">Cargando órdenes...</p>
           </div>
         ) : !orders || orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-6">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center text-border">
               <Inbox className="h-10 w-10" />
             </div>
             <div className="text-center">
-              <p className="font-black text-slate-900">No hay transferencias aquí</p>
-              <p className="text-xs text-slate-400 font-medium mt-1">
+              <p className="font-black text-foreground">No hay transferencias aquí</p>
+              <p className="text-xs text-muted-foreground font-medium mt-1">
                 {filter === 'pending'
                   ? 'No tenés transferencias pendientes de aprobación.'
                   : 'No se encontraron transferencias con este filtro.'}
@@ -239,8 +239,8 @@ export default function TransfersPage() {
                   className={cn(
                     'border rounded-lg overflow-hidden transition-all',
                     isPending
-                      ? 'border-amber-200 shadow-amber-50 bg-white'
-                      : 'border-slate-100 shadow-md bg-white'
+                      ? 'border-warn/20 shadow-warn/10 bg-white'
+                      : 'border-muted shadow-md bg-white'
                   )}
                 >
                   <CardContent className="p-8">
@@ -257,44 +257,44 @@ export default function TransfersPage() {
                             {statusConfig.icon}
                             {statusConfig.label}
                           </Badge>
-                          <span className="text-xs text-slate-400 font-medium">{createdAt}</span>
+                          <span className="text-xs text-muted-foreground font-medium">{createdAt}</span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                              <User className="h-4 w-4 text-slate-500" />
+                            <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                              <User className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Alumno</p>
-                              <p className="font-bold text-slate-900 text-sm">{order.studentName}</p>
+                              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Alumno</p>
+                              <p className="font-bold text-foreground text-sm">{order.studentName}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                              <Mail className="h-4 w-4 text-slate-500" />
+                            <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                              <Mail className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Email</p>
-                              <p className="font-bold text-slate-900 text-sm">{order.studentEmail}</p>
+                              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Email</p>
+                              <p className="font-bold text-foreground text-sm">{order.studentEmail}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                              <BookOpen className="h-4 w-4 text-slate-500" />
+                            <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                              <BookOpen className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div>
-                              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Curso</p>
-                              <p className="font-bold text-slate-900 text-sm">{order.pageTitle}</p>
+                              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Curso</p>
+                              <p className="font-bold text-foreground text-sm">{order.pageTitle}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-                              <Banknote className="h-4 w-4 text-indigo-500" />
+                            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                              <Banknote className="h-4 w-4 text-primary" />
                             </div>
                             <div>
-                              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Monto</p>
-                              <p className="font-black text-indigo-700 text-lg">
+                              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Monto</p>
+                              <p className="font-black text-primary text-lg">
                                 ${(order.amount ?? 0).toLocaleString('es-AR')}
                               </p>
                             </div>
@@ -302,13 +302,13 @@ export default function TransfersPage() {
                         </div>
 
                         {/* Código de referencia */}
-                        <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
-                          <Hash className="h-4 w-4 text-amber-600 shrink-0" />
+                        <div className="flex items-center gap-3 p-4 bg-warn/10 border border-warn/15 rounded-2xl">
+                          <Hash className="h-4 w-4 text-warn shrink-0" />
                           <div>
-                            <p className="text-[10px] text-amber-700 font-black uppercase tracking-widest">
+                            <p className="text-[10px] text-warn font-black uppercase tracking-widest">
                               Código de referencia (verificar en el banco)
                             </p>
-                            <p className="font-black text-amber-900 font-mono tracking-widest text-base">
+                            <p className="font-black text-warn font-mono tracking-widest text-base">
                               {order.referenceCode}
                             </p>
                           </div>
@@ -321,7 +321,7 @@ export default function TransfersPage() {
                           <Button
                             onClick={() => openConfirm(order, 'approve')}
                             disabled={isProcessing}
-                            className="h-14 px-8 rounded-2xl font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 gap-2"
+                            className="h-14 px-8 rounded-2xl font-black bg-success hover:bg-success text-white shadow-lg shadow-success/20 gap-2"
                           >
                             {isProcessing ? (
                               <Loader2 className="animate-spin h-5 w-5" />
@@ -334,7 +334,7 @@ export default function TransfersPage() {
                             onClick={() => openConfirm(order, 'reject')}
                             disabled={isProcessing}
                             variant="outline"
-                            className="h-12 px-8 rounded-2xl font-black text-rose-500 border-rose-200 hover:bg-rose-50 gap-2"
+                            className="h-12 px-8 rounded-2xl font-black text-danger border-danger/20 hover:bg-danger/10 gap-2"
                           >
                             <XCircle className="h-4 w-4" />
                             Rechazar
@@ -343,16 +343,16 @@ export default function TransfersPage() {
                       )}
 
                       {status === 'approved' && (
-                        <div className="flex items-center gap-2 px-5 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl shrink-0">
-                          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                          <span className="font-black text-emerald-700 text-sm">Inscripción activa</span>
+                        <div className="flex items-center gap-2 px-5 py-3 bg-success/10 border border-success/15 rounded-2xl shrink-0">
+                          <CheckCircle2 className="h-5 w-5 text-success" />
+                          <span className="font-black text-success text-sm">Inscripción activa</span>
                         </div>
                       )}
 
                       {status === 'rejected' && (
-                        <div className="flex items-center gap-2 px-5 py-3 bg-rose-50 border border-rose-100 rounded-2xl shrink-0">
-                          <XCircle className="h-5 w-5 text-rose-500" />
-                          <span className="font-black text-rose-600 text-sm">Rechazada</span>
+                        <div className="flex items-center gap-2 px-5 py-3 bg-danger/10 border border-danger/15 rounded-2xl shrink-0">
+                          <XCircle className="h-5 w-5 text-danger" />
+                          <span className="font-black text-danger text-sm">Rechazada</span>
                         </div>
                       )}
                     </div>
@@ -372,8 +372,8 @@ export default function TransfersPage() {
               className={cn(
                 'w-16 h-16 rounded-3xl flex items-center justify-center mx-auto',
                 confirmDialog.action === 'approve'
-                  ? 'bg-emerald-100 text-emerald-600'
-                  : 'bg-rose-100 text-rose-500'
+                  ? 'bg-success/15 text-success'
+                  : 'bg-danger/15 text-danger'
               )}
             >
               {confirmDialog.action === 'approve' ? (
@@ -387,15 +387,15 @@ export default function TransfersPage() {
                 ? '¿Confirmar el pago?'
                 : '¿Rechazar esta transferencia?'}
             </DialogTitle>
-            <DialogDescription className="text-center text-slate-500 font-medium">
+            <DialogDescription className="text-center text-muted-foreground font-medium">
               {confirmDialog.action === 'approve' ? (
                 <>
                   Verificá que el monto de{' '}
-                  <strong className="text-slate-900">
+                  <strong className="text-foreground">
                     ${(confirmDialog.order?.amount ?? 0).toLocaleString('es-AR')}
                   </strong>{' '}
                   fue acreditado con el código{' '}
-                  <strong className="text-amber-700 font-mono">
+                  <strong className="text-warn font-mono">
                     {confirmDialog.order?.referenceCode}
                   </strong>
                   . Luego de aprobar, el alumno recibirá acceso inmediato.
@@ -403,7 +403,7 @@ export default function TransfersPage() {
               ) : (
                 <>
                   La transferencia de{' '}
-                  <strong className="text-slate-900">{confirmDialog.order?.studentName}</strong> será
+                  <strong className="text-foreground">{confirmDialog.order?.studentName}</strong> será
                   rechazada. El alumno NO recibirá acceso al curso.
                 </>
               )}
@@ -415,8 +415,8 @@ export default function TransfersPage() {
               className={cn(
                 'w-full h-14 rounded-2xl font-black text-lg',
                 confirmDialog.action === 'approve'
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  : 'bg-rose-500 hover:bg-rose-600 text-white'
+                  ? 'bg-success hover:bg-success text-white'
+                  : 'bg-danger hover:bg-danger text-white'
               )}
             >
               {confirmDialog.action === 'approve' ? 'Sí, aprobar inscripción' : 'Sí, rechazar'}
@@ -424,7 +424,7 @@ export default function TransfersPage() {
             <Button
               variant="ghost"
               onClick={() => handleAction(false)}
-              className="text-slate-400 font-bold hover:bg-transparent"
+              className="text-muted-foreground font-bold hover:bg-transparent"
             >
               Cancelar
             </Button>

@@ -512,7 +512,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                 <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">
                   {studentData?.displayName || 'Alumno Institucional'}
                 </h1>
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Alumno Activo</Badge>
+                <Badge variant="outline" className="bg-success/10 text-success border-success/20">Alumno Activo</Badge>
               </div>
               <p className="text-muted-foreground font-medium flex items-center gap-2"><Mail className="h-4 w-4" /> {studentData?.email || enrollments[0]?.inviteEmail}</p>
             </div>
@@ -542,7 +542,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
                     <div className="space-y-4">
                       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Biografía Académica</Label>
-                      <div className="bg-secondary/10 p-6 rounded-lg border-none italic text-slate-700 leading-relaxed min-h-[100px]">
+                      <div className="bg-secondary/10 p-6 rounded-lg border-none italic text-foreground leading-relaxed min-h-[100px]">
                         {studentData?.profile?.bio || 'Sin biografía registrada.'}
                       </div>
                     </div>
@@ -579,7 +579,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                       {sub ? (
                         <div className="bg-primary/5 p-6 rounded-lg border border-primary/10 grid sm:grid-cols-2 gap-6">
                           <div className="space-y-3">
-                            <Badge className="bg-emerald-500 text-white border-none h-5 text-[8px] font-black uppercase tracking-widest">Activo: {sub.planName}</Badge>
+                            <Badge className="bg-success text-white border-none h-5 text-[8px] font-black uppercase tracking-widest">Activo: {sub.planName}</Badge>
                             <div className="flex items-center gap-4">
                               <div className="w-10 h-10 rounded-xl bg-white border flex items-center justify-center text-primary shadow-sm"><Layers className="h-5 w-5" /></div>
                               <div>
@@ -594,7 +594,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                               <span className="text-primary">{daysLeft} Días</span>
                             </div>
                             <Progress value={Math.min(100, (daysLeft/365)*100)} className="h-1.5 bg-secondary" />
-                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase text-right">Vence: {subEndDate ? format(subEndDate, 'dd/MM/yyyy') : '-'}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase text-right">Vence: {subEndDate ? format(subEndDate, 'dd/MM/yyyy') : '-'}</p>
                           </div>
                         </div>
                       ) : (
@@ -699,11 +699,11 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                               <TableRow key={enroll.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
                                 <TableCell className="px-10 py-6">
                                   <div className="flex items-center gap-4">
-                                    <div className="relative w-12 h-12 rounded-xl bg-slate-100 overflow-hidden border shrink-0">
+                                    <div className="relative w-12 h-12 rounded-xl bg-muted overflow-hidden border shrink-0">
                                       {enroll.course?.thumbnail ? (
                                         <img src={enroll.course.thumbnail} alt={enroll.course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                       ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                        <div className="w-full h-full flex items-center justify-center text-border">
                                           <BookOpen className="h-6 w-6" />
                                         </div>
                                       )}
@@ -726,7 +726,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <Badge variant="outline" className="rounded-lg h-7 gap-1.5 font-bold border-primary/20 text-primary">
-                                    <CheckCircle2 className={cn("h-3 w-3", progress === 100 ? "text-emerald-500" : "text-slate-300")} />
+                                    <CheckCircle2 className={cn("h-3 w-3", progress === 100 ? "text-success" : "text-border")} />
                                     {completedModules}/{totalModules}
                                   </Badge>
                                 </TableCell>
@@ -782,13 +782,13 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                           <Card className="border-none rounded-lg overflow-hidden bg-white">
                             <CardContent className="p-0">
                               <Table>
-                                <TableHeader className="bg-slate-50 border-b">
+                                <TableHeader className="bg-muted border-b">
                                   <TableRow className="border-none">
-                                    <TableHead className="py-4 px-8 text-slate-500 uppercase tracking-widest text-[9px] font-bold">Módulo</TableHead>
-                                    <TableHead className="py-4 text-center text-slate-500 uppercase tracking-widest text-[9px] font-bold">Fecha</TableHead>
-                                    <TableHead className="py-4 text-center text-slate-500 uppercase tracking-widest text-[9px] font-bold">Calificación</TableHead>
-                                    <TableHead className="py-4 text-center text-slate-500 uppercase tracking-widest text-[9px] font-bold">Intentos</TableHead>
-                                    <TableHead className="py-4 px-8 text-right text-slate-500 uppercase tracking-widest text-[9px] font-bold">Acción</TableHead>
+                                    <TableHead className="py-4 px-8 text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Módulo</TableHead>
+                                    <TableHead className="py-4 text-center text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Fecha</TableHead>
+                                    <TableHead className="py-4 text-center text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Calificación</TableHead>
+                                    <TableHead className="py-4 text-center text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Intentos</TableHead>
+                                    <TableHead className="py-4 px-8 text-right text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Acción</TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -804,11 +804,11 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                                           <div className="flex items-center gap-3">
                                             <div className={cn(
                                               "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black",
-                                              moduleAttempts.length > 0 ? (isPassing ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600") : "bg-slate-50 text-slate-300"
+                                              moduleAttempts.length > 0 ? (isPassing ? "bg-success/10 text-success" : "bg-danger/10 text-danger") : "bg-muted text-border"
                                             )}>
                                               {index + 1}
                                             </div>
-                                            <span className={cn("font-bold text-sm", moduleAttempts.length === 0 ? "text-slate-400" : "text-slate-700")}>
+                                            <span className={cn("font-bold text-sm", moduleAttempts.length === 0 ? "text-muted-foreground" : "text-foreground")}>
                                               {mod.title}
                                             </span>
                                           </div>
@@ -826,18 +826,18 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                                           {evalData ? (
                                             <Badge className={cn(
                                               "h-7 px-3 rounded-lg border-none font-black text-xs",
-                                              isPassing ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"
+                                              isPassing ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
                                             )}>
                                               {evalData.score}%
                                             </Badge>
                                           ) : (
-                                            <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Pendiente</span>
+                                            <span className="text-[10px] text-border font-bold uppercase tracking-widest">Pendiente</span>
                                           )}
                                         </TableCell>
                                         <TableCell className="text-center min-w-[200px]">
                                           <div className="flex flex-wrap justify-center gap-1.5 py-1">
                                             {moduleAttempts.length === 0 ? (
-                                              <span className="text-[9px] text-slate-300 italic">Sin intentos</span>
+                                              <span className="text-[9px] text-border italic">Sin intentos</span>
                                             ) : (
                                               moduleAttempts.map((attempt) => (
                                                 <Badge 
@@ -846,7 +846,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                                                   className="h-6 px-2 rounded-md gap-1 cursor-pointer hover:bg-secondary transition-colors text-[9px] font-bold"
                                                   onClick={() => handleViewAttemptDetail(attempt)}
                                                 >
-                                                  <span className={attempt.score >= 70 ? "text-emerald-600" : "text-rose-600"}>
+                                                  <span className={attempt.score >= 70 ? "text-success" : "text-danger"}>
                                                     {attempt.score}%
                                                   </span>
                                                 </Badge>
@@ -874,8 +874,8 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                           </Card>
 
                           {progress < 100 && (
-                            <div className="p-4 bg-slate-50 rounded-[1.5rem] border border-dashed border-slate-200 text-center">
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+                            <div className="p-4 bg-muted rounded-[1.5rem] border border-dashed border-border text-center">
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2">
                                 <Clock className="h-3.5 w-3.5" /> Faltan {totalModules - completedModules} clases por completar
                               </p>
                             </div>
@@ -919,7 +919,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                             <TableCell className="text-center">
                               <Badge className={cn(
                                 "text-[8px] uppercase font-black px-2 h-5 border-none",
-                                f.status === 'active' ? "bg-emerald-500" : "bg-rose-500"
+                                f.status === 'active' ? "bg-success" : "bg-danger"
                               )}>
                                 {f.status === 'active' ? 'En Curso' : 'Suspendido'}
                               </Badge>
@@ -988,7 +988,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                             <TableCell className="text-center">
                               <Badge className={cn(
                                 "text-[8px] uppercase font-black px-2 h-5 border-none",
-                                task.status === 'completed' ? "bg-emerald-500" : "bg-amber-500"
+                                task.status === 'completed' ? "bg-success" : "bg-warn"
                               )}>
                                 {task.status === 'completed' ? 'Entregada' : 'Pendiente'}
                               </Badge>
@@ -1052,7 +1052,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                         ) : notes.map((note) => (
                           <TableRow key={note.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
                             <TableCell className="px-10 py-6">
-                              <p className="text-sm text-slate-700 line-clamp-1 italic">"{note.content}"</p>
+                              <p className="text-sm text-foreground line-clamp-1 italic">"{note.content}"</p>
                             </TableCell>
                             <TableCell className="text-center">
                               <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-center gap-1.5">
@@ -1087,20 +1087,20 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
         <DialogContent className="mw-2xl h-[90vh] flex flex-col">
           <div className="relative shrink-0 px-8 pt-8">
             <Settings2 className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
-            <DialogTitle className="text-2xl font-bold flex items-center gap-3"><BrainCircuit className="h-6 w-6 text-emerald-400" /> Perfilamiento Estratégico IA</DialogTitle>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3"><BrainCircuit className="h-6 w-6 text-success" /> Perfilamiento Estratégico IA</DialogTitle>
             <DialogDescription className="text-muted-foreground mt-1">Configura el enfoque del análisis y selecciona fuentes granulares.</DialogDescription>
           </div>
           
           <ScrollArea className="flex-1 px-8 pt-0">
             <div className="space-y-10 pb-8">
               <section className="space-y-4">
-                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">1. ¿Qué queremos descubrir? (Lente del Análisis)</Label>
+                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-1">1. ¿Qué queremos descubrir? (Lente del Análisis)</Label>
                 <div className="grid gap-4">
                   <Input 
                     value={profilingFocus}
                     onChange={e => setProfilingFocus(e.target.value)}
                     placeholder="Ej: Determinar su cliente ideal, sugerencias de marca personal..."
-                    className="border-2 border-primary/10 font-bold bg-slate-50"
+                    className="border-2 border-primary/10 font-bold bg-muted"
                    size="xl" />
                   <div className="flex flex-wrap gap-2">
                     {[
@@ -1125,7 +1125,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               </section>
 
               <section className="space-y-6">
-                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">2. Fuentes de Información Detalladas</Label>
+                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-1">2. Fuentes de Información Detalladas</Label>
                 
                 {/* Cursos */}
                 <div className="space-y-3">
@@ -1135,14 +1135,14 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div className="grid gap-2">
                     {enrollments.map(e => (
-                      <div key={e.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <div key={e.id} className="flex items-center gap-3 p-3 bg-muted rounded-xl border border-muted">
                         <Checkbox 
                           checked={selectedCourseIds.includes(e.courseId)}
                           onCheckedChange={(checked) => {
                             setSelectedCourseIds(checked ? [...selectedCourseIds, e.courseId] : selectedCourseIds.filter(id => id !== e.courseId));
                           }}
                         />
-                        <span className="text-xs font-bold text-slate-700 truncate">{e.course?.title}</span>
+                        <span className="text-xs font-bold text-foreground truncate">{e.course?.title}</span>
                       </div>
                     ))}
                   </div>
@@ -1156,14 +1156,14 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div className="grid gap-2">
                     {(tasks?.filter(t => t.status === 'completed') || []).map(t => (
-                      <div key={t.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <div key={t.id} className="flex items-center gap-3 p-3 bg-muted rounded-xl border border-muted">
                         <Checkbox 
                           checked={selectedTaskIds.includes(t.id)}
                           onCheckedChange={(checked) => {
                             setSelectedTaskIds(checked ? [...selectedTaskIds, t.id] : selectedTaskIds.filter(id => id !== t.id));
                           }}
                         />
-                        <span className="text-xs font-bold text-slate-700 truncate">{t.title}</span>
+                        <span className="text-xs font-bold text-foreground truncate">{t.title}</span>
                       </div>
                     ))}
                   </div>
@@ -1177,14 +1177,14 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div className="grid gap-2">
                     {(followUps || []).map(f => (
-                      <div key={f.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <div key={f.id} className="flex items-center gap-3 p-3 bg-muted rounded-xl border border-muted">
                         <Checkbox 
                           checked={selectedFollowUpIds.includes(f.id)}
                           onCheckedChange={(checked) => {
                             setSelectedFollowUpIds(checked ? [...selectedFollowUpIds, f.id] : selectedFollowUpIds.filter(id => id !== f.id));
                           }}
                         />
-                        <span className="text-xs font-bold text-slate-700 truncate">{f.title}</span>
+                        <span className="text-xs font-bold text-foreground truncate">{f.title}</span>
                       </div>
                     ))}
                   </div>
@@ -1205,7 +1205,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
             </div>
           </ScrollArea>
 
-          <DialogFooter className="bg-slate-50 border-t shrink-0 px-8 py-6">
+          <DialogFooter className="bg-muted border-t shrink-0 px-8 py-6">
             <Button 
               onClick={handleGenerateAIProfile} 
               disabled={isGeneratingProfile}
@@ -1242,7 +1242,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               <div className="bg-primary/5 p-8 border border-primary/10 flex items-start gap-6">
                 <div className={cn(
                   "w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-black text-white shrink-0",
-                  (selectedAttempt?.score || 0) >= 70 ? "bg-emerald-500" : "bg-rose-500"
+                  (selectedAttempt?.score || 0) >= 70 ? "bg-success" : "bg-danger"
                 )}>
                   {selectedAttempt?.score}%
                 </div>
@@ -1250,7 +1250,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
                     <MessageCircle className="h-4 w-4" /> Devolución de Gemini
                   </h4>
-                  <p className="text-sm text-slate-700 italic leading-relaxed">"{selectedAttempt?.feedback || 'Sin feedback registrado'}"</p>
+                  <p className="text-sm text-foreground italic leading-relaxed">"{selectedAttempt?.feedback || 'Sin feedback registrado'}"</p>
                 </div>
               </div>
 
@@ -1275,25 +1275,25 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                       }
                       
                       return (
-                        <Card key={idx} className="border-none shadow-sm rounded-2xl overflow-hidden bg-slate-50 border-l-4 border-l-primary/20">
+                        <Card key={idx} className="border-none shadow-sm rounded-2xl overflow-hidden bg-muted border-l-4 border-l-primary/20">
                           <div className="p-6 space-y-4">
                             <div className="flex items-center justify-between">
                               <Badge variant="secondary" className="text-[9px] uppercase font-bold tracking-widest">{q.type?.replace('_', ' ')}</Badge>
                               {q.type !== 'free_response' && (
                                 <Badge className={cn(
                                   "text-[9px] uppercase font-bold",
-                                  isCorrect ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                                  isCorrect ? "bg-success/15 text-success" : "bg-danger/15 text-danger"
                                 )}>
                                   {isCorrect ? 'Correcta' : 'Incorrecta'}
                                 </Badge>
                               )}
                             </div>
-                            <p className="font-bold text-slate-900 leading-snug">{q.question}</p>
+                            <p className="font-bold text-foreground leading-snug">{q.question}</p>
                             
                             <div className="grid sm:grid-cols-2 gap-4">
                               <div className="p-4 bg-white rounded-xl border border-primary/5">
                                 <span className="text-[8px] font-bold uppercase text-muted-foreground block mb-1">Respuesta del Alumno</span>
-                                <p className="text-sm font-medium text-slate-700">
+                                <p className="text-sm font-medium text-foreground">
                                   {studentAnswer === undefined || studentAnswer === null || studentAnswer === '' ? (
                                     <span className="text-muted-foreground/40 italic">Información en proceso de sincronización...</span>
                                   ) : (
@@ -1301,9 +1301,9 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                                   )}
                                 </p>
                               </div>
-                              <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                                <span className="text-[8px] font-bold uppercase text-emerald-600 block mb-1">Respuesta Correcta / Guía</span>
-                                <p className="text-sm font-medium text-emerald-800">
+                              <div className="p-4 bg-success/10/50 rounded-xl border border-success/15">
+                                <span className="text-[8px] font-bold uppercase text-success block mb-1">Respuesta Correcta / Guía</span>
+                                <p className="text-sm font-medium text-success">
                                   {typeof q.correctAnswer === 'boolean' ? (q.correctAnswer ? 'Verdadero' : 'Falso') : q.correctAnswer}
                                 </p>
                               </div>
@@ -1322,7 +1322,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           </ScrollArea>
-          <DialogFooter className="bg-slate-50 border-t px-8 py-6">
+          <DialogFooter className="bg-muted border-t px-8 py-6">
             <Button onClick={() => setIsAttemptDialogOpen(false)} variant="secondary" className="font-bold h-12 px-8">Cerrar Auditoría</Button>
           </DialogFooter>
         </DialogContent>
@@ -1333,7 +1333,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
         <DialogContent className="mw-2xl">
           <div className="relative px-8 pt-8">
             <Plus className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
-            <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Send className="h-6 w-6 text-emerald-400" /> Asignar Tarea Individual</DialogTitle>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Send className="h-6 w-6 text-success" /> Asignar Tarea Individual</DialogTitle>
             <DialogDescription className="text-muted-foreground mt-1">Crea un desafío personalizado para el alumno con evaluación por IA.</DialogDescription>
           </div>
           <ScrollArea className="max-h-[70vh] px-8">
@@ -1358,7 +1358,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           </ScrollArea>
-          <DialogFooter className="bg-slate-50 border-t gap-3 px-8 py-6">
+          <DialogFooter className="bg-muted border-t gap-3 px-8 py-6">
             <Button onClick={() => setIsNewTaskDialogOpen(false)} variant="ghost" className="font-bold">Cancelar</Button>
             <Button 
               onClick={handleSendTask} 
@@ -1378,7 +1378,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
             <div className="absolute right-8 top-8">
               <Badge className={cn(
                 "px-3 py-1 rounded-full text-[10px] font-black uppercase border-none",
-                selectedTask?.status === 'completed' ? "bg-emerald-500" : "bg-amber-500"
+                selectedTask?.status === 'completed' ? "bg-success" : "bg-warn"
               )}>
                 {selectedTask?.status === 'completed' ? 'Entregada' : 'Pendiente'}
               </Badge>
@@ -1390,7 +1390,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
             <div className="space-y-8 pb-8">
               <div className="space-y-3">
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Target className="h-4 w-4" /> Consigna</h4>
-                <div className="p-5 bg-secondary/10 rounded-2xl text-sm leading-relaxed italic text-slate-700">
+                <div className="p-5 bg-secondary/10 rounded-2xl text-sm leading-relaxed italic text-foreground">
                   "{selectedTask?.description}"
                 </div>
               </div>
@@ -1415,13 +1415,13 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2"><BrainCircuit className="h-4 w-4" /> Evaluación IA</h4>
-                    <div className="p-6 bg-emerald-50/50 rounded-lg border border-emerald-100 relative overflow-hidden">
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-success flex items-center gap-2"><BrainCircuit className="h-4 w-4" /> Evaluación IA</h4>
+                    <div className="p-6 bg-success/10/50 rounded-lg border border-success/15 relative overflow-hidden">
                       <div className="flex justify-between items-start mb-4">
-                        <Badge className="bg-emerald-500 text-white border-none h-6 px-3 font-black text-xs">Puntaje: {selectedTask.score}%</Badge>
+                        <Badge className="bg-success text-white border-none h-6 px-3 font-black text-xs">Puntaje: {selectedTask.score}%</Badge>
                         <span className="text-[9px] font-bold text-muted-foreground uppercase">{format(selectedTask.completedAt?.toDate?.() || new Date(selectedTask.completedAt), 'dd/MM/yyyy HH:mm')}</span>
                       </div>
-                      <p className="text-sm italic text-emerald-900 leading-relaxed">"{selectedTask.aiFeedback}"</p>
+                      <p className="text-sm italic text-success leading-relaxed">"{selectedTask.aiFeedback}"</p>
                     </div>
                   </div>
                 </>
@@ -1433,7 +1433,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               )}
             </div>
           </ScrollArea>
-          <DialogFooter className="bg-slate-50 border-t px-8 py-6">
+          <DialogFooter className="bg-muted border-t px-8 py-6">
             <Button onClick={() => setIsTaskDetailDialogOpen(false)} variant="secondary" className="font-bold h-12 px-8">Cerrar Detalle</Button>
           </DialogFooter>
         </DialogContent>
@@ -1441,11 +1441,11 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
       {/* AI Profile Detail Dialog */}
       <Dialog open={isProfileDetailDialogOpen} onOpenChange={setIsProfileDetailDialogOpen}>
         <DialogContent className="mw-3xl h-[90vh] flex flex-col modal-inverse">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden shrink-0 px-8 pt-8">
+          <div className="bg-gradient-to-br from-foreground to-foreground relative overflow-hidden shrink-0 px-8 pt-8">
             <BrainCircuit className="absolute -right-10 -top-10 h-64 w-64 opacity-10 pointer-events-none" />
             <div className="flex items-center gap-5 mb-2">
               <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md">
-                <Sparkles className="h-7 w-7 text-emerald-400" />
+                <Sparkles className="h-7 w-7 text-success" />
               </div>
               <div>
                 <DialogTitle className="font-bold text-2xl leading-tight">{selectedProfile?.focus}</DialogTitle>
@@ -1457,28 +1457,28 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
           <ScrollArea className="flex-1">
             <div className="px-8 pb-8 pt-2 space-y-6">
               <div className="p-6 bg-white/5 border border-white/10">
-                <Label className="text-[10px] font-bold uppercase text-emerald-400 tracking-widest flex items-center gap-2 mb-3"><Lightbulb className="h-4 w-4" /> Resumen de Potencial</Label>
-                <p className="text-lg leading-relaxed text-slate-100 italic">"{selectedProfile?.summary}"</p>
+                <Label className="text-[10px] font-bold uppercase text-success tracking-widest flex items-center gap-2 mb-3"><Lightbulb className="h-4 w-4" /> Resumen de Potencial</Label>
+                <p className="text-lg leading-relaxed text-muted italic">"{selectedProfile?.summary}"</p>
               </div>
 
               <div className="p-6 bg-white/5 border border-white/10">
                 <h5 className="text-[10px] font-bold uppercase text-white/40 mb-3">Patrón de Marca Detectado</h5>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-none px-4 h-7 font-bold text-xs w-fit">{selectedProfile?.learningStyle}</Badge>
+                <Badge className="bg-success/20 text-success border-none px-4 h-7 font-bold text-xs w-fit">{selectedProfile?.learningStyle}</Badge>
               </div>
 
               <div className="p-6 bg-white/5 border border-white/10">
                 <h5 className="text-[10px] font-bold uppercase text-white/40 mb-3">Justificación del Razonamiento</h5>
-                <p className="text-sm text-slate-400 leading-relaxed">{selectedProfile?.justification}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{selectedProfile?.justification}</p>
               </div>
 
               <div className="bg-white/10 p-8 border border-white/20">
-                <h4 className="text-[10px] font-bold uppercase text-amber-400 mb-4 flex items-center gap-2"><Target className="h-4 w-4" /> Hoja de Ruta Sugerida</h4>
-                <p className="text-base font-medium text-slate-100 leading-relaxed">{selectedProfile?.recommendation}</p>
+                <h4 className="text-[10px] font-bold uppercase text-warn mb-4 flex items-center gap-2"><Target className="h-4 w-4" /> Hoja de Ruta Sugerida</h4>
+                <p className="text-base font-medium text-muted leading-relaxed">{selectedProfile?.recommendation}</p>
               </div>
             </div>
           </ScrollArea>
 
-          <DialogFooter className="bg-slate-900/50 border-t border-white/10 flex justify-between items-center shrink-0 px-8 py-6">
+          <DialogFooter className="bg-foreground/50 border-t border-white/10 flex justify-between items-center shrink-0 px-8 py-6">
             <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Generado el {selectedProfile?.createdAt ? format(selectedProfile.createdAt?.toDate?.() || new Date(selectedProfile.createdAt), 'dd/MM/yyyy HH:mm') : '-'}</span>
             <Button onClick={() => setIsProfileDetailDialogOpen(false)} variant="ghost" className="rounded-xl font-bold text-white hover:bg-white/10 border border-white/10 px-8">Cerrar Diagnóstico</Button>
           </DialogFooter>
@@ -1490,21 +1490,21 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
         <DialogContent className="mw-2xl">
           <div className="relative px-8 pt-8">
             <MessageSquare className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
-            <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Plus className="h-6 w-6 text-emerald-400" /> Nueva Observación</DialogTitle>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Plus className="h-6 w-6 text-success" /> Nueva Observación</DialogTitle>
             <DialogDescription className="text-muted-foreground mt-1">Registra detalles cualitativos sobre el avance del alumno.</DialogDescription>
           </div>
           <div className="space-y-6 px-8 pb-8">
             <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Contenido de la nota</Label>
+              <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-1">Contenido de la nota</Label>
               <Textarea 
                 value={newNote}
                 onChange={e => setNewNote(e.target.value)}
                 placeholder="Escribe aquí tus observaciones..."
-                className="min-h-[200px] border-2 border-primary/10 font-medium bg-slate-50 p-4"
+                className="min-h-[200px] border-2 border-primary/10 font-medium bg-muted p-4"
               />
             </div>
           </div>
-          <DialogFooter className="bg-slate-50 border-t px-8 py-6">
+          <DialogFooter className="bg-muted border-t px-8 py-6">
             <Button 
               onClick={() => {
                 handleSaveNote().then(() => setIsNewNoteDialogOpen(false));
@@ -1523,7 +1523,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
       <Dialog open={isNoteDetailDialogOpen} onOpenChange={setIsNoteDetailDialogOpen}>
         <DialogContent className="mw-2xl flex flex-col max-h-[80vh]">
           <div className="relative shrink-0 px-8 pt-8">
-            <DialogTitle className="text-xl font-bold flex items-center gap-3"><MessageSquare className="h-5 w-5 text-emerald-400" /> Detalle de Observación</DialogTitle>
+            <DialogTitle className="text-xl font-bold flex items-center gap-3"><MessageSquare className="h-5 w-5 text-success" /> Detalle de Observación</DialogTitle>
             <DialogDescription className="text-muted-foreground/60 mt-1 uppercase text-[9px] font-bold tracking-widest">
               Registrado el {selectedNote?.createdAt ? format(selectedNote.createdAt?.toDate?.() || new Date(selectedNote.createdAt), 'dd/MM/yyyy HH:mm') : '-'}
             </DialogDescription>
@@ -1531,11 +1531,11 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
           <ScrollArea className="flex-1">
             <div className="px-8 pb-8 space-y-6">
               <div className="p-8 bg-primary/5 border border-primary/10">
-                <p className="text-lg leading-relaxed text-slate-700 italic">"{selectedNote?.content}"</p>
+                <p className="text-lg leading-relaxed text-foreground italic">"{selectedNote?.content}"</p>
               </div>
             </div>
           </ScrollArea>
-          <DialogFooter className="bg-slate-50 border-t shrink-0 px-8 py-6">
+          <DialogFooter className="bg-muted border-t shrink-0 px-8 py-6">
             <Button onClick={() => setIsNoteDetailDialogOpen(false)} variant="secondary" className="font-bold h-12 px-8 w-full">Cerrar</Button>
           </DialogFooter>
         </DialogContent>

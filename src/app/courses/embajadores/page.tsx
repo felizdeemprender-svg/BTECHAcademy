@@ -211,11 +211,11 @@ export default function EmbajadoresBoardPage() {
       <div className="max-w-6xl mx-auto space-y-10 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 py-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+            <h1 className="text-2xl md:text-4xl font-black text-foreground tracking-tight flex items-center gap-3">
               Rendimiento de Mis Acciones como Embajador
-              <Badge className="bg-indigo-100 text-indigo-700 border-none rounded-full px-3 py-1">Embajador Mode</Badge>
+              <Badge className="bg-primary/15 text-primary border-none rounded-full px-3 py-1">Embajador Mode</Badge>
             </h1>
-            <p className="text-sm md:text-base text-slate-500 mt-2 font-medium max-w-2xl">
+            <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium max-w-2xl">
               Aquí ves cómo están funcionando las landings donde actúas como embajador, con el detalle de cursos y el impacto de tu acción sobre cada tutor.
             </p>
           </div>
@@ -223,40 +223,40 @@ export default function EmbajadoresBoardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="border-none rounded-2xl bg-white overflow-hidden relative group">
-            <Users className="absolute -right-4 -bottom-4 h-24 w-24 text-slate-100 transition-transform group-hover:scale-110" />
+            <Users className="absolute -right-4 -bottom-4 h-24 w-24 text-muted transition-transform group-hover:scale-110" />
             <CardContent className="p-6">
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Tutores Activos</p>
-              <p className="text-4xl font-black text-slate-800">{tutors.length}</p>
+              <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest mb-1">Tutores Activos</p>
+              <p className="text-4xl font-black text-foreground">{tutors.length}</p>
             </CardContent>
           </Card>
 
-          <Card className="border-none rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-primary to-primary text-white overflow-hidden relative">
             <Users className="absolute -right-4 -bottom-4 h-24 w-24 opacity-10" />
             <CardContent className="p-6">
-              <p className="text-indigo-100 font-bold uppercase text-[10px] tracking-widest mb-1">Leads Traídos</p>
+              <p className="text-primary/15 font-bold uppercase text-[10px] tracking-widest mb-1">Leads Traídos</p>
               <p className="text-4xl font-black">{globalLeads}</p>
             </CardContent>
           </Card>
 
-          <Card className="border-none rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-success to-teal-600 text-white overflow-hidden relative">
             <Target className="absolute -right-4 -bottom-4 h-24 w-24 opacity-10" />
             <CardContent className="p-6">
-              <p className="text-emerald-100 font-bold uppercase text-[10px] tracking-widest mb-1">Ventas Exitosas</p>
+              <p className="text-success/15 font-bold uppercase text-[10px] tracking-widest mb-1">Ventas Exitosas</p>
               <p className="text-4xl font-black">{globalConversions}</p>
             </CardContent>
           </Card>
 
-          <Card className="border-none rounded-2xl bg-slate-900 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-foreground text-white overflow-hidden relative">
             <Percent className="absolute -right-4 -bottom-4 h-24 w-24 opacity-5" />
             <CardContent className="p-6">
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Tasa Global</p>
+              <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest mb-1">Tasa Global</p>
               <p className="text-4xl font-black text-accent">{globalRate}%</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="space-y-6">
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Search className="h-5 w-5 text-accent" />
             Mis Landings como Embajador
           </h2>
@@ -264,7 +264,7 @@ export default function EmbajadoresBoardPage() {
           <Card className="rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-[10px] text-slate-500 uppercase bg-slate-50/80 font-black tracking-widest border-b border-slate-100">
+                <thead className="text-[10px] text-muted-foreground uppercase bg-muted/80 font-black tracking-widest border-b border-muted">
                   <tr>
                     <th className="px-6 py-4">Tutor</th>
                     <th className="px-6 py-4 text-center">Accesos</th>
@@ -273,17 +273,17 @@ export default function EmbajadoresBoardPage() {
                     <th className="px-6 py-4 text-right">Conversión</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                   {tutors.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-16 text-center">
                         <div className="flex flex-col items-center gap-4">
-                          <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center">
-                            <Users className="h-8 w-8 text-indigo-300" />
+                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Users className="h-8 w-8 text-primary/30" />
                           </div>
                           <div>
-                            <p className="font-bold text-slate-700 mb-1">Aún no tenés landings en las que actúes como embajador</p>
-                            <p className="text-slate-500 text-sm">
+                            <p className="font-bold text-foreground mb-1">Aún no tenés landings en las que actúes como embajador</p>
+                            <p className="text-muted-foreground text-sm">
                               Esta vista aparece cuando algún tutor te da de alta y se generan landings donde vos actuás como embajador.
                             </p>
                           </div>
@@ -298,31 +298,31 @@ export default function EmbajadoresBoardPage() {
 
                       return (
                         <Fragment key={tutor.uid}>
-                          <tr className="hover:bg-slate-50/50 transition-colors">
+                          <tr className="hover:bg-muted/50 transition-colors">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-10 w-10">
                                   <AvatarImage src={tutor.photoURL} />
-                                  <AvatarFallback className="bg-emerald-100 text-emerald-700 font-bold">
+                                  <AvatarFallback className="bg-success/15 text-success font-bold">
                                     {tutor.name.charAt(0).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <div className="font-bold text-slate-800">{tutor.name}</div>
-                                  <div className="text-xs text-slate-500">{tutor.email}</div>
+                                  <div className="font-bold text-foreground">{tutor.name}</div>
+                                  <div className="text-xs text-muted-foreground">{tutor.email}</div>
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <div className="inline-flex items-center justify-center bg-slate-100 text-slate-700 h-8 px-3 rounded-lg text-xs font-bold gap-1.5">
-                                <MousePointer2 className="h-3 w-3 text-indigo-500" /> {tutor.totalClicks}
+                              <div className="inline-flex items-center justify-center bg-muted text-foreground h-8 px-3 rounded-lg text-xs font-bold gap-1.5">
+                                <MousePointer2 className="h-3 w-3 text-primary" /> {tutor.totalClicks}
                               </div>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <span className="font-black text-slate-700">{tutor.totalLeads}</span>
+                              <span className="font-black text-foreground">{tutor.totalLeads}</span>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <span className="font-black text-emerald-600">{tutor.convertedLeads}</span>
+                              <span className="font-black text-success">{tutor.convertedLeads}</span>
                             </td>
                             <td className="px-6 py-4 text-right">
                               <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent px-2.5 py-1 rounded-md text-[11px] font-bold">
@@ -332,49 +332,49 @@ export default function EmbajadoresBoardPage() {
                           </tr>
                           <tr>
                             <td colSpan={5} className="px-6 py-0">
-                              <div className="border-t border-slate-100 bg-slate-50/80">
+                              <div className="border-t border-muted bg-muted/80">
                                 <div className="px-6 py-4">
                                   <div className="flex items-center justify-between gap-4">
                                     <div>
-                                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cursos</p>
-                                      <p className="text-sm font-bold text-slate-800">Detalle de cursos asignados a {tutor.name}</p>
+                                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cursos</p>
+                                      <p className="text-sm font-bold text-foreground">Detalle de cursos asignados a {tutor.name}</p>
                                     </div>
-                                    <div className="text-right text-xs text-slate-500">
+                                    <div className="text-right text-xs text-muted-foreground">
                                       <p>{tutor.courses.length} curso{tutor.courses.length !== 1 ? 's' : ''} asignado{tutor.courses.length !== 1 ? 's' : ''}</p>
                                     </div>
                                   </div>
 
                                   <div className="mt-4 grid gap-3">
                                     {tutor.courses.length === 0 ? (
-                                      <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-5 text-sm text-slate-500">
+                                      <div className="rounded-2xl border border-dashed border-border bg-white px-4 py-5 text-sm text-muted-foreground">
                                         Este tutor aún no tiene cursos asociados a tu embajador.
                                       </div>
                                     ) : (
                                       tutor.courses.map((course) => (
-                                        <div key={course.landingId} className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
+                                        <div key={course.landingId} className="rounded-2xl border border-muted bg-white px-4 py-4 shadow-sm">
                                           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                             <div className="space-y-2">
                                               <div className="flex flex-wrap items-center gap-2">
-                                                <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-700">
+                                                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
                                                   {course.landingTitle}
                                                 </span>
-                                                <span className="text-xs text-slate-500">Landing: {course.landingId}</span>
+                                                <span className="text-xs text-muted-foreground">Landing: {course.landingId}</span>
                                               </div>
-                                              <p className="font-black text-slate-800">{course.title}</p>
-                                              <p className="text-sm text-slate-500">{course.description}</p>
+                                              <p className="font-black text-foreground">{course.title}</p>
+                                              <p className="text-sm text-muted-foreground">{course.description}</p>
                                             </div>
 
                                             <div className="flex flex-wrap gap-2 lg:justify-end">
-                                              <span className="inline-flex items-center rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700">
+                                              <span className="inline-flex items-center rounded-xl bg-muted px-3 py-2 text-xs font-bold text-foreground">
                                                 Precio: ${course.price}
                                               </span>
-                                              <span className="inline-flex items-center rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
+                                              <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
                                                 Clicks: {course.clicks}
                                               </span>
-                                              <span className="inline-flex items-center rounded-xl bg-indigo-100 px-3 py-2 text-xs font-bold text-indigo-700">
+                                              <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
                                                 Leads: {course.leads}
                                               </span>
-                                              <span className="inline-flex items-center rounded-xl bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-700">
+                                              <span className="inline-flex items-center rounded-xl bg-success/15 px-3 py-2 text-xs font-bold text-success">
                                                 Ventas: {course.conversions}
                                               </span>
                                             </div>

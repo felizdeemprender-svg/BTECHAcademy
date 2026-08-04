@@ -95,7 +95,7 @@ export function EvoAssistant({ userObjects }: { userObjects?: string }) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-200">
+        <div className="rounded-2xl border border-success/20 bg-success/5 px-4 py-3 text-sm text-success dark:text-success/20">
           <div className="flex items-center gap-2 font-semibold">
             <ShieldCheck className="h-4 w-4" />
             Modo solo guía
@@ -165,7 +165,7 @@ export function EvoAssistant({ userObjects }: { userObjects?: string }) {
                   <ul className="mt-2 space-y-2">
                     {answer.guardrails.map((item) => (
                       <li key={item} className="flex gap-2 text-sm text-muted-foreground">
-                        <span className="mt-1 h-2 w-2 rounded-full bg-amber-400" />
+                        <span className="mt-1 h-2 w-2 rounded-full bg-warn" />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -191,7 +191,7 @@ export function EvoAssistant({ userObjects }: { userObjects?: string }) {
             <div className="space-y-3">
               <div className="rounded-xl border bg-muted/40 p-3">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
-                  <Lightbulb className="h-4 w-4 text-amber-500" />
+                  <Lightbulb className="h-4 w-4 text-warn" />
                   Orientación contextual
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -200,7 +200,7 @@ export function EvoAssistant({ userObjects }: { userObjects?: string }) {
               </div>
               <div className="rounded-xl border bg-muted/40 p-3">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                  <ShieldCheck className="h-4 w-4 text-success" />
                   Guía sin modificaciones
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">

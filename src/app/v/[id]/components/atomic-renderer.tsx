@@ -2984,7 +2984,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                 )}
                 
                 <div className="relative z-10 p-6 flex flex-col items-center text-center border border-white/10 rounded-[var(--component-radius)]" style={{ color: sec.imageUrl ? '#FFFFFF' : onPrimary }}>
-                  <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mb-4 animate-pulse border border-red-500/30">
+                  <div className="w-12 h-12 rounded-full bg-danger/20 text-danger flex items-center justify-center mb-4 animate-pulse border border-danger/30">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   </div>
                   <h4 className="font-black text-xl mb-2 leading-tight font-headline">{sec.title || '¡Oferta por Tiempo Limitado!'}</h4>
@@ -3084,7 +3084,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
 
               {/* Seguridad y copyright */}
               <div className="flex items-center justify-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                <ShieldCheck className="h-4 w-4 text-success" />
                 <span className={safeCls}>Entorno de Aprendizaje Seguro</span>
               </div>
               {mentorName && (
@@ -3230,7 +3230,7 @@ function CountdownTimer({ activeUntil }: { activeUntil: any }) {
       </div>
       <div className="text-lg font-bold text-white/40 -mt-5">:</div>
       <div className="flex flex-col items-center flex-1">
-        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-[var(--component-radius)] flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono text-red-300">{pad(s)}</div>
+        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-[var(--component-radius)] flex items-center justify-center font-bold text-lg md:text-xl shadow-inner border border-white/20 text-white font-mono text-danger/30">{pad(s)}</div>
         <span className="text-[9px] md:text-[10px] uppercase font-bold tracking-wider mt-1.5 opacity-80 text-white">Seg</span>
       </div>
     </div>
@@ -3307,7 +3307,7 @@ function SecureVideoPlayer({ videoUrl }: { videoUrl: string }) {
 
       {/* Marca de Agua */}
       <div className="absolute top-6 left-6 z-40 flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-[var(--component-radius)] border border-white/10 opacity-0 group-hover/video-container:opacity-100 transition-opacity">
-        <ShieldCheck className="h-3 w-3 text-emerald-400" />
+        <ShieldCheck className="h-3 w-3 text-success" />
         <span className="text-[8px] font-black uppercase text-white tracking-widest">Contenido Protegido • Evolución Académica</span>
       </div>
     </div>

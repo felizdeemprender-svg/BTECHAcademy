@@ -273,7 +273,7 @@ export default function MentorInfluencersControl() {
       toast({
         title: "¡Embajador Dado de Alta!",
         description: `${foundUser.displayName || foundUser.email} ahora es tu embajador.`,
-        className: "bg-emerald-600 text-white border-none"
+        className: "bg-success text-white border-none"
       });
 
       closeModal();
@@ -319,11 +319,11 @@ export default function MentorInfluencersControl() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+            <h1 className="text-2xl md:text-4xl font-black text-foreground tracking-tight flex items-center gap-3">
               Control de Embajadores
-              <Badge className="bg-indigo-100 text-indigo-700 border-none rounded-full px-3 py-1">Tutor Mode</Badge>
+              <Badge className="bg-primary/15 text-primary border-none rounded-full px-3 py-1">Tutor Mode</Badge>
             </h1>
-            <p className="text-sm md:text-base text-slate-500 mt-2 font-medium max-w-2xl">
+            <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium max-w-2xl">
               Tus embajadores y referidos. Solo ves a los embajadores que vos diste de alta.
             </p>
           </div>
@@ -338,33 +338,33 @@ export default function MentorInfluencersControl() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="border-none rounded-2xl bg-white overflow-hidden relative group">
-            <Users className="absolute -right-4 -bottom-4 h-24 w-24 text-slate-100 transition-transform group-hover:scale-110" />
+            <Users className="absolute -right-4 -bottom-4 h-24 w-24 text-muted transition-transform group-hover:scale-110" />
             <CardContent className="p-6">
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Total Embajadores</p>
-              <p className="text-4xl font-black text-slate-800">{influencers.length}</p>
+              <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest mb-1">Total Embajadores</p>
+              <p className="text-4xl font-black text-foreground">{influencers.length}</p>
             </CardContent>
           </Card>
 
-          <Card className="border-none rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-primary to-primary text-white overflow-hidden relative">
             <Users className="absolute -right-4 -bottom-4 h-24 w-24 opacity-10" />
             <CardContent className="p-6">
-              <p className="text-indigo-100 font-bold uppercase text-[10px] tracking-widest mb-1">Leads Traídos</p>
+              <p className="text-primary/15 font-bold uppercase text-[10px] tracking-widest mb-1">Leads Traídos</p>
               <p className="text-4xl font-black">{globalLeads}</p>
             </CardContent>
           </Card>
 
-          <Card className="border-none rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-gradient-to-br from-success to-teal-600 text-white overflow-hidden relative">
             <Target className="absolute -right-4 -bottom-4 h-24 w-24 opacity-10" />
             <CardContent className="p-6">
-              <p className="text-emerald-100 font-bold uppercase text-[10px] tracking-widest mb-1">Ventas Exitosas</p>
+              <p className="text-success/15 font-bold uppercase text-[10px] tracking-widest mb-1">Ventas Exitosas</p>
               <p className="text-4xl font-black">{globalConversions}</p>
             </CardContent>
           </Card>
 
-          <Card className="border-none rounded-2xl bg-slate-900 text-white overflow-hidden relative">
+          <Card className="border-none rounded-2xl bg-foreground text-white overflow-hidden relative">
             <Percent className="absolute -right-4 -bottom-4 h-24 w-24 opacity-5" />
             <CardContent className="p-6">
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Tasa Global</p>
+              <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest mb-1">Tasa Global</p>
               <p className="text-4xl font-black text-accent">{globalRate}%</p>
             </CardContent>
           </Card>
@@ -372,7 +372,7 @@ export default function MentorInfluencersControl() {
 
         {/* Tabla */}
         <div className="space-y-6">
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Search className="h-5 w-5 text-accent" />
             Tus Embajadores
           </h2>
@@ -380,7 +380,7 @@ export default function MentorInfluencersControl() {
           <Card className="rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-[10px] text-slate-500 uppercase bg-slate-50/80 font-black tracking-widest border-b border-slate-100">
+                <thead className="text-[10px] text-muted-foreground uppercase bg-muted/80 font-black tracking-widest border-b border-muted">
                   <tr>
                     <th className="px-6 py-4">Embajador</th>
                     <th className="px-6 py-4 text-center">Accesos</th>
@@ -389,17 +389,17 @@ export default function MentorInfluencersControl() {
                     <th className="px-6 py-4 text-right">Conversión</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                   {influencers.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-16 text-center">
                         <div className="flex flex-col items-center gap-4">
-                          <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center">
-                            <Users className="h-8 w-8 text-indigo-300" />
+                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Users className="h-8 w-8 text-primary/30" />
                           </div>
                           <div>
-                            <p className="font-bold text-slate-700 mb-1">Aún no tenés embajadores</p>
-                            <p className="text-slate-500 text-sm">
+                            <p className="font-bold text-foreground mb-1">Aún no tenés embajadores</p>
+                            <p className="text-muted-foreground text-sm">
                               Hacé clic en "Dar de Alta Embajador" para agregar tu primer embajador.
                             </p>
                           </div>
@@ -419,31 +419,31 @@ export default function MentorInfluencersControl() {
                         : 0;
                       return (
                         <Fragment key={inf.uid}>
-                          <tr className="hover:bg-slate-50/50 transition-colors">
+                          <tr className="hover:bg-muted/50 transition-colors">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-10 w-10">
                                   <AvatarImage src={inf.photoURL} />
-                                  <AvatarFallback className="bg-emerald-100 text-emerald-700 font-bold">
+                                  <AvatarFallback className="bg-success/15 text-success font-bold">
                                     {inf.name.charAt(0).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <div className="font-bold text-slate-800">{inf.name}</div>
-                                  <div className="text-xs text-slate-500">{inf.email}</div>
+                                  <div className="font-bold text-foreground">{inf.name}</div>
+                                  <div className="text-xs text-muted-foreground">{inf.email}</div>
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <div className="inline-flex items-center justify-center bg-slate-100 text-slate-700 h-8 px-3 rounded-lg text-xs font-bold gap-1.5">
-                                <MousePointer2 className="h-3 w-3 text-indigo-500" /> {inf.totalClicks}
+                              <div className="inline-flex items-center justify-center bg-muted text-foreground h-8 px-3 rounded-lg text-xs font-bold gap-1.5">
+                                <MousePointer2 className="h-3 w-3 text-primary" /> {inf.totalClicks}
                               </div>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <span className="font-black text-slate-700">{inf.totalLeads}</span>
+                              <span className="font-black text-foreground">{inf.totalLeads}</span>
                             </td>
                             <td className="px-6 py-4 text-center">
-                              <span className="font-black text-emerald-600">{inf.convertedLeads}</span>
+                              <span className="font-black text-success">{inf.convertedLeads}</span>
                             </td>
                             <td className="px-6 py-4 text-right">
                               <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent px-2.5 py-1 rounded-md text-[11px] font-bold">
@@ -453,49 +453,49 @@ export default function MentorInfluencersControl() {
                           </tr>
                           <tr>
                             <td colSpan={5} className="px-6 py-0">
-                              <div className="border-t border-slate-100 bg-slate-50/80">
+                              <div className="border-t border-muted bg-muted/80">
                                 <div className="px-6 py-4">
                                   <div className="flex items-center justify-between gap-4">
                                     <div>
-                                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cursos</p>
-                                      <p className="text-sm font-bold text-slate-800">Detalle de cursos asignados a {inf.name}</p>
+                                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cursos</p>
+                                      <p className="text-sm font-bold text-foreground">Detalle de cursos asignados a {inf.name}</p>
                                     </div>
-                                    <div className="text-right text-xs text-slate-500">
+                                    <div className="text-right text-xs text-muted-foreground">
                                       <p>{inf.courses.length} curso{inf.courses.length !== 1 ? 's' : ''} asignado{inf.courses.length !== 1 ? 's' : ''}</p>
                                     </div>
                                   </div>
 
                                   <div className="mt-4 grid gap-3">
                                     {inf.courses.length === 0 ? (
-                                      <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-5 text-sm text-slate-500">
+                                      <div className="rounded-2xl border border-dashed border-border bg-white px-4 py-5 text-sm text-muted-foreground">
                                         Este embajador aún no tiene cursos asignados.
                                       </div>
                                     ) : (
                                       inf.courses.map(course => (
-                                        <div key={course.landingId} className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
+                                        <div key={course.landingId} className="rounded-2xl border border-muted bg-white px-4 py-4 shadow-sm">
                                           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                             <div className="space-y-2">
                                               <div className="flex flex-wrap items-center gap-2">
-                                                <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-700">
+                                                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
                                                   {course.landingTitle}
                                                 </span>
-                                                <span className="text-xs text-slate-500">Landing: {course.landingId}</span>
+                                                <span className="text-xs text-muted-foreground">Landing: {course.landingId}</span>
                                               </div>
-                                              <p className="font-black text-slate-800">{course.title}</p>
-                                              <p className="text-sm text-slate-500">{course.description}</p>
+                                              <p className="font-black text-foreground">{course.title}</p>
+                                              <p className="text-sm text-muted-foreground">{course.description}</p>
                                             </div>
 
                                             <div className="flex flex-wrap gap-2 lg:justify-end">
-                                              <span className="inline-flex items-center rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700">
+                                              <span className="inline-flex items-center rounded-xl bg-muted px-3 py-2 text-xs font-bold text-foreground">
                                                 Precio: ${course.price}
                                               </span>
-                                              <span className="inline-flex items-center rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
+                                              <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
                                                 Clicks: {course.clicks}
                                               </span>
-                                              <span className="inline-flex items-center rounded-xl bg-indigo-100 px-3 py-2 text-xs font-bold text-indigo-700">
+                                              <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
                                                 Leads: {course.leads}
                                               </span>
-                                              <span className="inline-flex items-center rounded-xl bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-700">
+                                              <span className="inline-flex items-center rounded-xl bg-success/15 px-3 py-2 text-xs font-bold text-success">
                                                 Ventas: {course.conversions}
                                               </span>
                                             </div>
@@ -524,13 +524,13 @@ export default function MentorInfluencersControl() {
         <DialogContent className="mw-md p-0">
 
           {/* Header del modal */}
-          <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100">
-            <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
-              <UserPlus className="h-5 w-5 text-indigo-600" />
+          <div className="flex items-center gap-3 px-6 py-5 border-b border-muted">
+            <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
+              <UserPlus className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900">Dar de Alta Embajador</h2>
-              <p className="text-xs text-slate-500 font-medium">Buscá al usuario por su email de registro</p>
+              <h2 className="text-base font-black text-foreground">Dar de Alta Embajador</h2>
+              <p className="text-xs text-muted-foreground font-medium">Buscá al usuario por su email de registro</p>
             </div>
           </div>
 
@@ -544,22 +544,22 @@ export default function MentorInfluencersControl() {
                     required
                     value={searchEmail}
                     onChange={e => setSearchEmail(e.target.value)}
-                    className="h-11 pl-10 rounded-xl bg-slate-50 border-slate-200"
+                    className="h-11 pl-10 rounded-xl bg-muted border-border"
                     autoFocus
                   />
-                  <Search className="h-4 w-4 text-slate-400 absolute left-3 top-3.5" />
+                  <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-3.5" />
                 </div>
                 <Button
                   type="submit"
                   disabled={isSearching}
-                  className="h-11 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold"
+                  className="h-11 px-5 rounded-xl bg-foreground hover:bg-foreground text-white font-bold"
                 >
                   {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
                 </Button>
               </form>
 
               {searchError && (
-                <div className="flex items-start gap-3 bg-rose-50 text-rose-600 p-4 rounded-xl">
+                <div className="flex items-start gap-3 bg-danger/10 text-danger p-4 rounded-xl">
                   <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                   <div className="text-sm font-medium">{searchError}</div>
                 </div>
@@ -567,25 +567,25 @@ export default function MentorInfluencersControl() {
 
               {foundUser && (
                 <div className="animate-in fade-in slide-in-from-bottom-2">
-                  <div className="flex flex-col sm:flex-row items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 bg-slate-50/50">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 p-5 rounded-2xl border-2 border-muted bg-muted/50">
                     <Avatar className="h-14 w-14 shadow-md">
                       <AvatarImage src={foundUser.photoURL} />
-                      <AvatarFallback className="bg-indigo-100 text-indigo-700 text-xl font-black">
+                      <AvatarFallback className="bg-primary/15 text-primary text-xl font-black">
                         {(foundUser.displayName || foundUser.email).charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 text-center sm:text-left">
-                      <h4 className="text-base font-bold text-slate-900">
+                      <h4 className="text-base font-bold text-foreground">
                         {foundUser.displayName || 'Usuario sin nombre'}
                       </h4>
-                      <p className="text-sm text-slate-500">{foundUser.email}</p>
-                      <p className="text-xs text-slate-400 mt-1">Usuario registrado en la plataforma</p>
+                      <p className="text-sm text-muted-foreground">{foundUser.email}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Usuario registrado en la plataforma</p>
                     </div>
 
                     <div className="shrink-0">
                       {foundUser.alreadyAssociated ? (
-                        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-2.5 rounded-xl text-sm font-bold">
+                        <div className="flex items-center gap-2 bg-success/10 text-success px-4 py-2.5 rounded-xl text-sm font-bold">
                           <CheckCircle2 className="h-4 w-4" /> Ya es tu embajador
                         </div>
                       ) : (
@@ -605,9 +605,9 @@ export default function MentorInfluencersControl() {
                 </div>
               )}
 
-              <div className="bg-indigo-50/60 rounded-xl p-4 space-y-2">
-                <p className="text-xs font-black text-indigo-600 uppercase tracking-widest">¿Cómo funciona?</p>
-                <ul className="text-xs text-slate-600 space-y-1.5 font-medium">
+              <div className="bg-primary/10/60 rounded-xl p-4 space-y-2">
+                <p className="text-xs font-black text-primary uppercase tracking-widest">¿Cómo funciona?</p>
+                <ul className="text-xs text-muted-foreground space-y-1.5 font-medium">
                   <li>• El usuario debe estar <strong>registrado</strong> en la plataforma con ese email.</li>
                   <li>• Solo verás a <strong>tus propios</strong> embajadores, sin importar si trabajan con otros tutores.</li>
                   <li>• Luego podrás asignarles landings desde tus campañas.</li>

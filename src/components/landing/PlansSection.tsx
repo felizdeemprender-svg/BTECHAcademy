@@ -95,7 +95,7 @@ export default function PlansSection() {
               <CardHeader className="p-8 pb-4">
                 <div className={cn(
                   "w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-500",
-                  plan.type === 'free' ? "bg-slate-100 text-slate-600" :
+                  plan.type === 'free' ? "bg-muted text-muted-foreground" :
                   plan.type === 'fixed' ? "bg-primary/10 text-primary" :
                   "bg-accent/10 text-accent"
                 )}>

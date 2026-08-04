@@ -69,8 +69,8 @@ export default function MarketingTemplatesPage() {
         <div className="flex h-screen items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Cargando información de usuario...</p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-muted-foreground">Cargando información de usuario...</p>
+            <p className="text-sm text-muted-foreground mt-2">
               Si persiste, inicia sesión nuevamente
             </p>
           </div>
@@ -144,7 +144,7 @@ export default function MarketingTemplatesPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-2 border-b pb-6">
           <h1 className="text-4xl font-headline font-bold text-primary tracking-tight flex items-center gap-3">
-            <BrainCircuit className="h-8 w-8 text-emerald-500" /> Arquitecto de
+            <BrainCircuit className="h-8 w-8 text-success" /> Arquitecto de
             Identidad IA
           </h1>
           <p className="text-muted-foreground font-medium text-lg">

@@ -255,7 +255,7 @@ export const TemplateViewerProduction = ({
           </div>
 
           {/* Content con solapas y sub-solapas */}
-          <div className="flex-1 overflow-y-auto bg-slate-50/50">
+          <div className="flex-1 overflow-y-auto bg-muted/50">
             <Tabs defaultValue="landing" className="w-full">
               <div className="px-8 pt-8 pb-4 border-b bg-white">
                 <TabsList className="bg-secondary/20 p-1 rounded-2xl h-14 justify-start gap-2 overflow-x-auto w-full">
@@ -304,7 +304,7 @@ export const TemplateViewerProduction = ({
                               <TabsTrigger
                                 key={lIdx}
                                 value={`landing-${lIdx}`}
-                                className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
+                                className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-border text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
                               >
                                 Variante {lIdx + 1}
                               </TabsTrigger>
@@ -322,7 +322,7 @@ export const TemplateViewerProduction = ({
                             >
                               <Card className="overflow-hidden border-none rounded-lg bg-white">
                                 <CardContent className="p-0">
-                                  <div className="flex justify-center w-full h-[600px] overflow-hidden bg-gray-50 rounded-b-[2rem]">
+                                  <div className="flex justify-center w-full h-[600px] overflow-hidden bg-muted rounded-b-[2rem]">
                                     <iframe 
                                       src={`/v/${collection.id}?v=${lIdx}&preview=true`} 
                                       className="w-[1280px] h-[calc(600px*1.28)] origin-top-left"
@@ -332,7 +332,7 @@ export const TemplateViewerProduction = ({
                                   </div>
                                 </CardContent>
                                 {isAdmin && (
-                                  <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
+                                  <div className="p-4 border-t border-muted flex justify-end gap-3 bg-white">
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -350,7 +350,7 @@ export const TemplateViewerProduction = ({
                                         handleRefineVariantAI("landing", l, lIdx)
                                       }
                                       disabled={isRefining === `landing-${lIdx}`}
-                                      className="rounded-xl font-bold h-9 px-5 text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-100 shadow-sm border border-emerald-100"
+                                      className="rounded-xl font-bold h-9 px-5 text-xs bg-success/10 text-success hover:bg-success/15 shadow-sm border border-success/15"
                                     >
                                       {isRefining === `landing-${lIdx}` ? (
                                         <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
@@ -382,7 +382,7 @@ export const TemplateViewerProduction = ({
                               <TabsTrigger
                                 key={eIdx}
                                 value={`email-${eIdx}`}
-                                className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
+                                className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-border text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
                               >
                                 Variante {eIdx + 1}
                               </TabsTrigger>
@@ -401,7 +401,7 @@ export const TemplateViewerProduction = ({
                                   <EmailMockup template={e} index={eIdx} />
                                 </CardContent>
                                 {isAdmin && (
-                                  <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
+                                  <div className="p-4 border-t border-muted flex justify-end gap-3 bg-white">
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -419,7 +419,7 @@ export const TemplateViewerProduction = ({
                                         handleRefineVariantAI("email", e, eIdx)
                                       }
                                       disabled={isRefining === `email-${eIdx}`}
-                                      className="rounded-xl font-bold h-9 px-5 text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-100 shadow-sm border border-emerald-100"
+                                      className="rounded-xl font-bold h-9 px-5 text-xs bg-success/10 text-success hover:bg-success/15 shadow-sm border border-success/15"
                                     >
                                       {isRefining === `email-${eIdx}` ? (
                                         <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
@@ -451,7 +451,7 @@ export const TemplateViewerProduction = ({
                               <TabsTrigger
                                 key={aIdx}
                                 value={`ad-${aIdx}`}
-                                className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-slate-200 text-slate-500 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
+                                className="rounded-full px-5 py-2 font-bold text-xs bg-white border border-border text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary shadow-sm"
                               >
                                 Variante {aIdx + 1}
                               </TabsTrigger>
@@ -470,7 +470,7 @@ export const TemplateViewerProduction = ({
                                   <AdMockup template={a} index={aIdx} />
                                 </CardContent>
                                 {isAdmin && (
-                                  <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
+                                  <div className="p-4 border-t border-muted flex justify-end gap-3 bg-white">
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -488,7 +488,7 @@ export const TemplateViewerProduction = ({
                                         handleRefineVariantAI("ad", a, aIdx)
                                       }
                                       disabled={isRefining === `ad-${aIdx}`}
-                                      className="rounded-xl font-bold h-9 px-5 text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-100 shadow-sm border border-emerald-100"
+                                      className="rounded-xl font-bold h-9 px-5 text-xs bg-success/10 text-success hover:bg-success/15 shadow-sm border border-success/15"
                                     >
                                       {isRefining === `ad-${aIdx}` ? (
                                         <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
@@ -526,12 +526,12 @@ export const TemplateViewerProduction = ({
           <ScrollArea className="max-h-[70vh]">
             <div className="p-8 space-y-10">
               <section className="space-y-4">
-                <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
                   Contexto Técnico
                 </Label>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-secondary/10 rounded-xl">
-                    <p className="text-[8px] font-black uppercase text-slate-400 mb-1">
+                    <p className="text-[8px] font-black uppercase text-muted-foreground mb-1">
                       Canal
                     </p>
                     <p className="text-sm font-bold capitalize">
@@ -539,7 +539,7 @@ export const TemplateViewerProduction = ({
                     </p>
                   </div>
                   <div className="p-4 bg-secondary/10 rounded-xl">
-                    <p className="text-[8px] font-black uppercase text-slate-400 mb-1">
+                    <p className="text-[8px] font-black uppercase text-muted-foreground mb-1">
                       Estrategia / Tipo
                     </p>
                     <p className="text-sm font-bold capitalize">
@@ -553,7 +553,7 @@ export const TemplateViewerProduction = ({
                 <section className="space-y-8">
                   {/* TEMA VISUAL */}
                   <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
                       Modo Visual (Theme Mode)
                     </Label>
                     <div className="grid grid-cols-3 gap-2">
@@ -570,7 +570,7 @@ export const TemplateViewerProduction = ({
                             "py-2 rounded-xl text-xs font-bold border-2 capitalize transition-all",
                             (editingVariant?.themeMode || 'light') === mode
                               ? "border-primary bg-primary/10 text-primary"
-                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
+                              : "border-muted bg-muted text-muted-foreground hover:border-border"
                           )}
                         >
                           {mode}
@@ -581,7 +581,7 @@ export const TemplateViewerProduction = ({
 
                   {/* DENSIDAD ACADÉMICA */}
                   <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
                       Densidad Académica
                     </Label>
                     <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-xl">
@@ -607,7 +607,7 @@ export const TemplateViewerProduction = ({
 
                   {/* VISIBILIDAD DE SECCIONES */}
                   <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
                       Secciones Visibles
                     </Label>
                     <div className="grid grid-cols-2 gap-3">
@@ -642,12 +642,12 @@ export const TemplateViewerProduction = ({
                             className={cn(
                               "flex items-center justify-between p-3 rounded-xl border-2 text-xs font-bold transition-all",
                               isVisible
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : "border-slate-200 bg-slate-50 text-slate-400"
+                                ? "border-success/20 bg-success/10 text-success"
+                                : "border-border bg-muted text-muted-foreground"
                             )}
                           >
                             {item.label}
-                            <div className={cn("w-3 h-3 rounded-full transition-colors", isVisible ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-slate-300")} />
+                            <div className={cn("w-3 h-3 rounded-full transition-colors", isVisible ? "bg-success shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-border")} />
                           </button>
                         );
                       })}
@@ -658,12 +658,12 @@ export const TemplateViewerProduction = ({
 
               {editingChannel === "social" && (
                 <section className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
                     Estructura del Formato
                   </Label>
 
                   {/* EVO SOCIAL LAB UNIVERSAL - BLUEPRINT TÉCNICO */}
-                  <div className="pt-4 border-t border-slate-200 flex flex-col gap-6">
+                  <div className="pt-4 border-t border-border flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-primary">
                         <Sparkles className="h-4 w-4" />
@@ -699,13 +699,13 @@ export const TemplateViewerProduction = ({
                                 })
                               }
                               className={cn(
-                                "group relative overflow-hidden rounded-2xl border-2 transition-all cursor-pointer flex flex-col min-h-[100px] justify-center bg-white hover:border-slate-300",
+                                "group relative overflow-hidden rounded-2xl border-2 transition-all cursor-pointer flex flex-col min-h-[100px] justify-center bg-white hover:border-border",
                                 editingVariant?.blueprintConfig?.presetId ===
                                   preset.id ||
                                   (!editingVariant?.blueprintConfig?.presetId &&
                                     preset.id === "01")
                                   ? "border-primary bg-primary/5 shadow-lg scale-[1.01]"
-                                  : "border-slate-100",
+                                  : "border-muted",
                               )}
                             >
                               <div className="p-5 relative z-10 w-full">
@@ -720,12 +720,12 @@ export const TemplateViewerProduction = ({
                                             ?.presetId &&
                                             preset.id === "01")
                                           ? "text-primary"
-                                          : "text-slate-800",
+                                          : "text-foreground",
                                       )}
                                     >
                                       {preset.name}
                                     </p>
-                                    <p className="text-[12px] text-slate-500 font-medium mt-1 pr-6 leading-relaxed">
+                                    <p className="text-[12px] text-muted-foreground font-medium mt-1 pr-6 leading-relaxed">
                                       {preset.description}
                                     </p>
                                   </div>
@@ -742,8 +742,8 @@ export const TemplateViewerProduction = ({
                             </div>
                           ))
                         ) : (
-                          <div className="p-8 text-center text-sm font-medium text-slate-500 border rounded-2xl bg-slate-50 border-dashed">
-                            <Loader2 className="h-5 w-5 mx-auto mb-2 animate-spin text-slate-400" />
+                          <div className="p-8 text-center text-sm font-medium text-muted-foreground border rounded-2xl bg-muted border-dashed">
+                            <Loader2 className="h-5 w-5 mx-auto mb-2 animate-spin text-muted-foreground" />
                             Sincronizando ADNs Maestros...
                           </div>
                         )}
@@ -762,7 +762,7 @@ export const TemplateViewerProduction = ({
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-[9px] font-bold uppercase text-slate-500 ml-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">
                               Vector Estratégico
                             </Label>
                             <Input
@@ -787,7 +787,7 @@ export const TemplateViewerProduction = ({
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[9px] font-bold uppercase text-slate-500 ml-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">
                               Tono Comercial
                             </Label>
                             <Input
@@ -954,7 +954,7 @@ export const TemplateViewerProduction = ({
 
                       {/* 3. Para Single Posts */}
                       {editingVariant?.type === "single_post" && (
-                        <div className="p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-slate-500">
+                        <div className="p-4 rounded-xl border border-dashed border-border bg-muted text-center text-muted-foreground">
                           <p className="text-xs font-bold uppercase mb-1">
                             Formato Estático
                           </p>
@@ -969,7 +969,7 @@ export const TemplateViewerProduction = ({
                         <p className="text-[10px] text-primary/80 font-bold uppercase mb-1">
                           Nota de Social Lab
                         </p>
-                        <p className="text-[11px] leading-relaxed italic text-slate-600">
+                        <p className="text-[11px] leading-relaxed italic text-muted-foreground">
                           La IA utilizará esta estructura técnica para maquetar
                           el guion detallado según el protocolo de la
                           plataforma.
@@ -984,7 +984,7 @@ export const TemplateViewerProduction = ({
               {editingChannel !== "social" && (
                 <>
                   <section className="space-y-6">
-                    <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
                       <Type className="h-4 w-4" /> ADN Tipográfico Universal
                     </h4>
                     <div className="grid sm:grid-cols-2 gap-6">
@@ -1033,7 +1033,7 @@ export const TemplateViewerProduction = ({
                   </section>
 
                   <section className="space-y-6">
-                    <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
                       <Palette className="h-4 w-4" /> Paleta Maestra
                     </h4>
                     <div className="grid grid-cols-3 gap-4">

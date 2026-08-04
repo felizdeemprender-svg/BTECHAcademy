@@ -263,11 +263,11 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
   return (
     <div 
       ref={containerRef}
-      className="relative aspect-video bg-slate-950 rounded-lg rounded-lg overflow-hidden border-4 border-white/10 group/video"
+      className="relative aspect-video bg-foreground rounded-lg rounded-lg overflow-hidden border-4 border-white/10 group/video"
       onContextMenu={(e) => e.preventDefault()}
     >
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-foreground z-10">
           <Loader2 className="h-10 w-10 text-white/20 animate-spin" />
         </div>
       )}
@@ -282,7 +282,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
           onLoad={() => setIsLoading(false)}
         />
       ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 z-10 text-slate-500">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-foreground z-10 text-muted-foreground">
           <Play className="h-12 w-12 opacity-20 mb-4" />
           <p className="text-sm font-bold">Video no disponible aún</p>
         </div>
@@ -389,7 +389,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
 
             {/* Branding Watermark */}
             <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                <ShieldCheck className="h-3 w-3 text-success" />
                 <span className="text-[8px] font-black uppercase text-white tracking-widest">Contenido Protegido • {title || 'BTECH'}</span>
             </div>
         </div>
@@ -397,7 +397,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
 
       {/* End Screen Overlay */}
       {showEndScreen && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-500">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-foreground/60 backdrop-blur-xl animate-in fade-in duration-500">
           <div className="text-center p-8 max-w-md">
             <div className="mb-6 flex justify-center">
               <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
@@ -407,12 +407,12 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
             <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">
               ¡Gracias por ver!
             </h3>
-            <p className="text-slate-300 text-sm md:text-base mb-8">
+            <p className="text-border text-sm md:text-base mb-8">
               Esperamos que este contenido sea de gran utilidad para ti.
             </p>
             <button
               onClick={handleReplay}
-              className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-950 font-bold rounded-2xl hover:scale-105 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+              className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-foreground font-bold rounded-2xl hover:scale-105 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
             >
               <RotateCcw className="h-5 w-5 group-hover:rotate-[-45deg] transition-transform" />
               Ver de nuevo

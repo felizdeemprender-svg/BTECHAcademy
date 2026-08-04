@@ -149,24 +149,24 @@ export default function PublishingEnginesPage() {
     if (id === 'meta_social') {
       return (
         <div className="space-y-6 animate-in fade-in">
-          <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex gap-3">
-            <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0" />
-            <div className="text-[11px] text-amber-900 space-y-1">
+          <div className="bg-warn/10 p-4 rounded-xl border border-warn/20 flex gap-3">
+            <ShieldAlert className="h-5 w-5 text-warn shrink-0" />
+            <div className="text-[11px] text-warn space-y-1">
               <p className="font-bold uppercase">Meta Unified Protocol (FB/IG):</p>
               <p>Este motor unifica la publicación en **Facebook Pages** e **Instagram Business** mediante la Graph API.</p>
             </div>
           </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="1" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Vinculación de Cuentas</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">1. Vinculación de Cuentas</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Tu cuenta de Instagram debe ser de tipo **Business** y estar vinculada a una Página de Facebook de la cual seas Administrador.</p>
                 <a href="https://business.facebook.com/settings/instagram-account-v2" target="_blank" className="text-blue-600 text-[10px] font-bold flex items-center gap-1 hover:underline"><ExternalLink className="h-3 w-3" /> Configuración de Negocio Meta</a>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Token de Acceso Permanente</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-3">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Token de Acceso Permanente</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-3">
                 <p>Genera un **User Access Token** en el <a href="https://developers.facebook.com/tools/explorer" target="_blank" className="underline">Explorador de la API Graph</a> con estos permisos:</p>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary" className="text-[9px]">pages_manage_posts</Badge>
@@ -193,16 +193,16 @@ export default function PublishingEnginesPage() {
           </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="1" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. LinkedIn Developer Portal</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">1. LinkedIn Developer Portal</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Crea una App en el <a href="https://www.linkedin.com/developers/apps" target="_blank" className="underline text-blue-600 font-bold">Portal de Desarrolladores</a> y vincúlala a tu Página de Empresa.</p>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Scopes Requeridos</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Scopes Requeridos</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Asegúrate de solicitar los permisos **"Share on LinkedIn"** y **"Sign In with LinkedIn"**. Los scopes técnicos son:</p>
-                <code className="block p-2 bg-slate-100 rounded text-[10px]">w_member_social, w_organization_social</code>
+                <code className="block p-2 bg-muted rounded text-[10px]">w_member_social, w_organization_social</code>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -213,7 +213,7 @@ export default function PublishingEnginesPage() {
     if (id === 'twitter') {
       return (
         <div className="space-y-6 animate-in fade-in">
-          <div className="bg-slate-900 p-4 rounded-xl border border-white/10 flex gap-3 text-white">
+          <div className="bg-foreground p-4 rounded-xl border border-white/10 flex gap-3 text-white">
             <Twitter className="h-5 w-5 text-blue-400 shrink-0" />
             <div className="text-[11px] text-white/70 space-y-1">
               <p className="font-bold uppercase text-white">X (Twitter) v2 Protocol:</p>
@@ -222,15 +222,15 @@ export default function PublishingEnginesPage() {
           </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="1" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Developer Portal (Project)</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">1. Developer Portal (Project)</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Crea un **Project** y una **App** en <a href="https://developer.x.com" target="_blank" className="underline text-blue-600">developer.x.com</a>.</p>
-                <p className="text-[10px] text-amber-600 font-bold">⚠️ Configura los permisos de la App como "Read and Write".</p>
+                <p className="text-[10px] text-warn font-bold">⚠️ Configura los permisos de la App como "Read and Write".</p>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Credenciales OAuth 1.0a</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Credenciales OAuth 1.0a</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Evo utiliza el par de llaves: <code>API Key</code> + <code>API Secret</code> y los <code>Access Tokens</code> generados en la pestaña "Keys and Tokens".</p>
               </AccordionContent>
             </AccordionItem>
@@ -242,23 +242,23 @@ export default function PublishingEnginesPage() {
     if (id === 'tiktok') {
       return (
         <div className="space-y-6 animate-in fade-in">
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex gap-3">
-            <TikTokIcon className="h-5 w-5 text-slate-900 shrink-0" />
-            <div className="text-[11px] text-slate-600 space-y-1">
+          <div className="bg-muted p-4 rounded-xl border border-border flex gap-3">
+            <TikTokIcon className="h-5 w-5 text-foreground shrink-0" />
+            <div className="text-[11px] text-muted-foreground space-y-1">
               <p className="font-bold uppercase">TikTok for Business API:</p>
               <p>Protocolo para la subida y gestión de videos cortos en el feed comercial.</p>
             </div>
           </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="1" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. TikTok Developers</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">1. TikTok Developers</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Regístrate en <a href="https://developers.tiktok.com" target="_blank" className="underline text-blue-600">TikTok Developers</a> y crea una App de tipo "Content Posting".</p>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Permisos de Video</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Permisos de Video</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Activa los permisos <code>video.upload</code> and <code>video.list</code> para permitir que Evo gestione tus clips.</p>
               </AccordionContent>
             </AccordionItem>
@@ -271,25 +271,25 @@ export default function PublishingEnginesPage() {
     if (group === 'Email') {
       return (
         <div className="space-y-6 animate-in fade-in">
-          <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex gap-3">
-            <Mail className="h-5 w-5 text-emerald-600 shrink-0" />
-            <div className="text-[11px] text-emerald-900 space-y-1">
+          <div className="bg-success/10 p-4 rounded-xl border border-success/20 flex gap-3">
+            <Mail className="h-5 w-5 text-success shrink-0" />
+            <div className="text-[11px] text-success space-y-1">
               <p className="font-bold uppercase">{selectedMotor.label}:</p>
               <p>Envío masivo y automatizado con alta tasa de entregabilidad.</p>
             </div>
           </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="1" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. Ubicación de la API Key</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">1. Ubicación de la API Key</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 {id === 'sendgrid' && <p>Ve a **Settings → API Keys** en SendGrid y crea una con "Full Access" o "Mail Send".</p>}
                 {id === 'mailchimp' && <p>Busca en **Account → Extras → API Keys**. Genera una nueva llave exclusiva para Evo.</p>}
                 {id === 'brevo' && <p>Entra a **SMTP & API** y genera una llave de versión **v3**.</p>}
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Dominio Remitente</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Dominio Remitente</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Es vital que hayas verificado tu dominio (Single Sender Verification) antes de intentar emitir correos masivos.</p>
               </AccordionContent>
             </AccordionItem>
@@ -302,23 +302,23 @@ export default function PublishingEnginesPage() {
     if (group === 'Ads') {
       return (
         <div className="space-y-6 animate-in fade-in">
-          <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex gap-3">
-            <Megaphone className="h-5 w-5 text-amber-600 shrink-0" />
-            <div className="text-[11px] text-amber-900 space-y-1">
+          <div className="bg-warn/10 p-4 rounded-xl border border-warn/20 flex gap-3">
+            <Megaphone className="h-5 w-5 text-warn shrink-0" />
+            <div className="text-[11px] text-warn space-y-1">
               <p className="font-bold uppercase">Publicidad Digital (Ads Engine):</p>
               <p>Gestión automatizada de presupuestos y variantes creativas.</p>
             </div>
           </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="1" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">1. ID de Cuenta Publicitaria</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">1. ID de Cuenta Publicitaria</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Ingresa el **Account ID** que encontrarás en el panel superior de tu gestor de anuncios ({selectedMotor.provider}).</p>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-slate-700">2. Token de Desarrollador</AccordionTrigger>
-              <AccordionContent className="text-slate-500 space-y-2">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Token de Desarrollador</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
                 {id === 'meta_ads' && <p>Asegúrate de que el Token de Meta incluya el permiso <code>ads_management</code>.</p>}
                 {id === 'google_ads' && <p>Necesitarás el **Developer Token** aprobado de tu Google Ads Manager Center y las credenciales de OAuth CLIENT ID.</p>}
               </AccordionContent>
@@ -329,9 +329,9 @@ export default function PublishingEnginesPage() {
     }
 
     return (
-      <div className="p-6 bg-slate-50 rounded-2xl border flex flex-col items-center gap-3 text-center">
-        <Server className="h-10 w-10 text-slate-300" />
-        <p className="text-sm text-slate-500 italic">Documentación técnica certificada por Evo Automation.</p>
+      <div className="p-6 bg-muted rounded-2xl border flex flex-col items-center gap-3 text-center">
+        <Server className="h-10 w-10 text-border" />
+        <p className="text-sm text-muted-foreground italic">Documentación técnica certificada por Evo Automation.</p>
       </div>
     );
   };
@@ -341,7 +341,7 @@ export default function PublishingEnginesPage() {
     const creds = p?.marketingCredentials?.[motorId];
     if (!creds?.apiKey) {
       return (
-        <Badge variant="outline" className="text-[8px] font-bold bg-slate-50 text-slate-400 border-slate-100">
+        <Badge variant="outline" className="text-[8px] font-bold bg-muted text-muted-foreground border-muted">
           No Conectado
         </Badge>
       );
@@ -349,7 +349,7 @@ export default function PublishingEnginesPage() {
     const isSandbox = creds.mode === 'sandbox';
     return (
       <Badge className={cn("text-[8px] font-black uppercase border-none", 
-        isSandbox ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+        isSandbox ? "bg-warn/15 text-warn" : "bg-success/15 text-success"
       )}>
         {isSandbox ? 'Sandbox Activo' : 'Real Conectado'}
       </Badge>
@@ -370,9 +370,9 @@ export default function PublishingEnginesPage() {
           </div>
         </header>
 
-        <div className="bg-slate-50/50 border border-slate-100 p-8 rounded-lg space-y-6">
+        <div className="bg-muted/50 border border-muted p-8 rounded-lg space-y-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary shrink-0 border border-slate-200/50">
+            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary shrink-0 border border-border/50">
               <Settings2 className="h-6 w-6 text-primary" />
             </div>
             <div className="space-y-1">
@@ -396,7 +396,7 @@ export default function PublishingEnginesPage() {
                   {MOTORS.filter(m => m.group === group).map(motor => (
                     <Card key={motor.id} className="border-none shadow-lg rounded-lg bg-white p-8 space-y-6 group transition-all border-2 border-transparent hover:border-primary/5">
                       <div className="flex justify-between items-start">
-                        <div className={cn("w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg transition-transform group-hover:rotate-6", motor.color === 'emerald' ? 'bg-emerald-500' : motor.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500')}>
+                        <div className={cn("w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg transition-transform group-hover:rotate-6", motor.color === 'emerald' ? 'bg-success' : motor.color === 'blue' ? 'bg-blue-500' : 'bg-warn')}>
                           <motor.icon className="h-6 w-6" />
                         </div>
                         <div className="flex flex-col items-end gap-1.5">
@@ -412,7 +412,7 @@ export default function PublishingEnginesPage() {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => openMotorConfig(motor)}
-                        className="w-full rounded-xl text-[10px] font-black uppercase tracking-widest h-10 border border-slate-100 hover:bg-slate-50 gap-2"
+                        className="w-full rounded-xl text-[10px] font-black uppercase tracking-widest h-10 border border-muted hover:bg-muted gap-2"
                       >
                         Configurar API <ArrowUpRight className="h-3 w-3" />
                       </Button>
@@ -426,7 +426,7 @@ export default function PublishingEnginesPage() {
 
         <Dialog open={isConfigOpen} onOpenChange={(open) => { setIsConfigOpen(open); if(!open) clearUILocks(); }}>
           <DialogContent className="mw-2xl">
-            <div className={cn("px-8 pt-8 text-white relative", selectedMotor?.color === 'emerald' ? 'bg-emerald-600' : selectedMotor?.color === 'blue' ? 'bg-blue-600' : 'bg-amber-600')}>
+            <div className={cn("px-8 pt-8 text-white relative", selectedMotor?.color === 'emerald' ? 'bg-success' : selectedMotor?.color === 'blue' ? 'bg-blue-600' : 'bg-warn')}>
               <Sparkles className="absolute -right-4 -top-4 h-24 w-24 opacity-10" />
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
@@ -450,7 +450,7 @@ export default function PublishingEnginesPage() {
                     <TabsContent value="params" className="m-0 space-y-8 animate-in fade-in">
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">
                           <KeyRound className="h-3 w-3" /> API Key / Access Token
                         </Label>
                         <Input 
@@ -463,7 +463,7 @@ export default function PublishingEnginesPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">
                           <Database className="h-3 w-3" /> App ID / Account ID
                         </Label>
                         <Input 
@@ -475,7 +475,7 @@ export default function PublishingEnginesPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">
                           <Globe className="h-3 w-3" /> Modo de Operación
                         </Label>
                         <Select 
@@ -487,23 +487,23 @@ export default function PublishingEnginesPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="sandbox" className="font-bold">Modo Prueba (Sandbox)</SelectItem>
-                            <SelectItem value="production" className="font-bold text-emerald-600">Modo Real (Producción)</SelectItem>
+                            <SelectItem value="production" className="font-bold text-success">Modo Real (Producción)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 flex items-center justify-between">
+                    <div className="bg-muted p-6 rounded-lg border border-border flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <ShieldCheck className="h-5 w-5 text-emerald-500" />
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Validación de Túnel</p>
+                        <ShieldCheck className="h-5 w-5 text-success" />
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Validación de Túnel</p>
                       </div>
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={handleTestConnection} 
                         disabled={isTesting}
-                        className="rounded-xl font-bold h-9 gap-2 border-slate-200 hover:bg-white"
+                        className="rounded-xl font-bold h-9 gap-2 border-border hover:bg-white"
                       >
                         {isTesting ? <Loader2 className="animate-spin h-3.5 w-3.5" /> : <RefreshCw className="h-3.5 w-3.5" />}
                         Verificar Conexión
@@ -512,13 +512,13 @@ export default function PublishingEnginesPage() {
                   </TabsContent>
 
                   <TabsContent value="help" className="m-0 space-y-6 animate-in fade-in">
-                    <div className="p-6 bg-slate-900 rounded-lg text-white relative overflow-hidden">
+                    <div className="p-6 bg-foreground rounded-lg text-white relative overflow-hidden">
                       <Sparkles className="absolute -right-4 -top-4 h-24 w-24 opacity-10" />
                       <div className="flex items-center gap-3 relative z-10 mb-4">
                         <BookOpen className="h-5 w-5 text-accent" />
                         <h4 className="text-sm font-bold">Guía Institucional: {selectedMotor?.label}</h4>
                       </div>
-                      <p className="text-xs text-slate-400 leading-relaxed relative z-10">Sigue este protocolo para autorizar la emisión automática desde el motor de Evo y asegurar la confiabilidad del 100%.</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed relative z-10">Sigue este protocolo para autorizar la emisión automática desde el motor de Evo y asegurar la confiabilidad del 100%.</p>
                     </div>
                     
                     <div className="px-2">
@@ -533,7 +533,7 @@ export default function PublishingEnginesPage() {
                 </div>
               </ScrollArea>
 
-              <DialogFooter className="p-8 bg-slate-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+              <DialogFooter className="p-8 bg-muted border-t shrink-0 flex flex-col sm:flex-row gap-3">
                 <Button variant="ghost" onClick={() => setIsConfigOpen(false)} className="rounded-xl font-bold h-12 px-8">Cerrar</Button>
                 <Button onClick={handleSaveConfig} className="flex-1 h-12 rounded-xl font-bold bg-primary">Guardar Credenciales</Button>
               </DialogFooter>

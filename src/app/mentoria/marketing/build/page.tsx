@@ -243,7 +243,7 @@ export default function CampaignOrchestratorPage() {
                           selectedPageId === p.id ? "bg-primary/5 border-primary shadow-sm" : "bg-white border-border/50 hover:border-primary/20"
                         )}
                       >
-                        <p className="font-bold text-sm text-slate-700">{p.title}</p>
+                        <p className="font-bold text-sm text-foreground">{p.title}</p>
                         <p className="text-[10px] text-muted-foreground mt-1">ID: {p.id}</p>
                       </div>
                     ))}
@@ -293,42 +293,42 @@ export default function CampaignOrchestratorPage() {
                   const otherCount = socials.length - (instagramCount + tiktokCount + linkedinCount + twitterCount);
                   
                   return (
-                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-4 animate-in fade-in zoom-in-95">
-                      <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Activos del Pack Seleccionado</h4>
+                    <div className="p-5 rounded-2xl bg-muted border border-muted space-y-4 animate-in fade-in zoom-in-95">
+                      <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Activos del Pack Seleccionado</h4>
                       
                       <div className="grid grid-cols-3 gap-3 text-center">
-                        <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100/50">
-                          <p className="text-xl font-black text-slate-800">{emails.length}</p>
+                        <div className="p-3 bg-white rounded-xl shadow-sm border border-muted/50">
+                          <p className="text-xl font-black text-foreground">{emails.length}</p>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Emails</p>
                         </div>
-                        <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100/50">
-                          <p className="text-xl font-black text-slate-800">{ads.length}</p>
+                        <div className="p-3 bg-white rounded-xl shadow-sm border border-muted/50">
+                          <p className="text-xl font-black text-foreground">{ads.length}</p>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Ads (Anuncios)</p>
                         </div>
-                        <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100/50">
-                          <p className="text-xl font-black text-slate-800">{socials.length}</p>
+                        <div className="p-3 bg-white rounded-xl shadow-sm border border-muted/50">
+                          <p className="text-xl font-black text-foreground">{socials.length}</p>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Videos/Posts</p>
                         </div>
                       </div>
                       
                       {socials.length > 0 && (
-                        <div className="space-y-1.5 pt-2 border-t border-slate-200/60">
-                          <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Distribución por Redes</p>
+                        <div className="space-y-1.5 pt-2 border-t border-border/60">
+                          <p className="text-[9px] font-black uppercase text-muted-foreground tracking-wider">Distribución por Redes</p>
                           <div className="flex flex-wrap gap-2">
                             {instagramCount > 0 && <Badge variant="outline" className="bg-pink-50/50 border-pink-100 text-pink-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">Instagram: {instagramCount}</Badge>}
-                            {tiktokCount > 0 && <Badge variant="outline" className="bg-slate-50/50 border-slate-200 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">TikTok: {tiktokCount}</Badge>}
+                            {tiktokCount > 0 && <Badge variant="outline" className="bg-muted/50 border-border text-foreground text-[10px] font-bold px-2.5 py-0.5 rounded-lg">TikTok: {tiktokCount}</Badge>}
                             {linkedinCount > 0 && <Badge variant="outline" className="bg-blue-50/50 border-blue-100 text-blue-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">LinkedIn: {linkedinCount}</Badge>}
                             {twitterCount > 0 && <Badge variant="outline" className="bg-sky-50/50 border-sky-100 text-sky-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">Twitter/X: {twitterCount}</Badge>}
-                            {otherCount > 0 && <Badge variant="outline" className="bg-slate-50/50 border-slate-200 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-lg">Otros: {otherCount}</Badge>}
+                            {otherCount > 0 && <Badge variant="outline" className="bg-muted/50 border-border text-foreground text-[10px] font-bold px-2.5 py-0.5 rounded-lg">Otros: {otherCount}</Badge>}
                           </div>
                         </div>
                       )}
                       
-                      <div className="bg-amber-50/80 border border-amber-100/60 rounded-xl p-3 text-[11px] font-medium text-amber-800 space-y-1">
+                      <div className="bg-warn/10/80 border border-warn/15/60 rounded-xl p-3 text-[11px] font-medium text-warn space-y-1">
                         <p className="font-bold flex items-center gap-1.5">
-                          <Lightbulb className="h-3.5 w-3.5 text-amber-600 shrink-0" /> Recomendación del Planificador:
+                          <Lightbulb className="h-3.5 w-3.5 text-warn shrink-0" /> Recomendación del Planificador:
                         </p>
-                        <p className="leading-normal text-amber-900">
+                        <p className="leading-normal text-warn">
                           {socials.length === 0 ? (
                             "Este pack no tiene videos generados. Te sugerimos generar videos en el Productor antes de orquestar la emisión."
                           ) : socials.length === 1 ? (
@@ -366,7 +366,7 @@ export default function CampaignOrchestratorPage() {
               <CardContent className="p-10 space-y-10">
                 <div className="grid gap-8">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Modelo de Lanzamiento</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Modelo de Lanzamiento</Label>
                     <Select value={strategy} onValueChange={(v: any) => setStrategy(v)}>
                       <SelectTrigger size="xl" className="bg-secondary/10 border-none px-6 font-bold text-lg">
                         <SelectValue placeholder="Selecciona..." />
@@ -381,7 +381,7 @@ export default function CampaignOrchestratorPage() {
                   
                   <div className="grid sm:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Duración (Días)</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Duración (Días)</Label>
                       <div className="flex items-center gap-4">
                         <Input 
                           type="number" 
@@ -390,7 +390,7 @@ export default function CampaignOrchestratorPage() {
                           className="bg-secondary/10 border-none px-6 font-black text-xl w-32" 
                          size="xl" />
                         <div>
-                          <p className="text-xs font-bold text-slate-700">Duración sugerida</p>
+                          <p className="text-xs font-bold text-foreground">Duración sugerida</p>
                           {(() => {
                             const page = salesPages?.find(p => p.id === selectedPageId);
                             const socials = page?.aiContent?.socials || page?.aiContent?.social || [];
@@ -398,7 +398,7 @@ export default function CampaignOrchestratorPage() {
                             return (
                               <p className={cn(
                                 "text-[10px] font-bold uppercase tracking-tighter mt-0.5",
-                                duration === recommended ? "text-emerald-600 animate-pulse" : "text-amber-600"
+                                duration === recommended ? "text-success animate-pulse" : "text-warn"
                               )}>
                                 {duration === recommended ? "✓ Óptima para tus videos" : `Sugerida: ${recommended} días`}
                               </p>
@@ -411,7 +411,7 @@ export default function CampaignOrchestratorPage() {
 
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Refinar Segmentación del Público</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Refinar Segmentación del Público</Label>
                       <Textarea 
                         value={targetAudience} 
                         onChange={e => setTargetAudience(e.target.value)} 
@@ -421,8 +421,8 @@ export default function CampaignOrchestratorPage() {
                     </div>
                     
                     <div className="space-y-3">
-                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-1 flex items-center gap-2">
-                        <Lightbulb className="h-3 w-3 text-amber-500" /> Perfiles de Referencia:
+                      <p className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] px-1 flex items-center gap-2">
+                        <Lightbulb className="h-3 w-3 text-warn" /> Perfiles de Referencia:
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {STRATEGIC_SEGMENTS.map(seg => (
@@ -443,7 +443,7 @@ export default function CampaignOrchestratorPage() {
                 <Button 
                   onClick={handleGeneratePlan} 
                   disabled={isGenerating} 
-                  className="w-full h-20 rounded-lg font-bold text-2xl bg-slate-900"
+                  className="w-full h-20 rounded-lg font-bold text-2xl bg-foreground"
                 >
                   {isGenerating ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <Sparkles className="mr-3 h-8 w-8 text-accent" />}
                   Generar Plan Maestro
@@ -456,48 +456,48 @@ export default function CampaignOrchestratorPage() {
         {step === 3 && coordinationPlan && (
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
             <Card className="rounded-lg bg-white overflow-hidden">
-              <CardHeader className="bg-emerald-500 p-10 text-white relative">
+              <CardHeader className="bg-success p-10 text-white relative">
                 <TrendingUp className="absolute right-10 top-10 h-20 w-20 opacity-10" />
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-3xl bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/30"><Calendar className="h-8 w-8" /></div>
                   <div>
                     <CardTitle className="text-3xl font-bold">Cronograma Flexible</CardTitle>
-                    <CardDescription className="text-emerald-100 text-base">Ajusta el orden de emisión de tus 3 variantes.</CardDescription>
+                    <CardDescription className="text-success/15 text-base">Ajusta el orden de emisión de tus 3 variantes.</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               
               <CardContent className="p-10 space-y-10">
-                <div className="bg-slate-50 p-8 rounded-lg border border-slate-200">
+                <div className="bg-muted p-8 rounded-lg border border-border">
                   <h4 className="text-xs font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2"><Zap className="h-4 w-4 text-accent" /> Lógica de la Campaña</h4>
-                  <p className="text-slate-600 leading-relaxed italic font-medium">"{coordinationPlan.logic}"</p>
+                  <p className="text-muted-foreground leading-relaxed italic font-medium">"{coordinationPlan.logic}"</p>
                 </div>
 
                 <div className="space-y-6">
                   <div className="flex justify-between items-center px-2">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Línea de Tiempo Editable</h4>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Línea de Tiempo Editable</h4>
                     <Button variant="outline" size="sm" onClick={handleAddEvent} className="rounded-xl font-bold gap-2 h-9">
                       <Plus className="h-4 w-4" /> Añadir Hito
                     </Button>
                   </div>
                   
-                  <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-1/2 before:bg-slate-200">
+                  <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-1/2 before:bg-border">
                     {coordinationPlan.timeline.map((event, i) => (
                       <div key={i} className="relative flex items-start gap-10 group">
-                        <div className="absolute left-0 flex h-10 w-10 items-center justify-center rounded-full bg-white border-4 border-emerald-500 z-10 shrink-0">
+                        <div className="absolute left-0 flex h-10 w-10 items-center justify-center rounded-full bg-white border-4 border-success z-10 shrink-0">
                           <input 
                             type="number" 
                             value={event.day} 
                             onChange={e => handleUpdateEvent(i, 'day', parseInt(e.target.value) || 0)}
-                            className="w-full text-center text-xs font-black text-emerald-600 border-none bg-transparent outline-none"
+                            className="w-full text-center text-xs font-black text-success border-none bg-transparent outline-none"
                           />
                         </div>
-                        <Card className="ml-14 flex-1 p-6 rounded-lg border-2 border-slate-100 bg-white hover:border-emerald-200 transition-all group/card relative">
+                        <Card className="ml-14 flex-1 p-6 rounded-lg border-2 border-muted bg-white hover:border-success/20 transition-all group/card relative">
                           <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleDeleteEvent(i)}
-                            className="absolute top-4 right-4 h-8 w-8 text-rose-400 opacity-0 group-hover/card:opacity-100 transition-opacity hover:bg-rose-50"
+                            className="absolute top-4 right-4 h-8 w-8 text-danger opacity-0 group-hover/card:opacity-100 transition-opacity hover:bg-danger/10"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -509,13 +509,13 @@ export default function CampaignOrchestratorPage() {
                                 <input 
                                   value={event.phase} 
                                   onChange={e => handleUpdateEvent(i, 'phase', e.target.value)}
-                                  className="text-xs font-bold text-slate-400 border-none bg-transparent outline-none w-full"
+                                  className="text-xs font-bold text-muted-foreground border-none bg-transparent outline-none w-full"
                                 />
                               </div>
                               <Textarea 
                                 value={event.action} 
                                 onChange={e => handleUpdateEvent(i, 'action', e.target.value)} 
-                                className="font-bold text-lg text-slate-900 border-none bg-slate-50 rounded-xl p-4 min-h-[80px]" 
+                                className="font-bold text-lg text-foreground border-none bg-muted rounded-xl p-4 min-h-[80px]" 
                               />
 
                               {event.channels.includes('Social') && (() => {
@@ -527,12 +527,12 @@ export default function CampaignOrchestratorPage() {
                                 const platforms = Array.from(new Set(socials.map((s: any) => s.platform).filter(Boolean))) as string[];
 
                                 return (
-                                  <div className="mt-4 p-5 rounded-2xl bg-slate-50/80 border border-slate-200/60 space-y-4">
+                                  <div className="mt-4 p-5 rounded-2xl bg-muted/80 border border-border/60 space-y-4">
                                     <div className="flex items-center justify-between">
-                                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider flex items-center gap-1.5">
                                         <Instagram className="h-3.5 w-3.5 text-primary" /> Distribución y Horarios de Video
                                       </p>
-                                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[8px] font-bold">
+                                      <Badge variant="outline" className="bg-success/10 text-success border-success/15 text-[8px] font-bold">
                                         Horario Recomendado
                                       </Badge>
                                     </div>
@@ -625,13 +625,13 @@ export default function CampaignOrchestratorPage() {
                                         }
 
                                         return (
-                                          <div key={plat} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                          <div key={plat} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-muted shadow-sm">
                                             <div className="flex items-center gap-3">
                                               <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-bold text-xs uppercase">
                                                 {plat.substring(0, 2)}
                                               </div>
                                               <div>
-                                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">{plat}</p>
+                                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">{plat}</p>
                                                 <Select
                                                   value={activeVideoName}
                                                   onValueChange={(val) => {
@@ -642,7 +642,7 @@ export default function CampaignOrchestratorPage() {
                                                     handleUpdateEvent(i, 'socialSchedule', updatedSchedule);
                                                   }}
                                                 >
-                                                  <SelectTrigger className="h-7 px-2 bg-slate-50 border-none font-bold text-[10px] rounded-lg mt-0.5 max-w-[200px] truncate">
+                                                  <SelectTrigger className="h-7 px-2 bg-muted border-none font-bold text-[10px] rounded-lg mt-0.5 max-w-[200px] truncate">
                                                     <SelectValue placeholder="Seleccionar Video..." />
                                                   </SelectTrigger>
                                                   <SelectContent>
@@ -661,7 +661,7 @@ export default function CampaignOrchestratorPage() {
 
                                             <div className="flex flex-col items-end gap-1 shrink-0">
                                               <div className="flex items-center gap-2">
-                                                <Label className="text-[9px] font-black uppercase text-slate-400">Publicar:</Label>
+                                                <Label className="text-[9px] font-black uppercase text-muted-foreground">Publicar:</Label>
                                                 <input
                                                   type="time"
                                                   value={activeTime}
@@ -672,14 +672,14 @@ export default function CampaignOrchestratorPage() {
                                                     };
                                                     handleUpdateEvent(i, 'socialSchedule', updatedSchedule);
                                                   }}
-                                                  className="h-8 px-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-black text-slate-700 outline-none w-24 focus:border-primary/20 transition-all text-center"
+                                                  className="h-8 px-2.5 rounded-lg bg-muted border border-muted text-xs font-black text-foreground outline-none w-24 focus:border-primary/20 transition-all text-center"
                                                 />
                                               </div>
                                               <span className={cn(
                                                 "text-[8px] text-right font-black tracking-tight max-w-[210px] leading-tight block transition-all",
-                                                statusType === 'primary' && "text-emerald-600/90",
+                                                statusType === 'primary' && "text-success/90",
                                                 statusType === 'secondary' && "text-sky-600/90",
-                                                statusType === 'none' && "text-rose-500 animate-pulse"
+                                                statusType === 'none' && "text-danger animate-pulse"
                                               )}>
                                                 {statusType === 'primary' && `🌟 ¡Pico Óptimo!: ${statusDesc}`}
                                                 {statusType === 'secondary' && `⚡ Tránsito Moderado: ${statusDesc}`}
@@ -696,7 +696,7 @@ export default function CampaignOrchestratorPage() {
                             </div>
                             <div className="space-y-4 flex flex-col justify-end">
                               <div className="space-y-1">
-                                <Label className="text-[9px] font-black uppercase text-slate-400 ml-1">Canales Activos</Label>
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Canales Activos</Label>
                                 <div className="flex gap-1.5 flex-wrap">
                                   {['Email', 'Social', 'Ads'].map(ch => (
                                     <Badge 

@@ -33,10 +33,10 @@ export function StudentFollowUpCard({
             <UserCircle className="h-5 w-5 md:h-6 md:w-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-base md:text-lg text-slate-900 line-clamp-1 group-hover:text-primary transition-colors">
+            <h3 className="font-bold text-base md:text-lg text-foreground line-clamp-1 group-hover:text-primary transition-colors">
               {title}
             </h3>
-            <p className="text-xs font-medium text-slate-500 flex items-center gap-1.5 mt-0.5">
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mt-0.5">
               <Target className="h-3 w-3" /> Objetivo: {goal}
             </p>
           </div>
@@ -48,17 +48,17 @@ export function StudentFollowUpCard({
               <p className="text-xl md:text-2xl font-black text-primary leading-none">
                 {consumedSessions} / {totalSessions}
               </p>
-              <p className="text-[8px] font-bold uppercase text-slate-400 mt-1">Sesiones</p>
+              <p className="text-[8px] font-bold uppercase text-muted-foreground mt-1">Sesiones</p>
             </div>
             
             <div className="text-center">
               <Badge className={cn(
                 "px-2 py-0.5 rounded-full text-[8px] uppercase font-black border-none", 
-                isActive ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+                isActive ? "bg-success text-white" : "bg-danger text-white"
               )}>
                 {isActive ? 'En Curso' : 'Pausado'}
               </Badge>
-              <p className="text-[8px] font-bold uppercase text-slate-400 mt-1">Estado</p>
+              <p className="text-[8px] font-bold uppercase text-muted-foreground mt-1">Estado</p>
             </div>
           </div>
           

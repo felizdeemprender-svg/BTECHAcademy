@@ -85,7 +85,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="w-full justify-start text-white/40 hover:text-rose-400 hover:bg-rose-500/10 h-9 rounded-xl font-bold text-xs p-2"
+                className="w-full justify-start text-white/40 hover:text-danger hover:bg-danger/10 h-9 rounded-xl font-bold text-xs p-2"
                 onClick={handleLogout}
               >
                 <LogOut className="mr-2 h-4 w-4" />

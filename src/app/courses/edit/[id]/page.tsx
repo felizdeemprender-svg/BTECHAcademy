@@ -498,7 +498,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   };
 
   const renderQuestionEditor = (q: Question, qIdx: number, isSupport: boolean) => (
-    <Card key={q.id} className={`p-6 ${isSupport ? 'bg-emerald-50/30' : 'bg-muted/10'} rounded-lg relative border-none shadow-sm`}>
+    <Card key={q.id} className={`p-6 ${isSupport ? 'bg-success/10/30' : 'bg-muted/10'} rounded-lg relative border-none shadow-sm`}>
       <Button 
         variant="ghost" size="icon" 
         onClick={() => { 
@@ -514,7 +514,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       </Button>
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-           <span className={`w-8 h-8 rounded-xl ${isSupport ? 'bg-emerald-500' : 'bg-primary'} text-white flex items-center justify-center text-xs font-bold`}>
+           <span className={`w-8 h-8 rounded-xl ${isSupport ? 'bg-success' : 'bg-primary'} text-white flex items-center justify-center text-xs font-bold`}>
              {isSupport ? 'S' : ''}{qIdx + 1}
            </span>
            <div className="flex gap-2">
@@ -528,7 +528,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     newQs[qIdx] = { ...newQs[qIdx], type: type as any, options: type === 'multiple_choice' ? ['','','',''] : undefined, correctAnswer: type === 'true_false' ? true : '' };
                     setCurrentModule({...currentModule!, [key]: newQs});
                   }} 
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all ${q.type === type ? (isSupport ? 'bg-emerald-600' : 'bg-primary') + ' text-white' : 'bg-white border text-muted-foreground'}`}
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all ${q.type === type ? (isSupport ? 'bg-success' : 'bg-primary') + ' text-white' : 'bg-white border text-muted-foreground'}`}
                 >
                   {type.replace('_', ' ')}
                 </button>
@@ -558,7 +558,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       type="button" 
                       className={`w-8 h-8 rounded-lg font-bold shrink-0 transition-colors ${
                         q.correctAnswer === opt 
-                          ? (isSupport ? 'bg-emerald-500' : 'bg-primary') + ' text-white' 
+                          ? (isSupport ? 'bg-success' : 'bg-primary') + ' text-white' 
                           : 'bg-muted hover:bg-muted/80'
                       }`} 
                       onClick={() => {
@@ -787,7 +787,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       variant="outline" 
                       size="icon" 
                       onClick={() => handleDeleteModule(mod.id, mod.title)} 
-                      className="rounded-xl h-11 w-11 text-red-500 border-red-200 hover:bg-red-50"
+                      className="rounded-xl h-11 w-11 text-danger border-danger/20 hover:bg-danger/10"
                     >
                       <Trash2 className="h-5 w-5" />
                     </Button>
@@ -965,9 +965,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </div>
                   </div>
 
-                  <div className="bg-emerald-50/50 p-8 rounded-lg border-2 border-dashed border-emerald-200/50 space-y-6">
+                  <div className="bg-success/10/50 p-8 rounded-lg border-2 border-dashed border-success/20/50 space-y-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-emerald-700">Refuerzo Académico</h3><p className="text-[10px] text-emerald-600 font-medium">Se activa si el alumno reprueba.</p></div></div>
+                      <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-2xl bg-success text-white flex items-center justify-center shadow-lg"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-success">Refuerzo Académico</h3><p className="text-[10px] text-success font-medium">Se activa si el alumno reprueba.</p></div></div>
                       <Switch checked={currentModule.enableSupportQuestions} onCheckedChange={(val) => {
                         if (currentModule) setCurrentModule({...currentModule, enableSupportQuestions: val});
                       }} />
@@ -975,10 +975,10 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     {currentModule.enableSupportQuestions && (
                       <div className="space-y-8">
                         <div className="flex justify-between items-center">
-                          <h4 className="font-bold text-lg flex items-center gap-3"><Zap className="h-5 w-5 text-emerald-600" /> Evaluación de Soporte</h4>
+                          <h4 className="font-bold text-lg flex items-center gap-3"><Zap className="h-5 w-5 text-success" /> Evaluación de Soporte</h4>
                           <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setCurrentModule({...currentModule!, supportQuestions: [...currentModule!.supportQuestions, { id: generateId(), type: 'multiple_choice', question: '', correctAnswer: '', options: ['','','',''] }]})} className="rounded-xl font-bold border-emerald-200 text-emerald-700"><Plus className="h-4 w-4 mr-2" /> Añadir Soporte</Button>
-                            <Button onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg"><Sparkles className="h-4 w-4" /> Generar Soporte IA</Button>
+                            <Button variant="outline" onClick={() => setCurrentModule({...currentModule!, supportQuestions: [...currentModule!.supportQuestions, { id: generateId(), type: 'multiple_choice', question: '', correctAnswer: '', options: ['','','',''] }]})} className="rounded-xl font-bold border-success/20 text-success"><Plus className="h-4 w-4 mr-2" /> Añadir Soporte</Button>
+                            <Button onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-xl gap-2 bg-success hover:bg-success text-white font-bold shadow-lg"><Sparkles className="h-4 w-4" /> Generar Soporte IA</Button>
                           </div>
                         </div>
                         <div className="space-y-6">{currentModule.supportQuestions.map((sq, sqIdx) => renderQuestionEditor(sq, sqIdx, true))}</div>
@@ -1009,7 +1009,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
               <div className="mt-8 flex items-center justify-between relative px-0">
                 <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-primary/10 -translate-y-1/2 z-0 mx-8" />
                 <div className={cn("relative z-10 flex flex-col items-center gap-2", aiFlowStep >= 1 ? "text-primary" : "text-muted-foreground/30")}>
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-green-500 border-green-500" : "bg-primary/10 border-primary/20")}>
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all", aiFlowStep === 1 ? "bg-accent border-accent shadow-[0_0_15px_rgba(var(--accent),0.5)]" : aiFlowStep > 1 ? "bg-success border-success" : "bg-primary/10 border-primary/20")}>
                     {aiFlowStep > 1 ? <Check className="h-4 w-4" /> : "1"}
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-widest">Lectura</span>
@@ -1048,9 +1048,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
               {aiFlowStep === 2 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-2xl flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center"><ClipboardCheck className="h-6 w-6" /></div>
-                    <div><p className="text-xs font-bold text-green-700">Contenido Preparado</p><p className="text-[10px] text-green-600">Base de conocimiento cargada con éxito.</p></div>
+                  <div className="bg-success/10 border border-success/20 p-4 rounded-2xl flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-success text-white flex items-center justify-center"><ClipboardCheck className="h-6 w-6" /></div>
+                    <div><p className="text-xs font-bold text-success">Contenido Preparado</p><p className="text-[10px] text-success">Base de conocimiento cargada con éxito.</p></div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-6">

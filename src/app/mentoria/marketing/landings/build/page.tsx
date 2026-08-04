@@ -39,10 +39,10 @@ import { LandingEditor } from './components/LandingEditor';
 import { uploadPendingImagesInObject } from '@/lib/upload-base64';
 
 const MISSIONS = [
-  { id: 'venta', label: 'Venta Directa', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200', desc: 'Urgencia, ROI y escasez.' },
+  { id: 'venta', label: 'Venta Directa', icon: Zap, color: 'text-warn', bg: 'bg-warn/10', border: 'border-warn/20', desc: 'Urgencia, ROI y escasez.' },
   { id: 'autoridad', label: 'Autoridad / Branding', icon: UserCheck, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200', desc: 'Confianza y liderazgo.' },
-  { id: 'lanzamiento', label: 'Lanzamiento', icon: Rocket, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200', desc: 'Hype y bonos exclusivos.' },
-  { id: 'leads', label: 'Captación Leads', icon: Target, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200', desc: 'Valor y transformación.' },
+  { id: 'lanzamiento', label: 'Lanzamiento', icon: Rocket, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20', desc: 'Hype y bonos exclusivos.' },
+  { id: 'leads', label: 'Captación Leads', icon: Target, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20', desc: 'Valor y transformación.' },
 ] as const;
 
 const STRATEGIC_SEGMENTS = [
@@ -402,22 +402,22 @@ function LandingBuilderContent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div 
                     onClick={() => setLandingType('general')}
-                    className={cn("p-6 rounded-2xl border-2 transition-all cursor-pointer text-center", landingType === 'general' ? "bg-indigo-50 border-indigo-500 shadow-md" : "bg-white border-border/50 hover:border-indigo-200")}
+                    className={cn("p-6 rounded-2xl border-2 transition-all cursor-pointer text-center", landingType === 'general' ? "bg-primary/10 border-primary shadow-md" : "bg-white border-border/50 hover:border-primary/20")}
                   >
                     <div className="mx-auto w-10 h-10 rounded-full bg-white flex items-center justify-center mb-3 shadow-sm">
-                      <Layout className="h-5 w-5 text-indigo-500" />
+                      <Layout className="h-5 w-5 text-primary" />
                     </div>
-                    <p className="font-black text-slate-800 text-sm">Landing General</p>
+                    <p className="font-black text-foreground text-sm">Landing General</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Página principal para todos</p>
                   </div>
                   <div 
                     onClick={() => setLandingType('promocion')}
-                    className={cn("p-6 rounded-2xl border-2 transition-all cursor-pointer text-center", landingType === 'promocion' ? "bg-amber-50 border-amber-500 shadow-md" : "bg-white border-border/50 hover:border-amber-200")}
+                    className={cn("p-6 rounded-2xl border-2 transition-all cursor-pointer text-center", landingType === 'promocion' ? "bg-warn/10 border-warn shadow-md" : "bg-white border-border/50 hover:border-warn/20")}
                   >
                     <div className="mx-auto w-10 h-10 rounded-full bg-white flex items-center justify-center mb-3 shadow-sm">
-                      <Zap className="h-5 w-5 text-amber-500" />
+                      <Zap className="h-5 w-5 text-warn" />
                     </div>
-                    <p className="font-black text-slate-800 text-sm">Promoción / Embajador</p>
+                    <p className="font-black text-foreground text-sm">Promoción / Embajador</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Oferta temporal o para embajadores</p>
                   </div>
                 </div>
@@ -425,10 +425,10 @@ function LandingBuilderContent() {
 
               <Button disabled={!selectedCourseId || !selectedCollectionId} onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold">Continuar al Enfoque <ArrowRight className="ml-2 h-5 w-5" /></Button>
             </Card>
-            <div className="bg-slate-50 rounded-lg border-2 border-dashed flex items-center justify-center p-12 text-center">
+            <div className="bg-muted rounded-lg border-2 border-dashed flex items-center justify-center p-12 text-center">
                <div className="max-w-xs space-y-4">
                   <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary"><Layout className="h-10 w-10" /></div>
-                  <h3 className="text-2xl font-black text-slate-800">Cerebro Atómico</h3>
+                  <h3 className="text-2xl font-black text-foreground">Cerebro Atómico</h3>
                   <p className="text-sm text-muted-foreground font-medium">Al generar solo la Landing, la IA puede profundizar en los argumentos técnicos y el cierre de venta sin distracciones.</p>
                </div>
             </div>
@@ -445,16 +445,16 @@ function LandingBuilderContent() {
               
               {/* SELECTOR DE MISIÓN */}
               <div className="space-y-6">
-                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Selecciona la Misión de esta Landing</Label>
+                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">Selecciona la Misión de esta Landing</Label>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {MISSIONS.map((m) => {
                     const Icon = m.icon;
                     const isActive = mission === m.id;
                     return (
-                      <button key={m.id} onClick={() => setMission(m.id as any)} className={cn("flex flex-col items-center text-center p-6 rounded-lg border-2 transition-all duration-300 gap-3 group", isActive ? `${m.bg} ${m.border} shadow-lg scale-[1.02]` : "bg-white border-slate-100 hover:border-slate-300")}>
-                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-colors", isActive ? "bg-white" : "bg-slate-50 group-hover:bg-slate-100")}><Icon className={cn("h-6 w-6", m.color)} /></div>
+                      <button key={m.id} onClick={() => setMission(m.id as any)} className={cn("flex flex-col items-center text-center p-6 rounded-lg border-2 transition-all duration-300 gap-3 group", isActive ? `${m.bg} ${m.border} shadow-lg scale-[1.02]` : "bg-white border-muted hover:border-border")}>
+                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-colors", isActive ? "bg-white" : "bg-muted group-hover:bg-muted")}><Icon className={cn("h-6 w-6", m.color)} /></div>
                         <div className="space-y-1">
-                          <p className={cn("font-black text-xs uppercase transition-colors", isActive ? "text-slate-900" : "text-slate-500")}>{m.label}</p>
+                          <p className={cn("font-black text-xs uppercase transition-colors", isActive ? "text-foreground" : "text-muted-foreground")}>{m.label}</p>
                           <p className="text-[9px] text-muted-foreground font-medium leading-tight">{m.desc}</p>
                         </div>
                       </button>
@@ -463,9 +463,9 @@ function LandingBuilderContent() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-8 pt-6 border-t border-slate-100">
+              <div className="grid sm:grid-cols-2 gap-8 pt-6 border-t border-muted">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Título de la Página</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Título de la Página</Label>
                   <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-secondary/10 border-none px-6 font-bold"  size="xl" />
                 </div>
                 <div className="space-y-2">
@@ -480,7 +480,7 @@ function LandingBuilderContent() {
               {/* MEDIOS DE PAGO PERMITIDOS */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Medios de Pago Aceptados</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Medios de Pago Aceptados</Label>
                   <Badge variant="outline" className="text-[8px] font-bold text-accent border-accent/20 h-5 px-2">Checkout</Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -489,12 +489,12 @@ function LandingBuilderContent() {
                       onClick={() => setAllowedPaymentMethods(prev => prev.includes('mercadopago') ? prev.filter(m => m !== 'mercadopago') : [...prev, 'mercadopago'])}
                       className={cn(
                         'flex items-center gap-3 p-4 rounded-2xl border-2 transition-all text-left',
-                        allowedPaymentMethods.includes('mercadopago') ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'
+                        allowedPaymentMethods.includes('mercadopago') ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white border-border hover:border-border'
                       )}
                     >
-                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl", allowedPaymentMethods.includes('mercadopago') ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400')}>💳</div>
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl", allowedPaymentMethods.includes('mercadopago') ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground')}>💳</div>
                       <div>
-                        <p className={cn("font-black text-sm", allowedPaymentMethods.includes('mercadopago') ? 'text-indigo-900' : 'text-slate-600')}>Mercado Pago</p>
+                        <p className={cn("font-black text-sm", allowedPaymentMethods.includes('mercadopago') ? 'text-foreground' : 'text-muted-foreground')}>Mercado Pago</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">Tarjetas, saldo, etc.</p>
                       </div>
                     </button>
@@ -504,24 +504,24 @@ function LandingBuilderContent() {
                       onClick={() => setAllowedPaymentMethods(prev => prev.includes('transfer') ? prev.filter(m => m !== 'transfer') : [...prev, 'transfer'])}
                       className={cn(
                         'flex items-center gap-3 p-4 rounded-2xl border-2 transition-all text-left',
-                        allowedPaymentMethods.includes('transfer') ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-200 hover:border-slate-300'
+                        allowedPaymentMethods.includes('transfer') ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white border-border hover:border-border'
                       )}
                     >
-                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl", allowedPaymentMethods.includes('transfer') ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400')}>🏦</div>
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl", allowedPaymentMethods.includes('transfer') ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground')}>🏦</div>
                       <div>
-                        <p className={cn("font-black text-sm", allowedPaymentMethods.includes('transfer') ? 'text-indigo-900' : 'text-slate-600')}>Transferencia</p>
+                        <p className={cn("font-black text-sm", allowedPaymentMethods.includes('transfer') ? 'text-foreground' : 'text-muted-foreground')}>Transferencia</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">Aprobación manual</p>
                       </div>
                     </button>
                   )}
                 </div>
                 {(!isMercadoPagoActive && !isTransferActive) && (
-                  <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1">
+                  <p className="text-xs text-danger font-bold mt-2 flex items-center gap-1">
                     <AlertTriangle className="h-4 w-4" /> No tienes métodos de cobro configurados. Configúralos en tu Perfil de Mentor.
                   </p>
                 )}
                 {allowedPaymentMethods.length === 0 && (
-                  <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1">
+                  <p className="text-xs text-danger font-bold mt-2 flex items-center gap-1">
                     <AlertTriangle className="h-4 w-4" /> Debes seleccionar al menos un medio de pago (si el precio es mayor a 0).
                   </p>
                 )}
@@ -529,14 +529,14 @@ function LandingBuilderContent() {
 
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Segmentación Estratégica (Buyer Persona)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Segmentación Estratégica (Buyer Persona)</Label>
                   <Badge variant="outline" className="text-[8px] font-bold text-accent border-accent/20 h-5 px-2">Guía para la IA</Badge>
                 </div>
                 <Textarea value={targetAudience} onChange={e => setTargetAudience(e.target.value)} placeholder="Ej: Médicos interesados en optimizar su consulta..." size="lg" className="bg-secondary/10 border-none p-6 text-base font-medium" />
                 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {dynamicProfiles.map((seg: any) => (
-                    <button key={seg.id} onClick={() => setTargetAudience(seg.label + ': ' + seg.desc)} className="p-4 rounded-2xl border-2 border-slate-100 bg-white hover:border-primary/20 hover:bg-slate-50 transition-all text-left group">
+                    <button key={seg.id} onClick={() => setTargetAudience(seg.label + ': ' + seg.desc)} className="p-4 rounded-2xl border-2 border-muted bg-white hover:border-primary/20 hover:bg-muted transition-all text-left group">
                       <p className="font-bold text-xs text-primary group-hover:text-accent">{seg.label}</p>
                       <p className="text-[9px] text-muted-foreground mt-1 line-clamp-2">{seg.desc}</p>
                     </button>
@@ -546,7 +546,7 @@ function LandingBuilderContent() {
 
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Directivas para la IA (Guía de Copy)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Directivas para la IA (Guía de Copy)</Label>
                   <Badge variant="outline" className="text-[8px] font-bold text-primary border-primary/20 h-5 px-2">Cerebro de Marketing</Badge>
                 </div>
                 <Textarea value={templateDirectives} onChange={e => setTemplateDirectives(e.target.value)} placeholder="Ej: Usa un tono muy técnico, enfócate en el ROI..." size="lg" className="bg-secondary/10 border-none p-6 text-sm font-medium" />
@@ -554,33 +554,33 @@ function LandingBuilderContent() {
 
               {/* ─── VIGENCIA DE LA LANDING ─── */}
               {landingType === 'promocion' && (
-                <div className="space-y-4 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-4">
+                <div className="space-y-4 pt-6 border-t border-muted animate-in fade-in slide-in-from-top-4">
                   <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center">
-                    <CalendarDays className="h-5 w-5 text-indigo-500" />
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <CalendarDays className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <Label className="text-[10px] font-black uppercase text-indigo-500 tracking-widest block">Vigencia de la Promoción</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary tracking-widest block">Vigencia de la Promoción</Label>
                     <p className="text-[9px] text-muted-foreground font-medium">Opcional. La landing se bloqueará automáticamente fuera de este rango.</p>
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Inicio (Desde)</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Inicio (Desde)</Label>
                     <Input
                       type="datetime-local"
                       value={activeFrom}
                       onChange={e => setActiveFrom(e.target.value)}
-                      className="bg-indigo-50/50 border-none px-6 font-bold text-slate-700"
+                      className="bg-primary/10/50 border-none px-6 font-bold text-foreground"
                      size="xl" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Fin (Hasta)</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Fin (Hasta)</Label>
                     <Input
                       type="datetime-local"
                       value={activeUntil}
                       onChange={e => setActiveUntil(e.target.value)}
-                      className="bg-rose-50/50 border-none px-6 font-bold text-slate-700"
+                      className="bg-danger/10/50 border-none px-6 font-bold text-foreground"
                      size="xl" />
                   </div>
                 </div>
@@ -589,20 +589,20 @@ function LandingBuilderContent() {
 
               {/* ─── ASIGNACIÓN DE REFERIDO ─── */}
               {landingType === 'promocion' && (
-              <div className="space-y-4 pt-6 border-t border-slate-100">
+              <div className="space-y-4 pt-6 border-t border-muted">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <UserPlus className="h-5 w-5 text-emerald-500" />
+                  <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center">
+                    <UserPlus className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <Label className="text-[10px] font-black uppercase text-emerald-600 tracking-widest block">Asignar a un Referido (Embajador)</Label>
+                    <Label className="text-[10px] font-black uppercase text-success tracking-widest block">Asignar a un Referido (Embajador)</Label>
                     <p className="text-[9px] text-muted-foreground font-medium">Opcional. Todos los leads de esta landing se atribuirán a este referido.</p>
                   </div>
                 </div>
 
                 {referidos.length === 0 ? (
-                  <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center">
-                    <p className="text-xs text-muted-foreground font-medium">No hay usuarios con rol <span className="font-black text-slate-600">'referido'</span> en el sistema aún.</p>
+                  <div className="p-6 rounded-2xl bg-muted border border-dashed border-border text-center">
+                    <p className="text-xs text-muted-foreground font-medium">No hay usuarios con rol <span className="font-black text-muted-foreground">'referido'</span> en el sistema aún.</p>
                     <p className="text-[9px] text-muted-foreground mt-1">Puedes asignar el rol 'referido' a cualquier usuario desde el panel de administración.</p>
                   </div>
                 ) : (
@@ -612,11 +612,11 @@ function LandingBuilderContent() {
                       onClick={() => setReferidoId('')}
                       className={cn(
                         'flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
-                        !referidoId ? 'bg-slate-100 border-slate-400' : 'bg-white border-slate-100 hover:border-slate-300'
+                        !referidoId ? 'bg-muted border-muted-foreground' : 'bg-white border-muted hover:border-border'
                       )}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-black">—</div>
-                      <span className="text-xs font-bold text-slate-500">Sin referido (landing general)</span>
+                      <div className="w-8 h-8 rounded-lg bg-border flex items-center justify-center text-muted-foreground text-xs font-black">—</div>
+                      <span className="text-xs font-bold text-muted-foreground">Sin referido (landing general)</span>
                     </button>
                     {referidos.map(r => (
                       <button
@@ -624,17 +624,17 @@ function LandingBuilderContent() {
                         onClick={() => setReferidoId(r.id)}
                         className={cn(
                           'flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
-                          referidoId === r.id ? 'bg-emerald-50 border-emerald-400 shadow-sm' : 'bg-white border-slate-100 hover:border-emerald-200'
+                          referidoId === r.id ? 'bg-success/10 border-success shadow-sm' : 'bg-white border-muted hover:border-success/20'
                         )}
                       >
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-black">
+                        <div className="w-8 h-8 rounded-lg bg-success/15 flex items-center justify-center text-success text-xs font-black">
                           {(r.displayName || r.email).charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-black text-slate-800 truncate">{r.displayName}</p>
+                          <p className="text-xs font-black text-foreground truncate">{r.displayName}</p>
                           <p className="text-[9px] text-muted-foreground truncate">{r.email}</p>
                         </div>
-                        {referidoId === r.id && <CheckCircle2 className="h-4 w-4 text-emerald-500 ml-auto shrink-0" />}
+                        {referidoId === r.id && <CheckCircle2 className="h-4 w-4 text-success ml-auto shrink-0" />}
                       </button>
                     ))}
                   </div>
@@ -642,7 +642,7 @@ function LandingBuilderContent() {
               </div>
               )}
 
-              <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience || (price > 0 && allowedPaymentMethods.length === 0)} className="w-full h-24 rounded-lg font-bold text-2xl bg-slate-900 group transition-all">
+              <Button onClick={handleGenerate} disabled={isGenerating || !targetAudience || (price > 0 && allowedPaymentMethods.length === 0)} className="w-full h-24 rounded-lg font-bold text-2xl bg-foreground group transition-all">
                 {isGenerating ? <Loader2 className="animate-spin mr-3 h-10 w-10" /> : <Sparkles className="mr-3 h-10 w-10 text-accent group-hover:rotate-12 transition-transform" />}
                 Lanzar Generación Atómica
               </Button>

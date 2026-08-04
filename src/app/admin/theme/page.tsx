@@ -313,9 +313,9 @@ export default function AdminThemePage() {
             )}
 
             {!brands.length && (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center gap-3 text-sm text-amber-800">
+              <div className="bg-warn/10 border border-warn/20 rounded-2xl p-5 flex items-center gap-3 text-sm text-warn">
                 <AlertTriangle className="h-5 w-5 shrink-0" />
-                <p>No hay brand kits importados. Importá un archivo <code className="font-mono font-bold bg-amber-100 px-1 rounded">brand-tokens.json</code> en formato DTCG/W3C para empezar.</p>
+                <p>No hay brand kits importados. Importá un archivo <code className="font-mono font-bold bg-warn/15 px-1 rounded">brand-tokens.json</code> en formato DTCG/W3C para empezar.</p>
               </div>
             )}
           </>

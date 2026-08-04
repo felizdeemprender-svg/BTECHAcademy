@@ -26,7 +26,7 @@ export function LandingHeader() {
           href="/" 
           className={cn(
             "text-sm font-bold transition-colors",
-            pathname === '/' ? "text-primary" : "text-slate-500 hover:text-primary"
+            pathname === '/' ? "text-primary" : "text-muted-foreground hover:text-primary"
           )}
         >
           Inicio
@@ -35,7 +35,7 @@ export function LandingHeader() {
           href="/courses" 
           className={cn(
             "text-sm font-bold transition-colors",
-            pathname === '/courses' ? "text-primary" : "text-slate-500 hover:text-primary"
+            pathname === '/courses' ? "text-primary" : "text-muted-foreground hover:text-primary"
           )}
         >
           Catálogo
@@ -44,7 +44,7 @@ export function LandingHeader() {
           href="/planes" 
           className={cn(
             "text-sm font-bold transition-colors",
-            pathname === '/planes' ? "text-primary" : "text-slate-500 hover:text-primary"
+            pathname === '/planes' ? "text-primary" : "text-muted-foreground hover:text-primary"
           )}
         >
           Planes
@@ -53,7 +53,7 @@ export function LandingHeader() {
           href="/about" 
           className={cn(
             "text-sm font-bold transition-colors",
-            pathname === '/about' ? "text-primary" : "text-slate-500 hover:text-primary"
+            pathname === '/about' ? "text-primary" : "text-muted-foreground hover:text-primary"
           )}
         >
           Institución
@@ -62,7 +62,7 @@ export function LandingHeader() {
           href="/services" 
           className={cn(
             "text-sm font-bold transition-colors",
-            pathname === '/services' ? "text-primary" : "text-slate-500 hover:text-primary"
+            pathname === '/services' ? "text-primary" : "text-muted-foreground hover:text-primary"
           )}
         >
           Servicios

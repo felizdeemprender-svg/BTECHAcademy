@@ -113,8 +113,8 @@ export function IdentityDesigner({
                   className={cn(
                     "flex items-center gap-1",
                     isDesignApproved
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800",
+                      ? "bg-success/15 text-success"
+                      : "bg-warn/15 text-warn",
                   )}
                 >
                   {isDesignApproved ? (
@@ -140,8 +140,8 @@ export function IdentityDesigner({
             <Label className="text-base font-medium">
               Directivas de Diseño
             </Label>
-            <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-700">{directives}</p>
+            <div className="mt-2 p-3 bg-muted rounded-lg">
+              <p className="text-sm text-foreground">{directives}</p>
             </div>
           </div>
 
@@ -153,10 +153,10 @@ export function IdentityDesigner({
                   <Sparkles className="h-8 w-8 text-blue-600" />
                 </div>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 Generar Identidad Visual
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-muted-foreground mb-6">
                 Basado en tus directivas, la IA creará una propuesta de colores
                 y tipografías
               </p>
@@ -187,7 +187,7 @@ export function IdentityDesigner({
                 <span className="text-sm font-medium">
                   {designProgress.label}
                 </span>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground">
                   {designProgress.current} / {designProgress.total}
                 </span>
               </div>
@@ -210,44 +210,44 @@ export function IdentityDesigner({
                 <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <div
-                      className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
+                      className="w-full h-20 rounded-lg border-2 border-border mb-2"
                       style={{
                         backgroundColor: identityDesign.colorPalette.primary,
                       }}
                     />
                     <p className="text-sm font-medium">Primario</p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-muted-foreground">
                       {identityDesign.colorPalette.primary}
                     </p>
                   </div>
                   <div className="text-center">
                     <div
-                      className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
+                      className="w-full h-20 rounded-lg border-2 border-border mb-2"
                       style={{
                         backgroundColor: identityDesign.colorPalette.secondary,
                       }}
                     />
                     <p className="text-sm font-medium">Secundario</p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-muted-foreground">
                       {identityDesign.colorPalette.secondary}
                     </p>
                   </div>
                   <div className="text-center">
                     <div
-                      className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
+                      className="w-full h-20 rounded-lg border-2 border-border mb-2"
                       style={{
                         backgroundColor: identityDesign.colorPalette.accent,
                       }}
                     />
                     <p className="text-sm font-medium">Acento</p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-muted-foreground">
                       {identityDesign.colorPalette.accent}
                     </p>
                   </div>
                   <div className="text-center">
-                    <div className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2 bg-gradient-to-r from-gray-100 to-gray-300" />
+                    <div className="w-full h-20 rounded-lg border-2 border-border mb-2 bg-gradient-to-r from-muted to-border" />
                     <p className="text-sm font-medium">Neutros</p>
-                    <p className="text-xs text-gray-600">4 tonos</p>
+                    <p className="text-xs text-muted-foreground">4 tonos</p>
                   </div>
                 </div>
               </div>
@@ -319,13 +319,13 @@ export function IdentityDesigner({
                 <div className="mt-3 space-y-4">
                   <div>
                     <h4 className="font-medium text-sm mb-1">Colores</h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {identityDesign.rationale.colors}
                     </p>
                   </div>
                   <div>
                     <h4 className="font-medium text-sm mb-1">Tipografía</h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {identityDesign.rationale.typography}
                     </p>
                   </div>
@@ -333,7 +333,7 @@ export function IdentityDesigner({
                     <h4 className="font-medium text-sm mb-1">
                       Concepto General
                     </h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {identityDesign.rationale.overall}
                     </p>
                   </div>
@@ -355,7 +355,7 @@ export function IdentityDesigner({
                     <Button
                       onClick={onApproveDesign}
                       disabled={isDesigning}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-success hover:bg-success"
                     >
                       <CheckCircle2 className="h-4 w-4 mr-2" />
                       Aprobar Diseño
@@ -363,7 +363,7 @@ export function IdentityDesigner({
                   </>
                 )}
                 {isDesignApproved && (
-                  <Badge className="bg-green-100 text-green-800">
+                  <Badge className="bg-success/15 text-success">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
                     Diseño Aprobado - Listo para generar planos omnicanal
                   </Badge>

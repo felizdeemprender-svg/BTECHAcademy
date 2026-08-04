@@ -83,7 +83,7 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
                   <div className="flex items-center gap-4">
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center font-bold border shrink-0 shadow-sm",
-                      type === 'pending' ? "bg-accent/5 text-accent border-accent/10" : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                      type === 'pending' ? "bg-accent/5 text-accent border-accent/10" : "bg-success/10 text-success border-success/15"
                     )}>
                       {type === 'pending' ? <Zap className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
                     </div>
@@ -100,7 +100,7 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
                 {type === 'history' && (
                   <TableCell className="text-center">
                     <div className="inline-flex flex-col items-center">
-                      <span className="text-lg font-black text-emerald-600 leading-none">{task.score || 0}%</span>
+                      <span className="text-lg font-black text-success leading-none">{task.score || 0}%</span>
                       <span className="text-[8px] font-bold uppercase text-muted-foreground tracking-widest mt-1">Score IA</span>
                     </div>
                   </TableCell>
@@ -113,7 +113,7 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
                 <TableCell className="text-center">
                   <Badge className={cn(
                     "text-[9px] uppercase tracking-widest px-2 h-5 border-none",
-                    type === 'pending' ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+                    type === 'pending' ? "bg-warn/10 text-warn" : "bg-success/10 text-success"
                   )}>
                     {type === 'pending' ? 'Pendiente' : 'Completado'}
                   </Badge>
@@ -146,7 +146,7 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
               <div className="flex items-center gap-3">
                 <div className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center font-bold border shrink-0",
-                  type === 'pending' ? "bg-accent/5 text-accent border-accent/10" : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                  type === 'pending' ? "bg-accent/5 text-accent border-accent/10" : "bg-success/10 text-success border-success/15"
                 )}>
                   {type === 'pending' ? <Zap className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
                 </div>
@@ -160,7 +160,7 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
               </div>
               {type === 'history' && (
                 <div className="text-right">
-                  <span className="text-lg font-black text-emerald-600 block">{task.score}%</span>
+                  <span className="text-lg font-black text-success block">{task.score}%</span>
                 </div>
               )}
             </div>
@@ -176,7 +176,7 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
                 <span className="text-[9px] uppercase font-black text-muted-foreground tracking-tighter">Estado</span>
                 <Badge className={cn(
                   "text-[8px] uppercase tracking-widest px-2 h-5 border-none w-fit",
-                  type === 'pending' ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+                  type === 'pending' ? "bg-warn/10 text-warn" : "bg-success/10 text-success"
                 )}>
                   {type === 'pending' ? 'Pendiente' : 'Completado'}
                 </Badge>

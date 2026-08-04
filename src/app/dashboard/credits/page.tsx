@@ -51,7 +51,7 @@ export default function TutorCreditsDashboard() {
 
         <div className="grid md:grid-cols-3 gap-6">
           {/* Main Balance Widget */}
-          <Card className="md:col-span-2 border-none rounded-lg bg-gradient-to-br from-primary to-indigo-900 text-white overflow-hidden relative">
+          <Card className="md:col-span-2 border-none rounded-lg bg-gradient-to-br from-primary to-foreground text-white overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Zap className="w-32 h-32" />
             </div>
@@ -71,7 +71,7 @@ export default function TutorCreditsDashboard() {
                   </div>
                   <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden">
                     <div 
-                      className={`h-full rounded-full transition-all duration-1000 ${usagePercentage > 90 ? 'bg-rose-400' : 'bg-emerald-400'}`} 
+                      className={`h-full rounded-full transition-all duration-1000 ${usagePercentage > 90 ? 'bg-danger' : 'bg-success'}`} 
                       style={{ width: `${usagePercentage}%` }}
                     />
                   </div>
@@ -88,33 +88,33 @@ export default function TutorCreditsDashboard() {
           {/* Quick Stats */}
           <Card className="border-none rounded-lg bg-white">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2"><Activity className="w-4 h-4 text-emerald-500" /> Resumen del Mes</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2"><Activity className="w-4 h-4 text-success" /> Resumen del Mes</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-bold text-slate-600">Evaluaciones a Alumnos</span>
+                  <span className="font-bold text-muted-foreground">Evaluaciones a Alumnos</span>
                   <span className="font-bold text-primary">60%</span>
                 </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 w-[60%] rounded-full"></div>
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-success w-[60%] rounded-full"></div>
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-bold text-slate-600">Generación de Videos</span>
+                  <span className="font-bold text-muted-foreground">Generación de Videos</span>
                   <span className="font-bold text-primary">30%</span>
                 </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500 w-[30%] rounded-full"></div>
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-warn w-[30%] rounded-full"></div>
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-bold text-slate-600">ADN y Marketing</span>
+                  <span className="font-bold text-muted-foreground">ADN y Marketing</span>
                   <span className="font-bold text-primary">10%</span>
                 </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                   <div className="h-full bg-blue-500 w-[10%] rounded-full"></div>
                 </div>
               </div>
@@ -124,8 +124,8 @@ export default function TutorCreditsDashboard() {
 
         {/* Transactions List */}
         <Card className="border-none rounded-lg overflow-hidden bg-white">
-          <CardHeader className="border-b bg-slate-50/50 p-6">
-            <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5 text-slate-400" /> Últimos Movimientos (10 días)</CardTitle>
+          <CardHeader className="border-b bg-muted/50 p-6">
+            <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5 text-muted-foreground" /> Últimos Movimientos (10 días)</CardTitle>
             <CardDescription>Historial de consumo automático de IA.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -136,13 +136,13 @@ export default function TutorCreditsDashboard() {
             ) : (
               <div className="divide-y">
                 {transactions?.map((tx: any) => (
-                  <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-muted transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                      <div className="w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center text-danger">
                         <Zap className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="font-bold text-slate-800 capitalize">
+                        <p className="font-bold text-foreground capitalize">
                           {tx.actionType.replace(/_/g, ' ')}
                         </p>
                         <p className="text-xs font-bold text-muted-foreground">
@@ -152,7 +152,7 @@ export default function TutorCreditsDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-black text-red-500 text-lg">{tx.amount} cr</p>
+                      <p className="font-black text-danger text-lg">{tx.amount} cr</p>
                     </div>
                   </div>
                 ))}

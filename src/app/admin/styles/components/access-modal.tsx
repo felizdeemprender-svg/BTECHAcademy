@@ -13,9 +13,9 @@ interface AccessModalProps {
 }
 
 const AVAILABLE_PLANS = [
-  { id: 'free', label: 'Free', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
-  { id: 'pro', label: 'Pro', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
-  { id: 'premium', label: 'Premium', color: 'text-amber-600 bg-amber-50 border-amber-200' }
+  { id: 'free', label: 'Free', color: 'text-success bg-success/10 border-success/20' },
+  { id: 'pro', label: 'Pro', color: 'text-primary bg-primary/10 border-primary/20' },
+  { id: 'premium', label: 'Premium', color: 'text-warn bg-warn/10 border-warn/20' }
 ];
 
 export default function AccessModal({ styleData, isOpen, onClose }: AccessModalProps) {
@@ -67,7 +67,7 @@ export default function AccessModal({ styleData, isOpen, onClose }: AccessModalP
 
         <div className="py-6 space-y-4">
           {AVAILABLE_PLANS.map(plan => (
-            <div key={plan.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 transition-colors">
+            <div key={plan.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted transition-colors">
               <Checkbox 
                 id={plan.id}
                 checked={selectedPlans.includes(plan.id)}
@@ -90,7 +90,7 @@ export default function AccessModal({ styleData, isOpen, onClose }: AccessModalP
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isSaving}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-indigo-600 hover:bg-indigo-700">
+          <Button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-primary">
             {isSaving ? 'Guardando...' : 'Guardar Accesos'}
           </Button>
         </DialogFooter>

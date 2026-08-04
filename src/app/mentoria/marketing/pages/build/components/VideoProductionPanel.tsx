@@ -98,16 +98,16 @@ export function VideoProductionPanel({
   const isZip = videoUrl?.toLowerCase().includes('.zip');
 
   return (
-    <div className="p-6 rounded-3xl border-2 border-dashed space-y-6 bg-slate-800/50 backdrop-blur-sm" style={{ borderColor: isCurrentlyRendering ? '#8b5cf6' : 'rgba(255,255,255,0.05)' }}>
+    <div className="p-6 rounded-3xl border-2 border-dashed space-y-6 bg-foreground/50 backdrop-blur-sm" style={{ borderColor: isCurrentlyRendering ? '#8b5cf6' : 'rgba(255,255,255,0.05)' }}>
 
       {/* Configuración Global de Video */}
       <div className="flex items-center gap-4 mb-2">
-        <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center border border-violet-500/20">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
           <Clapperboard className="h-5 w-5" />
         </div>
         <div>
           <h4 className="text-sm font-black text-white uppercase tracking-tighter">Motor de Producción de Video</h4>
-          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Configura el ADN y la Post-Producción</p>
+          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Configura el ADN y la Post-Producción</p>
         </div>
         <div className="ml-auto">
           <Select
@@ -119,10 +119,10 @@ export function VideoProductionPanel({
               });
             }}
           >
-            <SelectTrigger className="h-9 bg-emerald-600 border-none text-[9px] font-black uppercase text-white px-4 shadow-lg">
+            <SelectTrigger className="h-9 bg-success border-none text-[9px] font-black uppercase text-white px-4 shadow-lg">
               <SelectValue placeholder="ADN" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-white/10 text-white">
+            <SelectContent className="bg-foreground border-white/10 text-white">
               {Object.values(adns).map((adn: any) => (
                 <SelectItem key={adn.id} value={adn.id} className="text-[10px] uppercase font-bold">
                   🎬 {adn.name}
@@ -150,12 +150,12 @@ export function VideoProductionPanel({
       {/* Selector de Locutor IA y Calidad */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 flex items-center gap-4 bg-white/5 p-4 rounded-[1.5rem] border border-white/10 group transition-all hover:bg-white/[0.07]">
-          <div className="w-11 h-11 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0 border border-violet-500/20 group-hover:scale-110 transition-transform">
-            <Clapperboard className="h-5 w-5 text-violet-400" />
+          <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20 group-hover:scale-110 transition-transform">
+            <Clapperboard className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 space-y-0.5">
             <div className="flex items-center gap-2">
-              <Volume2 className="h-3.5 w-3.5 text-violet-300" />
+              <Volume2 className="h-3.5 w-3.5 text-primary/30" />
               <span className="text-[10px] font-black uppercase text-white/90 tracking-widest">Configuración de Voz</span>
             </div>
             <p className="text-[9px] font-bold text-white/40 italic">IA Neural Avanzada</p>
@@ -170,10 +170,10 @@ export function VideoProductionPanel({
               });
             }}
           >
-            <SelectTrigger className="w-[140px] h-10 bg-slate-900 border-white/10 text-white text-[10px] font-black focus:ring-violet-500/50">
+            <SelectTrigger className="w-[140px] h-10 bg-foreground border-white/10 text-white text-[10px] font-black focus:ring-primary/50">
               <SelectValue placeholder="Elegir Voz" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-white/10 text-white">
+            <SelectContent className="bg-foreground border-white/10 text-white">
               <SelectItem value="off" className="text-xs hover:bg-white/10 focus:bg-white/10">Desactivada</SelectItem>
               <SelectItem value="dalia" className="text-xs hover:bg-white/10 focus:bg-white/10">Dalia (Soft ES)</SelectItem>
               <SelectItem value="jorge" className="text-xs hover:bg-white/10 focus:bg-white/10">Jorge (Pro ES)</SelectItem>
@@ -186,7 +186,7 @@ export function VideoProductionPanel({
 
         <div className="w-full md:w-[200px] flex items-center gap-3 bg-white/5 p-4 rounded-[1.5rem] border border-white/10">
           <div className="flex-1">
-            <p className="text-[8px] font-black uppercase text-violet-300 tracking-widest">Calidad de Audio</p>
+            <p className="text-[8px] font-black uppercase text-primary/30 tracking-widest">Calidad de Audio</p>
             <p className="text-[10px] font-bold text-white/90">Estudio Pro</p>
           </div>
           <Select
@@ -198,11 +198,11 @@ export function VideoProductionPanel({
               });
             }}
           >
-            <SelectTrigger className="w-[100px] h-9 bg-violet-600 border-none text-white text-[9px] font-black shadow-lg">
+            <SelectTrigger className="w-[100px] h-9 bg-primary border-none text-white text-[9px] font-black shadow-lg">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-white/10 text-white">
-              <SelectItem value="auto" className="text-xs font-bold text-violet-300">AUTO (ADN)</SelectItem>
+            <SelectContent className="bg-foreground border-white/10 text-white">
+              <SelectItem value="auto" className="text-xs font-bold text-primary/30">AUTO (ADN)</SelectItem>
               <SelectItem value="studio" className="text-xs">FORZAR ON ✨</SelectItem>
               <SelectItem value="none" className="text-xs">FORZAR OFF</SelectItem>
             </SelectContent>
@@ -214,7 +214,7 @@ export function VideoProductionPanel({
       {!(videoUrl) ? (
         <>
           <Button 
-            className="w-full h-14 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-violet-200 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full h-14 rounded-2xl bg-primary hover:bg-primary text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
             onClick={() => onGenerateVideo(s, sIdx)}
             disabled={isCurrentlyRendering}
           >
@@ -227,12 +227,12 @@ export function VideoProductionPanel({
           {isCurrentlyRendering && jobProgress && (
             <div className="space-y-2 mt-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-violet-300 uppercase tracking-widest">{jobProgress.stage}</span>
+                <span className="text-[10px] font-bold text-primary/30 uppercase tracking-widest">{jobProgress.stage}</span>
                 <span className="text-[10px] font-black text-white">{jobProgress.progress}%</span>
               </div>
               <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-emerald-400 transition-all duration-700"
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-success transition-all duration-700"
                   style={{ width: `${jobProgress.progress}%` }}
                 />
               </div>
@@ -251,7 +251,7 @@ export function VideoProductionPanel({
                      <Button 
                         key={uIdx}
                         variant="outline"
-                        className="h-12 rounded-xl bg-violet-600/20 hover:bg-violet-600 text-white border-white/10 text-[9px] font-black uppercase transition-all shadow-lg"
+                        className="h-12 rounded-xl bg-primary/20 hover:bg-primary text-white border-white/10 text-[9px] font-black uppercase transition-all shadow-lg"
                         onClick={() => {
                           const fileName = `Placa_${uIdx + 1}_${s.marketingName || 'Asset'}.mp4`;
                           handleDownload(id, fileName);
@@ -265,7 +265,7 @@ export function VideoProductionPanel({
              ) : (
                <Button 
                   variant="outline"
-                  className="w-full h-14 rounded-2xl border-white/10 bg-violet-600 hover:bg-violet-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg transition-all active:scale-95"
+                  className="w-full h-14 rounded-2xl border-white/10 bg-primary hover:bg-primary text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg transition-all active:scale-95"
                   onClick={() => {
                     const ids = (s.production_notes?.video_drive_id || '').split(',');
                     const id = ids[0]?.trim();
@@ -279,7 +279,7 @@ export function VideoProductionPanel({
           </div>
           <div className="flex gap-2">
             <Button 
-               className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
+               className="flex-1 h-14 rounded-2xl bg-success hover:bg-success text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-success/15 transition-all active:scale-95 disabled:opacity-50"
                onClick={() => {
                  setShowConfirm(false);
                  onGenerateVideo(s, sIdx);
@@ -297,8 +297,8 @@ export function VideoProductionPanel({
               className={cn(
                 "w-14 h-14 rounded-2xl border-2 transition-all active:scale-95",
                 showConfirm 
-                  ? "bg-red-600 border-red-500 text-white hover:bg-red-700" 
-                  : "border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-500"
+                  ? "bg-danger border-danger text-white hover:bg-danger" 
+                  : "border-danger/20 text-danger hover:bg-danger/10 hover:text-danger"
               )}
               onClick={() => {
                 if (showConfirm) {

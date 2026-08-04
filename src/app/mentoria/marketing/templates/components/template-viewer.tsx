@@ -159,26 +159,26 @@ export function TemplateViewer({
             {type === "landings" && (
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-medium text-gray-700">Headline:</h4>
+                  <h4 className="font-medium text-foreground">Headline:</h4>
                   <p className="text-lg font-bold">{template.headline}</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-700">Subheadline:</h4>
-                  <p className="text-gray-600">{template.subheadline}</p>
+                  <h4 className="font-medium text-foreground">Subheadline:</h4>
+                  <p className="text-muted-foreground">{template.subheadline}</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-700">CTA:</h4>
+                  <h4 className="font-medium text-foreground">CTA:</h4>
                   <Badge variant="secondary">{template.ctaText}</Badge>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-700">Secciones:</h4>
+                  <h4 className="font-medium text-foreground">Secciones:</h4>
                   <Badge variant="outline">
                     {template.sectionCount} secciones
                   </Badge>
                 </div>
                 {template.designTokens && (
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-2">
+                    <h4 className="font-medium text-foreground mb-2">
                       Design Tokens:
                     </h4>
                     <div className="flex gap-2">
@@ -213,18 +213,18 @@ export function TemplateViewer({
             {type === "emails" && (
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-medium text-gray-700">Asunto:</h4>
+                  <h4 className="font-medium text-foreground">Asunto:</h4>
                   <p className="font-semibold">{template.subject}</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-700">Preheader:</h4>
-                  <p className="text-sm text-gray-600 italic">
+                  <h4 className="font-medium text-foreground">Preheader:</h4>
+                  <p className="text-sm text-muted-foreground italic">
                     {template.preheader}
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-700">Cuerpo:</h4>
-                  <div className="bg-gray-50 p-3 rounded text-sm whitespace-pre-wrap">
+                  <h4 className="font-medium text-foreground">Cuerpo:</h4>
+                  <div className="bg-muted p-3 rounded text-sm whitespace-pre-wrap">
                     {template.body}
                   </div>
                 </div>
@@ -235,18 +235,18 @@ export function TemplateViewer({
             {type === "socials" && (
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-medium text-gray-700">Hook/Gancho:</h4>
+                  <h4 className="font-medium text-foreground">Hook/Gancho:</h4>
                   <p className="font-semibold text-blue-600">{template.hook}</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-700">Caption:</h4>
-                  <div className="bg-gray-50 p-3 rounded text-sm whitespace-pre-wrap">
+                  <h4 className="font-medium text-foreground">Caption:</h4>
+                  <div className="bg-muted p-3 rounded text-sm whitespace-pre-wrap">
                     {template.caption}
                   </div>
                 </div>
                 {template.hashtags && template.hashtags.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-gray-700">Hashtags:</h4>
+                    <h4 className="font-medium text-foreground">Hashtags:</h4>
                     <div className="flex flex-wrap gap-1">
                       {template.hashtags.map((tag: string, i: number) => (
                         <Badge key={i} variant="secondary" className="text-xs">
@@ -258,7 +258,7 @@ export function TemplateViewer({
                 )}
                 {template.slides && (
                   <div>
-                    <h4 className="font-medium text-gray-700">
+                    <h4 className="font-medium text-foreground">
                       Slides/Fragmentos:
                     </h4>
                     <Badge variant="outline">
@@ -273,20 +273,20 @@ export function TemplateViewer({
             {type === "ads" && (
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-medium text-gray-700">Headlines:</h4>
+                  <h4 className="font-medium text-foreground">Headlines:</h4>
                   <div className="space-y-1">
                     {template.headlines.map((headline: string, i: number) => (
-                      <div key={i} className="bg-gray-50 p-2 rounded text-sm">
+                      <div key={i} className="bg-muted p-2 rounded text-sm">
                         {i + 1}. {headline}
                       </div>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-700">Descriptions:</h4>
+                  <h4 className="font-medium text-foreground">Descriptions:</h4>
                   <div className="space-y-1">
                     {template.descriptions.map((desc: string, i: number) => (
-                      <div key={i} className="bg-gray-50 p-2 rounded text-sm">
+                      <div key={i} className="bg-muted p-2 rounded text-sm">
                         {i + 1}. {desc}
                       </div>
                     ))}
@@ -294,7 +294,7 @@ export function TemplateViewer({
                 </div>
                 {template.keywords && template.keywords.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-gray-700">Keywords:</h4>
+                    <h4 className="font-medium text-foreground">Keywords:</h4>
                     <div className="flex flex-wrap gap-1">
                       {template.keywords.map((keyword: string, i: number) => (
                         <Badge key={i} variant="outline" className="text-xs">
@@ -326,8 +326,8 @@ export function TemplateViewer({
 
   if (!collection.assets) {
     return (
-      <div className="bg-gray-50 p-6 rounded-lg text-center">
-        <p className="text-gray-600">
+      <div className="bg-muted p-6 rounded-lg text-center">
+        <p className="text-muted-foreground">
           Esta colección no tiene templates generados aún.
         </p>
       </div>
@@ -340,24 +340,24 @@ export function TemplateViewer({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xl font-semibold">{collection.name}</h3>
-          <p className="text-gray-600">{collection.directives}</p>
+          <p className="text-muted-foreground">{collection.directives}</p>
         </div>
         <div className="flex gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
               {templateCounts.total}
             </div>
-            <div className="text-sm text-gray-600">Templates</div>
+            <div className="text-sm text-muted-foreground">Templates</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-success">
               {
                 Object.entries(templateCounts).filter(
                   ([key, count]) => key !== "total" && count > 0,
                 ).length
               }
             </div>
-            <div className="text-sm text-gray-600">Canales</div>
+            <div className="text-sm text-muted-foreground">Canales</div>
           </div>
         </div>
       </div>
@@ -397,7 +397,7 @@ export function TemplateViewer({
                           {getChannelIcon(channel)}
                         </div>
                         <div className="text-2xl font-bold">{count}</div>
-                        <div className="text-sm text-gray-600 capitalize">
+                        <div className="text-sm text-muted-foreground capitalize">
                           {channel}
                         </div>
                       </CardContent>
@@ -439,7 +439,7 @@ export function TemplateViewer({
                     />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       <strong>Tipografía:</strong>{" "}
                       {collection.designTokens.fontHeading} /{" "}
                       {collection.designTokens.fontBody}
@@ -459,7 +459,7 @@ export function TemplateViewer({
               renderTemplateCard(template, "landings", index),
             )
           ) : (
-            <div className="text-center text-gray-500 py-8">
+            <div className="text-center text-muted-foreground py-8">
               No hay landing pages generadas
             </div>
           )}
@@ -472,7 +472,7 @@ export function TemplateViewer({
               renderTemplateCard(template, "emails", index),
             )
           ) : (
-            <div className="text-center text-gray-500 py-8">
+            <div className="text-center text-muted-foreground py-8">
               No hay emails generados
             </div>
           )}
@@ -509,7 +509,7 @@ export function TemplateViewer({
 
           {!collection.assets.socials?.length &&
             !collection.assets.ads?.length && (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-muted-foreground py-8">
                 No hay contenido de social media o anuncios generados
               </div>
             )}

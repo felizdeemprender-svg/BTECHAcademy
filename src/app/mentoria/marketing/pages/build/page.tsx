@@ -82,7 +82,7 @@ const STRATEGIC_SEGMENTS = [
 export default function ContentBuilderMatchPage() {
   return (
     <Suspense fallback={
-      <div className="h-screen flex items-center justify-center bg-slate-50">
+      <div className="h-screen flex items-center justify-center bg-muted">
         <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
       </div>
     }>

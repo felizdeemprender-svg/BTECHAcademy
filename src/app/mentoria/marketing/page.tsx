@@ -159,11 +159,11 @@ export default function CampaignsDashboardPage() {
             <Button 
               variant="outline"
               onClick={() => router.push('/mentoria/marketing/execution')} 
-              className="h-14 px-8 rounded-2xl font-bold border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 gap-2 shadow-sm relative group"
+              className="h-14 px-8 rounded-2xl font-bold border-2 border-success text-success hover:bg-success/10 gap-2 shadow-sm relative group"
             >
-              <Cpu className="h-5 w-5 fill-emerald-500 group-hover:scale-110 transition-transform" /> 
+              <Cpu className="h-5 w-5 fill-success group-hover:scale-110 transition-transform" /> 
               Centro de Mando
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-ping" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-success rounded-full animate-ping" />
             </Button>
             <Button 
               onClick={() => router.push('/mentoria/marketing/build')} 
@@ -181,7 +181,7 @@ export default function CampaignsDashboardPage() {
             <div className="py-24 text-center bg-secondary/10 rounded-lg border-2 border-dashed">
               <Activity className="h-16 w-16 text-muted-foreground/30 mx-auto mb-6" />
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-slate-600">No hay campañas coordinadas</h3>
+                <h3 className="text-xl font-bold text-muted-foreground">No hay campañas coordinadas</h3>
                 <p className="text-muted-foreground max-w-sm mx-auto">Selecciona un pack multimedia y Gemini diseñará el cronograma de emisión ideal.</p>
               </div>
               <Button onClick={() => router.push('/mentoria/marketing/build')} variant="link" className="font-bold text-accent mt-4">Comenzar orquestación</Button>
@@ -195,10 +195,10 @@ export default function CampaignsDashboardPage() {
                 return (
                   <Card key={camp.id} className="group transition-all duration-500">
                     <div className="flex flex-col lg:flex-row items-stretch">
-                      <div className="bg-slate-900 p-8 lg:w-80 flex flex-col justify-between text-white shrink-0">
+                      <div className="bg-foreground p-8 lg:w-80 flex flex-col justify-between text-white shrink-0">
                         <div>
                           <div className="flex items-center justify-between mb-4">
-                            <Badge className={cn("border-none text-[8px] font-black uppercase tracking-widest", camp.isActive ? "bg-emerald-500" : "bg-slate-500")}>
+                            <Badge className={cn("border-none text-[8px] font-black uppercase tracking-widest", camp.isActive ? "bg-success" : "bg-muted-foreground")}>
                               {camp.isActive ? 'Activa' : 'Pausada'}
                             </Badge>
                             <div className="flex items-center gap-2">
@@ -211,13 +211,13 @@ export default function CampaignsDashboardPage() {
                             </div>
                           </div>
                           <h3 className="text-2xl font-bold leading-tight">{camp.title}</h3>
-                          <p className="text-slate-400 text-xs mt-2 uppercase font-bold tracking-tighter">Iniciado: {format(start, 'dd/MM/yyyy')}</p>
+                          <p className="text-muted-foreground text-xs mt-2 uppercase font-bold tracking-tighter">Iniciado: {format(start, 'dd/MM/yyyy')}</p>
                         </div>
                         <div className="pt-8 space-y-3">
                           <Button onClick={() => handleOpenSchedule(camp)} variant="secondary" className="w-full rounded-xl font-bold gap-2">
                             <Calendar className="h-4 w-4" /> Gestionar Plan
                           </Button>
-                          <Button onClick={() => handleDeleteCampaign(camp.id)} variant="ghost" className="w-full text-rose-400 hover:text-rose-300 hover:bg-white/5 rounded-xl font-bold gap-2">
+                          <Button onClick={() => handleDeleteCampaign(camp.id)} variant="ghost" className="w-full text-danger hover:text-danger/30 hover:bg-white/5 rounded-xl font-bold gap-2">
                             <Trash2 className="h-4 w-4" /> Borrar Campaña
                           </Button>
                         </div>
@@ -226,12 +226,12 @@ export default function CampaignsDashboardPage() {
                       <div className="flex-1 p-8 overflow-x-auto">
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-4">
-                            <TrendingUp className="h-5 w-5 text-emerald-500" />
-                            <h4 className="text-sm font-black uppercase text-slate-400 tracking-widest">Ejecución de Variante Actual</h4>
+                            <TrendingUp className="h-5 w-5 text-success" />
+                            <h4 className="text-sm font-black uppercase text-muted-foreground tracking-widest">Ejecución de Variante Actual</h4>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Clock className="h-3.5 w-3.5 text-slate-300" />
-                            <span className="text-xs font-black text-slate-400 uppercase">Día Actual: {currentDay}</span>
+                            <Clock className="h-3.5 w-3.5 text-border" />
+                            <span className="text-xs font-black text-muted-foreground uppercase">Día Actual: {currentDay}</span>
                           </div>
                         </div>
                         
@@ -243,20 +243,20 @@ export default function CampaignsDashboardPage() {
                             return (
                               <div key={i} className={cn(
                                 "w-64 p-6 rounded-3xl border-2 flex flex-col justify-between transition-all",
-                                isToday ? "bg-emerald-50 border-emerald-500 shadow-lg scale-105" : 
-                                isPast ? "bg-slate-50 border-slate-200 opacity-40" : "bg-white border-slate-100"
+                                isToday ? "bg-success/10 border-success shadow-lg scale-105" : 
+                                isPast ? "bg-muted border-border opacity-40" : "bg-white border-muted"
                               )}>
                                 <div>
                                   <div className="flex justify-between items-center mb-3">
-                                    <Badge className={cn("h-5 px-2 text-[8px] font-black", isToday ? "bg-emerald-500" : "bg-slate-200")}>DÍA {step.day}</Badge>
-                                    {isToday && <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />}
-                                    <span className="text-[10px] font-bold text-slate-400">VAR {step.variantIndex + 1}</span>
+                                    <Badge className={cn("h-5 px-2 text-[8px] font-black", isToday ? "bg-success" : "bg-border")}>DÍA {step.day}</Badge>
+                                    {isToday && <div className="w-2 h-2 rounded-full bg-success animate-ping" />}
+                                    <span className="text-[10px] font-bold text-muted-foreground">VAR {step.variantIndex + 1}</span>
                                   </div>
-                                  <p className="font-bold text-sm text-slate-900 line-clamp-2 leading-snug">{step.action}</p>
+                                  <p className="font-bold text-sm text-foreground line-clamp-2 leading-snug">{step.action}</p>
                                 </div>
                                 <div className="flex gap-1 mt-4">
                                   {step.channels.map((ch: string) => (
-                                    <div key={ch} title={ch} className="w-6 h-6 rounded bg-white flex items-center justify-center text-slate-400 border shadow-sm">
+                                    <div key={ch} title={ch} className="w-6 h-6 rounded bg-white flex items-center justify-center text-muted-foreground border shadow-sm">
                                       {ch === 'Email' ? <Mail className="h-3 w-3" /> : ch === 'Social' ? <Instagram className="h-3 w-3" /> : <Megaphone className="h-3 w-3" />}
                                     </div>
                                   ))}
@@ -299,12 +299,12 @@ export default function CampaignsDashboardPage() {
               </div>
             </div>
             
-            <ScrollArea className="flex-1 p-8 bg-slate-50">
+            <ScrollArea className="flex-1 p-8 bg-muted">
               <div className="space-y-8">
                 {!isEditing ? (
                   <div className="bg-white p-6 rounded-2xl border shadow-sm">
-                    <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Fundamento Estratégico</h4>
-                    <p className="text-sm text-slate-600 leading-relaxed font-medium italic">"{selectedCampaign?.strategy?.logic}"</p>
+                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Fundamento Estratégico</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed font-medium italic">"{selectedCampaign?.strategy?.logic}"</p>
                   </div>
                 ) : (
                   <div className="flex justify-between items-center px-2">
@@ -316,7 +316,7 @@ export default function CampaignsDashboardPage() {
                 )}
 
                 <div className="space-y-4">
-                  <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-1/2 before:bg-slate-200">
+                  <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-1/2 before:bg-border">
                     {(isEditing ? editingStrategy?.timeline : selectedCampaign?.strategy?.timeline)?.map((step: any, i: number) => (
                       <div key={i} className="relative flex gap-4 items-stretch group">
                         <div className="w-12 flex flex-col items-center">
@@ -333,15 +333,15 @@ export default function CampaignsDashboardPage() {
                               />
                             ) : step.day}
                           </div>
-                          <div className="flex-1 w-0.5 bg-slate-200 group-last:bg-transparent" />
+                          <div className="flex-1 w-0.5 bg-border group-last:bg-transparent" />
                         </div>
-                        <Card className="flex-1 p-6 rounded-lg border-2 border-slate-100 shadow-sm bg-white hover:shadow-md transition-all mb-4 relative overflow-hidden">
+                        <Card className="flex-1 p-6 rounded-lg border-2 border-muted shadow-sm bg-white hover:shadow-md transition-all mb-4 relative overflow-hidden">
                           {isEditing && (
                             <Button 
                               variant="ghost" 
                               size="icon" 
                               onClick={() => handleDeleteEvent(i)}
-                              className="absolute top-4 right-4 h-8 w-8 text-rose-400 hover:bg-rose-50 rounded-full"
+                              className="absolute top-4 right-4 h-8 w-8 text-danger hover:bg-danger/10 rounded-full"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -355,7 +355,7 @@ export default function CampaignsDashboardPage() {
                                   <input 
                                     value={step.phase} 
                                     onChange={e => handleUpdateEvent(i, 'phase', e.target.value)}
-                                    className="text-[10px] font-bold text-slate-400 border-none bg-transparent outline-none w-full"
+                                    className="text-[10px] font-bold text-muted-foreground border-none bg-transparent outline-none w-full"
                                   />
                                 )}
                               </div>
@@ -363,22 +363,22 @@ export default function CampaignsDashboardPage() {
                                 <Textarea 
                                   value={step.action} 
                                   onChange={e => handleUpdateEvent(i, 'action', e.target.value)}
-                                  className="font-bold text-slate-800 border-none bg-slate-50 rounded-xl p-3 min-h-[60px]"
+                                  className="font-bold text-foreground border-none bg-muted rounded-xl p-3 min-h-[60px]"
                                 />
                               ) : (
-                                <p className="font-bold text-slate-800">{step.action}</p>
+                                <p className="font-bold text-foreground">{step.action}</p>
                               )}
                             </div>
                             
                             <div className="space-y-4 flex flex-col justify-end">
                               <div className="space-y-1">
-                                <p className="text-[8px] font-black uppercase text-slate-400 ml-1">Variante</p>
+                                <p className="text-[8px] font-black uppercase text-muted-foreground ml-1">Variante</p>
                                 {isEditing ? (
                                   <Select 
                                     value={step.variantIndex.toString()} 
                                     onValueChange={v => handleUpdateEvent(i, 'variantIndex', parseInt(v))}
                                   >
-                                    <SelectTrigger className="h-8 rounded-lg bg-emerald-50 border-none font-bold text-[10px]">
+                                    <SelectTrigger className="h-8 rounded-lg bg-success/10 border-none font-bold text-[10px]">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -388,7 +388,7 @@ export default function CampaignsDashboardPage() {
                                     </SelectContent>
                                   </Select>
                                 ) : (
-                                  <Badge className="bg-slate-900 text-white border-none h-5 px-2 text-[8px] font-bold">Variante {step.variantIndex + 1}</Badge>
+                                  <Badge className="bg-foreground text-white border-none h-5 px-2 text-[8px] font-bold">Variante {step.variantIndex + 1}</Badge>
                                 )}
                               </div>
                               <div className="flex gap-2 flex-wrap">
@@ -410,7 +410,7 @@ export default function CampaignsDashboardPage() {
                                   ))
                                 ) : (
                                   step.channels.map((ch: string) => (
-                                    <div key={ch} className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase">
+                                    <div key={ch} className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground uppercase">
                                       {ch === 'Email' ? <Mail className="h-3 w-3" /> : ch === 'Social' ? <Instagram className="h-3 w-3" /> : <Megaphone className="h-3 w-3" />}
                                       {ch}
                                     </div>

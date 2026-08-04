@@ -182,7 +182,7 @@ export default function StylePreviewPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="bg-yellow-400 text-yellow-900 font-bold text-center py-2 text-xs uppercase tracking-widest z-50 sticky top-0">
+      <div className="bg-warn text-warn font-bold text-center py-2 text-xs uppercase tracking-widest z-50 sticky top-0">
         MODO DE VISTA PREVIA (ESTILO: {style.name})
       </div>
 

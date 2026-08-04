@@ -109,7 +109,7 @@ function CourseStatsCells({ courseId }: { courseId: string }) {
       <TableCell className="text-center font-semibold text-foreground/80">{stats.modules}</TableCell>
       <TableCell className="text-center font-semibold text-foreground/80">{stats.enrolled}</TableCell>
       <TableCell className="text-center">
-        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] h-5 px-1.5">
+        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-[10px] h-5 px-1.5">
           {stats.completed}%
         </Badge>
       </TableCell>
@@ -152,10 +152,10 @@ function EnrollmentRow({ enrollment, totalModules, onApprove, onToggleStatus, on
   }, [db, enrollment.studentId]);
 
   return (
-    <div className={cn("flex flex-col gap-2 p-3 bg-white rounded border transition-colors", enrollment.isInvited ? "border-amber-400 bg-amber-50/20 shadow-sm" : "border-border/50 hover:border-accent/30")}>
+    <div className={cn("flex flex-col gap-2 p-3 bg-white rounded border transition-colors", enrollment.isInvited ? "border-warn bg-warn/10/20 shadow-sm" : "border-border/50 hover:border-accent/30")}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={cn("w-8 h-8 rounded flex items-center justify-center font-bold text-xs uppercase border", enrollment.isInvited ? "bg-amber-100 text-amber-600 border-amber-200" : "bg-primary/5 text-primary")}>
+          <div className={cn("w-8 h-8 rounded flex items-center justify-center font-bold text-xs uppercase border", enrollment.isInvited ? "bg-warn/15 text-warn border-warn/20" : "bg-primary/5 text-primary")}>
             {enrollment.studentName?.[0] || <Mail className="h-3 w-3" />}
           </div>
           <div className="flex flex-col">
@@ -165,7 +165,7 @@ function EnrollmentRow({ enrollment, totalModules, onApprove, onToggleStatus, on
               {(enrollment.isInvited || enrollment.isDirect) && (
                 <Badge className={cn(
                   "border-none text-[8px] h-4 px-1.5 uppercase font-bold tracking-widest shadow-none",
-                  enrollment.isDirect ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                  enrollment.isDirect ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-warn/15 text-warn hover:bg-warn/20"
                 )}>
                   {enrollment.isDirect ? 'Carga Directa' : 'Invitado'}
                 </Badge>
@@ -173,13 +173,13 @@ function EnrollmentRow({ enrollment, totalModules, onApprove, onToggleStatus, on
             </div>
             <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">{enrollment.inviteEmail}</p>
             <div className="flex items-center gap-2 mt-1">
-              <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden w-20">
+              <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden w-20">
                 <div 
-                  className="h-full bg-emerald-500 transition-all" 
+                  className="h-full bg-success transition-all" 
                   style={{ width: `${currentProgress}%` }} 
                 />
               </div>
-              <span className="text-[8px] font-bold text-emerald-600">{currentProgress}%</span>
+              <span className="text-[8px] font-bold text-success">{currentProgress}%</span>
             </div>
           </div>
         </div>
@@ -899,9 +899,9 @@ export default function ManageCoursesClient() {
                       <TableCell className="text-center">
                         <Badge className={cn(
                           "text-[9px] uppercase tracking-widest px-2 h-5",
-                          course.status === 'published' || course.status === 'approved' ? "bg-emerald-50 text-emerald-700" 
-                          : course.status === 'pending' ? "bg-amber-50 text-amber-700 animate-pulse"
-                          : course.status === 'pending_terms' ? "bg-rose-50 text-rose-700"
+                          course.status === 'published' || course.status === 'approved' ? "bg-success/10 text-success" 
+                          : course.status === 'pending' ? "bg-warn/10 text-warn animate-pulse"
+                          : course.status === 'pending_terms' ? "bg-danger/10 text-danger"
                           : "bg-muted text-muted-foreground"
                         )}>
                           {course.status === 'published' || course.status === 'approved' ? <ShieldCheck className="h-2 w-2 mr-1" /> : course.status === 'pending_terms' ? <Scale className="h-2 w-2 mr-1" /> : <Clock className="h-2 w-2 mr-1" />}
@@ -909,7 +909,7 @@ export default function ManageCoursesClient() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant={course.isActive ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", course.isActive ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground")}>{course.isActive ? 'Público' : 'Privado'}</Badge>
+                        <Badge variant={course.isActive ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", course.isActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>{course.isActive ? 'Público' : 'Privado'}</Badge>
                       </TableCell>
                       <TableCell className="text-right px-6">
                         <DropdownMenu>
@@ -921,19 +921,19 @@ export default function ManageCoursesClient() {
                                   {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BrainCircuit className="h-3.5 w-3.5" />} Auditoría IA Profunda
                                 </DropdownMenuItem>
                                 {course.status === 'pending_terms' && (
-                                  <DropdownMenuItem onSelect={() => handleApproveTerms(course.id)} className="cursor-pointer gap-2 py-2 text-amber-600"><CheckCircle2 className="h-3.5 w-3.5" /> Aprobar Términos</DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => handleApproveTerms(course.id)} className="cursor-pointer gap-2 py-2 text-warn"><CheckCircle2 className="h-3.5 w-3.5" /> Aprobar Términos</DropdownMenuItem>
                                 )}
                                 {course.status === 'pending' && (
                                   <>
-                                    <DropdownMenuItem onSelect={() => handleModerateCourse(course.id, true)} className="cursor-pointer gap-2 py-2 text-emerald-600"><ShieldCheck className="h-3.5 w-3.5" /> Autorizar Curso</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleModerateCourse(course.id, false)} className="cursor-pointer gap-2 py-2 text-rose-600"><ShieldX className="h-3.5 w-3.5" /> Rechazar Contenido</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleModerateCourse(course.id, true)} className="cursor-pointer gap-2 py-2 text-success"><ShieldCheck className="h-3.5 w-3.5" /> Autorizar Curso</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleModerateCourse(course.id, false)} className="cursor-pointer gap-2 py-2 text-danger"><ShieldX className="h-3.5 w-3.5" /> Rechazar Contenido</DropdownMenuItem>
                                   </>
                                 )}
                                 {!isOwner && <DropdownMenuSeparator />}
                               </>
                             )}
                             {(isOwner || isAdmin) && (
-                              <DropdownMenuItem onSelect={() => openModerationHistory(course)} className="cursor-pointer gap-2 py-2 text-slate-600">
+                              <DropdownMenuItem onSelect={() => openModerationHistory(course)} className="cursor-pointer gap-2 py-2 text-muted-foreground">
                                 <History className="h-3.5 w-3.5" /> Historial de Auditoría
                               </DropdownMenuItem>
                             )}
@@ -949,7 +949,7 @@ export default function ManageCoursesClient() {
                                   <Link2 className="h-3.5 w-3.5 text-blue-500" /> Cursos Asociados (Ruta)
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => openPublishDialog(course)} disabled={isAuditing === course.id} className="cursor-pointer gap-2 py-2">
-                                  {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : course.isActive ? <PowerOff className="h-3.5 w-3.5 text-orange-500" /> : <Power className="h-3.5 w-3.5 text-emerald-500" />}
+                                  {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : course.isActive ? <PowerOff className="h-3.5 w-3.5 text-orange-500" /> : <Power className="h-3.5 w-3.5 text-success" />}
                                   {course.isActive ? 'Ocultar Catálogo' : 'Publicar Catálogo'}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => openEnrollments(course)} className="cursor-pointer gap-2 py-2"><Users className="h-3.5 w-3.5 text-accent" /> Gestionar Alumnos</DropdownMenuItem>
@@ -987,15 +987,15 @@ export default function ManageCoursesClient() {
               <DialogDescription className="text-muted-foreground mt-1">Es obligatorio aceptar los términos académicos para proceder con la publicación.</DialogDescription>
             </div>
             <div className="space-y-6 px-8 pb-8">
-              <div className="bg-slate-50 border p-6">
+              <div className="bg-muted border p-6">
                 <ScrollArea className="h-[300px] pr-4">
-                  <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                  <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {termsConfig?.content || "Cargando protocolo académico..."}
                   </div>
                 </ScrollArea>
               </div>
 
-              <div className="flex items-center space-x-3 p-4 bg-amber-50/50 border border-dashed border-amber-200">
+              <div className="flex items-center space-x-3 p-4 bg-warn/10/50 border border-dashed border-warn/20">
                 <Checkbox id="manage-terms-accept" checked={termsAccepted} onCheckedChange={(v) => setTermsAccepted(!!v)} className="h-5 w-5" />
                 <Label htmlFor="manage-terms-accept" className="text-xs font-bold cursor-pointer">
                   Confirmo que el contenido cumple con el protocolo académico vigente.
@@ -1122,9 +1122,9 @@ export default function ManageCoursesClient() {
                 ))}
               </div>
 
-              <div className="bg-amber-50 p-4 border border-amber-100 flex gap-3 items-start">
-                <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-amber-800 font-medium">Al confirmar, se iniciará el proceso de auditoría institucional mediante Gemini 2.5 Pro para validar que el contenido cumple con los protocolos.</p>
+              <div className="bg-warn/10 p-4 border border-warn/15 flex gap-3 items-start">
+                <ShieldCheck className="h-5 w-5 text-warn shrink-0 mt-0.5" />
+                <p className="text-[11px] text-warn font-medium">Al confirmar, se iniciará el proceso de auditoría institucional mediante Gemini 2.5 Pro para validar que el contenido cumple con los protocolos.</p>
               </div>
               
               <Button onClick={confirmPublication} disabled={selectedTags.length === 0} className="w-full h-14 text-lg font-bold">
@@ -1326,29 +1326,29 @@ export default function ManageCoursesClient() {
                     {moderationLogs.map((log) => (
                       <Card key={log.id} className={cn(
                         "p-6 rounded-2xl border-2 transition-all",
-                        log.isSensitive ? "bg-rose-50 border-rose-100 shadow-[0_10px_20px_rgba(225,29,72,0.1)]" : "bg-emerald-50 border-emerald-100"
+                        log.isSensitive ? "bg-danger/10 border-danger/15 shadow-[0_10px_20px_rgba(225,29,72,0.1)]" : "bg-success/10 border-success/15"
                       )}>
                         <div className="flex flex-col gap-4 mb-4">
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
                               <div className={cn(
                                 "w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm",
-                                log.isSensitive ? "bg-rose-500" : "bg-emerald-500"
+                                log.isSensitive ? "bg-danger" : "bg-success"
                               )}>
                                 {log.isSensitive ? <AlertTriangle className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
                               </div>
                               <div>
-                                <p className="font-bold text-slate-900">{log.isSensitive ? 'Anomalía Detectada' : 'Auditoría Aprobada'}</p>
-                                <p className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">{format(new Date(log.createdAt?.seconds * 1000 || Date.now()), 'dd/MM/yyyy HH:mm')}</p>
+                                <p className="font-bold text-foreground">{log.isSensitive ? 'Anomalía Detectada' : 'Auditoría Aprobada'}</p>
+                                <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">{format(new Date(log.createdAt?.seconds * 1000 || Date.now()), 'dd/MM/yyyy HH:mm')}</p>
                               </div>
                             </div>
                           </div>
                           {log.isSensitive && (
-                            <div className="space-y-3 pt-4 border-t border-rose-200/50">
-                              <p className="text-[10px] font-black uppercase text-rose-600 tracking-[0.2em] ml-1">Temas de Vigilancia:</p>
+                            <div className="space-y-3 pt-4 border-t border-danger/20/50">
+                              <p className="text-[10px] font-black uppercase text-danger tracking-[0.2em] ml-1">Temas de Vigilancia:</p>
                               <div className="flex flex-wrap gap-2">
                                 {log.flaggedTopics?.map((topic: string, i: number) => (
-                                  <Badge key={i} variant="destructive" className="text-xs h-9 px-5 uppercase font-black bg-rose-600 border-none ring-2 ring-white/20">
+                                  <Badge key={i} variant="destructive" className="text-xs h-9 px-5 uppercase font-black bg-danger border-none ring-2 ring-white/20">
                                     {topic}
                                   </Badge>
                                 ))}
@@ -1357,7 +1357,7 @@ export default function ManageCoursesClient() {
                           )}
                         </div>
                         <div className="bg-white/60 p-5 rounded-2xl border border-black/5">
-                          <p className="text-sm text-slate-700 leading-relaxed italic">"{log.reason}"</p>
+                          <p className="text-sm text-foreground leading-relaxed italic">"{log.reason}"</p>
                         </div>
                       </Card>
                     ))}
@@ -1365,7 +1365,7 @@ export default function ManageCoursesClient() {
                 )}
               </ScrollArea>
             </div>
-            <DialogFooter className="bg-slate-50 border-t px-8 py-6">
+            <DialogFooter className="bg-muted border-t px-8 py-6">
               <Button onClick={() => setIsHistoryDialogOpen(false)} variant="ghost" className="font-bold">Cerrar Historial</Button>
             </DialogFooter>
           </DialogContent>
@@ -1382,7 +1382,7 @@ export default function ManageCoursesClient() {
               <AlertDialogDescription className="text-center text-sm text-muted-foreground flex flex-col gap-2">
                 <span>Esta acción es permanente. Se eliminarán todas las clases, materiales y registros asociados a este programa.</span>
                 {isCheckingLandings && (
-                  <span className="text-amber-600 font-medium flex items-center justify-center gap-2 mt-2"><Loader2 className="h-3 w-3 animate-spin"/> Verificando landings asociadas...</span>
+                  <span className="text-warn font-medium flex items-center justify-center gap-2 mt-2"><Loader2 className="h-3 w-3 animate-spin"/> Verificando landings asociadas...</span>
                 )}
                 {!isCheckingLandings && associatedLandings.length > 0 && (
                   <span className="text-destructive font-bold mt-2 bg-destructive/5 p-3 rounded-xl border border-destructive/10">

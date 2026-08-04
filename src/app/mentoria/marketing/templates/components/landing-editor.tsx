@@ -112,7 +112,7 @@ export function LandingEditor({
                 <DialogTitle className="text-xl font-bold">
                   Editor de Landing Page
                 </DialogTitle>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Personaliza contenido y diseño visual
                 </p>
               </div>
@@ -130,7 +130,7 @@ export function LandingEditor({
             className={`px-4 py-2 font-medium border-b-2 transition-colors ${
               activeTab === "content"
                 ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             <Type className="h-4 w-4 mr-2 inline" />
@@ -141,7 +141,7 @@ export function LandingEditor({
             className={`px-4 py-2 font-medium border-b-2 transition-colors ${
               activeTab === "design"
                 ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             <Palette className="h-4 w-4 mr-2 inline" />
@@ -224,14 +224,14 @@ export function LandingEditor({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300">
+                  <div className="bg-muted p-6 rounded-lg border-2 border-dashed border-border">
                     <h1
                       className="text-3xl font-bold mb-3"
                       style={{ color: editedTokens.primary }}
                     >
                       {editedTemplate.headline || "Tu Headline Aquí"}
                     </h1>
-                    <p className="text-lg text-gray-600 mb-6">
+                    <p className="text-lg text-muted-foreground mb-6">
                       {editedTemplate.subheadline ||
                         "Tu subheadline descriptiva aquí..."}
                     </p>
@@ -287,7 +287,7 @@ export function LandingEditor({
                         <button
                           key={color}
                           onClick={() => updateDesignToken("primary", color)}
-                          className="w-8 h-8 rounded border-2 border-gray-200 hover:border-gray-400"
+                          className="w-8 h-8 rounded border-2 border-border hover:border-muted-foreground"
                           style={{ backgroundColor: color }}
                         />
                       ))}
@@ -322,7 +322,7 @@ export function LandingEditor({
                         <button
                           key={color}
                           onClick={() => updateDesignToken("secondary", color)}
-                          className="w-8 h-8 rounded border-2 border-gray-200 hover:border-gray-400"
+                          className="w-8 h-8 rounded border-2 border-border hover:border-muted-foreground"
                           style={{ backgroundColor: color }}
                         />
                       ))}
@@ -357,7 +357,7 @@ export function LandingEditor({
                         <button
                           key={color}
                           onClick={() => updateDesignToken("accent", color)}
-                          className="w-8 h-8 rounded border-2 border-gray-200 hover:border-gray-400"
+                          className="w-8 h-8 rounded border-2 border-border hover:border-muted-foreground"
                           style={{ backgroundColor: color }}
                         />
                       ))}
@@ -422,36 +422,36 @@ export function LandingEditor({
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center">
                       <div
-                        className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
+                        className="w-full h-20 rounded-lg border-2 border-border mb-2"
                         style={{ backgroundColor: editedTokens.primary }}
                       />
                       <p className="text-xs font-medium">Primary</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {editedTokens.primary}
                       </p>
                     </div>
                     <div className="text-center">
                       <div
-                        className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
+                        className="w-full h-20 rounded-lg border-2 border-border mb-2"
                         style={{ backgroundColor: editedTokens.secondary }}
                       />
                       <p className="text-xs font-medium">Secondary</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {editedTokens.secondary}
                       </p>
                     </div>
                     <div className="text-center">
                       <div
-                        className="w-full h-20 rounded-lg border-2 border-gray-200 mb-2"
+                        className="w-full h-20 rounded-lg border-2 border-border mb-2"
                         style={{ backgroundColor: editedTokens.accent }}
                       />
                       <p className="text-xs font-medium">Accent</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {editedTokens.accent}
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
                     <h3
                       className="text-xl font-bold mb-2"
                       style={{
@@ -476,7 +476,7 @@ export function LandingEditor({
         </div>
 
         {/* Footer con Acciones */}
-        <div className="flex justify-between items-center p-6 border-t bg-gray-50">
+        <div className="flex justify-between items-center p-6 border-t bg-muted">
           <div className="flex gap-2">
             <Button
               variant="outline"

@@ -35,14 +35,14 @@ export function StudentPageHeader({
             {category}
           </span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-headline font-bold text-slate-900 tracking-tight">
+        <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground tracking-tight">
           {title}
         </h1>
         {description && (
-          <p className="text-slate-500 font-medium mt-1 flex flex-wrap items-center gap-2">
+          <p className="text-muted-foreground font-medium mt-1 flex flex-wrap items-center gap-2">
             {description}
             {version && (
-              <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded-md font-mono">
+              <span className="text-[10px] bg-border text-muted-foreground px-1.5 py-0.5 rounded-md font-mono">
                 {version}
               </span>
             )}
@@ -58,7 +58,7 @@ export function StudentPageHeader({
               variant={badge.variant || 'default'}
               className={cn(
                 "px-4 py-1.5 rounded-xl font-bold uppercase tracking-widest text-[9px] shadow-sm",
-                badge.variant === 'default' && !badge.className && "bg-slate-900 text-white border-none",
+                badge.variant === 'default' && !badge.className && "bg-foreground text-white border-none",
                 badge.className
               )}
             >

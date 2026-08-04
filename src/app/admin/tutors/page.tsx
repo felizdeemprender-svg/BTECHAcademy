@@ -107,7 +107,7 @@ export default function AdminTutorsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-500 flex items-center gap-1">
+        return <Badge className="bg-success flex items-center gap-1">
           <CheckCircle className="h-3 w-3" /> Activo
         </Badge>;
       case 'inactive':
@@ -183,9 +183,9 @@ export default function AdminTutorsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Activos</p>
-                  <p className="text-2xl font-bold text-green-600">{tutorsData.active}</p>
+                  <p className="text-2xl font-bold text-success">{tutorsData.active}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-green-500" />
+                <TrendingUp className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>
@@ -211,7 +211,7 @@ export default function AdminTutorsPage() {
                     {tutorsData.total > 0 ? Math.round((tutorsData.active / tutorsData.total) * 100) : 0}%
                   </p>
                 </div>
-                <Settings className="h-8 w-8 text-purple-500" />
+                <Settings className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -306,7 +306,7 @@ export default function AdminTutorsPage() {
                     <TableRow key={tutor.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-border">
                             {tutor.photoURL ? (
                               <img 
                                 src={tutor.photoURL} 
@@ -327,7 +327,7 @@ export default function AdminTutorsPage() {
                       </TableCell>
                       <TableCell>
                         {tutor.subscription.hasCustomPage ? (
-                          <Badge className="bg-green-500 flex items-center gap-1">
+                          <Badge className="bg-success flex items-center gap-1">
                             <Globe className="h-3 w-3" /> Sí
                           </Badge>
                         ) : (
@@ -351,7 +351,7 @@ export default function AdminTutorsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Mail className="h-4 w-4 text-purple-500" />
+                          <Mail className="h-4 w-4 text-primary" />
                           <span>{tutor.subscription.invitationsPerCourse}</span>
                         </div>
                       </TableCell>

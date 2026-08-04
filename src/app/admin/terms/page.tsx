@@ -123,7 +123,7 @@ export default function AdminTermsPage() {
                       <FileText className="h-4 w-4" /> Editor de Términos de Uso
                     </Label>
                     {usageConfig?.version && (
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Versión: v{usageConfig.version}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Versión: v{usageConfig.version}</span>
                     )}
                   </div>
                   <Textarea 
@@ -146,9 +146,9 @@ export default function AdminTermsPage() {
 
           <TabsContent value="courses">
             <div className="grid gap-8">
-              <div className="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-2xl flex items-start gap-4 shadow-sm">
-                <Scale className="h-6 w-6 text-amber-500 shrink-0" />
-                <div className="text-sm text-amber-800 space-y-1">
+              <div className="bg-warn/10 border-l-4 border-warn p-6 rounded-r-2xl flex items-start gap-4 shadow-sm">
+                <Scale className="h-6 w-6 text-warn shrink-0" />
+                <div className="text-sm text-warn space-y-1">
                   <p className="font-bold">Protocolo de Autoría Docente</p>
                   <p>Este texto será presentado específicamente a los **mentores** en el paso final de creación de cursos. Define la propiedad intelectual y responsabilidades académicas.</p>
                 </div>
@@ -161,7 +161,7 @@ export default function AdminTermsPage() {
                       <FileText className="h-4 w-4" /> Editor de Términos de Creación
                     </Label>
                     {coursesConfig?.version && (
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Versión: v{coursesConfig.version}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Versión: v{coursesConfig.version}</span>
                     )}
                   </div>
                   <Textarea 
@@ -173,7 +173,7 @@ export default function AdminTermsPage() {
                   <Button 
                     onClick={() => handleSave('courses')} 
                     disabled={loading || !coursesContent.trim()} 
-                    className="w-full h-14 rounded-2xl font-bold bg-slate-900 flex items-center justify-center gap-2"
+                    className="w-full h-14 rounded-2xl font-bold bg-foreground flex items-center justify-center gap-2"
                   >
                     {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />} Publicar Términos Académicos
                   </Button>
@@ -183,7 +183,7 @@ export default function AdminTermsPage() {
           </TabsContent>
         </Tabs>
 
-        <div className="flex items-center gap-3 p-4 bg-slate-100 rounded-xl text-slate-600">
+        <div className="flex items-center gap-3 p-4 bg-muted rounded-xl text-muted-foreground">
           <AlertTriangle className="h-5 w-5 shrink-0" />
           <p className="text-xs font-medium">Al publicar una nueva versión, los usuarios verán la actualización de forma inmediata en sus respectivos flujos.</p>
         </div>

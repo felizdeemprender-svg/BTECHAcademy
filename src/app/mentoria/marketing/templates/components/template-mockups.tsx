@@ -57,41 +57,41 @@ export const EmailMockup = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border">
-            <div className="w-4 h-4 bg-red-500 rounded" />
+          <div className="w-8 h-8 rounded-full bg-border flex items-center justify-center border">
+            <div className="w-4 h-4 bg-danger rounded" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase text-slate-900 leading-none">
+            <p className="text-[10px] font-black uppercase text-foreground leading-none">
               Email
             </p>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter">
               Variante {index + 1}
             </p>
           </div>
         </div>
-        <Badge className="bg-red-500 text-white border-none text-[8px] font-black uppercase h-5">
+        <Badge className="bg-danger text-white border-none text-[8px] font-black uppercase h-5">
           Marketing
         </Badge>
       </div>
 
       <div className="relative mx-auto rounded-lg overflow-hidden border-8 border-white bg-white max-w-[500px]">
         {/* Email Header */}
-        <div className="p-4 border-b bg-gray-50">
+        <div className="p-4 border-b bg-muted">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-primary rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">B</span>
               </div>
               <div>
                 <p className="font-semibold text-sm">FastoriaAcademy</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   mentoria@FastoriaAcademy.com
                 </p>
               </div>
             </div>
             <div className="flex gap-2">
-              <div className="w-6 h-6 bg-gray-200 rounded"></div>
-              <div className="w-6 h-6 bg-gray-200 rounded"></div>
+              <div className="w-6 h-6 bg-border rounded"></div>
+              <div className="w-6 h-6 bg-border rounded"></div>
             </div>
           </div>
         </div>
@@ -101,11 +101,11 @@ export const EmailMockup = ({
           <h3 className="text-xl font-bold mb-2" style={{ color: tokens?.primary || "#3b82f6" }}>
             {template.headline || "Historia Universal: Un Viaje Épico"}
           </h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             {template.subheadline || "Descubre cómo el pasado configura nuestro futuro"}
           </p>
-          <div className="bg-gray-50 p-4 rounded-lg mb-4">
-            <p className="text-xs text-gray-700">
+          <div className="bg-muted p-4 rounded-lg mb-4">
+            <p className="text-xs text-foreground">
               Únete a nuestro curso exclusivo de historia universal con la Dra. Elena Martínez.
             </p>
           </div>
@@ -138,26 +138,26 @@ export const AdMockup = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border">
-            <div className="w-4 h-4 bg-green-500 rounded" />
+          <div className="w-8 h-8 rounded-full bg-border flex items-center justify-center border">
+            <div className="w-4 h-4 bg-success rounded" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase text-slate-900 leading-none">
+            <p className="text-[10px] font-black uppercase text-foreground leading-none">
               Ad
             </p>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter">
               Variante {index + 1}
             </p>
           </div>
         </div>
-        <Badge className="bg-green-500 text-white border-none text-[8px] font-black uppercase h-5">
+        <Badge className="bg-success text-white border-none text-[8px] font-black uppercase h-5">
           Ads
         </Badge>
       </div>
 
       <div className="relative mx-auto rounded-lg overflow-hidden border-8 border-white bg-white aspect-[16/9] max-w-[600px]">
         <div className="h-full w-full overflow-y-auto">
-          <div className="p-8 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+          <div className="p-8 bg-gradient-to-br from-blue-500 to-primary text-white">
             <h3 className="text-2xl font-bold mb-2">
               {template.headline || "Historia Universal: Un Viaje Épico"}
             </h3>
@@ -193,14 +193,14 @@ export const SocialMockup = ({
     <div className="space-y-3">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border">
+          <div className="w-8 h-8 rounded-full bg-border flex items-center justify-center border">
             <div className="w-4 h-4 bg-blue-500 rounded" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase text-slate-900 leading-none">
+            <p className="text-[10px] font-black uppercase text-foreground leading-none">
               {variant.platform}
             </p>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter">
               Variante {index + 1}
             </p>
           </div>
@@ -212,7 +212,7 @@ export const SocialMockup = ({
 
       <div
         className={cn(
-          "relative mx-auto overflow-hidden border-8 border-white bg-slate-900 shadow-xl",
+          "relative mx-auto overflow-hidden border-8 border-white bg-foreground shadow-xl",
           isVertical ? "aspect-[9/16] max-w-[200px]" : "aspect-square",
         )}
       >

@@ -258,7 +258,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                               onClick={() => setFormData({ ...formData, brandName: '', primaryColor: activeBrand?.palette?.primary || formData.primaryColor })}
                               className={cn(
                                 'flex items-center gap-4 rounded-2xl border-2 bg-white p-4 text-left transition-colors',
-                                formData.brandName === '' ? 'border-emerald-400 ring-2 ring-emerald-200' : 'border-transparent hover:border-primary/40'
+                                formData.brandName === '' ? 'border-success ring-2 ring-success/20' : 'border-transparent hover:border-primary/40'
                               )}
                             >
                               <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow shrink-0" style={{ backgroundColor: activeBrand?.palette?.primary || '#3B2D86' }} />
@@ -266,7 +266,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                                 <p className="font-bold truncate">{activeBrand?.name || 'Brand activo'}</p>
                                 <p className="text-xs text-muted-foreground">{formData.brandName === '' ? 'Usando este brand' : 'Heredar brand activo'}</p>
                               </div>
-                              {formData.brandName === '' && <Check className="h-5 w-5 text-emerald-500 ml-auto shrink-0" />}
+                              {formData.brandName === '' && <Check className="h-5 w-5 text-success ml-auto shrink-0" />}
                             </button>
                             {ownBrands.map((brand) => {
                               const isSelected = formData.brandName === brand.name;
@@ -278,7 +278,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                                   onClick={() => setFormData({ ...formData, brandName: brand.name, primaryColor: brand.palette?.primary || formData.primaryColor })}
                                   className={cn(
                                     'flex items-center gap-4 rounded-2xl border-2 bg-white p-4 text-left transition-colors',
-                                    isSelected ? 'border-emerald-400 ring-2 ring-emerald-200' : 'border-transparent hover:border-primary/40'
+                                    isSelected ? 'border-success ring-2 ring-success/20' : 'border-transparent hover:border-primary/40'
                                   )}
                                 >
                                   <div className="flex flex-col gap-1 shrink-0">
@@ -291,7 +291,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                                       {isActive ? 'Brand activo en tu web' : brand.tokens?.themeMode || 'light'}
                                     </p>
                                   </div>
-                                  {isSelected && <Check className="h-5 w-5 text-emerald-500 ml-auto shrink-0" />}
+                                  {isSelected && <Check className="h-5 w-5 text-success ml-auto shrink-0" />}
                                 </button>
                               );
                             })}
@@ -322,7 +322,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
 
           <div className="pt-10 space-y-6">
             <h2 className="text-xl font-bold flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Simulador de Experiencia del Alumno</h2>
-            <Card className="rounded-lg overflow-hidden border-none bg-slate-50 p-12">
+            <Card className="rounded-lg overflow-hidden border-none bg-muted p-12">
               <header className="flex items-end justify-between bg-white p-8 rounded-lg border-4 border-white mb-10">
                 <div className="flex items-end gap-4">
                   {Object.entries(formData.socials).map(([key, val]) => val && (
@@ -385,17 +385,17 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                       </div>
                     </Card>
 
-                    <div className="bg-emerald-50 border-2 border-emerald-200 p-6 rounded-lg flex items-center gap-4 animate-pulse">
-                      <Zap className="h-8 w-8 text-emerald-600" />
+                    <div className="bg-success/10 border-2 border-success/20 p-6 rounded-lg flex items-center gap-4 animate-pulse">
+                      <Zap className="h-8 w-8 text-success" />
                       <div>
-                        <p className="font-bold text-emerald-800 text-lg">Modo Refuerzo Activado</p>
-                        <p className="text-sm text-emerald-600">Se han habilitado preguntas adicionales para validar tu conocimiento.</p>
+                        <p className="font-bold text-success text-lg">Modo Refuerzo Activado</p>
+                        <p className="text-sm text-success">Se han habilitado preguntas adicionales para validar tu conocimiento.</p>
                       </div>
                     </div>
 
                     <Card className="p-8 rounded-lg border-none shadow-md bg-white opacity-80 grayscale-[0.5]">
                       <div className="flex items-center gap-3 mb-6">
-                        <Badge variant="secondary" className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest bg-emerald-100 text-emerald-700 border-none">Pregunta de Soporte</Badge>
+                        <Badge variant="secondary" className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest bg-success/15 text-success border-none">Pregunta de Soporte</Badge>
                       </div>
                       <p className="font-bold text-lg mb-8 leading-tight">Redacta una breve síntesis de lo aprendido hasta el momento:</p>
                       <div className="h-32 bg-secondary/10 rounded-2xl border-2 border-dashed border-muted-foreground/20" />

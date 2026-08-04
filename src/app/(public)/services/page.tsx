@@ -44,8 +44,8 @@ export default function ServicesPage() {
       icon: Building,
       title: 'Para Empresas',
       description: 'Capacita a tu equipo con soluciones personalizadas y escalables.',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      color: 'text-success',
+      bgColor: 'bg-success/10',
       features: [
         'Planes empresariales a medida',
         'Integración con sistemas de RRHH',
@@ -60,8 +60,8 @@ export default function ServicesPage() {
       icon: Users,
       title: 'Para Estudiantes',
       description: 'Accede a formación de excelencia con mentors expertos.',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
       features: [
         'Cursos validados por expertos',
         'Aprendizaje personalizado con IA',
@@ -189,7 +189,7 @@ export default function ServicesPage() {
                   <ul className="space-y-3">
                     {service.features.map((feature, featureIdx) => (
                       <li key={featureIdx} className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
                         <span className="text-sm text-muted-foreground">{feature}</span>
                       </li>
                     ))}
@@ -255,8 +255,8 @@ export default function ServicesPage() {
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-                    <Building className="h-6 w-6 text-green-600" />
+                  <div className="w-12 h-12 rounded-xl bg-success/15 flex items-center justify-center flex-shrink-0">
+                    <Building className="h-6 w-6 text-success" />
                   </div>
                   <div>
                     <h3 className="font-bold text-lg text-primary mb-1">Empresa Tecnológica</h3>
@@ -264,8 +264,8 @@ export default function ServicesPage() {
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
-                    <Users className="h-6 w-6 text-purple-600" />
+                  <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                    <Users className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-bold text-lg text-primary mb-1">Institución Educativa</h3>

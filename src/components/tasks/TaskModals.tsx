@@ -75,7 +75,7 @@ export function TaskModals({
           <div className="space-y-6 px-8 pb-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="bg-muted/30 p-5 border-l-4 border-accent">
               <Label className="text-[10px] font-bold uppercase text-accent mb-1 block">Consigna del Mentor</Label>
-              <p className="text-sm font-medium text-slate-700 leading-relaxed italic">"{selectedTask.description}"</p>
+              <p className="text-sm font-medium text-foreground leading-relaxed italic">"{selectedTask.description}"</p>
             </div>
 
             <div className="space-y-3">
@@ -145,12 +145,12 @@ export function TaskModals({
           <div className="space-y-8 px-8 pb-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1 h-4 bg-emerald-500 rounded-full" />
+                <div className="w-1 h-4 bg-success rounded-full" />
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Retroalimentación Estratégica</Label>
               </div>
-              <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 relative overflow-hidden">
-                <BrainCircuit className="absolute -right-4 -top-4 h-24 w-24 opacity-5 text-emerald-500" />
-                <p className="text-sm md:text-base italic text-emerald-900 leading-relaxed font-medium relative z-10">
+              <div className="bg-success/10/50 p-6 rounded-2xl border border-success/15 relative overflow-hidden">
+                <BrainCircuit className="absolute -right-4 -top-4 h-24 w-24 opacity-5 text-success" />
+                <p className="text-sm md:text-base italic text-success leading-relaxed font-medium relative z-10">
                   "{selectedTask.aiFeedback}"
                 </p>
               </div>
@@ -159,12 +159,12 @@ export function TaskModals({
             <div className="space-y-4">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1 tracking-widest">Tu Respuesta Original</Label>
               <div className="bg-muted/20 p-5 rounded-2xl border">
-                <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">{selectedTask.answer}</p>
+                <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">{selectedTask.answer}</p>
                 {selectedTask.fileUrl && (
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-9 rounded-xl text-[10px] font-bold gap-2 mt-6 border-emerald-200 text-emerald-700 hover:bg-emerald-50" 
+                    className="h-9 rounded-xl text-[10px] font-bold gap-2 mt-6 border-success/20 text-success hover:bg-success/10" 
                     onClick={() => window.open(selectedTask.fileUrl, '_blank')}
                   >
                     <FileText className="h-4 w-4" /> Descargar Documento Enviado
@@ -182,8 +182,8 @@ export function TaskModals({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-emerald-500" />
-                <span className="text-[10px] font-bold text-emerald-600 uppercase">Evaluación Finalizada</span>
+                <AlertCircle className="h-4 w-4 text-success" />
+                <span className="text-[10px] font-bold text-success uppercase">Evaluación Finalizada</span>
               </div>
             </div>
 

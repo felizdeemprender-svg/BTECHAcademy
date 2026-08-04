@@ -62,15 +62,15 @@ function getPageTypeInfo(page: any) {
   }
   if (lt === 'promocion') {
     if (page.referidoId) {
-      return { label: 'Promo Embajador', color: 'bg-violet-500/10 text-violet-700', icon: Users };
+      return { label: 'Promo Embajador', color: 'bg-primary/10 text-primary', icon: Users };
     }
-    return { label: 'Promo Directa', color: 'bg-amber-500/10 text-amber-700', icon: Megaphone };
+    return { label: 'Promo Directa', color: 'bg-warn/10 text-warn', icon: Megaphone };
   }
   // Pages del builder de campañas (type !== 'landing_only')
   if (page.type === 'landing_only') {
-    return { label: 'Pack x3', color: 'bg-emerald-500/10 text-emerald-700', icon: Star };
+    return { label: 'Pack x3', color: 'bg-success/10 text-success', icon: Star };
   }
-  return { label: 'Pack Multimedia', color: 'bg-slate-500/10 text-slate-600', icon: Layout };
+  return { label: 'Pack Multimedia', color: 'bg-muted-foreground/10 text-muted-foreground', icon: Layout };
 }
 
 export default function SalesLandingsDashboardPage() {
@@ -402,7 +402,7 @@ export default function SalesLandingsDashboardPage() {
         ) : !groupedByCourse || Object.keys(groupedByCourse).length === 0 ? (
           <div className="py-24 text-center bg-secondary/5 rounded-3xl border-2 border-dashed">
             <Layout className="h-14 w-14 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-600 mb-1">
+            <h3 className="text-lg font-bold text-muted-foreground mb-1">
               {searchTerm ? 'Sin resultados' : 'No hay landings creadas'}
             </h3>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
@@ -429,14 +429,14 @@ export default function SalesLandingsDashboardPage() {
                   {/* Cabecera del grupo / curso */}
                   <button
                     onClick={() => toggleCourse(courseId)}
-                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                         <BookOpen className="h-4 w-4 text-primary" />
                       </div>
                       <div className="text-left">
-                        <p className="font-bold text-slate-800 text-sm leading-tight">{group.courseName}</p>
+                        <p className="font-bold text-foreground text-sm leading-tight">{group.courseName}</p>
                         <p className="text-[11px] text-muted-foreground font-medium">
                           {group.pages.length} landing{group.pages.length !== 1 ? 's' : ''}
                         </p>
@@ -465,7 +465,7 @@ export default function SalesLandingsDashboardPage() {
                   {isOpen && (
                     <div className="border-t border-border/40">
                       {/* Cabecera de tabla */}
-                      <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-2 bg-slate-50 border-b border-border/30">
+                      <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-2 bg-muted border-b border-border/30">
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Landing</span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-24 text-center hidden sm:block">Tipo</span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-16 text-center hidden md:block">Inicio</span>
@@ -487,11 +487,11 @@ export default function SalesLandingsDashboardPage() {
                         return (
                           <div
                             key={page.id}
-                            className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-3.5 border-b border-border/20 last:border-b-0 hover:bg-slate-50/50 transition-colors"
+                            className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-3.5 border-b border-border/20 last:border-b-0 hover:bg-muted/50 transition-colors"
                           >
                             {/* Nombre y variantes */}
                             <div className="min-w-0">
-                              <p className="font-bold text-sm text-slate-800 truncate leading-tight">{page.title || 'Sin título'}</p>
+                              <p className="font-bold text-sm text-foreground truncate leading-tight">{page.title || 'Sin título'}</p>
                               {variantsCount > 0 && (
                                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                                   {Array.from({ length: variantsCount }, (_, v) => {
@@ -501,7 +501,7 @@ export default function SalesLandingsDashboardPage() {
                                       <button
                                         key={v}
                                         onClick={() => window.open(link, '_blank')}
-                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 hover:bg-primary/10 hover:text-primary text-slate-500 transition-colors"
+                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors"
                                       >
                                         <ExternalLink className="h-2.5 w-2.5" />
                                         {label}
@@ -522,7 +522,7 @@ export default function SalesLandingsDashboardPage() {
 
                             {/* Inicio */}
                             <div className="w-16 text-center hidden md:block">
-                              <span className="text-[10px] font-bold text-slate-600">
+                              <span className="text-[10px] font-bold text-muted-foreground">
                                 {page.activeFrom?.toDate 
                                   ? format(page.activeFrom.toDate(), 'dd/MM/yy') 
                                   : page.activeFrom?.seconds 
@@ -533,7 +533,7 @@ export default function SalesLandingsDashboardPage() {
 
                             {/* Fin */}
                             <div className="w-16 text-center hidden md:block">
-                              <span className="text-[10px] font-bold text-slate-600">
+                              <span className="text-[10px] font-bold text-muted-foreground">
                                 {page.activeUntil?.toDate 
                                   ? format(page.activeUntil.toDate(), 'dd/MM/yy') 
                                   : page.activeUntil?.seconds 
@@ -544,7 +544,7 @@ export default function SalesLandingsDashboardPage() {
 
                             {/* Embajador */}
                             <div className="w-32 text-center hidden md:block truncate px-2">
-                              <span className="text-xs font-bold text-violet-600 truncate">
+                              <span className="text-xs font-bold text-primary truncate">
                                 {page.referidoId ? page.referidoName || referidosMap[page.referidoId] || 'ID: ' + page.referidoId.substring(0, 6) : '—'}
                               </span>
                             </div>
@@ -552,7 +552,7 @@ export default function SalesLandingsDashboardPage() {
                             {/* Precio */}
                             <div className="w-20 text-center hidden md:flex items-center justify-center gap-1">
                               {page.price != null ? (
-                                <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
+                                <span className="text-xs font-bold text-success flex items-center gap-0.5">
                                   <DollarSign className="h-3 w-3" />
                                   {page.price === 0 ? 'Gratis' : page.price.toLocaleString('es-AR')}
                                 </span>
@@ -578,7 +578,7 @@ export default function SalesLandingsDashboardPage() {
                                     setCloneData({ referidoId: '', startDate: '', endDate: '', price: page.price || 0 });
                                   }}
                                   title="Clonar Promo"
-                                  className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
+                                  className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                                 >
                                   <Copy className="h-3.5 w-3.5" />
                                 </button>
@@ -599,7 +599,7 @@ export default function SalesLandingsDashboardPage() {
                                     setExtendingPage(page);
                                   }}
                                   title="Prorrogar vencimiento"
-                                  className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                                  className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-warn hover:bg-warn/10 transition-colors"
                                 >
                                   <CalendarClock className="h-3.5 w-3.5" />
                                 </button>
@@ -608,7 +608,7 @@ export default function SalesLandingsDashboardPage() {
                               <button
                                 onClick={() => setSelectedStatsPage(page)}
                                 title="Ver Estadísticas"
-                                className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                                className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
                               >
                                 <BarChart2 className="h-3.5 w-3.5" />
                               </button>
@@ -616,7 +616,7 @@ export default function SalesLandingsDashboardPage() {
                               <button
                                 onClick={() => router.push(isV2 ? `/mentoria/marketing/landings/v2-edit/${page.id}` : `/mentoria/marketing/landings/build?id=${page.id}`)}
                                 title="Editar"
-                                className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                                className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
                               >
                                 <FileEdit className="h-3.5 w-3.5" />
                               </button>
@@ -627,8 +627,8 @@ export default function SalesLandingsDashboardPage() {
                                 className={cn(
                                   'h-8 w-8 rounded-xl flex items-center justify-center transition-colors',
                                   isConfirmDelete
-                                    ? 'bg-red-500 text-white animate-pulse'
-                                    : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
+                                    ? 'bg-danger text-white animate-pulse'
+                                    : 'text-muted-foreground hover:text-danger hover:bg-danger/10'
                                 )}
                               >
                                 {isDeleting
@@ -651,16 +651,16 @@ export default function SalesLandingsDashboardPage() {
         {/* Modal de Detalle de Estadísticas */}
         <Dialog open={!!selectedStatsPage} onOpenChange={(open) => !open && setSelectedStatsPage(null)}>
           <DialogContent className="mw-4xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader className="pb-4 border-b border-slate-100">
+            <DialogHeader className="pb-4 border-b border-muted">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
-                  <BarChart2 className="h-6 w-6 text-indigo-600 animate-pulse" />
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <BarChart2 className="h-6 w-6 text-primary animate-pulse" />
                 </div>
                 <div className="text-left font-sans">
-                  <DialogTitle className="text-2xl font-black text-slate-800 tracking-tight">
+                  <DialogTitle className="text-2xl font-black text-foreground tracking-tight">
                     Estadísticas de la Landing
                   </DialogTitle>
-                  <DialogDescription className="text-slate-500 font-medium line-clamp-1">
+                  <DialogDescription className="text-muted-foreground font-medium line-clamp-1">
                     {selectedStatsPage?.title || 'Sin título'}
                   </DialogDescription>
                 </div>
@@ -669,53 +669,53 @@ export default function SalesLandingsDashboardPage() {
 
             {isLoadingStatsData ? (
               <div className="py-20 flex flex-col items-center justify-center gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-                <p className="text-sm text-slate-500 font-semibold">Cargando métricas de rendimiento...</p>
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground font-semibold">Cargando métricas de rendimiento...</p>
               </div>
             ) : (
               <div className="space-y-6 pt-4 font-sans">
                 {/* Metric Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   {/* Accesos */}
-                  <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-2xl p-4 relative overflow-hidden group">
-                    <div className="absolute -right-2 -bottom-2 opacity-5 text-indigo-600 group-hover:scale-110 transition-transform">
+                  <div className="bg-primary/10/50 border border-primary/15/50 rounded-2xl p-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 text-primary group-hover:scale-110 transition-transform">
                       <MousePointer2 className="h-16 w-16" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-indigo-400">Accesos (Clics)</p>
-                    <p className="text-3xl font-black text-slate-800 mt-1">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-primary">Accesos (Clics)</p>
+                    <p className="text-3xl font-black text-foreground mt-1">
                       {Math.max(selectedStatsPage?.stats?.totalClicks || 0, statsLeads.length, selectedStatsPage?.stats?.conversions || 0).toLocaleString()}
                     </p>
                   </div>
 
                   {/* Leads */}
-                  <div className="bg-violet-50/50 border border-violet-100/50 rounded-2xl p-4 relative overflow-hidden group">
-                    <div className="absolute -right-2 -bottom-2 opacity-5 text-violet-600 group-hover:scale-110 transition-transform">
+                  <div className="bg-primary/10/50 border border-primary/15/50 rounded-2xl p-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 text-primary group-hover:scale-110 transition-transform">
                       <Users className="h-16 w-16" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-violet-400">Leads Obtenidos</p>
-                    <p className="text-3xl font-black text-slate-800 mt-1">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-primary">Leads Obtenidos</p>
+                    <p className="text-3xl font-black text-foreground mt-1">
                       {statsLeads.length.toLocaleString()}
                     </p>
                   </div>
 
                   {/* Ventas */}
-                  <div className="bg-emerald-50/50 border border-emerald-100/50 rounded-2xl p-4 relative overflow-hidden group">
-                    <div className="absolute -right-2 -bottom-2 opacity-5 text-emerald-600 group-hover:scale-110 transition-transform">
+                  <div className="bg-success/10/50 border border-success/15/50 rounded-2xl p-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 text-success group-hover:scale-110 transition-transform">
                       <Target className="h-16 w-16" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Ventas Realizadas</p>
-                    <p className="text-3xl font-black text-slate-800 mt-1">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-success">Ventas Realizadas</p>
+                    <p className="text-3xl font-black text-foreground mt-1">
                       {(selectedStatsPage?.stats?.conversions || 0).toLocaleString()}
                     </p>
                   </div>
 
                   {/* Tasa de conversión */}
-                  <div className="bg-amber-50/50 border border-amber-100/50 rounded-2xl p-4 relative overflow-hidden group">
-                    <div className="absolute -right-2 -bottom-2 opacity-5 text-amber-600 group-hover:scale-110 transition-transform">
+                  <div className="bg-warn/10/50 border border-warn/15/50 rounded-2xl p-4 relative overflow-hidden group">
+                    <div className="absolute -right-2 -bottom-2 opacity-5 text-warn group-hover:scale-110 transition-transform">
                       <TrendingUp className="h-16 w-16" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-amber-400">Conversion Rate (CR)</p>
-                    <p className="text-3xl font-black text-slate-800 mt-1">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-warn">Conversion Rate (CR)</p>
+                    <p className="text-3xl font-black text-foreground mt-1">
                       {(() => {
                         const clicks = Math.max(selectedStatsPage?.stats?.totalClicks || 0, statsLeads.length, selectedStatsPage?.stats?.conversions || 0);
                         const convs = selectedStatsPage?.stats?.conversions || 0;
@@ -727,7 +727,7 @@ export default function SalesLandingsDashboardPage() {
 
                 {/* Tabs for details */}
                 <Tabs defaultValue="leads" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-xl">
+                  <TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
                     <TabsTrigger value="leads" className="rounded-lg font-bold text-sm">
                       Historial de Leads ({statsLeads.length})
                     </TabsTrigger>
@@ -738,20 +738,20 @@ export default function SalesLandingsDashboardPage() {
 
                   {/* Leads Tab Content */}
                   <TabsContent value="leads" className="mt-4">
-                    <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
+                    <div className="border border-muted rounded-2xl overflow-hidden shadow-sm bg-white">
                       <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                         <table className="w-full text-sm text-left">
-                          <thead className="text-[10px] text-slate-500 uppercase bg-slate-50 font-black tracking-widest border-b border-slate-100 sticky top-0 z-10">
+                          <thead className="text-[10px] text-muted-foreground uppercase bg-muted font-black tracking-widest border-b border-muted sticky top-0 z-10">
                             <tr>
                               <th className="px-5 py-3">Estudiante</th>
                               <th className="px-5 py-3">Fecha</th>
                               <th className="px-5 py-3 text-right">Estado</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100">
+                          <tbody className="divide-y divide-border">
                             {statsLeads.length === 0 ? (
                               <tr>
-                                <td colSpan={3} className="px-5 py-10 text-center text-slate-400 italic">
+                                <td colSpan={3} className="px-5 py-10 text-center text-muted-foreground italic">
                                   Aún no hay leads registrados para esta landing.
                                 </td>
                               </tr>
@@ -762,21 +762,21 @@ export default function SalesLandingsDashboardPage() {
                                   : 'Reciente';
 
                                 return (
-                                  <tr key={lead.id} className="hover:bg-slate-50/50 transition-colors">
+                                  <tr key={lead.id} className="hover:bg-muted/50 transition-colors">
                                     <td className="px-5 py-3.5">
-                                      <div className="font-bold text-slate-800">{lead.studentName}</div>
-                                      <div className="text-xs text-slate-500">{lead.studentEmail}</div>
+                                      <div className="font-bold text-foreground">{lead.studentName}</div>
+                                      <div className="text-xs text-muted-foreground">{lead.studentEmail}</div>
                                     </td>
-                                    <td className="px-5 py-3.5 text-slate-500 text-xs font-semibold">
+                                    <td className="px-5 py-3.5 text-muted-foreground text-xs font-semibold">
                                       {date}
                                     </td>
                                     <td className="px-5 py-3.5 text-right">
                                       {lead.status === 'converted' ? (
-                                        <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border-none font-bold text-[10px]">
+                                        <Badge className="bg-success/10 text-success hover:bg-success/10 border-none font-bold text-[10px]">
                                           <CheckCircle2 className="h-3 w-3 mr-1" /> Convertido
                                         </Badge>
                                       ) : (
-                                        <Badge className="bg-amber-50 text-amber-600 hover:bg-amber-50 border-none font-bold text-[10px]">
+                                        <Badge className="bg-warn/10 text-warn hover:bg-warn/10 border-none font-bold text-[10px]">
                                           <Clock className="h-3 w-3 mr-1" /> Pendiente
                                         </Badge>
                                       )}
@@ -793,10 +793,10 @@ export default function SalesLandingsDashboardPage() {
 
                   {/* Sales Tab Content */}
                   <TabsContent value="sales" className="mt-4">
-                    <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
+                    <div className="border border-muted rounded-2xl overflow-hidden shadow-sm bg-white">
                       <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
                         <table className="w-full text-sm text-left">
-                          <thead className="text-[10px] text-slate-500 uppercase bg-slate-50 font-black tracking-widest border-b border-slate-100 sticky top-0 z-10">
+                          <thead className="text-[10px] text-muted-foreground uppercase bg-muted font-black tracking-widest border-b border-muted sticky top-0 z-10">
                             <tr>
                               <th className="px-5 py-3">Alumno</th>
                               <th className="px-5 py-3">Fecha Compra</th>
@@ -804,10 +804,10 @@ export default function SalesLandingsDashboardPage() {
                               <th className="px-5 py-3 text-right">Estado</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100">
+                          <tbody className="divide-y divide-border">
                             {statsEnrollments.length === 0 ? (
                               <tr>
-                                <td colSpan={4} className="px-5 py-10 text-center text-slate-400 italic">
+                                <td colSpan={4} className="px-5 py-10 text-center text-muted-foreground italic">
                                   Aún no hay inscripciones registradas para esta landing.
                                 </td>
                               </tr>
@@ -818,19 +818,19 @@ export default function SalesLandingsDashboardPage() {
                                   : 'Reciente';
 
                                 return (
-                                  <tr key={enroll.id} className="hover:bg-slate-50/50 transition-colors">
+                                  <tr key={enroll.id} className="hover:bg-muted/50 transition-colors">
                                     <td className="px-5 py-3.5">
-                                      <div className="font-bold text-slate-800">{enroll.inviteEmail}</div>
-                                      <div className="text-[10px] text-slate-400">ID: {enroll.studentId}</div>
+                                      <div className="font-bold text-foreground">{enroll.inviteEmail}</div>
+                                      <div className="text-[10px] text-muted-foreground">ID: {enroll.studentId}</div>
                                     </td>
-                                    <td className="px-5 py-3.5 text-slate-500 text-xs font-semibold">
+                                    <td className="px-5 py-3.5 text-muted-foreground text-xs font-semibold">
                                       {date}
                                     </td>
-                                    <td className="px-5 py-3.5 text-xs font-mono text-slate-500">
+                                    <td className="px-5 py-3.5 text-xs font-mono text-muted-foreground">
                                       {enroll.paymentId || 'N/A'}
                                     </td>
                                     <td className="px-5 py-3.5 text-right">
-                                      <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-50 border-none font-bold text-[10px]">
+                                      <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-none font-bold text-[10px]">
                                         {enroll.status === 'active' ? 'Activo' : enroll.status}
                                       </Badge>
                                     </td>
@@ -846,7 +846,7 @@ export default function SalesLandingsDashboardPage() {
                 </Tabs>
 
                 {/* Nota de advertencia sobre la permanencia de los datos al borrar landings */}
-                <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-100 text-xs text-amber-800 leading-relaxed font-medium">
+                <div className="p-4 rounded-2xl bg-warn/10/80 border border-warn/15 text-xs text-warn leading-relaxed font-medium">
                   ⚠️ <strong>Nota de Integridad de Datos:</strong> Los leads y alumnos registrados son propiedad exclusiva del tutor de forma global. La eliminación de esta landing no afectará a los leads ni a los alumnos generados, los cuales permanecerán seguros en tu base de datos para no interrumpir su progreso.
                 </div>
               </div>
@@ -858,16 +858,16 @@ export default function SalesLandingsDashboardPage() {
         <Dialog open={!!cloningPage} onOpenChange={(open) => !open && setCloningPage(null)}>
           <DialogContent className="mw-md">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black text-slate-800">Clonar para Embajador</DialogTitle>
+              <DialogTitle className="text-2xl font-black text-foreground">Clonar para Embajador</DialogTitle>
               <DialogDescription>
                 Crea una promoción exclusiva de "{cloningPage?.title}".
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase">Embajador / Influencer</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase">Embajador / Influencer</label>
                 <select
-                  className="flex h-12 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  className="flex h-12 w-full items-center justify-between rounded-xl border border-border bg-white px-4 py-2 text-sm ring-offset-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   value={cloneData.referidoId}
                   onChange={e => setCloneData({...cloneData, referidoId: e.target.value})}
                 >
@@ -879,37 +879,37 @@ export default function SalesLandingsDashboardPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Fecha Inicio</label>
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Fecha Inicio</label>
                   <Input 
                     type="datetime-local" 
                     value={cloneData.startDate}
                     onChange={e => setCloneData({...cloneData, startDate: e.target.value})}
-                    className="bg-slate-50 border-slate-200"
+                    className="bg-muted border-border"
                    size="lg" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Fecha Fin</label>
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Fecha Fin</label>
                   <Input 
                     type="datetime-local" 
                     value={cloneData.endDate}
                     onChange={e => setCloneData({...cloneData, endDate: e.target.value})}
-                    className="bg-slate-50 border-slate-200"
+                    className="bg-muted border-border"
                    size="lg" />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase">Precio Promocional ($)</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase">Precio Promocional ($)</label>
                 <Input 
                   type="number" 
                   value={cloneData.price}
                   onChange={e => setCloneData({...cloneData, price: Number(e.target.value)})}
-                  className="bg-slate-50 border-slate-200 font-bold text-lg"
+                  className="bg-muted border-border font-bold text-lg"
                  size="lg" />
               </div>
             </div>
-            <div className="flex gap-3 justify-end pt-4 border-t border-slate-100">
+            <div className="flex gap-3 justify-end pt-4 border-t border-muted">
               <Button variant="ghost" onClick={() => setCloningPage(null)} disabled={isCloning} className="rounded-xl">Cancelar</Button>
-              <Button onClick={handleClone} disabled={isCloning} className="rounded-xl bg-violet-600 hover:bg-violet-700">
+              <Button onClick={handleClone} disabled={isCloning} className="rounded-xl bg-primary hover:bg-primary">
                 {isCloning ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Promoción'}
               </Button>
             </div>
@@ -921,25 +921,25 @@ export default function SalesLandingsDashboardPage() {
           <DialogContent className="mw-sm">
             <DialogHeader>
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
-                  <CalendarClock className="h-5 w-5 text-amber-500" />
+                <div className="w-10 h-10 rounded-2xl bg-warn/10 flex items-center justify-center shrink-0">
+                  <CalendarClock className="h-5 w-5 text-warn" />
                 </div>
-                <DialogTitle className="text-xl font-black text-slate-800 leading-tight">Prorrogar Vencimiento</DialogTitle>
+                <DialogTitle className="text-xl font-black text-foreground leading-tight">Prorrogar Vencimiento</DialogTitle>
               </div>
-              <DialogDescription className="text-slate-500 text-sm font-medium leading-relaxed pl-[3.25rem]">
+              <DialogDescription className="text-muted-foreground text-sm font-medium leading-relaxed pl-[3.25rem]">
                 Extendé la fecha de cierre de la landing<br />
-                <span className="font-bold text-slate-700 truncate block mt-0.5">&ldquo;{extendingPage?.title}&rdquo;</span>
+                <span className="font-bold text-foreground truncate block mt-0.5">&ldquo;{extendingPage?.title}&rdquo;</span>
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-5 py-4">
               {/* Fecha actual */}
               {extendingPage?.activeUntil && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100">
-                  <Clock className="h-4 w-4 text-slate-400 shrink-0" />
+                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-muted border border-muted">
+                  <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Vencimiento actual</p>
-                    <p className="text-sm font-bold text-slate-700">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Vencimiento actual</p>
+                    <p className="text-sm font-bold text-foreground">
                       {(() => {
                         const d = extendingPage.activeUntil?.toDate
                           ? extendingPage.activeUntil.toDate()
@@ -953,17 +953,17 @@ export default function SalesLandingsDashboardPage() {
 
               {/* Nueva fecha */}
               <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Nueva fecha de vencimiento</label>
+                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Nueva fecha de vencimiento</label>
                 <Input
                   type="datetime-local"
                   value={newEndDate}
                   onChange={e => setNewEndDate(e.target.value)}
-                  className="bg-amber-50/60 border-amber-200 focus:border-amber-400 font-semibold text-slate-700"
+                  className="bg-warn/10/60 border-warn/20 focus:border-warn font-semibold text-foreground"
                  size="lg" />
               </div>
             </div>
 
-            <div className="flex gap-3 justify-end pt-2 border-t border-slate-100">
+            <div className="flex gap-3 justify-end pt-2 border-t border-muted">
               <Button
                 variant="ghost"
                 onClick={() => { setExtendingPage(null); setNewEndDate(''); }}
@@ -975,7 +975,7 @@ export default function SalesLandingsDashboardPage() {
               <Button
                 onClick={handleExtend}
                 disabled={isExtending || !newEndDate}
-                className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-md shadow-amber-200"
+                className="rounded-xl bg-warn hover:bg-warn text-white font-bold shadow-md shadow-warn/20"
               >
                 {isExtending
                   ? <Loader2 className="h-4 w-4 animate-spin" />

@@ -123,16 +123,16 @@ export default function AdminCursosPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map(i => (
               <Card key={i} className="animate-pulse">
-                <div className="h-20 bg-gray-200 rounded-t-lg"></div>
+                <div className="h-20 bg-border rounded-t-lg"></div>
                 <div className="p-4 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-border rounded"></div>
+                  <div className="h-3 bg-border rounded w-3/4"></div>
                 </div>
               </Card>
             ))}
           </div>
           <Card className="animate-pulse">
-            <div className="h-96 bg-gray-200 rounded-lg"></div>
+            <div className="h-96 bg-border rounded-lg"></div>
           </Card>
         </div>
       </DashboardLayout>

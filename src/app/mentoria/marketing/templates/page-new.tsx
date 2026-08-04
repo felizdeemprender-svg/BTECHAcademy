@@ -114,10 +114,10 @@ export default function MarketingTemplatesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Arquitecto de Identidad IA
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-muted-foreground mt-2">
             Crea identidades visuales con IA y genera planos omnicanal para tus
             campañas de marketing
           </p>
@@ -137,12 +137,12 @@ export default function MarketingTemplatesPage() {
         {/* Vista Previa de Colección Seleccionada */}
         {selectedCollection && (
           <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
               Vista Previa: {selectedCollection.name}
             </h2>
             {/* Aquí podríamos agregar un componente de vista previa */}
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <p className="text-gray-600">
+            <div className="bg-muted p-6 rounded-lg">
+              <p className="text-muted-foreground">
                 Vista previa de la colección seleccionada. Los templates se
                 mostrarían aquí con opciones de edición y refinamiento.
               </p>

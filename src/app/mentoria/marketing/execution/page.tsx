@@ -241,15 +241,15 @@ export default function MarketingAutomationEnginePage() {
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Centro de Mando</h1>
             <p className="text-muted-foreground text-lg font-medium">Control de motores para emisión multicanal automática.</p>
           </div>
-          <div className="bg-slate-900 px-6 py-4 rounded-[1.5rem] border border-white/10 flex items-center gap-6">
+          <div className="bg-foreground px-6 py-4 rounded-[1.5rem] border border-white/10 flex items-center gap-6">
             <div className="text-center">
               <p className="text-[8px] font-black uppercase text-white/40 tracking-widest">En Emisión</p>
               <p className="text-2xl font-black text-white">{activeCampaigns.length}</p>
             </div>
             <div className="w-px h-8 bg-white/10" />
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-              <span className="text-[10px] font-black uppercase text-emerald-400 tracking-tighter">Sistemas OK</span>
+              <div className="w-2 h-2 rounded-full bg-success animate-ping" />
+              <span className="text-[10px] font-black uppercase text-success tracking-tighter">Sistemas OK</span>
             </div>
           </div>
         </header>
@@ -261,15 +261,15 @@ export default function MarketingAutomationEnginePage() {
             {activeCampaigns.map((camp) => (
               <Card key={camp.id} className="rounded-lg bg-white overflow-hidden group">
                 <div className="flex flex-col lg:flex-row">
-                  <div className="lg:w-80 bg-slate-900 p-10 text-white shrink-0 flex flex-col justify-between relative overflow-hidden">
+                  <div className="lg:w-80 bg-foreground p-10 text-white shrink-0 flex flex-col justify-between relative overflow-hidden">
                     <BrainCircuit className="absolute -right-10 -top-10 h-48 w-48 opacity-10 pointer-events-none" />
                     <div className="relative z-10">
                       <Badge className="bg-accent text-white border-none h-5 px-2 text-[8px] font-black uppercase tracking-widest mb-4">Auto-Pilot Active</Badge>
                       <h3 className="text-2xl font-bold leading-tight">{camp.title}</h3>
-                      <p className="text-slate-400 text-xs mt-2 uppercase font-bold tracking-tighter">Ciclo: Día {camp.currentDay}</p>
+                      <p className="text-muted-foreground text-xs mt-2 uppercase font-bold tracking-tighter">Ciclo: Día {camp.currentDay}</p>
                     </div>
                     <div className="pt-10 relative z-10">
-                      <div className="flex justify-between items-center text-[10px] font-bold uppercase text-slate-500 mb-2">
+                      <div className="flex justify-between items-center text-[10px] font-bold uppercase text-muted-foreground mb-2">
                         <span>Progreso Plan</span>
                         <span>{camp.progress}%</span>
                       </div>
@@ -279,34 +279,34 @@ export default function MarketingAutomationEnginePage() {
 
                   <div className="flex-1 p-10 space-y-10">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-emerald-500" /> Despliegues para hoy
+                      <h4 className="text-sm font-black uppercase text-muted-foreground tracking-[0.2em] flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-success" /> Despliegues para hoy
                       </h4>
                     </div>
 
                     <div className="grid gap-4">
                       {camp.todayActions.length === 0 ? (
-                        <div className="p-10 bg-slate-50 rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center gap-3">
-                          <Clock className="h-8 w-8 text-slate-300" />
-                          <p className="font-bold text-slate-500">Sin lanzamientos previstos para hoy</p>
+                        <div className="p-10 bg-muted rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center gap-3">
+                          <Clock className="h-8 w-8 text-border" />
+                          <p className="font-bold text-muted-foreground">Sin lanzamientos previstos para hoy</p>
                         </div>
                       ) : camp.todayActions.map((action: any, i: number) => (
-                        <div key={i} className="bg-emerald-50/50 border-2 border-emerald-100 p-6 rounded-lg flex flex-col md:flex-row justify-between items-center gap-6 group/item hover:bg-emerald-50 transition-all">
+                        <div key={i} className="bg-success/10/50 border-2 border-success/15 p-6 rounded-lg flex flex-col md:flex-row justify-between items-center gap-6 group/item hover:bg-success/10 transition-all">
                           <div className="flex items-center gap-6">
-                            <div className="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg">
+                            <div className="w-14 h-14 rounded-2xl bg-success text-white flex items-center justify-center shadow-lg">
                               <Zap className="h-7 w-7" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <Badge className="bg-emerald-600 text-white border-none text-[8px] font-black uppercase h-5">{action.phase}</Badge>
-                                <span className="text-xs font-black text-emerald-700">Variante {action.variantIndex + 1}</span>
+                                <Badge className="bg-success text-white border-none text-[8px] font-black uppercase h-5">{action.phase}</Badge>
+                                <span className="text-xs font-black text-success">Variante {action.variantIndex + 1}</span>
                               </div>
-                              <p className="font-bold text-lg text-slate-900 leading-tight">{action.action}</p>
+                              <p className="font-bold text-lg text-foreground leading-tight">{action.action}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 bg-white/60 p-2 rounded-2xl border border-emerald-200">
+                          <div className="flex items-center gap-4 bg-white/60 p-2 rounded-2xl border border-success/20">
                             {action.channels.map((ch: string) => (
-                              <div key={ch} title={ch} className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-600 border border-emerald-100">
+                              <div key={ch} title={ch} className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-success border border-success/15">
                                 {ch === 'Email' ? <Mail className="h-5 w-5" /> : ch === 'Social' ? <Instagram className="h-5 w-5" /> : <Megaphone className="h-5 w-5" />}
                               </div>
                             ))}
@@ -317,9 +317,9 @@ export default function MarketingAutomationEnginePage() {
 
                     {/* Execution Logs / Provider Feedback History */}
                     {camp.executionLogs && camp.executionLogs.length > 0 && (
-                      <div className="pt-8 border-t border-slate-100 space-y-4">
-                        <h5 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.25em] flex items-center gap-2">
-                          <Database className="h-3.5 w-3.5 text-slate-400" /> Historial de Emisiones y Feedback
+                      <div className="pt-8 border-t border-muted space-y-4">
+                        <h5 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.25em] flex items-center gap-2">
+                          <Database className="h-3.5 w-3.5 text-muted-foreground" /> Historial de Emisiones y Feedback
                         </h5>
                         <div className="max-h-[280px] overflow-y-auto pr-2 space-y-3 scrollbar-thin">
                           {[...camp.executionLogs].reverse().map((log: any, logIdx: number) => {
@@ -333,16 +333,16 @@ export default function MarketingAutomationEnginePage() {
                             return (
                               <div key={logIdx} className={cn(
                                 "p-4 rounded-2xl border text-xs transition-all relative overflow-hidden",
-                                isSuccess ? "bg-slate-50/50 border-slate-100" : "bg-rose-50/30 border-rose-100"
+                                isSuccess ? "bg-muted/50 border-muted" : "bg-danger/10/30 border-danger/15"
                               )}>
                                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                                   <div className="flex items-center gap-2">
                                     <Badge className={cn("text-[7px] font-black uppercase tracking-wider h-4 border-none",
-                                      isSuccess ? "bg-emerald-500/10 text-emerald-700" : "bg-rose-500/10 text-rose-700"
+                                      isSuccess ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
                                     )}>
                                       {isSuccess ? 'Éxito' : 'Error'}
                                     </Badge>
-                                    <Badge className="text-[7px] font-black uppercase bg-slate-100 text-slate-600 border-none h-4">
+                                    <Badge className="text-[7px] font-black uppercase bg-muted text-muted-foreground border-none h-4">
                                       Día {log.day}
                                     </Badge>
                                     {log.platform && (
@@ -351,17 +351,17 @@ export default function MarketingAutomationEnginePage() {
                                       </Badge>
                                     )}
                                     <Badge className={cn("text-[7px] font-black uppercase border-none h-4",
-                                      isSandbox ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+                                      isSandbox ? "bg-warn/10 text-warn" : "bg-success/10 text-success"
                                     )}>
                                       {isSandbox ? 'Sandbox' : 'Real'}
                                     </Badge>
                                   </div>
                                   {formattedTime && (
-                                    <span className="text-[9px] font-black text-slate-400">{formattedTime} hs</span>
+                                    <span className="text-[9px] font-black text-muted-foreground">{formattedTime} hs</span>
                                   )}
                                 </div>
-                                <p className="font-bold text-slate-800 leading-snug">{log.action}</p>
-                                <p className="mt-2 text-[10px] text-slate-500 leading-relaxed font-medium bg-white p-2.5 rounded-lg border border-slate-100/50">
+                                <p className="font-bold text-foreground leading-snug">{log.action}</p>
+                                <p className="mt-2 text-[10px] text-muted-foreground leading-relaxed font-medium bg-white p-2.5 rounded-lg border border-muted/50">
                                   {log.feedback}
                                 </p>
                               </div>
@@ -376,7 +376,7 @@ export default function MarketingAutomationEnginePage() {
                         <Button
                           onClick={() => handleManualDispatch(camp)}
                           disabled={executing === camp.id}
-                          className="h-14 px-10 rounded-2xl font-bold text-lg bg-slate-900 gap-3"
+                          className="h-14 px-10 rounded-2xl font-bold text-lg bg-foreground gap-3"
                         >
                           {executing === camp.id ? <Loader2 className="animate-spin h-5 w-5" /> : <Play className="h-5 w-5 fill-current" />}
                           Disparar Automatización

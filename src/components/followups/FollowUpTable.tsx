@@ -97,7 +97,7 @@ export function FollowUpTable({
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-bold text-sm text-foreground line-clamp-1">{f.title}</p>
-                        {f.planGuideUrl && <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Guía disponible" />}
+                        {f.planGuideUrl && <div className="w-2 h-2 rounded-full bg-success animate-pulse" title="Guía disponible" />}
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <UserCircle className="h-3 w-3 text-muted-foreground" />
@@ -115,8 +115,8 @@ export function FollowUpTable({
                 <TableCell className="text-center">
                   <Badge className={cn(
                     "text-[9px] uppercase tracking-widest px-2 h-5 border-none",
-                    f.status === 'active' ? "bg-emerald-50 text-emerald-700" : 
-                    f.status === 'suspended' ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"
+                    f.status === 'active' ? "bg-success/10 text-success" : 
+                    f.status === 'suspended' ? "bg-danger/10 text-danger" : "bg-muted text-muted-foreground"
                   )}>
                     {f.status === 'active' ? 'En Curso' : f.status === 'suspended' ? 'Suspendido' : 'Finalizado'}
                   </Badge>
@@ -144,9 +144,9 @@ export function FollowUpTable({
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onToggleStatus(f)} className="gap-2 py-2 cursor-pointer">
                             {f.status === 'suspended' ? (
-                              <><PlayCircle className="h-3.5 w-3.5 text-emerald-600" /> Habilitar Seguimiento</>
+                              <><PlayCircle className="h-3.5 w-3.5 text-success" /> Habilitar Seguimiento</>
                             ) : (
-                              <><PauseCircle className="h-3.5 w-3.5 text-amber-600" /> Suspender Seguimiento</>
+                              <><PauseCircle className="h-3.5 w-3.5 text-warn" /> Suspender Seguimiento</>
                             )}
                           </DropdownMenuItem>
                           {f.planGuideUrl && (
@@ -191,8 +191,8 @@ export function FollowUpTable({
               </div>
               <Badge className={cn(
                 "text-[8px] uppercase tracking-widest px-2 h-5 border-none",
-                f.status === 'active' ? "bg-emerald-50 text-emerald-700" : 
-                f.status === 'suspended' ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"
+                f.status === 'active' ? "bg-success/10 text-success" : 
+                f.status === 'suspended' ? "bg-danger/10 text-danger" : "bg-muted text-muted-foreground"
               )}>
                 {f.status === 'active' ? 'En Curso' : f.status === 'suspended' ? 'Suspendido' : 'Finalizado'}
               </Badge>
@@ -232,9 +232,9 @@ export function FollowUpTable({
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onToggleStatus(f)} className="gap-3 py-3 rounded-lg">
                       {f.status === 'suspended' ? (
-                        <><PlayCircle className="h-4 w-4 text-emerald-600" /> Habilitar</>
+                        <><PlayCircle className="h-4 w-4 text-success" /> Habilitar</>
                       ) : (
-                        <><PauseCircle className="h-4 w-4 text-amber-600" /> Suspender</>
+                        <><PauseCircle className="h-4 w-4 text-warn" /> Suspender</>
                       )}
                     </DropdownMenuItem>
                     {f.planGuideUrl && (

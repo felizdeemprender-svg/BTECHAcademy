@@ -333,7 +333,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* 2. Lessons Content & Resources or Quiz */}
-            <div className="bg-white rounded-lg p-6 md:p-10 border border-slate-100">
+            <div className="bg-white rounded-lg p-6 md:p-10 border border-muted">
                {showQuiz ? (
                  <QuizWizard 
                     questions={currentQuestions}

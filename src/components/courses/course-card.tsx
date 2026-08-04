@@ -82,8 +82,8 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
         </div>
         <div className="absolute top-4 right-4">
           <Badge className={
-            course.price === undefined ? "bg-slate-500 text-white shadow-lg" :
-            course.price === 0 ? "bg-green-500 text-white" : 
+            course.price === undefined ? "bg-muted-foreground text-white shadow-lg" :
+            course.price === 0 ? "bg-success text-white" : 
             "bg-blue-500 text-white shadow-lg"
           }>
             {course.price === undefined ? 'Precio a consultar' : course.price === 0 ? 'Gratis' : `$${course.price}`}
@@ -98,7 +98,7 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
             {course.duration}h
           </span>
           <span className="flex items-center gap-1">
-            <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" /> 
+            <Star className="h-3.5 w-3.5 text-warn fill-warn" /> 
             {course.rating}
           </span>
           <span className="flex items-center gap-1">
@@ -139,13 +139,13 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
                   Perfil
                 </Link>
               ) : (
-                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-border uppercase tracking-wider">
                   Sin Perfil
                 </span>
               )}
             </div>
             {course.tutor.subscription?.status === 'active' && (
-              <Badge className="text-[9px] bg-emerald-50 text-emerald-600 border-emerald-100 font-bold">
+              <Badge className="text-[9px] bg-success/10 text-success border-success/15 font-bold">
                 Verificado
               </Badge>
             )}

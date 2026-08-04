@@ -88,42 +88,42 @@ export default function AiPricingAdminPage() {
 
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="group transition-all">
-            <CardHeader className="bg-slate-50 border-b pb-6 relative">
-              <div className="absolute top-4 right-4 p-2 bg-indigo-100 rounded-xl text-indigo-600">
+            <CardHeader className="bg-muted border-b pb-6 relative">
+              <div className="absolute top-4 right-4 p-2 bg-primary/15 rounded-xl text-primary">
                 <BrainCircuit className="w-6 h-6" />
               </div>
-              <CardTitle className="text-xl font-black text-slate-900">Gemini (Texto)</CardTitle>
-              <CardDescription className="text-slate-500 font-medium">Costo por 1 Millón de tokens</CardDescription>
+              <CardTitle className="text-xl font-black text-foreground">Gemini (Texto)</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium">Costo por 1 Millón de tokens</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Costo Base (USD)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
                   <Input 
                     type="number" 
                     step="0.01"
                     value={config.geminiPricePerMillionTokens} 
                     onChange={e => handleNumChange('geminiPricePerMillionTokens', e.target.value)} 
-                    className="font-bold border-slate-100 focus:border-indigo-500"
+                    className="font-bold border-muted focus:border-primary"
                    size="lg" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Margen (%)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
                   <div className="relative">
                     <Input 
                       type="number" 
                       value={config.geminiMarkupPercentage} 
                       onChange={e => handleNumChange('geminiMarkupPercentage', e.target.value)} 
-                      className="pl-8 font-bold border-slate-100 focus:border-indigo-500"
+                      className="pl-8 font-bold border-muted focus:border-primary"
                      size="lg" />
-                    <span className="absolute left-3 top-3 text-slate-400 font-black">%</span>
+                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
                   </div>
                 </div>
               </div>
               
-              <div className="p-5 rounded-2xl bg-indigo-50 border border-indigo-100 flex justify-between items-center">
-                <span className="text-xs font-black text-indigo-900 uppercase">Precio de Venta</span>
-                <span className="text-2xl font-black text-indigo-600">
+              <div className="p-5 rounded-2xl bg-primary/10 border border-primary/15 flex justify-between items-center">
+                <span className="text-xs font-black text-foreground uppercase">Precio de Venta</span>
+                <span className="text-2xl font-black text-primary">
                   ${(config.geminiPricePerMillionTokens * (1 + config.geminiMarkupPercentage / 100)).toFixed(4)}
                 </span>
               </div>
@@ -131,42 +131,42 @@ export default function AiPricingAdminPage() {
           </Card>
 
           <Card className="group transition-all">
-            <CardHeader className="bg-slate-50 border-b pb-6 relative">
-              <div className="absolute top-4 right-4 p-2 bg-amber-100 rounded-xl text-amber-600">
+            <CardHeader className="bg-muted border-b pb-6 relative">
+              <div className="absolute top-4 right-4 p-2 bg-warn/15 rounded-xl text-warn">
                 <Mic className="w-6 h-6" />
               </div>
-              <CardTitle className="text-xl font-black text-slate-900">Voces (TTS)</CardTitle>
-              <CardDescription className="text-slate-500 font-medium">Costo por Millón de Caracteres</CardDescription>
+              <CardTitle className="text-xl font-black text-foreground">Voces (TTS)</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium">Costo por Millón de Caracteres</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Costo Base (USD)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
                   <Input 
                     type="number" 
                     step="0.1"
                     value={config.ttsPricePerMillionChars} 
                     onChange={e => handleNumChange('ttsPricePerMillionChars', e.target.value)} 
-                    className="font-bold border-slate-100 focus:border-amber-500"
+                    className="font-bold border-muted focus:border-warn"
                    size="lg" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Margen (%)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
                   <div className="relative">
                     <Input 
                       type="number" 
                       value={config.ttsMarkupPercentage} 
                       onChange={e => handleNumChange('ttsMarkupPercentage', e.target.value)} 
-                      className="pl-8 font-bold border-slate-100 focus:border-amber-500"
+                      className="pl-8 font-bold border-muted focus:border-warn"
                      size="lg" />
-                    <span className="absolute left-3 top-3 text-slate-400 font-black">%</span>
+                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
                   </div>
                 </div>
               </div>
               
-              <div className="p-5 rounded-2xl bg-amber-50 border border-amber-100 flex justify-between items-center">
-                <span className="text-xs font-black text-amber-900 uppercase">Precio de Venta</span>
-                <span className="text-2xl font-black text-amber-600">
+              <div className="p-5 rounded-2xl bg-warn/10 border border-warn/15 flex justify-between items-center">
+                <span className="text-xs font-black text-warn uppercase">Precio de Venta</span>
+                <span className="text-2xl font-black text-warn">
                   ${(config.ttsPricePerMillionChars * (1 + config.ttsMarkupPercentage / 100)).toFixed(2)}
                 </span>
               </div>
@@ -176,42 +176,42 @@ export default function AiPricingAdminPage() {
 
         <div className="grid md:grid-cols-2 gap-6 mt-6">
           <Card className="group transition-all">
-            <CardHeader className="bg-slate-50 border-b pb-6 relative">
-              <div className="absolute top-4 right-4 p-2 bg-rose-100 rounded-xl text-rose-600">
+            <CardHeader className="bg-muted border-b pb-6 relative">
+              <div className="absolute top-4 right-4 p-2 bg-danger/15 rounded-xl text-danger">
                 <ImageIcon className="w-6 h-6" />
               </div>
-              <CardTitle className="text-xl font-black text-slate-900">Imágenes (SDXL)</CardTitle>
-              <CardDescription className="text-slate-500 font-medium">Costo por cada 100 imágenes</CardDescription>
+              <CardTitle className="text-xl font-black text-foreground">Imágenes (SDXL)</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium">Costo por cada 100 imágenes</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Costo Base (USD)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
                   <Input 
                     type="number" 
                     step="0.1"
                     value={config.imagePricePerHundred} 
                     onChange={e => handleNumChange('imagePricePerHundred', e.target.value)} 
-                    className="font-bold border-slate-100 focus:border-rose-500"
+                    className="font-bold border-muted focus:border-danger"
                    size="lg" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Margen (%)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
                   <div className="relative">
                     <Input 
                       type="number" 
                       value={config.imageMarkupPercentage} 
                       onChange={e => handleNumChange('imageMarkupPercentage', e.target.value)} 
-                      className="pl-8 font-bold border-slate-100 focus:border-rose-500"
+                      className="pl-8 font-bold border-muted focus:border-danger"
                      size="lg" />
-                    <span className="absolute left-3 top-3 text-slate-400 font-black">%</span>
+                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
                   </div>
                 </div>
               </div>
               
-              <div className="p-5 rounded-2xl bg-rose-50 border border-rose-100 flex justify-between items-center">
-                <span className="text-xs font-black text-rose-900 uppercase">Precio de Venta</span>
-                <span className="text-2xl font-black text-rose-600">
+              <div className="p-5 rounded-2xl bg-danger/10 border border-danger/15 flex justify-between items-center">
+                <span className="text-xs font-black text-danger uppercase">Precio de Venta</span>
+                <span className="text-2xl font-black text-danger">
                   ${(config.imagePricePerHundred * (1 + config.imageMarkupPercentage / 100)).toFixed(2)}
                 </span>
               </div>
@@ -219,35 +219,35 @@ export default function AiPricingAdminPage() {
           </Card>
 
           <Card className="group transition-all">
-            <CardHeader className="bg-slate-50 border-b pb-6 relative">
+            <CardHeader className="bg-muted border-b pb-6 relative">
               <div className="absolute top-4 right-4 p-2 bg-blue-100 rounded-xl text-blue-600">
                 <Film className="w-6 h-6" />
               </div>
-              <CardTitle className="text-xl font-black text-slate-900">Video Rendering</CardTitle>
-              <CardDescription className="text-slate-500 font-medium">Costo por Minuto de Renderizado</CardDescription>
+              <CardTitle className="text-xl font-black text-foreground">Video Rendering</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium">Costo por Minuto de Renderizado</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Costo Base (USD)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
                   <Input 
                     type="number" 
                     step="0.01"
                     value={config.videoPricePerMinute} 
                     onChange={e => handleNumChange('videoPricePerMinute', e.target.value)} 
-                    className="font-bold border-slate-100 focus:border-blue-500"
+                    className="font-bold border-muted focus:border-blue-500"
                    size="lg" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Margen (%)</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
                   <div className="relative">
                     <Input 
                       type="number" 
                       value={config.videoMarkupPercentage} 
                       onChange={e => handleNumChange('videoMarkupPercentage', e.target.value)} 
-                      className="pl-8 font-bold border-slate-100 focus:border-blue-500"
+                      className="pl-8 font-bold border-muted focus:border-blue-500"
                      size="lg" />
-                    <span className="absolute left-3 top-3 text-slate-400 font-black">%</span>
+                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
                   </div>
                 </div>
               </div>
@@ -266,7 +266,7 @@ export default function AiPricingAdminPage() {
           <Button 
             onClick={handleSave} 
             disabled={saving} 
-            className="w-full md:w-auto h-16 rounded-2xl px-12 font-black text-lg bg-slate-900 text-white hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+            className="w-full md:w-auto h-16 rounded-2xl px-12 font-black text-lg bg-foreground text-white hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
           >
             {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
             Guardar Configuración Económica

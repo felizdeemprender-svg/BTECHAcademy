@@ -513,7 +513,7 @@ export default function SettingsPage() {
             <TabsList className="bg-secondary/10 p-1.5 rounded-none border-b h-16 w-full justify-start gap-2 px-10">
               <TabsTrigger value="perfil" className="rounded-xl gap-2 font-bold px-6 h-11"><User className="h-4 w-4" /> Perfil</TabsTrigger>
               {isMentorOrAdmin && (
-                <TabsTrigger value="web" className="rounded-xl gap-2 font-bold px-6 h-11 text-amber-600 bg-amber-50/50 border-amber-100"><Sparkles className="h-4 w-4" /> Web Personal</TabsTrigger>
+                <TabsTrigger value="web" className="rounded-xl gap-2 font-bold px-6 h-11 text-warn bg-warn/10/50 border-warn/15"><Sparkles className="h-4 w-4" /> Web Personal</TabsTrigger>
               )}
               <TabsTrigger value="contacto" className="rounded-xl gap-2 font-bold px-6 h-11"><Globe className="h-4 w-4" /> Contacto</TabsTrigger>
               {isMentorOrAdmin && (
@@ -546,12 +546,12 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center justify-between p-6 bg-secondary/5 rounded-3xl border border-primary/5 shadow-sm">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-2xl bg-success/15 text-success flex items-center justify-center">
                         <ShieldCheck className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="font-black text-slate-800">Visibilidad del Perfil</p>
-                        <p className="text-xs text-slate-400 font-medium">Habilita o deshabilita tu página pública</p>
+                        <p className="font-black text-foreground">Visibilidad del Perfil</p>
+                        <p className="text-xs text-muted-foreground font-medium">Habilita o deshabilita tu página pública</p>
                       </div>
                     </div>
                     <Switch 
@@ -578,23 +578,23 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="pt-6 border-t border-primary/5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-3">Tu Puerta al Mundo</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-3">Tu Puerta al Mundo</p>
                     {formData.username ? (
                       <div className="p-6 bg-white rounded-3xl border border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-2xl bg-success/10 text-success flex items-center justify-center">
                             <Globe className="h-6 w-6" />
                           </div>
                           <div>
-                            <p className="font-black text-slate-800 text-lg">Página Pública</p>
-                            <p className="text-xs text-slate-400 font-medium">Link para compartir con tus alumnos</p>
+                            <p className="font-black text-foreground text-lg">Página Pública</p>
+                            <p className="text-xs text-muted-foreground font-medium">Link para compartir con tus alumnos</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 w-full sm:w-auto">
                           <Input 
                             readOnly 
                             value={tutorProfileUrl || ''} 
-                            className="bg-slate-50 border-slate-100 font-mono text-[10px] min-w-[200px]"
+                            className="bg-muted border-muted font-mono text-[10px] min-w-[200px]"
                            size="lg" />
                           <Button 
                             onClick={() => {
@@ -613,7 +613,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="p-8 bg-amber-50 rounded-3xl border border-amber-100 flex items-center gap-4 text-amber-800">
+                      <div className="p-8 bg-warn/10 rounded-3xl border border-warn/15 flex items-center gap-4 text-warn">
                         <Info className="h-5 w-5" />
                         <p className="text-sm font-medium">Define un <strong>Nombre de Usuario</strong> arriba para habilitar tu página pública.</p>
                       </div>
@@ -624,32 +624,32 @@ export default function SettingsPage() {
 
               <TabsContent value="web" className="m-0 space-y-10">
                 {/* Cabecera de Generación IA */}
-                <div className="relative overflow-hidden p-8 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-700 text-white">
+                <div className="relative overflow-hidden p-8 rounded-lg bg-gradient-to-br from-primary to-primary text-white">
                   <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="space-y-2 text-center md:text-left">
                       <h3 className="text-2xl font-black flex items-center justify-center md:justify-start gap-2">
-                        <Sparkles className="h-6 w-6 text-amber-300" /> Tu Vitrina de Marca Personal
+                        <Sparkles className="h-6 w-6 text-warn/30" /> Tu Vitrina de Marca Personal
                       </h3>
-                      <p className="text-sm text-indigo-100 max-w-md">
+                      <p className="text-sm text-primary/15 max-w-md">
                         Convierte tu biografía en una web premium de autoridad. La IA analizará tu perfil y creará una estructura persuasiva automáticamente.
                       </p>
                     </div>
                     <Button 
                       onClick={handleGenerateWeb}
                       disabled={isGeneratingWeb}
-                      className="h-16 px-10 rounded-2xl bg-white text-indigo-600 hover:bg-indigo-50 font-black text-lg transition-all hover:scale-105 active:scale-95 group"
+                      className="h-16 px-10 rounded-2xl bg-white text-primary hover:bg-primary/10 font-black text-lg transition-all hover:scale-105 active:scale-95 group"
                     >
                       {isGeneratingWeb ? (
                         <Loader2 className="animate-spin mr-2 h-6 w-6" />
                       ) : (
-                        <Zap className="mr-2 h-6 w-6 fill-amber-400 text-amber-400 group-hover:animate-pulse" />
+                        <Zap className="mr-2 h-6 w-6 fill-warn text-warn group-hover:animate-pulse" />
                       )}
                       {formData.websiteConfig.headline ? 'Regenerar con IA' : 'Magia IA: Crear mi Web'}
                     </Button>
                   </div>
                   {/* Decoración visual */}
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
-                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-400/20 rounded-full -ml-10 -mb-10 blur-2xl" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-warn/20 rounded-full -ml-10 -mb-10 blur-2xl" />
                 </div>
 
                 {formData.websiteConfig.headline && (
@@ -661,24 +661,24 @@ export default function SettingsPage() {
                           <Layout className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="font-black text-slate-800 uppercase tracking-tighter">Sección Principal (Hero)</h4>
+                          <h4 className="font-black text-foreground uppercase tracking-tighter">Sección Principal (Hero)</h4>
                           <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Lo primero que verán tus alumnos</p>
                         </div>
                       </div>
-                      <div className="grid gap-4 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                      <div className="grid gap-4 bg-muted/50 p-6 rounded-3xl border border-muted">
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-slate-400 ml-1">Titular de Impacto</Label>
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Titular de Impacto</Label>
                           <Input 
                             value={formData.websiteConfig.headline || ''}
                             onChange={e => setFormData({
                               ...formData, 
                               websiteConfig: { ...formData.websiteConfig, headline: e.target.value }
                             })}
-                            className="bg-white border-none shadow-sm font-bold text-slate-800"
+                            className="bg-white border-none shadow-sm font-bold text-foreground"
                            size="lg" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-slate-400 ml-1">Propuesta de Valor (Bajada)</Label>
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Propuesta de Valor (Bajada)</Label>
                           <Textarea 
                             value={formData.websiteConfig.subheadline || ''}
                             onChange={e => setFormData({
@@ -694,18 +694,18 @@ export default function SettingsPage() {
                     {/* Pillars Edit */}
                     <div className="space-y-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                        <div className="w-10 h-10 rounded-xl bg-warn/10 flex items-center justify-center text-warn">
                           <Layers className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="font-black text-slate-800 uppercase tracking-tighter">Tus 3 Pilares Metodológicos</h4>
+                          <h4 className="font-black text-foreground uppercase tracking-tighter">Tus 3 Pilares Metodológicos</h4>
                           <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Tu propuesta diferencial de enseñanza</p>
                         </div>
                       </div>
                       <div className="grid md:grid-cols-3 gap-6">
                         {formData.websiteConfig.pilares.map((pilar, idx) => (
-                          <div key={idx} className="bg-white p-6 rounded-lg border border-slate-100 shadow-sm space-y-4">
-                            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-xs">
+                          <div key={idx} className="bg-white p-6 rounded-lg border border-muted shadow-sm space-y-4">
+                            <div className="w-8 h-8 rounded-full bg-foreground text-white flex items-center justify-center font-black text-xs">
                               {idx + 1}
                             </div>
                             <div className="space-y-2">
@@ -716,7 +716,7 @@ export default function SettingsPage() {
                                   newPilares[idx] = { ...newPilares[idx], titulo: e.target.value };
                                   setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
                                 }}
-                                className="font-bold border-none bg-slate-50 rounded-xl h-10"
+                                className="font-bold border-none bg-muted rounded-xl h-10"
                                 placeholder="Título del Pilar"
                               />
                               <Textarea 
@@ -726,7 +726,7 @@ export default function SettingsPage() {
                                   newPilares[idx] = { ...newPilares[idx], descripcion: e.target.value };
                                   setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
                                 }}
-                                className="text-xs border-none bg-slate-50 rounded-xl min-h-[100px]"
+                                className="text-xs border-none bg-muted rounded-xl min-h-[100px]"
                                 placeholder="Descripción corta..."
                               />
                             </div>
@@ -738,17 +738,17 @@ export default function SettingsPage() {
                     {/* Authority Badges */}
                     <div className="space-y-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                        <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success">
                           <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="font-black text-slate-800 uppercase tracking-tighter">Medallas de Autoridad</h4>
+                          <h4 className="font-black text-foreground uppercase tracking-tighter">Medallas de Autoridad</h4>
                           <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Lo que garantiza tu excelencia</p>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between gap-4 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                      <div className="flex items-center justify-between gap-4 p-6 bg-muted rounded-3xl border border-muted">
                         <div>
-                          <h4 className="font-bold text-slate-800">Mostrar Estadísticas</h4>
+                          <h4 className="font-bold text-foreground">Mostrar Estadísticas</h4>
                           <p className="text-xs text-muted-foreground">Si eres un tutor nuevo o prefieres un perfil exclusivo, puedes ocultar los números de alumnos y horas.</p>
                         </div>
                         <Button 
@@ -763,13 +763,13 @@ export default function SettingsPage() {
                         </Button>
                       </div>
 
-                      <div className="grid gap-6 p-6 bg-emerald-50/30 rounded-3xl border border-emerald-100">
+                      <div className="grid gap-6 p-6 bg-success/10/30 rounded-3xl border border-success/15">
                         {formData.websiteConfig.badges.map((badge: any, idx) => (
-                          <div key={idx} className="relative group bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm space-y-3">
+                          <div key={idx} className="relative group bg-white p-4 rounded-2xl border border-success/15 shadow-sm space-y-3">
                             <div className="flex gap-4">
                               <div className="flex-1 space-y-3">
                                 <div className="space-y-1">
-                                  <Label className="text-[9px] font-black uppercase text-slate-400">Título de la Medalla</Label>
+                                  <Label className="text-[9px] font-black uppercase text-muted-foreground">Título de la Medalla</Label>
                                   <Input 
                                     value={badge.label || ''}
                                     onChange={e => {
@@ -777,11 +777,11 @@ export default function SettingsPage() {
                                       newBadges[idx] = { ...newBadges[idx], label: e.target.value };
                                       setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, badges: newBadges } });
                                     }}
-                                    className="h-10 bg-slate-50 border-none rounded-xl font-bold text-emerald-800"
+                                    className="h-10 bg-muted border-none rounded-xl font-bold text-success"
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-[9px] font-black uppercase text-slate-400">Argumento de Respaldo</Label>
+                                  <Label className="text-[9px] font-black uppercase text-muted-foreground">Argumento de Respaldo</Label>
                                   <Textarea 
                                     value={badge.description || ''}
                                     onChange={e => {
@@ -789,7 +789,7 @@ export default function SettingsPage() {
                                       newBadges[idx] = { ...newBadges[idx], description: e.target.value };
                                       setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, badges: newBadges } });
                                     }}
-                                    className="text-xs bg-slate-50 border-none rounded-xl min-h-[60px]"
+                                    className="text-xs bg-muted border-none rounded-xl min-h-[60px]"
                                     placeholder="Explica por qué esto te da autoridad..."
                                   />
                                 </div>
@@ -799,7 +799,7 @@ export default function SettingsPage() {
                                   const newBadges = formData.websiteConfig.badges.filter((_, i) => i !== idx);
                                   setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, badges: newBadges } });
                                 }}
-                                className="h-8 w-8 bg-slate-100 text-slate-400 rounded-lg hover:bg-red-100 hover:text-red-500 transition-colors flex items-center justify-center"
+                                className="h-8 w-8 bg-muted text-muted-foreground rounded-lg hover:bg-danger/15 hover:text-danger transition-colors flex items-center justify-center"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -809,7 +809,7 @@ export default function SettingsPage() {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          className="rounded-full border-2 border-dashed border-emerald-200 text-emerald-600 font-bold hover:bg-emerald-100 h-12"
+                          className="rounded-full border-2 border-dashed border-success/20 text-success font-bold hover:bg-success/15 h-12"
                           onClick={() => {
                             setFormData({ 
                               ...formData, 
@@ -829,12 +829,12 @@ export default function SettingsPage() {
 
                 {!formData.websiteConfig.headline && (
                   <div className="py-20 text-center space-y-6">
-                    <div className="w-24 h-24 rounded-lg bg-slate-100 flex items-center justify-center mx-auto text-slate-300">
+                    <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center mx-auto text-border">
                       <LayoutDashboard className="h-12 w-12" />
                     </div>
                     <div className="space-y-2">
-                      <h4 className="text-xl font-bold text-slate-400">Tu web personal está en blanco</h4>
-                      <p className="text-sm text-slate-400 max-w-xs mx-auto">
+                      <h4 className="text-xl font-bold text-muted-foreground">Tu web personal está en blanco</h4>
+                      <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                         Usa el botón de Magia IA de arriba para generar tu propuesta de marca personal basada en tu biografía actual.
                       </p>
                     </div>
@@ -911,7 +911,7 @@ export default function SettingsPage() {
                         </Button>
                         <input type="file" ref={brandFileInputRef} className="hidden" accept=".json,application/json" onChange={handleBrandFile} />
                       </div>
-                      <p className="text-xs text-slate-500 -mt-3">
+                      <p className="text-xs text-muted-foreground -mt-3">
                         Tus brands son privados y solo se usan en tu página personal. Formato DTCG/W3C o el formato del sistema.
                       </p>
                       {formData.myBrands.length > 0 ? (
@@ -923,7 +923,7 @@ export default function SettingsPage() {
                                 key={brand.name}
                                 className={cn(
                                   "border-2 rounded-xl p-4 transition-all",
-                                  isActive ? "border-emerald-400 bg-emerald-50/60" : "border-slate-200 bg-white"
+                                  isActive ? "border-success bg-success/10/60" : "border-border bg-white"
                                 )}
                               >
                                 <div className="flex items-start justify-between gap-2">
@@ -940,8 +940,8 @@ export default function SettingsPage() {
                                       className={cn(
                                         "text-[10px] font-black uppercase tracking-widest rounded-full px-2.5 py-1 transition-colors",
                                         isActive
-                                          ? "bg-emerald-500 text-white cursor-default"
-                                          : "bg-slate-100 text-slate-500 hover:bg-emerald-100 hover:text-emerald-700"
+                                          ? "bg-success text-white cursor-default"
+                                          : "bg-muted text-muted-foreground hover:bg-success/15 hover:text-success"
                                       )}
                                     >
                                       {isActive ? 'Activo' : 'Activar'}
@@ -949,16 +949,16 @@ export default function SettingsPage() {
                                     <button
                                       type="button"
                                       onClick={() => handleRemoveBrand(brand.name)}
-                                      className="text-[10px] font-black text-slate-300 hover:text-red-500 transition-colors px-1"
+                                      className="text-[10px] font-black text-border hover:text-danger transition-colors px-1"
                                       title="Eliminar brand"
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
                                     </button>
                                   </div>
                                 </div>
-                                <p className="font-bold text-sm text-slate-800 mt-2">{brand.name}</p>
-                                <p className="text-[10px] text-slate-500 truncate">{brand.description || 'Sin descripción'}</p>
-                                <p className="text-[10px] font-mono text-slate-400 mt-1">
+                                <p className="font-bold text-sm text-foreground mt-2">{brand.name}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{brand.description || 'Sin descripción'}</p>
+                                <p className="text-[10px] font-mono text-muted-foreground mt-1">
                                   {brand.typography?.headingFont} · {brand.palette.primary} · modo {brand.tokens?.themeMode}
                                 </p>
                               </div>
@@ -969,11 +969,11 @@ export default function SettingsPage() {
                         <button
                           type="button"
                           onClick={() => brandFileInputRef.current?.click()}
-                          className="w-full border-2 border-dashed border-slate-300 bg-slate-50 rounded-2xl p-8 text-center hover:border-primary hover:text-primary transition-colors"
+                          className="w-full border-2 border-dashed border-border bg-muted rounded-2xl p-8 text-center hover:border-primary hover:text-primary transition-colors"
                         >
-                          <Upload className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                          <p className="font-bold text-slate-500">No tenés brands cargados</p>
-                          <p className="text-xs text-slate-400 mt-1">Cargá un archivo .json (DTCG/W3C) para tu web personal.</p>
+                          <Upload className="h-8 w-8 text-border mx-auto mb-2" />
+                          <p className="font-bold text-muted-foreground">No tenés brands cargados</p>
+                          <p className="text-xs text-muted-foreground mt-1">Cargá un archivo .json (DTCG/W3C) para tu web personal.</p>
                         </button>
                       )}
                     </div>
@@ -983,26 +983,26 @@ export default function SettingsPage() {
                         <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Brand del sistema</Label>
                       </div>
                       {activeOwnBrand ? (
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                           Tu brand activo <span className="font-bold">{formData.activeBrandName || activeOwnBrand.name}</span> tiene prioridad sobre el del sistema.
                         </p>
                       ) : (
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                           Sin brands propios, tu web usa el brand activo del sistema ({systemBrand?.name || 'Classic'}). No se pueden elegir otros.
                         </p>
                       )}
                       {systemBrand && (
-                        <div className="border-2 border-slate-200 bg-white rounded-xl px-4 py-3 flex items-center gap-4">
+                        <div className="border-2 border-border bg-white rounded-xl px-4 py-3 flex items-center gap-4">
                           <div className="flex -space-x-1.5">
                             <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-30" style={{ backgroundColor: systemBrand.palette.primary }} />
                             <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-20" style={{ backgroundColor: systemBrand.palette.secondary }} />
                             <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-10" style={{ backgroundColor: systemBrand.palette.accent }} />
                           </div>
                           <div className="flex-1">
-                            <p className="font-bold text-xs text-slate-800">{systemBrand.name}</p>
-                            <p className="text-[10px] text-slate-400">Brand activo del sistema · usado por la plataforma</p>
+                            <p className="font-bold text-xs text-foreground">{systemBrand.name}</p>
+                            <p className="text-[10px] text-muted-foreground">Brand activo del sistema · usado por la plataforma</p>
                           </div>
-                          <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                          <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
                             Fijo
                           </Badge>
                         </div>

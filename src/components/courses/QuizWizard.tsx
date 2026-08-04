@@ -56,7 +56,7 @@ export function QuizWizard({
     return (
       <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-emerald-500/10 rounded-3xl flex items-center justify-center mx-auto text-emerald-600">
+          <div className="w-16 h-16 bg-success/10 rounded-3xl flex items-center justify-center mx-auto text-success">
             <HelpCircle className="h-8 w-8" />
           </div>
           <h3 className="text-2xl font-black text-primary">Revisión Final</h3>
@@ -70,8 +70,8 @@ export function QuizWizard({
                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Pregunta {idx + 1}</span>
                 <Button variant="ghost" size="sm" onClick={() => { setShowSummary(false); setCurrentStep(idx); }} className="h-7 text-xs font-bold text-accent">Editar</Button>
               </div>
-              <p className="font-bold text-slate-800 text-sm">{q.question}</p>
-              <div className="p-4 bg-secondary/10 rounded-xl italic text-sm text-slate-600 border-l-4 border-emerald-500/30">
+              <p className="font-bold text-foreground text-sm">{q.question}</p>
+              <div className="p-4 bg-secondary/10 rounded-xl italic text-sm text-muted-foreground border-l-4 border-success/30">
                 {userAnswers[idx.toString()] || 'Sin respuesta'}
               </div>
             </div>
@@ -82,7 +82,7 @@ export function QuizWizard({
           <Button 
             onClick={onSubmit} 
             disabled={isEvaluating}
-            className="h-16 rounded-2xl text-lg font-bold bg-emerald-600 hover:bg-emerald-700 w-full"
+            className="h-16 rounded-2xl text-lg font-bold bg-success hover:bg-success w-full"
           >
             {isEvaluating ? <><Loader2 className="animate-spin mr-2" /> Evaluando con IA...</> : <><Send className="mr-2" /> Confirmar y Enviar</>}
           </Button>
@@ -107,13 +107,13 @@ export function QuizWizard({
       </div>
 
       {/* Question Card */}
-      <div className="bg-white rounded-lg p-6 md:p-10 border border-slate-100 space-y-8">
+      <div className="bg-white rounded-lg p-6 md:p-10 border border-muted space-y-8">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/5 rounded-lg border border-primary/10">
             <BrainCircuit className="h-4 w-4 text-primary" />
             <span className="text-[10px] font-bold text-primary uppercase">IA Ready</span>
           </div>
-          <h4 className="text-xl md:text-2xl font-bold text-slate-800 leading-tight">
+          <h4 className="text-xl md:text-2xl font-bold text-foreground leading-tight">
             {currentQuestion.question}
           </h4>
         </div>
@@ -130,9 +130,9 @@ export function QuizWizard({
           />
         </div>
 
-        <div className="flex items-center gap-4 p-4 bg-amber-50/50 rounded-2xl border border-amber-100">
-          <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
-          <p className="text-[10px] md:text-xs text-amber-800 font-medium leading-relaxed">
+        <div className="flex items-center gap-4 p-4 bg-warn/10/50 rounded-2xl border border-warn/15">
+          <AlertCircle className="h-5 w-5 text-warn shrink-0" />
+          <p className="text-[10px] md:text-xs text-warn font-medium leading-relaxed">
             Tu progreso se guarda automáticamente. Puedes salir y retomar en cualquier momento desde esta misma pregunta.
           </p>
         </div>

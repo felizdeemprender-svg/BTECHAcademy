@@ -18,7 +18,7 @@ function GamutStrip({ color }: { color?: string }) {
   const gamut = color ? expandColorGamut(color) : []
   if (gamut.length === 0) return null
   return (
-    <div className="flex h-6 gap-[2px] overflow-hidden rounded-md border border-slate-200">
+    <div className="flex h-6 gap-[2px] overflow-hidden rounded-md border border-border">
       {gamut.map((c, i) => (
         <div key={i} className="flex-1" style={{ backgroundColor: c }} title={c} />
       ))}
@@ -34,58 +34,58 @@ function BrandDetail({ brand }: { brand: StyleBrand }) {
           <Palette className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <p className="font-bold text-slate-800">{brand.name}</p>
-          {brand.description && <p className="text-xs text-slate-500">{brand.description}</p>}
+          <p className="font-bold text-foreground">{brand.name}</p>
+          {brand.description && <p className="text-xs text-muted-foreground">{brand.description}</p>}
         </div>
       </div>
 
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Paleta: {brand.palette?.name}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Paleta: {brand.palette?.name}</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
-            <p className="text-[10px] font-semibold text-slate-500">Primario</p>
+            <p className="text-[10px] font-semibold text-muted-foreground">Primario</p>
             <GamutStrip color={brand.palette?.primary} />
-            <p className="font-mono text-[10px] text-slate-500">{brand.palette?.primary}</p>
+            <p className="font-mono text-[10px] text-muted-foreground">{brand.palette?.primary}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-semibold text-slate-500">Secundario</p>
+            <p className="text-[10px] font-semibold text-muted-foreground">Secundario</p>
             <GamutStrip color={brand.palette?.secondary} />
-            <p className="font-mono text-[10px] text-slate-500">{brand.palette?.secondary}</p>
+            <p className="font-mono text-[10px] text-muted-foreground">{brand.palette?.secondary}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] font-semibold text-slate-500">Acento</p>
+            <p className="text-[10px] font-semibold text-muted-foreground">Acento</p>
             <GamutStrip color={brand.palette?.accent} />
-            <p className="font-mono text-[10px] text-slate-500">{brand.palette?.accent}</p>
+            <p className="font-mono text-[10px] text-muted-foreground">{brand.palette?.accent}</p>
           </div>
         </div>
       </div>
 
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Tipografía: {brand.typography?.name}</p>
-        <div className="flex items-center gap-2 flex-wrap text-xs text-slate-600">
-          <span className="inline-flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1">
-            <Type className="h-3.5 w-3.5 text-slate-400" />
-            Títulos: <span className="font-bold text-slate-700">{brand.typography?.headingFont}</span>
-            <span className="text-slate-400">({brand.typography?.headingScale}x)</span>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Tipografía: {brand.typography?.name}</p>
+        <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 bg-white border border-border rounded-lg px-2 py-1">
+            <Type className="h-3.5 w-3.5 text-muted-foreground" />
+            Títulos: <span className="font-bold text-foreground">{brand.typography?.headingFont}</span>
+            <span className="text-muted-foreground">({brand.typography?.headingScale}x)</span>
           </span>
-          <span className="inline-flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1">
-            <Type className="h-3.5 w-3.5 text-slate-400" />
-            Cuerpo: <span className="font-bold text-slate-700">{brand.typography?.bodyFont}</span>
-            <span className="text-slate-400">({brand.typography?.bodyScale}x)</span>
+          <span className="inline-flex items-center gap-1 bg-white border border-border rounded-lg px-2 py-1">
+            <Type className="h-3.5 w-3.5 text-muted-foreground" />
+            Cuerpo: <span className="font-bold text-foreground">{brand.typography?.bodyFont}</span>
+            <span className="text-muted-foreground">({brand.typography?.bodyScale}x)</span>
           </span>
         </div>
       </div>
 
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Tokens</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Tokens</p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
           {Object.keys(TOKEN_LABELS).map((key) => {
             const tokenKey = key as keyof StyleBrand['tokens']
             const value = brand.tokens?.[tokenKey]
             return (
               <div key={key} className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-slate-500" title={TOKEN_DESCRIPTIONS[tokenKey]}>{TOKEN_LABELS[tokenKey]}</span>
-                <span className="font-mono text-slate-700 truncate text-right max-w-[180px]" title={value ? String(value) : undefined}>
+                <span className="text-muted-foreground" title={TOKEN_DESCRIPTIONS[tokenKey]}>{TOKEN_LABELS[tokenKey]}</span>
+                <span className="font-mono text-foreground truncate text-right max-w-[180px]" title={value ? String(value) : undefined}>
                   {tokenSummary(value ? String(value) : '')}
                 </span>
               </div>
@@ -127,7 +127,7 @@ export function BrandVisual({
               }}
               className={cn(
                 "p-3 rounded-xl border-2 text-left transition-all relative cursor-pointer",
-                isActive ? "border-primary bg-primary/5 shadow-md" : "border-slate-200 bg-white hover:border-primary/30"
+                isActive ? "border-primary bg-primary/5 shadow-md" : "border-border bg-white hover:border-primary/30"
               )}
             >
               {isActive && (
@@ -142,7 +142,7 @@ export function BrandVisual({
                     e.stopPropagation()
                     onDelete(brand)
                   }}
-                  className="absolute top-2 right-2 z-10 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full p-1"
+                  className="absolute top-2 right-2 z-10 text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-full p-1"
                   title={`Eliminar brand "${brand.name}"`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -150,7 +150,7 @@ export function BrandVisual({
               )}
               <div className="flex items-center gap-2 mb-2 pr-8">
                 <div className="w-5 h-5 rounded-md flex-shrink-0 shadow-sm" style={{ backgroundColor: brand.palette?.primary }} />
-                <span className="font-bold text-sm text-slate-800 truncate">{brand.name}</span>
+                <span className="font-bold text-sm text-foreground truncate">{brand.name}</span>
               </div>
               <GamutStrip color={brand.palette?.primary} />
               <div className="flex gap-[2px] mt-1">
@@ -163,9 +163,9 @@ export function BrandVisual({
       </div>
 
       {active && (
-        <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60">
+        <div className="p-4 rounded-xl border border-border bg-muted/60">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Detalle del brand</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Detalle del brand</p>
             {onSelect && (
               <button
                 type="button"

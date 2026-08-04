@@ -48,10 +48,10 @@ interface CampaignGeneratorProps {
 }
 
 const MISSIONS = [
-  { id: 'venta', label: 'Venta Directa', icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-200', desc: 'Urgencia, ROI y escasez.' },
+  { id: 'venta', label: 'Venta Directa', icon: Zap, color: 'text-warn', bg: 'bg-warn/10', border: 'border-warn/20', desc: 'Urgencia, ROI y escasez.' },
   { id: 'autoridad', label: 'Autoridad / Branding', icon: UserCheck, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200', desc: 'Confianza y liderazgo.' },
-  { id: 'lanzamiento', label: 'Lanzamiento', icon: Rocket, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200', desc: 'Hype y bonos exclusivos.' },
-  { id: 'leads', label: 'Captación Leads', icon: Target, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200', desc: 'Valor y transformación.' },
+  { id: 'lanzamiento', label: 'Lanzamiento', icon: Rocket, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20', desc: 'Hype y bonos exclusivos.' },
+  { id: 'leads', label: 'Captación Leads', icon: Target, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20', desc: 'Valor y transformación.' },
 ] as const;
 
 export function CampaignGenerator({
@@ -172,7 +172,7 @@ export function CampaignGenerator({
             
             {/* SELECTOR DE MISIÓN */}
             <div className="space-y-6">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">
+              <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">
                 Selecciona la Misión de esta Campaña
               </Label>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -187,17 +187,17 @@ export function CampaignGenerator({
                         "flex flex-col items-center text-center p-6 rounded-lg border-2 transition-all duration-300 gap-3 group",
                         isActive 
                           ? `${m.bg} ${m.border} shadow-lg scale-[1.02]` 
-                          : "bg-white border-slate-100 hover:border-slate-300"
+                          : "bg-white border-muted hover:border-border"
                       )}
                     >
                       <div className={cn(
                         "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
-                        isActive ? "bg-white" : "bg-slate-50 group-hover:bg-slate-100"
+                        isActive ? "bg-white" : "bg-muted group-hover:bg-muted"
                       )}>
                         <Icon className={cn("h-6 w-6", m.color)} />
                       </div>
                       <div className="space-y-1">
-                        <p className={cn("font-black text-xs uppercase transition-colors", isActive ? "text-slate-900" : "text-slate-500")}>
+                        <p className={cn("font-black text-xs uppercase transition-colors", isActive ? "text-foreground" : "text-muted-foreground")}>
                           {m.label}
                         </p>
                         <p className="text-[9px] text-muted-foreground font-medium leading-tight">
@@ -210,9 +210,9 @@ export function CampaignGenerator({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 pt-6 border-t border-slate-100">
+            <div className="grid grid-cols-1 gap-6 pt-6 border-t border-muted">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-slate-400">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground">
                   Título del Pack (Interno)
                 </Label>
                 <Input 
@@ -227,7 +227,7 @@ export function CampaignGenerator({
             <div className="space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">
                     Segmentación Estratégica (Buyer Persona)
                   </Label>
                   <Badge variant="outline" className="text-[8px] font-bold text-accent border-accent/20 h-5 px-2">
@@ -244,7 +244,7 @@ export function CampaignGenerator({
 
               <div className="space-y-4">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1 flex items-center gap-2">
-                  <Lightbulb className="h-3 w-3 text-amber-500" /> 
+                  <Lightbulb className="h-3 w-3 text-warn" /> 
                   Perfiles Relacionados al Curso:
                 </p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -253,7 +253,7 @@ export function CampaignGenerator({
                       key={seg.id}
                       type="button"
                       onClick={() => setTargetAudience(seg.label + ': ' + seg.desc)}
-                      className="p-4 rounded-2xl border-2 border-slate-100 bg-white hover:border-primary/20 hover:bg-slate-50 transition-all text-left group"
+                      className="p-4 rounded-2xl border-2 border-muted bg-white hover:border-primary/20 hover:bg-muted transition-all text-left group"
                     >
                       <p className="font-bold text-xs text-primary group-hover:text-accent">
                         {seg.label}
@@ -270,7 +270,7 @@ export function CampaignGenerator({
             <div className="space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">
                     Directivas Estratégicas (Enfoque de Ventas)
                   </Label>
                   <Badge variant="outline" className="text-[8px] font-bold text-primary border-primary/20 h-5 px-2">
@@ -292,7 +292,7 @@ export function CampaignGenerator({
             <div className="space-y-6">
               {generationProgress && (
                 <div className="space-y-2 bg-secondary/10 p-5 rounded-[1.5rem] border border-secondary/20 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                     <span>{generationProgress.label}</span>
                     <span className="text-primary">
                       {Math.round((generationProgress.current / (generationProgress.total || 1)) * 100)}%
@@ -300,14 +300,14 @@ export function CampaignGenerator({
                   </div>
                   <Progress 
                     value={(generationProgress.current / (generationProgress.total || 1)) * 100} 
-                    className="h-2 bg-slate-200" 
+                    className="h-2 bg-border" 
                   />
                 </div>
               )}
               <Button 
                 onClick={onGenerate} 
                 disabled={isGenerating || !targetAudience} 
-                className="w-full h-20 rounded-lg font-bold text-2xl bg-slate-900 group transition-all"
+                className="w-full h-20 rounded-lg font-bold text-2xl bg-foreground group transition-all"
               >
                 {isGenerating ? (
                   <Loader2 className="animate-spin mr-3 h-8 w-8" />

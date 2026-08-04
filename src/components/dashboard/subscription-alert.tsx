@@ -28,7 +28,7 @@ export function SubscriptionAlert({ status, gracePeriodEndsAt, trialEndsAt }: Su
     return (
       <div className={cn(
         'w-full px-4 py-3 flex items-center justify-between gap-4',
-        'bg-amber-500 text-white'
+        'bg-warn text-white'
       )}>
         <div className="flex items-center gap-3 min-w-0">
           <AlertTriangle className="h-5 w-5 shrink-0" />
@@ -54,7 +54,7 @@ export function SubscriptionAlert({ status, gracePeriodEndsAt, trialEndsAt }: Su
 
   if (status === 'suspended') {
     return (
-      <div className="w-full px-4 py-3 flex items-center justify-between gap-4 bg-red-600 text-white">
+      <div className="w-full px-4 py-3 flex items-center justify-between gap-4 bg-danger text-white">
         <div className="flex items-center gap-3 min-w-0">
           <XCircle className="h-5 w-5 shrink-0" />
           <p className="text-sm font-bold truncate">
