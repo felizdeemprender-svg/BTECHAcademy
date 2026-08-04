@@ -9,6 +9,19 @@ const classicBaseTokens: StyleTokens = {
   contentGap: '16px',
   transitionDuration: '150ms',
   themeMode: 'light',
+  extraTokens: {
+    buttonStyle: 'filled',
+    buttonRadius: '6px',
+    ctaShadow: 'none',
+    sectionBgAlternate: '#FAFAFA',
+    containerMaxWidth: '1180px',
+    headingWeight: '600',
+    headingLetterSpacing: '0em',
+    gradientOverlay: 'none',
+    overlayOpacity: '1',
+    navbarHeight: '64px',
+    countdownStyle: 'normal',
+  },
 };
 
 const classicTypography: TypographyVariant[] = [
@@ -16,7 +29,8 @@ const classicTypography: TypographyVariant[] = [
   { name: 'Elegante', headingScale: 1.2, bodyScale: 1, headingFont: 'Playfair Display', bodyFont: 'Lora' },
   { name: 'Audaz', headingScale: 1.15, bodyScale: 1.05, headingFont: 'Montserrat', bodyFont: 'Open Sans' },
   { name: 'Geométrica', headingScale: 1.0, bodyScale: 0.95, headingFont: 'Poppins', bodyFont: 'Roboto' },
-  { name: 'Creativa', headingScale: 1.2, bodyScale: 1.1, headingFont: 'Outfit', bodyFont: 'Nunito' }
+  { name: 'Creativa', headingScale: 1.2, bodyScale: 1.1, headingFont: 'Outfit', bodyFont: 'Nunito' },
+  { name: 'Serif Editorial', headingScale: 1.18, bodyScale: 1.05, headingFont: 'Crimson Text', bodyFont: 'Source Serif 3' }
 ];
 
 const classicColorProposals: ColorPalette[] = [
@@ -24,7 +38,10 @@ const classicColorProposals: ColorPalette[] = [
   { name: 'Corporativo', primary: '#3B2D86', secondary: '#F8FAFC', accent: '#FACC15' },
   { name: 'Bosque', primary: '#065F46', secondary: '#ECFDF5', accent: '#10B981' },
   { name: 'Monocromo', primary: '#18181B', secondary: '#FAFAFA', accent: '#A1A1AA' },
-  { name: 'Púrpura Vibrante', primary: '#7C3AED', secondary: '#F5F3FF', accent: '#D946EF' }
+  { name: 'Púrpura Vibrante', primary: '#7C3AED', secondary: '#F5F3FF', accent: '#D946EF' },
+  { name: 'Arena Suave', primary: '#8B5A2B', secondary: '#FEF8F5', accent: '#EC8721' },
+  { name: 'Cielo Claro', primary: '#0EA5E9', secondary: '#F0F9FF', accent: '#FACC15' },
+  { name: 'Cárdenas', primary: '#7F1D1D', secondary: '#FFF5F5', accent: '#B91C1C' }
 ];
 
 export const classicStyle: LandingStyle = {
@@ -85,6 +102,69 @@ export const classicStyle: LandingStyle = {
       },
       typography: { name: 'Elegante', headingScale: 1.2, bodyScale: 1, headingFont: 'Playfair Display', bodyFont: 'Lora' },
       palette: { name: 'Bosque', primary: '#065F46', secondary: '#ECFDF5', accent: '#10B981' }
+    },
+    {
+      name: 'Creativo',
+      description: 'Vibrante y moderno — para cursos creativos y comunidades jóvenes',
+      tokens: {
+        componentRadius: '12px',
+        componentBorder: 'none',
+        componentShadow: '0 8px 24px rgba(0,0,0,0.06)',
+        componentBg: 'var(--surface)',
+        sectionPadding: '96px',
+        contentGap: '20px',
+        transitionDuration: '250ms',
+        themeMode: 'light',
+        extraTokens: {
+          buttonStyle: 'outline', buttonRadius: '12px', ctaShadow: 'none',
+          sectionBgAlternate: '#F5F3FF', containerMaxWidth: '1180px', headingWeight: '600',
+          headingLetterSpacing: '0em', gradientOverlay: 'none', overlayOpacity: '1', navbarHeight: '64px', countdownStyle: 'normal'
+        },
+      },
+      typography: { name: 'Creativa', headingScale: 1.2, bodyScale: 1.1, headingFont: 'Outfit', bodyFont: 'Nunito' },
+      palette: { name: 'Púrpura Vibrante', primary: '#7C3AED', secondary: '#F5F3FF', accent: '#D946EF' }
+    },
+    {
+      name: 'Académico',
+      description: 'Claro y estructurado — para cursos académicos y certificaciones',
+      tokens: {
+        componentRadius: '6px',
+        componentBorder: '1px solid var(--border)',
+        componentShadow: 'none',
+        componentBg: 'var(--surface)',
+        sectionPadding: '88px',
+        contentGap: '16px',
+        transitionDuration: '180ms',
+        themeMode: 'light',
+        extraTokens: {
+          buttonStyle: 'filled', buttonRadius: '6px', ctaShadow: 'none',
+          sectionBgAlternate: '#F0F4F8', containerMaxWidth: '1180px', headingWeight: '700',
+          headingLetterSpacing: '0em', gradientOverlay: 'none', overlayOpacity: '1', navbarHeight: '64px', countdownStyle: 'normal'
+        },
+      },
+      typography: { name: 'Audaz', headingScale: 1.15, bodyScale: 1.05, headingFont: 'Montserrat', bodyFont: 'Open Sans' },
+      palette: { name: 'Cielo Claro', primary: '#0EA5E9', secondary: '#F0F9FF', accent: '#FACC15' }
+    },
+    {
+      name: 'Minimalista',
+      description: 'Escultural y limpio — editorial premium sin ruido visual',
+      tokens: {
+        componentRadius: '0px',
+        componentBorder: '1px solid var(--border)',
+        componentShadow: 'none',
+        componentBg: 'var(--surface)',
+        sectionPadding: '112px',
+        contentGap: '20px',
+        transitionDuration: '200ms',
+        themeMode: 'light',
+        extraTokens: {
+          buttonStyle: 'ghost', buttonRadius: '0px', ctaShadow: 'none',
+          sectionBgAlternate: '#FFFFFF', containerMaxWidth: '1180px', headingWeight: '700',
+          headingLetterSpacing: '-0.02em', gradientOverlay: 'none', overlayOpacity: '1', navbarHeight: '64px', countdownStyle: 'normal'
+        },
+      },
+      typography: { name: 'Serif Editorial', headingScale: 1.18, bodyScale: 1.05, headingFont: 'Crimson Text', bodyFont: 'Source Serif 3' },
+      palette: { name: 'Monocromo', primary: '#18181B', secondary: '#FAFAFA', accent: '#A1A1AA' }
     }
   ],
   availableSections: [
@@ -113,13 +193,7 @@ export const classicStyle: LandingStyle = {
     testimonials: false,
     footer: true,
   },
-  colorProposals: [
-    { name: 'Océano', primary: '#1E40AF', secondary: '#F1F5F9', accent: '#F59E0B' },
-    { name: 'Corporativo', primary: '#3B2D86', secondary: '#F8FAFC', accent: '#FACC15' },
-    { name: 'Bosque', primary: '#065F46', secondary: '#ECFDF5', accent: '#10B981' },
-    { name: 'Monocromo', primary: '#18181B', secondary: '#FAFAFA', accent: '#A1A1AA' },
-    { name: 'Púrpura Vibrante', primary: '#7C3AED', secondary: '#F5F3FF', accent: '#D946EF' }
-  ],
+  colorProposals: classicColorProposals,
   aiDirectives: 'Tu objetivo es convertir visitantes en compradores. Utiliza copywriting persuasivo y estructurado (fórmulas PAS o AIDA). Dirígete al lector en segunda persona ("tú"). Mantén un tono neutro, profesional y altamente enfocado en los beneficios y resultados tangibles. Evita exageraciones emocionales; prioriza la claridad y la confianza.',
   aiWriterPersona: 'Copywriter Institucional. Tono neutro, claro y profesional. Describe el problema de forma objetiva y presenta el programa como la solución lógica y estructurada. Genera confianza mediante la claridad.'
 };

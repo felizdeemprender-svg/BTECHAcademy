@@ -74,6 +74,7 @@ function V2LandingBuilderContent() {
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
   const [basePrice, setBasePrice] = useState<number>(49900);
+  const [anchorPrice, setAnchorPrice] = useState<number>(0);
   const [priceMercadoPago, setPriceMercadoPago] = useState<number>(49900);
   const [priceTransfer, setPriceTransfer] = useState<number>(49900);
   const [title, setTitle] = useState('');
@@ -96,6 +97,21 @@ function V2LandingBuilderContent() {
 
   const isMercadoPagoActive = !!profile?.profile?.mercadopago?.accessToken || !!profile?.mercadopago?.accessToken;
   const isTransferActive = !!profile?.profile?.bankDetails?.cbu || !!profile?.profile?.bankDetails?.alias || !!profile?.bankDetails?.cbu || !!profile?.bankDetails?.alias;
+
+  const cleanUndefined = (obj: any): any => {
+    if (Array.isArray(obj)) return obj.map(v => v === undefined ? null : cleanUndefined(v));
+    if (obj !== null && typeof obj === 'object') {
+      if (typeof obj.toDate === 'function' || obj._methodName === 'serverTimestamp' || obj.isEqual) {
+        return obj;
+      }
+      return Object.fromEntries(
+        Object.entries(obj)
+          .filter(([_, v]) => v !== undefined)
+          .map(([k, v]) => [k, cleanUndefined(v)])
+      );
+    }
+    return obj;
+  };
 
   // Cargar referidos
   useEffect(() => {
@@ -125,6 +141,18 @@ function V2LandingBuilderContent() {
   const { data: styles } = useCollection<LandingStyle>(stylesQuery);
 
   const selectedStyle = useMemo(() => styles?.find(s => s.id === selectedStyleId), [styles, selectedStyleId]);
+
+  const styleBrands = useMemo(() => selectedStyle?.brands || [], [selectedStyle]);
+
+  const extraPalettes = useMemo(() => {
+    const taken = new Set(styleBrands.map(b => b.palette.name));
+    return (selectedStyle?.colorProposals || []).filter(c => !taken.has(c.name));
+  }, [selectedStyle, styleBrands]);
+
+  const extraTypography = useMemo(() => {
+    const taken = new Set(styleBrands.map(b => b.typography.name));
+    return (selectedStyle?.typography || []).filter(t => !taken.has(t.name));
+  }, [selectedStyle, styleBrands]);
 
   const myLandingsQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
@@ -229,6 +257,7 @@ function V2LandingBuilderContent() {
         landingType: basePrice > 0 && allowedPaymentMethods.length > 0 ? (activeUntil ? 'promocion' : 'general') : 'general',
         title: title || result.marketingName || 'Nueva Landing',
         price: basePrice,
+        oldPrice: anchorPrice > 0 ? anchorPrice : null,
         priceMercadoPago: isMercadoPagoActive ? priceMercadoPago : null,
         priceTransfer: isTransferActive ? priceTransfer : null,
         allowedPaymentMethods,
@@ -244,12 +273,13 @@ function V2LandingBuilderContent() {
       };
 
       // 5. Guardar y redirigir
+      const safePayload = cleanUndefined(payload);
       if (editId) {
-        await updateDoc(doc(db, 'salesPages', editId), payload);
+        await updateDoc(doc(db, 'salesPages', editId), safePayload);
         toast({ title: 'Éxito', description: 'Landing page actualizada correctamente.' });
         router.push(`/mentoria/marketing/landings/v2-edit/${editId}`);
       } else {
-        const docRef = await addDoc(collection(db, 'salesPages'), payload);
+        const docRef = await addDoc(collection(db, 'salesPages'), safePayload);
         toast({ title: 'Éxito', description: 'Landing page creada correctamente.' });
         router.push(`/mentoria/marketing/landings/v2-edit/${docRef.id}`);
       }
@@ -455,6 +485,16 @@ function V2LandingBuilderContent() {
                         if (priceTransfer === basePrice) setPriceTransfer(val);
                       }} 
                       className="bg-accent/5 border-none pl-12 font-black text-xl text-accent" 
+                     size="xl" />
+                  </div>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-accent/40" />
+                    <Input 
+                      type="number" 
+                      value={anchorPrice || ''} 
+                      placeholder="Precio anterior (tachado) — vacío = automático (precio × 2.94)"
+                      onChange={e => setAnchorPrice(e.target.value === '' ? 0 : Number(e.target.value))} 
+                      className="bg-accent/5 border-none pl-12 font-semibold text-slate-500" 
                      size="xl" />
                   </div>
                   <p className="text-[9px] text-muted-foreground font-medium">Este precio se usará para redactar los textos. Abajo puedes desglosar el precio real por método de pago.</p>
@@ -693,58 +733,175 @@ function V2LandingBuilderContent() {
                   <Label className="text-[10px] font-black uppercase text-slate-400">Estética Visual</Label>
                   <p className="text-xs text-muted-foreground">Elige la personalidad visual que se usará para el renderizado.</p>
                 </div>
-                
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Paleta de Colores</label>
-                    <div className="grid grid-cols-5 gap-2">
-                      {selectedStyle?.colorProposals?.map((color: any, idx: number) => {
-                        const isActive = colorPaletteName === color.name || (!colorPaletteName && idx === 0);
-                        return (
-                          <button
-                            key={color.name}
-                            onClick={() => setColorPaletteName(color.name)}
-                            className={cn(
-                              "flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all group",
-                              isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
-                            )}
-                          >
-                            <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-                              <div className="flex-1" style={{ backgroundColor: color.primary }}></div>
-                              <div className="flex-1" style={{ backgroundColor: color.secondary }}></div>
-                              <div className="flex-1" style={{ backgroundColor: color.accent }}></div>
-                            </div>
-                            <span className={cn("text-[9px] font-bold text-center leading-tight line-clamp-2", isActive ? "text-primary" : "text-slate-500")}>
-                              {color.name}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipografías</label>
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
-                      {selectedStyle?.typography?.map((typo: any, idx: number) => {
-                        const isActive = typographyVariantName === typo.name || (!typographyVariantName && idx === 0);
-                        return (
-                          <button
-                            key={typo.name}
-                            onClick={() => setTypographyVariantName(typo.name)}
-                            className={cn(
-                              "flex flex-col items-center justify-center text-center p-3 rounded-xl border-2 transition-all",
-                              isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
-                            )}
-                          >
-                            <span className="font-serif text-lg font-black text-slate-800 leading-none mb-1">Aa</span>
-                            <span className={cn("text-[9px] font-bold leading-tight", isActive ? "text-primary" : "text-slate-500")}>{typo.name}</span>
-                          </button>
-                        );
-                      })}
+                {styleBrands.length > 0 ? (
+                  <>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Packs por Brand</label>
+                      <p className="text-xs text-muted-foreground">Cada brand agrupa su paleta de colores y su tipografía. Al elegirlo se aplica el pack completo (tokens + tipografía + paleta).</p>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        {styleBrands.map((brand: StyleBrand) => {
+                          const isActive = selectedBrand?.name === brand.name;
+                          const paletteIsActive = isActive || (!selectedBrand && colorPaletteName === brand.palette.name);
+                          const typoIsActive = isActive || (!selectedBrand && typographyVariantName === brand.typography.name);
+                          return (
+                            <button
+                              key={brand.name}
+                              type="button"
+                              onClick={() => {
+                                setSelectedBrand(brand);
+                                setColorPaletteName(brand.palette.name);
+                                setTypographyVariantName(brand.typography.name);
+                              }}
+                              className={cn(
+                                "text-left p-4 rounded-2xl border-2 transition-all",
+                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                              )}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+                                    <div className="flex-1" style={{ backgroundColor: brand.palette.primary }}></div>
+                                    <div className="flex-1" style={{ backgroundColor: brand.palette.secondary }}></div>
+                                    <div className="flex-1" style={{ backgroundColor: brand.palette.accent }}></div>
+                                  </div>
+                                  <p className={cn("mt-2 text-[10px] font-bold leading-tight truncate", paletteIsActive ? "text-primary" : "text-slate-500")}>
+                                    Paleta: {brand.palette.name}
+                                  </p>
+                                </div>
+                                <div className="w-20 shrink-0">
+                                  <div className={cn("flex flex-col items-center justify-center text-center p-2 rounded-xl border-2", typoIsActive ? "border-primary bg-primary/5" : "border-slate-100 bg-white")}>
+                                    <span className="text-lg font-black text-slate-800 leading-none mb-1" style={{ fontFamily: brand.typography.headingFont }}>Aa</span>
+                                    <span className={cn("text-[8px] font-bold leading-tight text-center line-clamp-2", typoIsActive ? "text-primary" : "text-slate-500")}>{brand.typography.name}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <p className={cn("mt-2 font-bold text-sm", isActive ? "text-primary" : "text-slate-800")}>{brand.name}</p>
+                              {brand.description && <p className="text-[10px] text-slate-500 mt-0.5">{brand.description}</p>}
+                              <p className="text-[9px] text-slate-400 mt-1.5 font-medium">Tokens: {brand.tokens.themeMode} · {brand.tokens.componentRadius} · Sombra: {brand.tokens.componentShadow}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {(extraPalettes.length > 0 || extraTypography.length > 0) && (
+                      <div className="space-y-4 pt-4 border-t border-slate-100">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Otras opciones</label>
+                        <div className="grid md:grid-cols-2 gap-8">
+                          {extraPalettes.length > 0 && (
+                            <div className="space-y-3">
+                              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Paleta de Colores</label>
+                              <div className="grid grid-cols-4 gap-2">
+                                {extraPalettes.map((color: any) => {
+                                  const isActive = colorPaletteName === color.name;
+                                  return (
+                                    <button
+                                      key={color.name}
+                                      type="button"
+                                      onClick={() => { setColorPaletteName(color.name); setSelectedBrand(null); }}
+                                      className={cn(
+                                        "flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all group",
+                                        isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                                      )}
+                                    >
+                                      <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+                                        <div className="flex-1" style={{ backgroundColor: color.primary }}></div>
+                                        <div className="flex-1" style={{ backgroundColor: color.secondary }}></div>
+                                        <div className="flex-1" style={{ backgroundColor: color.accent }}></div>
+                                      </div>
+                                      <span className={cn("text-[9px] font-bold text-center leading-tight line-clamp-2", isActive ? "text-primary" : "text-slate-500")}>
+                                        {color.name}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {extraTypography.length > 0 && (
+                            <div className="space-y-3">
+                              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipografías</label>
+                              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                                {extraTypography.map((typo: any) => {
+                                  const isActive = typographyVariantName === typo.name;
+                                  return (
+                                    <button
+                                      key={typo.name}
+                                      type="button"
+                                      onClick={() => { setTypographyVariantName(typo.name); setSelectedBrand(null); }}
+                                      className={cn(
+                                        "flex flex-col items-center justify-center text-center p-3 rounded-xl border-2 transition-all",
+                                        isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                                      )}
+                                    >
+                                      <span className="text-lg font-black text-slate-800 leading-none mb-1" style={{ fontFamily: typo.headingFont }}>Aa</span>
+                                      <span className={cn("text-[9px] font-bold leading-tight", isActive ? "text-primary" : "text-slate-500")}>{typo.name}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Paleta de Colores</label>
+                      <div className="grid grid-cols-5 gap-2">
+                        {selectedStyle?.colorProposals?.map((color: any, idx: number) => {
+                          const isActive = colorPaletteName === color.name || (!colorPaletteName && idx === 0);
+                          return (
+                            <button
+                              key={color.name}
+                              type="button"
+                              onClick={() => setColorPaletteName(color.name)}
+                              className={cn(
+                                "flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all group",
+                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                              )}
+                            >
+                              <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+                                <div className="flex-1" style={{ backgroundColor: color.primary }}></div>
+                                <div className="flex-1" style={{ backgroundColor: color.secondary }}></div>
+                                <div className="flex-1" style={{ backgroundColor: color.accent }}></div>
+                              </div>
+                              <span className={cn("text-[9px] font-bold text-center leading-tight line-clamp-2", isActive ? "text-primary" : "text-slate-500")}>
+                                {color.name}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipografías</label>
+                      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+                        {selectedStyle?.typography?.map((typo: any, idx: number) => {
+                          const isActive = typographyVariantName === typo.name || (!typographyVariantName && idx === 0);
+                          return (
+                            <button
+                              key={typo.name}
+                              type="button"
+                              onClick={() => setTypographyVariantName(typo.name)}
+                              className={cn(
+                                "flex flex-col items-center justify-center text-center p-3 rounded-xl border-2 transition-all",
+                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-300"
+                              )}
+                            >
+                              <span className="text-lg font-black text-slate-800 leading-none mb-1" style={{ fontFamily: typo.headingFont }}>Aa</span>
+                              <span className={cn("text-[9px] font-bold leading-tight", isActive ? "text-primary" : "text-slate-500")}>{typo.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* ─── ESTRUCTURA DE LA LANDING ─── */}

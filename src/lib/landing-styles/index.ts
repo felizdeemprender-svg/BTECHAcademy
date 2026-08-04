@@ -3,11 +3,27 @@ export * from './types';
 import { LandingStyle, StyleBrand } from './types';
 import { classicStyle } from './classic';
 import { dharmaStyle } from './dharma';
+import { flashSaleStyle } from './flash-sale';
+import { launchCountdownStyle } from './launch-countdown';
+import { corporateStyle } from './corporate';
+import { techB2bStyle } from './tech-b2b';
+import { executiveDarkStyle } from './executive-dark';
+import { luxurySerifStyle } from './luxury-serif';
+import { editorialStyle } from './editorial';
+import { modernCleanStyle } from './modern-clean';
 
 // Array exportando todos los estilos disponibles
 export const LANDING_STYLES: LandingStyle[] = [
   classicStyle,
-  dharmaStyle
+  dharmaStyle,
+  flashSaleStyle,
+  launchCountdownStyle,
+  corporateStyle,
+  techB2bStyle,
+  executiveDarkStyle,
+  luxurySerifStyle,
+  editorialStyle,
+  modernCleanStyle
 ];
 
 export function getLandingStyle(id: string): LandingStyle | undefined {

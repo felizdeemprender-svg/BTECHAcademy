@@ -40,6 +40,34 @@ export default function V2LandingEditorPage() {
   const [styleData, setStyleData] = useState<any>(null);
   const [courseData, setCourseData] = useState<any>(null);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [activeUntilStr, setActiveUntilStr] = useState('');
+
+  const cleanUndefined = (obj: any): any => {
+    if (Array.isArray(obj)) return obj.map(v => v === undefined ? null : cleanUndefined(v));
+    if (obj !== null && typeof obj === 'object') {
+      if (typeof obj.toDate === 'function' || obj._methodName === 'serverTimestamp' || obj.isEqual || obj instanceof Date) {
+        return obj;
+      }
+      return Object.fromEntries(
+        Object.entries(obj)
+          .filter(([_, v]) => v !== undefined)
+          .map(([k, v]) => [k, cleanUndefined(v)])
+      );
+    }
+    return obj;
+  };
+
+  const formatDateTimeLocal = (d: any): string => {
+    if (!d) return '';
+    const date = d.toDate ? d.toDate() : new Date(d);
+    if (isNaN(date.getTime())) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const updatePageField = (key: string, value: any) => {
+    setLandingData((prev: any) => ({ ...prev, [key]: value }));
+  };
 
   useEffect(() => {
     if (!db || !id) return;
@@ -49,6 +77,7 @@ export default function V2LandingEditorPage() {
         if (snap.exists()) {
           const data = snap.data();
           setLandingData(data);
+          setActiveUntilStr(formatDateTimeLocal(data.activeUntil));
           
           const currentStyleId = data.styleId || 'classic'; // Fallback a classic
           let loadedStyle: any = null;
@@ -109,11 +138,14 @@ export default function V2LandingEditorPage() {
     if (!db || !id || !landingData) return;
     setSaving(true);
     try {
-      await updateDoc(doc(db, 'salesPages', id), {
+      await updateDoc(doc(db, 'salesPages', id), cleanUndefined({
         content: landingData.content,
+        price: landingData.price,
+        oldPrice: landingData.oldPrice,
+        activeUntil: landingData.activeUntil || null,
         isActive: true,
         updatedAt: new Date(),
-      });
+      }));
       toast({ title: 'Éxito', description: 'Cambios guardados correctamente.' });
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Error', description: e.message });
@@ -433,6 +465,44 @@ export default function V2LandingEditorPage() {
                 <div className="max-w-2xl space-y-6">
                   {activeSectionId === 'global_settings' ? (
                     <div className="space-y-8">
+                      {/* PRECIO Y VENCIMIENTO */}
+                      <div className="space-y-4">
+                        <Label className="text-lg font-bold text-slate-800">Precio y Vencimiento</Label>
+                        <p className="text-sm text-muted-foreground">Precio actual, precio ancla (tachado) y cuándo caduca la oferta. El countdown cuenta el tiempo real hasta el vencimiento.</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-slate-600">Precio actual ($)</Label>
+                            <Input
+                              type="number"
+                              value={landingData?.price ?? ''}
+                              onChange={(e) => updatePageField('price', e.target.value === '' ? 0 : Number(e.target.value))}
+                              className="font-bold text-lg"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-slate-600">Precio anterior / ancla (tachado $)</Label>
+                            <Input
+                              type="number"
+                              value={landingData?.oldPrice ?? ''}
+                              onChange={(e) => updatePageField('oldPrice', e.target.value === '' ? null : Number(e.target.value))}
+                              placeholder="Vacío = automático (precio × 2.94)"
+                              className="font-bold text-lg"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-slate-600">Caducidad de la oferta (countdown)</Label>
+                          <Input
+                            type="datetime-local"
+                            value={activeUntilStr}
+                            onChange={(e) => {
+                              setActiveUntilStr(e.target.value);
+                              updatePageField('activeUntil', e.target.value ? new Date(e.target.value) : null);
+                            }}
+                          />
+                        </div>
+                      </div>
+
                       {/* BRANDS */}
                       <div className="space-y-4">
                         <Label className="text-lg font-bold text-slate-800">Brand Visual</Label>
@@ -552,6 +622,35 @@ export default function V2LandingEditorPage() {
                         onChange={(e) => updateActiveSection({ subtitle: e.target.value })}
                         className="min-h-[100px] resize-none"
                       />
+                    </div>
+                  )}
+                  {activeSection.id.startsWith('heroVideo') && (
+                    <div className="space-y-3 pt-4 border-t border-slate-100">
+                      <Label className="font-bold text-slate-700">Oferta Relámpago (Hero)</Label>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">Sello / Badge superior</Label>
+                        <Input
+                          value={activeSection.badge || ''}
+                          onChange={(e) => updateActiveSection({ badge: e.target.value })}
+                          placeholder="Ej: Cupo limitado"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">Micro prueba social (debajo del precio)</Label>
+                        <Input
+                          value={activeSection.micro || ''}
+                          onChange={(e) => updateActiveSection({ micro: e.target.value })}
+                          placeholder="Ej: 4.9/5 — 1.200+ alumnos"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-slate-600">Nota junto al countdown</Label>
+                        <Input
+                          value={activeSection.timerNote || ''}
+                          onChange={(e) => updateActiveSection({ timerNote: e.target.value })}
+                          placeholder="Ej: La oferta caduca en 48 horas"
+                        />
+                      </div>
                     </div>
                   )}
                   {(activeSection.content !== undefined || activeSection.body !== undefined) && (

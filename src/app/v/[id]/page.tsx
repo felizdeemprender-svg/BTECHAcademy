@@ -417,6 +417,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const primaryColor = tokens.primary || page.branding?.primaryColor || '#3B2D86';
   const secondaryColor = tokens.secondary || '#F1F5F9';
   const accentColor = tokens.accent || '#FACC15';
+  // Altura del navbar: proviene del token per-style (navbarHeight en extraTokens del brand).
+  const navbarHeight = (tokens as any)?.styleTokens?.extraTokens?.navbarHeight || '64px';
   const fontHeading = tokens.typography?.headingFont || tokens.fontHeading || 'inherit';
   const fontBody = tokens.typography?.bodyFont || tokens.fontBody || 'inherit';
   const socials = mentorProfile?.profile?.socials || {};
@@ -469,6 +471,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         ['--primary' as any]: primaryColor,
         ['--secondary' as any]: secondaryColor,
         ['--accent' as any]: accentColor,
+        ['--navbar-height' as any]: navbarHeight,
       }}
     >
       {/* Dynamic Font Injection */}
@@ -480,7 +483,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
       {/* Header - Marca Blanca */}
       <nav className={cn("backdrop-blur-md sticky top-0 z-50 border-b font-body", isDark ? 'bg-slate-950/80 border-slate-800' : isGlass ? 'bg-indigo-950/80 border-indigo-800' : 'bg-white/80 border-slate-100')}>
-        <div className="container mx-auto px-6 h-20 flex justify-between items-center">
+        <div className="container mx-auto px-6 h-[var(--navbar-height)] flex justify-between items-center">
           <div className="flex items-center gap-4">
             {page.branding?.logoUrl && (
               <div className="relative w-10 h-10 overflow-hidden shrink-0">
@@ -501,9 +504,10 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       </nav>
 
       {/* Renderizado Condicional: V2 (Atomic) vs V1 (Monolítico) */}
-      {isV2 ? (
-        <AtomicRenderer page={page} onPurchase={handlePurchase} mentorProfile={mentorProfile} />
-      ) : (
+      <div style={{ scrollMarginTop: 'var(--navbar-height)' }}>
+        {isV2 ? (
+          <AtomicRenderer page={page} onPurchase={handlePurchase} mentorProfile={mentorProfile} />
+        ) : (
         <>
           {/* Hero Section */}
           <section className={cn("py-20 lg:py-32 relative overflow-hidden", bgSurface)}>
@@ -795,6 +799,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       </footer>
         </>
       )}
+    </div>
 
       {/* Sticky Bottom CTA */}
       <div className={cn("fixed bottom-0 left-0 right-0 p-4 backdrop-blur-xl border-t z-50 flex items-center justify-between md:justify-center md:gap-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]", isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-white/80 border-slate-200')}>

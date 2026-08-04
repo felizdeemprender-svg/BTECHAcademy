@@ -799,12 +799,12 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         </Tabs>
 
         <Dialog open={isModuleModalOpen} onOpenChange={(open) => { setIsModuleModalOpen(open); if(!open) clearUILocks(); }}>
-          <DialogContent className="mw-5xl h-[90vh] flex flex-col">
+          <DialogContent className="max-w-5xl w-[90vw] max-h-[calc(100vh-2rem)] flex flex-col">
             <DialogHeader className="bg-primary/5 px-8 pt-8">
               <DialogTitle className="text-2xl font-bold">{currentModule?.id ? 'Diseñador de Clase' : 'Nuevo Tema Académico'}</DialogTitle>
               <DialogDescription>Define el contenido y los criterios de evaluación del módulo.</DialogDescription>
             </DialogHeader>
-            <ScrollArea className="flex-1 px-8">
+            <ScrollArea className="flex-1 px-8 overflow-y-auto">
               {currentModule && (
                 <div className="space-y-10 pb-8">
                   <div className="space-y-4">
@@ -998,7 +998,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
 
         {/* AI Modal */}
         <Dialog open={isAiModalOpen} onOpenChange={(open) => { setIsAiModalOpen(open); if(!open) { setAiFlowStep(1); setExtractedContent(''); clearUILocks(); } }}>
-          <DialogContent className="mw-xl">
+            <DialogContent className="max-w-xl w-[90vw] max-h-[calc(100vh-2rem)] flex flex-col">
             <div className="relative px-8 pt-8">
               <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mb-4">
                 <BrainCircuit className="text-primary h-6 w-6" />

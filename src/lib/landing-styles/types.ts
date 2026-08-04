@@ -39,6 +39,23 @@ export interface ColorPalette {
   accent: string;
 }
 
+export interface ExtraTokens {
+  buttonStyle?: 'filled' | 'outline' | 'pill' | 'ghost';
+  buttonRadius?: string;
+  ctaShadow?: string;
+  sectionBgAlternate?: string;
+  containerMaxWidth?: string;
+  headingWeight?: string;
+  headingLetterSpacing?: string;
+  gradientOverlay?: string;
+  overlayOpacity?: string;
+  navbarHeight?: string;
+  countdownStyle?: string;
+  headingFont?: string;
+  bodyFont?: string;
+  monoFont?: string;
+}
+
 export interface StyleTokens {
   componentRadius: string;
   componentBorder: string;
@@ -48,6 +65,7 @@ export interface StyleTokens {
   contentGap: string;
   transitionDuration: string;
   themeMode: 'light' | 'dark' | 'glass';
+  extraTokens?: ExtraTokens;
 }
 
 export const TOKEN_LABELS: Record<keyof StyleTokens, string> = {
@@ -59,6 +77,7 @@ export const TOKEN_LABELS: Record<keyof StyleTokens, string> = {
   contentGap: 'Gap entre elementos',
   transitionDuration: 'Duración de transiciones',
   themeMode: 'Modo visual',
+  extraTokens: 'Tokens extra del estilo (buttonStyle, ctaShadow, etc.)',
 };
 
 export const TOKEN_DESCRIPTIONS: Record<keyof StyleTokens, string> = {
@@ -70,6 +89,7 @@ export const TOKEN_DESCRIPTIONS: Record<keyof StyleTokens, string> = {
   contentGap: 'gap entre elementos en grillas',
   transitionDuration: 'transition-duration en CSS',
   themeMode: 'light = claro, dark = oscuro, glass = cristal',
+  extraTokens: 'Tokens extra del estilo (buttonStyle, ctaShadow, etc.)',
 };
 
 export interface StyleBrand {

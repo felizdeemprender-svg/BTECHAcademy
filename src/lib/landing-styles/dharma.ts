@@ -9,6 +9,19 @@ const dharmaBaseTokens: StyleTokens = {
   contentGap: '24px',
   transitionDuration: '300ms',
   themeMode: 'dark',
+  extraTokens: {
+    buttonStyle: 'ghost',
+    buttonRadius: '8px',
+    ctaShadow: '0 0 30px rgba(168,85,247,0.35)',
+    sectionBgAlternate: '#110E18',
+    containerMaxWidth: '1180px',
+    headingWeight: '600',
+    headingLetterSpacing: '0em',
+    gradientOverlay: 'none',
+    overlayOpacity: '0.5',
+    navbarHeight: '64px',
+    countdownStyle: 'boxed',
+  },
 };
 
 const dharmaTypography: TypographyVariant[] = [
@@ -16,7 +29,8 @@ const dharmaTypography: TypographyVariant[] = [
   { name: 'Luxury Minimal', headingScale: 1.1, bodyScale: 1.0, headingFont: 'Cormorant Garamond', bodyFont: 'Montserrat' },
   { name: 'Modern Elite', headingScale: 1.25, bodyScale: 1.05, headingFont: 'Cinzel', bodyFont: 'Lato' },
   { name: 'Sleek Sans', headingScale: 1.15, bodyScale: 1.1, headingFont: 'Syne', bodyFont: 'DM Sans' },
-  { name: 'Avant Garde', headingScale: 1.3, bodyScale: 1.0, headingFont: 'Playfair Display', bodyFont: 'Raleway' }
+  { name: 'Avant Garde', headingScale: 1.3, bodyScale: 1.0, headingFont: 'Playfair Display', bodyFont: 'Raleway' },
+  { name: 'Modern Serif', headingScale: 1.22, bodyScale: 1.08, headingFont: 'Crimson Text', bodyFont: 'Inter' }
 ];
 
 const dharmaColorProposals: ColorPalette[] = [
@@ -24,7 +38,10 @@ const dharmaColorProposals: ColorPalette[] = [
   { name: 'Plata y Obsidiana', primary: '#1A1A1A', secondary: '#F3F4F6', accent: '#C0C0C0' },
   { name: 'Vino y Crema', primary: '#4A0E17', secondary: '#FFFDD0', accent: '#8B9A46' },
   { name: 'Zafiro y Nieve', primary: '#0F2C59', secondary: '#F8F9FA', accent: '#E8C872' },
-  { name: 'Bronce Imperial', primary: '#2C1810', secondary: '#F5F5DC', accent: '#CD7F32' }
+  { name: 'Bronce Imperial', primary: '#2C1810', secondary: '#F5F5DC', accent: '#CD7F32' },
+  { name: 'Ívory y Rubí', primary: '#3B0A21', secondary: '#FFFCF2', accent: '#DC2626' },
+  { name: 'Topacio y Humo', primary: '#0F1E3A', secondary: '#F0F4F8', accent: '#0EA5E9' },
+  { name: 'Esmeralda', primary: '#064E35', secondary: '#ECFDF0', accent: '#10B981' }
 ];
 
 export const dharmaStyle: LandingStyle = {
@@ -85,6 +102,69 @@ export const dharmaStyle: LandingStyle = {
       },
       typography: { name: 'Avant Garde', headingScale: 1.3, bodyScale: 1.0, headingFont: 'Playfair Display', bodyFont: 'Raleway' },
       palette: { name: 'Vino y Crema', primary: '#4A0E17', secondary: '#FFFDD0', accent: '#8B9A46' }
+    },
+    {
+      name: 'Rubí',
+      description: 'Intenso y dramático — para ofertas con fuerte carga emocional',
+      tokens: {
+        componentRadius: '4px',
+        componentBorder: '1px solid rgba(220,38,38,0.35)',
+        componentShadow: '0 0 0 1px rgba(220,38,38,0.1), 0 24px 70px rgba(54,0,17,0.3)',
+        componentBg: 'rgba(54,0,17,0.9)',
+        sectionPadding: '120px',
+        contentGap: '26px',
+        transitionDuration: '350ms',
+        themeMode: 'dark',
+        extraTokens: {
+          buttonStyle: 'outline', buttonRadius: '6px', ctaShadow: '0 0 30px rgba(220,38,38,0.4)',
+          sectionBgAlternate: '#220410', containerMaxWidth: '1180px', headingWeight: '600',
+          headingLetterSpacing: '0.01em', gradientOverlay: 'none', overlayOpacity: '0.5', navbarHeight: '64px', countdownStyle: 'boxed'
+        },
+      },
+      typography: { name: 'Luxury Minimal', headingScale: 1.1, bodyScale: 1.0, headingFont: 'Cormorant Garamond', bodyFont: 'Montserrat' },
+      palette: { name: 'Ívory y Rubí', primary: '#3B0A21', secondary: '#FFFCF2', accent: '#DC2626' }
+    },
+    {
+      name: 'Topacio Tech',
+      description: 'Futurista y preciso — para mentorías técnicas de alto rendimiento',
+      tokens: {
+        componentRadius: '8px',
+        componentBorder: '1px solid rgba(14,165,233,0.3)',
+        componentShadow: '0 0 0 1px rgba(14,165,233,0.08), 0 20px 60px rgba(0,0,0,0.2)',
+        componentBg: 'rgba(15,30,58,0.95)',
+        sectionPadding: '112px',
+        contentGap: '22px',
+        transitionDuration: '250ms',
+        themeMode: 'dark',
+        extraTokens: {
+          buttonStyle: 'outline', buttonRadius: '8px', ctaShadow: '0 0 24px rgba(14,165,233,0.4)',
+          sectionBgAlternate: '#0B1E3A', containerMaxWidth: '1180px', headingWeight: '600',
+          headingLetterSpacing: '-0.01em', gradientOverlay: 'none', overlayOpacity: '0.5', navbarHeight: '64px', countdownStyle: 'boxed'
+        },
+      },
+      typography: { name: 'Sleek Sans', headingScale: 1.15, bodyScale: 1.1, headingFont: 'Syne', bodyFont: 'DM Sans' },
+      palette: { name: 'Topacio y Humo', primary: '#0F1E3A', secondary: '#F0F4F8', accent: '#0EA5E9' }
+    },
+    {
+      name: 'Esmeralda',
+      description: 'Cálido y premium — para programas de bienestar y transformación',
+      tokens: {
+        componentRadius: '6px',
+        componentBorder: '1px solid rgba(16,185,129,0.25)',
+        componentShadow: '0 0 0 1px rgba(16,185,129,0.1), 0 20px 60px rgba(0,0,0,0.18)',
+        componentBg: 'rgba(6,78,53,0.95)',
+        sectionPadding: '120px',
+        contentGap: '24px',
+        transitionDuration: '320ms',
+        themeMode: 'dark',
+        extraTokens: {
+          buttonStyle: 'filled', buttonRadius: '8px', ctaShadow: '0 0 28px rgba(16,185,129,0.35)',
+          sectionBgAlternate: '#043024', containerMaxWidth: '1180px', headingWeight: '600',
+          headingLetterSpacing: '0em', gradientOverlay: 'none', overlayOpacity: '0.55', navbarHeight: '64px', countdownStyle: 'boxed'
+        },
+      },
+      typography: { name: 'Modern Serif', headingScale: 1.22, bodyScale: 1.08, headingFont: 'Crimson Text', bodyFont: 'Inter' },
+      palette: { name: 'Esmeralda', primary: '#064E35', secondary: '#ECFDF0', accent: '#10B981' }
     }
   ],
   availableSections: [
@@ -101,13 +181,7 @@ export const dharmaStyle: LandingStyle = {
     { id: 'footer', name: 'Pie de Página', description: 'Redes sociales y disclaimer personalizado del tutor.', blueprint: 'Texto centrado, sutil y minimalista.', required: false, isRepeatable: false, contentType: 'text' },
   ],
   defaultVisibility: { heroVideo: true, narrativeSections: true, syllabus: true, benefits: true, mentorProfile: true, faqs: true, countdownTimer: false, bonuses: false, guarantee: false, testimonials: false, footer: true },
-  colorProposals: [
-    { name: 'Oro y Ébano', primary: '#000000', secondary: '#FFFFFF', accent: '#D4AF37' },
-    { name: 'Plata y Obsidiana', primary: '#1A1A1A', secondary: '#F3F4F6', accent: '#C0C0C0' },
-    { name: 'Vino y Crema', primary: '#4A0E17', secondary: '#FFFDD0', accent: '#8B9A46' },
-    { name: 'Zafiro y Nieve', primary: '#0F2C59', secondary: '#F8F9FA', accent: '#E8C872' },
-    { name: 'Bronce Imperial', primary: '#2C1810', secondary: '#F5F5DC', accent: '#CD7F32' }
-  ],
+  colorProposals: dharmaColorProposals,
   aiDirectives: 'Eres un experto en ventas High-Ticket. Tono sofisticado, directo y persuasivo. Exclusividad ante todo.',
   aiWriterPersona: 'Copywriter High-Ticket. Escribe con autoridad, sofisticación y escasez. Presenta la oferta como un privilegio exclusivo en un tono elitista pero elegante, sin rogar por la venta.'
 };

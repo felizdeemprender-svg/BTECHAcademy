@@ -287,8 +287,8 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                     <span className="w-6 h-[2px] bg-slate-300"></span> Tokens CSS
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
-                    {Object.keys(TOKEN_LABELS).map((key) => {
-                      const tokenKey = key as keyof StyleTokens;
+                    {Object.keys(TOKEN_LABELS).filter((k) => k !== 'extraTokens').map((key) => {
+                          const tokenKey = key as Exclude<keyof StyleTokens, 'extraTokens'>;
                       return (
                         <div key={key} className="space-y-1">
                           <Label className="text-xs font-medium">{TOKEN_LABELS[tokenKey]}</Label>
@@ -504,8 +504,8 @@ export default function StyleForm({ initialData, isCloning, onClose }: StyleForm
                         </Label>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        {Object.keys(TOKEN_LABELS).map((key) => {
-                          const tokenKey = key as keyof StyleTokens;
+                        {Object.keys(TOKEN_LABELS).filter((k) => k !== 'extraTokens').map((key) => {
+                      const tokenKey = key as Exclude<keyof StyleTokens, 'extraTokens'>;
                           return (
                             <div key={key} className="space-y-1">
                               <Label className="text-xs font-medium">{TOKEN_LABELS[tokenKey]}</Label>
