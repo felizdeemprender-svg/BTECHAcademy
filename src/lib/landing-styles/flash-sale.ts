@@ -195,7 +195,7 @@ export const flashSaleStyle: LandingStyle = {
       name: 'Prueba Social',
       description: 'Escribe 3-6 testimonios con resultado medible y nombre/rol del alumno. Transformación concreta en 1-2 líneas.',
       blueprint: 'Grilla asimétrica de tarjetas con resultado destacado en mono y cita corta. Avatar circular pequeño. Leve rotación alternada en algunas tarjetas.',
-      required: false, isRepeatable: false, contentType: 'mixed',
+      required: false, isRepeatable: false, contentType: 'text',
     },
     {
       id: 'faqs',

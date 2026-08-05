@@ -919,12 +919,14 @@ function V2LandingBuilderContent() {
                     return (
                       <div key={sec.id} className={cn("flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border-2 transition-all gap-4", isActive ? "border-primary/30 bg-white shadow-sm" : "border-muted bg-muted/50")}>
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
                             <p className={cn("font-bold text-sm", isActive ? "text-foreground" : "text-muted-foreground")}>{sec.name}</p>
                             {sec.required && <Badge variant="secondary" className="text-[8px] uppercase tracking-widest bg-warn/15 text-warn">Obligatoria</Badge>}
                             {sec.isRepeatable && <Badge variant="outline" className="text-[8px] uppercase tracking-widest text-muted-foreground">Multi-Instancia</Badge>}
+                            {(sec.contentType === 'mixed' || sec.contentType === 'image') && <Badge variant="outline" className="text-[8px] uppercase tracking-widest text-blue-600 bg-blue-50 border-blue-200">Genera Imagen</Badge>}
+                            {sec.contentType === 'text' && <Badge variant="outline" className="text-[8px] uppercase tracking-widest text-muted-foreground">Solo Texto</Badge>}
                           </div>
-                          <p className="text-[10px] text-muted-foreground leading-relaxed">{sec.description}</p>
+                          <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{sec.description}</p>
                         </div>
                         
                         <div className="flex items-center gap-3 shrink-0">

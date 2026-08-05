@@ -181,7 +181,7 @@ export const executiveDarkStyle: LandingStyle = {
       name: 'Resultados Senior',
       description: 'Redacta 3-6 testimonios con resultado concreto y perfil profesional del alumno.',
       blueprint: 'Citas asimétricas con resultado en mono destacado y nombre/rol abajo.',
-      required: false, isRepeatable: false, contentType: 'mixed',
+      required: false, isRepeatable: false, contentType: 'text',
     },
     {
       id: 'bonuses',

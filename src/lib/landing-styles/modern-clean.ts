@@ -181,7 +181,7 @@ export const modernCleanStyle: LandingStyle = {
       name: 'Testimonios',
       description: 'Redacta 3-6 testimonios breves y concretos con resultado y nombre.',
       blueprint: 'Grilla 3 columnas de tarjetas suaves, cita corta y nombre abajo.',
-      required: false, isRepeatable: false, contentType: 'mixed',
+      required: false, isRepeatable: false, contentType: 'text',
     },
     {
       id: 'bonuses',

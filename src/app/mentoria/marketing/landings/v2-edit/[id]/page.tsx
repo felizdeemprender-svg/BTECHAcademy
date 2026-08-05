@@ -797,13 +797,7 @@ export default function V2LandingEditorPage() {
                     const baseId = activeSection.id.split('_')[0];
                     const activeSectionStyle = styleData?.availableSections?.find((s: any) => s.id === baseId);
                     const acceptsVideo = activeSectionStyle?.contentType === 'video' || activeSectionStyle?.contentType === 'mixed';
-                    const acceptsImage = activeSectionStyle?.contentType === 'mixed' || 
-                                         activeSectionStyle?.contentType === 'image' || 
-                                         activeSection.id.startsWith('narrativeSections') ||
-                                         activeSection.id.startsWith('mentorProfile') ||
-                                         activeSection.id.startsWith('bonuses') ||
-                                         activeSection.id.startsWith('countdownTimer') ||
-                                         activeSection.id.startsWith('testimonials');
+                    const acceptsImage = activeSectionStyle?.contentType === 'mixed' || activeSectionStyle?.contentType === 'image';
 
                     return (
                       <>

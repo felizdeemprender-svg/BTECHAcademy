@@ -32,6 +32,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
   // Estilo + flags: declarados antes de extraTokens/sectionBgAlt que los consumen.
   const styleDefinition = getLandingStyle(page.styleId || 'classic');
   const styleId = styleDefinition?.id || 'classic';
+  const isClassic = styleId === 'classic';
   const isFlashSale = styleId === 'flash-sale';
   const isCorporate = styleId === 'corporate';
   const isTechB2b = styleId === 'tech-b2b';
@@ -955,7 +956,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
             }
             return (
               <section key={sec.id} className="py-8 md:py-16 px-6">
-                {sec.imageUrl ? (
+                {sec.imageUrl && !isClassic ? (
                   <div className={cn("mx-auto flex flex-col gap-12 lg:gap-20 items-center w-full", isEven ? "md:flex-row" : "md:flex-row-reverse")} style={{ maxWidth: 'var(--container-max)' }}>
                     <div className="w-full md:w-1/2">
                       <div className="w-full aspect-[4/3] rounded-[var(--component-radius)] overflow-hidden relative bg-[var(--surface-muted)]" style={{ border: 'var(--component-border)' }}>
@@ -1908,17 +1909,13 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                           const hasColon = bullet.includes(':');
                           const [name, ...quoteArr] = hasColon ? bullet.split(':') : ['', bullet];
                           const quote = hasColon ? quoteArr.join(':') : bullet;
-                          const avatar = sec.avatars?.[i] || `https://picsum.photos/seed/alumno-${i}/200/200`;
                           return (
                             <div key={i} className="od-fs-card p-6 md:p-7 flex flex-col gap-5 od-fs-card-lift" style={{ boxShadow: 'var(--component-shadow)' }}>
                               <div className="text-lg tracking-[3px]" style={{ color: 'var(--accent)' }}>{'★'.repeat(5)}</div>
                               <p className="leading-relaxed text-[15px] flex-1" style={{ color: 'var(--fg)' }}>"{quote.trim()}"</p>
-                              <div className="flex items-center gap-3">
-                                <img src={avatar} alt={name || 'Alumno'} className="w-[52px] h-[52px] rounded-full object-cover border-[3px]" style={{ borderColor: 'var(--fg)' }} />
-                                <div>
-                                  {hasColon && <div className="font-headline font-bold text-[15px]" style={{ color: 'var(--fg)' }}>{name.replace(/\*\*/g, '').trim()}</div>}
-                                  {sec.roles?.[i] && <div className="font-mono text-[11px] uppercase tracking-[.06em]" style={{ color: 'var(--muted)' }}>{sec.roles[i]}</div>}
-                                </div>
+                              <div className="flex flex-col">
+                                {hasColon && <div className="font-headline font-bold text-[15px]" style={{ color: 'var(--fg)' }}>{name.replace(/\*\*/g, '').trim()}</div>}
+                                {sec.roles?.[i] && <div className="font-mono text-[11px] uppercase tracking-[.06em] mt-1" style={{ color: 'var(--muted)' }}>{sec.roles[i]}</div>}
                               </div>
                             </div>
                           );
@@ -2067,17 +2064,13 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                         const hasColon = bullet.includes(':');
                         const [name, ...quoteArr] = hasColon ? bullet.split(':') : ['', bullet];
                         const quote = hasColon ? quoteArr.join(':') : bullet;
-                        const avatar = sec.avatars?.[i];
                         return (
                           <div key={i} className="p-7 bg-[var(--component-bg)] rounded-[var(--component-radius)]" style={{ border: 'var(--component-border)', boxShadow: 'var(--component-shadow)' }}>
                             <div className="text-lg" style={{ color: accentColor }}>{'★'.repeat(5)}</div>
                             <p className="mt-3 text-opacity-85 leading-relaxed flex-1">"{quote.trim()}"</p>
-                            <div className="mt-5 flex items-center gap-3">
-                              {avatar && <img src={avatar} alt={name || 'Alumno'} className="w-10 h-10 rounded-full object-cover" />}
-                              <div>
-                                {hasColon && <h4 className="font-bold text-sm">{name.replace(/\*\*/g, '').trim()}</h4>}
-                                {sec.roles?.[i] && <p className="text-xs text-opacity-60 mt-0.5">{sec.roles[i]}</p>}
-                              </div>
+                            <div className="mt-5 flex flex-col">
+                              {hasColon && <h4 className="font-bold text-sm">{name.replace(/\*\*/g, '').trim()}</h4>}
+                              {sec.roles?.[i] && <p className="text-xs text-opacity-60 mt-0.5">{sec.roles[i]}</p>}
                             </div>
                           </div>
                         );
@@ -2106,17 +2099,13 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                         const hasColon = bullet.includes(':');
                         const [name, ...quoteArr] = hasColon ? bullet.split(':') : ['', bullet];
                         const quote = hasColon ? quoteArr.join(':') : bullet;
-                        const avatar = sec.avatars?.[i] || `https://picsum.photos/seed/alumno-${i}/120/120`;
                         return (
                           <div key={i} className={cn("p-7 bg-[var(--component-bg)] flex flex-col gap-4", i % 2 === 1 && "md:-translate-y-3")} style={{ border: 'var(--component-border)', borderRadius: 'var(--component-radius)' }}>
                             <span className="font-mono text-2xl font-bold" style={{ color: accentColor }}>{sec.metrics?.[i] || '+00'}</span>
                             <p className="text-opacity-85 leading-relaxed flex-1 text-sm">"{quote.trim()}"</p>
-                            <div className="flex items-center gap-3">
-                              <img src={avatar} alt={name || 'Alumno'} className="w-9 h-9 rounded-full object-cover" />
-                              <div>
-                                {hasColon && <h4 className="font-bold text-sm">{name.replace(/\*\*/g, '').trim()}</h4>}
-                                {sec.roles?.[i] && <p className="text-xs text-opacity-60 mt-0.5">{sec.roles[i]}</p>}
-                              </div>
+                            <div className="flex flex-col">
+                              {hasColon && <h4 className="font-bold text-sm">{name.replace(/\*\*/g, '').trim()}</h4>}
+                              {sec.roles?.[i] && <p className="text-xs text-opacity-60 mt-0.5">{sec.roles[i]}</p>}
                             </div>
                           </div>
                         );
@@ -2138,12 +2127,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                 <div className="max-w-6xl mx-auto text-center space-y-16">
                   {sec.title && <h2 className="text-4xl md:text-5xl font-black font-headline" style={{ color: pageFg }}>{sec.title}</h2>}
                   {sec.content && <div className={cn("prose prose-lg mx-auto text-opacity-90", isDark && "prose-invert")}>{sec.content}</div>}
-                  
-                  {sec.imageUrl && (
-                    <div className="max-w-4xl mx-auto rounded-[var(--component-radius)] overflow-hidden" style={{ border: 'var(--component-border)' }}>
-                      <img src={sec.imageUrl} alt="Testimonios" className="w-full h-auto object-cover" />
-                    </div>
-                  )}
+
 
                   {sec.bullets && sec.bullets.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[var(--content-gap)] text-left mt-12">
@@ -2187,31 +2171,39 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                       {sec.title && <h2 className="od-fs-heading text-3xl md:text-5xl">{sec.title}</h2>}
                       {sec.content && <p className="mt-3 max-w-[52ch] mx-auto leading-relaxed" style={{ color: 'var(--muted)' }}>{sec.content}</p>}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {sec.bullets?.map((bullet: string, i: number) => {
-                        const [bName, ...bDescArr] = bullet.split(':');
-                        const bDesc = bDescArr.join(':');
-                        const img = sec.images?.[i] || `https://picsum.photos/seed/bono-${i}/800/500`;
-                        return (
-                          <div key={i} className="od-fs-card overflow-hidden od-fs-card-lift" style={{ boxShadow: 'var(--component-shadow)' }}>
-                            <div className="relative aspect-[16/10] overflow-hidden">
-                              <img src={img} alt={bName || 'Bonus'} className="w-full h-full object-cover" />
-                              <span className="absolute top-3 left-3 font-headline font-black uppercase text-[13px] px-3 py-1 rounded-full border-2" style={{ background: 'var(--accent)', color: 'var(--fg)', borderColor: 'var(--fg)' }}>
-                                {sec.badgeText || 'GRATIS'}
-                              </span>
-                            </div>
-                            <div className="p-5 md:p-6">
+                    
+                    <div className={cn("flex flex-col md:flex-row items-center gap-10 md:gap-12", index % 2 === 1 && "md:flex-row-reverse")}>
+                      {sec.imageUrl && (
+                        <div className="w-full md:w-2/5 flex-shrink-0 aspect-[4/5] overflow-hidden" style={{ borderRadius: 'var(--component-radius)', boxShadow: 'var(--component-shadow)' }}>
+                          <img src={sec.imageUrl} alt={sec.title || 'Bonus'} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      
+                      <div className={cn("w-full", sec.imageUrl ? "md:w-3/5 grid grid-cols-1 sm:grid-cols-2 gap-6" : "grid grid-cols-1 md:grid-cols-3 gap-6")}>
+                        {sec.bullets?.map((bullet: string, i: number) => {
+                          const [bName, ...bDescArr] = bullet.split(':');
+                          const bDesc = bDescArr.join(':');
+                          return (
+                            <div key={i} className="od-fs-card overflow-hidden od-fs-card-lift flex flex-col justify-center p-5 md:p-6" style={{ boxShadow: 'var(--component-shadow)' }}>
+                              <div className="mb-4">
+                                <span className="font-headline font-black uppercase text-[11px] px-3 py-1 rounded-full border-2" style={{ background: 'var(--accent)', color: 'var(--fg)', borderColor: 'var(--fg)' }}>
+                                  {sec.badgeText || 'GRATIS'}
+                                </span>
+                              </div>
                               {bName && <h3 className="text-xl font-headline font-bold leading-snug" style={{ color: 'var(--fg)' }}>{bName}</h3>}
                               {bDesc && <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>{bDesc}</p>}
-                              <div className="mt-4 font-mono text-[13px]">
-                                {sec.oldValues?.[i] && <s className="mr-2" style={{ color: 'var(--muted)' }}>{sec.oldValues[i]}</s>}
-                                {sec.newValues?.[i] && <b style={{ color: 'var(--accent-text)' }}>{sec.newValues[i]}</b>}
-                              </div>
+                              {(sec.oldValues?.[i] || sec.newValues?.[i]) && (
+                                <div className="mt-4 font-mono text-[13px]">
+                                  {sec.oldValues?.[i] && <s className="mr-2" style={{ color: 'var(--muted)' }}>{sec.oldValues[i]}</s>}
+                                  {sec.newValues?.[i] && <b style={{ color: 'var(--accent-text)' }}>{sec.newValues[i]}</b>}
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
+                    
                     {sec.ctaText && (
                       <div className="flex justify-center pt-12">
                         <button onClick={onPurchase} className="od-fs-btn od-fs-btn-primary">{sec.ctaText}</button>
@@ -2234,26 +2226,29 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                       {sec.title && <h2 className="text-3xl md:text-5xl font-headline font-bold" style={{ color: pageFg }}>{sec.title}</h2>}
                       {sec.content && <p className="text-opacity-70 max-w-2xl mx-auto leading-relaxed">{sec.content}</p>}
                     </div>
-                    <div className="space-y-4">
-                      {sec.bullets?.map((bullet: string, i: number) => {
-                        const [bName, ...bDescArr] = bullet.split(':');
-                        const bDesc = bDescArr.join(':');
-                        const img = sec.images?.[i];
-                        return (
-                          <div key={i} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-[var(--component-bg)]" style={{ border: 'var(--component-border)', borderRadius: 'var(--component-radius)' }}>
-                            {img && (
-                              <div className="w-full sm:w-40 flex-shrink-0 aspect-[16/10] overflow-hidden" style={{ borderRadius: 'var(--component-radius)' }}>
-                                <img src={img} alt={bName || 'Material'} className="w-full h-full object-cover" />
+                    
+                    <div className={cn("flex flex-col md:flex-row items-center gap-10 md:gap-12", index % 2 === 1 && "md:flex-row-reverse")}>
+                      {sec.imageUrl && (
+                        <div className="w-full md:w-2/5 flex-shrink-0 aspect-[4/5] overflow-hidden" style={{ borderRadius: 'var(--component-radius)' }}>
+                          <img src={sec.imageUrl} alt={sec.title || 'Bonus'} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className={cn("w-full space-y-4", sec.imageUrl ? "md:w-3/5" : "")}>
+                        {sec.bullets?.map((bullet: string, i: number) => {
+                          const [bName, ...bDescArr] = bullet.split(':');
+                          const bDesc = bDescArr.join(':');
+                          return (
+                            <div key={i} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-[var(--component-bg)]" style={{ border: 'var(--component-border)', borderRadius: 'var(--component-radius)' }}>
+                              <div className="flex-1 text-center sm:text-left">
+                                {bName && <h3 className="text-lg font-bold" style={{ color: pageFg }}>{bName}</h3>}
+                                {bDesc && <p className="mt-1 text-sm text-opacity-70 leading-relaxed">{bDesc}</p>}
                               </div>
-                            )}
-                            <div className="flex-1 text-center sm:text-left">
-                              {bName && <h3 className="text-lg font-bold" style={{ color: pageFg }}>{bName}</h3>}
-                              {bDesc && <p className="mt-1 text-sm text-opacity-70 leading-relaxed">{bDesc}</p>}
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
+                    
                     {sec.ctaText && (
                       <div className="flex justify-center">
                         <Button onClick={onPurchase} className="h-14 px-10 text-base font-semibold rounded-[var(--component-radius)]" style={{ backgroundColor: btnBg, color: btnText }}>
@@ -2274,33 +2269,36 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                       {sec.title && <h2 className="text-3xl md:text-5xl font-headline font-bold" style={{ color: pageFg }}>{sec.title}</h2>}
                       {sec.content && <p className="text-opacity-70 max-w-2xl mx-auto leading-relaxed">{sec.content}</p>}
                     </div>
-                    <div className="space-y-4">
-                      {sec.bullets?.map((bullet: string, i: number) => {
-                        const [bName, ...bDescArr] = bullet.split(':');
-                        const bDesc = bDescArr.join(':');
-                        const img = sec.images?.[i];
-                        return (
-                          <div key={i} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-[var(--component-bg)]" style={{ border: 'var(--component-border)', borderRadius: 'var(--component-radius)', boxShadow: 'var(--component-shadow)' }}>
-                            <span className="font-mono text-sm font-bold flex-shrink-0" style={{ color: accentColor }}>{"0" + (i + 1)}</span>
-                            {img && (
-                              <div className="w-full sm:w-44 flex-shrink-0 aspect-[16/10] overflow-hidden" style={{ borderRadius: 'var(--component-radius)' }}>
-                                <img src={img} alt={bName || 'Material'} className="w-full h-full object-cover" />
+                    
+                    <div className={cn("flex flex-col md:flex-row items-center gap-10 md:gap-12", index % 2 === 1 && "md:flex-row-reverse")}>
+                      {sec.imageUrl && (
+                        <div className="w-full md:w-2/5 flex-shrink-0 aspect-[4/5] overflow-hidden" style={{ borderRadius: 'var(--component-radius)' }}>
+                          <img src={sec.imageUrl} alt={sec.title || 'Bonus'} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className={cn("w-full space-y-4", sec.imageUrl ? "md:w-3/5" : "")}>
+                        {sec.bullets?.map((bullet: string, i: number) => {
+                          const [bName, ...bDescArr] = bullet.split(':');
+                          const bDesc = bDescArr.join(':');
+                          return (
+                            <div key={i} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-[var(--component-bg)]" style={{ border: 'var(--component-border)', borderRadius: 'var(--component-radius)', boxShadow: 'var(--component-shadow)' }}>
+                              <span className="font-mono text-sm font-bold flex-shrink-0" style={{ color: accentColor }}>{"0" + (i + 1)}</span>
+                              <div className="flex-1 text-center sm:text-left">
+                                {bName && <h3 className="text-lg font-bold" style={{ color: pageFg }}>{bName}</h3>}
+                                {bDesc && <p className="mt-1 text-sm text-opacity-70 leading-relaxed">{bDesc}</p>}
+                                {(sec.oldValues?.[i] || sec.newValues?.[i]) && (
+                                  <div className="mt-2 font-mono text-[13px]">
+                                    {sec.oldValues?.[i] && <s className="mr-2 text-opacity-50">{sec.oldValues[i]}</s>}
+                                    {sec.newValues?.[i] && <b style={{ color: accentColor }}>{sec.newValues[i]}</b>}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            <div className="flex-1 text-center sm:text-left">
-                              {bName && <h3 className="text-lg font-bold" style={{ color: pageFg }}>{bName}</h3>}
-                              {bDesc && <p className="mt-1 text-sm text-opacity-70 leading-relaxed">{bDesc}</p>}
-                              {(sec.oldValues?.[i] || sec.newValues?.[i]) && (
-                                <div className="mt-2 font-mono text-[13px]">
-                                  {sec.oldValues?.[i] && <s className="mr-2 text-opacity-50">{sec.oldValues[i]}</s>}
-                                  {sec.newValues?.[i] && <b style={{ color: accentColor }}>{sec.newValues[i]}</b>}
-                                </div>
-                              )}
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
+                    
                     {sec.ctaText && (
                       <div className="flex justify-center pt-6">
                         <Button onClick={onPurchase} className="h-14 px-10 text-base font-semibold rounded-[var(--component-radius)]" style={{ backgroundColor: btnBg, color: btnText }}>{sec.ctaText}</Button>
@@ -2312,52 +2310,62 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
             }
             if (isExecutiveDark || isLuxurySerif || isEditorial) {
               const serif = isLuxurySerif || isEditorial;
+              const grayscale = isExecutiveDark;
+              const isRight = index % 2 === 1;
               return (
                 <section key={sec.id} className={cn("py-[var(--section-padding)] px-6", isExecutiveDark && "bg-[var(--surface-muted)]")}>
-                  <div className={cn("space-y-12", serif ? "max-w-2xl mx-auto" : "max-w-5xl mx-auto")}>
-                    <div className="text-center">
-                      {sec.title && <h2 className={cn("font-headline", serif ? "font-medium text-4xl md:text-5xl" : "font-bold text-3xl md:text-5xl")} style={{ color: pageFg }}>{sec.title}</h2>}
-                      {sec.content && <p className={cn("text-opacity-60 leading-relaxed max-w-2xl mx-auto mt-4", serif && "font-light")}>{sec.content}</p>}
-                    </div>
-                    <div className={cn("space-y-6", serif && "space-y-8")}>
-                      {sec.bullets?.map((bullet: string, i: number) => {
-                        const [bName, ...bDescArr] = bullet.split(':');
-                        const bDesc = bDescArr.join(':');
-                        const img = sec.images?.[i];
-                        return (
-                          <div key={i} className={cn("flex flex-col sm:flex-row items-center gap-6", serif && "pb-8", isExecutiveDark && "p-6 bg-[var(--component-bg)]")} style={serif ? { borderBottom: '1px solid var(--component-border)' } : { border: 'var(--component-border)', borderRadius: 'var(--component-radius)' }}>
-                            <div className="flex-1 text-center sm:text-left">
+                  <div className="max-w-6xl mx-auto space-y-12 lg:space-y-16">
+                    {(sec.title || sec.content) && (
+                      <div className="text-center">
+                        {sec.title && <h2 className={cn("font-headline", serif ? "font-medium text-4xl md:text-5xl" : "font-bold text-3xl md:text-5xl")} style={{ color: pageFg }}>{sec.title}</h2>}
+                        {sec.content && <p className={cn("text-opacity-60 leading-relaxed max-w-2xl mx-auto mt-4", serif && "font-light")}>{sec.content}</p>}
+                      </div>
+                    )}
+                    
+                    <div className={cn("flex flex-col items-center gap-10 md:gap-16", isRight ? "md:flex-row-reverse" : "md:flex-row")}>
+                      {sec.imageUrl && (
+                        <div className="w-full md:w-2/5 flex-shrink-0 aspect-[4/5] overflow-hidden bg-[var(--component-bg)]" style={{ border: 'var(--component-border)', borderRadius: serif ? 0 : 'var(--component-radius)' }}>
+                          <img src={sec.imageUrl} alt={sec.title || 'Bonus'} className={cn("w-full h-full object-cover", grayscale && "grayscale")} />
+                        </div>
+                      )}
+                      
+                      <div className={cn("w-full flex flex-col gap-8 md:gap-10", sec.imageUrl ? "md:w-3/5 text-center md:text-left" : "md:text-center items-center")}>
+                        {sec.bullets?.map((bullet: string, i: number) => {
+                          const [bName, ...bDescArr] = bullet.split(':');
+                          const bDesc = bDescArr.join(':');
+                          return (
+                            <div key={i} className="flex flex-col justify-center">
                               {serif ? (
                                 <>
-                                  <span className="font-headline text-2xl font-light mr-3" style={{ color: accentColor }}>·</span>
-                                  {bName && <h3 className="inline font-headline font-medium text-xl tracking-wide" style={{ color: pageFg }}>{bName}</h3>}
-                                  {bDesc && <p className="mt-2 text-sm text-opacity-60 font-light leading-relaxed">{bDesc}</p>}
+                                  <div className="mb-2">
+                                    <span className="font-headline text-3xl font-light" style={{ color: accentColor }}>·</span>
+                                  </div>
+                                  {bName && <h3 className="font-headline font-medium text-2xl tracking-wide" style={{ color: pageFg }}>{bName}</h3>}
+                                  {bDesc && <p className="mt-3 text-base text-opacity-70 font-light leading-relaxed">{bDesc}</p>}
                                 </>
                               ) : (
                                 <>
-                                  <span className="font-mono text-sm font-bold mr-3" style={{ color: accentColor }}>{"0" + (i + 1)}</span>
-                                  {bName && <h3 className="inline text-lg font-bold" style={{ color: pageFg }}>{bName}</h3>}
-                                  {bDesc && <p className="mt-1 text-sm text-opacity-70 leading-relaxed">{bDesc}</p>}
+                                  <div className="mb-2">
+                                    <span className="font-mono text-xl font-bold" style={{ color: accentColor }}>{"0" + (i + 1)}</span>
+                                  </div>
+                                  {bName && <h3 className="text-2xl font-bold" style={{ color: pageFg }}>{bName}</h3>}
+                                  {bDesc && <p className="mt-2 text-base text-opacity-70 leading-relaxed">{bDesc}</p>}
                                 </>
                               )}
                               {(sec.oldValues?.[i] || sec.newValues?.[i]) && (
-                                <div className="mt-2 font-mono text-[13px]">
-                                  {sec.oldValues?.[i] && <s className="mr-2 text-opacity-50">{sec.oldValues[i]}</s>}
-                                  {sec.newValues?.[i] && <b style={{ color: accentColor }}>{sec.newValues[i]}</b>}
+                                <div className="mt-4 font-mono text-sm">
+                                  {sec.oldValues?.[i] && <s className="mr-3 text-opacity-50">{sec.oldValues[i]}</s>}
+                                  {sec.newValues?.[i] && <b className="text-lg" style={{ color: accentColor }}>{sec.newValues[i]}</b>}
                                 </div>
                               )}
                             </div>
-                            {img && (
-                              <div className={cn("w-full sm:w-44 flex-shrink-0 aspect-[16/10] overflow-hidden", isEditorial && "sm:order-first")} style={{ borderRadius: serif ? 0 : 'var(--component-radius)' }}>
-                                <img src={img} alt={bName || 'Material'} className="w-full h-full object-cover" />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
+                    
                     {sec.ctaText && (
-                      <div className={cn("flex", serif ? "justify-start" : "justify-center")}>
+                      <div className="flex justify-center pt-8">
                         <Button onClick={onPurchase} className={cn("h-14 px-10 text-base font-semibold rounded-[var(--component-radius)]", serif && "text-sm font-medium tracking-[0.08em] uppercase")} style={isLuxurySerif ? { border: '1px solid ' + pageFg, backgroundColor: 'transparent', color: pageFg } : { backgroundColor: btnBg, color: btnText }}>{sec.ctaText}</Button>
                       </div>
                     )}
@@ -2373,35 +2381,38 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                       {sec.title && <h2 className="text-3xl md:text-5xl font-headline font-bold" style={{ color: pageFg }}>{sec.title}</h2>}
                       {sec.content && <p className="text-opacity-70 max-w-2xl mx-auto leading-relaxed">{sec.content}</p>}
                     </div>
-                    <div className="space-y-5">
-                      {sec.bullets?.map((bullet: string, i: number) => {
-                        const [bName, ...bDescArr] = bullet.split(':');
-                        const bDesc = bDescArr.join(':');
-                        const img = sec.images?.[i];
-                        return (
-                          <div key={i} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-[var(--component-bg)] rounded-[var(--component-radius)]" style={{ border: 'var(--component-border)', boxShadow: 'var(--component-shadow)' }}>
-                            <div className="flex-1 text-center sm:text-left">
-                              <div className="inline-flex items-center gap-2">
-                                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full" style={{ backgroundColor: hexToRgba(accentColor, 0.12), color: accentColor }}>BONO {i + 1}</span>
-                                {bName && <h3 className="text-lg font-bold" style={{ color: pageFg }}>{bName}</h3>}
-                              </div>
-                              {bDesc && <p className="mt-1 text-sm text-opacity-70 leading-relaxed">{bDesc}</p>}
-                              {(sec.oldValues?.[i] || sec.newValues?.[i]) && (
-                                <div className="mt-2 font-mono text-[13px]">
-                                  {sec.oldValues?.[i] && <s className="mr-2 text-opacity-50">{sec.oldValues[i]}</s>}
-                                  {sec.newValues?.[i] && <b style={{ color: accentColor }}>{sec.newValues[i]}</b>}
+                    
+                    <div className={cn("flex flex-col md:flex-row items-center gap-10 md:gap-12", index % 2 === 1 && "md:flex-row-reverse")}>
+                      {sec.imageUrl && (
+                        <div className="w-full md:w-2/5 flex-shrink-0 aspect-[4/5] overflow-hidden" style={{ borderRadius: 'var(--component-radius)' }}>
+                          <img src={sec.imageUrl} alt={sec.title || 'Bonus'} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className={cn("w-full space-y-5", sec.imageUrl ? "md:w-3/5" : "")}>
+                        {sec.bullets?.map((bullet: string, i: number) => {
+                          const [bName, ...bDescArr] = bullet.split(':');
+                          const bDesc = bDescArr.join(':');
+                          return (
+                            <div key={i} className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-[var(--component-bg)] rounded-[var(--component-radius)]" style={{ border: 'var(--component-border)', boxShadow: 'var(--component-shadow)' }}>
+                              <div className="flex-1 text-center sm:text-left">
+                                <div className="inline-flex items-center gap-2">
+                                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full" style={{ backgroundColor: hexToRgba(accentColor, 0.12), color: accentColor }}>BONO {i + 1}</span>
+                                  {bName && <h3 className="text-lg font-bold" style={{ color: pageFg }}>{bName}</h3>}
                                 </div>
-                              )}
-                            </div>
-                            {img && (
-                              <div className="w-full sm:w-44 flex-shrink-0 aspect-[16/10] overflow-hidden rounded-[var(--component-radius)]">
-                                <img src={img} alt={bName || 'Material'} className="w-full h-full object-cover" />
+                                {bDesc && <p className="mt-1 text-sm text-opacity-70 leading-relaxed">{bDesc}</p>}
+                                {(sec.oldValues?.[i] || sec.newValues?.[i]) && (
+                                  <div className="mt-2 font-mono text-[13px]">
+                                    {sec.oldValues?.[i] && <s className="mr-2 text-opacity-50">{sec.oldValues[i]}</s>}
+                                    {sec.newValues?.[i] && <b style={{ color: accentColor }}>{sec.newValues[i]}</b>}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
+                    
                     {sec.ctaText && (
                       <div className="flex justify-center pt-4">
                         <Button onClick={onPurchase} className="h-14 px-10 text-base font-semibold rounded-[var(--component-radius)]" style={{ backgroundColor: btnBg, color: btnText }}>{sec.ctaText}</Button>
@@ -2420,20 +2431,19 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                       {sec.title && <h2 className="text-3xl md:text-5xl font-headline font-black" style={{ color: pageFg }}>{sec.title}</h2>}
                       {sec.content && <p className="text-opacity-75 max-w-2xl mx-auto leading-relaxed">{sec.content}</p>}
                     </div>
+                    {sec.imageUrl && (
+                      <div className="w-full max-w-4xl mx-auto aspect-[16/9] overflow-hidden rounded-[var(--component-radius)] mb-10" style={{ boxShadow: 'var(--component-shadow)' }}>
+                        <img src={sec.imageUrl} alt={sec.title || 'Bonus'} className="w-full h-full object-cover" />
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-[var(--content-gap)]">
                       {sec.bullets?.map((bullet: string, i: number) => {
                         const [bName, ...bDescArr] = bullet.split(':');
                         const bDesc = bDescArr.join(':');
-                        const img = sec.images?.[i];
                         return (
                           <div key={i} className="p-6 bg-[var(--component-bg)] rounded-[var(--component-radius)] flex flex-col gap-4" style={{ border: 'var(--component-border)', boxShadow: `0 0 28px ${hexToRgba(accentColor, 0.1)}` }}>
                             <div className="flex items-center gap-3">
                               <span className="font-mono text-lg font-black" style={{ color: accentColor }}>{"0" + (i + 1)}</span>
-                              {img && (
-                                <div className="flex-1 aspect-[16/8] overflow-hidden rounded-[var(--component-radius)]">
-                                  <img src={img} alt={bName || 'Material'} className="w-full h-full object-cover" />
-                                </div>
-                              )}
                             </div>
                             {bName && <h3 className="text-lg font-bold" style={{ color: pageFg }}>{bName}</h3>}
                             {bDesc && <p className="text-sm text-opacity-70 leading-relaxed">{bDesc}</p>}
@@ -2787,7 +2797,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
             );
 
           case 'countdownTimer':
-            if (page.landingType !== 'promocion' || !page.activeUntil) return null;
+            // Removed strict return null so Oportunidad Reservada can show its content/image even without a date
             if (styleDefinition?.id === 'flash-sale') {
               const nowPrice = typeof page.price === 'number' ? page.price : 0;
               const oldPrice = (typeof page.oldPrice === 'number' && page.oldPrice > 0) ? Math.round(page.oldPrice) : (nowPrice > 0 ? Math.round(nowPrice * 2.94) : 0);
@@ -2806,7 +2816,9 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
                       {oldPrice > 0 && <span className="font-mono text-lg line-through" style={{ color: 'rgba(14,14,15,.6)' }}>${oldPrice.toLocaleString('es-AR')}</span>}
                       {nowPrice > 0 && <span className="font-headline font-black text-4xl md:text-6xl leading-none" style={{ color: 'var(--fg)' }}>${nowPrice.toLocaleString('es-AR')}</span>}
                     </div>
-                    <FlashCountdown activeUntil={page.activeUntil} shadowColor={primaryColor} />
+                    {page.activeUntil && (
+                      <FlashCountdown activeUntil={page.activeUntil} shadowColor={primaryColor} />
+                    )}
                     <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
                       <button onClick={onPurchase} className="od-fs-btn od-fs-btn-dark">{sec.ctaText || 'Inscribirme Ahora'}</button>
                     </div>
@@ -2896,25 +2908,35 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
             if (isLuxurySerif || isEditorial) {
               const nowPrice = typeof page.price === 'number' ? page.price : 0;
               const oldPrice = (typeof page.oldPrice === 'number' && page.oldPrice > 0) ? Math.round(page.oldPrice) : (nowPrice > 0 ? Math.round(nowPrice * 2.94) : 0);
+              const grayscale = isExecutiveDark;
               return (
                 <section key={sec.id} className="py-[var(--section-padding)] px-6">
-                  <div className="max-w-2xl mx-auto text-center space-y-7">
-                    {sec.title && <h2 className={cn("font-headline", isLuxurySerif ? "font-medium text-3xl md:text-5xl" : "font-bold text-3xl md:text-5xl")} style={{ color: pageFg }}>{sec.title}</h2>}
-                    {sec.content && <p className={cn("text-opacity-70 leading-relaxed", isLuxurySerif && "font-light")}>{sec.content}</p>}
-                    <div className="py-6" style={{ borderTop: '1px solid var(--component-border)', borderBottom: '1px solid var(--component-border)' }}>
-                      <div className="flex items-center justify-center gap-3">
-                        {oldPrice > 0 && <span className={cn("font-mono text-lg line-through text-opacity-50", isLuxurySerif && "font-light")}>${oldPrice.toLocaleString('es-AR')}</span>}
-                        {nowPrice > 0 && <span className="font-headline font-black text-4xl" style={{ color: accentColor }}>${nowPrice.toLocaleString('es-AR')}</span>}
-                      </div>
-                      {page.activeUntil && (
-                        <div className="mt-5 text-[26px] md:text-4xl tracking-[0.14em]" style={{ color: pageFg }}>
-                          <CompactCountdown activeUntil={page.activeUntil} color={pageFg} />
+                  <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+                    {sec.imageUrl && (
+                      <div className="w-full md:w-1/2 flex-shrink-0">
+                        <div className="relative aspect-[4/5] overflow-hidden" style={{ borderRadius: isEditorial ? 'var(--component-radius)' : 0 }}>
+                          <img src={sec.imageUrl} alt={sec.title || "Oferta"} className={cn("w-full h-full object-cover", grayscale && "grayscale")} />
                         </div>
+                      </div>
+                    )}
+                    <div className={cn("w-full flex flex-col", sec.imageUrl ? "md:w-1/2 md:items-start md:text-left" : "items-center text-center max-w-2xl mx-auto")}>
+                      {sec.title && <h2 className={cn("font-headline mb-4", isLuxurySerif ? "font-medium text-3xl md:text-5xl" : "font-bold text-3xl md:text-5xl")} style={{ color: pageFg }}>{sec.title}</h2>}
+                      {sec.content && <p className={cn("text-opacity-70 leading-relaxed mb-8", isLuxurySerif && "font-light")}>{sec.content}</p>}
+                      <div className="w-full py-8 mb-8" style={{ borderTop: '1px solid var(--component-border)', borderBottom: '1px solid var(--component-border)' }}>
+                        <div className={cn("flex items-center gap-3", sec.imageUrl ? "justify-start" : "justify-center")}>
+                          {oldPrice > 0 && <span className={cn("font-mono text-lg line-through text-opacity-50", isLuxurySerif && "font-light")}>${oldPrice.toLocaleString('es-AR')}</span>}
+                          {nowPrice > 0 && <span className="font-headline font-black text-4xl" style={{ color: accentColor }}>${nowPrice.toLocaleString('es-AR')}</span>}
+                        </div>
+                        {page.activeUntil && (
+                          <div className="mt-6 text-[26px] md:text-4xl tracking-[0.14em]" style={{ color: pageFg }}>
+                            <CompactCountdown activeUntil={page.activeUntil} color={pageFg} />
+                          </div>
+                        )}
+                      </div>
+                      {sec.ctaText && (
+                        <Button onClick={onPurchase} className={cn("h-14 px-12 text-sm font-medium tracking-[0.08em] uppercase rounded-[var(--component-radius)]", isLuxurySerif && "border")} style={isLuxurySerif ? { borderColor: pageFg, backgroundColor: 'transparent', color: pageFg } : { backgroundColor: btnBg, color: btnText }}>{sec.ctaText}</Button>
                       )}
                     </div>
-                    {sec.ctaText && (
-                      <Button onClick={onPurchase} className={cn("h-14 px-12 text-sm font-medium tracking-[0.08em] uppercase rounded-[var(--component-radius)]", isLuxurySerif && "border")} style={isLuxurySerif ? { borderColor: pageFg, backgroundColor: 'transparent', color: pageFg } : { backgroundColor: btnBg, color: btnText }}>{sec.ctaText}</Button>
-                    )}
                   </div>
                 </section>
               );

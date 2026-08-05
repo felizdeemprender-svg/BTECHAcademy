@@ -181,7 +181,7 @@ export const editorialStyle: LandingStyle = {
       name: 'Historias de Lectores',
       description: 'Redacta 3-6 testimonios con estructura de historia corta: contexto, giro, resultado.',
       blueprint: 'Citas en serif itálica grande, cita central de la historia en negrita.',
-      required: false, isRepeatable: false, contentType: 'mixed',
+      required: false, isRepeatable: false, contentType: 'text',
     },
     {
       id: 'bonuses',

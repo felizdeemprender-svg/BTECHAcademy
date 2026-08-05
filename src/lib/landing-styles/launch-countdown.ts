@@ -218,7 +218,7 @@ export const launchCountdownStyle: LandingStyle = {
       name: 'Expectativa de la Comunidad',
       description: 'Redacta 3-6 historias cortas de la comunidad que espera el lanzamiento o resultados previos, con resultado medible y nombre/rol. Que el lector se identifique.',
       blueprint: 'Grilla asimétrica de tarjetas oscuras con cita corta, resultado en mono destacado, avatar circular small. Leve rotación alternada.',
-      required: false, isRepeatable: false, contentType: 'mixed',
+      required: false, isRepeatable: false, contentType: 'text',
     },
     {
       id: 'countdownTimer',

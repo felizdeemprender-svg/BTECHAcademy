@@ -169,7 +169,7 @@ export const techB2bStyle: LandingStyle = {
       name: 'Secciones de Argumento',
       description: 'Argumenta con datos: el costo del problema, la eficiencia de la solución y el retorno medible. Viñetas con cifras.',
       blueprint: 'Bloques alternados con screenshot o tabla de datos. Títulos en primario, cifras destacadas en mono.',
-      required: true, isRepeatable: true, contentType: 'text',
+      required: true, isRepeatable: true, contentType: 'mixed',
     },
     {
       id: 'benefits',
@@ -197,7 +197,7 @@ export const techB2bStyle: LandingStyle = {
       name: 'Casos de Clientes',
       description: 'Redacta 3-6 casos con resultado medible (tiempo ahorrado, ingresos, eficiencia) y nombre/rol real.',
       blueprint: 'Tarjetas con métrica destacada en mono arriba, cita corta, nombre y rol abajo.',
-      required: false, isRepeatable: false, contentType: 'mixed',
+      required: false, isRepeatable: false, contentType: 'text',
     },
     {
       id: 'bonuses',

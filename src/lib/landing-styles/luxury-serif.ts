@@ -181,7 +181,7 @@ export const luxurySerifStyle: LandingStyle = {
       name: 'Testimonios Distinguidos',
       description: 'Redacta 3-6 testimonios de clientes distinguidos con resultado concreto y nombre/rol.',
       blueprint: 'Citas en serif itálica gigante, nombre pequeño y elegante abajo. Sin fotos.',
-      required: false, isRepeatable: false, contentType: 'mixed',
+      required: false, isRepeatable: false, contentType: 'text',
     },
     {
       id: 'bonuses',

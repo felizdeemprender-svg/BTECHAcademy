@@ -98,7 +98,6 @@ export function getSectionsNeedingImages(
     const styleSec = styleData?.availableSections?.find((s: any) => s.id === baseId);
     const ct = styleSec?.contentType;
     if (ct === 'mixed' || ct === 'image') return true;
-    if (['narrativeSections', 'mentorProfile', 'bonuses', 'countdownTimer', 'testimonials'].includes(baseId)) return true;
     return false;
   }).map((sec: any) => ({
     id: sec.id,

@@ -197,7 +197,7 @@ export const corporateStyle: LandingStyle = {
       name: 'Referencias',
       description: 'Redacta 3-6 testimonios profesionales con resultado concreto y nombre completo/rol. Credibilidad y prueba verificable.',
       blueprint: 'Grilla de tarjetas blancas con borde fino. Cita en comillas, nombre y rol abajo en pequeño. Sin fotos llamativas.',
-      required: false, isRepeatable: false, contentType: 'mixed',
+      required: false, isRepeatable: false, contentType: 'text',
     },
     {
       id: 'bonuses',
