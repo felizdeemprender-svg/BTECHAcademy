@@ -338,6 +338,31 @@ export default function V2LandingEditorPage() {
     brands.find((b: StyleBrand) => b.palette?.primary === landingData?.content?.designTokens?.primary && b.typography?.name === landingData?.content?.designTokens?.typography?.name) ||
     undefined;
 
+  const presentBaseIds = new Set((landingData?.content?.sections || []).map((s: any) => s.id.split('_')[0]));
+  const missingSections = (styleData?.availableSections || []).filter((s: any) => !presentBaseIds.has(s.id));
+
+  const addSection = (secDef: any) => {
+    const baseId = secDef.id;
+    const existingCount = (landingData?.content?.sections || []).filter((s: any) => s.id.startsWith(baseId + '_')).length;
+    const newSec = {
+      id: `${baseId}_${existingCount}`,
+      name: secDef.name,
+      title: secDef.name,
+      subtitle: '',
+      content: '',
+      bullets: [] as string[],
+      isVisible: true,
+    };
+    setLandingData((prev: any) => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        sections: [...(prev.content?.sections || []), newSec],
+      },
+    }));
+    setActiveSectionId(newSec.id);
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-[1600px] mx-auto pb-20 space-y-6">
@@ -365,7 +390,7 @@ export default function V2LandingEditorPage() {
               <Eye className="w-4 h-4 mr-2" />
               Previsualizar
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="rounded-full font-bold bg-success hover:bg-success">
+            <Button onClick={handleSave} disabled={saving} className="rounded-full font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Guardar Cambios
             </Button>
@@ -389,6 +414,17 @@ export default function V2LandingEditorPage() {
                 )}
               >
                 🎨 Paleta y Tipografía
+              </button>
+              <button
+                onClick={() => setActiveSectionId('page_data')}
+                className={cn(
+                  "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors mt-2",
+                  activeSectionId === 'page_data' 
+                    ? "bg-primary text-white shadow-sm"
+                    : "hover:bg-muted text-muted-foreground bg-muted border border-border"
+                )}
+              >
+                📄 Datos de la Página
               </button>
               <button
                 onClick={() => setActiveSectionId('footer_0')}
@@ -435,20 +471,39 @@ export default function V2LandingEditorPage() {
                 })}
               </div>
             </ScrollArea>
+            {missingSections.length > 0 && (
+              <>
+                <div className="p-4 border-t border-border/50 bg-muted/50">
+                  <h3 className="font-bold text-sm text-foreground">Agregar Secciones</h3>
+                </div>
+                <div className="p-3 space-y-1">
+                  {missingSections.map((sec: any) => (
+                    <button
+                      key={sec.id}
+                      onClick={() => addSection(sec)}
+                      className="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors hover:bg-muted text-muted-foreground bg-muted border border-dashed border-border flex items-center justify-between gap-2"
+                    >
+                      <span>{sec.name}</span>
+                      <span className="text-primary font-black text-base leading-none">+</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </Card>
 
           {/* Panel Derecho: Editor de la Sección Activa */}
-          {activeSection || activeSectionId === 'global_settings' ? (
+          {activeSection || activeSectionId === 'global_settings' || activeSectionId === 'page_data' ? (
             <Card className="shadow-sm border-border/50 h-full overflow-hidden flex flex-col rounded-2xl bg-white">
               <div className="p-6 border-b border-border/50 flex items-center justify-between">
                 <h2 className="text-xl font-black text-foreground">
-                  {activeSectionId === 'global_settings' ? 'Configuración Visual Global' : `Editando: ${(() => {
+                  {activeSectionId === 'global_settings' ? 'Configuración Visual Global' : activeSectionId === 'page_data' ? 'Datos de la Página' : `Editando: ${(() => {
                     const baseId = activeSection.id?.split('_')[0];
                     const styleSec = styleData?.availableSections?.find((s: any) => s.id === baseId);
                     return styleSec?.name || activeSection?.name || activeSection?.id;
                   })()}`}
                 </h2>
-                {activeSectionId !== 'global_settings' && activeSectionId !== 'footer' && (
+                {activeSectionId !== 'global_settings' && activeSectionId !== 'page_data' && activeSectionId !== 'footer' && (
                   <Button 
                     onClick={handleRegenerateSection} 
                     disabled={isRegenerating}
@@ -463,7 +518,7 @@ export default function V2LandingEditorPage() {
               </div>
               <ScrollArea className="flex-1 p-6">
                 <div className="max-w-2xl space-y-6">
-                  {activeSectionId === 'global_settings' ? (
+                  {activeSectionId === 'page_data' ? (
                     <div className="space-y-8">
                       {/* PRECIO Y VENCIMIENTO */}
                       <div className="space-y-4">
@@ -499,10 +554,12 @@ export default function V2LandingEditorPage() {
                               setActiveUntilStr(e.target.value);
                               updatePageField('activeUntil', e.target.value ? new Date(e.target.value) : null);
                             }}
-                          />
+                            />
+                          </div>
                         </div>
                       </div>
-
+                  ) : activeSectionId === 'global_settings' ? (
+                    <div className="space-y-8">
                       {/* BRANDS */}
                       <div className="space-y-4">
                         <Label className="text-lg font-bold text-foreground">Brand Visual</Label>
@@ -538,7 +595,7 @@ export default function V2LandingEditorPage() {
                         </div>
                         <p className="text-sm text-muted-foreground">Valores del brand activo. Se aplican al renderizar la landing; para cambiarlos, seleccioná otro brand arriba.</p>
                         <div className="grid grid-cols-2 gap-3">
-                          {styleData?.tokens && Object.entries(TOKEN_LABELS).map(([key, label]) => {
+                          {styleData?.tokens && Object.entries(TOKEN_LABELS).filter(([key]) => key !== 'extraTokens').map(([key, label]) => {
                             const tokenKey = key as keyof StyleTokens;
                             const styleVal = styleData.tokens[tokenKey];
                             const overrideVal = landingData?.content?.designTokens?.styleTokens?.[tokenKey];
