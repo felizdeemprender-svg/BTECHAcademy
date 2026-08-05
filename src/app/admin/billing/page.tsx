@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ResponsiveTable } from '@/components/ui/responsive-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -231,42 +231,73 @@ export default function BillingPage() {
               <h2 className="font-headline font-bold text-lg text-primary">Desglose por Tipo de Abono</h2>
             </div>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-primary/5">
-                  <TableRow className="border-none">
-                    {['Tipo', 'Tutores', 'Monto Total Facturado', 'Promedio / Tutor', '% del Total'].map(h => (
-                      <TableHead key={h} className="py-4 px-8 text-[10px] font-bold uppercase tracking-widest text-primary/60">{h}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {report.byType.map(row => (
-                    <TableRow key={row.type} className="hover:bg-primary/5 transition-colors border-b border-border/30">
-                      <TableCell className="px-8 py-5">
-                        <Badge className={cn('text-xs font-bold border', TYPE_CONFIG[row.type as keyof typeof TYPE_CONFIG]?.color || 'bg-muted text-muted-foreground')}>
-                          {row.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-8 py-5 font-bold text-foreground">{row.count}</TableCell>
-                      <TableCell className="px-8 py-5 font-bold text-foreground text-base">{formatCurrency(row.totalBilled)}</TableCell>
-                      <TableCell className="px-8 py-5 text-muted-foreground font-medium">{formatCurrency(row.avgBilled)}</TableCell>
-                      <TableCell className="px-8 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[120px]">
-                            <div
-                              className={cn('h-full rounded-full', TYPE_CONFIG[row.type as keyof typeof TYPE_CONFIG]?.dot || 'bg-muted-foreground')}
-                              style={{ width: `${report.summary.totalBilled > 0 ? (row.totalBilled / report.summary.totalBilled) * 100 : 0}%` }}
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-muted-foreground tabular-nums">
-                            {report.summary.totalBilled > 0 ? ((row.totalBilled / report.summary.totalBilled) * 100).toFixed(1) : 0}%
-                          </span>
+              <ResponsiveTable
+                data={report.byType}
+                keyExtractor={(row) => row.type}
+                columns={[
+                  {
+                    key: 'type',
+                    header: 'Tipo',
+                    hideOnMobile: true,
+                    className: 'px-8 py-5',
+                    cell: (row) => (
+                      <Badge className={cn('text-xs font-bold border', TYPE_CONFIG[row.type as keyof typeof TYPE_CONFIG]?.color || 'bg-muted text-muted-foreground')}>
+                        {row.label}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    key: 'count',
+                    header: 'Tutores',
+                    align: 'center',
+                    className: 'px-8 py-5',
+                    cell: (row) => <span className="font-bold text-foreground">{row.count}</span>,
+                  },
+                  {
+                    key: 'totalBilled',
+                    header: 'Monto Total Facturado',
+                    align: 'right',
+                    cardLabel: 'Monto Total',
+                    className: 'px-8 py-5',
+                    cell: (row) => <span className="font-bold text-foreground text-base">{formatCurrency(row.totalBilled)}</span>,
+                  },
+                  {
+                    key: 'avgBilled',
+                    header: 'Promedio / Tutor',
+                    align: 'right',
+                    cardLabel: 'Promedio / Tutor',
+                    className: 'px-8 py-5',
+                    cell: (row) => <span className="text-muted-foreground font-medium">{formatCurrency(row.avgBilled)}</span>,
+                  },
+                  {
+                    key: 'pct',
+                    header: '% del Total',
+                    align: 'right',
+                    className: 'px-8 py-5',
+                    cell: (row) => (
+                      <div className="flex items-center justify-end gap-3">
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[120px]">
+                          <div
+                            className={cn('h-full rounded-full', TYPE_CONFIG[row.type as keyof typeof TYPE_CONFIG]?.dot || 'bg-muted-foreground')}
+                            style={{ width: `${report.summary.totalBilled > 0 ? (row.totalBilled / report.summary.totalBilled) * 100 : 0}%` }}
+                          />
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        <span className="text-xs font-bold text-muted-foreground tabular-nums">
+                          {report.summary.totalBilled > 0 ? ((row.totalBilled / report.summary.totalBilled) * 100).toFixed(1) : 0}%
+                        </span>
+                      </div>
+                    ),
+                  },
+                ]}
+                mobileCardHeader={(row) => (
+                  <div className="flex items-start justify-between gap-4">
+                    <Badge className={cn('text-xs font-bold border', TYPE_CONFIG[row.type as keyof typeof TYPE_CONFIG]?.color || 'bg-muted text-muted-foreground')}>
+                      {row.label}
+                    </Badge>
+                    <span className="text-lg font-bold text-foreground">{formatCurrency(row.totalBilled)}</span>
+                  </div>
+                )}
+              />
             </CardContent>
           </Card>
         )}
@@ -312,89 +343,142 @@ export default function BillingPage() {
             </div>
           </div>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-primary/5">
-                <TableRow className="border-none">
-                  {['Tutor', 'Plan / Tipo', 'Cursos Activos', 'Ventas (unid.)', 'Ingresos Generados', 'A Facturar', 'Estado'].map(h => (
-                    <TableHead key={h} className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest text-primary/60 first:pl-8 last:pr-8">{h}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-20 text-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
-                      <p className="text-muted-foreground text-sm font-medium">Calculando facturación...</p>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredTutors.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-20 text-center italic text-muted-foreground">
-                      No hay tutores que coincidan con los filtros.
-                    </TableCell>
-                  </TableRow>
-                ) : filteredTutors.map(tutor => (
-                  <TableRow key={tutor.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
-                    <TableCell className="pl-8 py-5">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                          <AvatarImage src={tutor.photoURL || undefined} />
-                          <AvatarFallback className="bg-primary/15 text-primary font-bold text-sm">
-                            {tutor.displayName[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-bold text-foreground leading-tight">{tutor.displayName}</p>
-                          <p className="text-xs text-muted-foreground">{tutor.email}</p>
-                        </div>
+            <ResponsiveTable
+              data={filteredTutors}
+              keyExtractor={(tutor) => tutor.id}
+              isLoading={loading}
+              loadingState={
+                <div className="py-20 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm font-medium">Calculando facturación...</p>
+                </div>
+              }
+              emptyState={
+                <div className="py-20 text-center italic text-muted-foreground">
+                  No hay tutores que coincidan con los filtros.
+                </div>
+              }
+              columns={[
+                {
+                  key: 'tutor',
+                  header: 'Tutor',
+                  hideOnMobile: true,
+                  className: 'pl-8',
+                  cell: (tutor) => (
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                        <AvatarImage src={tutor.photoURL || undefined} />
+                        <AvatarFallback className="bg-primary/15 text-primary font-bold text-sm">
+                          {tutor.displayName[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-bold text-foreground leading-tight">{tutor.displayName}</p>
+                        <p className="text-xs text-muted-foreground">{tutor.email}</p>
                       </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-5">
-                      <div className="space-y-1">
-                        <Badge className={cn('text-[10px] font-bold border', TYPE_CONFIG[tutor.subscriptionType]?.color)}>
-                          {TYPE_CONFIG[tutor.subscriptionType]?.label}
-                        </Badge>
-                        <p className="text-[10px] text-muted-foreground font-medium leading-tight">
-                          {tutor.planName}
-                          {tutor.subscriptionType === 'fixed' && tutor.fixedAmount > 0 && ` · ${formatCurrency(tutor.fixedAmount)}/mes`}
-                          {tutor.subscriptionType === 'percentage' && tutor.percentageRate > 0 && ` · ${tutor.percentageRate}%`}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-5 text-center">
-                      <span className="font-bold text-foreground text-lg">{tutor.activeCoursesCount}</span>
-                    </TableCell>
-                    <TableCell className="px-6 py-5 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <ShoppingCart className="h-4 w-4 text-success" />
-                        <span className="font-bold text-foreground">{tutor.totalSalesCount}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-5">
-                      <span className={cn('font-bold', tutor.totalSalesRevenue > 0 ? 'text-success' : 'text-muted-foreground')}>
-                        {formatCurrency(tutor.totalSalesRevenue)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-6 py-5">
-                      <span className={cn('font-bold text-lg', tutor.billedAmount > 0 ? 'text-primary' : 'text-muted-foreground')}>
-                        {formatCurrency(tutor.billedAmount)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="pr-8 py-5">
-                      <Badge
-                        className={cn(
-                          'text-[10px] font-bold border',
-                          tutor.subscriptionStatus === 'active' ? 'bg-success/15 text-success border-success/20' : 'bg-warn/15 text-warn border-warn/20'
-                        )}
-                      >
-                        {tutor.subscriptionStatus === 'active' ? 'Activo' : tutor.subscriptionStatus}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'plan',
+                  header: 'Plan / Tipo',
+                  cardLabel: 'Plan / Tipo',
+                  cell: (tutor) => (
+                    <div className="space-y-1">
+                      <Badge className={cn('text-[10px] font-bold border', TYPE_CONFIG[tutor.subscriptionType]?.color)}>
+                        {TYPE_CONFIG[tutor.subscriptionType]?.label}
                       </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      <p className="text-[10px] text-muted-foreground font-medium leading-tight">
+                        {tutor.planName}
+                        {tutor.subscriptionType === 'fixed' && tutor.fixedAmount > 0 && ` · ${formatCurrency(tutor.fixedAmount)}/mes`}
+                        {tutor.subscriptionType === 'percentage' && tutor.percentageRate > 0 && ` · ${tutor.percentageRate}%`}
+                      </p>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'activeCourses',
+                  header: 'Cursos Activos',
+                  align: 'center',
+                  hideOnMobile: true,
+                  cell: (tutor) => <span className="font-bold text-foreground text-lg">{tutor.activeCoursesCount}</span>,
+                },
+                {
+                  key: 'sales',
+                  header: 'Ventas (unid.)',
+                  align: 'center',
+                  hideOnMobile: true,
+                  cell: (tutor) => (
+                    <div className="flex items-center justify-center gap-1.5">
+                      <ShoppingCart className="h-4 w-4 text-success" />
+                      <span className="font-bold text-foreground">{tutor.totalSalesCount}</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'revenue',
+                  header: 'Ingresos Generados',
+                  align: 'right',
+                  cardLabel: 'Ingresos Generados',
+                  cell: (tutor) => (
+                    <span className={cn('font-bold', tutor.totalSalesRevenue > 0 ? 'text-success' : 'text-muted-foreground')}>
+                      {formatCurrency(tutor.totalSalesRevenue)}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'billed',
+                  header: 'A Facturar',
+                  align: 'right',
+                  cardLabel: 'A Facturar',
+                  cell: (tutor) => (
+                    <span className={cn('font-bold text-lg', tutor.billedAmount > 0 ? 'text-primary' : 'text-muted-foreground')}>
+                      {formatCurrency(tutor.billedAmount)}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'status',
+                  header: 'Estado',
+                  hideOnMobile: true,
+                  className: 'pr-8',
+                  cell: (tutor) => (
+                    <Badge
+                      className={cn(
+                        'text-[10px] font-bold border',
+                        tutor.subscriptionStatus === 'active' ? 'bg-success/15 text-success border-success/20' : 'bg-warn/15 text-warn border-warn/20'
+                      )}
+                    >
+                      {tutor.subscriptionStatus === 'active' ? 'Activo' : tutor.subscriptionStatus}
+                    </Badge>
+                  ),
+                },
+              ]}
+              mobileCardHeader={(tutor) => (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                      <AvatarImage src={tutor.photoURL || undefined} />
+                      <AvatarFallback className="bg-primary/15 text-primary font-bold text-sm">
+                        {tutor.displayName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-bold text-sm text-foreground leading-tight">{tutor.displayName}</p>
+                      <p className="text-xs text-muted-foreground">{tutor.email}</p>
+                    </div>
+                  </div>
+                  <Badge
+                    className={cn(
+                      'text-[8px] font-bold border',
+                      tutor.subscriptionStatus === 'active' ? 'bg-success/15 text-success border-success/20' : 'bg-warn/15 text-warn border-warn/20'
+                    )}
+                  >
+                    {tutor.subscriptionStatus === 'active' ? 'Activo' : tutor.subscriptionStatus}
+                  </Badge>
+                </div>
+              )}
+            />
           </CardContent>
         </Card>
       </div>

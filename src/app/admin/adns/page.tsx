@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ResponsiveTable } from '@/components/ui/responsive-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -269,11 +269,11 @@ export default function AdminAdnsPage() {
     <DashboardLayout>
       <div className="space-y-8 animate-in fade-in duration-700">
         <div className="flex flex-col gap-2 border-b border-border/30 pb-8">
-          <div className="flex items-center justify-between">
-            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight flex items-center gap-3">
-              <Rocket className="h-8 w-8 text-success" /> Gestión de ADNs Maestros
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight flex items-center gap-3 min-w-0">
+              <Rocket className="h-8 w-8 text-success shrink-0" /> <span className="truncate">Gestión de ADNs Maestros</span>
             </h1>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <Button onClick={fetchAdns} variant="outline" className="rounded-xl h-11 px-6 font-bold gap-2 border-2">
                 <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
                 Sincronizar
@@ -303,44 +303,85 @@ export default function AdminAdnsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow className="border-none">
-                  <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-black">ADN / Master</TableHead>
-                  <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-black text-center">Estado</TableHead>
-                  <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-black text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {adns.map((adn) => (
-                  <TableRow key={adn.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
-                    <TableCell className="px-10 py-6">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-foreground text-base tracking-tight">{adn.name}</span>
-                        <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1">ID: {adn.id}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">{getStatusBadge(adn.status)}</TableCell>
-                    <TableCell className="px-10 py-6 text-right">
-                      <div className="flex justify-end gap-2 items-center">
-                        <Button variant="ghost" size="sm" className="h-10 px-4 rounded-xl font-bold gap-2 text-primary hover:bg-primary/10" onClick={() => handleVerify(adn.id)}>
-                          <ShieldCheck className="h-4 w-4 text-success" /> Verificar
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-blue-500 hover:bg-blue-50 rounded-xl" onClick={() => handleViewDetail(adn.id)}>
-                          <Eye className="h-5 w-5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:bg-muted rounded-xl">
-                          <Upload className="h-5 w-5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-danger hover:bg-danger/10 rounded-xl" onClick={() => setConfirmDeleteId(adn.id)}>
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ResponsiveTable
+              data={adns}
+              keyExtractor={(adn) => adn.id}
+              columns={[
+                {
+                  key: 'adn',
+                  header: 'ADN / Master',
+                  hideOnMobile: true,
+                  className: 'px-10 py-6',
+                  cell: (adn) => (
+                    <div className="flex flex-col">
+                      <span className="font-bold text-foreground text-base tracking-tight">{adn.name}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1">ID: {adn.id}</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'status',
+                  header: 'Estado',
+                  align: 'center',
+                  hideOnMobile: true,
+                  cell: (adn) => getStatusBadge(adn.status),
+                },
+                {
+                  key: 'actions',
+                  header: 'Acciones',
+                  align: 'right',
+                  hideOnMobile: true,
+                  className: 'px-10 py-6',
+                  cell: (adn) => (
+                    <div className="flex justify-end gap-2 items-center">
+                      <Button variant="ghost" size="sm" className="h-10 px-4 rounded-xl font-bold gap-2 text-primary hover:bg-primary/10" onClick={() => handleVerify(adn.id)}>
+                        <ShieldCheck className="h-4 w-4 text-success" /> Verificar
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-blue-500 hover:bg-blue-50 rounded-xl" onClick={() => handleViewDetail(adn.id)}>
+                        <Eye className="h-5 w-5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:bg-muted rounded-xl">
+                        <Upload className="h-5 w-5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-danger hover:bg-danger/10 rounded-xl" onClick={() => setConfirmDeleteId(adn.id)}>
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+              mobileCardHeader={(adn) => (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col">
+                    <span className="font-bold text-foreground text-base tracking-tight">{adn.name}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1">ID: {adn.id}</span>
+                  </div>
+                  {getStatusBadge(adn.status)}
+                </div>
+              )}
+              mobileCardFooter={(adn) => (
+                <div className="space-y-2">
+                  <Button
+                    variant="ghost"
+                    className="w-full h-11 rounded-xl font-bold text-xs gap-2 text-primary hover:bg-primary/10"
+                    onClick={() => handleVerify(adn.id)}
+                  >
+                    <ShieldCheck className="h-4 w-4 text-success" /> Verificar
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="icon" className="flex-1 h-11 rounded-xl text-blue-500" onClick={() => handleViewDetail(adn.id)}>
+                      <Eye className="h-5 w-5" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="flex-1 h-11 rounded-xl text-muted-foreground">
+                      <Upload className="h-5 w-5" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="flex-1 h-11 rounded-xl text-danger hover:text-danger" onClick={() => setConfirmDeleteId(adn.id)}>
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            />
           </CardContent>
         </Card>
 

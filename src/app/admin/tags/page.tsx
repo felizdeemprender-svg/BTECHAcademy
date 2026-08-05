@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { ResponsiveTable } from '@/components/ui/responsive-table';
 import { Plus, Trash2, Pencil, Save, Loader2, Tags, Tag as TagIcon, Sparkles, BrainCircuit, Check, Search, X, Globe } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -173,15 +173,15 @@ export default function AdminTagsPage() {
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Etiquetas Académicas</h1>
             <p className="text-muted-foreground text-lg font-medium">Define las categorías institucionales para la clasificación de cursos y el posicionamiento SEO en Google.</p>
           </div>
-          <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsAiDialogOpen(true)} 
-              disabled={loading || isAuthLoading}
-              className="h-12 px-6 rounded-xl font-bold border-2 border-dashed border-accent text-accent hover:bg-accent/5 gap-2"
-            >
-              <Sparkles className="h-4 w-4" /> Cargar Sugerencias SEO
-            </Button>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setIsAiDialogOpen(true)}
+            disabled={loading || isAuthLoading}
+            className="h-12 px-6 rounded-xl font-bold border-2 border-dashed border-accent text-accent hover:bg-accent/5 gap-2"
+          >
+            <Sparkles className="h-4 w-4" /> Cargar Sugerencias SEO
+          </Button>
             <Button onClick={() => handleOpenDialog()} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
               <Plus className="h-5 w-5" /> Nueva Etiqueta
             </Button>
@@ -190,46 +190,88 @@ export default function AdminTagsPage() {
 
         <Card className="border-none rounded-2xl overflow-hidden bg-white">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-primary/5">
-                <TableRow className="border-none">
-                  <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Palabra Clave (SEO)</TableHead>
-                  <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Descripción Semántica</TableHead>
-                  <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tagsLoading ? (
-                  <TableRow><TableCell colSpan={3} className="py-20 text-center text-muted-foreground animate-pulse font-bold text-lg">Sincronizando taxonomías...</TableCell></TableRow>
-                ) : tags?.length === 0 ? (
-                  <TableRow><TableCell colSpan={3} className="py-20 text-center italic text-muted-foreground">No hay etiquetas definidas. Usa "Cargar Sugerencias SEO" para que Gemini te proponga keywords.</TableCell></TableRow>
-                ) : tags?.map((tag) => (
-                  <TableRow key={tag.id} className="hover:bg-primary/5 transition-colors border-b border-border/30">
-                    <TableCell className="px-10 py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                          <TagIcon className="h-5 w-5" />
-                        </div>
-                        <span className="font-bold text-lg text-foreground">{tag.name}</span>
+            <ResponsiveTable
+              data={tags || []}
+              keyExtractor={(tag) => tag.id}
+              isLoading={tagsLoading}
+              loadingState={
+                <div className="py-20 text-center text-muted-foreground animate-pulse font-bold text-lg">Sincronizando taxonomías...</div>
+              }
+              emptyState={
+                <div className="py-20 text-center italic text-muted-foreground">
+                  No hay etiquetas definidas. Usa "Cargar Sugerencias SEO" para que Gemini te proponga keywords.
+                </div>
+              }
+              columns={[
+                {
+                  key: 'keyword',
+                  header: 'Palabra Clave (SEO)',
+                  hideOnMobile: true,
+                  className: 'px-10 py-6',
+                  cell: (tag) => (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <TagIcon className="h-5 w-5" />
                       </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground max-w-md truncate">
+                      <span className="font-bold text-lg text-foreground">{tag.name}</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'description',
+                  header: 'Descripción Semántica',
+                  cardLabel: 'Descripción Semántica',
+                  cell: (tag) => (
+                    <span className="max-w-md truncate text-muted-foreground inline-block">
                       {tag.description || '-'}
-                    </TableCell>
-                    <TableCell className="px-10 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(tag)} className="h-10 w-10 rounded-xl hover:bg-primary/10 text-primary">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteTag(tag.id)} className="h-10 w-10 rounded-xl hover:bg-destructive/10 text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </span>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  header: 'Acciones',
+                  align: 'right',
+                  hideOnMobile: true,
+                  className: 'px-10',
+                  cell: (tag) => (
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(tag)} className="h-10 w-10 rounded-xl hover:bg-primary/10 text-primary">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteTag(tag.id)} className="h-10 w-10 rounded-xl hover:bg-destructive/10 text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+              mobileCardHeader={(tag) => (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <TagIcon className="h-5 w-5" />
+                  </div>
+                  <span className="font-bold text-foreground">{tag.name}</span>
+                </div>
+              )}
+              mobileCardFooter={(tag) => (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleOpenDialog(tag)}
+                    className="flex-1 h-11 rounded-xl font-bold text-xs gap-2 text-primary"
+                  >
+                    <Pencil className="h-4 w-4" /> Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDeleteTag(tag.id)}
+                    className="flex-1 h-11 rounded-xl font-bold text-xs gap-2 text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" /> Eliminar
+                  </Button>
+                </div>
+              )}
+            />
           </CardContent>
         </Card>
 

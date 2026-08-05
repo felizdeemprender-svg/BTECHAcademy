@@ -143,7 +143,7 @@ export default function MarketingTemplatesPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-col gap-2 border-b pb-6">
-          <h1 className="text-4xl font-headline font-bold text-primary tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl md:text-4xl font-headline font-bold text-primary tracking-tight flex items-center gap-3">
             <BrainCircuit className="h-8 w-8 text-success" /> Arquitecto de
             Identidad IA
           </h1>

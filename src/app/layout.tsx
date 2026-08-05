@@ -1,6 +1,13 @@
-﻿import type {Metadata} from 'next';
+﻿import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { LayoutWrapper } from './layout-wrapper';
+import { OverflowDetector } from '@/components/dev/overflow-detector';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export const metadata: Metadata = {
   title: 'FastoriaAcademy | Plataforma de Alto Impacto para Mentores',
@@ -28,6 +35,7 @@ export default function RootLayout({
         <LayoutWrapper>
           {children}
         </LayoutWrapper>
+        <OverflowDetector />
       </body>
     </html>
   );

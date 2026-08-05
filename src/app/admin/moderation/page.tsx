@@ -149,14 +149,14 @@ export default function AdminModerationPage() {
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Temas Sensibles</h1>
             <p className="text-muted-foreground text-lg font-medium">Define los conceptos que requieren supervisión administrativa obligatoria.</p>
           </div>
-          <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsAiDialogOpen(true)}
-              className="h-14 px-6 rounded-2xl font-bold border-2 border-dashed border-accent text-accent hover:bg-accent/5 gap-2"
-            >
-              <Sparkles className="h-5 w-5" /> Sugerencias IA
-            </Button>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setIsAiDialogOpen(true)}
+            className="h-14 px-6 rounded-2xl font-bold border-2 border-dashed border-accent text-accent hover:bg-accent/5 gap-2"
+          >
+            <Sparkles className="h-5 w-5" /> Sugerencias IA
+          </Button>
             <Button onClick={handleSaveModeration} disabled={loading} className="h-14 px-8 rounded-2xl font-bold flex items-center gap-2">
               {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />} Guardar Protocolo
             </Button>

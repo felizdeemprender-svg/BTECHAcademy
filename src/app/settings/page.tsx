@@ -590,11 +590,11 @@ export default function SettingsPage() {
                             <p className="text-xs text-muted-foreground font-medium">Link para compartir con tus alumnos</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
                           <Input 
                             readOnly 
                             value={tutorProfileUrl || ''} 
-                            className="bg-muted border-muted font-mono text-[10px] min-w-[200px]"
+                             className="bg-muted border-muted font-mono text-[10px] w-full"
                            size="lg" />
                           <Button 
                             onClick={() => {

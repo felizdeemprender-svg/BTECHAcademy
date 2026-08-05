@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ResponsiveTable } from '@/components/ui/responsive-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -281,122 +281,193 @@ export default function AdminTutorsPage() {
           <CardTitle>Tutores y Suscripciones ({filteredTutors.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tutor</TableHead>
-                  <TableHead>Página</TableHead>
-                  <TableHead>Tipo de Abono</TableHead>
-                  <TableHead>Cursos Gratuitos</TableHead>
-                  <TableHead>Invitaciones</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTutors.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No se encontraron tutores con los filtros seleccionados
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredTutors.map((tutor) => (
-                    <TableRow key={tutor.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden bg-border">
-                            {tutor.photoURL ? (
-                              <img 
-                                src={tutor.photoURL} 
-                                alt={tutor.displayName}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-sm font-medium">
-                                {tutor.displayName.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium">{tutor.displayName}</div>
-                            <div className="text-sm text-muted-foreground">{tutor.email}</div>
-                          </div>
+          <ResponsiveTable
+            data={filteredTutors}
+            keyExtractor={(tutor) => tutor.id}
+            emptyState={
+              <div className="text-center py-8 text-muted-foreground">
+                No se encontraron tutores con los filtros seleccionados
+              </div>
+            }
+            columns={[
+              {
+                key: 'tutor',
+                header: 'Tutor',
+                hideOnMobile: true,
+                cell: (tutor) => (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-border">
+                      {tutor.photoURL ? (
+                        <img
+                          src={tutor.photoURL}
+                          alt={tutor.displayName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-sm font-medium">
+                          {tutor.displayName.charAt(0).toUpperCase()}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {tutor.subscription.hasCustomPage ? (
-                          <Badge className="bg-success flex items-center gap-1">
-                            <Globe className="h-3 w-3" /> Sí
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="flex items-center gap-1">
-                            <XCircle className="h-3 w-3" /> No
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {getSubscriptionBadge(tutor.subscription)}
-                      </TableCell>
-                      <TableCell>
-                        {tutor.subscription.requiresFreeCourses ? (
-                          <div className="flex items-center gap-1">
-                            <GraduationCap className="h-4 w-4 text-blue-500" />
-                            <span>{tutor.subscription.freeCoursesCount}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">No requerido</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-4 w-4 text-primary" />
-                          <span>{tutor.subscription.invitationsPerCourse}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(tutor.subscription.status)}
-                      </TableCell>
-                      <TableCell>
-                        <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setSelectedTutor(tutor)}
-                            >
-                              <Settings className="h-4 w-4 mr-1" />
-                              Configurar
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="mw-4xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle>
-                                Configurar Suscripción - {selectedTutor?.displayName}
-                              </DialogTitle>
-                            </DialogHeader>
-                            {selectedTutor && (
-                              <SubscriptionConfigForm 
-                                tutorId={selectedTutor.id}
-                                tutorName={selectedTutor.displayName}
-                                initialData={selectedTutor.subscription}
-                                onSave={handleConfigSuccess}
-                                onCancel={() => {
-                                  setIsConfigOpen(false);
-                                  setSelectedTutor(null);
-                                }}
-                              />
-                            )}
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium">{tutor.displayName}</div>
+                      <div className="text-sm text-muted-foreground">{tutor.email}</div>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                key: 'page',
+                header: 'Página',
+                cardLabel: 'Página',
+                cell: (tutor) =>
+                  tutor.subscription.hasCustomPage ? (
+                    <Badge className="bg-success flex items-center gap-1">
+                      <Globe className="h-3 w-3" /> Sí
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <XCircle className="h-3 w-3" /> No
+                    </Badge>
+                  ),
+              },
+              {
+                key: 'plan',
+                header: 'Tipo de Abono',
+                cardLabel: 'Tipo de Abono',
+                cell: (tutor) => getSubscriptionBadge(tutor.subscription),
+              },
+              {
+                key: 'freeCourses',
+                header: 'Cursos Gratuitos',
+                align: 'center',
+                hideOnMobile: true,
+                cell: (tutor) =>
+                  tutor.subscription.requiresFreeCourses ? (
+                    <div className="flex items-center justify-center gap-1">
+                      <GraduationCap className="h-4 w-4 text-blue-500" />
+                      <span>{tutor.subscription.freeCoursesCount}</span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">No requerido</span>
+                  ),
+              },
+              {
+                key: 'invitations',
+                header: 'Invitaciones',
+                align: 'center',
+                hideOnMobile: true,
+                cell: (tutor) => (
+                  <div className="flex items-center justify-center gap-1">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <span>{tutor.subscription.invitationsPerCourse}</span>
+                  </div>
+                ),
+              },
+              {
+                key: 'status',
+                header: 'Estado',
+                align: 'center',
+                hideOnMobile: true,
+                cell: (tutor) => getStatusBadge(tutor.subscription.status),
+              },
+              {
+                key: 'actions',
+                header: 'Acciones',
+                align: 'right',
+                hideOnMobile: true,
+                cell: (tutor) => (
+                  <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedTutor(tutor)}
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        Configurar
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="mw-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>
+                          Configurar Suscripción - {selectedTutor?.displayName}
+                        </DialogTitle>
+                      </DialogHeader>
+                      {selectedTutor && (
+                        <SubscriptionConfigForm
+                          tutorId={selectedTutor.id}
+                          tutorName={selectedTutor.displayName}
+                          initialData={selectedTutor.subscription}
+                          onSave={handleConfigSuccess}
+                          onCancel={() => {
+                            setIsConfigOpen(false);
+                            setSelectedTutor(null);
+                          }}
+                        />
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                ),
+              },
+            ]}
+            mobileCardHeader={(tutor) => (
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-border shrink-0">
+                    {tutor.photoURL ? (
+                      <img
+                        src={tutor.photoURL}
+                        alt={tutor.displayName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-sm font-medium">
+                        {tutor.displayName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-foreground leading-tight">{tutor.displayName}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{tutor.email}</p>
+                  </div>
+                </div>
+                {getStatusBadge(tutor.subscription.status)}
+              </div>
+            )}
+            mobileCardFooter={(tutor) => (
+              <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full h-11 rounded-xl font-bold text-xs gap-2"
+                    onClick={() => setSelectedTutor(tutor)}
+                  >
+                    <Settings className="h-4 w-4" /> Configurar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="mw-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      Configurar Suscripción - {selectedTutor?.displayName}
+                    </DialogTitle>
+                  </DialogHeader>
+                  {selectedTutor && (
+                    <SubscriptionConfigForm
+                      tutorId={selectedTutor.id}
+                      tutorName={selectedTutor.displayName}
+                      initialData={selectedTutor.subscription}
+                      onSave={handleConfigSuccess}
+                      onCancel={() => {
+                        setIsConfigOpen(false);
+                        setSelectedTutor(null);
+                      }}
+                    />
+                  )}
+                </DialogContent>
+              </Dialog>
+            )}
+          />
         </CardContent>
       </Card>
     </div>

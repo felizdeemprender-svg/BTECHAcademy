@@ -1019,7 +1019,7 @@ function BuilderContent() {
             <ArrowLeft className="h-6 w-6" />
           </Button>
           <div>
-            <h1 className="text-3xl font-headline font-bold text-primary">Generador Multimedia x3</h1>
+            <h1 className="text-2xl md:text-3xl font-headline font-bold text-primary">Generador Multimedia x3</h1>
             <p className="text-sm text-muted-foreground font-medium">Fusión estratégica avanzada. Paso {step} de 3.</p>
           </div>
         </header>

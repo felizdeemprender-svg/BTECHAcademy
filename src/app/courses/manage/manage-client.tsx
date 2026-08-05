@@ -7,9 +7,9 @@ import { useAuth } from '@/components/auth-context';
 import { sendWelcomeEmailAction } from '@/app/actions/email-actions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { ResponsiveTable, ResponsiveColumn } from '@/components/ui/responsive-table';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, query, orderBy, setDoc, serverTimestamp, deleteDoc, where, getDocs, arrayUnion, arrayRemove, getDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, updateDoc, query, setDoc, serverTimestamp, deleteDoc, where, getDocs, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { getAuth } from 'firebase/auth';
 import { 
@@ -37,11 +37,7 @@ import {
   AlertTriangle,
   Tags,
   Link2,
-  ArrowRight,
   Sparkles,
-  Check,
-  X,
-  FileText
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -64,58 +60,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { differenceInDays, format } from 'date-fns';
 import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
-
-function CourseStatsCells({ courseId }: { courseId: string }) {
-  const db = useFirestore();
-  const [stats, setStats] = useState({ modules: 0, enrolled: 0, completed: 0 });
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [modSnap, enrollSnap] = await Promise.all([
-          getDocs(collection(db, 'courses', courseId, 'modules')),
-          getDocs(query(collection(db, 'enrollments'), where('courseId', '==', courseId)))
-        ]);
-        const enrolls = enrollSnap.docs.map(d => d.data());
-        const totalModules = modSnap.size;
-        
-        const totalProgress = enrolls.reduce((acc, curr) => {
-          // 1. Si está marcado como completado, es 100%
-          if (curr.status === 'completed') return acc + 100;
-          
-          // 2. Si tiene el nuevo campo progressPercent
-          if (curr.progressPercent !== undefined) return acc + curr.progressPercent;
-          
-          // 3. Fallback: Buscar módulos completados en varias estructuras posibles
-          const completedList = curr.progress?.completedModules || curr.completedModules || [];
-          const completedCount = Array.isArray(completedList) ? completedList.length : 0;
-          
-          const calculatedPercent = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
-          return acc + calculatedPercent;
-        }, 0);
-        
-        setStats({
-          modules: totalModules,
-          enrolled: enrolls.length,
-          completed: Math.round(enrolls.length > 0 ? totalProgress / enrolls.length : 0)
-        });
-      } catch (e) {}
-    };
-    fetchStats();
-  }, [db, courseId]);
-
-  return (
-    <>
-      <TableCell className="text-center font-semibold text-foreground/80">{stats.modules}</TableCell>
-      <TableCell className="text-center font-semibold text-foreground/80">{stats.enrolled}</TableCell>
-      <TableCell className="text-center">
-        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-[10px] h-5 px-1.5">
-          {stats.completed}%
-        </Badge>
-      </TableCell>
-    </>
-  );
-}
 
 function EnrollmentRow({ enrollment, totalModules, onApprove, onToggleStatus, onDelete }: { 
   enrollment: any, 
@@ -268,6 +212,42 @@ export default function ManageCoursesClient() {
 
   // Consulta a Firestore restaurada para mostrar cursos
   const { data: courses, isLoading } = useCollection(coursesQuery);
+
+  const [courseStatsMap, setCourseStatsMap] = useState<Record<string, { modules: number; enrolled: number; completed: number }>>({});
+
+  useEffect(() => {
+    if (!db || !courses) return;
+    let active = true;
+    const ids = (courses as any[]).map((c: any) => c.id);
+    Promise.all(ids.map(async (id: string) => {
+      try {
+        const [modSnap, enrollSnap] = await Promise.all([
+          getDocs(collection(db, 'courses', id, 'modules')),
+          getDocs(query(collection(db, 'enrollments'), where('courseId', '==', id)))
+        ]);
+        const enrolls = enrollSnap.docs.map(d => d.data());
+        const totalModules = modSnap.size;
+        const totalProgress = enrolls.reduce((acc: number, curr: any) => {
+          if (curr.status === 'completed') return acc + 100;
+          if (curr.progressPercent !== undefined) return acc + curr.progressPercent;
+          const completedList = curr.progress?.completedModules || curr.completedModules || [];
+          const completedCount = Array.isArray(completedList) ? completedList.length : 0;
+          const calculatedPercent = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
+          return acc + calculatedPercent;
+        }, 0);
+        return [id, {
+          modules: totalModules,
+          enrolled: enrolls.length,
+          completed: Math.round(enrolls.length > 0 ? totalProgress / enrolls.length : 0)
+        }] as [string, { modules: number; enrolled: number; completed: number }];
+      } catch (e) {
+        return [id, { modules: 0, enrolled: 0, completed: 0 }] as [string, { modules: number; enrolled: number; completed: number }];
+      }
+    })).then(entries => {
+      if (active) setCourseStatsMap(Object.fromEntries(entries));
+    });
+    return () => { active = false; };
+  }, [db, courses]);
 
   const clearUILocks = useCallback(() => {
     document.body.style.pointerEvents = 'auto';
@@ -835,6 +815,156 @@ export default function ManageCoursesClient() {
   const otherCourses = courses?.filter(c => c.id !== selectedId && (isAdmin || c.mentorId === profile?.uid));
   const filteredOtherCourses = otherCourses?.filter(c => c.title?.toLowerCase().includes(associatedSearchTerm.toLowerCase()));
 
+  const renderCourseActionsMenu = (course: any, isOwner: boolean) => (
+    <DropdownMenuContent align="end" className="w-56 text-xs font-bold">
+      {isAdmin && (
+        <>
+          <DropdownMenuItem onSelect={() => handleManualAudit(course)} disabled={isAuditing === course.id} className="cursor-pointer gap-2 py-2 text-primary">
+            {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BrainCircuit className="h-3.5 w-3.5" />} Auditoría IA Profunda
+          </DropdownMenuItem>
+          {course.status === 'pending_terms' && (
+            <DropdownMenuItem onSelect={() => handleApproveTerms(course.id)} className="cursor-pointer gap-2 py-2 text-warn"><CheckCircle2 className="h-3.5 w-3.5" /> Aprobar Términos</DropdownMenuItem>
+          )}
+          {course.status === 'pending' && (
+            <>
+              <DropdownMenuItem onSelect={() => handleModerateCourse(course.id, true)} className="cursor-pointer gap-2 py-2 text-success"><ShieldCheck className="h-3.5 w-3.5" /> Autorizar Curso</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => handleModerateCourse(course.id, false)} className="cursor-pointer gap-2 py-2 text-danger"><ShieldX className="h-3.5 w-3.5" /> Rechazar Contenido</DropdownMenuItem>
+            </>
+          )}
+          {!isOwner && <DropdownMenuSeparator />}
+        </>
+      )}
+      {(isOwner || isAdmin) && (
+        <DropdownMenuItem onSelect={() => openModerationHistory(course)} className="cursor-pointer gap-2 py-2 text-muted-foreground">
+          <History className="h-3.5 w-3.5" /> Historial de Auditoría
+        </DropdownMenuItem>
+      )}
+      {isOwner && (
+        <>
+          <DropdownMenuItem onSelect={() => handleEditClick(course)} className="cursor-pointer gap-2 py-2">
+            <Pencil className="h-3.5 w-3.5" /> Editar Contenido
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => router.push(`/courses/style/${course.id}`)} className="cursor-pointer gap-2 py-2">
+            <Palette className="h-3.5 w-3.5 text-primary" /> Identidad Visual (Marca)
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => openAssociatedDialog(course)} className="cursor-pointer gap-2 py-2">
+            <Link2 className="h-3.5 w-3.5 text-blue-500" /> Cursos Asociados (Ruta)
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => openPublishDialog(course)} disabled={isAuditing === course.id} className="cursor-pointer gap-2 py-2">
+            {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : course.isActive ? <PowerOff className="h-3.5 w-3.5 text-orange-500" /> : <Power className="h-3.5 w-3.5 text-success" />}
+            {course.isActive ? 'Ocultar Catálogo' : 'Publicar Catálogo'}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => openEnrollments(course)} className="cursor-pointer gap-2 py-2"><Users className="h-3.5 w-3.5 text-accent" /> Gestionar Alumnos</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={async (e) => { 
+            e.preventDefault();
+            setSelectedId(course.id); 
+            setIsCheckingLandings(true);
+            setIsDeleteDialogOpen(true); 
+            try {
+              const snap = await getDocs(query(collection(db, 'salesPages'), where('courseId', '==', course.id)));
+              setAssociatedLandings(snap.docs.map(d => ({ id: d.id, title: d.data().title || 'Landing sin título' })));
+            } catch(e) { console.error(e); }
+            setIsCheckingLandings(false);
+          }} className="text-destructive font-bold gap-2 py-2 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /> Eliminar Programa</DropdownMenuItem>
+        </>
+      )}
+    </DropdownMenuContent>
+  );
+
+  const courseTableColumns: ResponsiveColumn<any>[] = [
+    {
+      key: 'programa',
+      header: 'Programa',
+      hideOnMobile: true,
+      className: 'px-6',
+      cell: (course) => (
+        <div className="flex items-center gap-4">
+          <div className="relative w-10 h-10 rounded bg-muted overflow-hidden border shrink-0">
+            <Image
+              src={course.thumbnail || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop`}
+              alt="Cover"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <div><p className="font-bold text-sm text-foreground line-clamp-1">{course.title}</p>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {course.tags?.length > 0 ? course.tags.map((tagName: string) => (
+                <Badge key={tagName} variant="outline" className="text-[8px] h-3 px-1 border-primary/20 text-primary/70">{tagName}</Badge>
+              )) : <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'clases',
+      header: 'Clases',
+      align: 'center',
+      hideOnMobile: true,
+      cell: (course) => (
+        <span className="font-semibold text-foreground/80">{courseStatsMap[course.id]?.modules ?? 0}</span>
+      ),
+    },
+    {
+      key: 'alumnos',
+      header: 'Alumnos',
+      align: 'center',
+      hideOnMobile: true,
+      cell: (course) => (
+        <span className="font-semibold text-foreground/80">{courseStatsMap[course.id]?.enrolled ?? 0}</span>
+      ),
+    },
+    {
+      key: 'cumplimiento',
+      header: 'Cumplimiento',
+      align: 'center',
+      hideOnMobile: true,
+      cell: (course) => (
+        <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-[10px] h-5 px-1.5">
+          {courseStatsMap[course.id]?.completed ?? 0}%
+        </Badge>
+      ),
+    },
+    {
+      key: 'catalogo',
+      header: 'Catálogo',
+      align: 'center',
+      cell: (course) => (
+        <div className="flex flex-col items-center gap-1.5">
+          <Badge className={cn(
+            "text-[9px] uppercase tracking-widest px-2 h-5",
+            course.status === 'published' || course.status === 'approved' ? "bg-success/10 text-success"
+            : course.status === 'pending' ? "bg-warn/10 text-warn animate-pulse"
+            : course.status === 'pending_terms' ? "bg-danger/10 text-danger"
+            : "bg-muted text-muted-foreground"
+          )}>
+            {course.status === 'published' || course.status === 'approved' ? <ShieldCheck className="h-2 w-2 mr-1" /> : course.status === 'pending_terms' ? <Scale className="h-2 w-2 mr-1" /> : <Clock className="h-2 w-2 mr-1" />}
+            {course.status === 'pending_terms' ? 'Sin Términos' : (course.status === 'published' ? 'publicado' : course.status || 'draft')}
+          </Badge>
+          <Badge variant={course.isActive ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", course.isActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>{course.isActive ? 'Público' : 'Privado'}</Badge>
+        </div>
+      ),
+    },
+    {
+      key: 'acciones',
+      header: 'Acciones',
+      align: 'right',
+      className: 'px-6',
+      cell: (course) => {
+        const isOwner = course.mentorId === profile?.uid;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+            {renderCourseActionsMenu(course, isOwner)}
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -855,126 +985,62 @@ export default function ManageCoursesClient() {
 
         <Card className="border rounded-md overflow-hidden bg-white shadow-none">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-secondary/50 border-b">
-                <TableRow className="border-none">
-                  <TableHead className="font-bold py-4 px-6 text-foreground text-[11px] uppercase tracking-wider">Programa</TableHead>
-                  <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Clases</TableHead>
-                  <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Alumnos</TableHead>
-                  <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Cumplimiento</TableHead>
-                  <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Catálogo</TableHead>
-                  <TableHead className="text-right py-4 px-6 text-foreground text-[11px] uppercase tracking-wider">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20 text-muted-foreground animate-pulse font-medium">Sincronizando...</TableCell></TableRow>
-                ) : filteredCourses?.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20 italic text-muted-foreground">Sin registros.</TableCell></TableRow>
-                ) : filteredCourses?.map((course) => {
-                  const isOwner = course.mentorId === profile?.uid;
-                  return (
-                    <TableRow key={course.id} className="hover:bg-secondary/20 border-b transition-colors">
-                      <TableCell className="px-6 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="relative w-10 h-10 rounded bg-muted overflow-hidden border shrink-0">
-                            <Image 
-                              src={course.thumbnail || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop`} 
-                              alt="Cover" 
-                              fill 
-                              className="object-cover" 
-                              unoptimized 
-                            />
-                          </div>
-                          <div><p className="font-bold text-sm text-foreground line-clamp-1">{course.title}</p>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {course.tags?.length > 0 ? course.tags.map((tagName: string) => (
-                                <Badge key={tagName} variant="outline" className="text-[8px] h-3 px-1 border-primary/20 text-primary/70">{tagName}</Badge>
-                              )) : <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <CourseStatsCells courseId={course.id} />
-                      <TableCell className="text-center">
-                        <Badge className={cn(
-                          "text-[9px] uppercase tracking-widest px-2 h-5",
-                          course.status === 'published' || course.status === 'approved' ? "bg-success/10 text-success" 
-                          : course.status === 'pending' ? "bg-warn/10 text-warn animate-pulse"
-                          : course.status === 'pending_terms' ? "bg-danger/10 text-danger"
-                          : "bg-muted text-muted-foreground"
-                        )}>
-                          {course.status === 'published' || course.status === 'approved' ? <ShieldCheck className="h-2 w-2 mr-1" /> : course.status === 'pending_terms' ? <Scale className="h-2 w-2 mr-1" /> : <Clock className="h-2 w-2 mr-1" />}
-                          {course.status === 'pending_terms' ? 'Sin Términos' : (course.status === 'published' ? 'publicado' : course.status || 'draft')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={course.isActive ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", course.isActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>{course.isActive ? 'Público' : 'Privado'}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right px-6">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56 text-xs font-bold">
-                            {isAdmin && (
-                              <>
-                                <DropdownMenuItem onSelect={() => handleManualAudit(course)} disabled={isAuditing === course.id} className="cursor-pointer gap-2 py-2 text-primary">
-                                  {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BrainCircuit className="h-3.5 w-3.5" />} Auditoría IA Profunda
-                                </DropdownMenuItem>
-                                {course.status === 'pending_terms' && (
-                                  <DropdownMenuItem onSelect={() => handleApproveTerms(course.id)} className="cursor-pointer gap-2 py-2 text-warn"><CheckCircle2 className="h-3.5 w-3.5" /> Aprobar Términos</DropdownMenuItem>
-                                )}
-                                {course.status === 'pending' && (
-                                  <>
-                                    <DropdownMenuItem onSelect={() => handleModerateCourse(course.id, true)} className="cursor-pointer gap-2 py-2 text-success"><ShieldCheck className="h-3.5 w-3.5" /> Autorizar Curso</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleModerateCourse(course.id, false)} className="cursor-pointer gap-2 py-2 text-danger"><ShieldX className="h-3.5 w-3.5" /> Rechazar Contenido</DropdownMenuItem>
-                                  </>
-                                )}
-                                {!isOwner && <DropdownMenuSeparator />}
-                              </>
-                            )}
-                            {(isOwner || isAdmin) && (
-                              <DropdownMenuItem onSelect={() => openModerationHistory(course)} className="cursor-pointer gap-2 py-2 text-muted-foreground">
-                                <History className="h-3.5 w-3.5" /> Historial de Auditoría
-                              </DropdownMenuItem>
-                            )}
-                            {isOwner && (
-                              <>
-                                <DropdownMenuItem onSelect={() => handleEditClick(course)} className="cursor-pointer gap-2 py-2">
-                                  <Pencil className="h-3.5 w-3.5" /> Editar Contenido
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => router.push(`/courses/style/${course.id}`)} className="cursor-pointer gap-2 py-2">
-                                  <Palette className="h-3.5 w-3.5 text-primary" /> Identidad Visual (Marca)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => openAssociatedDialog(course)} className="cursor-pointer gap-2 py-2">
-                                  <Link2 className="h-3.5 w-3.5 text-blue-500" /> Cursos Asociados (Ruta)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => openPublishDialog(course)} disabled={isAuditing === course.id} className="cursor-pointer gap-2 py-2">
-                                  {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : course.isActive ? <PowerOff className="h-3.5 w-3.5 text-orange-500" /> : <Power className="h-3.5 w-3.5 text-success" />}
-                                  {course.isActive ? 'Ocultar Catálogo' : 'Publicar Catálogo'}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => openEnrollments(course)} className="cursor-pointer gap-2 py-2"><Users className="h-3.5 w-3.5 text-accent" /> Gestionar Alumnos</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={async (e) => { 
-                                  e.preventDefault();
-                                  setSelectedId(course.id); 
-                                  setIsCheckingLandings(true);
-                                  setIsDeleteDialogOpen(true); 
-                                  try {
-                                    const snap = await getDocs(query(collection(db, 'salesPages'), where('courseId', '==', course.id)));
-                                    setAssociatedLandings(snap.docs.map(d => ({ id: d.id, title: d.data().title || 'Landing sin título' })));
-                                  } catch(e) { console.error(e); }
-                                  setIsCheckingLandings(false);
-                                }} className="text-destructive font-bold gap-2 py-2 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /> Eliminar Programa</DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <ResponsiveTable
+              columns={courseTableColumns}
+              data={filteredCourses || []}
+              keyExtractor={(course: any) => course.id}
+              isLoading={isLoading}
+              loadingState={<div className="p-20 text-center text-muted-foreground animate-pulse font-medium">Sincronizando...</div>}
+              emptyState={<div className="p-20 text-center italic text-muted-foreground">Sin registros.</div>}
+              mobileCardHeader={(course: any) => (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-10 h-10 rounded bg-muted overflow-hidden border shrink-0">
+                      <Image
+                        src={course.thumbnail || `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop`}
+                        alt="Cover"
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-foreground leading-tight line-clamp-1">{course.title}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {course.tags?.length > 0 ? course.tags.map((tagName: string) => (
+                          <Badge key={tagName} variant="outline" className="text-[8px] h-3 px-1 border-primary/20 text-primary/70">{tagName}</Badge>
+                        )) : <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge className={cn(
+                    "text-[9px] uppercase tracking-widest px-2 h-5",
+                    course.status === 'published' || course.status === 'approved' ? "bg-success/10 text-success"
+                    : course.status === 'pending' ? "bg-warn/10 text-warn animate-pulse"
+                    : course.status === 'pending_terms' ? "bg-danger/10 text-danger"
+                    : "bg-muted text-muted-foreground"
+                  )}>
+                    {course.status === 'published' || course.status === 'approved' ? <ShieldCheck className="h-2 w-2 mr-1" /> : course.status === 'pending_terms' ? <Scale className="h-2 w-2 mr-1" /> : <Clock className="h-2 w-2 mr-1" />}
+                    {course.status === 'pending_terms' ? 'Sin Términos' : (course.status === 'published' ? 'publicado' : course.status || 'draft')}
+                  </Badge>
+                </div>
+              )}
+              mobileCardFooter={(course: any) => {
+                const isOwner = course.mentorId === profile?.uid;
+                return (
+                  <div className="flex justify-end">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl shrink-0">
+                          <MoreHorizontal className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      {renderCourseActionsMenu(course, isOwner)}
+                    </DropdownMenu>
+                  </div>
+                );
+              }}
+            />
           </CardContent>
         </Card>
 

@@ -37,9 +37,9 @@ export default function TutorCreditsDashboard() {
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-8 pb-20">
-        <header className="flex justify-between items-end">
-          <div>
-            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Consumo de IA</h1>
+        <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight truncate">Consumo de IA</h1>
             <p className="text-muted-foreground mt-2">Monitorea la cuota de generación de tu Plan Mensual.</p>
           </div>
           <Link href="/dashboard/plan">

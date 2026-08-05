@@ -39,8 +39,9 @@ export default function V2LandingEditorPage() {
   const [landingData, setLandingData] = useState<any>(null);
   const [styleData, setStyleData] = useState<any>(null);
   const [courseData, setCourseData] = useState<any>(null);
-  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
-  const [activeUntilStr, setActiveUntilStr] = useState('');
+   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+   const [activeUntilStr, setActiveUntilStr] = useState('');
+   const [mobileView, setMobileView] = useState<'list' | 'editor'>('list');
 
   const cleanUndefined = (obj: any): any => {
     if (Array.isArray(obj)) return obj.map(v => v === undefined ? null : cleanUndefined(v));
@@ -366,43 +367,63 @@ export default function V2LandingEditorPage() {
   return (
     <DashboardLayout>
       <div className="max-w-[1600px] mx-auto pb-20 space-y-6">
-        <header className="flex items-center justify-between sticky top-0 bg-muted/80 backdrop-blur-md z-10 py-4 border-b border-border/50">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.push('/mentoria/marketing/landings')} className="rounded-full">
+        <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sticky top-0 bg-muted/80 backdrop-blur-md z-10 py-4 border-b border-border/50">
+          <div className="flex items-center gap-4 min-w-0">
+            <Button variant="ghost" size="icon" onClick={() => router.push('/mentoria/marketing/landings')} className="rounded-full shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-headline font-bold text-foreground">Editor V2: {landingData?.title}</h1>
+            <div className="min-w-0">
+              <h1 className="text-lg lg:text-2xl font-headline font-bold text-foreground truncate">Editor V2: {landingData?.title}</h1>
               <p className="text-xs text-muted-foreground">Modifica los contenidos de cada sección en tiempo real.</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto lg:justify-end justify-end">
             <Button
               onClick={handleGenerateAllImages}
               disabled={isGeneratingImages}
               variant="outline"
-              className="rounded-full font-bold border-primary/30 text-primary hover:bg-primary/10"
+              aria-label="Generar imágenes"
+              className="rounded-full font-bold border-primary/30 text-primary hover:bg-primary/10 h-10 w-10 px-0 md:w-auto md:px-5"
             >
-              {isGeneratingImages ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ImageIcon className="w-4 h-4 mr-2" />}
-              {isGeneratingImages ? imageGenProgress || 'Generando...' : 'Generar Imágenes'}
+              {isGeneratingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+              <span className="hidden md:inline">{isGeneratingImages ? imageGenProgress || 'Generando...' : 'Generar Imágenes'}</span>
             </Button>
-            <Button variant="outline" onClick={() => window.open(`/v/${id}`, '_blank')} className="rounded-full font-bold">
-              <Eye className="w-4 h-4 mr-2" />
-              Previsualizar
+            <Button variant="outline" onClick={() => window.open(`/v/${id}`, '_blank')} aria-label="Previsualizar landing" className="rounded-full font-bold h-10 w-10 px-0 md:w-auto md:px-5">
+              <Eye className="w-4 h-4" />
+              <span className="hidden md:inline">Previsualizar</span>
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="rounded-full font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
-              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-              Guardar Cambios
+            <Button onClick={handleSave} disabled={saving} aria-label="Guardar cambios" className="rounded-full font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm h-10 w-10 px-0 md:w-auto md:px-5">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span className="hidden md:inline">Guardar Cambios</span>
             </Button>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 items-start h-[calc(100vh-140px)]">
-          {/* Panel Izquierdo: Lista de Secciones */}
-          <Card className="shadow-none border-border/50 bg-white/50 h-full overflow-hidden flex flex-col rounded-2xl">
-            <div className="p-4 border-b border-border/50 bg-muted/50">
-              <h3 className="font-bold text-sm text-foreground">Diseño y Configuración</h3>
-            </div>
+         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 items-start">
+           {/* Panel Izquierdo: Lista de Secciones */}
+           <Card className="shadow-none border-border/50 bg-white/50 h-full overflow-hidden flex flex-col rounded-2xl">
+             {/* Botón de alternancia en mobile */}
+             <div className="lg:hidden p-3 border-b border-border/50 bg-muted/50 flex gap-2">
+               <Button
+                 variant={mobileView === 'list' ? 'default' : 'outline'}
+                 size="sm"
+                 onClick={() => setMobileView('list')}
+                 className="flex-1 font-bold"
+               >
+                 Secciones
+               </Button>
+               <Button
+                 variant={mobileView === 'editor' ? 'default' : 'outline'}
+                 size="sm"
+                 onClick={() => setMobileView('editor')}
+                 className="flex-1 font-bold"
+               >
+                 Editor
+               </Button>
+             </div>
+             <div className="p-4 border-b border-border/50 bg-muted/50">
+               <h3 className="font-bold text-sm text-foreground">Diseño y Configuración</h3>
+             </div>
             <div className="p-3">
               <button
                 onClick={() => setActiveSectionId('global_settings')}
@@ -493,8 +514,11 @@ export default function V2LandingEditorPage() {
           </Card>
 
           {/* Panel Derecho: Editor de la Sección Activa */}
-          {activeSection || activeSectionId === 'global_settings' || activeSectionId === 'page_data' ? (
-            <Card className="shadow-sm border-border/50 h-full overflow-hidden flex flex-col rounded-2xl bg-white">
+          {(activeSection || activeSectionId === 'global_settings' || activeSectionId === 'page_data') ? (
+            <Card className={cn(
+              "shadow-sm border-border/50 h-full overflow-hidden flex flex-col rounded-2xl bg-white",
+              mobileView === 'list' ? "hidden lg:block" : "block"
+            )}>
               <div className="p-6 border-b border-border/50 flex items-center justify-between">
                 <h2 className="text-xl font-black text-foreground">
                   {activeSectionId === 'global_settings' ? 'Configuración Visual Global' : activeSectionId === 'page_data' ? 'Datos de la Página' : `Editando: ${(() => {

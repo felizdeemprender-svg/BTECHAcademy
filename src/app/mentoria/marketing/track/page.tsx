@@ -24,20 +24,15 @@ import {
 import { 
   Rocket, 
   TrendingUp, 
-  Users, 
   MousePointer2, 
   Target, 
-  ArrowUpRight, 
-  ArrowDownRight,
   Filter,
   Calendar,
   Search,
   Mail,
   Instagram,
   Megaphone,
-  Layout,
   Activity,
-  ChevronRight,
   MoreHorizontal
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -45,6 +40,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ResponsiveTable, ResponsiveColumn } from '@/components/ui/responsive-table';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -134,6 +130,79 @@ export default function CampaignTrackingPage() {
       </div>
     </DashboardLayout>
   );
+
+  const filteredCampaigns = enrichedCampaigns.filter((c: any) => c.title?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const campaignTableColumns: ResponsiveColumn<any>[] = [
+    {
+      key: 'campaign',
+      header: 'Campaña / Mentor',
+      hideOnMobile: true,
+      cell: (campaign: any) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs ring-2 ring-white shadow-sm">
+            {campaign.title?.[0] || 'C'}
+          </div>
+          <div>
+            <p className="font-bold text-foreground line-clamp-1">{campaign.title}</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5">
+              Creado: {campaign.createdAt?.toDate ? format(campaign.createdAt.toDate(), 'dd MMM yyyy', { locale: es }) : 'Hoy'}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'impacto',
+      header: 'Impacto',
+      align: 'center',
+      hideOnMobile: true,
+      cell: (campaign: any) => (
+        <span className="font-bold text-muted-foreground">{campaign.stats.totalImpressions.toLocaleString()}</span>
+      ),
+    },
+    {
+      key: 'clicks',
+      header: 'Clicks',
+      align: 'center',
+      hideOnMobile: true,
+      cell: (campaign: any) => (
+        <span className="font-bold text-muted-foreground">{campaign.stats.totalClicks.toLocaleString()}</span>
+      ),
+    },
+    {
+      key: 'convs',
+      header: 'Convs.',
+      align: 'center',
+      cell: (campaign: any) => (
+        <span className="font-bold text-foreground">{campaign.stats.conversions.toLocaleString()}</span>
+      ),
+    },
+    {
+      key: 'cr',
+      header: 'CR (%)',
+      align: 'center',
+      cell: (campaign: any) => (
+        <Badge className="bg-success/10 text-success border-none font-bold">{campaign.cr}%</Badge>
+      ),
+    },
+    {
+      key: 'estado',
+      header: 'Estado',
+      align: 'right',
+      hideOnMobile: true,
+      cell: (campaign: any) => (
+        <div className="flex items-center justify-end gap-2">
+          <Badge variant="outline" className="rounded-full border-border text-muted-foreground font-bold text-[10px] uppercase px-3">
+            Activa
+          </Badge>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <DashboardLayout>
@@ -278,79 +347,51 @@ export default function CampaignTrackingPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground bg-muted/50 border-y border-muted">
-                  <tr>
-                    <th className="px-6 py-4">Campaña / Mentor</th>
-                    <th className="px-6 py-4 text-center">Impacto</th>
-                    <th className="px-6 py-4 text-center">Clicks</th>
-                    <th className="px-6 py-4 text-center">Convs.</th>
-                    <th className="px-6 py-4 text-center">CR (%)</th>
-                    <th className="px-6 py-4 text-right">Estado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-muted">
-                  {enrichedCampaigns
-                    .filter(c => c.title?.toLowerCase().includes(searchTerm.toLowerCase()))
-                    .map((campaign, i) => (
-                    <tr key={i} className="group hover:bg-muted/50 transition-colors">
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs ring-2 ring-white shadow-sm group-hover:scale-110 transition-transform">
-                            {campaign.title?.[0] || 'C'}
-                          </div>
-                          <div>
-                            <p className="font-bold text-foreground line-clamp-1">{campaign.title}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5">
-                              Creado: {campaign.createdAt?.toDate ? format(campaign.createdAt.toDate(), 'dd MMM yyyy', { locale: es }) : 'Hoy'}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-center font-bold text-muted-foreground">
-                        {campaign.stats.totalImpressions.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-5 text-center font-bold text-muted-foreground">
-                        {campaign.stats.totalClicks.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-5 text-center font-bold text-foreground">
-                        {campaign.stats.conversions.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-5 text-center">
-                        <Badge className="bg-success/10 text-success border-none font-bold">
-                          {campaign.cr}%
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Badge variant="outline" className="rounded-full border-border text-muted-foreground font-bold text-[10px] uppercase px-3">
-                            Activa
-                          </Badge>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {enrichedCampaigns.length === 0 && (
-              <div className="py-20 flex flex-col items-center gap-4 text-center">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-border">
-                  <Activity className="h-8 w-8" />
+            <ResponsiveTable
+              columns={campaignTableColumns}
+              data={filteredCampaigns}
+              keyExtractor={(campaign: any) => campaign.id}
+              rowClassName={() => 'group'}
+              emptyState={
+                <div className="py-20 flex flex-col items-center gap-4 text-center">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-border">
+                    <Activity className="h-8 w-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-foreground">Sin estadísticas aún</h3>
+                    <p className="text-sm text-muted-foreground max-w-sm">Genera y publica tu primera campaña para empezar a recibir métricas de rendimiento real.</p>
+                  </div>
+                  <Button variant="outline" className="rounded-xl mt-2" onClick={() => window.location.href='/mentoria/marketing/pages'}>
+                    Ir a Generación
+                  </Button>
                 </div>
-                <div className="space-y-1">
-                  <h3 className="font-bold text-foreground">Sin estadísticas aún</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm">Genera y publica tu primera campaña para empezar a recibir métricas de rendimiento real.</p>
+              }
+              mobileCardHeader={(campaign: any) => (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs ring-2 ring-white shadow-sm shrink-0">
+                      {campaign.title?.[0] || 'C'}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-foreground leading-tight line-clamp-1">{campaign.title}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5">
+                        Creado: {campaign.createdAt?.toDate ? format(campaign.createdAt.toDate(), 'dd MMM yyyy', { locale: es }) : 'Hoy'}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="rounded-full border-border text-muted-foreground font-bold text-[10px] uppercase px-3 shrink-0">
+                    Activa
+                  </Badge>
                 </div>
-                <Button variant="outline" className="rounded-xl mt-2" onClick={() => window.location.href='/mentoria/marketing/pages'}>
-                  Ir a Generación
-                </Button>
-              </div>
-            )}
+              )}
+              mobileCardFooter={() => (
+                <div className="flex justify-end">
+                  <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl shrink-0">
+                    <MoreHorizontal className="h-5 w-5" />
+                  </Button>
+                </div>
+              )}
+            />
           </CardContent>
         </Card>
       </div>

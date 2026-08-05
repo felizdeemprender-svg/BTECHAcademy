@@ -55,7 +55,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-background overflow-hidden font-body w-full">
+      <div className="flex h-dvh bg-background overflow-hidden font-body w-full">
         <Sidebar collapsible="offcanvas" className="border-r border-[hsl(var(--sidebar-border))]">
           <SidebarHeader className="p-6">
             <Link href="/" className="flex items-center gap-3 group">

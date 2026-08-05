@@ -5,10 +5,11 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ResponsiveTable, ResponsiveColumn } from '@/components/ui/responsive-table';
 import { MousePointer2, Users, Target, Percent, Loader2, Search } from 'lucide-react';
 import { useFirestore } from '@/firebase';
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface TutorCourse {
   id: string;
@@ -206,6 +207,130 @@ export default function EmbajadoresBoardPage() {
     );
   }
 
+  const renderCoursesDetail = (tutor: TutorStat) => (
+    <div className="border-t border-muted bg-muted/80">
+      <div className="px-6 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cursos</p>
+            <p className="text-sm font-bold text-foreground">Detalle de cursos asignados a {tutor.name}</p>
+          </div>
+          <div className="text-right text-xs text-muted-foreground">
+            <p>{tutor.courses.length} curso{tutor.courses.length !== 1 ? 's' : ''} asignado{tutor.courses.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3">
+          {tutor.courses.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-white px-4 py-5 text-sm text-muted-foreground">
+              Este tutor aún no tiene cursos asociados a tu embajador.
+            </div>
+          ) : (
+            tutor.courses.map((course) => (
+              <div key={course.landingId} className="rounded-2xl border border-muted bg-white px-4 py-4 shadow-sm">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
+                        {course.landingTitle}
+                      </span>
+                      <span className="text-xs text-muted-foreground">Landing: {course.landingId}</span>
+                    </div>
+                    <p className="font-black text-foreground">{course.title}</p>
+                    <p className="text-sm text-muted-foreground">{course.description}</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 lg:justify-end">
+                    <span className="inline-flex items-center rounded-xl bg-muted px-3 py-2 text-xs font-bold text-foreground">
+                      Precio: ${course.price}
+                    </span>
+                    <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
+                      Clicks: {course.clicks}
+                    </span>
+                    <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
+                      Leads: {course.leads}
+                    </span>
+                    <span className="inline-flex items-center rounded-xl bg-success/15 px-3 py-2 text-xs font-bold text-success">
+                      Ventas: {course.conversions}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const tutorTableColumns: ResponsiveColumn<TutorStat>[] = [
+    {
+      key: 'tutor',
+      header: 'Tutor',
+      hideOnMobile: true,
+      className: 'align-top',
+      cell: (tutor: TutorStat) => (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={tutor.photoURL} />
+              <AvatarFallback className="bg-success/15 text-success font-bold">
+                {tutor.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-bold text-foreground">{tutor.name}</div>
+              <div className="text-xs text-muted-foreground">{tutor.email}</div>
+            </div>
+          </div>
+          <div className="hidden md:block">{renderCoursesDetail(tutor)}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'accesos',
+      header: 'Accesos',
+      align: 'center',
+      cell: (tutor: TutorStat) => (
+        <div className="inline-flex items-center justify-center bg-muted text-foreground h-8 px-3 rounded-lg text-xs font-bold gap-1.5">
+          <MousePointer2 className="h-3 w-3 text-primary" /> {tutor.totalClicks}
+        </div>
+      ),
+    },
+    {
+      key: 'leads',
+      header: 'Leads',
+      align: 'center',
+      cell: (tutor: TutorStat) => (
+        <span className="font-black text-foreground">{tutor.totalLeads}</span>
+      ),
+    },
+    {
+      key: 'ventas',
+      header: 'Ventas',
+      align: 'center',
+      cell: (tutor: TutorStat) => (
+        <span className="font-black text-success">{tutor.convertedLeads}</span>
+      ),
+    },
+    {
+      key: 'conversion',
+      header: 'Conversión',
+      align: 'right',
+      hideOnMobile: true,
+      cell: (tutor: TutorStat) => {
+        const rate = tutor.totalLeads > 0
+          ? Math.round((tutor.convertedLeads / tutor.totalLeads) * 100)
+          : 0;
+        return (
+          <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent px-2.5 py-1 rounded-md text-[11px] font-bold">
+            {rate}%
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto space-y-10 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 py-6">
@@ -262,138 +387,51 @@ export default function EmbajadoresBoardPage() {
           </h2>
 
           <Card className="rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-[10px] text-muted-foreground uppercase bg-muted/80 font-black tracking-widest border-b border-muted">
-                  <tr>
-                    <th className="px-6 py-4">Tutor</th>
-                    <th className="px-6 py-4 text-center">Accesos</th>
-                    <th className="px-6 py-4 text-center">Leads</th>
-                    <th className="px-6 py-4 text-center">Ventas</th>
-                    <th className="px-6 py-4 text-right">Conversión</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {tutors.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-16 text-center">
-                        <div className="flex flex-col items-center gap-4">
-                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Users className="h-8 w-8 text-primary/30" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-foreground mb-1">Aún no tenés landings en las que actúes como embajador</p>
-                            <p className="text-muted-foreground text-sm">
-                              Esta vista aparece cuando algún tutor te da de alta y se generan landings donde vos actuás como embajador.
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    tutors.map((tutor) => {
-                      const rate = tutor.totalLeads > 0
-                        ? Math.round((tutor.convertedLeads / tutor.totalLeads) * 100)
-                        : 0;
-
-                      return (
-                        <Fragment key={tutor.uid}>
-                          <tr className="hover:bg-muted/50 transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={tutor.photoURL} />
-                                  <AvatarFallback className="bg-success/15 text-success font-bold">
-                                    {tutor.name.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="font-bold text-foreground">{tutor.name}</div>
-                                  <div className="text-xs text-muted-foreground">{tutor.email}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <div className="inline-flex items-center justify-center bg-muted text-foreground h-8 px-3 rounded-lg text-xs font-bold gap-1.5">
-                                <MousePointer2 className="h-3 w-3 text-primary" /> {tutor.totalClicks}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="font-black text-foreground">{tutor.totalLeads}</span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="font-black text-success">{tutor.convertedLeads}</span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent px-2.5 py-1 rounded-md text-[11px] font-bold">
-                                {rate}%
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td colSpan={5} className="px-6 py-0">
-                              <div className="border-t border-muted bg-muted/80">
-                                <div className="px-6 py-4">
-                                  <div className="flex items-center justify-between gap-4">
-                                    <div>
-                                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cursos</p>
-                                      <p className="text-sm font-bold text-foreground">Detalle de cursos asignados a {tutor.name}</p>
-                                    </div>
-                                    <div className="text-right text-xs text-muted-foreground">
-                                      <p>{tutor.courses.length} curso{tutor.courses.length !== 1 ? 's' : ''} asignado{tutor.courses.length !== 1 ? 's' : ''}</p>
-                                    </div>
-                                  </div>
-
-                                  <div className="mt-4 grid gap-3">
-                                    {tutor.courses.length === 0 ? (
-                                      <div className="rounded-2xl border border-dashed border-border bg-white px-4 py-5 text-sm text-muted-foreground">
-                                        Este tutor aún no tiene cursos asociados a tu embajador.
-                                      </div>
-                                    ) : (
-                                      tutor.courses.map((course) => (
-                                        <div key={course.landingId} className="rounded-2xl border border-muted bg-white px-4 py-4 shadow-sm">
-                                          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                            <div className="space-y-2">
-                                              <div className="flex flex-wrap items-center gap-2">
-                                                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
-                                                  {course.landingTitle}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">Landing: {course.landingId}</span>
-                                              </div>
-                                              <p className="font-black text-foreground">{course.title}</p>
-                                              <p className="text-sm text-muted-foreground">{course.description}</p>
-                                            </div>
-
-                                            <div className="flex flex-wrap gap-2 lg:justify-end">
-                                              <span className="inline-flex items-center rounded-xl bg-muted px-3 py-2 text-xs font-bold text-foreground">
-                                                Precio: ${course.price}
-                                              </span>
-                                              <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
-                                                Clicks: {course.clicks}
-                                              </span>
-                                              <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
-                                                Leads: {course.leads}
-                                              </span>
-                                              <span className="inline-flex items-center rounded-xl bg-success/15 px-3 py-2 text-xs font-bold text-success">
-                                                Ventas: {course.conversions}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ))
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        </Fragment>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              columns={tutorTableColumns}
+              data={tutors}
+              keyExtractor={(tutor) => tutor.uid}
+              emptyState={
+                <div className="flex flex-col items-center gap-4 py-16 text-center">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="h-8 w-8 text-primary/30" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-foreground mb-1">Aún no tenés landings en las que actúes como embajador</p>
+                    <p className="text-muted-foreground text-sm">
+                      Esta vista aparece cuando algún tutor te da de alta y se generan landings donde vos actuás como embajador.
+                    </p>
+                  </div>
+                </div>
+              }
+              mobileCardHeader={(tutor: TutorStat) => {
+                const rate = tutor.totalLeads > 0
+                  ? Math.round((tutor.convertedLeads / tutor.totalLeads) * 100)
+                  : 0;
+                return (
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarImage src={tutor.photoURL} />
+                        <AvatarFallback className="bg-success/15 text-success font-bold">
+                          {tutor.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-bold text-sm text-foreground leading-tight">{tutor.name}</p>
+                        <p className="text-xs text-muted-foreground">{tutor.email}</p>
+                      </div>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent px-2.5 py-1 rounded-md text-[11px] font-bold shrink-0">
+                      {rate}%
+                    </div>
+                  </div>
+                );
+              }}
+              mobileCardFooter={(tutor: TutorStat) => (
+                <div>{renderCoursesDetail(tutor)}</div>
+              )}
+            />
           </Card>
         </div>
       </div>

@@ -27,7 +27,7 @@ export default function TutorAccessDenied() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Users className="h-5 w-5 text-primary" />

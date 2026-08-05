@@ -171,9 +171,9 @@ export const TemplateViewerProduction = ({
                         <Card key={lIdx} className="overflow-hidden">
                           <CardContent className="p-0">
                           <div className="flex justify-center w-full h-[600px] overflow-hidden bg-muted rounded-b-3xl">
-                            <iframe 
-                              src={`/v/${collection.id}?v=${lIdx}&preview=true`} 
-                              className="w-[1280px] h-[calc(600px*1.28)] origin-top-left"
+                             <iframe 
+                               src={`/v/${collection.id}?v=${lIdx}&preview=true`} 
+                               className="w-full h-[calc(600px*1.28)] origin-top-left"
                               style={{ transform: 'scale(0.78125)', border: 'none' }}
                               title={`Preview Variante ${lIdx + 1}`}
                             />

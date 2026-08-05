@@ -205,13 +205,13 @@ export const TemplateViewerProduction = ({
         <DialogContent aria-describedby={undefined} className="mw-6xl h-[90vh] flex flex-col p-0 overflow-hidden">
           {/* Header */}
           <div className="bg-white border-b p-8 pb-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-3xl font-headline font-bold text-primary tracking-tight mb-3">
+                <h2 className="text-xl md:text-3xl font-headline font-bold text-primary tracking-tight mb-3">
                   {collection?.name || "Colección de Templates"}
                 </h2>
                 {collection && (
-                  <div className="flex gap-4 text-xs">
+                  <div className="flex flex-wrap gap-2 text-xs">
                     <Badge
                       variant="outline"
                       className="bg-secondary/10 text-muted-foreground border-none font-bold gap-1.5 px-3 py-1"
@@ -323,9 +323,9 @@ export const TemplateViewerProduction = ({
                               <Card className="overflow-hidden border-none rounded-lg bg-white">
                                 <CardContent className="p-0">
                                   <div className="flex justify-center w-full h-[600px] overflow-hidden bg-muted rounded-b-[2rem]">
-                                    <iframe 
-                                      src={`/v/${collection.id}?v=${lIdx}&preview=true`} 
-                                      className="w-[1280px] h-[calc(600px*1.28)] origin-top-left"
+                                     <iframe 
+                                       src={`/v/${collection.id}?v=${lIdx}&preview=true`} 
+                                       className="w-full h-[calc(600px*1.28)] origin-top-left"
                                       style={{ transform: 'scale(0.78125)', border: 'none' }}
                                       title={`Preview Variante ${lIdx + 1}`}
                                     />

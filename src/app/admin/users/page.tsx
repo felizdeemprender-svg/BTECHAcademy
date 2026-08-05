@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { collection, doc, updateDoc, query, orderBy, setDoc, serverTimestamp, deleteDoc, where, getDocs, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { ResponsiveTable } from '@/components/ui/responsive-table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
@@ -435,168 +435,266 @@ export default function AdminUsersPage() {
 
         <Card className="border border-border rounded-2xl overflow-hidden bg-white shadow-sm">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-muted/80 border-b">
-                <TableRow className="border-none hover:bg-transparent">
-                  <TableHead className="font-bold py-4 px-6 text-muted-foreground text-[10px] uppercase tracking-widest">Identidad</TableHead>
-                  <TableHead className="font-bold py-4 text-muted-foreground text-[10px] uppercase tracking-widest text-center">Permisos Asignados</TableHead>
-                  {(roleFilter.length === 0 || roleFilter.includes('mentor')) && (
-                    <TableHead className="font-bold py-4 text-muted-foreground text-[10px] uppercase tracking-widest text-center">Plan</TableHead>
-                  )}
-                  {(roleFilter.length === 0 || roleFilter.includes('alumno')) && (
-                    <TableHead className="font-bold py-4 text-muted-foreground text-[10px] uppercase tracking-widest text-center">Inscripciones</TableHead>
-                  )}
-                  <TableHead className="font-bold py-4 text-muted-foreground text-[10px] uppercase tracking-widest text-center">Estado</TableHead>
-                  <TableHead className="font-bold py-4 px-6 text-muted-foreground text-[10px] uppercase tracking-widest text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-20 animate-pulse text-muted-foreground">Sincronizando identidades...</TableCell></TableRow>
-                ) : filteredUsers?.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-20 italic text-muted-foreground">No se encontraron registros.</TableCell></TableRow>
-                ) : filteredUsers?.map((user) => {
-                  const isGoogleUser = user.signInProvider === 'google.com';
-                  const isSuperAdminAccount = user.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
-                  const isInvitation = user.id.includes('_');
-                  
-                  return (
-                    <TableRow key={user.id} className="hover:bg-muted/50 transition-colors border-b border-muted last:border-0">
-                      <TableCell className="px-6 py-5">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-10 w-10 border shadow-sm">
-                            <AvatarImage src={user.photoURL || undefined} />
-                            <AvatarFallback className="bg-muted text-muted-foreground font-bold uppercase">{user.displayName?.[0] || 'U'}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-bold text-foreground leading-tight">{user.displayName}</p>
-                              {user.roles?.includes('mentor') && (
-                                <button
-                                  onClick={() => window.location.href = `/admin/users/tutores/${user.id}`}
-                                  className="text-primary/50 hover:text-primary transition-colors"
-                                  title="Ver detalle del tutor"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                </button>
-                              )}
-                              {isGoogleUser && (
-                                <span title="Usuario Google Workspace">
-                                  <Globe className="h-3 w-3 text-accent" />
-                                </span>
-                              )}
-                              {isSuperAdminAccount && <Badge className="bg-foreground text-[7px] text-white h-4 px-1.5 border-none">SYSTEM</Badge>}
-                              {isInvitation && <Badge className="bg-warn/15 text-warn text-[7px] h-4 px-1.5 border-none font-black uppercase tracking-tighter">Invitación</Badge>}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
-                              <div className="flex items-center gap-1 opacity-20 hover:opacity-100 transition-opacity" title={`Internal ID: ${user.id}`}>
-                                <Fingerprint className="h-2.5 w-2.5" />
-                                <span className="text-[8px] font-mono">{user.id.substring(0, 8)}...</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="flex flex-wrap justify-center gap-1.5">
-                            {(user.roles || []).map((role: string) => (
-                              <Badge key={role} variant="outline" className="text-[9px] uppercase font-bold px-2 py-0 h-5 border-border text-muted-foreground bg-muted">
-                                {role}
-                              </Badge>
-                            ))}
-                          </div>
-                          {user.roles?.includes('mentor') && (
-                            <p className="text-[8px] font-bold text-primary uppercase mt-1">
-                              Permisos: {(user.mentorPermissions || []).length}/{MENTOR_SUB_PERMISSIONS.length}
-                              {user.subscription?.limits?.maxStudents && ` | Alum: ${user.subscription.limits.maxStudents === -1 ? '∞' : user.subscription.limits.maxStudents}`}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      {(roleFilter.length === 0 || roleFilter.includes('mentor')) && (
-                        <TableCell className="text-center">
-                          {user.roles?.includes('mentor') && user.subscription ? (
-                            <div className="flex flex-col items-center gap-0.5">
-                              <Badge className={cn(
-                                "text-[8px] uppercase font-bold px-2 h-4 border-none",
-                                user.subscription.type === 'free' ? "bg-muted text-muted-foreground" :
-                                user.subscription.type === 'fixed' ? "bg-success/15 text-success" :
-                                "bg-blue-100 text-blue-700"
-                              )}>
-                                {user.subscription.type === 'free' ? 'Gratis' :
-                                 user.subscription.type === 'fixed' ? `$${user.subscription.fixedAmount}` :
-                                 `${user.subscription.percentageRate}%`}
-                              </Badge>
-                              <span className={cn(
-                                "text-[7px] font-bold uppercase",
-                                user.subscription.status === 'active' ? "text-success" :
-                                user.subscription.status === 'trial' ? "text-blue-500" : "text-muted-foreground"
-                              )}>
-                                {user.subscription.status}
+            <ResponsiveTable
+              data={filteredUsers}
+              keyExtractor={(user) => user.id}
+              isLoading={isLoading}
+              loadingState={
+                <div className="text-center py-20 animate-pulse text-muted-foreground">Sincronizando identidades...</div>
+              }
+              emptyState={
+                <div className="text-center py-20 italic text-muted-foreground">No se encontraron registros.</div>
+              }
+              columns={[
+                {
+                  key: 'identity',
+                  header: 'Identidad',
+                  hideOnMobile: true,
+                  cell: (user) => {
+                    const isGoogleUser = user.signInProvider === 'google.com';
+                    const isSuperAdminAccount = user.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
+                    const isInvitation = user.id.includes('_');
+                    return (
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-10 w-10 border shadow-sm">
+                          <AvatarImage src={user.photoURL || undefined} />
+                          <AvatarFallback className="bg-muted text-muted-foreground font-bold uppercase">{user.displayName?.[0] || 'U'}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-foreground leading-tight">{user.displayName}</p>
+                            {user.roles?.includes('mentor') && (
+                              <button
+                                onClick={() => window.location.href = `/admin/users/tutores/${user.id}`}
+                                className="text-primary/50 hover:text-primary transition-colors"
+                                title="Ver detalle del tutor"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </button>
+                            )}
+                            {isGoogleUser && (
+                              <span title="Usuario Google Workspace">
+                                <Globe className="h-3 w-3 text-accent" />
                               </span>
+                            )}
+                            {isSuperAdminAccount && <Badge className="bg-foreground text-[7px] text-white h-4 px-1.5 border-none">SYSTEM</Badge>}
+                            {isInvitation && <Badge className="bg-warn/15 text-warn text-[7px] h-4 px-1.5 border-none font-black uppercase tracking-tighter">Invitación</Badge>}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
+                            <div className="flex items-center gap-1 opacity-20 hover:opacity-100 transition-opacity" title={`Internal ID: ${user.id}`}>
+                              <Fingerprint className="h-2.5 w-2.5" />
+                              <span className="text-[8px] font-mono">{user.id.substring(0, 8)}...</span>
                             </div>
-                          ) : (
-                            <span className="text-[10px] text-border">—</span>
-                          )}
-                        </TableCell>
-                      )}
-                      {(roleFilter.length === 0 || roleFilter.includes('alumno')) && (
-                        <TableCell className="text-center">
-                          {user.roles?.includes('alumno') && !user.roles?.includes('mentor') ? (
-                            <span className="text-[10px] text-muted-foreground italic">—</span>
-                          ) : (
-                            <span className="text-[10px] text-border">—</span>
-                          )}
-                        </TableCell>
-                      )}
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-3">
-                          <Badge className={cn(
-                            "text-[9px] uppercase tracking-widest px-2 h-5 border-none",
-                            user.isActive !== false ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
-                          )}>
-                            {user.isActive !== false ? 'Activo' : 'Suspendido'}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  },
+                },
+                {
+                  key: 'permissions',
+                  header: 'Permisos Asignados',
+                  cardLabel: 'Permisos',
+                  align: 'center' as const,
+                  cell: (user: any) => (
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="flex flex-wrap justify-center gap-1.5">
+                        {(user.roles || []).map((role: string) => (
+                          <Badge key={role} variant="outline" className="text-[9px] uppercase font-bold px-2 py-0 h-5 border-border text-muted-foreground bg-muted">
+                            {role}
                           </Badge>
-                          <Switch 
-                            disabled={isSuperAdminAccount}
-                            checked={user.isActive !== false}
-                            onCheckedChange={() => toggleActiveStatus(user.id, user.email, user.isActive !== false)}
-                            className="scale-75"
-                          />
+                        ))}
+                      </div>
+                      {user.roles?.includes('mentor') && (
+                        <p className="text-[8px] font-bold text-primary uppercase mt-1">
+                          Permisos: {(user.mentorPermissions || []).length}/{MENTOR_SUB_PERMISSIONS.length}
+                          {user.subscription?.limits?.maxStudents && ` | Alum: ${user.subscription.limits.maxStudents === -1 ? '∞' : user.subscription.limits.maxStudents}`}
+                        </p>
+                      )}
+                    </div>
+                  ),
+                },
+                ...(roleFilter.length === 0 || roleFilter.includes('mentor')
+                  ? [{
+                      key: 'plan',
+                      header: 'Plan',
+                      align: 'center' as const,
+                      hideOnMobile: true,
+                      cell: (user: any) => (
+                        user.roles?.includes('mentor') && user.subscription ? (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <Badge className={cn(
+                              "text-[8px] uppercase font-bold px-2 h-4 border-none",
+                              user.subscription.type === 'free' ? "bg-muted text-muted-foreground" :
+                              user.subscription.type === 'fixed' ? "bg-success/15 text-success" :
+                              "bg-blue-100 text-blue-700"
+                            )}>
+                              {user.subscription.type === 'free' ? 'Gratis' :
+                               user.subscription.type === 'fixed' ? `$${user.subscription.fixedAmount}` :
+                               `${user.subscription.percentageRate}%`}
+                            </Badge>
+                            <span className={cn(
+                              "text-[7px] font-bold uppercase",
+                              user.subscription.status === 'active' ? "text-success" :
+                              user.subscription.status === 'trial' ? "text-blue-500" : "text-muted-foreground"
+                            )}>
+                              {user.subscription.status}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-border">—</span>
+                        )
+                      ),
+                    }]
+                  : []),
+                ...(roleFilter.length === 0 || roleFilter.includes('alumno')
+                  ? [{
+                      key: 'enrollments',
+                      header: 'Inscripciones',
+                      align: 'center' as const,
+                      hideOnMobile: true,
+                      cell: (user: any) => (
+                        user.roles?.includes('alumno') && !user.roles?.includes('mentor') ? (
+                          <span className="text-[10px] text-muted-foreground italic">—</span>
+                        ) : (
+                          <span className="text-[10px] text-border">—</span>
+                        )
+                      ),
+                    }]
+                  : []),
+                {
+                  key: 'status',
+                  header: 'Estado',
+                  align: 'center' as const,
+                  hideOnMobile: true,
+                  cell: (user: any) => {
+                    const isSuperAdminAccount = user.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
+                    return (
+                      <div className="flex items-center justify-center gap-3">
+                        <Badge className={cn(
+                          "text-[9px] uppercase tracking-widest px-2 h-5 border-none",
+                          user.isActive !== false ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                        )}>
+                          {user.isActive !== false ? 'Activo' : 'Suspendido'}
+                        </Badge>
+                        <Switch
+                          disabled={isSuperAdminAccount}
+                          checked={user.isActive !== false}
+                          onCheckedChange={() => toggleActiveStatus(user.id, user.email, user.isActive !== false)}
+                          className="scale-75"
+                        />
+                      </div>
+                    );
+                  },
+                },
+                {
+                  key: 'actions',
+                  header: 'Acciones',
+                  align: 'right' as const,
+                  hideOnMobile: true,
+                  cell: (user: any) => {
+                    const isSuperAdminAccount = user.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
+                    return (
+                      <div className="flex justify-end items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
+                          onClick={() => {
+                            setUserForPermissions(user);
+                            setPendingUser(JSON.parse(JSON.stringify(user)));
+                            setIsPermissionsOpen(true);
+                          }}
+                        >
+                          <Shield className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10"
+                          disabled={isSuperAdminAccount}
+                          onClick={() => { setUserToDelete(user); setIsDeleteDialogOpen(true); }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  },
+                },
+              ]}
+              mobileCardHeader={(user) => {
+                const isGoogleUser = user.signInProvider === 'google.com';
+                const isSuperAdminAccount = user.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
+                const isInvitation = user.id.includes('_');
+                return (
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 border shadow-sm">
+                        <AvatarImage src={user.photoURL || undefined} />
+                        <AvatarFallback className="bg-muted text-muted-foreground font-bold uppercase">{user.displayName?.[0] || 'U'}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-sm text-foreground leading-tight">{user.displayName}</p>
+                          {user.roles?.includes('mentor') && (
+                            <button
+                              onClick={() => window.location.href = `/admin/users/tutores/${user.id}`}
+                              className="text-primary/50 hover:text-primary transition-colors"
+                              title="Ver detalle del tutor"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </button>
+                          )}
+                          {isGoogleUser && (
+                            <span title="Usuario Google Workspace">
+                              <Globe className="h-3 w-3 text-accent" />
+                            </span>
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell className="px-6 text-right">
-                        <div className="flex justify-end items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" 
-                            onClick={() => { 
-                              setUserForPermissions(user); 
-                              setPendingUser(JSON.parse(JSON.stringify(user))); // Deep copy for pending changes
-                              setIsPermissionsOpen(true); 
-                            }}
-                          >
-                            <Shield className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-9 w-9 rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10" 
-                            disabled={isSuperAdminAccount}
-                            onClick={() => { setUserToDelete(user); setIsDeleteDialogOpen(true); }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        <p className="text-xs text-muted-foreground font-medium mt-0.5">{user.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <Badge className={cn(
+                        "text-[8px] uppercase tracking-widest px-2 h-5 border-none",
+                        user.isActive !== false ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                      )}>
+                        {user.isActive !== false ? 'Activo' : 'Suspendido'}
+                      </Badge>
+                      {isSuperAdminAccount && <Badge className="bg-foreground text-[7px] text-white h-4 px-1.5 border-none">SYSTEM</Badge>}
+                      {isInvitation && <Badge className="bg-warn/15 text-warn text-[7px] h-4 px-1.5 border-none font-black uppercase tracking-tighter">Invitación</Badge>}
+                    </div>
+                  </div>
+                );
+              }}
+              mobileCardFooter={(user) => {
+                const isSuperAdminAccount = user.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
+                return (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setUserForPermissions(user);
+                        setPendingUser(JSON.parse(JSON.stringify(user)));
+                        setIsPermissionsOpen(true);
+                      }}
+                      className="flex-1 h-11 rounded-xl font-bold text-xs gap-2"
+                    >
+                      <Shield className="h-4 w-4" /> Permisos
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={isSuperAdminAccount}
+                      onClick={() => { setUserToDelete(user); setIsDeleteDialogOpen(true); }}
+                      className="flex-1 h-11 rounded-xl font-bold text-xs gap-2 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" /> Eliminar
+                    </Button>
+                  </div>
+                );
+              }}
+            />
           </CardContent>
         </Card>
 

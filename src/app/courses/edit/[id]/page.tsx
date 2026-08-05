@@ -681,7 +681,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         </header>
 
         <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); clearUILocks(); }} className="space-y-6">
-          <TabsList className="bg-secondary/20 p-1 rounded-2xl">
+          <TabsList className="bg-secondary/20 p-1 rounded-2xl grid grid-cols-2">
             <TabsTrigger value="general" className="rounded-xl px-8 font-bold">Información General</TabsTrigger>
             <TabsTrigger value="modules" className="rounded-xl px-8 font-bold">Temario ({modules?.length || 0})</TabsTrigger>
           </TabsList>
@@ -773,25 +773,25 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                   <Button variant="link" onClick={handleOpenNewModule} className="font-bold text-primary">Comenzar a añadir temas</Button>
                 </div>
               ) : modules?.map((mod, idx) => (
-                <Card key={mod.id} className="p-6 flex items-center justify-between shadow-md rounded-2xl bg-white border-none hover:shadow-lg transition-shadow">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold text-lg">{idx + 1}</div>
-                    <div>
-                      <h4 className="font-bold truncate max-w-[300px] text-lg">{mod.title}</h4>
-                      <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground mt-1">{mod.contentType}</Badge>
-                    </div>
+<Card key={mod.id} className="p-4 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between shadow-md rounded-2xl bg-white border-none hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-3 flex-1 min-w-0 mb-2 md:mb-0">
+                  <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold text-lg shrink-0">{idx + 1}</div>
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <h4 className="font-bold truncate text-lg min-w-0">{mod.title}</h4>
+                    <Badge variant="outline" className="text-[9px] uppercase font-bold text-muted-foreground mt-1">{mod.contentType}</Badge>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={() => openEditModule(mod)} className="rounded-xl h-11 w-11"><Pencil className="h-5 w-5 text-primary" /></Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={() => handleDeleteModule(mod.id, mod.title)} 
-                      className="rounded-xl h-11 w-11 text-danger border-danger/20 hover:bg-danger/10"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="icon" onClick={() => openEditModule(mod)} className="rounded-xl h-11 w-11"><Pencil className="h-5 w-5 text-primary" /></Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleDeleteModule(mod.id, mod.title)}
+                    className="rounded-xl h-11 w-11 text-danger border-danger/20 hover:bg-danger/10"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
                 </Card>
               ))}
             </div>
@@ -839,7 +839,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </div>
                   </div>
                   <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({...currentModule!, contentType: v as any})}>
-                    <TabsList className="mb-6 h-12 rounded-2xl p-1 bg-muted">
+                    <TabsList className="mb-6 h-12 rounded-2xl p-1 bg-muted grid grid-cols-2">
                       <TabsTrigger value="text" className="rounded-xl font-bold">Bibliografía</TabsTrigger>
                       <TabsTrigger value="video" className="rounded-xl font-bold">Video</TabsTrigger>
                     </TabsList>
@@ -858,8 +858,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         {currentModule.supportMaterials.map((mat) => {
                           const compatible = isCompatibleWithAI(mat.fileBlob, mat.name);
                           return (
-                            <div key={mat.id} className={cn(
-                              "flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
+<div key={mat.id} className={cn(
+"flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
                               mat.isMaster ? "bg-primary/5 border-primary shadow-sm" : "bg-white border-border/50"
                             )}>
                               <div className="flex items-center gap-3">
@@ -976,7 +976,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       <div className="space-y-8">
                         <div className="flex justify-between items-center">
                           <h4 className="font-bold text-lg flex items-center gap-3"><Zap className="h-5 w-5 text-success" /> Evaluación de Soporte</h4>
-                          <div className="flex gap-2">
+<div className="flex flex-wrap gap-2">
                             <Button variant="outline" onClick={() => setCurrentModule({...currentModule!, supportQuestions: [...currentModule!.supportQuestions, { id: generateId(), type: 'multiple_choice', question: '', correctAnswer: '', options: ['','','',''] }]})} className="rounded-xl font-bold border-success/20 text-success"><Plus className="h-4 w-4 mr-2" /> Añadir Soporte</Button>
                             <Button onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-xl gap-2 bg-success hover:bg-success text-white font-bold shadow-lg"><Sparkles className="h-4 w-4" /> Generar Soporte IA</Button>
                           </div>
@@ -1053,7 +1053,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     <div><p className="text-xs font-bold text-success">Contenido Preparado</p><p className="text-[10px] text-success">Base de conocimiento cargada con éxito.</p></div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Cantidad</Label>
                       <Input type="number" className="bg-secondary/30 border-none font-bold" value={aiPrefs.numQuestions} onChange={e => setAiPrefs({...aiPrefs, numQuestions: parseInt(e.target.value) || 0})}  size="lg" />

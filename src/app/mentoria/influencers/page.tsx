@@ -4,10 +4,11 @@ import { useAuth } from '@/components/auth-context';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, setDoc, serverTimestamp, limit } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import { Fragment, useEffect, useState, useCallback } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useEffect, useState, useCallback } from 'react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ResponsiveTable, ResponsiveColumn } from '@/components/ui/responsive-table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { 
@@ -17,11 +18,10 @@ import {
   Loader2,
   CheckCircle2,
   UserPlus,
-  Layout as LayoutIcon,
   Search,
   AlertCircle,
-  X,
-  MousePointer2
+  MousePointer2,
+  BookOpen
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
@@ -65,6 +65,10 @@ export default function MentorInfluencersControl() {
   const [isPromoting, setIsPromoting] = useState(false);
   const [foundUser, setFoundUser] = useState<any | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
+
+  // Cursos modal state
+  const [selectedForCourses, setSelectedForCourses] = useState<InfluencerStat | null>(null);
+  const [isCoursesDialogOpen, setIsCoursesDialogOpen] = useState(false);
 
   const fetchInfluencersStats = useCallback(async () => {
     if (!profile?.uid || !db) return;
@@ -312,6 +316,102 @@ export default function MentorInfluencersControl() {
   const globalConversions = influencers.reduce((acc, curr) => acc + curr.convertedLeads, 0);
   const globalRate = globalLeads > 0 ? Math.round((globalConversions / globalLeads) * 100) : 0;
 
+  const renderCoursesList = (inf: InfluencerStat) => (
+    <div className="space-y-1">
+      {inf.courses.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Este embajador aún no tiene cursos asignados.</p>
+      ) : (
+        <ul className="space-y-2">
+          {inf.courses.map(course => (
+            <li key={course.landingId} className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <BookOpen className="h-4 w-4 text-accent shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground truncate">{course.title}</p>
+                {course.landingTitle && (
+                  <p className="text-[11px] text-muted-foreground truncate">{course.landingTitle}</p>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+
+  const influencerTableColumns: ResponsiveColumn<InfluencerStat>[] = [
+    {
+      key: 'embajador',
+      header: 'Embajador',
+      hideOnMobile: true,
+      className: 'align-top',
+      cell: (inf: InfluencerStat) => (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={inf.photoURL} />
+              <AvatarFallback className="bg-success/15 text-success font-bold">
+                {inf.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-bold text-foreground">{inf.name}</div>
+              <div className="text-xs text-muted-foreground">{inf.email}</div>
+            </div>
+          </div>
+          <button
+            onClick={() => { setSelectedForCourses(inf); setIsCoursesDialogOpen(true); }}
+            className="w-fit inline-flex items-center gap-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 px-2.5 py-1 text-xs font-bold transition-colors"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            Ver cursos ({inf.courses.length})
+          </button>
+        </div>
+      ),
+    },
+    {
+      key: 'accesos',
+      header: 'Accesos',
+      align: 'center',
+      cell: (inf: InfluencerStat) => (
+        <div className="inline-flex items-center justify-center bg-muted text-foreground h-8 px-3 rounded-lg text-xs font-bold gap-1.5">
+          <MousePointer2 className="h-3 w-3 text-primary" /> {inf.totalClicks}
+        </div>
+      ),
+    },
+    {
+      key: 'leads',
+      header: 'Leads',
+      align: 'center',
+      cell: (inf: InfluencerStat) => (
+        <span className="font-black text-foreground">{inf.totalLeads}</span>
+      ),
+    },
+    {
+      key: 'ventas',
+      header: 'Ventas',
+      align: 'center',
+      cell: (inf: InfluencerStat) => (
+        <span className="font-black text-success">{inf.convertedLeads}</span>
+      ),
+    },
+    {
+      key: 'conversion',
+      header: 'Conversión',
+      align: 'right',
+      hideOnMobile: true,
+      cell: (inf: InfluencerStat) => {
+        const rate = inf.totalLeads > 0
+          ? Math.round((inf.convertedLeads / inf.totalLeads) * 100)
+          : 0;
+        return (
+          <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent px-2.5 py-1 rounded-md text-[11px] font-bold">
+            {rate}%
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto space-y-10 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 py-6">
@@ -378,146 +478,89 @@ export default function MentorInfluencersControl() {
           </h2>
 
           <Card className="rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-[10px] text-muted-foreground uppercase bg-muted/80 font-black tracking-widest border-b border-muted">
-                  <tr>
-                    <th className="px-6 py-4">Embajador</th>
-                    <th className="px-6 py-4 text-center">Accesos</th>
-                    <th className="px-6 py-4 text-center">Leads</th>
-                    <th className="px-6 py-4 text-center">Ventas</th>
-                    <th className="px-6 py-4 text-right">Conversión</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {influencers.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-16 text-center">
-                        <div className="flex flex-col items-center gap-4">
-                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Users className="h-8 w-8 text-primary/30" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-foreground mb-1">Aún no tenés embajadores</p>
-                            <p className="text-muted-foreground text-sm">
-                              Hacé clic en "Dar de Alta Embajador" para agregar tu primer embajador.
-                            </p>
-                          </div>
-                          <Button
-                            onClick={() => setShowAltaModal(true)}
-                            className="mt-2 h-10 px-5 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold gap-2"
-                          >
-                            <UserPlus className="h-4 w-4" /> Dar de Alta Embajador
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    influencers.map(inf => {
-                      const rate = inf.totalLeads > 0
-                        ? Math.round((inf.convertedLeads / inf.totalLeads) * 100)
-                        : 0;
-                      return (
-                        <Fragment key={inf.uid}>
-                          <tr className="hover:bg-muted/50 transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={inf.photoURL} />
-                                  <AvatarFallback className="bg-success/15 text-success font-bold">
-                                    {inf.name.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="font-bold text-foreground">{inf.name}</div>
-                                  <div className="text-xs text-muted-foreground">{inf.email}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <div className="inline-flex items-center justify-center bg-muted text-foreground h-8 px-3 rounded-lg text-xs font-bold gap-1.5">
-                                <MousePointer2 className="h-3 w-3 text-primary" /> {inf.totalClicks}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="font-black text-foreground">{inf.totalLeads}</span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="font-black text-success">{inf.convertedLeads}</span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent px-2.5 py-1 rounded-md text-[11px] font-bold">
-                                {rate}%
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td colSpan={5} className="px-6 py-0">
-                              <div className="border-t border-muted bg-muted/80">
-                                <div className="px-6 py-4">
-                                  <div className="flex items-center justify-between gap-4">
-                                    <div>
-                                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cursos</p>
-                                      <p className="text-sm font-bold text-foreground">Detalle de cursos asignados a {inf.name}</p>
-                                    </div>
-                                    <div className="text-right text-xs text-muted-foreground">
-                                      <p>{inf.courses.length} curso{inf.courses.length !== 1 ? 's' : ''} asignado{inf.courses.length !== 1 ? 's' : ''}</p>
-                                    </div>
-                                  </div>
-
-                                  <div className="mt-4 grid gap-3">
-                                    {inf.courses.length === 0 ? (
-                                      <div className="rounded-2xl border border-dashed border-border bg-white px-4 py-5 text-sm text-muted-foreground">
-                                        Este embajador aún no tiene cursos asignados.
-                                      </div>
-                                    ) : (
-                                      inf.courses.map(course => (
-                                        <div key={course.landingId} className="rounded-2xl border border-muted bg-white px-4 py-4 shadow-sm">
-                                          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                            <div className="space-y-2">
-                                              <div className="flex flex-wrap items-center gap-2">
-                                                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
-                                                  {course.landingTitle}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">Landing: {course.landingId}</span>
-                                              </div>
-                                              <p className="font-black text-foreground">{course.title}</p>
-                                              <p className="text-sm text-muted-foreground">{course.description}</p>
-                                            </div>
-
-                                            <div className="flex flex-wrap gap-2 lg:justify-end">
-                                              <span className="inline-flex items-center rounded-xl bg-muted px-3 py-2 text-xs font-bold text-foreground">
-                                                Precio: ${course.price}
-                                              </span>
-                                              <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
-                                                Clicks: {course.clicks}
-                                              </span>
-                                              <span className="inline-flex items-center rounded-xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary">
-                                                Leads: {course.leads}
-                                              </span>
-                                              <span className="inline-flex items-center rounded-xl bg-success/15 px-3 py-2 text-xs font-bold text-success">
-                                                Ventas: {course.conversions}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ))
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        </Fragment>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              columns={influencerTableColumns}
+              data={influencers}
+              keyExtractor={(inf) => inf.uid}
+              emptyState={
+                <div className="flex flex-col items-center gap-4 py-16 text-center">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="h-8 w-8 text-primary/30" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-foreground mb-1">Aún no tenés embajadores</p>
+                    <p className="text-muted-foreground text-sm">
+                      Hacé clic en "Dar de Alta Embajador" para agregar tu primer embajador.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setShowAltaModal(true)}
+                    className="mt-2 h-10 px-5 rounded-xl bg-accent hover:bg-accent/90 text-white font-bold gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" /> Dar de Alta Embajador
+                  </Button>
+                </div>
+              }
+              mobileCardHeader={(inf: InfluencerStat) => {
+                const rate = inf.totalLeads > 0
+                  ? Math.round((inf.convertedLeads / inf.totalLeads) * 100)
+                  : 0;
+                return (
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarImage src={inf.photoURL} />
+                        <AvatarFallback className="bg-success/15 text-success font-bold">
+                          {inf.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-bold text-sm text-foreground leading-tight">{inf.name}</p>
+                        <p className="text-xs text-muted-foreground">{inf.email}</p>
+                      </div>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent px-2.5 py-1 rounded-md text-[11px] font-bold shrink-0">
+                      {rate}%
+                    </div>
+                  </div>
+                );
+              }}
+              mobileCardFooter={(inf: InfluencerStat) => (
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => { setSelectedForCourses(inf); setIsCoursesDialogOpen(true); }}
+                    className="flex-1 h-11 rounded-xl font-bold text-xs gap-2 bg-accent hover:bg-accent/90 text-white"
+                  >
+                    <BookOpen className="h-4 w-4" /> Ver Cursos ({inf.courses.length})
+                  </Button>
+                </div>
+              )}
+            />
           </Card>
         </div>
       </div>
+
+      {/* ── Modal de Cursos del Embajador ─────────────────────────────────── */}
+      <Dialog open={isCoursesDialogOpen} onOpenChange={setIsCoursesDialogOpen}>
+        <DialogContent className="mw-2xl max-h-[80vh] overflow-y-auto p-0">
+          <div className="flex items-center gap-3 px-6 py-5 border-b border-muted">
+            <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center">
+              <BookOpen className="h-5 w-5 text-accent" />
+            </div>
+            <div>
+              <DialogTitle className="text-base font-black text-foreground">
+                Cursos de {selectedForCourses?.name}
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground font-medium">
+                {selectedForCourses?.courses.length} curso{selectedForCourses?.courses.length !== 1 ? 's' : ''} asignado{selectedForCourses?.courses.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+          <div className="p-6">
+            {selectedForCourses && renderCoursesList(selectedForCourses)}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Modal de Alta ──────────────────────────────────────────────────── */}
       <Dialog open={showAltaModal} onOpenChange={(open) => { if (!open) closeModal(); }}>
@@ -529,7 +572,7 @@ export default function MentorInfluencersControl() {
               <UserPlus className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-base font-black text-foreground">Dar de Alta Embajador</h2>
+              <DialogTitle className="text-base font-black text-foreground">Dar de Alta Embajador</DialogTitle>
               <p className="text-xs text-muted-foreground font-medium">Buscá al usuario por su email de registro</p>
             </div>
           </div>

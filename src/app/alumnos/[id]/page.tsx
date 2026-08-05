@@ -8,7 +8,7 @@ import {
   collection, query, where, doc, getDocs, getDoc, setDoc, 
   serverTimestamp, orderBy, updateDoc, limit 
 } from 'firebase/firestore';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { ResponsiveTable } from '@/components/ui/responsive-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -624,50 +624,88 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
                 <Card className="bg-white/50 backdrop-blur-xl">
                   <CardContent className="p-0">
-                    <Table>
-                      <TableHeader className="bg-primary/5">
-                        <TableRow className="border-none">
-                          <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Diagnóstico / Enfoque</TableHead>
-                          <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">Fecha</TableHead>
-                          <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-right">Acción</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {!profiles || profiles.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={3} className="py-20 text-center italic text-muted-foreground">
-                              No hay diagnósticos IA generados para este alumno.
-                            </TableCell>
-                          </TableRow>
-                        ) : profiles.map((p) => (
-                          <TableRow key={p.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
-                            <TableCell className="px-10 py-6">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-foreground text-sm">{p.focus}</span>
-                                <span className="text-[10px] text-muted-foreground italic mt-1 leading-relaxed">"{p.summary}"</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-center gap-1.5">
-                                <Calendar className="h-3 w-3 opacity-40" /> {p.createdAt ? format(p.createdAt.toDate(), 'dd/MM/yyyy') : '-'}
-                              </span>
-                            </TableCell>
-                            <TableCell className="px-10 text-right">
-                              <Button 
-                                onClick={() => {
-                                  setSelectedProfile(p);
-                                  setIsProfileDetailDialogOpen(true);
-                                }}
-                                variant="ghost" 
-                                className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10"
-                              >
-                                Ver Detalle <ChevronRight className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <ResponsiveTable
+                      columns={[
+                        {
+                          key: 'diagnostico',
+                          header: 'Diagnóstico / Enfoque',
+                          hideOnMobile: true,
+                          cell: (p: any) => (
+                            <div className="flex flex-col">
+                              <span className="font-bold text-foreground text-sm">{p.focus}</span>
+                              <span className="text-[10px] text-muted-foreground italic mt-1 leading-relaxed">"{p.summary}"</span>
+                            </div>
+                          ),
+                          className: 'px-10 py-6',
+                        },
+                        {
+                          key: 'fecha',
+                          header: 'Fecha',
+                          align: 'center',
+                          hideOnMobile: true,
+                          cell: (p: any) => (
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-center gap-1.5">
+                              <Calendar className="h-3 w-3 opacity-40" /> {p.createdAt ? format(p.createdAt.toDate(), 'dd/MM/yyyy') : '-'}
+                            </span>
+                          ),
+                        },
+                        {
+                          key: 'accion',
+                          header: 'Acción',
+                          align: 'right',
+                          hideOnMobile: true,
+                          cell: (p: any) => (
+                            <Button
+                              onClick={() => {
+                                setSelectedProfile(p);
+                                setIsProfileDetailDialogOpen(true);
+                              }}
+                              variant="ghost"
+                              className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10"
+                            >
+                              Ver Detalle <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          ),
+                          className: 'px-10',
+                        },
+                      ]}
+                      data={profiles || []}
+                      keyExtractor={(p) => p.id}
+                      headerCellClassName="py-6 text-primary/70 uppercase tracking-widest text-[10px]"
+                      rowClassName={() => 'hover:bg-primary/5 border-border/30 group'}
+                      emptyState={
+                        <div className="py-20 text-center italic text-muted-foreground">
+                          No hay diagnósticos IA generados para este alumno.
+                        </div>
+                      }
+                      mobileCardHeader={(p: any) => (
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-bold border shrink-0">
+                              <BrainCircuit className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-sm text-foreground leading-tight">{p.focus}</p>
+                              <span className="text-[10px] text-muted-foreground italic leading-relaxed block">"{p.summary}"</span>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 shrink-0">
+                            <Calendar className="h-3 w-3 opacity-40" /> {p.createdAt ? format(p.createdAt.toDate(), 'dd/MM/yyyy') : '-'}
+                          </span>
+                        </div>
+                      )}
+                      mobileCardFooter={(p: any) => (
+                        <Button
+                          onClick={() => {
+                            setSelectedProfile(p);
+                            setIsProfileDetailDialogOpen(true);
+                          }}
+                          className="w-full h-11 rounded-xl font-bold text-xs gap-2"
+                        >
+                          Ver Detalle <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      )}
+                    />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -680,70 +718,130 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                 ) : !selectedCourseId ? (
                   <Card className="bg-white/50 backdrop-blur-xl animate-in fade-in duration-500">
                     <CardContent className="p-0">
-                      <Table>
-                        <TableHeader className="bg-primary/5">
-                          <TableRow className="border-none">
-                            <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Programa</TableHead>
-                            <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">Progreso</TableHead>
-                            <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">Clases</TableHead>
-                            <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-right">Acción</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {enrollments.map((enroll) => {
-                            const completedModules = enroll.progress?.completedModules?.length || 0;
-                            const totalModules = enroll.course?.modulesCount || 1;
-                            const progress = Math.min(100, Math.round((completedModules / totalModules) * 100));
-
-                            return (
-                              <TableRow key={enroll.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
-                                <TableCell className="px-10 py-6">
-                                  <div className="flex items-center gap-4">
-                                    <div className="relative w-12 h-12 rounded-xl bg-muted overflow-hidden border shrink-0">
-                                      {enroll.course?.thumbnail ? (
-                                        <img src={enroll.course.thumbnail} alt={enroll.course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-border">
-                                          <BookOpen className="h-6 w-6" />
-                                        </div>
-                                      )}
+                      <ResponsiveTable
+                        columns={[
+                          {
+                            key: 'programa',
+                            header: 'Programa',
+                            hideOnMobile: true,
+                            cell: (enroll: any) => (
+                              <div className="flex items-center gap-4">
+                                <div className="relative w-12 h-12 rounded-xl bg-muted overflow-hidden border shrink-0">
+                                  {enroll.course?.thumbnail ? (
+                                    <img src={enroll.course.thumbnail} alt={enroll.course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-border">
+                                      <BookOpen className="h-6 w-6" />
                                     </div>
-                                    <div>
-                                      <p className="font-bold text-foreground text-sm line-clamp-1">{enroll.course?.title}</p>
-                                      <Badge className="bg-primary/5 text-primary/60 border-none text-[8px] font-black uppercase h-4 px-1.5 mt-1">
-                                        {enroll.course?.category || 'Académico'}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-center w-48">
-                                  <div className="flex flex-col gap-1.5 px-4">
-                                    <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-                                      <span>{progress}%</span>
-                                    </div>
-                                    <Progress value={progress} className="h-1.5" />
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Badge variant="outline" className="rounded-lg h-7 gap-1.5 font-bold border-primary/20 text-primary">
-                                    <CheckCircle2 className={cn("h-3 w-3", progress === 100 ? "text-success" : "text-border")} />
-                                    {completedModules}/{totalModules}
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-foreground text-sm line-clamp-1">{enroll.course?.title}</p>
+                                  <Badge className="bg-primary/5 text-primary/60 border-none text-[8px] font-black uppercase h-4 px-1.5 mt-1">
+                                    {enroll.course?.category || 'Académico'}
                                   </Badge>
-                                </TableCell>
-                                <TableCell className="px-10 text-right">
-                                  <Button 
-                                    onClick={() => setSelectedCourseId(enroll.courseId)}
-                                    variant="ghost" 
-                                    className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10"
-                                  >
-                                    Ver Desempeño <ChevronRight className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
+                                </div>
+                              </div>
+                            ),
+                            className: 'px-10 py-6',
+                          },
+                          {
+                            key: 'progreso',
+                            header: 'Progreso',
+                            align: 'center',
+                            hideOnMobile: true,
+                            cell: (enroll: any) => {
+                              const completedModules = enroll.progress?.completedModules?.length || 0;
+                              const totalModules = enroll.course?.modulesCount || 1;
+                              const progress = Math.min(100, Math.round((completedModules / totalModules) * 100));
+                              return (
+                                <div className="flex flex-col gap-1.5 px-4">
+                                  <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                                    <span>{progress}%</span>
+                                  </div>
+                                  <Progress value={progress} className="h-1.5" />
+                                </div>
+                              );
+                            },
+                            className: 'w-48',
+                          },
+                          {
+                            key: 'clases',
+                            header: 'Clases',
+                            align: 'center',
+                            hideOnMobile: true,
+                            cell: (enroll: any) => {
+                              const completedModules = enroll.progress?.completedModules?.length || 0;
+                              const totalModules = enroll.course?.modulesCount || 1;
+                              const progress = Math.min(100, Math.round((completedModules / totalModules) * 100));
+                              return (
+                                <Badge variant="outline" className="rounded-lg h-7 gap-1.5 font-bold border-primary/20 text-primary">
+                                  <CheckCircle2 className={cn("h-3 w-3", progress === 100 ? "text-success" : "text-border")} />
+                                  {completedModules}/{totalModules}
+                                </Badge>
+                              );
+                            },
+                          },
+                          {
+                            key: 'accion',
+                            header: 'Acción',
+                            align: 'right',
+                            hideOnMobile: true,
+                            cell: (enroll: any) => (
+                              <Button
+                                onClick={() => setSelectedCourseId(enroll.courseId)}
+                                variant="ghost"
+                                className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10"
+                              >
+                                Ver Desempeño <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            ),
+                            className: 'px-10',
+                          },
+                        ]}
+                        data={enrollments}
+                        keyExtractor={(enroll) => enroll.id}
+                        headerCellClassName="py-6 text-primary/70 uppercase tracking-widest text-[10px]"
+                        rowClassName={() => 'hover:bg-primary/5 border-border/30 group'}
+                        mobileCardHeader={(enroll: any) => {
+                          const completedModules = enroll.progress?.completedModules?.length || 0;
+                          const totalModules = enroll.course?.modulesCount || 1;
+                          const progress = Math.min(100, Math.round((completedModules / totalModules) * 100));
+                          return (
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-center gap-3">
+                                <div className="relative w-12 h-12 rounded-xl bg-muted overflow-hidden border shrink-0">
+                                  {enroll.course?.thumbnail ? (
+                                    <img src={enroll.course.thumbnail} alt={enroll.course.title} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-border">
+                                      <BookOpen className="h-6 w-6" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-sm text-foreground leading-tight">{enroll.course?.title}</p>
+                                  <Badge className="bg-primary/5 text-primary/60 border-none text-[8px] font-black uppercase h-4 px-1.5 mt-1">
+                                    {enroll.course?.category || 'Académico'}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <Badge variant="outline" className="rounded-lg h-7 gap-1.5 font-bold border-primary/20 text-primary shrink-0">
+                                <CheckCircle2 className={cn("h-3 w-3", progress === 100 ? "text-success" : "text-border")} />
+                                {completedModules}/{totalModules}
+                              </Badge>
+                            </div>
+                          );
+                        }}
+                        mobileCardFooter={(enroll: any) => (
+                          <Button
+                            onClick={() => setSelectedCourseId(enroll.courseId)}
+                            className="w-full h-11 rounded-xl font-bold text-xs gap-2"
+                          >
+                            Ver Desempeño <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        )}
+                      />
                     </CardContent>
                   </Card>
                 ) : (
@@ -781,95 +879,175 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
                           <Card className="border-none rounded-lg overflow-hidden bg-white">
                             <CardContent className="p-0">
-                              <Table>
-                                <TableHeader className="bg-muted border-b">
-                                  <TableRow className="border-none">
-                                    <TableHead className="py-4 px-8 text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Módulo</TableHead>
-                                    <TableHead className="py-4 text-center text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Fecha</TableHead>
-                                    <TableHead className="py-4 text-center text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Calificación</TableHead>
-                                    <TableHead className="py-4 text-center text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Intentos</TableHead>
-                                    <TableHead className="py-4 px-8 text-right text-muted-foreground uppercase tracking-widest text-[9px] font-bold">Acción</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {enroll.modules?.map((mod: any, index: number) => {
-                                    const moduleId = mod.id;
-                                    const evalData = enroll.progress?.evaluations?.[moduleId];
-                                    const moduleAttempts = attempts.filter(a => a.moduleId === moduleId && a.courseEnrollmentId === enroll.id);
-                                    const isPassing = evalData?.score >= 70;
-
-                                    return (
-                                      <TableRow key={moduleId} className="hover:bg-primary/5 transition-colors border-b last:border-none group">
-                                        <TableCell className="px-8 py-5">
-                                          <div className="flex items-center gap-3">
-                                            <div className={cn(
-                                              "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black",
-                                              moduleAttempts.length > 0 ? (isPassing ? "bg-success/10 text-success" : "bg-danger/10 text-danger") : "bg-muted text-border"
-                                            )}>
-                                              {index + 1}
-                                            </div>
-                                            <span className={cn("font-bold text-sm", moduleAttempts.length === 0 ? "text-muted-foreground" : "text-foreground")}>
-                                              {mod.title}
-                                            </span>
+                              <ResponsiveTable
+                                columns={[
+                                  {
+                                    key: 'modulo',
+                                    header: 'Módulo',
+                                    hideOnMobile: true,
+                                    cell: (mod: any) => {
+                                      const moduleId = mod.id;
+                                      const evalData = enroll.progress?.evaluations?.[moduleId];
+                                      const moduleAttempts = attempts.filter(a => a.moduleId === moduleId && a.courseEnrollmentId === enroll.id);
+                                      const isPassing = evalData?.score >= 70;
+                                      return (
+                                        <div className="flex items-center gap-3">
+                                          <div className={cn(
+                                            "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black",
+                                            moduleAttempts.length > 0 ? (isPassing ? "bg-success/10 text-success" : "bg-danger/10 text-danger") : "bg-muted text-border"
+                                          )}>
+                                            {(enroll.modules || []).indexOf(mod) + 1}
                                           </div>
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                          <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-center gap-1.5">
-                                            {evalData ? (
-                                              <>
-                                                <Calendar className="h-3 w-3 opacity-40" /> {format(evalData.submittedAt?.toDate?.() || new Date(evalData.submittedAt), 'dd/MM/yyyy')}
-                                              </>
-                                            ) : '-'}
+                                          <span className={cn("font-bold text-sm", moduleAttempts.length === 0 ? "text-muted-foreground" : "text-foreground")}>
+                                            {mod.title}
                                           </span>
-                                        </TableCell>
-                                        <TableCell className="text-center">
+                                        </div>
+                                      );
+                                    },
+                                    className: 'px-8 py-5',
+                                  },
+                                  {
+                                    key: 'fecha',
+                                    header: 'Fecha',
+                                    align: 'center',
+                                    hideOnMobile: true,
+                                    cell: (mod: any) => {
+                                      const evalData = enroll.progress?.evaluations?.[mod.id];
+                                      return (
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-center gap-1.5">
                                           {evalData ? (
-                                            <Badge className={cn(
-                                              "h-7 px-3 rounded-lg border-none font-black text-xs",
-                                              isPassing ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
-                                            )}>
-                                              {evalData.score}%
-                                            </Badge>
+                                            <>
+                                              <Calendar className="h-3 w-3 opacity-40" /> {format(evalData.submittedAt?.toDate?.() || new Date(evalData.submittedAt), 'dd/MM/yyyy')}
+                                            </>
+                                          ) : '-'}
+                                        </span>
+                                      );
+                                    },
+                                  },
+                                  {
+                                    key: 'calificacion',
+                                    header: 'Calificación',
+                                    align: 'center',
+                                    hideOnMobile: true,
+                                    cell: (mod: any) => {
+                                      const evalData = enroll.progress?.evaluations?.[mod.id];
+                                      const isPassing = evalData?.score >= 70;
+                                      return evalData ? (
+                                        <Badge className={cn(
+                                          "h-7 px-3 rounded-lg border-none font-black text-xs",
+                                          isPassing ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
+                                        )}>
+                                          {evalData.score}%
+                                        </Badge>
+                                      ) : (
+                                        <span className="text-[10px] text-border font-bold uppercase tracking-widest">Pendiente</span>
+                                      );
+                                    },
+                                  },
+                                  {
+                                    key: 'intentos',
+                                    header: 'Intentos',
+                                    align: 'center',
+                                    cell: (mod: any) => {
+                                      const moduleId = mod.id;
+                                      const moduleAttempts = attempts.filter(a => a.moduleId === moduleId && a.courseEnrollmentId === enroll.id);
+                                      return (
+                                        <div className="flex flex-wrap justify-center gap-1.5 py-1">
+                                          {moduleAttempts.length === 0 ? (
+                                            <span className="text-[9px] text-border italic">Sin intentos</span>
                                           ) : (
-                                            <span className="text-[10px] text-border font-bold uppercase tracking-widest">Pendiente</span>
+                                            moduleAttempts.map((attempt) => (
+                                              <Badge
+                                                key={attempt.id}
+                                                variant="secondary"
+                                                className="h-6 px-2 rounded-md gap-1 cursor-pointer hover:bg-secondary transition-colors text-[9px] font-bold"
+                                                onClick={() => handleViewAttemptDetail(attempt)}
+                                              >
+                                                <span className={attempt.score >= 70 ? "text-success" : "text-danger"}>
+                                                  {attempt.score}%
+                                                </span>
+                                              </Badge>
+                                            ))
                                           )}
-                                        </TableCell>
-                                        <TableCell className="text-center min-w-[200px]">
-                                          <div className="flex flex-wrap justify-center gap-1.5 py-1">
-                                            {moduleAttempts.length === 0 ? (
-                                              <span className="text-[9px] text-border italic">Sin intentos</span>
-                                            ) : (
-                                              moduleAttempts.map((attempt) => (
-                                                <Badge 
-                                                  key={attempt.id} 
-                                                  variant="secondary" 
-                                                  className="h-6 px-2 rounded-md gap-1 cursor-pointer hover:bg-secondary transition-colors text-[9px] font-bold"
-                                                  onClick={() => handleViewAttemptDetail(attempt)}
-                                                >
-                                                  <span className={attempt.score >= 70 ? "text-success" : "text-danger"}>
-                                                    {attempt.score}%
-                                                  </span>
-                                                </Badge>
-                                              ))
-                                            )}
-                                          </div>
-                                        </TableCell>
-                                        <TableCell className="px-8 text-right">
-                                          <Button 
-                                            onClick={() => evalData && handleOpenAudit(moduleId, enroll, evalData)}
-                                            size="sm"
-                                            variant="outline"
-                                            disabled={!evalData}
-                                            className="h-9 px-4 rounded-xl font-bold gap-2 text-xs border-primary/20 text-primary hover:bg-primary/5"
-                                          >
-                                            <FileSearch className="h-3.5 w-3.5" /> Detalle Q&A
-                                          </Button>
-                                        </TableCell>
-                                      </TableRow>
-                                    );
-                                  })}
-                                </TableBody>
-                              </Table>
+                                        </div>
+                                      );
+                                    },
+                                    className: 'min-w-[200px]',
+                                  },
+                                  {
+                                    key: 'accion',
+                                    header: 'Acción',
+                                    align: 'right',
+                                    hideOnMobile: true,
+                                    cell: (mod: any) => {
+                                      const evalData = enroll.progress?.evaluations?.[mod.id];
+                                      return (
+                                        <Button
+                                          onClick={() => evalData && handleOpenAudit(mod.id, enroll, evalData)}
+                                          size="sm"
+                                          variant="outline"
+                                          disabled={!evalData}
+                                          className="h-9 px-4 rounded-xl font-bold gap-2 text-xs border-primary/20 text-primary hover:bg-primary/5"
+                                        >
+                                          <FileSearch className="h-3.5 w-3.5" /> Detalle Q&A
+                                        </Button>
+                                      );
+                                    },
+                                    className: 'px-8',
+                                  },
+                                ]}
+                                data={enroll.modules || []}
+                                keyExtractor={(mod) => mod.id}
+                                headerCellClassName="py-4 text-muted-foreground uppercase tracking-widest text-[9px]"
+                                rowClassName={() => 'hover:bg-primary/5 border-b last:border-none group'}
+                                mobileCardHeader={(mod: any) => {
+                                  const moduleId = mod.id;
+                                  const evalData = enroll.progress?.evaluations?.[moduleId];
+                                  const moduleAttempts = attempts.filter(a => a.moduleId === moduleId && a.courseEnrollmentId === enroll.id);
+                                  const isPassing = evalData?.score >= 70;
+                                  return (
+                                    <div className="flex items-start justify-between gap-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                          "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0",
+                                          moduleAttempts.length > 0 ? (isPassing ? "bg-success/10 text-success" : "bg-danger/10 text-danger") : "bg-muted text-border"
+                                        )}>
+                                          {(enroll.modules || []).indexOf(mod) + 1}
+                                        </div>
+                                        <div>
+                                          <p className="font-bold text-sm text-foreground leading-tight">{mod.title}</p>
+                                          <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                                            {evalData ? format(evalData.submittedAt?.toDate?.() || new Date(evalData.submittedAt), 'dd/MM/yyyy') : 'Sin evaluación'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {evalData ? (
+                                        <Badge className={cn(
+                                          "h-7 px-3 rounded-lg border-none font-black text-xs shrink-0",
+                                          isPassing ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
+                                        )}>
+                                          {evalData.score}%
+                                        </Badge>
+                                      ) : (
+                                        <span className="text-[10px] text-border font-bold uppercase tracking-widest shrink-0">Pendiente</span>
+                                      )}
+                                    </div>
+                                  );
+                                }}
+                                mobileCardFooter={(mod: any) => {
+                                  const evalData = enroll.progress?.evaluations?.[mod.id];
+                                  return (
+                                    <Button
+                                      onClick={() => evalData && handleOpenAudit(mod.id, enroll, evalData)}
+                                      variant="outline"
+                                      disabled={!evalData}
+                                      className="w-full h-11 rounded-xl font-bold gap-2 text-xs border-primary/20 text-primary hover:bg-primary/5"
+                                    >
+                                      <FileSearch className="h-4 w-4" /> Detalle Q&A
+                                    </Button>
+                                  );
+                                }}
+                              />
                             </CardContent>
                           </Card>
 
@@ -890,56 +1068,94 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               <TabsContent value="followups" className="space-y-6 animate-in fade-in duration-500">
                 <Card className="bg-white/50 backdrop-blur-xl">
                   <CardContent className="p-0">
-                    <Table>
-                      <TableHeader className="bg-primary/5">
-                        <TableRow className="border-none">
-                          <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Seguimiento</TableHead>
-                          <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">Estado</TableHead>
-                          <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">Iniciado</TableHead>
-                          <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-right">Acción</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {followUps?.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={4} className="py-20 text-center italic text-muted-foreground">
-                              No hay seguimientos activos para este alumno.
-                            </TableCell>
-                          </TableRow>
-                        ) : followUps?.map((f) => (
-                          <TableRow key={f.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
-                            <TableCell className="px-10 py-6">
-                              <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-bold border shrink-0">
-                                  <ClipboardList className="h-5 w-5" />
-                                </div>
-                                <span className="font-bold text-foreground text-sm">{f.title}</span>
+                    <ResponsiveTable
+                      columns={[
+                        {
+                          key: 'seguimiento',
+                          header: 'Seguimiento',
+                          hideOnMobile: true,
+                          cell: (f: any) => (
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-bold border shrink-0">
+                                <ClipboardList className="h-5 w-5" />
                               </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge className={cn(
-                                "text-[8px] uppercase font-black px-2 h-5 border-none",
-                                f.status === 'active' ? "bg-success" : "bg-danger"
-                              )}>
-                                {f.status === 'active' ? 'En Curso' : 'Suspendido'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-center gap-1.5">
-                                <Calendar className="h-3 w-3" /> {f.startDate ? format(f.startDate?.toDate?.() || new Date(f.startDate), 'dd/MM/yyyy') : '-'}
-                              </span>
-                            </TableCell>
-                            <TableCell className="px-10 text-right">
-                              <Link href={`/seguimientos/${f.id}`}>
-                                <Button variant="ghost" className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10">
-                                  Detalle <ChevronRight className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                              <span className="font-bold text-foreground text-sm">{f.title}</span>
+                            </div>
+                          ),
+                          className: 'px-10 py-6',
+                        },
+                        {
+                          key: 'estado',
+                          header: 'Estado',
+                          align: 'center',
+                          hideOnMobile: true,
+                          cell: (f: any) => (
+                            <Badge className={cn(
+                              "text-[8px] uppercase font-black px-2 h-5 border-none",
+                              f.status === 'active' ? "bg-success" : "bg-danger"
+                            )}>
+                              {f.status === 'active' ? 'En Curso' : 'Suspendido'}
+                            </Badge>
+                          ),
+                        },
+                        {
+                          key: 'iniciado',
+                          header: 'Iniciado',
+                          align: 'center',
+                          cell: (f: any) => (
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-center gap-1.5">
+                              <Calendar className="h-3 w-3" /> {f.startDate ? format(f.startDate?.toDate?.() || new Date(f.startDate), 'dd/MM/yyyy') : '-'}
+                            </span>
+                          ),
+                        },
+                        {
+                          key: 'accion',
+                          header: 'Acción',
+                          align: 'right',
+                          hideOnMobile: true,
+                          cell: (f: any) => (
+                            <Link href={`/seguimientos/${f.id}`}>
+                              <Button variant="ghost" className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10">
+                                Detalle <ChevronRight className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          ),
+                          className: 'px-10',
+                        },
+                      ]}
+                      data={followUps || []}
+                      keyExtractor={(f) => f.id}
+                      headerCellClassName="py-6 text-primary/70 uppercase tracking-widest text-[10px]"
+                      rowClassName={() => 'hover:bg-primary/5 border-border/30 group'}
+                      emptyState={
+                        <div className="py-20 text-center italic text-muted-foreground">
+                          No hay seguimientos activos para este alumno.
+                        </div>
+                      }
+                      mobileCardHeader={(f: any) => (
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-bold border shrink-0">
+                              <ClipboardList className="h-5 w-5" />
+                            </div>
+                            <p className="font-bold text-sm text-foreground leading-tight">{f.title}</p>
+                          </div>
+                          <Badge className={cn(
+                            "text-[8px] uppercase font-black px-2 h-5 border-none",
+                            f.status === 'active' ? "bg-success" : "bg-danger"
+                          )}>
+                            {f.status === 'active' ? 'En Curso' : 'Suspendido'}
+                          </Badge>
+                        </div>
+                      )}
+                      mobileCardFooter={(f: any) => (
+                        <Link href={`/seguimientos/${f.id}`} className="w-full">
+                          <Button variant="ghost" className="w-full h-11 rounded-xl font-bold text-primary gap-2 hover:bg-primary/10 text-xs">
+                            Detalle <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      )}
+                    />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -959,63 +1175,105 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
                 <Card className="bg-white/50 backdrop-blur-xl">
                   <CardContent className="p-0">
-                    <Table>
-                      <TableHeader className="bg-primary/5">
-                        <TableRow className="border-none">
-                          <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Tarea / Desafío</TableHead>
-                          <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">Estado</TableHead>
-                          <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">Calificación</TableHead>
-                          <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-right">Acción</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tasks?.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={4} className="py-20 text-center italic text-muted-foreground">
-                              No hay tareas individuales asignadas a este alumno.
-                            </TableCell>
-                          </TableRow>
-                        ) : tasks?.map((task) => (
-                          <TableRow key={task.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
-                            <TableCell className="px-10 py-6">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-foreground text-sm">{task.title}</span>
-                                <span className="text-[10px] text-muted-foreground uppercase mt-1">
-                                  {format(task.createdAt?.toDate?.() || new Date(task.createdAt || Date.now()), 'dd/MM/yyyy HH:mm')}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge className={cn(
-                                "text-[8px] uppercase font-black px-2 h-5 border-none",
-                                task.status === 'completed' ? "bg-success" : "bg-warn"
-                              )}>
-                                {task.status === 'completed' ? 'Entregada' : 'Pendiente'}
+                    <ResponsiveTable
+                      columns={[
+                        {
+                          key: 'tarea',
+                          header: 'Tarea / Desafío',
+                          hideOnMobile: true,
+                          cell: (task: any) => (
+                            <div className="flex flex-col">
+                              <span className="font-bold text-foreground text-sm">{task.title}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase mt-1">
+                                {format(task.createdAt?.toDate?.() || new Date(task.createdAt || Date.now()), 'dd/MM/yyyy HH:mm')}
+                              </span>
+                            </div>
+                          ),
+                          className: 'px-10 py-6',
+                        },
+                        {
+                          key: 'estado',
+                          header: 'Estado',
+                          align: 'center',
+                          hideOnMobile: true,
+                          cell: (task: any) => (
+                            <Badge className={cn(
+                              "text-[8px] uppercase font-black px-2 h-5 border-none",
+                              task.status === 'completed' ? "bg-success" : "bg-warn"
+                            )}>
+                              {task.status === 'completed' ? 'Entregada' : 'Pendiente'}
+                            </Badge>
+                          ),
+                        },
+                        {
+                          key: 'calificacion',
+                          header: 'Calificación',
+                          align: 'center',
+                          cell: (task: any) => (
+                            task.status === 'completed' ? (
+                              <Badge variant="outline" className="h-6 px-2 rounded-lg font-black text-xs border-primary/20 text-primary">
+                                {task.score}%
                               </Badge>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {task.status === 'completed' ? (
-                                <Badge variant="outline" className="h-6 px-2 rounded-lg font-black text-xs border-primary/20 text-primary">
-                                  {task.score}%
-                                </Badge>
-                              ) : '-'}
-                            </TableCell>
-                            <TableCell className="px-10 text-right">
-                              <Button 
-                                onClick={() => {
-                                  setSelectedTask(task);
-                                  setIsTaskDetailDialogOpen(true);
-                                }}
-                                variant="ghost" 
-                                className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10"
-                              >
-                                Ver Detalle <ChevronRight className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                            ) : '-'
+                          ),
+                        },
+                        {
+                          key: 'accion',
+                          header: 'Acción',
+                          align: 'right',
+                          hideOnMobile: true,
+                          cell: (task: any) => (
+                            <Button
+                              onClick={() => {
+                                setSelectedTask(task);
+                                setIsTaskDetailDialogOpen(true);
+                              }}
+                              variant="ghost"
+                              className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10"
+                            >
+                              Ver Detalle <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          ),
+                          className: 'px-10',
+                        },
+                      ]}
+                      data={tasks || []}
+                      keyExtractor={(task) => task.id}
+                      headerCellClassName="py-6 text-primary/70 uppercase tracking-widest text-[10px]"
+                      rowClassName={() => 'hover:bg-primary/5 border-border/30 group'}
+                      emptyState={
+                        <div className="py-20 text-center italic text-muted-foreground">
+                          No hay tareas individuales asignadas a este alumno.
+                        </div>
+                      }
+                      mobileCardHeader={(task: any) => (
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="font-bold text-sm text-foreground leading-tight">{task.title}</p>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase mt-1 block">
+                              {format(task.createdAt?.toDate?.() || new Date(task.createdAt || Date.now()), 'dd/MM/yyyy HH:mm')}
+                            </span>
+                          </div>
+                          <Badge className={cn(
+                            "text-[8px] uppercase font-black px-2 h-5 border-none",
+                            task.status === 'completed' ? "bg-success" : "bg-warn"
+                          )}>
+                            {task.status === 'completed' ? 'Entregada' : 'Pendiente'}
+                          </Badge>
+                        </div>
+                      )}
+                      mobileCardFooter={(task: any) => (
+                        <Button
+                          onClick={() => {
+                            setSelectedTask(task);
+                            setIsTaskDetailDialogOpen(true);
+                          }}
+                          className="w-full h-11 rounded-xl font-bold text-xs gap-2"
+                        >
+                          Ver Detalle <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      )}
+                    />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -1034,47 +1292,77 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
                 <Card className="bg-white/50 backdrop-blur-xl">
                   <CardContent className="p-0">
-                    <Table>
-                      <TableHeader className="bg-primary/5">
-                        <TableRow className="border-none">
-                          <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold">Observación</TableHead>
-                          <TableHead className="py-6 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-center">Fecha</TableHead>
-                          <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold text-right">Acción</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {!notes || notes.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={3} className="py-20 text-center italic text-muted-foreground">
-                              No hay observaciones registradas para este alumno.
-                            </TableCell>
-                          </TableRow>
-                        ) : notes.map((note) => (
-                          <TableRow key={note.id} className="hover:bg-primary/5 transition-colors border-b border-border/30 group">
-                            <TableCell className="px-10 py-6">
-                              <p className="text-sm text-foreground line-clamp-1 italic">"{note.content}"</p>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-center gap-1.5">
-                                <Calendar className="h-3 w-3 opacity-40" /> {note.createdAt ? format(note.createdAt?.toDate?.() || new Date(note.createdAt), 'dd/MM/yyyy') : '-'}
-                              </span>
-                            </TableCell>
-                            <TableCell className="px-10 text-right">
-                              <Button 
-                                onClick={() => {
-                                  setSelectedNote(note);
-                                  setIsNoteDetailDialogOpen(true);
-                                }}
-                                variant="ghost" 
-                                className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10"
-                              >
-                                Ver Detalle <ChevronRight className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <ResponsiveTable
+                      columns={[
+                        {
+                          key: 'observacion',
+                          header: 'Observación',
+                          hideOnMobile: true,
+                          cell: (note: any) => (
+                            <p className="text-sm text-foreground line-clamp-1 italic">"{note.content}"</p>
+                          ),
+                          className: 'px-10 py-6',
+                        },
+                        {
+                          key: 'fecha',
+                          header: 'Fecha',
+                          align: 'center',
+                          hideOnMobile: true,
+                          cell: (note: any) => (
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center justify-center gap-1.5">
+                              <Calendar className="h-3 w-3 opacity-40" /> {note.createdAt ? format(note.createdAt?.toDate?.() || new Date(note.createdAt), 'dd/MM/yyyy') : '-'}
+                            </span>
+                          ),
+                        },
+                        {
+                          key: 'accion',
+                          header: 'Acción',
+                          align: 'right',
+                          hideOnMobile: true,
+                          cell: (note: any) => (
+                            <Button
+                              onClick={() => {
+                                setSelectedNote(note);
+                                setIsNoteDetailDialogOpen(true);
+                              }}
+                              variant="ghost"
+                              className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10"
+                            >
+                              Ver Detalle <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          ),
+                          className: 'px-10',
+                        },
+                      ]}
+                      data={notes || []}
+                      keyExtractor={(note) => note.id}
+                      headerCellClassName="py-6 text-primary/70 uppercase tracking-widest text-[10px]"
+                      rowClassName={() => 'hover:bg-primary/5 border-border/30 group'}
+                      emptyState={
+                        <div className="py-20 text-center italic text-muted-foreground">
+                          No hay observaciones registradas para este alumno.
+                        </div>
+                      }
+                      mobileCardHeader={(note: any) => (
+                        <div className="flex items-start justify-between gap-4">
+                          <p className="text-sm text-foreground leading-tight italic">"{note.content}"</p>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 shrink-0">
+                            <Calendar className="h-3 w-3 opacity-40" /> {note.createdAt ? format(note.createdAt?.toDate?.() || new Date(note.createdAt), 'dd/MM/yyyy') : '-'}
+                          </span>
+                        </div>
+                      )}
+                      mobileCardFooter={(note: any) => (
+                        <Button
+                          onClick={() => {
+                            setSelectedNote(note);
+                            setIsNoteDetailDialogOpen(true);
+                          }}
+                          className="w-full h-11 rounded-xl font-bold text-xs gap-2"
+                        >
+                          Ver Detalle <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      )}
+                    />
                   </CardContent>
                 </Card>
               </TabsContent>

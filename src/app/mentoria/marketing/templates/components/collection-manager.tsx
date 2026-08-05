@@ -156,7 +156,7 @@ export function CollectionManager({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-6 px-2">
+      <div className="flex justify-between items-center mb-6 px-2 flex-wrap">
         <h2 className="text-2xl font-headline font-bold text-primary flex items-center gap-3">
           <LayoutTemplate className="h-6 w-6 text-muted-foreground" />{" "}
           Colecciones de Templates
@@ -174,7 +174,8 @@ export function CollectionManager({
 
       <Card className="bg-white/50 backdrop-blur-xl">
         <CardContent className="p-0">
-          <Table>
+          <div className="overflow-x-auto">
+            <Table>
             <TableHeader className="bg-primary/5">
               <TableRow className="border-none">
                 <TableHead className="py-6 px-10 text-primary/70 uppercase tracking-widest text-[10px] font-bold">
@@ -305,9 +306,10 @@ export function CollectionManager({
                   </TableCell>
                 </TableRow>
               ))}
-            </TableBody>
-          </Table>
-        </CardContent>
+             </TableBody>
+           </Table>
+          </div>
+         </CardContent>
       </Card>
     </div>
   );

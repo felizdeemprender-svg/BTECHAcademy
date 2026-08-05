@@ -491,10 +491,10 @@ export default function CreateCoursePage() {
 
   const renderQuestionEditor = (q: any, idx: number, isSupport: boolean) => (
     <Card key={q.id} className="border-2 border-primary/10 shadow-sm rounded-2xl overflow-hidden">
-      <CardHeader className="py-4 px-6 bg-secondary/5 flex flex-row justify-between items-center">
+      <CardHeader className="py-4 px-6 bg-secondary/5 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="font-bold">Pregunta {idx + 1}</Badge>
-          <div className="flex gap-2">
+<div className="flex flex-wrap gap-2">
             {['multiple_choice', 'true_false', 'free_response'].map(type => (
               <button 
                 key={type} 
@@ -525,7 +525,7 @@ export default function CreateCoursePage() {
           }
         }}><Trash2 className="h-4 w-4" /></Button>
       </CardHeader>
-      <CardContent className="p-6 space-y-4">
+      <CardContent className="p-4 md:p-6 space-y-4">
         <div className="space-y-2">
           <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Enunciado</Label>
           <Input value={q.text || q.question || ''} onChange={e => {
@@ -614,7 +614,7 @@ export default function CreateCoursePage() {
         {q.type === 'true_false' && (
           <div className="space-y-3 pt-2">
             <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Respuesta Correcta</Label>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Button 
                 type="button"
                 variant={q.correctAnswer === true ? 'default' : 'outline'} 
@@ -777,14 +777,14 @@ export default function CreateCoursePage() {
                   className="font-bold text-xl border-none bg-muted/40" 
                  size="xl" />
                 <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({ ...currentModule, contentType: v as any })}>
-                  <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full max-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
+                  <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full grid-cols-2 max-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
                   <TabsContent value="text" className="space-y-6">
                     <div className="p-12 border-2 border-dashed rounded-lg flex flex-col items-center gap-4 relative bg-muted/5 hover:bg-muted/10 transition-all group">
                       <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
                       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">{currentModule.isProcessing ? <Loader2 className="animate-spin text-primary" /> : <Upload className="text-primary" />}</div>
                       <div className="text-center"><p className="font-bold text-lg">Cargar Materiales</p><p className="text-sm text-muted-foreground">PDF, Word o TXT.</p></div>
                     </div>
-                    <div className="grid gap-3">
+<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {currentModule.supportMaterials.map((mat) => {
                         const compatible = isCompatibleWithAI(mat.fileBlob);
                         return (
@@ -848,15 +848,15 @@ export default function CreateCoursePage() {
                 </div>
 
                 <div className="pt-8 border-t flex flex-col gap-6">
-                  <div className="flex justify-between items-center"><h3 className="font-bold text-xl flex items-center gap-2"><CheckCircle2 className="h-6 w-6 text-primary" /> Evaluaciones</h3><div className="flex gap-3"><Button onClick={() => addManualQuestion(false)} variant="outline" className="rounded-2xl gap-2 font-bold h-12 border-2"><Plus className="h-4 w-4" /> Añadir Pregunta</Button><Button onClick={() => { setAiTargetType('main'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-2xl gap-2 bg-accent h-12 text-white"><Sparkles className="h-4 w-4" /> Generar con IA</Button></div></div>
-                  <div className="grid gap-4">{currentModule.questions.map((q, idx) => renderQuestionEditor(q, idx, false))}</div>
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-4"><h3 className="font-bold text-xl flex items-center gap-2"><CheckCircle2 className="h-6 w-6 text-primary" /> Evaluaciones</h3><div className="flex flex-wrap gap-3"><Button onClick={() => addManualQuestion(false)} variant="outline" className="rounded-2xl gap-2 font-bold h-12 border-2"><Plus className="h-4 w-4" /> Añadir Pregunta</Button><Button onClick={() => { setAiTargetType('main'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-2xl gap-2 bg-accent h-12 text-white"><Sparkles className="h-4 w-4" /> Generar con IA</Button></div></div>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{currentModule.questions.map((q, idx) => renderQuestionEditor(q, idx, false))}</div>
                 </div>
                 <div className="bg-success/10/50 p-8 rounded-lg border-2 border-success/15 space-y-6">
                   <div className="flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-2xl bg-success text-white flex items-center justify-center"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-success">Refuerzo Automático</h3></div></div><Switch checked={currentModule.enableSupportQuestions} onCheckedChange={(val) => setCurrentModule({ ...currentModule, enableSupportQuestions: val })} /></div>
                   {currentModule.enableSupportQuestions && (
                     <div className="pt-6 space-y-6 border-t border-success/20">
-                      <div className="flex justify-between items-center"><h4 className="font-bold text-success">Evaluación de Soporte</h4><div className="flex gap-2"><Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={() => addManualQuestion(true)}><Plus className="h-3 w-3 mr-1" /> Añadir Manual</Button><Button size="sm" className="bg-success text-white rounded-xl font-bold" onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }}><Sparkles className="h-3 w-3 mr-1" /> Generar Soporte con IA</Button></div></div>
-                      <div className="grid gap-4">{currentModule.supportQuestions.map((q, idx) => renderQuestionEditor(q, idx, true))}</div>
+                      <div className="flex flex-col md:flex-row justify-between items-center gap-4"><h4 className="font-bold text-success">Evaluación de Soporte</h4><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={() => addManualQuestion(true)}><Plus className="h-3 w-3 mr-1" /> Añadir Manual</Button><Button size="sm" className="bg-success text-white rounded-xl font-bold" onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }}><Sparkles className="h-3 w-3 mr-1" /> Generar Soporte con IA</Button></div></div>
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{currentModule.supportQuestions.map((q, idx) => renderQuestionEditor(q, idx, true))}</div>
                     </div>
                   )}
                 </div>
@@ -878,7 +878,7 @@ export default function CreateCoursePage() {
               </CardHeader>
               <CardContent className="p-0">
                 <Tabs defaultValue="perfil" className="w-full">
-                  <TabsList className="bg-secondary/20 p-1 rounded-none border-b h-16 w-full justify-start gap-2 px-10">
+                  <TabsList className="bg-secondary/20 p-1 rounded-none border-b h-16 w-full flex-wrap gap-2 px-4">
                     <TabsTrigger value="perfil" className="rounded-xl gap-2 font-bold px-6 h-11"><User className="h-4 w-4" /> Perfil</TabsTrigger>
                     <TabsTrigger value="contacto" className="rounded-xl gap-2 font-bold px-6 h-11"><Globe className="h-4 w-4" /> Contacto</TabsTrigger>
                     <TabsTrigger value="marca" className="rounded-xl gap-2 font-bold px-6 h-11"><Palette className="h-4 w-4" /> Marca</TabsTrigger>
@@ -1011,7 +1011,7 @@ export default function CreateCoursePage() {
                     </Button>
                   </div>
                 </div>
-                <div className="grid gap-3">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {invitedStudents.map((stu, i) => (
                     <div key={i} className={cn(
                       "flex items-center justify-between p-4 rounded-2xl border transition-all",

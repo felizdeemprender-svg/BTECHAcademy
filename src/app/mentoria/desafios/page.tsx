@@ -564,12 +564,12 @@ export default function MentorChallengesPage() {
             <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Gestión de Desafíos</h1>
             <p className="text-muted-foreground text-lg font-medium">Asigna consignas de alto impacto y analiza el desempeño con IA.</p>
           </div>
-          <div className="flex gap-3">
-            {allTasks && allTasks.length > 0 && (
-              <Button variant="outline" onClick={() => setIsPurgeOpen(true)} className="h-12 px-6 rounded-xl font-bold border-danger/20 text-danger hover:bg-danger/10 gap-2">
-                <Trash2 className="h-4 w-4" /> Limpiar
-              </Button>
-            )}
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+          {allTasks && allTasks.length > 0 && (
+          <Button variant="outline" onClick={() => setIsPurgeOpen(true)} className="h-12 px-6 rounded-xl font-bold border-danger/20 text-danger hover:bg-danger/10 gap-2">
+            <Trash2 className="h-4 w-4" /> Limpiar
+          </Button>
+          )}
             <Button onClick={() => setIsCreateOpen(true)} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
               <Plus className="h-5 w-5" /> Nuevo Desafío
             </Button>

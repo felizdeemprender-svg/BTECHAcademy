@@ -177,6 +177,7 @@ export function AIGenerator({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="mw-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogTitle className="sr-only">Generador de Templates con IA</DialogTitle>
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">

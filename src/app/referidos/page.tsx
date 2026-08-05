@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ResponsiveTable } from '@/components/ui/responsive-table';
 import { 
   Users, 
   Target, 
@@ -98,6 +99,48 @@ export default function ReferidosDashboard() {
   const totalLeads = leads.length;
   const convertedLeads = leads.filter(l => l.status === 'converted').length;
   const conversionRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0;
+
+  const leadTableColumns = [
+    {
+      key: 'estudiante',
+      header: 'Estudiante',
+      hideOnMobile: true,
+      cell: (lead: any) => (
+        <>
+          <div className="font-bold text-foreground">{lead.studentName}</div>
+          <div className="text-xs text-muted-foreground">{lead.studentEmail}</div>
+        </>
+      ),
+    },
+    {
+      key: 'fecha',
+      header: 'Fecha',
+      cell: (lead: any) => {
+        const date = lead.createdAt?.seconds
+          ? format(new Date(lead.createdAt.seconds * 1000), "dd MMM yyyy, HH:mm", { locale: es })
+          : 'Reciente';
+        return (
+          <span className="text-muted-foreground text-xs font-medium">{date}</span>
+        );
+      },
+    },
+    {
+      key: 'estado',
+      header: 'Estado',
+      hideOnMobile: true,
+      cell: (lead: any) => (
+        lead.status === 'converted' ? (
+          <div className="inline-flex items-center gap-1.5 bg-success/10 text-success px-2.5 py-1 rounded-md text-[11px] font-bold">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Pago Confirmado
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 bg-warn/10 text-warn px-2.5 py-1 rounded-md text-[11px] font-bold">
+            <Clock className="h-3.5 w-3.5" /> Pendiente de Pago
+          </div>
+        )
+      ),
+    },
+  ];
 
   return (
     <DashboardLayout>
@@ -212,55 +255,38 @@ export default function ReferidosDashboard() {
           </h2>
           
           <Card className="rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-[10px] text-muted-foreground uppercase bg-muted/80 font-black tracking-widest border-b border-muted">
-                  <tr>
-                    <th className="px-6 py-4">Estudiante</th>
-                    <th className="px-6 py-4">Fecha</th>
-                    <th className="px-6 py-4">Estado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {leads.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="px-6 py-10 text-center text-muted-foreground italic">
-                        Aún no tienes leads registrados. Comparte tus enlaces para comenzar.
-                      </td>
-                    </tr>
-                  ) : (
-                    leads.map(lead => {
-                      const date = lead.createdAt?.seconds 
-                        ? format(new Date(lead.createdAt.seconds * 1000), "dd MMM yyyy, HH:mm", { locale: es })
-                        : 'Reciente';
-                      
-                      return (
-                        <tr key={lead.id} className="hover:bg-muted/50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="font-bold text-foreground">{lead.studentName}</div>
-                            <div className="text-xs text-muted-foreground">{lead.studentEmail}</div>
-                          </td>
-                          <td className="px-6 py-4 text-muted-foreground text-xs font-medium">
-                            {date}
-                          </td>
-                          <td className="px-6 py-4">
-                            {lead.status === 'converted' ? (
-                              <div className="inline-flex items-center gap-1.5 bg-success/10 text-success px-2.5 py-1 rounded-md text-[11px] font-bold">
-                                <CheckCircle2 className="h-3.5 w-3.5" /> Pago Confirmado
-                              </div>
-                            ) : (
-                              <div className="inline-flex items-center gap-1.5 bg-warn/10 text-warn px-2.5 py-1 rounded-md text-[11px] font-bold">
-                                <Clock className="h-3.5 w-3.5" /> Pendiente de Pago
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              columns={leadTableColumns}
+              data={leads}
+              keyExtractor={(lead) => lead.id}
+              emptyState={
+                <div className="px-6 py-10 text-center text-muted-foreground italic">
+                  Aún no tienes leads registrados. Comparte tus enlaces para comenzar.
+                </div>
+              }
+              mobileCardHeader={(lead: any) => {
+                const date = lead.createdAt?.seconds
+                  ? format(new Date(lead.createdAt.seconds * 1000), "dd MMM yyyy, HH:mm", { locale: es })
+                  : 'Reciente';
+                return (
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-bold text-sm text-foreground leading-tight">{lead.studentName}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{lead.studentEmail}</p>
+                    </div>
+                    {lead.status === 'converted' ? (
+                      <div className="inline-flex items-center gap-1.5 bg-success/10 text-success px-2.5 py-1 rounded-md text-[11px] font-bold shrink-0">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Pago Confirmado
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-1.5 bg-warn/10 text-warn px-2.5 py-1 rounded-md text-[11px] font-bold shrink-0">
+                        <Clock className="h-3.5 w-3.5" /> Pendiente de Pago
+                      </div>
+                    )}
+                  </div>
+                );
+              }}
+            />
           </Card>
         </div>
 

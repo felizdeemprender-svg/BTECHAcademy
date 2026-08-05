@@ -461,11 +461,11 @@ export default function SalesLandingsDashboardPage() {
                     </div>
                   </button>
 
-                  {/* Filas de landings */}
-                  {isOpen && (
-                    <div className="border-t border-border/40">
-                      {/* Cabecera de tabla */}
-                      <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-2 bg-muted border-b border-border/30">
+                   {/* Filas de landings */}
+                   {isOpen && (
+                     <div className="border-t border-border/40 overflow-x-auto">
+                       {/* Cabecera de tabla */}
+                       <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-2 bg-muted border-b border-border/30 min-w-[700px]">
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Landing</span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-24 text-center hidden sm:block">Tipo</span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground w-16 text-center hidden md:block">Inicio</span>
@@ -487,7 +487,7 @@ export default function SalesLandingsDashboardPage() {
                         return (
                           <div
                             key={page.id}
-                            className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-3.5 border-b border-border/20 last:border-b-0 hover:bg-muted/50 transition-colors"
+                             className="grid grid-cols-[1fr_auto_auto_auto_auto_auto_auto_auto_auto] items-center gap-4 px-6 py-3.5 border-b border-border/20 last:border-b-0 hover:bg-muted/50 transition-colors min-w-[700px]"
                           >
                             {/* Nombre y variantes */}
                             <div className="min-w-0">

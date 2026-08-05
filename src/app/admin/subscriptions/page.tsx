@@ -42,7 +42,7 @@ import {
   Zap
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { ResponsiveTable } from '@/components/ui/responsive-table';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -457,96 +457,159 @@ export default function AdminSubscriptionsPage() {
         {/* Planes Disponibles - Vista Tabla */}
         <Card className="border rounded-md overflow-hidden bg-white shadow-none">
           <CardContent className="p-0">
-            <Table>
-                  <TableHeader className="bg-secondary/50 border-b">
-                <TableRow className="border-none">
-                  <TableHead className="font-bold py-4 px-6 text-foreground text-[11px] uppercase tracking-wider">Plan</TableHead>
-                  <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Límites</TableHead>
-                  <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Precio</TableHead>
-                  <TableHead className="font-bold text-center text-[11px] uppercase tracking-wider">Estado</TableHead>
-                  <TableHead className="text-right py-4 px-6 text-foreground text-[11px] uppercase tracking-wider">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-20 animate-pulse text-muted-foreground">Sincronizando planes...</TableCell></TableRow>
-                ) : (!plans || plans.length === 0) ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-20 italic text-muted-foreground">No hay planes configurados.</TableCell></TableRow>
-                ) : plans.map((plan) => (
-                  <TableRow key={plan.id} className="hover:bg-secondary/20 border-b transition-colors">
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center border font-bold text-xs uppercase shrink-0 transition-transform", 
-                            plan.type === 'free' ? "bg-muted text-muted-foreground border-border" :
-                            plan.type === 'fixed' ? "bg-primary/10 text-primary border-primary/20" :
-                            "bg-success/10 text-success border-success/20"
-                          )}>
-                          {plan.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm text-foreground line-clamp-1">{plan.name}</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-primary/20 text-primary/70">{plan.durationMonths} meses</Badge>
-                            {plan.type === 'free' && <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-border text-muted-foreground">Gratuita</Badge>}
-                            {plan.hasPremiumAI && <span className="ml-1 text-[10px]" title="Incluye Motor IA Premium">🌟</span>}
-                          </div>
+            <ResponsiveTable
+              data={plans || []}
+              keyExtractor={(plan) => plan.id}
+              isLoading={loading}
+              loadingState={
+                <div className="text-center py-20 animate-pulse text-muted-foreground">Sincronizando planes...</div>
+              }
+              emptyState={
+                <div className="text-center py-20 italic text-muted-foreground">No hay planes configurados.</div>
+              }
+              columns={[
+                {
+                  key: 'plan',
+                  header: 'Plan',
+                  hideOnMobile: true,
+                  cell: (plan) => (
+                    <div className="flex items-center gap-4">
+                      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center border font-bold text-xs uppercase shrink-0 transition-transform",
+                          plan.type === 'free' ? "bg-muted text-muted-foreground border-border" :
+                          plan.type === 'fixed' ? "bg-primary/10 text-primary border-primary/20" :
+                          "bg-success/10 text-success border-success/20"
+                        )}>
+                        {plan.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm text-foreground line-clamp-1">{plan.name}</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-primary/20 text-primary/70">{plan.durationMonths} meses</Badge>
+                          {plan.type === 'free' && <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-border text-muted-foreground">Gratuita</Badge>}
+                          {plan.hasPremiumAI && <span className="ml-1 text-[10px]" title="Incluye Motor IA Premium">🌟</span>}
                         </div>
                       </div>
-                    </TableCell>
-                    
-                    <TableCell className="text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-xs font-bold text-foreground">{plan.limits.maxCourses === -1 ? '∞' : plan.limits.maxCourses} cursos</span>
-                        <span className="text-[10px] text-muted-foreground font-semibold">{plan.limits.maxStudents === -1 ? '∞' : plan.limits.maxStudents} alumnos</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'limits',
+                  header: 'Límites',
+                  align: 'center',
+                  hideOnMobile: true,
+                  cell: (plan) => (
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs font-bold text-foreground">{plan.limits.maxCourses === -1 ? '∞' : plan.limits.maxCourses} cursos</span>
+                      <span className="text-[10px] text-muted-foreground font-semibold">{plan.limits.maxStudents === -1 ? '∞' : plan.limits.maxStudents} alumnos</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'price',
+                  header: 'Precio',
+                  align: 'center',
+                  hideOnMobile: true,
+                  cell: (plan) => (
+                    <div className="flex flex-col items-center">
+                      <span className="font-bold text-foreground">
+                        {plan.type === 'free' ? 'Gratis' : plan.type === 'fixed' ? `$${plan.price}/m` : `${plan.percentageRate}%`}
+                      </span>
+                      {plan.type === 'percentage' && <span className="text-[9px] uppercase text-muted-foreground font-bold">Por Ventas</span>}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'status',
+                  header: 'Estado',
+                  align: 'center',
+                  hideOnMobile: true,
+                  cell: (plan) => (
+                    <div className="flex flex-col items-center gap-1">
+                      <Badge variant={plan.isEnterprise ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", plan.isEnterprise ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground uppercase")}>
+                        {plan.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
+                      </Badge>
+                      <div className="text-[8px] text-muted-foreground mt-1">
+                        {plan.isEnterprise ? 'Para organizaciones con múltiples usuarios' : 'Para tutores independientes y mentores'}
                       </div>
-                    </TableCell>
-                    
-                    <TableCell className="text-center">
-                      <div className="flex flex-col items-center">
-                        <span className="font-bold text-foreground">
-                          {plan.type === 'free' ? 'Gratis' : plan.type === 'fixed' ? `$${plan.price}/m` : `${plan.percentageRate}%`}
-                        </span>
-                        {plan.type === 'percentage' && <span className="text-[9px] uppercase text-muted-foreground font-bold">Por Ventas</span>}
+                      <Badge variant="outline" className="text-[9px] opacity-70 px-0 h-3 border-none bg-transparent">
+                        {plan.isActive ? '✓ Disponible' : '✗ Oculto'}
+                      </Badge>
+                      <div className="text-[8px] text-muted-foreground mt-1">
+                        {plan.isActive ? 'Visible para nuevos suscriptores' : 'No disponible para nuevos suscriptores'}
                       </div>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <Badge variant={plan.isEnterprise ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", plan.isEnterprise ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground uppercase")}>
-                          {plan.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
-                        </Badge>
-                        <div className="text-[8px] text-muted-foreground mt-1">
-                          {plan.isEnterprise ? 'Para organizaciones con múltiples usuarios' : 'Para tutores independientes y mentores'}
-                        </div>
-                        <Badge variant="outline" className="text-[9px] opacity-70 px-0 h-3 border-none bg-transparent">
-                          {plan.isActive ? '✓ Disponible' : '✗ Oculto'}
-                        </Badge>
-                        <div className="text-[8px] text-muted-foreground mt-1">
-                          {plan.isActive ? 'Visible para nuevos suscriptores' : 'No disponible para nuevos suscriptores'}
-                        </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  header: 'Acciones',
+                  align: 'right',
+                  hideOnMobile: true,
+                  cell: (plan) => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreHorizontal className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 text-xs font-bold">
+                        <DropdownMenuItem onSelect={() => handleEdit(plan)} className="cursor-pointer gap-2 py-2">
+                          <Edit className="h-3.5 w-3.5" /> Editar Plan
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => handleDelete(plan.id)} className="text-destructive font-bold cursor-pointer gap-2 py-2">
+                          <Trash2 className="h-3.5 w-3.5" /> Eliminar Plan
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ),
+                },
+              ]}
+              mobileCardHeader={(plan) => (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center border font-bold text-xs uppercase shrink-0",
+                        plan.type === 'free' ? "bg-muted text-muted-foreground border-border" :
+                        plan.type === 'fixed' ? "bg-primary/10 text-primary border-primary/20" :
+                        "bg-success/10 text-success border-success/20"
+                      )}>
+                      {plan.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-foreground leading-tight">{plan.name}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-primary/20 text-primary/70">{plan.durationMonths} meses</Badge>
+                        {plan.hasPremiumAI && <span className="ml-1 text-[10px]" title="Incluye Motor IA Premium">🌟</span>}
                       </div>
-                    </TableCell>
-
-                    <TableCell className="text-right px-6">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreHorizontal className="h-4 w-4" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 text-xs font-bold">
-                          <DropdownMenuItem onSelect={() => handleEdit(plan)} className="cursor-pointer gap-2 py-2">
-                            <Edit className="h-3.5 w-3.5" /> Editar Plan
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={() => handleDelete(plan.id)} className="text-destructive font-bold cursor-pointer gap-2 py-2">
-                            <Trash2 className="h-3.5 w-3.5" /> Eliminar Plan
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <Badge variant={plan.isEnterprise ? 'default' : 'outline'} className={cn("text-[9px] px-2 h-5", plan.isEnterprise ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground uppercase")}>
+                      {plan.isEnterprise ? 'Empresa' : 'Tutor/Mentor'}
+                    </Badge>
+                    <span className={cn("text-[8px] font-bold uppercase", plan.isActive ? "text-success" : "text-muted-foreground")}>
+                      {plan.isActive ? '✓ Disponible' : '✗ Oculto'}
+                    </span>
+                  </div>
+                </div>
+              )}
+              mobileCardFooter={(plan) => (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full h-11 rounded-xl font-bold text-xs gap-2">
+                      <MoreHorizontal className="h-4 w-4" /> Gestionar Plan
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 text-sm font-bold p-2">
+                    <DropdownMenuItem onSelect={() => handleEdit(plan)} className="gap-3 py-3 rounded-lg cursor-pointer">
+                      <Edit className="h-4 w-4" /> Editar Plan
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => handleDelete(plan.id)} className="text-destructive gap-3 py-3 rounded-lg cursor-pointer">
+                      <Trash2 className="h-4 w-4" /> Eliminar Plan
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            />
           </CardContent>
         </Card>
 

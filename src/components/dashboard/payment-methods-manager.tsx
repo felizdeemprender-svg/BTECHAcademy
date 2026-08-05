@@ -211,7 +211,8 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
 
       <Card className="rounded-lg overflow-hidden bg-white">
         <CardContent className="p-0">
-          <Table>
+          <div className="overflow-x-auto">
+            <Table>
             <TableHeader className="bg-muted/80">
               <TableRow className="border-none">
                 <TableHead className="py-6 px-10 text-muted-foreground uppercase tracking-widest text-[10px] font-black">Plataforma / Nombre</TableHead>
@@ -293,8 +294,9 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
-        </CardContent>
+           </Table>
+          </div>
+         </CardContent>
       </Card>
 
       {/* Dialog: ABM */}

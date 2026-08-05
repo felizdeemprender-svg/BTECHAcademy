@@ -24,7 +24,7 @@ function PreviewDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("p-0 overflow-hidden", maxWidth || "mw-4xl", className)}>
-        {title && <DialogTitle className="sr-only">{title}</DialogTitle>}
+        <DialogTitle className="sr-only">{title || 'Vista previa'}</DialogTitle>
         {children}
       </DialogContent>
     </Dialog>
