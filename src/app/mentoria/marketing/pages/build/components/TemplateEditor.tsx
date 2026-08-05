@@ -499,6 +499,124 @@ export function TemplateEditor({
     }
   };
 
+  const handleGenerateVideoIA = async (s: any, sIdx: number) => {
+    if (!s) return;
+    if (!selectedCourseId) {
+      toast({ variant: 'destructive', title: 'Sin curso', description: 'Selecciona un curso antes de generar el video IA.' });
+      return;
+    }
+
+    setIsRenderingVideo(`${sIdx}`);
+    setJobProgress(prev => ({ ...prev, [sIdx]: { progress: 0, stage: 'En cola...' } }));
+
+    try {
+      const accessToken = await ensureGoogleToken();
+      if (!accessToken) throw new Error('Se requiere acceso a Drive para guardar el video.');
+
+      const typeToFormat: Record<string, string> = {
+        story: '9:16',
+        short_video: '9:16',
+        portrait_post: '4:5',
+        single_post: '1:1',
+        carousel: '4:5'
+      };
+      const formato = typeToFormat[s.type] || '9:16';
+      const pNotes = s.production_notes || {};
+
+      // ── ENCOLAR el job en el circuito (responde ~100ms) ──────────────────
+      const res = await fetch('/api/video/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cursoId: selectedCourseId,
+          formato,
+          avatar: 'no',
+          engine: 'gemini-omni',
+          adnId: pNotes.adnId || '01_CINEMA',
+          marketingName: s.marketingName,
+          googleToken: accessToken,
+          isSmokeTest: false
+        })
+      });
+
+      const enqueueData = await res.json();
+      if (!res.ok || !enqueueData.success) {
+        throw new Error(enqueueData.error || 'No se pudo encolar el video IA.');
+      }
+      const jobId: string = enqueueData.jobId;
+
+      toast({ title: 'Video IA en Cola', description: 'Gemini Omni está generando el clip (máx 10s). Puedes seguir trabajando.' });
+
+      // ── POLLING: consultar /api/video/job-status cada 4 segundos ─────────
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusRes = await fetch(`/api/video/job-status?id=${jobId}`);
+          const statusData = await statusRes.json();
+          if (!statusData.success) return;
+
+          setJobProgress(prev => ({
+            ...prev,
+            [sIdx]: { progress: statusData.progress || 0, stage: statusData.stage || '...' }
+          }));
+
+          if (statusData.status === 'completed') {
+            clearInterval(pollInterval);
+            const result = statusData.result || {};
+
+            setRenderedVideos(prev => ({ ...prev, [sIdx]: result.webViewLink }));
+
+            const newSocials = [...generatedAssets.socials];
+            newSocials[sIdx] = {
+              ...newSocials[sIdx],
+              production_notes: {
+                ...pNotes,
+                video_url: result.webViewLink,
+                video_drive_id: result.driveId,
+                video_download_url: result.downloadUrl
+              }
+            };
+            await onSave({ ...generatedAssets, socials: newSocials }, true);
+            toast({ title: 'Video IA Listo ✅', description: 'El clip generado con IA ya está disponible.' });
+            setIsRenderingVideo(null);
+            setJobProgress(prev => ({ ...prev, [sIdx]: { progress: 100, stage: 'Completado' } }));
+
+          } else if (statusData.status === 'failed') {
+            clearInterval(pollInterval);
+            toast({ variant: 'destructive', title: 'Error de Video IA', description: statusData.error || 'El proceso falló.' });
+            setIsRenderingVideo(null);
+            setJobProgress(prev => ({ ...prev, [sIdx]: { progress: 0, stage: 'Error' } }));
+          }
+        } catch (pollErr) {
+          console.error('[Poll IA] Error consultando estado:', pollErr);
+        }
+      }, 4000);
+
+      setTimeout(() => clearInterval(pollInterval), 20 * 60 * 1000);
+
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Error', description: err.message });
+      setIsRenderingVideo(null);
+      setJobProgress(prev => ({ ...prev, [sIdx]: { progress: 0, stage: 'Error' } }));
+    }
+  };
+
+  // Mapear tipo de asset → formato del circuito (/api/video/generate)
+  const mapAssetTypeToFormato = (type: string): string => {
+    switch (type) {
+      case 'story':
+      case 'short_video':
+        return '9:16';
+      case 'portrait_post':
+        return '4:5';
+      case 'single_post':
+        return '1:1';
+      case 'carousel':
+        return '4:5';
+      default:
+        return '9:16';
+    }
+  };
+
 
   const handleGeneratePdf = async (s: any, sIdx: number) => {
     if (!s) return;
@@ -1166,6 +1284,7 @@ export function TemplateEditor({
                                                 isRenderingVideo={isRenderingVideo} 
                                                 updateAsset={updateAsset as any} 
                                                 onGenerateVideo={handleGenerateVideo} 
+                                                onGenerateVideoIA={handleGenerateVideoIA} 
                                                 onDeleteVideo={handleDeleteVideo} 
                                                 renderedVideos={renderedVideos} 
                                                 googleToken={googleToken}

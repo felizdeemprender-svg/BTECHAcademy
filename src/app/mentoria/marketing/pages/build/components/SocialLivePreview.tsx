@@ -99,31 +99,31 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
 
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border">
-            <PlatformIcon platform={social.platform || 'Instagram'} className="h-4 w-4 text-slate-500" />
+          <div className="w-8 h-8 rounded-full bg-border flex items-center justify-center border">
+            <PlatformIcon platform={social.platform || 'Instagram'} className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase text-slate-900 leading-none">{social.platform || 'Red Social'}</p>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{social.type?.replace('_', ' ')}</p>
+            <p className="text-[10px] font-black uppercase text-foreground leading-none">{social.platform || 'Red Social'}</p>
+            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter">{social.type?.replace('_', ' ')}</p>
           </div>
         </div>
-        {isCarousel && <Badge className="bg-emerald-500 text-white border-none text-[8px] font-black uppercase h-5">{slides.length} PLACAS</Badge>}
+        {isCarousel && <Badge className="bg-success text-white border-none text-[8px] font-black uppercase h-5">{slides.length} PLACAS</Badge>}
       </div>
 
       <div className={cn(
-          "relative mx-auto rounded-lg overflow-hidden border-[12px] border-white bg-slate-100 transition-all duration-500 group/mockup",
+          "relative mx-auto rounded-lg overflow-hidden border-[12px] border-white bg-muted transition-all duration-500 group/mockup",
           isVertical ? "aspect-[9/16] w-full max-w-[320px]" : 
           isPortrait ? "aspect-[4/5] w-full max-w-[360px]" : "aspect-square w-full"
         )}
       >
         {isCarousel && (
           <>
-            <div className="absolute inset-0 translate-x-3 translate-y-3 bg-slate-200 rounded-lg z-0 shadow-sm border border-slate-300" />
-            <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 bg-slate-300 rounded-lg z-0 shadow-sm border border-slate-400" />
+            <div className="absolute inset-0 translate-x-3 translate-y-3 bg-border rounded-lg z-0 shadow-sm border border-border" />
+            <div className="absolute inset-0 translate-x-1.5 translate-y-1.5 bg-border rounded-lg z-0 shadow-sm border border-muted-foreground" />
           </>
         )}
 
-        <div className="absolute inset-0 z-10 flex flex-col bg-slate-800">
+        <div className="absolute inset-0 z-10 flex flex-col bg-foreground">
           {slide.imageUrl ? (
             <div key={currentSlideIdx} className="absolute inset-0 block overflow-hidden">
                <img 
@@ -147,8 +147,8 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
               />
             </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-              <svg className="h-12 w-12 text-slate-300 opacity-50" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted to-border">
+              <svg className="h-12 w-12 text-border opacity-50" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                 <circle cx="8.5" cy="8.5" r="1.5"/>
                 <polyline points="21 15 16 10 5 21"/>
@@ -203,8 +203,8 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
             <div className="flex flex-col items-end gap-1 mt-2 pointer-events-none">
                 <Badge className={cn(
                     "border-none text-[8px] font-black uppercase px-2 mb-1 shadow-lg",
-                    segmentKey === 'GANCHO' ? "bg-amber-500 text-white" : 
-                    segmentKey === 'CTA' ? "bg-rose-500 text-white" : "bg-emerald-500 text-white"
+                    segmentKey === 'GANCHO' ? "bg-warn text-white" : 
+                    segmentKey === 'CTA' ? "bg-danger text-white" : "bg-success text-white"
                 )}>
                     {segmentKey}
                 </Badge>
@@ -275,15 +275,15 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         </div>
       </div>
       
-      <div className="p-8 rounded-lg bg-white border border-slate-100 text-sm text-slate-600 line-clamp-4 leading-relaxed relative overflow-hidden transition-all">
-        <div className="absolute left-0 top-0 w-1.5 h-full bg-slate-100" />
-        <span className="font-bold text-slate-900 mr-2">@{social.handle || 'tu_cuenta'}</span>
+      <div className="p-8 rounded-lg bg-white border border-muted text-sm text-muted-foreground line-clamp-4 leading-relaxed relative overflow-hidden transition-all">
+        <div className="absolute left-0 top-0 w-1.5 h-full bg-muted" />
+        <span className="font-bold text-foreground mr-2">@{social.handle || 'tu_cuenta'}</span>
         {social.caption || 'Aquí irá el cuerpo de la publicación...'}
         <div className="mt-4 text-primary font-bold text-xs flex flex-wrap gap-3">
-          {social.landingIdx !== undefined && <span className="bg-violet-50 text-violet-600 px-3 py-1.5 rounded-xl text-[10px] border border-violet-100">🔗 {landingUrl}</span>}
+          {social.landingIdx !== undefined && <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[10px] border border-primary/15">🔗 {landingUrl}</span>}
           <div className="flex gap-1.5">
             {social.hashtags?.map((h: string) => h.startsWith('#') ? h : `#${h}`).map((h: string, i: number) => (
-                <span key={i} className="text-violet-500 font-black tracking-tight">{h}</span>
+                <span key={i} className="text-primary font-black tracking-tight">{h}</span>
             ))}
           </div>
         </div>

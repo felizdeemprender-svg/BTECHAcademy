@@ -22,7 +22,8 @@ import {
   Trash2,
   Download,
   Type,
-  Mic2
+  Mic2,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AudioUploader } from './AudioUploader';
@@ -35,6 +36,7 @@ interface VideoProductionPanelProps {
   renderedVideos: Record<number, string | null>;
   updateAsset: (channel: 'landings' | 'emails' | 'socials' | 'ads', variantIdx: number, field: string, value: any, subIndex?: number) => void;
   onGenerateVideo: (s: any, sIdx: number) => void;
+  onGenerateVideoIA: (s: any, sIdx: number) => void;
   onDeleteVideo: (sIdx: number) => void;
   googleToken?: string | null;
   onRefreshGoogleToken?: () => Promise<string | null>;
@@ -54,6 +56,7 @@ export function VideoProductionPanel({
   renderedVideos,
   updateAsset,
   onGenerateVideo,
+  onGenerateVideoIA,
   onDeleteVideo,
   googleToken,
   onRefreshGoogleToken,
@@ -213,17 +216,26 @@ export function VideoProductionPanel({
       {/* Botón Generar / Reemplazar */}
       {!(videoUrl) ? (
         <>
-          <Button 
-            className="w-full h-14 rounded-2xl bg-primary hover:bg-primary text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
-            onClick={() => onGenerateVideo(s, sIdx)}
-            disabled={isCurrentlyRendering}
-          >
-            {isCurrentlyRendering ? (
-              <><Loader2 className="h-5 w-5 animate-spin" /> Encolando render...</>
-            ) : (
-              <><MonitorPlay className="h-5 w-5" /> Generar Pack Multimedia</>
-            )}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button 
+              className="w-full h-14 rounded-2xl bg-primary hover:bg-primary text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+              onClick={() => onGenerateVideo(s, sIdx)}
+              disabled={isCurrentlyRendering}
+            >
+              {isCurrentlyRendering ? (
+                <><Loader2 className="h-5 w-5 animate-spin" /> Encolando render...</>
+              ) : (
+                <><MonitorPlay className="h-5 w-5" /> Generar Pack Multimedia</>
+              )}
+            </Button>
+            <Button 
+              className="w-full h-12 rounded-2xl bg-fuchsia-600/90 hover:bg-fuchsia-500 text-white font-black uppercase tracking-widest text-[10px] gap-3 shadow-lg shadow-fuchsia-600/20 transition-all active:scale-95 disabled:opacity-50"
+              onClick={() => onGenerateVideoIA(s, sIdx)}
+              disabled={isCurrentlyRendering}
+            >
+              <Sparkles className="h-4 w-4" /> Video IA (Gemini Omni)
+            </Button>
+          </div>
           {isCurrentlyRendering && jobProgress && (
             <div className="space-y-2 mt-2">
               <div className="flex items-center justify-between">

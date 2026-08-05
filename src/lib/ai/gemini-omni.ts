@@ -5,10 +5,15 @@ import os from 'os';
 /**
  * @fileOverview Wrapper de Gemini Omni Flash (Interactions API) para text-to-video.
  * Endpoint: POST https://generativelanguage.googleapis.com/v1beta/interactions
- * Modelo: gemini-omni-flash-preview ($0.10/s 720p, audio sincronizado, 10s máx/clip).
- * Patrón HTTP directo (sin SDK) como ya hace generate-image/route.ts.
+ * Modelo: gemini-omni-flash-preview ($0.10/s 720p, audio sincronizado, 3–10s/clip).
  *
- * Referencia: plan-generacion-video.md §6 + video-prompt-template.md §1.4
+ * Request (plano, referencia ai.google.dev/gemini-api/docs/omni):
+ *   { "model": "gemini-omni-flash-preview",
+ *     "input": "<prompt>",
+ *     "response_format": { "type": "video", "aspect_ratio": "9:16" } }
+ *
+ * Response: interaction { id, status, steps[] } — el video vive en
+ * steps[].content[] con type "video" (data base64 o uri). Polling: GET /v1beta/interactions/{id}.
  */
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
@@ -18,7 +23,7 @@ const MAX_DURATION_SECONDS = 10;
 export interface OmniVideoRequest {
   prompt: string;
   model?: string;
-  format?: string; // 9:16 | 1:1 | 16:9 | 4:5
+  format?: string; // 9:16 | 1:1 | 16:9 | 4:5 (Omni solo soporta 9:16 / 16:9)
   durationSeconds?: number;
   delivery?: 'bytes' | 'uri';
 }
@@ -31,79 +36,63 @@ export interface OmniVideoResult {
   durationSeconds?: number;
 }
 
+// Omni Flash solo soporta 9:16 y 16:9. Los demás formatos se resuelven a vertical.
 function aspectRatio(format: string): string {
-  const map: Record<string, string> = {
-    '9:16': '9:16',
-    '1:1': '1:1',
-    '16:9': '16:9',
-    '4:5': '4:5'
-  };
-  return map[format] || '9:16';
+  return format === '16:9' ? '16:9' : '9:16';
 }
 
 /**
- * POST /v1beta/interactions — crea la interacción (long-running operation).
- * Devuelve el operation `name` para hacer polling con GET.
+ * Extrae el primer parte de video de la respuesta (steps[].content[] con type "video").
  */
-async function createInteraction(
-  apiKey: string,
-  prompt: string,
-  format: string,
-  durationSeconds: number,
-  delivery: 'bytes' | 'uri'
-): Promise<string> {
-  const model = DEFAULT_MODEL;
-  const interactionBody = {
-    model: `models/${model}`,
-    request: {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }]
-        }
-      ],
-      generationConfig: {
-        responseModalities: ['video'],
-        video: {
-          durationSeconds: Math.min(Math.max(1, durationSeconds), MAX_DURATION_SECONDS),
-          aspectRatio: aspectRatio(format)
-        }
-      },
-      responseFormat: {
-        type: 'video'
-      }
-    },
-    delivery: {
-      type: delivery
+function extractVideoPart(data: any): { mime_type?: string; data?: string; uri?: string } | null {
+  const steps: any[] = data?.steps || [];
+  for (const step of steps) {
+    const contents: any[] = step?.content || [];
+    for (const part of contents) {
+      if (part?.type === 'video') return part;
     }
+  }
+  // Conveniencia SDK: output_video
+  if (data?.output_video?.data || data?.output_video?.uri) return data.output_video;
+  return null;
+}
+
+/**
+ * Crea la interacción (POST /v1beta/interactions). Devuelve el interaction object.
+ */
+async function createInteraction(apiKey: string, prompt: string, format: string, delivery: 'bytes' | 'uri'): Promise<any> {
+  const responseFormat: any = {
+    type: 'video',
+    aspect_ratio: aspectRatio(format)
+  };
+  if (delivery === 'uri') responseFormat.delivery = 'uri';
+
+  const body = {
+    model: DEFAULT_MODEL,
+    input: prompt,
+    response_format: responseFormat
   };
 
   const res = await fetch(`${API_BASE}/interactions?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(interactionBody)
+    body: JSON.stringify(body)
   });
 
   if (!res.ok) {
     const errText = await res.text();
     throw new Error(`[Omni:Interactions] HTTP ${res.status}: ${errText}`);
   }
-
-  const data = await res.json();
-
-  // La respuesta puede ser un operation { name, ... } o el contenido directo.
-  if (data.name) return data.name;
-  if (data.interaction?.name) return data.interaction.name;
-  throw new Error('[Omni:Interactions] No se recibió un operation name.');
+  return res.json();
 }
 
 /**
- * Polling GET /v1beta/{operation} hasta que done === true.
+ * Polling GET /v1beta/interactions/{id} hasta que status === 'completed' | 'failed'.
  */
-async function pollOperation(apiKey: string, operationName: string, timeoutMs: number = 300000): Promise<any> {
+async function pollInteraction(apiKey: string, interactionId: string, timeoutMs: number = 300000): Promise<any> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const res = await fetch(`${API_BASE}/${operationName}?key=${apiKey}`, {
+    const res = await fetch(`${API_BASE}/interactions/${interactionId}?key=${apiKey}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -113,70 +102,45 @@ async function pollOperation(apiKey: string, operationName: string, timeoutMs: n
     }
     const data = await res.json();
 
-    if (data.done) {
-      if (data.error) throw new Error(`[Omni:Poll] Operation error: ${JSON.stringify(data.error)}`);
-      return data.response || data;
-    }
+    if (data.status === 'completed') return data;
+    if (data.status === 'failed') throw new Error(`[Omni:Poll] La interacción falló: ${JSON.stringify(data.error || data)}`);
+
     await new Promise(r => setTimeout(r, 3000));
   }
   throw new Error(`[Omni:Poll] Timeout esperando el video (${timeoutMs / 1000}s).`);
 }
 
 /**
- * Genera un clip de video (≤10s) con Gemini Omni Flash.
+ * Genera un clip de video (3–10s) con Gemini Omni Flash.
  * - delivery 'uri': devuelve videoUri (recomendado para >4MB).
- * - delivery 'bytes': descarga a un archivo temporal y devuelve videoPath.
+ * - delivery 'bytes': devuelve videoBytes base64.
  */
 export async function generateOmniVideo(input: OmniVideoRequest): Promise<OmniVideoResult> {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
   if (!apiKey) throw new Error('[Omni] No se ha configurado GOOGLE_GENAI_API_KEY.');
 
-  const duration = Math.min(Math.max(1, input.durationSeconds || MAX_DURATION_SECONDS), MAX_DURATION_SECONDS);
-  const delivery = input.delivery || (duration >= 8 ? 'uri' : 'bytes');
+  const delivery = input.delivery || 'bytes';
+  let result = await createInteraction(apiKey, input.prompt, input.format || '9:16', delivery);
 
-  const operationName = await createInteraction(apiKey, input.prompt, input.format || '9:16', duration, delivery);
-  const result = await pollOperation(apiKey, operationName);
-
-  // Formato posible de la respuesta con video
-  const videoPart = (result?.candidates?.[0]?.content?.parts || result?.parts || []).find(
-    (p: any) => p.inlineVideo?.mimeType || p.video?.uri || p.inlineData
-  );
-
-  if (videoPart?.inlineVideo) {
-    const { mimeType, data } = videoPart.inlineVideo;
-    return {
-      videoBytes: data,
-      mimeType: mimeType || 'video/mp4',
-      durationSeconds: duration
-    };
+  // Si la creación no devolvió el video aún, hacemos polling por id
+  if (result.id && result.status && result.status !== 'completed') {
+    result = await pollInteraction(apiKey, result.id);
   }
 
-  if (videoPart?.inlineData) {
-    const { mimeType, data } = videoPart.inlineData;
-    return {
-      videoBytes: data,
-      mimeType: mimeType || 'video/mp4',
-      durationSeconds: duration
-    };
+  const part = extractVideoPart(result);
+  if (!part) {
+    throw new Error('[Omni] No se encontró video en la respuesta del modelo.');
   }
 
-  if (videoPart?.video?.uri) {
-    return {
-      videoUri: videoPart.video.uri,
-      mimeType: videoPart.video.mimeType || 'video/mp4',
-      durationSeconds: duration
-    };
-  }
+  const duration = Math.min(input.durationSeconds || MAX_DURATION_SECONDS, MAX_DURATION_SECONDS);
 
-  // Fallback: campo delivery.uri a nivel raíz
-  if (result?.delivery?.uri) {
-    return {
-      videoUri: result.delivery.uri,
-      durationSeconds: duration
-    };
+  if (part.uri) {
+    return { videoUri: part.uri, mimeType: part.mime_type || 'video/mp4', durationSeconds: duration };
   }
-
-  throw new Error('[Omni] No se encontró video en la respuesta del modelo.');
+  if (part.data) {
+    return { videoBytes: part.data, mimeType: part.mime_type || 'video/mp4', durationSeconds: duration };
+  }
+  throw new Error('[Omni] El parte de video no tiene data ni uri.');
 }
 
 /**
