@@ -198,6 +198,292 @@ Sin texto quemado; sin clichés de éxito.`;
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PROMPT POR ESCENAS REALES (§3.3 — multi-escena, específico por motor)
+// Usa las escenas que el usuario editó (slides) en lugar de los slices del ADN,
+// más datos de producción: persona, subtítulos, marca de agua, voz y formato.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ScenePromptScene {
+  segment?: string;
+  text?: string;
+  subtitle?: string;
+  voiceover?: string;
+  watermark?: string;
+  imageUrl?: string;
+  duration?: number;
+}
+
+export interface ScenePromptOptions {
+  adn: any;
+  landing: LandingData;
+  format: string;
+  engine: 'seedance' | 'veo' | 'runway' | 'pika' | 'wan';
+  scenes: ScenePromptScene[];
+  persona?: { enabled?: boolean; description?: string };
+  subtitles?: boolean;
+  voiceId?: string;
+  marketingName?: string;
+  /** true solo en el perScene de la ÚLTIMA escena (para el cierre con música). */
+  finalScene?: boolean;
+}
+
+export interface ScenePromptResult {
+  prompt: string;
+  perScene: string[];
+  totalDuration: number;
+  engine: string;
+  format: string;
+}
+
+// Helpers de cámara según la sintaxis nativa de cada editor (basado en guías oficiales)
+function cameraMoveFor(adn: any, segment?: string): string {
+  const rules = adn.camera?.segment_rules?.[segment || 'GANCHO'] || adn.camera?.segment_rules?.['GANCHO'] || {};
+  const move = rules.mode === 'zoom' ? 'slow push-in' : rules.mode === 'pan' ? 'steady pan' : 'locked-off static shot';
+  return move;
+}
+
+function cameraFramingFor(segment?: string): string {
+  const seg = (segment || '').toLowerCase();
+  if (seg === 'gancho' || seg === 'hook') return 'close-up';
+  if (seg === 'cta' || seg === 'cierre') return 'medium shot';
+  return 'medium close-up';
+}
+
+function voiceName(opts: ScenePromptOptions, adn: any): string {
+  return opts.voiceId || adn.audio_engine?.voice_id || adn.voice_id || 'mateo';
+}
+
+function personaText(opts: ScenePromptOptions): string | null {
+  if (!opts.persona?.enabled) return null;
+  return opts.persona.description || 'presentadora profesional, consistente';
+}
+
+function courseLine(landing: LandingData): string {
+  const cta = landing.ctaText ? ` · CTA: "${landing.ctaText}"` : '';
+  const price = landing.price != null ? ` · precio: ${landing.price}` : '';
+  return `curso "${landing.courseTitle || 'curso'}"${cta}${price}`;
+}
+
+function moodOf(adn: any): string {
+  return adn.description || 'estilo de marca definido por el ADN';
+}
+
+/**
+ * Candado de consistencia multi-clip para montaje con FFmpeg.
+ * Fuerza que TODOS los clips compartan: misma voz, mismo personaje (ropa/look),
+ * mismo fondo cuando el segmento es el mismo, y música que cierra en la última escena.
+ */
+function consistencyLock(opts: ScenePromptOptions, adn: any, lang: 'es' | 'en'): string {
+  const persona = personaText(opts);
+  const voice = voiceName(opts, adn);
+  const identity = persona
+    ? persona
+    : 'escena sin presentador/a, sujetos de producto consistentes';
+  const mood = moodOf(adn);
+
+  if (lang === 'en') {
+    return `CONSISTENCY (multi-clip, final edit in FFmpeg):
+- Same narrator voice (${voice}) across every clip; identical delivery, no pitch change.
+- Same character: ${identity}. Same clothing, hairstyle, build and framing in every clip.
+- Same background/set whenever the scene shares the same message/segment; no set redesign between clips.
+- Music: one continuous background track across all clips${opts.finalScene ? ', ending with a final swell and fade-out in this last clip.' : '.'}`;
+  }
+
+  return `CONSISTENCIA (multi-clip, montaje final con FFmpeg):
+- Misma voz de narrador (${voice}) en todos los clips; misma entonación, sin cambios de tono.
+- Mismo personaje: ${identity}. Misma ropa, peinado, contextura y encuadre en cada clip.
+- Mismo fondo/escenografía siempre que la escena comparta el mismo mensaje/segmento; no rediseñar el set entre clips.
+- Música: una sola pista de fondo continua en todos los clips${opts.finalScene ? ', cerrando con crescendo y fade-out en este último clip.' : '.'}`;
+}
+
+/**
+ * SKIN SEEDANCE 2.0 (ByteDance) — sintaxis oficial:
+ * Fórmula por shot: Sujeto + Acción + Escena + Luz/color + Cámara + Estilo + Calidad + Restricciones.
+ * Símbolos: {} diálogo · 【】subtítulos on-screen · （）música · <> efectos de sonido.
+ * Shot list numerado secuencial: el orden del listado define la secuencia.
+ */
+function buildSeedancePrompt(adn: any, opts: ScenePromptOptions): string {
+  const { scenes, landing } = opts;
+  const persona = personaText(opts);
+
+  const shots = scenes.map((s, i) => {
+    const segment = s.segment || 'VALOR';
+    const subject = persona || 'escena cinematográfica de producto';
+    const action = s.voiceover || s.text || `contenido del segmento ${segment}`;
+    const camera = cameraMoveFor(adn, segment);
+    const framing = cameraFramingFor(segment);
+    const onScreen = s.text ? `, 【${s.text}】` : '';
+    return `Shot ${i + 1}: ${subject} realizando ${action}${onScreen}. Luz cálida de ${moodOf(adn)}. ${framing}, ${camera}. Estilo realista premium, calidad 4K. Audio: {${s.voiceover || ''}}${s.watermark ? `, marca de agua "${s.watermark}"` : ''}, （música de fondo）.`;
+  }).join('\n');
+
+  const constraint = opts.subtitles
+    ? 'Restricciones: mantener consistencia de identidad y sin deformación; subtítulos solo entre 【】.'
+    : 'Restricciones: mantener consistencia de identidad y sin deformación; sin texto quemado.';
+
+  return `Promo de ${courseLine(landing)} para ${opts.format}.
+${shots}
+
+${constraint}
+
+${consistencyLock(opts, adn, 'es')}`;
+}
+
+/**
+ * SKIN VEO 3 (Google) — 7 capas, AUDIO PRIMERO (el diálogo es la palanca más fuerte):
+ * Audio → Sujeto → Acción → Escena → Cámara → Iluminación → Estilo.
+ * Cada capa en su propia frase; una sola acción dominante por clip.
+ */
+function buildVeoPrompt(adn: any, opts: ScenePromptOptions): string {
+  const { scenes, landing } = opts;
+  const persona = personaText(opts);
+  const voice = voiceName(opts, adn);
+
+  const shots = scenes.map((s, i) => {
+    const segment = s.segment || 'VALOR';
+    const subject = persona || `el contexto del segmento ${segment}`;
+    const action = s.voiceover || s.text || `mostrar el valor de ${segment}`;
+    const camera = cameraMoveFor(adn, segment);
+    const framing = cameraFramingFor(segment);
+    const audio = s.voiceover
+      ? `"${s.voiceover}"` 
+      : `sonido ambiente discreto acorde a ${moodOf(adn)}`;
+    return `Audio: ${audio}, narración en ${voice}. Sujeto: ${subject}. Acción: ${action}. Escena: ${moodOf(adn)}. Cámara: ${framing}, ${camera}. Iluminación: cálida cinematográfica. Estilo: fotografía premium, grano sutil, sin clichés de éxito.`;
+  }).join('\n');
+
+  return `Promo de ${courseLine(landing)} para ${opts.format}. Narración: ${voice}.
+${shots}
+
+Regla: mantener la misma identidad visual entre clips; una sola acción dominante por clip.
+
+${consistencyLock(opts, adn, 'es')}`;
+}
+
+/**
+ * SKIN RUNWAY GEN-4 — MOTION FIRST (la imagen fija look/composición):
+ * "The camera [motion] as the subject [action]". Positivo, directo.
+ * Una escena por generación; estructura mínima porque el look ya viene de la imagen.
+ */
+function buildRunwayPrompt(adn: any, opts: ScenePromptOptions): string {
+  const { scenes, landing } = opts;
+  const persona = personaText(opts);
+
+  const shots = scenes.map((s, i) => {
+    const segment = s.segment || 'VALOR';
+    const subject = persona || 'the subject';
+    const action = s.voiceover || s.text || `move to express ${segment}`;
+    const camera = cameraMoveFor(adn, segment);
+    return `The ${camera} as ${subject} ${action}.`;
+  }).join('\n');
+
+  return `Motion-first promo for ${landing.courseTitle || 'a course'} (${opts.format}). The reference image sets the look; only describe movement.
+${shots}
+
+Positive instructions only. One scene per generation.
+
+${consistencyLock(opts, adn, 'en')}`;
+}
+
+/**
+ * SKIN PIKA — vocabulario de cámara propio, todo explícito:
+ * Sujeto → Escena → Acción → Cámara → Luz → Estilo + Avoid list separada.
+ */
+function buildPikaPrompt(adn: any, opts: ScenePromptOptions): string {
+  const { scenes, landing } = opts;
+  const persona = personaText(opts);
+
+  const shots = scenes.map((s, i) => {
+    const segment = s.segment || 'VALOR';
+    const subject = persona || `visual del segmento ${segment}`;
+    const action = s.voiceover || s.text || `desarrollar ${segment}`;
+    const camera = cameraMoveFor(adn, segment);
+    return `Subject: ${subject}. Scene: ${moodOf(adn)}. Action: ${action}. Camera: ${camera}. Lighting: warm, branded. Style: social-first, high polish.`;
+  }).join('\n');
+
+  return `Promo for ${landing.courseTitle || 'a course'} (${opts.format}).
+${shots}
+
+Avoid: clichés de éxito, texto ilegible, deformación facial, fondo genérico. Motion clarity: una acción dominante por clip.
+
+${consistencyLock(opts, adn, 'en')}`;
+}
+
+/**
+ * SKIN WAN (Alibaba) — Entity + Scene + Motion + Aesthetic control + Stylization.
+ * Multi-shot: Overall description + shot number por escena.
+ */
+function buildWanPrompt(adn: any, opts: ScenePromptOptions): string {
+  const { scenes, landing } = opts;
+  const persona = personaText(opts);
+
+  const shots = scenes.map((s, i) => {
+    const segment = s.segment || 'VALOR';
+    const entity = persona || `elemento del segmento ${segment}`;
+    const motion = s.voiceover || s.text || `movimiento pausado acorde a ${segment}`;
+    const camera = cameraMoveFor(adn, segment);
+    return `Shot ${i + 1}: Entity ${entity}. Scene: ${moodOf(adn)}. Motion: ${motion}. Camera: ${camera}. Aesthetic control: luz cálida, profundidad de campo. Stylization: cinematográfico de marca.`;
+  }).join('\n');
+
+  return `Promo of ${landing.courseTitle || 'a course'} (${opts.format}).
+${shots}
+
+Overall description: video de conversión para el curso, ritmo pausado, identidad consistente entre shots.
+
+${consistencyLock(opts, adn, 'es')}`;
+}
+
+/**
+ * Prompt export multi-escena por motor, con SKIN nativa de cada editor.
+ * Cada motor usa su propia sintaxis (Seedance/Veo/Runway/Pika/Wan).
+ * perScene es la versión por-clip para editores que generan de a una escena.
+ */
+export function buildSceneExportPrompt(opts: ScenePromptOptions): ScenePromptResult {
+  const { engine, format, scenes } = opts;
+  const totalDuration = scenes.reduce((acc, s) => acc + (Number(s.duration) || 5), 0) || 15;
+
+  let prompt: string;
+  let perScene: string[];
+
+  const lastIdx = scenes.length - 1;
+  const sceneOpts = (s: ScenePromptScene, i: number): ScenePromptOptions => ({
+    ...opts,
+    scenes: [s],
+    finalScene: i === lastIdx
+  });
+
+  switch (engine) {
+    case 'seedance': {
+      const single = buildSeedancePrompt(opts.adn, opts);
+      perScene = scenes.map((s, i) => buildSeedancePrompt(opts.adn, sceneOpts(s, i)));
+      prompt = single;
+      break;
+    }
+    case 'veo': {
+      perScene = scenes.map((s, i) => buildVeoPrompt(opts.adn, sceneOpts(s, i)));
+      prompt = buildVeoPrompt(opts.adn, opts);
+      break;
+    }
+    case 'runway': {
+      perScene = scenes.map((s, i) => buildRunwayPrompt(opts.adn, sceneOpts(s, i)));
+      prompt = buildRunwayPrompt(opts.adn, opts);
+      break;
+    }
+    case 'pika': {
+      perScene = scenes.map((s, i) => buildPikaPrompt(opts.adn, sceneOpts(s, i)));
+      prompt = buildPikaPrompt(opts.adn, opts);
+      break;
+    }
+    case 'wan':
+    default: {
+      perScene = scenes.map((s, i) => buildWanPrompt(opts.adn, sceneOpts(s, i)));
+      prompt = buildWanPrompt(opts.adn, opts);
+      break;
+    }
+  }
+
+  return { prompt, perScene, totalDuration, engine, format };
+}
+
 /**
  * Prompt avatar script-to-presenter (§2.2 del template).
  */

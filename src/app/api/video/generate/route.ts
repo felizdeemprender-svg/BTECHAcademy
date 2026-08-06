@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/firebase/admin';
 import { loadAdnConfig } from '@/lib/adn-utils';
-import { buildVideoPrompt } from '@/lib/ai/video-prompt';
+import { buildVideoPrompt, buildSceneExportPrompt } from '@/lib/ai/video-prompt';
 import { generateOmniVideo, downloadOmniVideo, saveOmniBytes } from '@/lib/ai/gemini-omni';
+import { generateLongVideo, downloadLongVideo } from '@/lib/ai/long-video';
 import { generateAvatarVideo } from '@/lib/ai/avatar';
 import { uploadToDrive, getOrCreateFolder } from '@/lib/drive-utils';
 
@@ -17,8 +18,8 @@ import { uploadToDrive, getOrCreateFolder } from '@/lib/drive-utils';
 // ─────────────────────────────────────────────────────────────────────────────
 // TIPOS
 // ─────────────────────────────────────────────────────────────────────────────
-type Engine = 'auto' | 'ffmpeg' | 'gemini-omni' | 'seedance' | 'avatar' | 'export';
-type Branch = 'A' | 'B' | 'C' | 'D' | 'E';
+type Engine = 'auto' | 'ffmpeg' | 'gemini-omni' | 'seedance' | 'avatar' | 'export' | 'long';
+type Branch = 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
 
 interface GenerateRequest {
   cursoId: string;
@@ -31,6 +32,19 @@ interface GenerateRequest {
   salesPageId?: string;
   avatarProvider?: 'heygen' | 'synthesia' | 'tavus';
   exportEngine?: 'seedance' | 'veo' | 'runway' | 'pika' | 'wan';
+  scenes?: Array<{
+    segment?: string;
+    text?: string;
+    subtitle?: string;
+    voiceover?: string;
+    watermark?: string;
+    imageUrl?: string;
+    duration?: number;
+  }>;
+  persona?: { enabled?: boolean; description?: string };
+  subtitles?: boolean;
+  voiceId?: string;
+  longDuration?: number; // segundos objetivo para engine 'long' (4–180)
   isSmokeTest?: boolean;
   uid?: string;
   role?: string;
@@ -63,6 +77,7 @@ async function updateJob(jobId: string, data: Record<string, any>) {
 function decideBranch(avatar: boolean, engine: Engine): Branch {
    if (engine === 'export') return 'D';
    if (engine === 'seedance') return 'E';
+   if (engine === 'long') return 'F';
    if (avatar) return 'C';
    if (engine === 'gemini-omni') return 'B';
    return 'A'; // 'auto' | 'ffmpeg' → default FFmpeg
@@ -271,6 +286,30 @@ async function runBranchD(jobId: string, body: GenerateRequest, adn: any, landin
   await updateJob(jobId, { status: 'processing', progress: 30, stage: 'Redactando prompt especializado...', branch: 'D' });
 
   const engine = body.exportEngine || 'seedance';
+
+  if (body.scenes && body.scenes.length > 0) {
+    // Multi-escena real: usa las escenas editadas por el usuario
+    const result = buildSceneExportPrompt({
+      adn,
+      landing,
+      format: body.formato || '9:16',
+      engine,
+      scenes: body.scenes,
+      persona: body.persona,
+      subtitles: body.subtitles,
+      voiceId: body.voiceId,
+      marketingName: body.marketingName
+    });
+
+    await updateJob(jobId, {
+      status: 'completed',
+      progress: 100,
+      stage: 'Completado',
+      result: { prompt: result.prompt, perScene: result.perScene, engine, formato: body.formato || '9:16', sceneCount: result.perScene.length }
+    });
+    return;
+  }
+
   const { prompt } = await buildVideoPrompt({
     adnId: body.adnId || '01_CINEMA',
     landing,
@@ -293,6 +332,28 @@ async function runBranchD(jobId: string, body: GenerateRequest, adn: any, landin
 async function runBranchE(jobId: string, body: GenerateRequest, adn: any, landing: any) {
   await updateJob(jobId, { status: 'processing', progress: 30, stage: 'Generando prompt Seedance 2.0...', branch: 'E' });
 
+  if (body.scenes && body.scenes.length > 0) {
+    const result = buildSceneExportPrompt({
+      adn,
+      landing,
+      format: body.formato || '9:16',
+      engine: 'seedance',
+      scenes: body.scenes,
+      persona: body.persona,
+      subtitles: body.subtitles,
+      voiceId: body.voiceId,
+      marketingName: body.marketingName
+    });
+
+    await updateJob(jobId, {
+      status: 'completed',
+      progress: 100,
+      stage: 'Completado',
+      result: { prompt: result.prompt, perScene: result.perScene, engine: 'seedance', formato: body.formato || '9:16', sceneCount: result.perScene.length }
+    });
+    return;
+  }
+
   const { prompt } = await buildVideoPrompt({
     adnId: body.adnId || '01_CINEMA',
     landing,
@@ -307,6 +368,91 @@ async function runBranchE(jobId: string, body: GenerateRequest, adn: any, landin
     stage: 'Completado',
     result: { prompt, engine: 'seedance', formato: body.formato || '9:16' }
   });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BRANCH F — Video Largo (AI Video API long-video, 4–180s en un solo request)
+// Usa la skin Seedance (provider seedance) + candado de consistencia multi-clip,
+// imágenes de referencia globales y audio nativo continuo.
+// ─────────────────────────────────────────────────────────────────────────────
+async function runBranchF(jobId: string, body: GenerateRequest, adn: any, landing: any, uid: string, role: string) {
+  await updateJob(jobId, { status: 'processing', progress: 5, stage: 'Redactando prompt de video largo...', branch: 'F' });
+
+  const scenes = (body.scenes && body.scenes.length > 0)
+    ? body.scenes
+    : (adn.slices || []).map((s: any) => ({
+        segment: s.segment_label || 'VALOR',
+        text: s.text || '',
+        subtitle: s.subtitle || '',
+        voiceover: s.voiceover || s.text || '',
+        watermark: s.watermark || '',
+        imageUrl: s.imageUrl || '',
+        duration: Number(s.duration) || 5
+      }));
+
+  const built = buildSceneExportPrompt({
+    adn,
+    landing,
+    format: body.formato || '9:16',
+    engine: 'seedance',
+    scenes,
+    persona: body.persona,
+    subtitles: body.subtitles,
+    voiceId: body.voiceId,
+    marketingName: body.marketingName
+  });
+
+  const totalSceneSeconds = built.totalDuration;
+  const requested = body.longDuration && body.longDuration >= 4 ? body.longDuration : totalSceneSeconds;
+  const durationSeconds = Math.min(Math.max(Math.round(requested), 4), 180);
+
+  await updateJob(jobId, { progress: 15, stage: `Generando video largo (${durationSeconds}s, consistencia Seedance)...` });
+
+  const result = await generateLongVideo({
+    prompt: built.prompt,
+    duration: durationSeconds,
+    provider: 'seedance',
+    resolution: body.formato === '16:9' ? '1080p' : '720p',
+    aspectRatio: (body.formato as any) === '1:1' ? '1:1' : (body.formato as any) === '4:5' || (body.formato as any) === '4:3' ? '4:3' : (body.formato as any) === '16:9' ? '16:9' : '9:16',
+    continuityMode: 'consistent',
+    style: adn.description || undefined,
+    imageUrls: scenes.map((s: any) => s.imageUrl).filter((u: string) => !!u && u.startsWith('http')).slice(0, 5),
+    nativeAudioContinuity: true
+  });
+
+  // Localizar el video generado
+  let videoPath: string | undefined;
+  if (result.videoUri) {
+    videoPath = await downloadLongVideo(result.videoUri, jobId);
+  }
+  if (!videoPath) throw new Error('[Branch F] No se pudo obtener el video largo.');
+
+  await updateJob(jobId, { progress: 80, stage: 'Subiendo video a Google Drive...' });
+
+  const safeBaseName = (body.marketingName || 'EvoAssetV2').replace(/[^a-zA-Z0-9]/g, '_');
+  let resultPayload: Record<string, any> = {};
+  if (body.googleToken) {
+    const rootFolderId = await getOrCreateFolder(body.googleToken, 'Aplicacion EVO V2');
+    const campaignFolderId = await getOrCreateFolder(body.googleToken, `Pack_${safeBaseName}`, rootFolderId);
+    const mainFile = await uploadToDrive(videoPath, body.googleToken, `${safeBaseName}_long_${Date.now()}.mp4`, 'video/mp4', campaignFolderId);
+    resultPayload = { webViewLink: mainFile.webViewLink, driveId: mainFile.id, downloadUrl: mainFile.webContentLink };
+  } else {
+    resultPayload = { videoPath };
+  }
+
+  // Billing (mismo patrón que Branch B)
+  try {
+    const { calculateVideoCost, deductCredits } = await import('@/lib/payments/credits');
+    const isAdmin = role === 'admin' || role === 'tutor';
+    if (uid && !body.isSmokeTest && !isAdmin) {
+      const cost = await calculateVideoCost(durationSeconds);
+      await deductCredits(uid, cost, 'video_long', role || 'alumno');
+    }
+  } catch (e) {
+    console.error('[Branch F] Error al procesar cobro:', e);
+  }
+
+  await updateJob(jobId, { status: 'completed', progress: 100, stage: 'Completado', result: { ...resultPayload, durationSeconds, engine: 'long', sceneCount: scenes.length } });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -336,6 +482,9 @@ async function runGenerateJob(jobId: string, body: GenerateRequest, uid: string,
         break;
       case 'E':
         await runBranchE(jobId, body, adn, landing);
+        break;
+      case 'F':
+        await runBranchF(jobId, body, adn, landing, uid, role);
         break;
     }
   } catch (err: any) {

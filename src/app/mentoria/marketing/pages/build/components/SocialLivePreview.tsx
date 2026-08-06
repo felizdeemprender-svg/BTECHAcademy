@@ -42,7 +42,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
   // Utilidad para convertir FFmpeg color (black@0.5) a CSS rgba
   const ffColorToCss = (ffCol: string, brandColor?: string) => {
     if (!ffCol) return 'transparent';
-    let base = ffCol.replace('{brandColor}', brandColor || '#8b5cf6');
+    let base = ffCol.replace('{brandColor}', brandColor || '#760464');
     if (base.includes('@')) {
       const [col, alpha] = base.split('@');
       const rgb = col === 'white' ? '255,255,255' : col === 'black' ? '0,0,0' : hexToRgb(col);
@@ -264,7 +264,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
               <button 
                 className="h-9 px-5 rounded-2xl text-[10px] font-black uppercase truncate max-w-[150px] transition-transform hover:scale-105 active:scale-95" 
                 style={{ 
-                    backgroundColor: tokens?.accent || '#8b5cf6',
+                    backgroundColor: tokens?.accent || '#760464',
                     color: '#fff'
                 }}
               >

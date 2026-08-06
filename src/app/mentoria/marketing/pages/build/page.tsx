@@ -56,8 +56,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { generateCampaignAssets, GenerateCampaignOutput } from '@/ai/flows/generate-campaign-assets';
-import { generateVariantContent } from '@/ai/flows/generate-variant-content';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -281,157 +279,25 @@ function BuilderContent() {
   }, [selectedCourse, editId]);
 
   const handleMatchAndGenerate = async () => {
-    if (!selectedCourseId || !selectedCollectionId) return;
+    if (!selectedCourseId) return;
     setIsGenerating(true);
     try {
       const course = courses?.find(c => c.id === selectedCourseId);
-      const collection = collections?.find(c => c.id === selectedCollectionId);
+      const collection = collections?.find(c => c.id === selectedCollectionId) || null;
 
-      if (!course || !collection) throw new Error('No se pudo localizar el programa o la colección seleccionada.');
+      if (!course) throw new Error('No se pudo localizar el programa seleccionado.');
 
       setBlueprintData(collection);
 
-      const tasks: { channel: string, label: string, payload: any }[] = [];
-      const { assets } = collection;
+      const assets = collection?.assets || {};
 
-      const chunkArray = (arr: any[], size: number) =>
-        Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, i * size + size));
+      setGenerationProgress({ current: 0, total: 1, label: 'Preparando borradores desde la campaña...' });
 
-      if (assets?.emails?.length) {
-        chunkArray(assets.emails, 3).forEach((chunk, i) =>
-          tasks.push({ channel: 'emails', label: `Emails ${i > 0 ? `(${i + 1})` : ''}...`, payload: { emails: chunk } })
-        );
-      }
-      if (assets?.ads?.length) {
-        chunkArray(assets.ads, 2).forEach((chunk, i) =>
-          tasks.push({ channel: 'ads', label: `Anuncios ${i > 0 ? `(${i + 1})` : ''}...`, payload: { ads: chunk } })
-        );
-      }
-      /* 
-        // DESACTIVADO: La generación de sociales ahora es a demanda
-        if (assets?.socials?.length) {
-          const platforms = ['instagram', 'tiktok', 'linkedin', 'twitter'];
-          platforms.forEach(plat => {
-            const platSocials = assets.socials.filter((s: any) => s.platform === plat);
-            if (platSocials.length > 0) {
-              chunkArray(platSocials, 2).forEach((chunk, i) => 
-                tasks.push({ 
-                  channel: 'socials', 
-                  label: `Creando ${plat.charAt(0).toUpperCase() + plat.slice(1)} ${platSocials.length > 2 ? `(${i+1})` : ''}...`, 
-                  payload: { socials: chunk } 
-                })
-              );
-            }
-          });
-          
-          const otherSocials = assets.socials.filter((s: any) => !platforms.includes(s.platform));
-          if (otherSocials.length > 0) {
-            chunkArray(otherSocials, 2).forEach((chunk, i) => 
-              tasks.push({ channel: 'socials', label: `Otros Posts ${i>0?`(${i+1})`:''}...`, payload: { socials: chunk } })
-            );
-          }
-        }
-      */
+      const finalAssets: any = { landings: [], emails: [], socials: [], ads: [] };
 
-      if (tasks.length === 0) {
-        setGenerationProgress({ current: 0, total: 1, label: 'Preparando borradores...' });
-      } else {
-        setGenerationProgress({ current: 0, total: tasks.length, label: 'Iniciando conexión interactiva...' });
-      }
-
-      let finalAssets: any = {};
-
-      // Sanitize keywords for loremflickr: remove accents, special chars, spaces > dashes, max 5 words
-      const sanitizeKeywords = (raw: string): string => {
-        return raw
-          .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // strip accents
-          .replace(/[^a-zA-Z0-9,\s-]/g, '')                // remove special chars
-          .replace(/\s+/g, '-')                             // spaces → dashes
-          .split(',')
-          .map(k => k.trim())
-          .filter(k => k.length > 2)
-          .slice(0, 5)
-          .join(',');
-      };
-
-      // Recursive function to replace invalid image URLs with loremflickr placeholders (keyword-aware)
-      const ensureValidUrls = (obj: any, baseSeed: number) => {
-        const course = courses?.find(c => c.id === selectedCourseId);
-        const courseTags = allTags?.filter(t => course?.tagIds?.includes(t.id)).map(t => t.name) || [];
-
-        const globalKeywords = sanitizeKeywords([
-          ...courseTags.slice(0, 3),
-          course?.title?.split(' ').slice(0, 3).join('-') || ''
-        ].filter(Boolean).join(','));
-
-        let counter = 0;
-        const walk = (o: any, path: string = '') => {
-          if (typeof o !== 'object' || o === null) return;
-          for (const key in o) {
-            if (key === 'imageUrl' && typeof o[key] === 'string' && o[key]) {
-              const val = o[key].toLowerCase();
-              const isInvalid = !val.startsWith('http');
-
-              if (isInvalid) {
-                const uniqueSeed = baseSeed + counter + Math.floor(Math.random() * 1000);
-
-                if (path.includes('aboutMentor') || val.includes('mentor') || val.includes('tutor') || val.includes('expert')) {
-                  o[key] = profile?.photoURL || `https://image.pollinations.ai/prompt/${encodeURIComponent('professional corporate portrait, close up, warm lighting')}?width=800&height=800&model=flux&nologo=true&seed=${uniqueSeed}`;
-                } else if (val.includes('logo')) {
-                  o[key] = course?.logo || `https://image.pollinations.ai/prompt/${encodeURIComponent('minimalist modern tech brand logo isolated on white')}?width=800&height=800&model=flux&nologo=true&seed=${uniqueSeed}`;
-                } else if (counter === 0 && course?.thumbnail && !path.includes('social')) {
-                  o[key] = course.thumbnail;
-                } else {
-                  // Use sanitized global keywords, feed to IA
-                  const promptText = `modern corporate illustration or photography about ${globalKeywords || 'business'}`;
-                  o[key] = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=800&height=600&model=flux&nologo=true&seed=${uniqueSeed}`;
-                }
-              }
-              counter++;
-            } else if (typeof o[key] === 'object') {
-              walk(o[key], `${path}.${key}`);
-            }
-          }
-        };
-        walk(obj);
-        return obj;
-      };
-
-      for (let i = 0; i < tasks.length; i++) {
-        setGenerationProgress({ current: i, total: tasks.length, label: tasks[i].label });
-        const courseTags = allTags?.filter(t => course?.tagIds?.includes(t.id)).map(t => t.name) || [];
-
-        const rawResult = await generateCampaignAssets({
-          courseTitle: course.title,
-          courseDescription: course.description || '',
-          mentorName: profile?.profile?.fullName || profile?.profile?.firstName || profile?.displayName || 'Mentor Experto',
-          mission: campaignMission,
-          mentorBio: profile?.profile?.bio,
-          mentorSocials: profile?.profile?.socials,
-          templateDirectives: collection.directives,
-          templateStructure: tasks[i].payload,
-          targetAudience: targetAudience,
-          courseTags: courseTags,
-          masterAdns: masterAdns // Inyectar ADNs cargados dinámicamente
-        });
-
-        const result = ensureValidUrls(rawResult, i * 100);
-
-        if (result.landings?.length) finalAssets.landings = [...(finalAssets.landings || []), ...result.landings];
-        if (result.emails?.length) finalAssets.emails = [...(finalAssets.emails || []), ...result.emails];
-        if (result.socials?.length) finalAssets.socials = [...(finalAssets.socials || []), ...result.socials];
-        if (result.ads?.length) finalAssets.ads = [...(finalAssets.ads || []), ...result.ads];
-      }
-
-      // Inicializar colecciones de finalAssets si no existen
-      if (!finalAssets.socials) finalAssets.socials = [];
-      if (!finalAssets.emails) finalAssets.emails = [];
-      if (!finalAssets.ads) finalAssets.ads = [];
-      if (!finalAssets.landings) finalAssets.landings = [];
-
-      // Pre-poblar borradores de Redes Sociales si no se generaron inicialmente (ya que son a demanda)
-      if (finalAssets.socials.length === 0 && Array.isArray(collection.assets?.socials)) {
-        finalAssets.socials = collection.assets.socials.map((s: any) => ({
+      // Borradores de Redes Sociales (generación individual on-demand)
+      if (Array.isArray(assets?.socials)) {
+        finalAssets.socials = assets.socials.map((s: any) => ({
           platform: s.platform,
           type: s.type || 'story',
           marketingName: s.marketingName || s.name || `Video ${s.platform}`,
@@ -446,30 +312,56 @@ function BuilderContent() {
             voice_id: 'mateo'
           }
         }));
+      } else {
+        // Sin blueprint: sembrar un borrador por defecto enfocado en redes
+        finalAssets.socials = [{
+          platform: 'instagram',
+          type: 'story',
+          marketingName: `Story ${course.title || 'Instagram'}`,
+          caption: '',
+          hook: '',
+          slides: [],
+          designTokens: {
+            accent: '#760464',
+            primary: '#760464',
+            surface: '#eedaea',
+            text: '#0a0a0a'
+          },
+          production_notes: {
+            adnId: '01_CINEMA',
+            isLocked: false,
+            enable_tts: true,
+            voice_id: 'mateo'
+          }
+        }];
       }
 
-      // Pre-poblar borradores de Emails si no se generaron inicialmente
-      if (finalAssets.emails.length === 0 && Array.isArray(collection.assets?.emails)) {
-        finalAssets.emails = collection.assets.emails.map((e: any) => ({
+      // Borradores de Emails (generación individual on-demand)
+      if (Array.isArray(assets?.emails)) {
+        finalAssets.emails = assets.emails.map((e: any) => ({
           marketingName: e.marketingName || e.name || 'Email Borrador',
+          type: e.type || 'direct',
+          designTokens: e.designTokens || {},
           subject: '',
+          preheader: '',
           body: '',
           landingId: 'mentor'
         }));
       }
 
-      // Pre-poblar borradores de Anuncios si no se generaron inicialmente
-      if (finalAssets.ads.length === 0 && Array.isArray(collection.assets?.ads)) {
-        finalAssets.ads = collection.assets.ads.map((a: any) => ({
+      // Borradores de Anuncios (generación individual on-demand)
+      if (Array.isArray(assets?.ads)) {
+        finalAssets.ads = assets.ads.map((a: any) => ({
           marketingName: a.marketingName || a.name || 'Ad Borrador',
-          headline: '',
-          primaryText: '',
+          type: a.type || 'search',
           platform: a.platform || 'facebook',
           designTokens: a.designTokens || {},
+          headlines: [],
+          descriptions: [],
+          keywords: [],
+          landingId: 'mentor'
         }));
       }
-
-      setGenerationProgress({ current: tasks.length || 1, total: tasks.length || 1, label: 'Validando Compatibilidad con APIs...' });
 
       // Validar y ajustar diseños para compatibilidad con APIs
       const validatedAssets = { ...finalAssets };
@@ -479,8 +371,8 @@ function BuilderContent() {
         for (let i = 0; i < finalAssets.socials.length; i++) {
           const social = finalAssets.socials[i];
           const validatedDesign = await validateAndAdjustDesignForAPIs(
-            collection.assets?.socials?.[0]?.designTokens || {},
-            collection.assets?.socials?.[0]?.designTokens || {},
+            assets?.socials?.[0]?.designTokens || {},
+            assets?.socials?.[0]?.designTokens || {},
             { landings: false, emails: false, socials: true, ads: false }
           );
 
@@ -497,8 +389,8 @@ function BuilderContent() {
         for (let i = 0; i < finalAssets.landings.length; i++) {
           const landing = finalAssets.landings[i];
           const validatedDesign = await validateAndAdjustDesignForAPIs(
-            collection.assets?.landings?.[0]?.designTokens || {},
-            collection.assets?.landings?.[0]?.designTokens || {},
+            assets?.landings?.[0]?.designTokens || {},
+            assets?.landings?.[0]?.designTokens || {},
             { landings: true, emails: false, socials: false, ads: false }
           );
 
@@ -515,8 +407,8 @@ function BuilderContent() {
         for (let i = 0; i < finalAssets.emails.length; i++) {
           const email = finalAssets.emails[i];
           const validatedDesign = await validateAndAdjustDesignForAPIs(
-            collection.assets?.emails?.[0]?.designTokens || {},
-            collection.assets?.emails?.[0]?.designTokens || {},
+            assets?.emails?.[0]?.designTokens || {},
+            assets?.emails?.[0]?.designTokens || {},
             { landings: false, emails: true, socials: false, ads: false }
           );
 
@@ -533,8 +425,8 @@ function BuilderContent() {
         for (let i = 0; i < finalAssets.ads.length; i++) {
           const ad = finalAssets.ads[i];
           const validatedDesign = await validateAndAdjustDesignForAPIs(
-            collection.assets?.ads?.[0]?.designTokens || {},
-            collection.assets?.ads?.[0]?.designTokens || {},
+            assets?.ads?.[0]?.designTokens || {},
+            assets?.ads?.[0]?.designTokens || {},
             { landings: false, emails: false, socials: false, ads: true }
           );
 
@@ -559,131 +451,11 @@ function BuilderContent() {
         emails: (validatedAssets.emails || []).map((e: any, idx: number) => ({ ...e, targetLandingIdx: idx }))
       };
 
-      // --- INICIO DE PRODUCCIÓN PROFUNDA (AUTOMATIZACIÓN TOTAL) ---
-      console.log("🚀 Iniciando Producción Profunda Automatizada...");
-
-      const totalProductionSteps = (assetsWithLinks.socials?.length || 0) +
-        (assetsWithLinks.landings?.length || 0) * 3 +
-        (assetsWithLinks.socials?.reduce((acc: number, s: any) => acc + (s.slides?.length || 5), 0) || 0) || 1;
-
-      let completedSteps = 0;
-      const updateProdProgress = (label: string) => {
-        completedSteps++;
-        setGenerationProgress({
-          current: tasks.length + completedSteps,
-          total: tasks.length + totalProductionSteps,
-          label
-        });
-      };
-
-      // 1. Automatización de Guiones Sociales (DESACTIVADO: Ahora es a demanda)
-      /*
-      if (assetsWithLinks.socials?.length > 0) {
-        for (let i = 0; i < assetsWithLinks.socials.length; i++) {
-          const social = assetsWithLinks.socials[i];
-          updateProdProgress(`Produciendo Guion Maestro: ${social.platform} [${i+1}/${assetsWithLinks.socials.length}]...`);
-          
-          try {
-            const breakdown = await generateVariantContent(
-              social, 
-              templateDirectives,
-              course.title,
-              course.description,
-              targetAudience,
-              campaignMission
-            );
-            if (breakdown.production_notes) {
-              social.production_notes = {
-                ...breakdown.production_notes,
-                voiceover: breakdown.voiceover || '' // Capturar Guion Maestro
-              };
-            }
-            
-            if (breakdown.slides?.length > 0) {
-              social.slides = breakdown.slides.map((s: any) => ({
-                segment: s.segment_label || 'VALOR',
-                text: s.text || '',
-                voiceover: s.voiceover || '',
-                duration: s.duration || 5,
-                imageUrl: '',
-                aiDescription: s.text
-              }));
-            } else if (breakdown.scenes?.length > 0) {
-              social.slides = breakdown.scenes.map((s: any) => ({
-                segment: s.segment_label || 'VALOR',
-                title: s.title || '',
-                text: s.text || '',
-                voiceover: s.voiceover || '',
-                duration: s.duration || 5,
-                imageUrl: '',
-                aiDescription: s.description || s.text
-              }));
-            }
-          } catch (err) {
-            console.error(`Error en Guion Social ${i}:`, err);
-          }
-        }
-      }
-      */
-
-      // 2. Automatización de Imágenes (Landings + Socials)
-      const generateImage = async (keywords: string, context: string, label: string) => {
-        try {
-          const res = await fetch('/api/ai/generate-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: '', keywords, contextHint: context, engine: 'free' }),
-          });
-          const data = await res.json();
-          return data?.imageDataUrl || '';
-        } catch (e) {
-          console.error(`Error generating image for ${label}:`, e);
-          return '';
-        }
-      };
-
-      // Imágenes de Landings
-      if (assetsWithLinks.landings?.length > 0) {
-        for (let lIdx = 0; lIdx < assetsWithLinks.landings.length; lIdx++) {
-          const landing = assetsWithLinks.landings[lIdx];
-          for (let sIdx = 0; sIdx < (landing.sections?.length || 0); sIdx++) {
-            const section = landing.sections[sIdx];
-            updateProdProgress(`Fotografía IA: Landing [${lIdx + 1}] - Sec [${sIdx + 1}]...`);
-            section.imageUrl = await generateImage(
-              section.title,
-              `Course: ${selectedCourse?.title}. Section: ${section.paragraph}`,
-              `Landing ${lIdx} Sec ${sIdx}`
-            );
-          }
-        }
-      }
-
-      // Imágenes de Socials (DESACTIVADO: Ahora es a demanda)
-      /*
-      if (assetsWithLinks.socials?.length > 0) {
-        for (let sIdx = 0; sIdx < assetsWithLinks.socials.length; sIdx++) {
-          const social = assetsWithLinks.socials[sIdx];
-          for (let slIdx = 0; slIdx < (social.slides?.length || 0); slIdx++) {
-            const slide = social.slides[slIdx];
-            updateProdProgress(`Fotografía IA: ${social.platform} - Placa [${slIdx+1}]...`);
-            slide.imageUrl = await generateImage(
-              social.marketingName || '', 
-              slide.aiDescription || slide.text,
-              `${social.platform} Slide ${slIdx}`
-            );
-          }
-        }
-      }
-      */
-      // --- FIN DE PRODUCCIÓN PROFUNDA ---
-
       setGeneratedAssets(assetsWithLinks as any);
       setStep(3);
-      toast({ 
-        title: tasks.length > 0 ? 'Pack de Producción Completo' : 'Estudio de Videos On-Demand Listo', 
-        description: tasks.length > 0 
-          ? 'Todos los guiones e imágenes han sido generados por la IA.' 
-          : 'Módulo de producción de video dinámica inicializado con éxito.' 
+      toast({
+        title: 'Borradores Listos',
+        description: 'Generá cada pieza individualmente con IA en el editor.'
       });
     } catch (e: any) {
       console.warn("[Fusion Error]", e);
@@ -1015,12 +787,12 @@ function BuilderContent() {
           ${allFonts.map(f => `@import url('https://fonts.googleapis.com/css2?family=${f.replace(/\s+/g, '+')}&display=swap');`).join('\n')}
         `}</style>
         <header className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => step > 1 ? setStep(step - 1) : router.back()} className="rounded-full">
+          <Button variant="ghost" size="icon" onClick={() => step > 1 ? setStep(1) : router.back()} className="rounded-full">
             <ArrowLeft className="h-6 w-6" />
           </Button>
           <div>
             <h1 className="text-2xl md:text-3xl font-headline font-bold text-primary">Generador Multimedia x3</h1>
-            <p className="text-sm text-muted-foreground font-medium">Fusión estratégica avanzada. Paso {step} de 3.</p>
+            <p className="text-sm text-muted-foreground font-medium">Fusión estratégica avanzada. Paso {step === 3 ? 2 : 1} de 2.</p>
           </div>
         </header>
 

@@ -54,15 +54,15 @@ export function SceneNarrativeEditor({
             {/* 1. SECCIÓN VISUAL (PANTALLA) */}
             <div className="md:col-span-4 space-y-3">
               <div className="flex items-center justify-between px-1">
-                <Label className="text-xs font-black uppercase text-white/90 tracking-wider flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-lg bg-white/10 flex items-center justify-center text-[10px] text-white/60">{i + 1}</span>
+                <Label className="text-xs font-black uppercase text-foreground tracking-wider flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-lg bg-muted/40 flex items-center justify-center text-[10px] text-muted-foreground">{i + 1}</span>
                   Escena Visual
                 </Label>
                 {items.length > 1 && (
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-6 w-6 text-border hover:text-danger hover:bg-danger/10 rounded-full transition-colors"
+                    className="h-6 w-6 text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-full transition-colors"
                     onClick={() => {
                       const newSlides = [...items];
                       newSlides.splice(i, 1);
@@ -74,7 +74,7 @@ export function SceneNarrativeEditor({
                 )}
               </div>
               
-              <div className="aspect-[4/5] rounded-lg overflow-hidden bg-foreground border-2 border-white/5 group-hover:scale-[1.01] transition-all duration-500">
+              <div className="rounded-xl bg-muted/40 border-2 border-border transition-all duration-500">
                 <ImageEditor 
                   url={sl.imageUrl}
                   onUpdate={(val) => {
@@ -98,7 +98,7 @@ export function SceneNarrativeEditor({
               <div className={`grid ${s.type === 'carousel' ? 'md:grid-cols-2' : 'grid-cols-1'} gap-4`}>
                 {/* Mostrar Voiceover Individual en todos los formatos para Narrativa Dual */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/30 flex items-center gap-2 mb-1">
+                  <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
                     <Mic2 className="h-3 w-3" /> Guion Narrativo (Voz de IA)
                   </Label>
                   <Textarea 
@@ -109,7 +109,7 @@ export function SceneNarrativeEditor({
                       updateAsset('socials', sIdx, 'slides', newItems);
                     }}
                     placeholder="Escribe lo que la voz de IA dirá en esta escena..."
-                    className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[100px] text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
+                    className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[100px] text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
                   />
                   {i === 0 && !sl.voiceover && (s.production_notes?.voiceover || s.voiceover) && (
                     <p className="text-[9px] text-warn/80 italic font-medium">
@@ -120,7 +120,7 @@ export function SceneNarrativeEditor({
 
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-cyan-300 flex items-center gap-2 mb-1">
+                      <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
                         <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
                       </Label>
                       <Textarea 
@@ -131,7 +131,7 @@ export function SceneNarrativeEditor({
                           updateAsset('socials', sIdx, 'slides', newItems);
                         }}
                         placeholder="Frase corta para resaltar..."
-                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 min-h-[60px] text-sm font-black uppercase focus-visible:ring-1 focus-visible:ring-cyan-500/50 rounded-2xl p-4"
+                        className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[60px] text-sm font-black uppercase focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
                       />
                     </div>
                     <div className="space-y-2">
@@ -146,16 +146,16 @@ export function SceneNarrativeEditor({
                           updateAsset('socials', sIdx, 'slides', newItems);
                         }}
                         placeholder="Texto secundario opcional..."
-                        className="bg-white/5 border border-white/10 text-white placeholder:text-white/20 text-xs font-medium focus-visible:ring-1 focus-visible:ring-muted-foreground/50 px-4"
+                        className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 text-xs font-medium focus-visible:ring-1 focus-visible:ring-muted-foreground/50 px-4"
                        size="lg" />
                     </div>
                   </div>
               </div>
 
               {/* Ajustes tácticos rápidos */}
-               <div className="flex items-center gap-6 px-6 py-4 bg-white/5 rounded-[1.5rem] border border-white/5 mt-auto">
+               <div className="flex items-center gap-6 px-6 py-4 bg-muted/40 rounded-[1.5rem] border border-border mt-auto">
                  <div className="flex flex-col gap-1.5">
-                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Duración (seg)</span>
+                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Duración (seg)</span>
                     <Input 
                        type="number"
                        step="0.1"
@@ -165,11 +165,11 @@ export function SceneNarrativeEditor({
                           newItems[i] = { ...newItems[i], duration: e.target.value };
                           updateAsset('socials', sIdx, 'slides', newItems);
                        }}
-                       className="w-20 h-8 bg-foreground text-xs font-black border-white/10 text-white rounded-xl shadow-lg"
+                       className="w-20 h-8 bg-white text-xs font-black border-border text-foreground rounded-xl shadow-lg"
                     />
                  </div>
                  <div className="flex flex-col gap-1.5 flex-1 max-w-[200px]">
-                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Marca de Agua / Crédito</span>
+                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Marca de Agua / Crédito</span>
                     <Input 
                        value={sl.watermark || ''}
                        onChange={(e) => {
@@ -178,12 +178,12 @@ export function SceneNarrativeEditor({
                           updateAsset('socials', sIdx, 'slides', newItems);
                        }}
                        placeholder="@cuenta"
-                       className="h-8 bg-foreground text-xs font-bold border-white/10 text-success rounded-xl px-3 shadow-lg"
+                       className="h-8 bg-white text-xs font-bold border-border text-success rounded-xl px-3 shadow-lg"
                     />
                  </div>
                  <div className="flex flex-col gap-1.5">
-                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Segmento</span>
-                    <Badge variant="secondary" className="text-[9px] h-8 px-4 bg-primary/20 border border-primary/30 text-primary/30 font-bold uppercase">
+                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Segmento</span>
+                    <Badge variant="secondary" className="text-[9px] h-8 px-4 bg-primary/10 border border-primary/20 text-primary font-bold uppercase">
                       {sl.segment || 'VALOR'}
                     </Badge>
                  </div>
@@ -201,7 +201,7 @@ export function SceneNarrativeEditor({
       {items.length === 0 && (
         <Button 
           variant="outline" 
-          className="w-full h-14 rounded-2xl border-dashed border-2 text-white/40 hover:text-white" 
+          className="w-full h-14 rounded-2xl border-dashed border-2 text-muted-foreground hover:text-foreground" 
           onClick={() => updateAsset('socials', sIdx, 'slides', [{ text: '', imageUrl: '' }])}
         >
           + Agregar Placa Visual
