@@ -185,6 +185,7 @@ export function TemplateEditor({
   const [jobProgress, setJobProgress] = useState<Record<number, { progress: number; stage: string }>>({});
   const [googleToken, setGoogleToken] = useState<string | null>(null);
   const [showFullReport, setShowFullReport] = useState(false);
+  const [landingSelectorState, setLandingSelectorState] = useState<{ open: boolean, variant: any, index: number, channel: any } | null>(null);
   const { toast } = useToast();
 
   // Cargar token persistido al montar
@@ -240,7 +241,7 @@ export function TemplateEditor({
       }
       return accessToken;
     } catch (error: any) {
-      console.error("[Auth] Error renovando token de Google Drive:", error);
+      console.warn("[Auth] No se pudo renovar token de Google Drive:", error.message || error);
       if (error.code === 'auth/popup-closed-by-user') {
         throw new Error("Proceso cancelado. Se necesita acceso a Drive para guardar el video.");
       }
@@ -406,7 +407,7 @@ export function TemplateEditor({
           watermark: sl.watermark || '',
           voiceover: sl.voiceover || '',
           segment_label: sl.segment || 'VALOR',
-          duration: Number(sl.duration) || 5
+          duration: Math.max(Number(sl.duration) || 10, 10)
         };
       }));
 
@@ -425,7 +426,7 @@ export function TemplateEditor({
           platform: s.platform,
           audioUrl: pNotes.audio_url,
           audioDuration: pNotes.audio_duration,
-          enable_tts: pNotes.enable_tts ?? true,
+          enable_tts: pNotes.enable_tts !== false,
           voice_id: pNotes.voice_id || 'mateo',
           voiceover: (s.slides?.some((sl: any) => sl.voiceover)) ? '' : (pNotes.voiceover || s.voiceover || ''),
           audioEffect: pNotes.audio_effect || 'auto',
@@ -522,7 +523,6 @@ export function TemplateEditor({
       const formato = typeToFormat[s.type] || '9:16';
       const pNotes = s.production_notes || {};
 
-      // ── ENCOLAR el job en el circuito (responde ~100ms) ──────────────────
       const res = await fetch('/api/video/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -534,7 +534,11 @@ export function TemplateEditor({
           adnId: pNotes.adnId || '01_CINEMA',
           marketingName: s.marketingName,
           googleToken: accessToken,
-          isSmokeTest: false
+          isSmokeTest: false,
+          audioUrl: pNotes.audio_url,
+          scenes: s.slides || [],
+          enable_tts: pNotes.enable_tts !== false,
+          voiceId: pNotes.voice_id || 'mateo'
         })
       });
 
@@ -562,16 +566,22 @@ export function TemplateEditor({
             clearInterval(pollInterval);
             const result = statusData.result || {};
 
-            setRenderedVideos(prev => ({ ...prev, [sIdx]: result.webViewLink }));
+            if (result.webViewLink) {
+              setRenderedVideos(prev => ({ ...prev, [sIdx]: result.webViewLink }));
+            }
 
             const newSocials = [...generatedAssets.socials];
             newSocials[sIdx] = {
               ...newSocials[sIdx],
               production_notes: {
                 ...pNotes,
-                video_url: result.webViewLink,
-                video_drive_id: result.driveId,
-                video_download_url: result.downloadUrl
+                ...(result.webViewLink && {
+                  video_url: result.webViewLink,
+                  video_drive_id: result.driveId,
+                  video_download_url: result.downloadUrl
+                }),
+                ...(result.prompt && { video_prompt: result.prompt }),
+                ...(result.perScene && { video_prompt_per_scene: result.perScene })
               }
             };
             await onSave({ ...generatedAssets, socials: newSocials }, true);
@@ -626,10 +636,10 @@ export function TemplateEditor({
         voiceover: sl.voiceover || '',
         watermark: sl.watermark || '',
         imageUrl: sl.imageUrl || '',
-        duration: Number(sl.duration) || 5
+        duration: Math.max(Number(sl.duration) || 10, 10)
       }));
 
-      const totalSceneSeconds = scenes.reduce((acc: number, sl: any) => acc + (Number(sl.duration) || 5), 0);
+      const totalSceneSeconds = scenes.reduce((acc: number, sl: any) => acc + sl.duration, 0);
 
       // ── ENCOLAR el job en el circuito (responde ~100ms) ──────────────────
       const res = await fetch('/api/video/generate', {
@@ -646,6 +656,7 @@ export function TemplateEditor({
           scenes,
           persona: { enabled: pNotes.persona_enabled ?? false, description: pNotes.persona_description || '' },
           subtitles: pNotes.subtitles_enabled ?? true,
+          enable_tts: pNotes.enable_tts !== false,
           voiceId: pNotes.voice_id || 'mateo',
           longDuration: Math.max(totalSceneSeconds, 10),
           isSmokeTest: false
@@ -738,7 +749,7 @@ export function TemplateEditor({
         voiceover: sl.voiceover || '',
         watermark: sl.watermark || '',
         imageUrl: sl.imageUrl || '',
-        duration: Number(sl.duration) || 5
+        duration: Math.max(Number(sl.duration) || 10, 10)
       }));
 
       const res = await fetch('/api/video/generate', {
@@ -952,12 +963,33 @@ export function TemplateEditor({
     return '';
   };
 
-  const handleGenerateBreakdown = async (variant: any, index: number, channel: 'emails' | 'socials' | 'ads') => {
+  const handleGenerateBreakdown = async (variant: any, index: number, channel: 'emails' | 'socials' | 'ads', selectedLandingIndex: number = -1) => {
+    // Si hay más de una landing y no hemos elegido, abrimos el selector.
+    if ((channel === 'socials' || channel === 'ads' || channel === 'emails') && generatedAssets?.landings && generatedAssets.landings.length > 1 && selectedLandingIndex === -1) {
+      setLandingSelectorState({ open: true, variant, index, channel });
+      return;
+    }
+
     setIsGeneratingBreakdown(`${channel}-${index}`);
     try {
       const selectedCourse = courses?.find(c => c.id === selectedCourseId);
       const realDirectives = templateDirectives || `Campana para "${selectedCourse?.title}".`;
-      const breakdown = await (await import('@/ai/flows/generate-variant-content')).generateVariantContent(variant, realDirectives, selectedCourse?.title || '', selectedCourse?.description || '', selectedCourse?.targetAudience || '', (campaignMission as any) || 'venta');
+      
+      const realIndex = selectedLandingIndex === -1 ? 0 : selectedLandingIndex;
+      const primaryLanding = generatedAssets?.landings?.[realIndex];
+      const landingContext = primaryLanding 
+        ? `\n\n== CONTEXTO DE LA LANDING PAGE DE VENTA ==\nTítulo de la Landing: "${primaryLanding.headline}"\nSubtítulo: "${primaryLanding.subheadline}"\nLlamado a la acción (CTA) de la Landing: "${primaryLanding.ctaText}"\nBeneficios / FAQs: ${primaryLanding.faqs?.map((f:any) => f.question).join(', ') || 'N/A'}`
+        : '';
+        
+      const breakdown = await (await import('@/ai/flows/generate-variant-content')).generateVariantContent(
+        variant, 
+        realDirectives, 
+        selectedCourse?.title || '', 
+        selectedCourse?.description || '', 
+        selectedCourse?.targetAudience || '', 
+        (campaignMission as any) || 'venta',
+        landingContext
+      );
       if (channel === 'socials') {
         const sourceArray = (breakdown.scenes && breakdown.scenes.length > 0) ? breakdown.scenes : (breakdown.slides || []);
         const currentPlatform = generatedAssets?.socials?.[index]?.platform || variant.platform;
@@ -969,8 +1001,12 @@ export function TemplateEditor({
           watermark: resolveWatermarkHandle(currentPlatform, variant.handle, s.watermark),
           voiceover: s.voiceover || '',
           description: s.description || s.imageUrl || '',
-          duration: s.duration || 5,
-          imageUrl: variant.slides?.[i]?.imageUrl || (s.imageUrl?.startsWith('http') ? s.imageUrl : '')
+          duration: Math.max(Number(s.duration) || 10, 10),
+          imageUrl: variant.slides?.[i]?.imageUrl || (s.imageUrl?.startsWith('http') ? s.imageUrl : ''),
+          subject_action: s.subject_action || '',
+          camera_movement: s.camera_movement || '',
+          framing: s.framing || '',
+          lighting: s.lighting || ''
         }));
         const newSocials = [...generatedAssets.socials];
         newSocials[index] = { ...newSocials[index], slides: mappedScenes, hook: breakdown.hook, caption: breakdown.caption };
@@ -1284,11 +1320,12 @@ export function TemplateEditor({
                         </SelectTrigger>
                         <SelectContent className="bg-white border-border text-foreground">
                           <SelectItem value="ffmpeg" className="text-[10px] uppercase font-bold">FFmpeg (Motor Propio)</SelectItem>
+                          {/* <SelectItem value="long" className="text-[10px] uppercase font-bold">Video Largo (Formato Extendido)</SelectItem> */}
                           <SelectItem value="omni" className="text-[10px] uppercase font-bold">Omni (Gemini)</SelectItem>
                           <SelectItem value="prompt" className="text-[10px] uppercase font-bold">Solo Prompt (Externos: Seedance, Veo...)</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-[10px] font-bold text-muted-foreground ml-2 italic">FFmpeg arma el video con tus placas · Omni genera el clip con IA (guarda igual que FFmpeg) · Prompt exporta el guion afinado por ADN para editores externos.</p>
+                      <p className="text-[10px] font-bold text-muted-foreground ml-2 italic">FFmpeg arma el video con tus placas · Largo unifica voz y video · Omni genera con IA · Prompt exporta guion para externos.</p>
                     </div>
                   </div>
 
@@ -1302,7 +1339,7 @@ export function TemplateEditor({
                         subtitle: s.subtitle || '',
                         watermark: s.watermark || '',
                         voiceover: s.voiceover || '',
-                        duration: s.duration || 5,
+                        duration: Math.max(Number(s.duration) || 10, 10),
                         imageUrl: s.imageUrl || ''
                       }));
 
@@ -1558,7 +1595,8 @@ export function TemplateEditor({
                                                           </SelectContent>
                                                         </Select>
                                                       </div>
-                                                    </div>
+
+                                                      </div>
                                                     <Button
                                                       variant="outline"
                                                       onClick={() => handleGenerateBreakdown(s, globalIdx, 'socials')}
@@ -1791,6 +1829,36 @@ export function TemplateEditor({
           </Tabs>
         </TabsContent>
       </Tabs>
+      {/* Selector de Landing Base */}
+      <Dialog open={landingSelectorState?.open || false} onOpenChange={(val) => { if (!val) setLandingSelectorState(null); }}>
+        <DialogContent className="max-w-md w-full p-6 bg-white border-border">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-foreground uppercase tracking-widest">Elegir Base de Venta</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Tienes varias Landings generadas. Selecciona de cuál de ellas quieres extraer la lógica de ventas (títulos, beneficios) para guiar la IA al generar este contenido.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 mt-4">
+            {generatedAssets?.landings?.map((l: any, i: number) => (
+              <Button
+                key={i}
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-start gap-1 justify-start border-border text-left hover:bg-muted/50 transition-colors"
+                onClick={() => {
+                  const state = landingSelectorState;
+                  setLandingSelectorState(null);
+                  if (state) {
+                    handleGenerateBreakdown(state.variant, state.index, state.channel, i);
+                  }
+                }}
+              >
+                <span className="font-bold text-foreground text-sm uppercase tracking-wider">{l.marketingName || `Variante ${i + 1}`}</span>
+                <span className="text-xs text-muted-foreground line-clamp-1 italic">{l.headline}</span>
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

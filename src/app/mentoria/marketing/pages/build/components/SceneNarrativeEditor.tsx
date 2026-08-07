@@ -9,9 +9,11 @@ import {
   Sparkles, 
   Trash2, 
   Mic2, 
-  Volume2 
+  Volume2,
+  ImageOff
 } from 'lucide-react';
 import { ImageEditor } from '@/components/courses/ImageEditor';
+import { Switch } from '@/components/ui/switch';
 
 interface SceneNarrativeEditorProps {
   asset: any;
@@ -39,6 +41,7 @@ export function SceneNarrativeEditor({
   
   const items = s.slides || s.scenes || [];
   const isGeneratingThis = isGeneratingBreakdown === `socials-${sIdx}`;
+  const isAiEngine = s.production_notes?.video_engine && s.production_notes.video_engine !== 'ffmpeg';
 
   return (
     <div className="space-y-6">
@@ -56,41 +59,75 @@ export function SceneNarrativeEditor({
               <div className="flex items-center justify-between px-1">
                 <Label className="text-xs font-black uppercase text-foreground tracking-wider flex items-center gap-2">
                   <span className="w-5 h-5 rounded-lg bg-muted/40 flex items-center justify-center text-[10px] text-muted-foreground">{i + 1}</span>
-                  Escena Visual
+                  {isAiEngine ? 'Ref. Visual' : 'Escena Visual'}
                 </Label>
-                {items.length > 1 && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-full transition-colors"
-                    onClick={() => {
-                      const newSlides = [...items];
-                      newSlides.splice(i, 1);
-                      updateAsset('socials', sIdx, 'slides', newSlides);
-                    }}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                )}
+                <div className="flex items-center gap-3">
+                  {isAiEngine && (
+                    <div className="flex items-center gap-2 bg-muted/30 px-2 py-1 rounded-lg border border-border">
+                      <Label htmlFor={`use-visual-${i}`} className="text-[9px] font-bold text-muted-foreground cursor-pointer">
+                        {sl.use_visual_reference !== false ? 'Usar Referencia' : 'Solo Texto'}
+                      </Label>
+                      <Switch 
+                        id={`use-visual-${i}`}
+                        checked={sl.use_visual_reference !== false} 
+                        onCheckedChange={(checked) => {
+                          const newItems = [...items];
+                          newItems[i] = { 
+                            ...newItems[i], 
+                            use_visual_reference: checked,
+                            ...(checked ? {} : { imageUrl: '' })
+                          };
+                          updateAsset('socials', sIdx, 'slides', newItems);
+                        }} 
+                      />
+                    </div>
+                  )}
+                  {items.length > 1 && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-full transition-colors"
+                      onClick={() => {
+                        const newSlides = [...items];
+                        newSlides.splice(i, 1);
+                        updateAsset('socials', sIdx, 'slides', newSlides);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
               </div>
               
-              <div className="rounded-xl bg-muted/40 border-2 border-border transition-all duration-500">
-                <ImageEditor 
-                  url={sl.imageUrl}
-                  onUpdate={(val) => {
-                    const newItems = [...items];
-                    newItems[i] = { ...newItems[i], imageUrl: val };
-                    updateAsset('socials', sIdx, 'slides', newItems);
-                  }}
-                  label={`Visual ${i + 1}`}
-                  channel="social"
-                  courseId={selectedCourseId || 'draft'}
-                  courseTitle={courseTitle}
-                  keywords={sl.voiceover || sl.text}
-                  description={sl.text}
-                  aiPromptHint={`Imagen para un video del curso "${courseTitle || ''}". La escena trata sobre: ${sl.voiceover || sl.text || 'contenido educativo'}`}
-                />
-              </div>
+              {sl.use_visual_reference !== false ? (
+                <div className="rounded-xl bg-muted/40 border-2 border-border transition-all duration-500">
+                  <ImageEditor 
+                    url={sl.imageUrl}
+                    onUpdate={(val) => {
+                      const newItems = [...items];
+                      newItems[i] = { ...newItems[i], imageUrl: val };
+                      updateAsset('socials', sIdx, 'slides', newItems);
+                    }}
+                    label={`Visual ${i + 1}`}
+                    channel="social"
+                    courseId={selectedCourseId || 'draft'}
+                    courseTitle={courseTitle}
+                    keywords={sl.voiceover || sl.text}
+                    description={sl.text}
+                    aiPromptHint={`Imagen para un video del curso "${courseTitle || ''}". La escena trata sobre: ${sl.voiceover || sl.text || 'contenido educativo'}`}
+                  />
+                </div>
+              ) : (
+                <div className="rounded-xl bg-muted/10 border-2 border-dashed border-border transition-all duration-500 h-[180px] flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                  <div className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center">
+                    <ImageOff className="h-5 w-5 opacity-50" />
+                  </div>
+                  <div className="text-center px-4">
+                    <p className="text-xs font-bold">Sin Referencia Visual</p>
+                    <p className="text-[10px] mt-1 opacity-70">La IA generará la escena libremente basándose en los parámetros de cámara y acción.</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 2. SECCIÓN NARRATIVA (GUION) */}
@@ -99,7 +136,7 @@ export function SceneNarrativeEditor({
                 {/* Mostrar Voiceover Individual en todos los formatos para Narrativa Dual */}
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
-                    <Mic2 className="h-3 w-3" /> Guion Narrativo (Voz de IA)
+                    <Mic2 className="h-3 w-3" /> Guion Narrativo (Voz)
                   </Label>
                   <Textarea 
                     value={sl.voiceover || (i === 0 && !sl.voiceover ? (s.production_notes?.voiceover || s.voiceover || '') : '')}
@@ -108,7 +145,7 @@ export function SceneNarrativeEditor({
                       newItems[i] = { ...newItems[i], voiceover: e.target.value };
                       updateAsset('socials', sIdx, 'slides', newItems);
                     }}
-                    placeholder="Escribe lo que la voz de IA dirá en esta escena..."
+                    placeholder="Escribe lo que la voz debe decir en esta escena..."
                     className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[100px] text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
                   />
                   {i === 0 && !sl.voiceover && (s.production_notes?.voiceover || s.voiceover) && (
@@ -119,36 +156,68 @@ export function SceneNarrativeEditor({
                 </div>
 
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
-                        <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
-                      </Label>
-                      <Textarea 
-                        value={sl.text || ''}
-                        onChange={(e) => {
-                          const newItems = [...items];
-                          newItems[i] = { ...newItems[i], text: e.target.value };
-                          updateAsset('socials', sIdx, 'slides', newItems);
-                        }}
-                        placeholder="Frase corta para resaltar..."
-                        className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[60px] text-sm font-black uppercase focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2 mb-1 opacity-60">
-                        <Sparkles className="h-3 w-3" /> Subtítulo / Apoyo
-                      </Label>
-                      <Input 
-                        value={sl.subtitle || ''}
-                        onChange={(e) => {
-                          const newItems = [...items];
-                          newItems[i] = { ...newItems[i], subtitle: e.target.value };
-                          updateAsset('socials', sIdx, 'slides', newItems);
-                        }}
-                        placeholder="Texto secundario opcional..."
-                        className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 text-xs font-medium focus-visible:ring-1 focus-visible:ring-muted-foreground/50 px-4"
-                       size="lg" />
-                    </div>
+                    {isAiEngine ? (
+                      <div className="space-y-4 bg-primary/5 p-4 rounded-2xl border border-primary/20">
+                        <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-2">
+                          <Sparkles className="h-3 w-3" /> Parámetros de Cámara y Acción (IA)
+                        </Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold text-muted-foreground uppercase">Sujeto / Acción</Label>
+                            <Input value={sl.subject_action || ''} onChange={(e) => { const n = [...items]; n[i] = { ...n[i], subject_action: e.target.value }; updateAsset('socials', sIdx, 'slides', n); }} placeholder="Ej: Mentor explicando a cámara..." className="text-xs font-medium h-9 bg-white" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold text-muted-foreground uppercase">Encuadre</Label>
+                            <Input value={sl.framing || ''} onChange={(e) => { const n = [...items]; n[i] = { ...n[i], framing: e.target.value }; updateAsset('socials', sIdx, 'slides', n); }} placeholder="Ej: close-up, medium shot..." className="text-xs font-medium h-9 bg-white" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold text-muted-foreground uppercase">Mov. Cámara</Label>
+                            <Input value={sl.camera_movement || ''} onChange={(e) => { const n = [...items]; n[i] = { ...n[i], camera_movement: e.target.value }; updateAsset('socials', sIdx, 'slides', n); }} placeholder="Ej: slow push-in, static..." className="text-xs font-medium h-9 bg-white" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold text-muted-foreground uppercase">Iluminación / Entorno</Label>
+                            <Input value={sl.lighting || ''} onChange={(e) => { const n = [...items]; n[i] = { ...n[i], lighting: e.target.value }; updateAsset('socials', sIdx, 'slides', n); }} placeholder="Ej: luz cálida cinemática..." className="text-xs font-medium h-9 bg-white" />
+                          </div>
+                        </div>
+                        <div className="space-y-2 mt-4 pt-4 border-t border-primary/10">
+                          <Label className="text-[9px] font-bold text-muted-foreground uppercase">Texto Superpuesto en Video (Opcional)</Label>
+                          <Input value={sl.text || ''} onChange={(e) => { const n = [...items]; n[i] = { ...n[i], text: e.target.value }; updateAsset('socials', sIdx, 'slides', n); }} placeholder="Ej: 3 CLAVES PARA EMPEZAR..." className="text-xs font-bold uppercase h-9 bg-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
+                            <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
+                          </Label>
+                          <Textarea 
+                            value={sl.text || ''}
+                            onChange={(e) => {
+                              const newItems = [...items];
+                              newItems[i] = { ...newItems[i], text: e.target.value };
+                              updateAsset('socials', sIdx, 'slides', newItems);
+                            }}
+                            placeholder="Frase corta para resaltar en pantalla..."
+                            className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[60px] text-sm font-black focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2 mb-1 opacity-60">
+                            <Sparkles className="h-3 w-3" /> Subtítulo / Apoyo
+                          </Label>
+                          <Input 
+                            value={sl.subtitle || ''}
+                            onChange={(e) => {
+                              const newItems = [...items];
+                              newItems[i] = { ...newItems[i], subtitle: e.target.value };
+                              updateAsset('socials', sIdx, 'slides', newItems);
+                            }}
+                            placeholder="Texto secundario opcional..."
+                            className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 text-xs font-medium focus-visible:ring-1 focus-visible:ring-muted-foreground/50 px-4"
+                           size="lg" />
+                        </div>
+                      </>
+                    )}
                   </div>
               </div>
 

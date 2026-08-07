@@ -14,10 +14,14 @@ const SceneContentSchema = z.object({
   text: z.string().describe('Texto de impacto visual ultra-corto (2-4 palabras).'),
   subtitle: z.string().describe('Texto secundario o de apoyo (6-8 palabras). Obligatorio generar.'),
   watermark: z.string().describe('El @usuario (handle) de la red social.'),
-  voiceover: z.string().describe('Guion narrativo. ¡CRÍTICO!: SU TIEMPO DE LECTURA HABLADA NO DEBE SUPERAR LA DURACIÓN DE LA ESCENA.'),
+  voiceover: z.string().describe('Guion narrativo. ¡CRÍTICO!: Escribe un guion fluido y continuo que dure por lo menos 10 SEGUNDOS de lectura hablada (aprox 25-35 palabras).'),
   media_hint: z.string().describe('Keywords precisas para buscar el fondo visual (ej: "minimalist luxury office", "dark cyber technology abstract").'),
-  duration: z.number().describe('Duración exacta en segundos (3-8s).'),
+  duration: z.number().describe('Duración exacta en segundos (MÍNIMO 10s, ej: 10-15s).'),
   production_notes: z.string().optional().describe('Notas sobre el estilo de animación o tono específico para esta escena.'),
+  subject_action: z.string().optional().describe('Para IA: Acción detallada del sujeto. Ej: "Mentor sonriendo", "Usuario escribiendo".'),
+  camera_movement: z.string().optional().describe('Para IA: Movimiento de cámara. Ej: "slow push-in", "steady pan", "static".'),
+  framing: z.string().optional().describe('Para IA: Encuadre. Ej: "close-up", "medium shot", "wide shot".'),
+  lighting: z.string().optional().describe('Para IA: Iluminación/Entorno. Ej: "luz cálida", "estudio cinemático".'),
 });
 
 const SocialSlideSchema = z.object({
@@ -25,9 +29,13 @@ const SocialSlideSchema = z.object({
   text: z.string().describe('Texto visual para la placa.'),
   subtitle: z.string().describe('Subtítulo de apoyo. Obligatorio generar.'),
   watermark: z.string().describe('El @usuario (handle) de la red social.'),
-  voiceover: z.string().describe('Guion de voz. ¡CRÍTICO!: SU TIEMPO DE LECTURA NO DEBE SUPERAR LA DURACIÓN DE LA ESCENA.'),
+  voiceover: z.string().describe('Guion de voz. ¡CRÍTICO!: Escribe un texto lo suficientemente largo para cubrir 10 SEGUNDOS mínimos de lectura.'),
   media_hint: z.string().describe('Keywords para el fondo de la placa.'),
-  duration: z.number().describe('Duración en segundos.'),
+  duration: z.number().describe('Duración en segundos (MÍNIMO 10s).'),
+  subject_action: z.string().optional().describe('Para IA: Acción detallada del sujeto. Ej: "Mentor sonriendo", "Usuario escribiendo".'),
+  camera_movement: z.string().optional().describe('Para IA: Movimiento de cámara. Ej: "slow push-in", "steady pan", "static".'),
+  framing: z.string().optional().describe('Para IA: Encuadre. Ej: "close-up", "medium shot", "wide shot".'),
+  lighting: z.string().optional().describe('Para IA: Iluminación/Entorno. Ej: "luz cálida", "estudio cinemático".'),
 });
 
 const VariantContentSchema = z.object({
@@ -52,7 +60,8 @@ export async function generateVariantContent(
   courseTitle?: string,
   courseDescription?: string,
   targetAudience?: string,
-  mission: 'venta' | 'autoridad' | 'lanzamiento' | 'leads' = 'venta'
+  mission: 'venta' | 'autoridad' | 'lanzamiento' | 'leads' = 'venta',
+  landingContext?: string
 ): Promise<any> {
   console.log(`[AI:Flow] Generando contenido para: ${variant.platform} - ${variant.type} | Misión: ${mission}`);
   
@@ -83,10 +92,17 @@ export async function generateVariantContent(
     ? `== ESTRATEGIA ESPECIFICA DE ESTA PIEZA (PRIORIDAD SOBRE GENERAL) ==\n- Vector de Venta: ${customVector || 'Usar general'}\n- Tono comercial: ${customTone || 'Usar general'}`
     : `== USAR ESTRATEGIA GENERAL DE LA CAMPAÑA: ${mission.toUpperCase()} ==`;
   
-  const injectedAdnRule = `${strategyContext}\n\n== REGLAS DE NARRATIVA DUAL (OBLIGATORIO) ==
+  const courseContext = courseTitle ? `\n\n== CONTEXTO DEL PRODUCTO ==\n- Curso/Producto a vender: "${courseTitle}"\n- Descripción: ${courseDescription || 'N/A'}${landingContext ? landingContext : ''}` : '';
+
+  const injectedAdnRule = `${strategyContext}${courseContext}\n\n== REGLAS DE NARRATIVA DUAL (OBLIGATORIO) ==
 Tu misión es coordinar lo que se OYE con lo que se VE:
 1. VOZ (voiceover): Relato fluido, humano y persuasivo. Es el guion de radio/podcast.
 2. PANTALLA (text): Refuerzo visual. Frases ultra-cortas (2-4 palabras) que clavan el concepto.
+
+== REGLA DE CIERRE COMERCIAL (CRÍTICO) ==
+¡ESTO ES UNA VENTA DE CURSOS! No te quedes solo atacando los síntomas o el dolor. La ÚLTIMA escena (CTA) DEBE ser un llamado a la acción DIRECTO y EXPLÍCITO para COMPRAR O UNIRSE AL CURSO. 
+- Debes mencionar explícitamente el curso (ej: "Únete a [Nombre del Curso]").
+- Debes decirles cómo conseguirlo (ej: "Haz clic en el enlace de mi perfil", "Ve al link en mi bio").
 
 [LIMITACIONES ESPECÍFICAS DEL ADN]
 - GANCHO: ${adnDef.ai_prompts?.GANCHO || ''}
@@ -126,8 +142,7 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
 - La VOZ lleva la carga emocional y técnica detallada.
 - LA PANTALLA (text) reafirma con frases de PODER (3-5 palabras) que subrayan el beneficio técnico.`;
 
-  const { output: parsed } = await ai.generate({
-    prompt: `Actúa como un Director Creativo y Guionista Senior especializado en Marketing Cinético.
+  const generatePrompt = `Actúa como un Director Creativo y Guionista Senior especializado en Marketing Cinético.
 Tu tarea es realizar un "MAQUETADO DE CONTENIDO ADN 2.0" fusionando estrategia comercial con precisión de renderizado.
 
 === MISIÓN ESTRATÉGICA ===
@@ -182,6 +197,7 @@ ${injectedAdnRule}
      * El 'text' visual debe ser minimalista y potente.
      * El 'media_hint' debe ser cinematográfico y coherente con el curso.
      * El 'voiceover' debe estar perfectamente sincronizado con la 'duration'.
+     * Para motores IA: Rellena detalladamente 'subject_action', 'camera_movement' (ej: slow push-in, pan), 'framing' (ej: close-up, medium shot) y 'lighting' (ej: luz cálida) asegurando coherencia visual en cada escena.
 
 3. TEXTOS DE ACOMPAÑAMIENTO:
    - Genera un 'hook' relevante al curso. 
@@ -191,10 +207,29 @@ ${injectedAdnRule}
 REGLAS FINALES:
 - ALTA RETENCIÓN. Idioma: Español. No inventar datos falsos.
 
-Devuelve un objeto JSON que siga el ContentBreakdown Schema.`,
-    output: { schema: VariantContentSchema },
-    config: { temperature: 0.8 }
-  });
+Devuelve un objeto JSON que siga el ContentBreakdown Schema.`;
+
+  let parsed: any = null;
+  let attempts = 0;
+  const maxAttempts = 3;
+
+  while (attempts < maxAttempts) {
+    try {
+      const { output } = await ai.generate({
+        prompt: generatePrompt,
+        output: { schema: VariantContentSchema },
+        config: { temperature: 0.8 }
+      });
+      parsed = output;
+      break; // Success
+    } catch (genErr: any) {
+      attempts++;
+      console.error(`[AI:Flow] Fallo en intento ${attempts}/${maxAttempts}:`, genErr.message);
+      if (attempts >= maxAttempts) throw genErr;
+      // Wait 1 second before retrying
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
 
     if (!parsed) {
       throw new Error("La IA no devolvió un desglose válido.");

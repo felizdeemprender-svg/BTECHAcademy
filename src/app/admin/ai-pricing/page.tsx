@@ -29,7 +29,9 @@ export default function AiPricingAdminPage() {
     imagePricePerHundred: 3.00,
     imageMarkupPercentage: 50,
     videoPricePerMinute: 0.60,
-    videoMarkupPercentage: 50
+    videoMarkupPercentage: 50,
+    omniPricePerMinute: 1.00,
+    omniMarkupPercentage: 10
   });
 
   useEffect(() => {
@@ -92,7 +94,7 @@ export default function AiPricingAdminPage() {
               <div className="absolute top-4 right-4 p-2 bg-primary/15 rounded-xl text-primary">
                 <BrainCircuit className="w-6 h-6" />
               </div>
-              <CardTitle className="text-xl font-black text-foreground">Gemini (Texto)</CardTitle>
+              <CardTitle className="text-xl font-black text-foreground">Generación de Texto (Omni)</CardTitle>
               <CardDescription className="text-muted-foreground font-medium">Costo por 1 Millón de tokens</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
@@ -135,8 +137,8 @@ export default function AiPricingAdminPage() {
               <div className="absolute top-4 right-4 p-2 bg-warn/15 rounded-xl text-warn">
                 <Mic className="w-6 h-6" />
               </div>
-              <CardTitle className="text-xl font-black text-foreground">Voces (TTS)</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium">Costo por Millón de Caracteres</CardDescription>
+              <CardTitle className="text-xl font-black text-foreground">Voces TTS (Pagas)</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium">Costo por 1 Millón de caracteres (Voces Edge son gratuitas)</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -223,8 +225,8 @@ export default function AiPricingAdminPage() {
               <div className="absolute top-4 right-4 p-2 bg-blue-100 rounded-xl text-blue-600">
                 <Film className="w-6 h-6" />
               </div>
-              <CardTitle className="text-xl font-black text-foreground">Video Rendering</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium">Costo por Minuto de Renderizado</CardDescription>
+              <CardTitle className="text-xl font-black text-foreground">Video Ensamble (FFmpeg)</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium">Costo por Minuto de Renderizado Clásico</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -258,6 +260,50 @@ export default function AiPricingAdminPage() {
                   ${(config.videoPricePerMinute * (1 + config.videoMarkupPercentage / 100)).toFixed(2)}
                 </span>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="group transition-all">
+            <CardHeader className="bg-muted border-b pb-6 relative">
+              <div className="absolute top-4 right-4 p-2 bg-indigo-100 rounded-xl text-indigo-600">
+                <Film className="w-6 h-6" />
+              </div>
+              <CardTitle className="text-xl font-black text-foreground">Video IA (Omni/Vertex)</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium">Costo por Minuto de Generación IA pura</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    value={config.omniPricePerMinute} 
+                    onChange={e => handleNumChange('omniPricePerMinute', e.target.value)} 
+                    className="font-bold border-muted focus:border-indigo-500"
+                   size="lg" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      value={config.omniMarkupPercentage} 
+                      onChange={e => handleNumChange('omniMarkupPercentage', e.target.value)} 
+                      className="pl-8 font-bold border-muted focus:border-indigo-500"
+                     size="lg" />
+                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-5 rounded-2xl bg-indigo-50 border border-indigo-100 flex justify-between items-center">
+                <span className="text-xs font-black text-indigo-600 uppercase">Precio de Venta</span>
+                <span className="text-2xl font-black text-indigo-600">
+                  ${(config.omniPricePerMinute * (1 + config.omniMarkupPercentage / 100)).toFixed(2)}
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2">Nota: Al generar video IA, al usuario se le cobrará este costo más el costo de Ensamble (FFmpeg) de forma sumada.</p>
             </CardContent>
           </Card>
         </div>

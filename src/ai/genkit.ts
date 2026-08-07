@@ -109,7 +109,8 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
       if (ownerUid) console.log(`> Referenciado a (Owner): ${ownerUid}`);
       console.log(`> Acción Detectada: ${finalActionName}`);
       console.log(`> Tokens: ${tokens}`);
-      console.log(`> Costo: ${cost} créditos`);
+      console.log(`> Costo Proveedor: $${cost.providerCost}`);
+      console.log(`> Cobro al Tutor: $${cost.billedCost}`);
       console.log("---------------------------------------");
 
       deductCredits(uid, cost, finalActionName, role, ownerUid || undefined);

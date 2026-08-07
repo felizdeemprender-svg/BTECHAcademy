@@ -43,6 +43,7 @@ interface GenerateRequest {
   }>;
   persona?: { enabled?: boolean; description?: string };
   subtitles?: boolean;
+  enable_tts?: boolean;
   voiceId?: string;
   longDuration?: number; // segundos objetivo para engine 'long' (4–180)
   isSmokeTest?: boolean;
@@ -184,68 +185,32 @@ async function runBranchA(jobId: string, body: GenerateRequest, adn: any) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BRANCH B — Gemini Omni text-to-video (sin imágenes previas)
+// BRANCH B — Gemini Omni text-to-video (Centralizado en Genkit)
 // ─────────────────────────────────────────────────────────────────────────────
 async function runBranchB(jobId: string, body: GenerateRequest, adn: any, landing: any, uid: string, role: string) {
-  await updateJob(jobId, { status: 'processing', progress: 5, stage: 'Redactando prompt de venta...', branch: 'B' });
-
-  const { prompt } = await buildVideoPrompt({
-    adnId: body.adnId || '01_CINEMA',
-    landing,
-    format: body.formato || '9:16',
-    engine: 'gemini-omni'
-  });
-
-  const totalDuration = (adn.slices || []).reduce((acc: number, s: any) => acc + (s.duration || 5), 0) || 10;
-  const durationSeconds = Math.min(totalDuration, 10);
-
-  await updateJob(jobId, { progress: 10, stage: `Generando video con Omni (hasta ${durationSeconds}s)...` });
-
-  const result = await generateOmniVideo({
-    prompt,
-    format: body.formato || '9:16',
-    durationSeconds
-  });
-
-  // Localizar el video generado
-  let videoPath: string | undefined;
-  if (result.videoPath) {
-    videoPath = result.videoPath;
-  } else if (result.videoBytes) {
-    videoPath = await saveOmniBytes(result.videoBytes, jobId);
-  } else if (result.videoUri) {
-    videoPath = await downloadOmniVideo(result.videoUri, jobId);
-  }
-  if (!videoPath) throw new Error('[Branch B] No se pudo obtener el video de Omni.');
-
-  // Ensamble con FFmpeg + subida a Drive
-  await updateJob(jobId, { progress: 80, stage: 'Subiendo video a Google Drive...' });
-
-  const safeBaseName = (body.marketingName || 'EvoAssetV2').replace(/[^a-zA-Z0-9]/g, '_');
-  let resultPayload: Record<string, any> = {};
-  if (body.googleToken) {
-    const rootFolderId = await getOrCreateFolder(body.googleToken, 'Aplicacion EVO V2');
-    const campaignFolderId = await getOrCreateFolder(body.googleToken, `Pack_${safeBaseName}`, rootFolderId);
-    const mainFile = await uploadToDrive(videoPath, body.googleToken, `${safeBaseName}_omni_${Date.now()}.mp4`, 'video/mp4', campaignFolderId);
-    resultPayload = { webViewLink: mainFile.webViewLink, driveId: mainFile.id, downloadUrl: mainFile.webContentLink };
-  } else {
-    resultPayload = { videoPath };
-  }
-
-  // Billing (mismo patrón render-v2)
+  const { generateVideoFlow } = await import('@/ai/flows/generate-video-flow');
+  
   try {
-    const { calculateVideoCost, deductCredits } = await import('@/lib/payments/credits');
-    const isAdmin = role === 'admin' || role === 'tutor';
-    if (uid && !body.isSmokeTest && !isAdmin) {
-      const cost = await calculateVideoCost(durationSeconds);
-      await deductCredits(uid, cost, 'video_omni', role || 'alumno');
-    }
-  } catch (e) {
-    console.error('[Branch B] Error al procesar cobro:', e);
+    await generateVideoFlow({
+      jobId,
+      uid,
+      role,
+      adn,
+      scenes: body.scenes,
+      formato: body.formato || '9:16',
+      marketingName: body.marketingName,
+      audioUrl: (body as any).audioUrl,
+      enable_tts: body.enable_tts !== false,
+      isSmokeTest: body.isSmokeTest,
+      googleToken: body.googleToken
+    });
+  } catch (err: any) {
+    console.error('[Branch B Genkit] Error crítico:', err);
+    await updateJob(jobId, { status: 'failed', progress: 0, stage: 'Error en flujo Genkit', error: err.message });
   }
-
-  await updateJob(jobId, { status: 'completed', progress: 100, stage: 'Completado', result: resultPayload });
 }
+
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BRANCH C — Avatar (HeyGen / Synthesia / Tavus)

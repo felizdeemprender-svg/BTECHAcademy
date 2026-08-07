@@ -1,70 +1,117 @@
 import { adminDb } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
+export interface CostBreakdown {
+  providerCost: number;
+  billedCost: number;
+}
+
 /**
  * Calcula el costo en créditos de una operación.
  */
-export async function calculateGeminiCost(tokens: number): Promise<number> {
+export async function calculateGeminiCost(tokens: number): Promise<CostBreakdown> {
   const pricingSnap = await adminDb.collection('config').doc('ai_pricing').get();
   const pricing = pricingSnap.data() || {};
   
   const baseCost = pricing.geminiPricePerMillionTokens || 0.3;
   const markup = pricing.geminiMarkupPercentage || 30;
 
-  // Precio por 1 Millón de tokens = Base + Margen
+  const rawProviderCost = (tokens / 1000000) * baseCost;
   const pricePerMillion = baseCost * (1 + markup / 100);
+  const rawBilledCost = (tokens / 1000000) * pricePerMillion;
   
-  // Costo final = (Tokens / 1,000,000) * PrecioVenta
-  const rawCost = (tokens / 1000000) * pricePerMillion;
-  
-  return Number(rawCost.toFixed(5));
+  return {
+    providerCost: Number(rawProviderCost.toFixed(5)),
+    billedCost: Number(rawBilledCost.toFixed(5))
+  };
 }
 
 /**
  * Calcula el costo de un renderizado de video por minuto.
  */
-export async function calculateVideoCost(durationSeconds: number): Promise<number> {
+export async function calculateVideoCost(durationSeconds: number, engine: 'ffmpeg' | 'omni' = 'ffmpeg'): Promise<CostBreakdown> {
   const pricingSnap = await adminDb.collection('config').doc('ai_pricing').get();
   const pricing = pricingSnap.data() || {};
   
   const minutes = durationSeconds / 60;
-  const basePrice = pricing.videoPricePerMinute || 0.60;
-  const markup = 1 + (pricing.videoMarkupPercentage || 50) / 100;
   
-  const finalCost = minutes * basePrice * markup;
-  return Number(finalCost.toFixed(4));
+  // Costo base FFmpeg (Ensamble / Render Clásico)
+  const ffmpegBasePrice = pricing.videoPricePerMinute || 0.60;
+  const ffmpegMarkup = 1 + (pricing.videoMarkupPercentage || 50) / 100;
+  const ffmpegProviderCost = minutes * ffmpegBasePrice;
+  const ffmpegBilledCost = minutes * ffmpegBasePrice * ffmpegMarkup;
+  
+  if (engine === 'omni') {
+    // Costo de la generación de Inteligencia Artificial (Omni/Vertex)
+    const omniBasePrice = pricing.omniPricePerMinute || 1.00; // default 1 USD/min
+    const omniMarkup = 1 + (pricing.omniMarkupPercentage || 10) / 100;
+    
+    const omniProviderCost = minutes * omniBasePrice;
+    const omniBilledCost = minutes * omniBasePrice * omniMarkup;
+    
+    // Total = IA + Ensamble
+    const totalProviderCost = omniProviderCost + ffmpegProviderCost;
+    const totalBilledCost = omniBilledCost + ffmpegBilledCost;
+    return {
+      providerCost: Number(totalProviderCost.toFixed(4)),
+      billedCost: Number(totalBilledCost.toFixed(4))
+    };
+  }
+  
+  return {
+    providerCost: Number(ffmpegProviderCost.toFixed(4)),
+    billedCost: Number(ffmpegBilledCost.toFixed(4))
+  };
 }
 
 /**
  * Calcula el costo de TTS por caracteres.
  */
-export async function calculateTTSCost(characters: number): Promise<number> {
+export async function calculateTTSCost(characters: number, voiceId: string = 'mateo'): Promise<CostBreakdown> {
   const pricingSnap = await adminDb.collection('config').doc('ai_pricing').get();
   const pricing = pricingSnap.data() || {};
   
+  // Voces gratuitas (Edge TTS)
+  const freeVoices = ['mateo', 'elena', 'carlos'];
+  const isFree = freeVoices.includes(voiceId.toLowerCase());
+
+  if (isFree) {
+    // Es gratuito, el proveedor no nos cobra y no le cobramos al tutor.
+    return { providerCost: 0, billedCost: 0 };
+  }
+
+  // Voces pagas (Google/ElevenLabs)
   const baseCost = pricing.ttsPricePerMillionChars || 15;
   const markup = pricing.ttsMarkupPercentage || 40;
 
+  const rawProviderCost = (characters / 1000000) * baseCost;
   const pricePerMillion = baseCost * (1 + markup / 100);
-  const rawCost = (characters / 1000000) * pricePerMillion;
+  const rawBilledCost = (characters / 1000000) * pricePerMillion;
   
-  return Number(rawCost.toFixed(5));
+  return {
+    providerCost: Number(rawProviderCost.toFixed(5)),
+    billedCost: Number(rawBilledCost.toFixed(5))
+  };
 }
 
 /**
  * Calcula el costo de generación de imágenes (SDXL).
  */
-export async function calculateImageCost(count: number = 1): Promise<number> {
+export async function calculateImageCost(count: number = 1): Promise<CostBreakdown> {
   const pricingSnap = await adminDb.collection('config').doc('ai_pricing').get();
   const pricing = pricingSnap.data() || {};
   
   const baseCost = pricing.imagePricePerHundred || 3;
   const markup = pricing.imageMarkupPercentage || 50;
 
+  const rawProviderCost = (count / 100) * baseCost;
   const pricePer100 = baseCost * (1 + markup / 100);
-  const rawCost = (count / 100) * pricePer100;
+  const rawBilledCost = (count / 100) * pricePer100;
   
-  return Number(rawCost.toFixed(4));
+  return {
+    providerCost: Number(rawProviderCost.toFixed(4)),
+    billedCost: Number(rawBilledCost.toFixed(4))
+  };
 }
 
 /**
@@ -72,7 +119,7 @@ export async function calculateImageCost(count: number = 1): Promise<number> {
  */
 export async function deductCredits(
   uid: string, 
-  amount: number, 
+  amountOrBreakdown: number | CostBreakdown, 
   action: string, 
   contextRole: string = 'mentor',
   ownerUid?: string
@@ -81,6 +128,11 @@ export async function deductCredits(
     const batch = adminDb.batch();
     const targetUid = ownerUid || uid;
     const isReferential = !!ownerUid && ownerUid !== uid;
+
+    // Resolve billed cost vs provider cost
+    const amount = typeof amountOrBreakdown === 'number' ? amountOrBreakdown : amountOrBreakdown.billedCost;
+    const providerCost = typeof amountOrBreakdown === 'number' ? 0 : amountOrBreakdown.providerCost;
+    const profit = amount - providerCost;
 
     // 1. Auditoría Global (Auto-borrado en 90 días via TTL)
     const auditRef = adminDb.collection('ai_audit_logs').doc();
@@ -93,6 +145,8 @@ export async function deductCredits(
       role: contextRole,
       action: action,
       amount: amount,
+      providerCost: providerCost,
+      profit: profit,
       isReferential: isReferential,
       timestamp: FieldValue.serverTimestamp(),
       expiresAt: expiresAt // Google borrará esto gratis en 90 días

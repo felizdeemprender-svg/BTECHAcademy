@@ -23,6 +23,7 @@ Archivos a mantener sincronizados con el código:
 
 - Dev server: `http://localhost:9002`
 - `tsc --noEmit`: baseline 50 errores preexistentes; los cambios deben aportar 0 errores nuevos.
+- Variables de entorno para motores de video en `/api/video/generate`: `GOOGLE_GENAI_API_KEY` (Omni/Gemini) y `AIVIDEO_API_KEY` (Video Largo, AI Video API `long-video` 4–180s). Sin `AIVIDEO_API_KEY`, el branch F falla con "No se ha configurado AIVIDEO_API_KEY".
 - Landings v1: el render monolítico en `v/[id]/page.tsx` está **congelado**, no tocar literales hardcodeados; los tutores reharán con v2. La v2 tiene infra DTCG ✅ (builder `v2-build`, renderer `atomic-renderer.tsx`, editor `v2-edit`) y restyling estético a editorial-plano ✅ (31 Jul 2026).
 - Shell del dashboard: **editorial-plano** decidido (31 Jul 2026) — `--card-radius: 0.75rem`, `--card-shadow: none`, `--card-border: 1px solid var(--border)`; sin `rounded-[2rem+]`, sin `shadow-3xl/2xl/xl`, sin `border-none` en Cards. No reintroducir estética redondeada.
 - Shape canónico de `branding`: `{ primaryColor, logoUrl }`.

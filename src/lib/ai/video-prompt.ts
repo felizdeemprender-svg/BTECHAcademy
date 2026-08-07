@@ -21,6 +21,7 @@ export interface VideoPromptInput {
   format: string; // 9:16 | 1:1 | 16:9 | 4:5
   engine: 'gemini-omni' | 'seedance' | 'veo' | 'runway' | 'pika' | 'wan';
   avatar?: boolean;
+  scenes?: any[];
 }
 
 export interface VideoPromptResult {
@@ -111,16 +112,25 @@ Transición de salida: ${transition} ${rules.transition_duration || 0.5}s`;
  * Prompt Omni end-to-end text-to-video (§1.4–1.5 del template).
  * Estructura de conversión: HOOK → PROBLEMA → SOLUCIÓN/OFERTA → CTA.
  */
-export function buildOmniPrompt(adn: any, landing: LandingData, format: string): string {
+export function buildOmniPrompt(adn: any, landing: LandingData, format: string, customScenes?: any[]): string {
   const block = buildAdnBlock(adn, landing);
-  const slices = adn.slices || [];
+  const slices = (customScenes && customScenes.length > 0) ? customScenes : (adn.slices || []);
 
-  // Mapear slices reales del ADN a la estructura de conversión, en orden del blueprint
+  // Mapear slices a la estructura de conversión
   const copySegments: string[] = [];
   slices.forEach((s: any) => {
-    const label = SEGMENT_TO_COPY[s.segment_label] || s.segment_label;
-    copySegments.push(`${label}: ${s.voiceover || s.text || ''}`);
+    const label = SEGMENT_TO_COPY[s.segment_label] || s.segment_label || 'ESCENA';
+    const text = s.text || ''; // Para la IA usamos el texto de escena (diálogo)
+    const details = [
+      s.subject_action && `Action: ${s.subject_action}`,
+      s.camera_movement && `Camera: ${s.camera_movement}`,
+      s.framing && `Framing: ${s.framing}`,
+      s.lighting && `Lighting: ${s.lighting}`
+    ].filter(Boolean).join(' | ');
+    
+    copySegments.push(`${label}: ${text}${details ? ` (${details})` : ''}`);
   });
+  
   if (copySegments.length === 0) {
     copySegments.push('HOOK: gancho emocional sobre el problema del alumno');
     copySegments.push('PROBLEMA / SOLUCIÓN: fricción que resuelve el curso');
@@ -128,14 +138,23 @@ export function buildOmniPrompt(adn: any, landing: LandingData, format: string):
     copySegments.push('CTA: urgencia + llamado a la acción');
   }
 
+  const mood = adn.description || 'estilo corporativo/educativo estándar';
+  const char = 'presentador consistente o sujetos consistentes según el mood';
+
   return `[ADN DEL GUION]
 ${block}
 
 VIDEO PROMOCIONAL DE CURSO — text-to-video, 10s máx por clip
-Aspecto: ${aspectRatioFromFormat(format)} · estilo de marca: del ADN
-Guion (estructura de conversión, respetando voiceover/textos del ADN):
+Aspecto: ${aspectRatioFromFormat(format)}
+Guion (estructura de conversión estricta, respeta este voiceover exacto):
 ${copySegments.map(s => `  ${s}`).join('\n')}
-Reglas: del ADN — voz ${adn.audio_engine?.voice_id || 'mateo'}, tono según mood, sin texto quemado, sin clichés.`;
+
+REGLAS DE CONSISTENCIA VISUAL OBLIGATORIA (OMNI):
+Como generarás este contenido de manera continua, es CRÍTICO que mantengas la continuidad visual en todas las tomas de este clip:
+- Estilo: ${mood}
+- Mismos personajes: ${char}. Mantén el mismo peinado, ropa, complexión física y tono de piel durante toda la pieza sin deformaciones.
+- Voz en off: ${adn.audio_engine?.voice_id || 'mateo'}, tono acorde al estilo.
+- Sin texto quemado en el video (esto se pondrá después).`;
 }
 
 /**
@@ -212,6 +231,10 @@ export interface ScenePromptScene {
   watermark?: string;
   imageUrl?: string;
   duration?: number;
+  subject_action?: string;
+  camera_movement?: string;
+  framing?: string;
+  lighting?: string;
 }
 
 export interface ScenePromptOptions {
@@ -309,12 +332,13 @@ function buildSeedancePrompt(adn: any, opts: ScenePromptOptions): string {
 
   const shots = scenes.map((s, i) => {
     const segment = s.segment || 'VALOR';
-    const subject = persona || 'escena cinematográfica de producto';
-    const action = s.voiceover || s.text || `contenido del segmento ${segment}`;
-    const camera = cameraMoveFor(adn, segment);
-    const framing = cameraFramingFor(segment);
+    const subjectAction = s.subject_action || s.text || s.voiceover || `contenido del segmento ${segment}`;
+    const camera = s.camera_movement || cameraMoveFor(adn, segment);
+    const framing = s.framing || cameraFramingFor(segment);
+    const light = s.lighting || `Luz cálida de ${moodOf(adn)}`;
     const onScreen = s.text ? `, 【${s.text}】` : '';
-    return `Shot ${i + 1}: ${subject} realizando ${action}${onScreen}. Luz cálida de ${moodOf(adn)}. ${framing}, ${camera}. Estilo realista premium, calidad 4K. Audio: {${s.voiceover || ''}}${s.watermark ? `, marca de agua "${s.watermark}"` : ''}, （música de fondo）.`;
+    const subject = persona ? `${persona}, ` : '';
+    return `Shot ${i + 1}: ${subject}${subjectAction}${onScreen}. ${light}. ${framing}, ${camera}. Estilo realista premium, calidad 4K. Audio: {${s.voiceover || ''}}${s.watermark ? `, marca de agua "${s.watermark}"` : ''}, （música de fondo）.`;
   }).join('\n');
 
   const constraint = opts.subtitles
@@ -342,13 +366,14 @@ function buildVeoPrompt(adn: any, opts: ScenePromptOptions): string {
   const shots = scenes.map((s, i) => {
     const segment = s.segment || 'VALOR';
     const subject = persona || `el contexto del segmento ${segment}`;
-    const action = s.voiceover || s.text || `mostrar el valor de ${segment}`;
-    const camera = cameraMoveFor(adn, segment);
-    const framing = cameraFramingFor(segment);
+    const subjectAction = s.subject_action || s.text || s.voiceover || `mostrar el valor de ${segment}`;
+    const camera = s.camera_movement || cameraMoveFor(adn, segment);
+    const framing = s.framing || cameraFramingFor(segment);
+    const light = s.lighting || `cálida cinematográfica`;
     const audio = s.voiceover
       ? `"${s.voiceover}"` 
       : `sonido ambiente discreto acorde a ${moodOf(adn)}`;
-    return `Audio: ${audio}, narración en ${voice}. Sujeto: ${subject}. Acción: ${action}. Escena: ${moodOf(adn)}. Cámara: ${framing}, ${camera}. Iluminación: cálida cinematográfica. Estilo: fotografía premium, grano sutil, sin clichés de éxito.`;
+    return `Audio: ${audio}, narración en ${voice}. Sujeto: ${subject}. Acción: ${subjectAction}. Escena: ${moodOf(adn)}. Cámara: ${framing}, ${camera}. Iluminación: ${light}. Estilo: fotografía premium, grano sutil, sin clichés de éxito.`;
   }).join('\n');
 
   return `Promo de ${courseLine(landing)} para ${opts.format}. Narración: ${voice}.
@@ -514,7 +539,7 @@ export async function buildVideoPrompt(input: VideoPromptInput): Promise<VideoPr
 
   let prompt: string;
   if (input.engine === 'gemini-omni') {
-    prompt = buildOmniPrompt(adn, input.landing, input.format);
+    prompt = buildOmniPrompt(adn, input.landing, input.format, input.scenes);
   } else if (input.avatar) {
     prompt = buildAvatarScript(adn, input.landing);
   } else {

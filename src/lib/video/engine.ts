@@ -485,7 +485,7 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
     const rules = (adn as any).scenes_rules || {};
     titleStyle = { ...(rules.default?.text_styling || {}), ...(rules[segment]?.text_styling || {}) };
     subStyle = { fontSize: (titleStyle.fontSize || 80) * 0.6 };
-    markStyle = { fontSize: 24, primaryColor: '#FFFFFF@0.5', alignment: 'bottom-right' };
+    markStyle = { fontSize: 55, primaryColor: '#FFFFFF@0.7', alignment: 'bottom-right' };
   }
 
   const resolveAssColor = (col: string) => {

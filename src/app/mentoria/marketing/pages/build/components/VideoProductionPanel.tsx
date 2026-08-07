@@ -11,16 +11,9 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { 
-  Clapperboard, 
-  Volume2, 
-  MonitorPlay, 
-  Loader2, 
-  Trash2,
-  Download,
-  Mic2,
-  Sparkles,
-  User2,
-  Captions
+  Clapperboard, Sparkles, Wand2, Plus, GripVertical, Settings2, Image as ImageIcon, Volume2, Mic2, 
+  Trash2, Copy, MonitorPlay, AlertTriangle, ExternalLink, Download, FileAudio, FileDown,
+  Captions, User2, Loader2, PlayCircle, FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AudioUploader } from './AudioUploader';
@@ -134,7 +127,7 @@ export function VideoProductionPanel({
             <SelectContent className="bg-white border-border text-foreground">
               <SelectItem value="ffmpeg" className="text-[10px] font-bold uppercase">FFmpeg (Motor Propio)</SelectItem>
               <SelectItem value="omni" className="text-[10px] font-bold uppercase">Omni (Gemini)</SelectItem>
-              <SelectItem value="long" className="text-[10px] font-bold uppercase">Video Largo (Seedance 180s)</SelectItem>
+              {/* <SelectItem value="long" className="text-[10px] font-bold uppercase">Video Largo (Seedance 180s)</SelectItem> */}
               <SelectItem value="prompt" className="text-[10px] font-bold uppercase">Solo Prompt (Externos)</SelectItem>
             </SelectContent>
           </Select>
@@ -221,7 +214,7 @@ export function VideoProductionPanel({
             <p className="text-[9px] font-bold text-muted-foreground italic">{videoEngine === 'ffmpeg' ? 'Locutor IA Neural' : videoEngine === 'long' ? 'Voz consistente en todo el video' : 'Define la voz que se indica en el prompt'}</p>
           </div>
           <Select
-            value={s.production_notes?.enable_tts ? (s.production_notes?.voice_id || 'mateo') : 'off'}
+            value={s.production_notes?.enable_tts !== false ? (s.production_notes?.voice_id || 'mateo') : 'off'}
             onValueChange={(val) => {
               updateAsset('socials', sIdx, 'production_notes', {
                 ...(s.production_notes || {}),
@@ -443,13 +436,22 @@ export function VideoProductionPanel({
                       : <><MonitorPlay className="h-5 w-5" /> Generar Pack Multimedia</>
                 )}
               </Button>
+              
+              <Button 
+                className="w-full h-12 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-black uppercase tracking-widest text-[10px] gap-3 shadow-lg shadow-foreground/10 transition-all active:scale-95 disabled:opacity-50"
+                onClick={() => onGeneratePrompt?.(s, sIdx)}
+                disabled={isCurrentlyRendering}
+              >
+                <FileText className="h-4 w-4" /> Solo Exportar Guion (Prompt)
+              </Button>
+              
               {videoEngine !== 'omni' && videoEngine !== 'long' && (
                 <Button 
-                  className="w-full h-12 rounded-2xl bg-foreground hover:bg-foreground/90 text-white font-black uppercase tracking-widest text-[10px] gap-3 shadow-lg shadow-foreground/10 transition-all active:scale-95 disabled:opacity-50"
+                  className="w-full h-12 rounded-2xl bg-muted text-foreground hover:bg-muted/80 font-black uppercase tracking-widest text-[10px] gap-3 shadow-lg transition-all active:scale-95 disabled:opacity-50 border border-border"
                   onClick={() => onGenerateVideoIA(s, sIdx)}
                   disabled={isCurrentlyRendering}
                 >
-                  <Sparkles className="h-4 w-4" /> Video IA (Gemini Omni)
+                  <Sparkles className="h-4 w-4 text-primary" /> Generar con Inteligencia Artificial
                 </Button>
               )}
             </div>
