@@ -110,7 +110,7 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
 - CTA: ${adnDef.ai_prompts?.CTA || ''}`;
 
   const missionTones = {
-    venta: "Tono altamente persuasivo, enfocado en RESULTADOS, ROI y ESCASEZ. El CTA debe ser un cierre de venta directo.",
+    venta: "Tono altamente persuasivo, enfocado en RESULTADOS tangibles, RENTABILIDAD y ESCASEZ (importante: varía el vocabulario sobre retorno de inversión, no uses siempre la frase literal 'ROI asegurado'). El CTA debe ser un cierre de venta directo.",
     autoridad: "Tono sofisticado, enfocado en CREDIBILIDAD, EXPERIENCIA y VALOR. El CTA debe invitar a aprender más o confiar en el mentor.",
     lanzamiento: "Tono vibrante, enfocado en ANTICIPACIÓN y EXCLUSIVIDAD. El CTA debe ser un registro para un evento o aprovechamiento de bono.",
     leads: "Tono directo y servicial, enfocado en la solución de un PROBLEMA específico mediante el curso. El CTA debe ser la descarga o acceso inicial."

@@ -29,10 +29,10 @@ export interface GenerateEmailContentInput {
 }
 
 const missionTones: Record<string, string> = {
-  venta: "Tono altamente persuasivo, enfocado en RESULTADOS, ROI y ESCASEZ. El CTA debe ser un cierre de venta directo.",
+  venta: "Tono altamente persuasivo, enfocado en RESULTADOS tangibles, RENTABILIDAD y ESCASEZ (importante: varía el vocabulario sobre retorno de inversión, no uses siempre la frase literal 'ROI asegurado'). El CTA debe ser un cierre de venta directo.",
   autoridad: "Tono sofisticado, enfocado en CREDIBILIDAD, EXPERIENCIA y VALOR. El CTA debe invitar a aprender más o confiar en el mentor.",
   lanzamiento: "Tono vibrante, enfocado en ANTICIPACIÓN y EXCLUSIVIDAD. El CTA debe ser un registro para un evento o aprovechamiento de bono.",
-  leads: "Tono directo y servicial, enfocado en la solución de un PROBLEMA específico mediante el curso. El CTA debe ser la descarga o acceso inicial."
+  leads: "Tono directo y servicial, enfocado en la solución de un PROBLEMA específico. El CTA debe ser una descarga o acceso inicial."
 };
 
 const emailTypeInstructions: Record<string, string> = {

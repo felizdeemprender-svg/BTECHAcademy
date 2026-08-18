@@ -127,10 +127,10 @@ CONFIGURACIÓN DEL ESTILO ${styleConfig.name.toUpperCase()}:
     }
     
     const missionDirectives = {
-      venta: "ENFOQUE: Venta Directa / Hard Sell. REGLAS: Usa urgencia real, escasez, resalta el ROI y el valor del precio.",
-      autoridad: "ENFOQUE: Autoridad / Branding. REGLAS: Posiciona al mentor, usa lenguaje sofisticado, resalta la metodología.",
-      lanzamiento: "ENFOQUE: Lanzamiento de Evento. REGLAS: Genera Hype, habla de una 'Oportunidad Única' y bonos.",
-      leads: "ENFOQUE: Lead Generation. REGLAS: Enfócate en la transformación rápida y el valor inicial."
+      venta: "ENFOQUE: Venta Directa / Hard Sell. REGLAS: Usa urgencia real, escasez, resalta la rentabilidad y el valor del precio (varía las frases sobre retorno de inversión, no repitas 'ROI asegurado').",
+      autoridad: "ENFOQUE: Credibilidad y Posicionamiento. REGLAS: Muestra expertise, usa un tono consultivo, resalta la transformación a largo plazo.",
+      lanzamiento: "ENFOQUE: Anticipación y FOMO. REGLAS: Genera hype, habla de 'cupos limitados', 'evento único' y exclusividad.",
+      leads: "ENFOQUE: Lead Magnet / Gratuito. REGLAS: Reduce fricción, enfócate 100% en el beneficio inmediato que obtienen al dejar el email."
     };
 
     const { output } = await ai.generate({
