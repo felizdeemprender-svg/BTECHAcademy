@@ -501,10 +501,8 @@ export function TemplateEditor({
 
   const handleGenerateVideoIA = async (s: any, sIdx: number) => {
     if (!s) return;
-    if (!selectedCourseId) {
-      toast({ variant: 'destructive', title: 'Sin curso', description: 'Selecciona un curso antes de generar el video IA.' });
-      return;
-    }
+    const courseId = selectedCourseId || 'global';
+    const jobId = `job_${courseId}_${sIdx}_${Date.now()}`;
 
     setIsRenderingVideo(`${sIdx}`);
     setJobProgress(prev => ({ ...prev, [sIdx]: { progress: 0, stage: 'En cola...' } }));
@@ -612,10 +610,6 @@ export function TemplateEditor({
   // Generar video largo (AI Video API long-video, 4–180s en un solo request)
   const handleGenerateLongVideo = async (s: any, sIdx: number) => {
     if (!s) return;
-    if (!selectedCourseId) {
-      toast({ variant: 'destructive', title: 'Sin curso', description: 'Selecciona un curso antes de generar el video largo.' });
-      return;
-    }
 
     setIsRenderingVideo(`${sIdx}`);
     setJobProgress(prev => ({ ...prev, [sIdx]: { progress: 0, stage: 'En cola...' } }));
@@ -727,10 +721,6 @@ export function TemplateEditor({
   // Generar prompt afinado por ADN + escenas reales para editores externos (Seedance, Veo, Runway, Pika, Wan)
   const handleGeneratePrompt = async (s: any, sIdx: number) => {
     if (!s) return;
-    if (!selectedCourseId) {
-      toast({ variant: 'destructive', title: 'Sin curso', description: 'Selecciona un curso antes de generar el prompt.' });
-      return;
-    }
 
     setIsRenderingVideo(`${sIdx}`);
     setJobProgress(prev => ({ ...prev, [sIdx]: { progress: 0, stage: 'Redactando prompt especializado...' } }));
