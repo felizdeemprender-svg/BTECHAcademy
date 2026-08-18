@@ -393,6 +393,8 @@ export function TemplateEditor({
       const { initializeFirebase } = await import('@/firebase');
       const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
       const { storage } = initializeFirebase();
+      const pNotes = s.production_notes || {};
+      
       const resolvedScenes = await Promise.all(slides.map(async (sl: any, i: number) => {
         let imageUrl = sl.imageUrl || '';
         if (imageUrl.startsWith('data:')) {
@@ -404,14 +406,12 @@ export function TemplateEditor({
           imageUrl,
           text: sl.text || '',
           subtitle: sl.subtitle || '',
-          watermark: sl.watermark || '',
+          watermark: sl.watermark || pNotes.watermark_text || '@felizdeemprender',
           voiceover: sl.voiceover || '',
           segment_label: sl.segment || 'VALOR',
           duration: Math.max(Number(sl.duration) || 10, 10)
         };
       }));
-
-      const pNotes = s.production_notes || {};
       const jobId = `job_${selectedCourseId}_${sIdx}_${Date.now()}`;
 
       // ── ENCOLAR el job (responde en ~100ms) ──────────────────────────────
