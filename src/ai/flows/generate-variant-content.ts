@@ -125,7 +125,7 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
   } else if (adnDef.logic_segments) {
      sequenceList = Object.keys(adnDef.logic_segments).map((k, i) => `${i + 1}. ${k} (Duración max: 5s)`).join('\n');
   } else {
-     sequenceList = "1. GANCHO (3s)\n2. VALOR (5s)\n3. CTA (4s)\n4. CIERRE (3s)";
+     sequenceList = "1. GANCHO (3s)\n2. VALOR (5s)\n3. CIERRE (3s)\n4. CTA (4s)";
   }
   const expectedCount = adnSceneCount || bConfig.sceneCount || bConfig.slideCount || 5;
 

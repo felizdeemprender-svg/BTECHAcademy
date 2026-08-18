@@ -36,18 +36,15 @@ export async function POST(req: NextRequest) {
 
     const promptPremium = `${finalPrompt.trim()}. Professional photography, cinematic lighting, no text, no words.`;
 
-    // Endpoint para Imagen 4 en Google AI Studio (Beta)
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+    // Endpoint para Imagen en Google AI Studio (Beta)
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;
 
     const aspectRatio = channel === 'landing' ? "16:9" : "9:16";
 
     const reqBody = {
-      instances: [{ prompt: promptPremium }],
-      parameters: {
-        sampleCount: 1,
-        aspectRatio: aspectRatio,
-        outputOptions: { mimeType: "image/jpeg" }
-      }
+      contents: [{
+        parts: [{ text: promptPremium }]
+      }]
     };
 
     const premiumRes = await fetch(endpoint, {
@@ -58,15 +55,23 @@ export async function POST(req: NextRequest) {
 
     if (!premiumRes.ok) {
       const errText = await premiumRes.text();
-      console.error('❌ Error de Google Imagen:', errText);
+      console.error('❌ Error de Google Imagen (Gemini):', errText);
       throw new Error(`El modelo premium falló (${premiumRes.status}): ${errText}`);
     }
 
     const premiumData = await premiumRes.json();
-    if (!premiumData.predictions || !premiumData.predictions[0]) {
+    if (!premiumData.candidates || !premiumData.candidates[0]) {
       throw new Error('La IA Premium no devolvió resultados.');
     }
-    const base64Img = premiumData.predictions[0].bytesBase64Encoded;
+    
+    let base64Img = '';
+    const parts = premiumData.candidates[0].content?.parts || [];
+    const imagePart = parts.find((p: any) => p.inlineData);
+    if (imagePart && imagePart.inlineData) {
+      base64Img = imagePart.inlineData.data;
+    } else {
+      throw new Error('La IA Premium no devolvió una imagen en el formato esperado.');
+    }
     return NextResponse.json({ 
       imageDataUrl: `data:image/jpeg;base64,${base64Img}`, 
       generatedPrompt: promptPremium 

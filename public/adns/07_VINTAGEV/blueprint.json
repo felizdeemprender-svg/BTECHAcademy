@@ -25,15 +25,15 @@
       "duration": 5
     },
     {
-      "id": "slice_4",
-      "segment_label": "CTA",
+      "id": "slice_5",
+      "segment_label": "CIERRE",
       "text": "NUEVO IMPACTO",
       "voiceover": "Relato del nuevo slice...",
       "duration": 5
     },
     {
-      "id": "slice_5",
-      "segment_label": "CIERRE",
+      "id": "slice_4",
+      "segment_label": "CTA",
       "text": "NUEVO IMPACTO",
       "voiceover": "Relato del nuevo slice...",
       "duration": 5

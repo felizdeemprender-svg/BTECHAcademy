@@ -35,7 +35,7 @@ async function updateJob(jobId: string, data: Record<string, any>) {
   }
 }
 
-export const generateVideoInputSchema = z.object({
+const generateVideoInputSchema = z.object({
   jobId: z.string(),
   uid: z.string(),
   role: z.string(),

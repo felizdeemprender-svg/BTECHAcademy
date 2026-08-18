@@ -588,6 +588,28 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
   const sub = resolveStyle(subStyle, 'sub');
   const mark = resolveStyle(markStyle, 'mark');
 
+  // Prevención de Overlap (Title vs Subtitle) calculando line breaks
+  if (subtitle && (t.assAlignment === 1 || t.assAlignment === 2 || t.assAlignment === 3)) {
+    const subAvailableWidth = width - (sub.marginL + sub.marginR);
+    const subCharWidth = sub.fontSize * 0.55;
+    const subCharsPerLine = Math.max(1, Math.floor(subAvailableWidth / subCharWidth));
+    
+    let subLines = 0;
+    const cleanSub = subtitle.replace(/\\N/g, '\n').replace(/\\n/g, '\n');
+    for (const line of cleanSub.split('\n')) {
+       subLines += Math.max(1, Math.ceil(line.length / subCharsPerLine));
+    }
+    
+    const estimatedSubHeight = subLines * sub.fontSize * 1.2;
+    const subTopEdge = sub.marginV + estimatedSubHeight;
+    const gap = 30; // 30px gap entre sub y title
+    
+    const requiredTitleMargin = subTopEdge + gap;
+    if (t.marginV < requiredTitleMargin) {
+      t.marginV = Math.round(requiredTitleMargin);
+    }
+  }
+
   let ass = `[Script Info]
 ScriptType: v4.00+
 PlayResX: ${width}

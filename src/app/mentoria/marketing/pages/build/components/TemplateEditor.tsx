@@ -979,7 +979,7 @@ export function TemplateEditor({
       const primaryLanding = generatedAssets?.landings?.[realIndex];
       const landingContext = primaryLanding 
         ? `\n\n== CONTEXTO DE LA LANDING PAGE DE VENTA ==\nTítulo de la Landing: "${primaryLanding.headline}"\nSubtítulo: "${primaryLanding.subheadline}"\nLlamado a la acción (CTA) de la Landing: "${primaryLanding.ctaText}"\nBeneficios / FAQs: ${primaryLanding.faqs?.map((f:any) => f.question).join(', ') || 'N/A'}`
-        : '';
+        : '\n\n== NOTA PARA LA IA ==\nATENCIÓN: No hay una Landing Page asociada. Se tomará como referencia la descripción del curso. Ten en cuenta que las landings tienen mejor definición para la generación de este contenido, por lo que debes inferir agresivamente un ángulo de ventas directo basándote en la información general del curso.';
         
       const breakdown = await (await import('@/ai/flows/generate-variant-content')).generateVariantContent(
         variant, 

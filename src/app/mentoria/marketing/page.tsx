@@ -68,10 +68,89 @@ export default function CampaignsDashboardPage() {
     });
   }, [rawCampaigns]);
 
+  const ensureGoogleToken = async () => {
+    const storedToken = localStorage.getItem('evo_google_token');
+    const storedExpiry = localStorage.getItem('evo_google_token_expiry');
+    const isValid = storedToken && storedToken !== 'null' && storedExpiry && Date.now() < Number(storedExpiry);
+    if (isValid) return storedToken;
+
+    const { initializeFirebase } = await import('@/firebase');
+    const { auth } = initializeFirebase();
+    const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
+
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/drive.file');
+    if (auth.currentUser?.email) {
+      provider.setCustomParameters({ login_hint: auth.currentUser.email });
+    }
+
+    try {
+      const authResult = await signInWithPopup(auth, provider);
+      const accessToken = GoogleAuthProvider.credentialFromResult(authResult)?.accessToken || null;
+      if (accessToken) {
+        localStorage.setItem('evo_google_token', accessToken);
+        localStorage.setItem('evo_google_token_expiry', String(Date.now() + 3300000));
+      }
+      return accessToken;
+    } catch (error) {
+      console.warn("No se pudo renovar token de Google Drive", error);
+      return null;
+    }
+  };
+
   const handleDeleteCampaign = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'campaigns', id));
-      toast({ title: 'Campaña eliminada' });
+      const { getDoc } = await import('firebase/firestore');
+      const campRef = doc(db, 'campaigns', id);
+      const campSnap = await getDoc(campRef);
+      
+      if (campSnap.exists()) {
+        const campData = campSnap.data();
+        const assets = campData.generatedAssets || {};
+        const driveIds: string[] = [];
+
+        if (assets.socials) {
+          assets.socials.forEach((s: any) => {
+             const driveId = s.production_notes?.video_drive_id;
+             if (driveId) {
+               const ids = driveId.split(',').map((i: string) => i.trim()).filter(Boolean);
+               driveIds.push(...ids);
+             }
+          });
+        }
+        
+        if (assets.ads) {
+          assets.ads.forEach((s: any) => {
+             const driveId = s.production_notes?.video_drive_id;
+             if (driveId) {
+               const ids = driveId.split(',').map((i: string) => i.trim()).filter(Boolean);
+               driveIds.push(...ids);
+             }
+          });
+        }
+
+        if (driveIds.length > 0) {
+           toast({ title: 'Limpiando Drive...', description: `Eliminando ${driveIds.length} videos asociados.` });
+           const token = await ensureGoogleToken();
+           if (token) {
+              for (const driveId of driveIds) {
+                 try {
+                   await fetch(`https://www.googleapis.com/drive/v3/files/${driveId}`, {
+                     method: 'DELETE',
+                     headers: { 'Authorization': `Bearer ${token}` }
+                   });
+                 } catch (err) {
+                   console.error(`Error borrando ${driveId}`, err);
+                 }
+              }
+           } else {
+             toast({ variant: 'destructive', title: 'Videos no borrados', description: 'No se autorizó Google Drive.' });
+           }
+        }
+      }
+
+      await deleteDoc(campRef);
+      toast({ title: 'Campaña eliminada exitosamente' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Error al borrar' });
     }
