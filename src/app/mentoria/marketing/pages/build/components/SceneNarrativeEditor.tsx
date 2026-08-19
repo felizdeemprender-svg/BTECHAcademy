@@ -100,22 +100,31 @@ export function SceneNarrativeEditor({
               </div>
               
               {sl.use_visual_reference !== false ? (
-                <div className="rounded-xl bg-muted/40 border-2 border-border transition-all duration-500">
-                  <ImageEditor 
-                    url={sl.imageUrl}
-                    onUpdate={(val) => {
-                      const newItems = [...items];
-                      newItems[i] = { ...newItems[i], imageUrl: val };
-                      updateAsset('socials', sIdx, 'slides', newItems);
-                    }}
-                    label={`Visual ${i + 1}`}
-                    channel="social"
-                    courseId={selectedCourseId || 'draft'}
-                    courseTitle={courseTitle}
-                    keywords={sl.voiceover || sl.text}
-                    description={sl.text}
-                    aiPromptHint={`Imagen para un video del curso "${courseTitle || ''}". La escena trata sobre: ${sl.voiceover || sl.text || 'contenido educativo'}`}
-                  />
+                <div className="relative">
+                  {!(sl.voiceover?.trim() || sl.text?.trim() || s.caption?.trim()) && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl px-4 text-center border-2 border-border">
+                      <ImageOff className="h-6 w-6 mb-2 opacity-50" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Deshabilitado</p>
+                      <p className="text-[9px] mt-1 font-medium text-muted-foreground">Genera el guion o escribe un texto primero para poder buscar referencias.</p>
+                    </div>
+                  )}
+                  <div className={`rounded-xl bg-muted/40 border-2 border-border transition-all duration-500 ${!(sl.voiceover?.trim() || sl.text?.trim() || s.caption?.trim()) ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <ImageEditor 
+                      url={sl.imageUrl}
+                      onUpdate={(val) => {
+                        const newItems = [...items];
+                        newItems[i] = { ...newItems[i], imageUrl: val };
+                        updateAsset('socials', sIdx, 'slides', newItems);
+                      }}
+                      label={`Visual ${i + 1}`}
+                      channel="social"
+                      courseId={selectedCourseId || 'draft'}
+                      courseTitle={courseTitle}
+                      keywords={sl.voiceover || sl.text}
+                      description={sl.text}
+                      aiPromptHint={`Imagen para un video del curso "${courseTitle || ''}". La escena trata sobre: ${sl.voiceover || sl.text || 'contenido educativo'}`}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="rounded-xl bg-muted/10 border-2 border-dashed border-border transition-all duration-500 h-[180px] flex flex-col items-center justify-center gap-3 text-muted-foreground">
