@@ -338,7 +338,7 @@ function buildSeedancePrompt(adn: any, opts: ScenePromptOptions): string {
     const light = s.lighting || `Luz cálida de ${moodOf(adn)}`;
     const onScreen = s.text ? `, 【${s.text}】` : '';
     const subject = persona ? `${persona}, ` : '';
-    return `Shot ${i + 1}: ${subject}${subjectAction}${onScreen}. ${light}. ${framing}, ${camera}. Estilo realista premium, calidad 4K. Audio: {${s.voiceover || ''}}${s.watermark ? `, marca de agua "${s.watermark}"` : ''}, （música de fondo）.`;
+    return `Shot ${i + 1}: ${subject}${subjectAction}${onScreen}. ${light}. ${framing}, ${camera}. Estilo realista premium, alta definición. Audio: {${s.voiceover || ''}}${s.watermark ? `, marca de agua "${s.watermark}"` : ''}, （música de fondo）.`;
   }).join('\n');
 
   const constraint = opts.subtitles
