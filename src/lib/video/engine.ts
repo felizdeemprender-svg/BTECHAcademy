@@ -33,18 +33,18 @@ export interface EngineRequest {
 
 function getFormatDimensions(adn: any, format: string, isV2: boolean): { width: number, height: number } {
   const resMap: Record<string, [number, number]> = {
-    vertical: [1080, 1920],
-    portrait: [1080, 1350],
-    square: [1080, 1080],
-    horizontal: [1920, 1080]
+    vertical: [720, 1280],
+    portrait: [720, 900],
+    square: [720, 720],
+    horizontal: [1280, 720]
   };
 
   if (!isV2 && adn.formats && adn.formats[format]) {
     const resolution = adn.formats[format].resolution || '9:16';
-    if (resolution === '9:16') return { width: 1080, height: 1920 };
-    if (resolution === '4:5') return { width: 1080, height: 1350 };
-    if (resolution === '1:1') return { width: 1080, height: 1080 };
-    if (resolution === '16:9') return { width: 1920, height: 1080 };
+    if (resolution === '9:16') return { width: 720, height: 1280 };
+    if (resolution === '4:5') return { width: 720, height: 900 };
+    if (resolution === '1:1') return { width: 720, height: 720 };
+    if (resolution === '16:9') return { width: 1280, height: 720 };
   }
 
   const [w, h] = resMap[format] || resMap.vertical;
