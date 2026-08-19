@@ -333,10 +333,13 @@ export default function V2LandingEditorPage() {
   const activeSection = landingData?.content?.sections?.find((s: any) => s.id === activeSectionId) || (activeSectionId === 'footer_0' ? { id: 'footer_0', title: 'Sígueme en mis Redes', content: '', bullets: [] } : undefined);
 
   const brands = styleData?.brands || [];
+  const customBrands = profile?.profile?.brands || profile?.myBrands || [];
+  const allAvailableBrands = [...brands, ...customBrands];
+  
   const appliedBrandName = landingData?.content?.designTokens?.brandApplied;
   const activeBrand: StyleBrand | undefined =
-    (appliedBrandName && brands.find((b: StyleBrand) => b.name === appliedBrandName)) ||
-    brands.find((b: StyleBrand) => b.palette?.primary === landingData?.content?.designTokens?.primary && b.typography?.name === landingData?.content?.designTokens?.typography?.name) ||
+    (appliedBrandName && allAvailableBrands.find((b: StyleBrand) => b.name === appliedBrandName)) ||
+    allAvailableBrands.find((b: StyleBrand) => b.palette?.primary === landingData?.content?.designTokens?.primary && b.typography?.name === landingData?.content?.designTokens?.typography?.name) ||
     undefined;
 
   const presentBaseIds = new Set((landingData?.content?.sections || []).map((s: any) => s.id.split('_')[0]));
@@ -590,6 +593,7 @@ export default function V2LandingEditorPage() {
                         <p className="text-sm text-muted-foreground">Pack completo: tokens + tipografía + paleta. El brand activo es el que aplica la landing; seleccioná uno para ver su gama completa.</p>
                         <BrandVisual
                           brands={brands}
+                          customBrands={customBrands}
                           activeName={activeBrand?.name}
                           onSelect={applyBrand}
                         />

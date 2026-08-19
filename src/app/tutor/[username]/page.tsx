@@ -136,6 +136,30 @@ const hexToRgb = (hex: string) => {
     '59, 45, 134';
 };
 
+const hexToHsl = (hex: string) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return '262 80% 50%';
+  
+  let r = parseInt(result[1], 16) / 255;
+  let g = parseInt(result[2], 16) / 255;
+  let b = parseInt(result[3], 16) / 255;
+
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+};
+
 export default function TutorProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params);
   const [tutorData, setTutorData] = useState<TutorData | null>(null);
@@ -311,7 +335,8 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
         '--brand-color': primaryColor,
         '--brand-color-alpha': `${primaryColor}20`,
         '--brand-secondary': secondaryColor,
-        '--brand-accent': accentColor
+        '--brand-accent': accentColor,
+        '--primary': hexToHsl(primaryColor)
       } as React.CSSProperties}
     >
       <style jsx global>{`
@@ -437,8 +462,11 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
                     size="lg" 
                     className="h-14 px-10 rounded-2xl bg-white text-foreground hover:bg-muted font-black text-lg"
                     onClick={() => {
-                      const el = document.getElementById('programas');
-                      el?.scrollIntoView({ behavior: 'smooth' });
+                      setActiveTab('academia');
+                      setTimeout(() => {
+                        const el = document.getElementById('programas');
+                        el?.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
                     }}
                   >
                     Ver Programas

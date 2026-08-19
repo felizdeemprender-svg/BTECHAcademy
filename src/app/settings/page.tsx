@@ -7,6 +7,7 @@ import { useFirestore, useFirebase, useCollection, useMemoFirebase } from '@/fir
 import { doc, updateDoc, getDocs, query, where, collection } from 'firebase/firestore';
 import { LandingStyle, StyleBrand, resolveStyleBrand } from '@/lib/landing-styles';
 import { parseBrandFile } from '@/lib/landing-styles/dtcg';
+import { getRootDomain } from '@/lib/utils';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -356,19 +357,17 @@ export default function SettingsPage() {
           toast({ variant: 'destructive', title: 'Brand inválido', description: result.errors[0] });
           return;
         }
-        setFormData(prev => {
-          const existing = new Set(prev.myBrands.map(b => b.name));
-          const newBrands = result.brands.filter(b => !existing.has(b.name));
-          if (newBrands.length === 0) {
-            toast({ title: 'Sin cambios', description: 'Ese brand ya está cargado.' });
-            return prev;
-          }
-          toast({ title: `${newBrands.length} brand(s) cargado(s)`, description: newBrands.map(b => b.name).join(', ') });
-          return {
-            ...prev,
-            myBrands: [...prev.myBrands, ...newBrands],
-            activeBrandName: prev.activeBrandName || newBrands[0].name
-          };
+        const existing = new Set(formData.myBrands.map(b => b.name));
+        const newBrands = result.brands.filter(b => !existing.has(b.name));
+        if (newBrands.length === 0) {
+          toast({ title: 'Sin cambios', description: 'Ese brand ya está cargado.' });
+          return;
+        }
+        toast({ title: `${newBrands.length} brand(s) cargado(s)`, description: newBrands.map(b => b.name).join(', ') });
+        setFormData({
+          ...formData,
+          myBrands: [...formData.myBrands, ...newBrands],
+          activeBrandName: formData.activeBrandName || newBrands[0].name
         });
       } catch (err: any) {
         toast({ variant: 'destructive', title: 'Error de parsing', description: err?.message || 'JSON inválido' });
@@ -440,19 +439,7 @@ export default function SettingsPage() {
     const protocol = parts[0];
     const fullHost = parts[1]; // ej: admin.localhost:9002 o juan.FastoriaAcademy.com
     
-    let baseHost = fullHost;
-    
-    // Limpiamos el host de cualquier subdominio previo
-    if (fullHost.includes('localhost')) {
-      // Especial para localhost:9002 o tutor.localhost:9002
-      baseHost = fullHost.includes('.') ? fullHost.split('.').slice(-1)[0] : fullHost;
-    } else {
-      // Para dominios reales: tomamos solo los últimos 2 segmentos (dominio.com)
-      const hostParts = fullHost.split('.');
-      if (hostParts.length > 2) {
-        baseHost = hostParts.slice(-2).join('.');
-      }
-    }
+    const baseHost = getRootDomain(fullHost);
     
     return `${protocol}://${previewUsername.toLowerCase()}.${baseHost}`;
   };

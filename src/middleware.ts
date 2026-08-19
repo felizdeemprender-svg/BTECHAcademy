@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getRootDomain, getSubdomain } from '@/lib/utils';
 
 const RESERVED_PATHS = [
   'admin', 'api', 'auth', 'courses', 'dashboard', 'mentoria', 
@@ -36,15 +37,10 @@ export async function middleware(request: NextRequest) {
   // Solo permitimos lógica de subdominios en localhost o en dominios personalizados con wildcard DNS
   const supportsSubdomains = hostname.includes('localhost') || !isFirebaseDefault;
 
-  
   let subdomain = null;
 
   if (supportsSubdomains) {
-    if (hostParts.length > 2 && !hostname.includes('localhost')) {
-      subdomain = hostParts[0] !== 'www' ? hostParts[0] : null;
-    } else if (hostParts.length > 1 && hostname.includes('localhost')) {
-      subdomain = hostParts[0];
-    }
+    subdomain = getSubdomain(hostname);
   }
 
   // 2. Redirección de Rutas Internas: /tutor/[username] en localhost -> subdominio
@@ -91,21 +87,16 @@ export async function middleware(request: NextRequest) {
 
   // 4. Lógica de Enmascaramiento por Ruta: Redirigir a Subdominio (Forzar Limpieza)
   // /juan -> juan.dominio.com
+  // 4. Lógica de Enmascaramiento por Ruta: Redirigir a Subdominio (Forzar Limpieza)
+  // /juan -> juan.dominio.com
   // SOLO si soporta subdominios.
   if (supportsSubdomains && segments.length === 1) {
     const url = request.nextUrl.clone();
     const username = segments[0].toLowerCase();
     
     // Construir la URL del subdominio
-    if (hostname.includes('localhost')) {
-      const parts = hostname.split('.');
-      const base = parts.includes('localhost') ? 'localhost:9002' : parts.slice(-1)[0];
-      url.host = `${username}.${base}`;
-    } else {
-      const hostParts = hostname.split('.');
-      const mainHost = hostParts.length > 2 ? hostParts.slice(-2).join('.') : hostname;
-      url.host = `${username}.${mainHost}`;
-    }
+    const mainHost = getRootDomain(hostname);
+    url.host = `${username}.${mainHost}`;
     
     url.pathname = '/';
     return NextResponse.redirect(url);
@@ -116,15 +107,8 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     const username = segments[0].toLowerCase();
     
-    if (hostname.includes('localhost')) {
-      const parts = hostname.split('.');
-      const base = parts.includes('localhost') ? 'localhost:9002' : parts.slice(-1)[0];
-      url.host = `${username}.${base}`;
-    } else {
-      const hostParts = hostname.split('.');
-      const mainHost = hostParts.length > 2 ? hostParts.slice(-2).join('.') : hostname;
-      url.host = `${username}.${mainHost}`;
-    }
+    const mainHost = getRootDomain(hostname);
+    url.host = `${username}.${mainHost}`;
     
     url.pathname = `/${segments[1]}`;
     return NextResponse.redirect(url);

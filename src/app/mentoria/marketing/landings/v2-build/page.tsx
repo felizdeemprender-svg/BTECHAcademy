@@ -57,7 +57,7 @@ export default function V2LandingBuilderPage() {
 }
 
 function V2LandingBuilderContent() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const db = useFirestore();
   const { storage } = useFirebase();
   const { toast } = useToast();
@@ -130,6 +130,23 @@ function V2LandingBuilderContent() {
     };
     loadReferidos();
   }, [db, profile?.uid]);
+
+  const [customBrands, setCustomBrands] = useState<StyleBrand[]>([]);
+  
+  useEffect(() => {
+    if (user?.uid && db) {
+      getDoc(doc(db, 'users', user.uid)).then((snap) => {
+        if (snap.exists()) {
+          const userData = snap.data();
+          if (userData.profile?.brands) {
+            setCustomBrands(userData.profile.brands);
+          } else if (userData.myBrands) { // Fallback por si hay datos viejos
+            setCustomBrands(userData.myBrands);
+          }
+        }
+      }).catch(err => console.error("Error al cargar brands del tutor:", err));
+    }
+  }, [user?.uid, db]);
 
   const coursesQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
@@ -428,6 +445,41 @@ function V2LandingBuilderContent() {
                               </Badge>
                             </button>
                           ))}
+                          
+                          {customBrands.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-border">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Tus Brands Personalizados</p>
+                              <div className="grid gap-2">
+                                {customBrands.map((brand: StyleBrand, i: number) => (
+                                  <button
+                                    key={`custom-${i}`}
+                                    type="button"
+                                    onClick={() => setSelectedBrand(brand)}
+                                    className={cn(
+                                      "flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all",
+                                      selectedBrand?.name === brand.name ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-primary/20"
+                                    )}
+                                  >
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: brand.palette.primary }}>
+                                      <Palette className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className={cn("font-bold text-sm", selectedBrand?.name === brand.name ? "text-primary" : "text-foreground")}>{brand.name}</p>
+                                      <p className="text-[10px] text-muted-foreground truncate">{brand.description || 'Brand propio del tutor'}</p>
+                                      <div className="flex gap-1 mt-1 text-[9px]">
+                                        <span className="w-5 h-5 rounded-full border" style={{ backgroundColor: brand.palette.primary }} title="Primary" />
+                                        <span className="w-5 h-5 rounded-full border" style={{ backgroundColor: brand.palette.secondary }} title="Secondary" />
+                                        <span className="w-5 h-5 rounded-full border" style={{ backgroundColor: brand.palette.accent }} title="Accent" />
+                                      </div>
+                                    </div>
+                                    <Badge variant={selectedBrand?.name === brand.name ? "default" : "outline"} className="text-[9px] font-bold">
+                                      {selectedBrand?.name === brand.name ? 'Activo' : 'Aplicar'}
+                                    </Badge>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         {selectedBrand && (
                           <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
@@ -724,182 +776,6 @@ function V2LandingBuilderContent() {
                         {referidoId === r.id && <CheckCircle2 className="h-4 w-4 text-success ml-auto shrink-0" />}
                       </button>
                     ))}
-                  </div>
-                )}
-              </div>
-              {/* ─── ESTÉTICA VISUAL (Movido del Paso 3 al Paso 2) ─── */}
-              <div className="space-y-6 pt-6 border-t border-muted">
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Estética Visual</Label>
-                  <p className="text-xs text-muted-foreground">Elige la personalidad visual que se usará para el renderizado.</p>
-                </div>
-
-                {styleBrands.length > 0 ? (
-                  <>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Packs por Brand</label>
-                      <p className="text-xs text-muted-foreground">Cada brand agrupa su paleta de colores y su tipografía. Al elegirlo se aplica el pack completo (tokens + tipografía + paleta).</p>
-                      <div className="grid sm:grid-cols-2 gap-3">
-                        {styleBrands.map((brand: StyleBrand) => {
-                          const isActive = selectedBrand?.name === brand.name;
-                          const paletteIsActive = isActive || (!selectedBrand && colorPaletteName === brand.palette.name);
-                          const typoIsActive = isActive || (!selectedBrand && typographyVariantName === brand.typography.name);
-                          return (
-                            <button
-                              key={brand.name}
-                              type="button"
-                              onClick={() => {
-                                setSelectedBrand(brand);
-                                setColorPaletteName(brand.palette.name);
-                                setTypographyVariantName(brand.typography.name);
-                              }}
-                              className={cn(
-                                "text-left p-4 rounded-2xl border-2 transition-all",
-                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
-                              )}
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-                                    <div className="flex-1" style={{ backgroundColor: brand.palette.primary }}></div>
-                                    <div className="flex-1" style={{ backgroundColor: brand.palette.secondary }}></div>
-                                    <div className="flex-1" style={{ backgroundColor: brand.palette.accent }}></div>
-                                  </div>
-                                  <p className={cn("mt-2 text-[10px] font-bold leading-tight truncate", paletteIsActive ? "text-primary" : "text-muted-foreground")}>
-                                    Paleta: {brand.palette.name}
-                                  </p>
-                                </div>
-                                <div className="w-20 shrink-0">
-                                  <div className={cn("flex flex-col items-center justify-center text-center p-2 rounded-xl border-2", typoIsActive ? "border-primary bg-primary/5" : "border-muted bg-white")}>
-                                    <span className="text-lg font-black text-foreground leading-none mb-1" style={{ fontFamily: brand.typography.headingFont }}>Aa</span>
-                                    <span className={cn("text-[8px] font-bold leading-tight text-center line-clamp-2", typoIsActive ? "text-primary" : "text-muted-foreground")}>{brand.typography.name}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <p className={cn("mt-2 font-bold text-sm", isActive ? "text-primary" : "text-foreground")}>{brand.name}</p>
-                              {brand.description && <p className="text-[10px] text-muted-foreground mt-0.5">{brand.description}</p>}
-                              <p className="text-[9px] text-muted-foreground mt-1.5 font-medium">Tokens: {brand.tokens.themeMode} · {brand.tokens.componentRadius} · Sombra: {brand.tokens.componentShadow}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {(extraPalettes.length > 0 || extraTypography.length > 0) && (
-                      <div className="space-y-4 pt-4 border-t border-muted">
-                        <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Otras opciones</label>
-                        <div className="grid md:grid-cols-2 gap-8">
-                          {extraPalettes.length > 0 && (
-                            <div className="space-y-3">
-                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Paleta de Colores</label>
-                              <div className="grid grid-cols-4 gap-2">
-                                {extraPalettes.map((color: any) => {
-                                  const isActive = colorPaletteName === color.name;
-                                  return (
-                                    <button
-                                      key={color.name}
-                                      type="button"
-                                      onClick={() => { setColorPaletteName(color.name); setSelectedBrand(null); }}
-                                      className={cn(
-                                        "flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all group",
-                                        isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
-                                      )}
-                                    >
-                                      <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-                                        <div className="flex-1" style={{ backgroundColor: color.primary }}></div>
-                                        <div className="flex-1" style={{ backgroundColor: color.secondary }}></div>
-                                        <div className="flex-1" style={{ backgroundColor: color.accent }}></div>
-                                      </div>
-                                      <span className={cn("text-[9px] font-bold text-center leading-tight line-clamp-2", isActive ? "text-primary" : "text-muted-foreground")}>
-                                        {color.name}
-                                      </span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                          {extraTypography.length > 0 && (
-                            <div className="space-y-3">
-                              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Tipografías</label>
-                              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-                                {extraTypography.map((typo: any) => {
-                                  const isActive = typographyVariantName === typo.name;
-                                  return (
-                                    <button
-                                      key={typo.name}
-                                      type="button"
-                                      onClick={() => { setTypographyVariantName(typo.name); setSelectedBrand(null); }}
-                                      className={cn(
-                                        "flex flex-col items-center justify-center text-center p-3 rounded-xl border-2 transition-all",
-                                        isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
-                                      )}
-                                    >
-                                      <span className="text-lg font-black text-foreground leading-none mb-1" style={{ fontFamily: typo.headingFont }}>Aa</span>
-                                      <span className={cn("text-[9px] font-bold leading-tight", isActive ? "text-primary" : "text-muted-foreground")}>{typo.name}</span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Paleta de Colores</label>
-                      <div className="grid grid-cols-5 gap-2">
-                        {selectedStyle?.colorProposals?.map((color: any, idx: number) => {
-                          const isActive = colorPaletteName === color.name || (!colorPaletteName && idx === 0);
-                          return (
-                            <button
-                              key={color.name}
-                              type="button"
-                              onClick={() => setColorPaletteName(color.name)}
-                              className={cn(
-                                "flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all group",
-                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
-                              )}
-                            >
-                              <div className="w-full h-8 rounded-lg flex overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-                                <div className="flex-1" style={{ backgroundColor: color.primary }}></div>
-                                <div className="flex-1" style={{ backgroundColor: color.secondary }}></div>
-                                <div className="flex-1" style={{ backgroundColor: color.accent }}></div>
-                              </div>
-                              <span className={cn("text-[9px] font-bold text-center leading-tight line-clamp-2", isActive ? "text-primary" : "text-muted-foreground")}>
-                                {color.name}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Tipografías</label>
-                      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
-                        {selectedStyle?.typography?.map((typo: any, idx: number) => {
-                          const isActive = typographyVariantName === typo.name || (!typographyVariantName && idx === 0);
-                          return (
-                            <button
-                              key={typo.name}
-                              type="button"
-                              onClick={() => setTypographyVariantName(typo.name)}
-                              className={cn(
-                                "flex flex-col items-center justify-center text-center p-3 rounded-xl border-2 transition-all",
-                                isActive ? "border-primary bg-primary/5 shadow-sm" : "border-muted bg-white hover:border-border"
-                              )}
-                            >
-                              <span className="text-lg font-black text-foreground leading-none mb-1" style={{ fontFamily: typo.headingFont }}>Aa</span>
-                              <span className={cn("text-[9px] font-bold leading-tight", isActive ? "text-primary" : "text-muted-foreground")}>{typo.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>

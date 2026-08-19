@@ -1,0 +1,58 @@
+{
+
+  "description": "Feliz de Emprender — Brand Design Tokens (DTCG/W3C format).",
+  "fastoria": {
+    "color": {
+      "bg":                 { "$value": "#e9e1d5", "$type": "color" },
+      "surface":            { "$value": "#eeedea", "$type": "color" },
+      "fg":                 { "$value": "#3A3530", "$type": "color" },
+      "fg-2":               { "$value": "#7A7468", "$type": "color" },
+      "muted":              { "$value": "#C4C2BE", "$type": "color" },
+      "border":             { "$value": "#D3BBA8", "$type": "color" },
+      "border-soft":        { "$value": "#F1E9DF", "$type": "color" },
+      "primary":            { "$value": "#760464", "$type": "color" },
+      "secondary":          { "$value": "#b288b9", "$type": "color" },
+      "accent":             { "$value": "#110b5c", "$type": "color" },
+      "accent-muted":       { "$value": "#b288b9", "$type": "color" },
+      "accent-light":       { "$value": "#eedaea", "$type": "color" },
+      "accent-on":          { "$value": "#ffffff", "$type": "color" },
+      "success":            { "$value": "oklch(50% 0.12 145)", "$type": "color" },
+      "warn":               { "$value": "oklch(62% 0.12 85)", "$type": "color" },
+      "danger":             { "$value": "oklch(45% 0.16 30)", "$type": "color" },
+      
+      "royal":              { "$value": "#760464", "$type": "color" },
+      "lila":               { "$value": "#b288b9", "$type": "color" },
+      "clasico":            { "$value": "#d3bba8", "$type": "color" },
+      "crema":              { "$value": "#e9e1d5", "$type": "color" },
+      "rubor":              { "$value": "#eedaea", "$type": "color" },
+      "plata":              { "$value": "#c4c2be", "$type": "color" },
+      "limpio":             { "$value": "#eeedea", "$type": "color" },
+      "calido":             { "$value": "#ded5d0", "$type": "color" },
+      "azul_oscuro":        { "$value": "#110b5c", "$type": "color" },
+      "arena_suave":        { "$value": "#F1E9DF", "$type": "color" },
+      "plata_suave":        { "$value": "#EDECE9", "$type": "color" },
+      "carbon_calido":      { "$value": "#3A3530", "$type": "color" }
+    },
+    "typography": {
+      "font-display":       { "$value": "Lato", "$type": "fontFamily" },
+      "heading-font":       { "$value": "Lato", "$type": "fontFamily" },
+      "font-body":          { "$value": "Mulish", "$type": "fontFamily" },
+      "font-mono":          { "$value": "Source Code Pro", "$type": "fontFamily" }
+    },
+    "radius": {
+      "sm":                 { "$value": "6px", "$type": "dimension" },
+      "md":                 { "$value": "12px", "$type": "dimension" },
+      "lg":                 { "$value": "24px", "$type": "dimension" },
+      "card":               { "$value": "2.5rem", "$type": "dimension" }
+    },
+    "elevation": {
+      "shadow":             { "$value": "none", "$type": "shadow" },
+      "card-shadow":        { "$value": "0 20px 60px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.03)", "$type": "shadow" },
+      "border-width":       { "$value": "1px", "$type": "dimension" }
+    },
+    "theme": {
+      "active":             { "$value": "institucional", "$type": "string" },
+      "logo-selected":      { "$value": "logo.jpeg", "$type": "string" }
+    }
+  }
+}

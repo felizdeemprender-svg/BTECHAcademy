@@ -69,3 +69,10 @@ public/tts_cache/
 scripts/check-tutor.ts
 scripts/delete-ghost.ts
 test_tts_v2.mp3
+
+# Local test scripts and secrets
+google-key.json
+image-test*.json
+models.json
+node-test.log
+test-select-options.js

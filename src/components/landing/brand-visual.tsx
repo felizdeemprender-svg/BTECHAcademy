@@ -8,6 +8,7 @@ import { expandColorGamut, tokenSummary } from "@/lib/landing-styles/palette-gam
 
 interface BrandVisualProps {
   brands: StyleBrand[]
+  customBrands?: StyleBrand[]
   activeName?: string | null
   onSelect?: (brand: StyleBrand) => void
   onDelete?: (brand: StyleBrand) => void
@@ -99,6 +100,7 @@ function BrandDetail({ brand }: { brand: StyleBrand }) {
 
 export function BrandVisual({
   brands,
+  customBrands,
   activeName,
   onSelect,
   onDelete,
@@ -107,60 +109,71 @@ export function BrandVisual({
   const [selectedName, setSelectedName] = useState<string | null>(null)
 
   const resolvedName = selectedName ?? activeName ?? null
-  const active = brands.find((b) => b.name === resolvedName) || brands[0] || null
+  const allBrands = [...brands, ...(customBrands || [])]
+  const active = allBrands.find((b) => b.name === resolvedName) || allBrands[0] || null
 
-  if (brands.length === 0) {
+  if (allBrands.length === 0) {
     return <p className="text-sm text-muted-foreground">{emptyMessage}</p>
   }
 
+  const renderBrandCard = (brand: StyleBrand, isActive: boolean) => (
+    <div
+      key={brand.name}
+      onClick={() => {
+        setSelectedName(brand.name)
+        onSelect?.(brand)
+      }}
+      className={cn(
+        "p-3 rounded-xl border-2 text-left transition-all relative cursor-pointer",
+        isActive ? "border-primary bg-primary/5 shadow-md" : "border-border bg-white hover:border-primary/30"
+      )}
+    >
+      {isActive && (
+        <div className="absolute top-3 right-3 text-primary pointer-events-none">
+          <CheckCircle2 className="w-4 h-4 fill-primary text-white" />
+        </div>
+      )}
+      {onDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete(brand)
+          }}
+          className="absolute top-2 right-2 z-10 text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-full p-1"
+          title={`Eliminar brand "${brand.name}"`}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
+      <div className="flex items-center gap-2 mb-2 pr-8">
+        <div className="w-5 h-5 rounded-md flex-shrink-0 shadow-sm" style={{ backgroundColor: brand.palette?.primary }} />
+        <span className="font-bold text-sm text-foreground truncate">{brand.name}</span>
+      </div>
+      <GamutStrip color={brand.palette?.primary} />
+      <div className="flex gap-[2px] mt-1">
+        <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: brand.palette?.secondary }} />
+        <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: brand.palette?.accent }} />
+      </div>
+    </div>
+  )
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {brands.map((brand) => {
-          const isActive = active?.name === brand.name
-          return (
-            <div
-              key={brand.name}
-              onClick={() => {
-                setSelectedName(brand.name)
-                onSelect?.(brand)
-              }}
-              className={cn(
-                "p-3 rounded-xl border-2 text-left transition-all relative cursor-pointer",
-                isActive ? "border-primary bg-primary/5 shadow-md" : "border-border bg-white hover:border-primary/30"
-              )}
-            >
-              {isActive && (
-                <div className="absolute top-3 right-3 text-primary pointer-events-none">
-                  <CheckCircle2 className="w-4 h-4 fill-primary text-white" />
-                </div>
-              )}
-              {onDelete && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDelete(brand)
-                  }}
-                  className="absolute top-2 right-2 z-10 text-muted-foreground hover:text-danger hover:bg-danger/10 rounded-full p-1"
-                  title={`Eliminar brand "${brand.name}"`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-              <div className="flex items-center gap-2 mb-2 pr-8">
-                <div className="w-5 h-5 rounded-md flex-shrink-0 shadow-sm" style={{ backgroundColor: brand.palette?.primary }} />
-                <span className="font-bold text-sm text-foreground truncate">{brand.name}</span>
-              </div>
-              <GamutStrip color={brand.palette?.primary} />
-              <div className="flex gap-[2px] mt-1">
-                <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: brand.palette?.secondary }} />
-                <div className="h-2 flex-1 rounded-full" style={{ backgroundColor: brand.palette?.accent }} />
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {brands.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {brands.map((brand) => renderBrandCard(brand, active?.name === brand.name))}
+        </div>
+      )}
+
+      {customBrands && customBrands.length > 0 && (
+        <div className="pt-4 border-t border-border mt-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Tus Brands Personalizados</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {customBrands.map((brand) => renderBrandCard(brand, active?.name === brand.name))}
+          </div>
+        </div>
+      )}
 
       {active && (
         <div className="p-4 rounded-xl border border-border bg-muted/60">
