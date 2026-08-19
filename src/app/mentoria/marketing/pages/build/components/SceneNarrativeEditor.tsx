@@ -145,7 +145,7 @@ export function SceneNarrativeEditor({
                 {/* Mostrar Voiceover Individual en todos los formatos para Narrativa Dual */}
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
-                    <Mic2 className="h-3 w-3" /> Guion Narrativo (Voz)
+                    <Mic2 className="h-3 w-3" /> {isAiEngine ? 'Descripción Visual y Acción (Prompt)' : 'Guion Narrativo (Voz)'}
                   </Label>
                   <Textarea 
                     value={sl.voiceover || (i === 0 && !sl.voiceover ? (s.production_notes?.voiceover || s.voiceover || '') : '')}
@@ -154,7 +154,7 @@ export function SceneNarrativeEditor({
                       newItems[i] = { ...newItems[i], voiceover: e.target.value };
                       updateAsset('socials', sIdx, 'slides', newItems);
                     }}
-                    placeholder="Escribe lo que la voz debe decir en esta escena..."
+                    placeholder={isAiEngine ? "Describe la acción visual, movimientos de cámara o escena..." : "Escribe lo que la voz debe decir en esta escena..."}
                     className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[100px] text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
                   />
                   {i === 0 && !sl.voiceover && (s.production_notes?.voiceover || s.voiceover) && (

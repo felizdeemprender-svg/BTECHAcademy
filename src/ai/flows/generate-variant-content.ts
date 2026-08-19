@@ -131,16 +131,25 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
 
   try {
   const isLinkedinDoc = (variant.platform?.toLowerCase() === 'linkedin') && (variant.type === 'document' || variant.type === 'carousel');
+  const isAiEngine = variant.production_notes?.video_engine && variant.production_notes.video_engine !== 'ffmpeg';
 
-  const dualNarrativeInstruction = isLinkedinDoc 
-    ? `== REGLA ESPECIAL PARA LINKEDIN (DOCUMENTO/PDF) ==
+  let dualNarrativeInstruction = '';
+  if (isLinkedinDoc) {
+    dualNarrativeInstruction = `== REGLA ESPECIAL PARA LINKEDIN (DOCUMENTO/PDF) ==
 - NO HAY LOCUCIÓN NI MÚSICA. Todo el valor debe estar en el TEXTO de las placas ('text').
 - EL TEXTO EN PANTALLA DEBE SER EXTENSO: Genera un párrafo educativo sólido y persuasivo (mínimo 30 palabras) en el campo 'text' para cada slide.
 - No uses frases cortas. Cada placa debe entregar un "Dato" o concepto completo que aporte valor por sí mismo sin necesidad de leer nada más.
-- El campo 'voiceover' sigue siendo requerido por el esquema pero puedes usarlo para notas internas del mentor.`
-    : `REGLA DE NARRATIVA DUAL:
-- La VOZ lleva la carga emocional y técnica detallada.
+- El campo 'voiceover' sigue siendo requerido por el esquema pero puedes usarlo para notas internas del mentor.`;
+  } else if (isAiEngine) {
+    dualNarrativeInstruction = `== REGLA ESPECIAL PARA MOTOR DE VIDEO CON INTELIGENCIA ARTIFICIAL ==
+- ATENCIÓN: El campo 'voiceover' NO será hablado. Se utilizará como PROMPT VISUAL para el modelo de Inteligencia Artificial que generará el video.
+- En el campo 'voiceover', escribe descripciones de ACCIÓN VISUAL, MOVIMIENTOS DE CÁMARA y ACTITUD (ej: "Plano medio, la persona sonríe confiada mirando a cámara y señala hacia abajo").
+- LA PANTALLA (text) debe seguir siendo texto de refuerzo (frases de PODER de 3-5 palabras).`;
+  } else {
+    dualNarrativeInstruction = `REGLA DE NARRATIVA DUAL:
+- La VOZ (voiceover) lleva la carga emocional y técnica detallada. Es un guion hablado.
 - LA PANTALLA (text) reafirma con frases de PODER (3-5 palabras) que subrayan el beneficio técnico.`;
+  }
 
   const generatePrompt = `Actúa como un Director Creativo y Guionista Senior especializado en Marketing Cinético.
 Tu tarea es realizar un "MAQUETADO DE CONTENIDO ADN 2.0" fusionando estrategia comercial con precisión de renderizado.
