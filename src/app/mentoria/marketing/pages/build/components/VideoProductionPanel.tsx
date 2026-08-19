@@ -265,7 +265,7 @@ export function VideoProductionPanel({
       </div>
 
       {/* Botón Generar / Reemplazar */}
-      {!(videoUrl) ? (
+      {!(videoUrl) || videoEngine === 'prompt' ? (
         <>
           {videoEngine === 'prompt' ? (
             <>
