@@ -92,7 +92,7 @@ export async function generateVariantContent(
     ? `== ESTRATEGIA ESPECIFICA DE ESTA PIEZA (PRIORIDAD SOBRE GENERAL) ==\n- Vector de Venta: ${customVector || 'Usar general'}\n- Tono comercial: ${customTone || 'Usar general'}`
     : `== USAR ESTRATEGIA GENERAL DE LA CAMPAÑA: ${mission.toUpperCase()} ==`;
   
-  const courseContext = courseTitle ? `\n\n== CONTEXTO DEL PRODUCTO ==\n- Curso/Producto a vender: "${courseTitle}"\n- Descripción: ${courseDescription || 'N/A'}${landingContext ? landingContext : ''}` : '';
+  const courseContext = courseTitle ? `\n\n== CONTEXTO DEL PRODUCTO ==\n- Curso/Producto a vender: "${courseTitle}"\n- Descripción: ${courseDescription || 'N/A'}\n- Información de la Landing (¡EXTRAE HECHOS DE AQUÍ!): ${landingContext ? landingContext : 'No provista.'}` : '';
 
   const injectedAdnRule = `${strategyContext}${courseContext}\n\n== REGLAS DE NARRATIVA DUAL (OBLIGATORIO) ==
 Tu misión es coordinar lo que se OYE con lo que se VE:
@@ -152,6 +152,8 @@ ${missionTones[mission]}
 1. EJE CENTRAL: El curso trata sobre "${courseTitle}". Descripción: "${courseDescription}". 
 2. IGNORA INDUSTRIAS AJENAS: Si el blueprint menciona una industria distinta, usa solo su estructura técnica y aplícala 100% al nicho del curso.
 3. HABLA EL LENGUAJE DEL EXPERTO: Usa terminología técnica específica. Prohibido el relleno genérico.
+4. ANCLAJE CONCRETO: No hables solo de "estrategias" o conceptos abstractos. DEBES extraer hechos concretos de la "Información de la Landing" (ej. cantidad de horas, módulos, herramientas prácticas que se enseñan) y mencionarlos.
+5. AUTORIDAD DEL TUTOR: Visibiliza la experiencia o rol de autoridad de quienes imparten el curso como garantía de éxito.
 
 === DIRECTRICES ADN 2.0 (CALIDAD CINEMATOGRÁFICA) ===
 1. ESTRUCTURA LÓGICA REQUERIDA (SECUENCIA NARRATIVA):
