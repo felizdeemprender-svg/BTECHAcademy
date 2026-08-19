@@ -164,7 +164,7 @@ ${sequenceList}
     - TEXTO IMPACTO: 2-4 palabras máximo, estilo Punchy.
     - SUBTÍTULO: Una frase corta de apoyo que dé contexto al texto de impacto. ¡OBLIGATORIO!.
     - MARCA DE AGUA (watermark): Inserta el handle exacto "${variant.handle ? (variant.handle.startsWith('@') ? variant.handle : '@'+variant.handle) : '@usuario'}" en cada escena.
-3. BACKGROUNDS (media_hint): Escribe keywords descriptivas para el buscador de imágenes (ej: "modern industrial machinery macro", "premium workspace lighting sunset").
+3. BACKGROUNDS (media_hint): Escribe keywords descriptivas para la generación visual. IMPORTANTE: Usa términos de género neutro (ej: "person", "speaker", "professional") y NUNCA asumas género masculino ("businessman", "hombre", "tutor"). Esto evita corromper las imágenes de referencia si el usuario sube a una mujer.
 4. VOZ (voiceover): Relato fluido, persuasivo y experto. ¡LÍMITE ESTRICTO DE TIEMPO!: El texto generado no debe requerir más segundos al ser hablado que la duración máxima asignada a la escena. Sé muy conciso.
 
 === CONTEXTO DEL PÚBLICO OBJETIVO ===
