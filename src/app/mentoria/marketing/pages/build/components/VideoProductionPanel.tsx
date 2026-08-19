@@ -126,8 +126,7 @@ export function VideoProductionPanel({
             </SelectTrigger>
             <SelectContent className="bg-white border-border text-foreground">
               <SelectItem value="ffmpeg" className="text-[10px] font-bold uppercase">FFmpeg (Motor Propio)</SelectItem>
-              <SelectItem value="omni" className="text-[10px] font-bold uppercase">Omni (Gemini)</SelectItem>
-              {/* <SelectItem value="long" className="text-[10px] font-bold uppercase">Video Largo (Seedance 180s)</SelectItem> */}
+              <SelectItem value="long" className="text-[10px] font-bold uppercase">Seedance (AI Video)</SelectItem>
               <SelectItem value="prompt" className="text-[10px] font-bold uppercase">Solo Prompt (Externos)</SelectItem>
             </SelectContent>
           </Select>
@@ -420,8 +419,7 @@ export function VideoProductionPanel({
               <Button 
                 className="w-full h-14 rounded-2xl bg-primary hover:bg-primary text-white font-black uppercase tracking-widest text-xs gap-3 shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
                 onClick={() => {
-                  if (videoEngine === 'omni') onGenerateVideoIA(s, sIdx);
-                  else if (videoEngine === 'long') onGenerateLongVideo?.(s, sIdx);
+                  if (videoEngine === 'omni' || videoEngine === 'long') onGenerateLongVideo?.(s, sIdx);
                   else onGenerateVideo(s, sIdx);
                 }}
                 disabled={isCurrentlyRendering}
@@ -429,11 +427,9 @@ export function VideoProductionPanel({
                 {isCurrentlyRendering ? (
                   <><Loader2 className="h-5 w-5 animate-spin" /> Encolando render...</>
                 ) : (
-                  videoEngine === 'omni'
-                    ? <><Sparkles className="h-5 w-5" /> Generar con Omni (Gemini)</>
-                    : videoEngine === 'long'
-                      ? <><MonitorPlay className="h-5 w-5" /> Generar Video Largo (Seedance)</>
-                      : <><MonitorPlay className="h-5 w-5" /> Generar Pack Multimedia</>
+                  (videoEngine === 'omni' || videoEngine === 'long')
+                    ? <><Sparkles className="h-5 w-5" /> Generar con IA (Seedance)</>
+                    : <><MonitorPlay className="h-5 w-5" /> Generar Pack Multimedia</>
                 )}
               </Button>
               
@@ -448,7 +444,7 @@ export function VideoProductionPanel({
               {videoEngine !== 'omni' && videoEngine !== 'long' && (
                 <Button 
                   className="w-full h-12 rounded-2xl bg-muted text-foreground hover:bg-muted/80 font-black uppercase tracking-widest text-[10px] gap-3 shadow-lg transition-all active:scale-95 disabled:opacity-50 border border-border"
-                  onClick={() => onGenerateVideoIA(s, sIdx)}
+                  onClick={() => onGenerateLongVideo?.(s, sIdx)}
                   disabled={isCurrentlyRendering}
                 >
                   <Sparkles className="h-4 w-4 text-primary" /> Generar con Inteligencia Artificial
