@@ -152,8 +152,8 @@ ${missionTones[mission]}
 1. EJE CENTRAL: El curso trata sobre "${courseTitle}". Descripción: "${courseDescription}". 
 2. IGNORA INDUSTRIAS AJENAS: Si el blueprint menciona una industria distinta, usa solo su estructura técnica y aplícala 100% al nicho del curso.
 3. HABLA EL LENGUAJE DEL EXPERTO: Usa terminología técnica específica. Prohibido el relleno genérico.
-4. ANCLAJE CONCRETO: No hables solo de "estrategias" o conceptos abstractos. DEBES extraer hechos concretos de la "Información de la Landing" (ej. cantidad de horas, módulos, herramientas prácticas que se enseñan) y mencionarlos.
-5. AUTORIDAD DEL TUTOR: Visibiliza la experiencia o rol de autoridad de quienes imparten el curso como garantía de éxito.
+4. ANCLAJE CONTEXTUAL (FLEXIBLE): Evita la abstracción. Extrae los diferenciales reales de la "Información de la Landing" que más aporten a la venta. Dependiendo del caso, resalta la metodología, las herramientas o los módulos prácticos. Usa el sentido común para elegir el dato más persuasivo sin forzar listas aburridas o métricas irrelevantes.
+5. AUTORIDAD DEL TUTOR (SIN SATURAR): Si hay un tutor experto, usa su autoridad para validar la solución de forma natural (ej: nombrando su expertise una sola vez en un punto clave). No repitas su nombre en cada escena para no saturar.
 
 === DIRECTRICES ADN 2.0 (CALIDAD CINEMATOGRÁFICA) ===
 1. ESTRUCTURA LÓGICA REQUERIDA (SECUENCIA NARRATIVA):
