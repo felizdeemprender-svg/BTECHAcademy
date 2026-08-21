@@ -275,28 +275,40 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !currentModule) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !currentModule) return;
 
     setIsProcessingFile(true);
-    const compatible = isCompatibleWithAI(file, file.name);
-    const hasMasterAlready = currentModule.supportMaterials.some(m => m.isMaster);
-
-    const newMaterial: SupportMaterial = {
-      id: generateId(),
-      name: file.name,
-      content: '', 
-      type: file.type || 'application/octet-stream',
-      isMaster: compatible && !hasMasterAlready,
-      fileBlob: file 
-    };
+    let hasMasterAlready = currentModule.supportMaterials.some(m => m.isMaster);
+    
+    const newMaterials: SupportMaterial[] = [];
+    
+    for (const file of files) {
+      const compatible = isCompatibleWithAI(file, file.name);
+      
+      const newMaterial: SupportMaterial = {
+        id: generateId() + Math.random().toString(),
+        name: file.name,
+        content: '', 
+        type: file.type || 'application/octet-stream',
+        isMaster: compatible && !hasMasterAlready,
+        fileBlob: file 
+      };
+      
+      if (newMaterial.isMaster) {
+        hasMasterAlready = true;
+      }
+      
+      newMaterials.push(newMaterial);
+    }
 
     setCurrentModule(prev => prev ? { 
       ...prev, 
-      supportMaterials: [...prev.supportMaterials, newMaterial] 
+      supportMaterials: [...prev.supportMaterials, ...newMaterials] 
     } : null);
-    
+
     setIsProcessingFile(false);
+    e.target.value = '';
     toast({ title: 'Archivo adjuntado' });
   };
 
@@ -846,7 +858,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     
                     <TabsContent value="text" className="space-y-6">
                       <div className="p-10 border-2 border-dashed rounded-3xl flex flex-col items-center gap-4 cursor-pointer relative bg-muted/5">
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
+                        <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
                         {isProcessingFile ? <Loader2 className="animate-spin h-10 w-10 text-primary" /> : <Upload className="h-10 w-10 text-primary" />}
                         <div className="text-center">
                           <p className="font-bold">Añadir Bibliografía o Material</p>

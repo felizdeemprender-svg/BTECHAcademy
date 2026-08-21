@@ -221,19 +221,32 @@ export default function CreateCoursePage() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !courseId) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !courseId) return;
+    
     setCurrentModule({ ...currentModule, isProcessing: true });
+    
     try {
-      const storageRef = ref(storage, `courses/${courseId}/materials/${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      const newMaterial = { id: Date.now().toString(), name: file.name, url, isMaster: false, fileBlob: file };
-      setCurrentModule(prev => ({ ...prev, supportMaterials: [...prev.supportMaterials, newMaterial], isProcessing: false }));
+      const newMaterials: any[] = [];
+      for (const file of files) {
+        const storageRef = ref(storage, `courses/${courseId}/materials/${Date.now()}-${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        const newMaterial = { id: Date.now().toString() + Math.random(), name: file.name, url, isMaster: false, fileBlob: file };
+        newMaterials.push(newMaterial);
+      }
+      
+      setCurrentModule(prev => ({ 
+        ...prev, 
+        supportMaterials: [...prev.supportMaterials, ...newMaterials], 
+        isProcessing: false 
+      }));
     } catch (error) {
-      toast({ title: 'Error al subir archivo', variant: 'destructive' });
+      toast({ title: 'Error al subir archivo(s)', variant: 'destructive' });
       setCurrentModule(prev => ({ ...prev, isProcessing: false }));
     }
+    
+    e.target.value = '';
   };
 
   const isCompatibleWithAI = (file: File | any) => {
@@ -780,7 +793,7 @@ export default function CreateCoursePage() {
                   <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full grid-cols-2 max-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
                   <TabsContent value="text" className="space-y-6">
                     <div className="p-12 border-2 border-dashed rounded-lg flex flex-col items-center gap-4 relative bg-muted/5 hover:bg-muted/10 transition-all group">
-                      <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
+                      <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
                       <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">{currentModule.isProcessing ? <Loader2 className="animate-spin text-primary" /> : <Upload className="text-primary" />}</div>
                       <div className="text-center"><p className="font-bold text-lg">Cargar Materiales</p><p className="text-sm text-muted-foreground">PDF, Word o TXT.</p></div>
                     </div>
