@@ -105,6 +105,14 @@ export function SidebarNav() {
       ])
     },
     {
+      label: 'Automatizaciones',
+      items: [
+        { name: 'Monitor', href: '/dashboard/automations/monitor', roles: ['mentor', 'admin'], icon: Activity },
+        { name: 'Configurador Global', href: '/dashboard/automations/builder', roles: ['mentor', 'admin'], icon: Cpu },
+        { name: 'Servicios', href: '/dashboard/automations/services', roles: ['mentor', 'admin'], icon: Settings },
+      ]
+    },
+    {
       label: 'Administración',
       items: [
         { name: 'Usuarios', href: '/admin/users', roles: ['admin'], icon: Users, group: 'USUARIOS' },
