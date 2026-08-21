@@ -10,6 +10,8 @@ export interface WhatsAppInstance {
   instanceName: string; // Típicamente tutorId
   status: 'open' | 'connecting' | 'close';
   qrcode?: string; // QR en base64 para que el tutor escanee
+  phone?: string;
+  profilePicUrl?: string;
 }
 
 /**
@@ -19,21 +21,34 @@ export async function getWhatsAppStatus(tutorId: string): Promise<WhatsAppInstan
   const instanceName = `tutor-${tutorId}`;
   
   try {
-    const response = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/${instanceName}`, {
+    const response = await fetch(`${EVOLUTION_API_URL}/instance/fetchInstances?instanceName=${instanceName}`, {
       headers: {
         'apikey': EVOLUTION_API_KEY
       }
     });
     
-    if (response.status === 404) {
-      // La instancia no existe aún
+    if (!response.ok) {
       return { instanceName, status: 'close' };
     }
     
     const data = await response.json();
+    if (!data || data.length === 0) {
+      return { instanceName, status: 'close' };
+    }
+
+    const instanceData = data[0];
+    const status = instanceData.connectionStatus || 'close';
+    
+    let phone = undefined;
+    if (instanceData.ownerJid) {
+      phone = instanceData.ownerJid.split('@')[0];
+    }
+
     return {
       instanceName,
-      status: data?.instance?.state || 'close'
+      status: status,
+      phone: phone,
+      profilePicUrl: instanceData.profilePicUrl || undefined
     };
   } catch (error) {
     console.error(`Error verificando estado de WhatsApp para ${instanceName}:`, error);
@@ -58,7 +73,8 @@ export async function connectWhatsApp(tutorId: string): Promise<WhatsAppInstance
       body: JSON.stringify({
         instanceName,
         token: instanceName, // Usamos el nombre como token para simplificar en este boilerplate
-        qrcode: true
+        qrcode: true,
+        integration: 'WHATSAPP-BAILEYS'
       })
     });
 
@@ -105,9 +121,7 @@ export async function sendWhatsAppMessage(tutorId: string, phone: string, messag
           delay: 1200, // Añadir delay sutil para parecer humano
           presence: 'composing' // Mostrar "escribiendo..." en el chat del usuario
         },
-        textMessage: {
-          text: message
-        }
+        text: message
       })
     });
 

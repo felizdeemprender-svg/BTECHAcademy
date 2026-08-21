@@ -11,6 +11,9 @@ export default function ServicesPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [phone, setPhone] = useState<string | null>(null);
+  const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
 
   // Al cargar, verificar estado actual
   useEffect(() => {
@@ -20,6 +23,8 @@ export default function ServicesPage() {
         const json = await res.json();
         if (json.success && json.data?.status === 'open') {
           setIsConnected(true);
+          setPhone(json.data.phone || null);
+          setProfilePic(json.data.profilePicUrl || null);
         }
       } catch (e) {
         console.error(e);
@@ -60,6 +65,8 @@ export default function ServicesPage() {
       });
       setIsConnected(false);
       setQrCode(null);
+      setPhone(null);
+      setProfilePic(null);
     } catch (e) {
       console.error(e);
     }
@@ -72,11 +79,40 @@ export default function ServicesPage() {
       if (json.success && json.data?.status === 'open') {
         setIsConnected(true);
         setQrCode(null);
+        setPhone(json.data.phone || null);
+        setProfilePic(json.data.profilePicUrl || null);
       } else {
         setError('Aún no estás conectado. Intenta escanear de nuevo.');
       }
     } catch (e: any) {
       setError(e.message);
+    }
+  };
+
+  const handleTestMessage = async () => {
+    if (!phone) {
+      setError("No se detectó un número de teléfono válido para enviar la prueba.");
+      return;
+    }
+    
+    setIsTesting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/automations/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'test_message', phone: phone })
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setError("Error al enviar prueba: " + (json.error || 'Desconocido'));
+      } else {
+        alert("¡Mensaje de prueba enviado exitosamente a tu número!");
+      }
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsTesting(false);
     }
   };
 
@@ -116,18 +152,35 @@ export default function ServicesPage() {
 
               {isConnected ? (
                 <div className="rounded-xl border border-success/30 bg-success/5 p-4 flex flex-col items-center text-center space-y-3">
-                  <div className="h-12 w-12 rounded-full bg-success/20 flex items-center justify-center text-success">
-                    <Smartphone className="h-6 w-6" />
+                  <div className="h-16 w-16 rounded-full bg-success/20 overflow-hidden flex items-center justify-center text-success border-2 border-success/30">
+                    {profilePic ? (
+                      <img src={profilePic} alt="WhatsApp Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <Smartphone className="h-8 w-8" />
+                    )}
                   </div>
                   <div>
                     <p className="font-semibold text-success">Conectado exitosamente</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Sesión activa. Evo usará este número para tus alumnos.
+                    <p className="text-sm font-bold text-foreground mt-1">
+                      {phone ? `+${phone}` : 'Sesión activa'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Evo usará este número para interactuar con tus alumnos.
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleDisconnect}>
-                    Desconectar
-                  </Button>
+                  <div className="flex w-full gap-2 mt-4">
+                    <Button 
+                      variant="default" 
+                      className="flex-1" 
+                      onClick={handleTestMessage}
+                      disabled={isTesting}
+                    >
+                      {isTesting ? 'Enviando...' : 'Probar conexión'}
+                    </Button>
+                    <Button variant="outline" className="flex-1" onClick={handleDisconnect}>
+                      Desconectar
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="rounded-xl border border-dashed border-border p-6 flex flex-col items-center text-center space-y-4">

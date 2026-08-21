@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { useAuth } from '@/components/auth-context';
@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { SubscriptionAlert } from '@/components/dashboard/subscription-alert';
 import { Logo } from '@/components/logo';
+import { EvoChatWidget } from "@/components/evo/evo-chat-widget";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, profile, logout, isLoading } = useAuth();
@@ -121,6 +122,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
           </main>
         </SidebarInset>
+        <EvoChatWidget />
       </div>
     </SidebarProvider>
   );

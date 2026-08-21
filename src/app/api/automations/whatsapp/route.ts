@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getWhatsAppStatus, connectWhatsApp, disconnectWhatsApp } from '@/lib/automations/whatsapp-client';
+import { getWhatsAppStatus, connectWhatsApp, disconnectWhatsApp, sendWhatsAppMessage } from '@/lib/automations/whatsapp-client';
 
 // En un entorno real, obtenemos el tutorId de la sesión (ej. NextAuth o token en header)
 // Por ahora, usaremos un mock o lo extraeremos del body/query params para las pruebas
@@ -34,6 +34,16 @@ export async function POST(request: Request) {
     
     if (action === 'disconnect') {
       const result = await disconnectWhatsApp(tutorId);
+      return NextResponse.json({ success: result });
+    }
+    
+    if (action === 'test_message') {
+      const { phone } = body;
+      if (!phone) return NextResponse.json({ success: false, error: 'Número no provisto' }, { status: 400 });
+      
+      const message = `🤖 *FastoriaAutomations*\n\n¡Hola! Esta es una prueba de conexión exitosa.\nSi recibiste este mensaje, significa que el motor de automatizaciones está 100% operativo y listo para despachar mensajes a tus alumnos.`;
+      
+      const result = await sendWhatsAppMessage(tutorId, phone, message);
       return NextResponse.json({ success: result });
     }
 
