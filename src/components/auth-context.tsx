@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
@@ -51,7 +51,7 @@ const SUPER_ADMIN_EMAILS = [
   'FastoriaAcademy.ai@gmail.com'
 ];
 
-const ALL_MENTOR_PERMISSIONS = ['academic', 'challenges', 'students', 'followups', 'marketing'];
+const ALL_MENTOR_PERMISSIONS = ['academic', 'challenges', 'students', 'followups', 'marketing', 'automations_access'];
 
 async function consolidateEnrollmentsForUser(uid: string, email: string, displayName: string) {
   if (!email) return;
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email: userEmail,
                 displayName: firebaseUser.displayName || preProfile.displayName || userEmail.split('@')[0],
                 photoURL: firebaseUser.photoURL || preProfile.photoURL || '',
-                roles: isSuperAdmin ? ['alumno', 'mentor', 'admin', 'marketing'] : (preProfile.roles || ['alumno']),
+                roles: isSuperAdmin ? ['alumno', 'mentor', 'admin', 'marketing', 'automatizacion'] : (preProfile.roles || ['alumno']),
                 mentorPermissions: isSuperAdmin ? ALL_MENTOR_PERMISSIONS : (preProfile.mentorPermissions || []),
                 isActive: true,
                 subscription: preProfile.subscription || null,
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 uid: firebaseUser.uid,
                 email: userEmail,
                 displayName: firebaseUser.displayName || userEmail.split('@')[0],
-                roles: isSuperAdmin ? ['alumno', 'mentor', 'admin', 'marketing'] : ['alumno'],
+                roles: isSuperAdmin ? ['alumno', 'mentor', 'admin', 'marketing', 'automatizacion'] : ['alumno'],
                 isActive: true,
                 createdAt: serverTimestamp(),
               };

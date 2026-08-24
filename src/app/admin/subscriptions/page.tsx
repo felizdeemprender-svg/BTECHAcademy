@@ -437,7 +437,7 @@ export default function AdminSubscriptionsPage() {
             { label: 'Activos', value: (plans || []).filter(p => p.isActive).length, icon: ShieldCheck, color: 'text-primary', bg: 'bg-primary/10' },
             { label: 'Ingresos MRR Pot.', value: `$${(plans || []).reduce((sum, p) => sum + (p.price || 0), 0).toFixed(2)}`, icon: DollarSign, color: 'text-warn', bg: 'bg-warn/10' },
           ].map((kpi, i) => (
-            <Card key={i} className="border-none shadow-sm bg-white/50 backdrop-blur-sm overflow-hidden group">
+            <Card key={i} className="border-none shadow-sm bg-background/50 backdrop-blur-sm overflow-hidden group">
               <CardContent className="p-6 relative">
                 <div className={cn("absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity", kpi.color)}>
                   <kpi.icon className="h-24 w-24" />
@@ -455,7 +455,7 @@ export default function AdminSubscriptionsPage() {
         </div>
 
         {/* Planes Disponibles - Vista Tabla */}
-        <Card className="border rounded-md overflow-hidden bg-white shadow-none">
+        <Card className="border rounded-md overflow-hidden bg-background shadow-none">
           <CardContent className="p-0">
             <ResponsiveTable
               data={plans || []}
@@ -615,22 +615,21 @@ export default function AdminSubscriptionsPage() {
 
         {/* Dialog Formulario de Creación/Edición */}
         <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-          <DialogContent className="mw-4xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="px-8 pt-8 bg-primary text-white shrink-0 relative">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
+            <DialogHeader className="px-8 py-6 shrink-0 border-b border-border">
               <DialogTitle className="text-2xl font-bold">{editingPlan ? 'Editar Configuración del Plan' : 'Definir Nuevo Plan Comercial'}</DialogTitle>
-              <DialogDescription className="text-primary/15 font-medium text-base">Especifica permisos, topes y regalías del nivel de suscripción.</DialogDescription>
+              <DialogDescription className="text-muted-foreground font-medium text-base">Especifica permisos, topes y regalías del nivel de suscripción.</DialogDescription>
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto">
               <form id="plan-form" onSubmit={handleSubmit}>
                 <Tabs defaultValue="comercial" className="w-full">
-                  <div className="px-8 pt-4 pb-2 bg-white border-b border-muted sticky top-0 z-10">
+                  <div className="px-8 pt-4 pb-2 bg-background border-b border-muted sticky top-0 z-10">
                     <TabsList className="bg-muted/50 p-1 rounded-xl w-full justify-start h-12 gap-2">
-                      <TabsTrigger value="comercial" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">🏷️ Comercial</TabsTrigger>
-                      <TabsTrigger value="permisos" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">🛡️ Límites y Permisos</TabsTrigger>
-                      <TabsTrigger value="ciclo" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">⏱️ Ciclo de Vida</TabsTrigger>
-                      <TabsTrigger value="freno" className="rounded-lg font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">⚡ Freno de Mano (IA)</TabsTrigger>
+                      <TabsTrigger value="comercial" className="rounded-lg font-bold px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">🏷️ Comercial</TabsTrigger>
+                      <TabsTrigger value="permisos" className="rounded-lg font-bold px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">🛡️ Límites y Permisos</TabsTrigger>
+                      <TabsTrigger value="ciclo" className="rounded-lg font-bold px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">⏱️ Ciclo de Vida</TabsTrigger>
+                      <TabsTrigger value="freno" className="rounded-lg font-bold px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">⚡ Freno de Mano (IA)</TabsTrigger>
                     </TabsList>
                   </div>
 
@@ -672,7 +671,7 @@ export default function AdminSubscriptionsPage() {
                     </div>
 
                     <div className={cn(
-                      "grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-white rounded-2xl border border-muted shadow-sm",
+                      "grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-background rounded-xl border border-border shadow-sm",
                       formData.type === 'free' && "opacity-50 pointer-events-none"
                     )}>
                       {formData.type !== 'percentage' && (
@@ -740,7 +739,7 @@ export default function AdminSubscriptionsPage() {
                       </div>
                     </div>
 
-                    <div className="p-6 bg-white rounded-2xl border border-muted shadow-sm space-y-6">
+                    <div className="p-6 bg-background rounded-xl border border-border shadow-sm space-y-6">
                       <h3 className="font-bold text-foreground border-b border-muted pb-4">Derechos Administrativos (RBAC)</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium text-foreground">
                         {[
@@ -748,7 +747,8 @@ export default function AdminSubscriptionsPage() {
                           { k: 'students_view', l: 'Exportar Lead Alumnos', i: Users },
                           { k: 'marketing_access', l: 'Campañas de Lanzamiento AI', i: Rocket },
                           { k: 'followups_management', l: 'Tickets de Seguimiento', i: ClipboardList },
-                          { k: 'mentor_challenges', l: 'Emitir Desafíos', i: Target }
+                          { k: 'mentor_challenges', l: 'Emitir Desafíos', i: Target },
+                          { k: 'automations_access', l: 'Configurar Evo Automations', i: Sparkles }
                         ].map(perm => (
                           <div key={perm.k} className="flex items-center justify-between p-3 rounded-xl bg-muted border border-muted hover:bg-muted transition-colors">
                             <div className="flex items-center gap-3">
@@ -782,7 +782,7 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Días de Prueba Gratuita (Trial)</Label>
                           <div className="relative">
-                            <Input type="number" min="0" value={formData.trialDays ?? 90} onChange={(e) => setFormData({...formData, trialDays: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
+                            <Input type="number" min="0" value={formData.trialDays ?? 90} onChange={(e) => setFormData({...formData, trialDays: parseInt(e.target.value)})} className="bg-background border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">El tutor no paga durante este período. 0 = sin trial.</p>
@@ -790,7 +790,7 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Aviso Previo al Fin del Trial</Label>
                           <div className="relative">
-                            <Input type="number" min="1" value={formData.trialReminderDays ?? 5} onChange={(e) => setFormData({...formData, trialReminderDays: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
+                            <Input type="number" min="1" value={formData.trialReminderDays ?? 5} onChange={(e) => setFormData({...formData, trialReminderDays: parseInt(e.target.value)})} className="bg-background border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">Días antes del vencimiento del trial para enviar el email de aviso.</p>
@@ -798,7 +798,7 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Ciclo de Facturación</Label>
                           <div className="relative">
-                            <Input type="number" min="1" value={formData.billingCycleMonths ?? 1} onChange={(e) => setFormData({...formData, billingCycleMonths: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
+                            <Input type="number" min="1" value={formData.billingCycleMonths ?? 1} onChange={(e) => setFormData({...formData, billingCycleMonths: parseInt(e.target.value)})} className="bg-background border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">mes</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">1 = mensual, 3 = trimestral, 12 = anual.</p>
@@ -806,7 +806,7 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Período de Gracia (Cobro Fallido)</Label>
                           <div className="relative">
-                            <Input type="number" min="1" value={formData.gracePeriodDays ?? 7} onChange={(e) => setFormData({...formData, gracePeriodDays: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
+                            <Input type="number" min="1" value={formData.gracePeriodDays ?? 7} onChange={(e) => setFormData({...formData, gracePeriodDays: parseInt(e.target.value)})} className="bg-background border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">Si el cobro falla, cuántos días tiene el tutor para pagar antes de la suspensión.</p>
@@ -814,12 +814,12 @@ export default function AdminSubscriptionsPage() {
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-blue-800/50 ml-1">Reintentos de Cobro (Cada)</Label>
                           <div className="relative">
-                            <Input type="number" min="1" value={formData.retryIntervalDays ?? 2} onChange={(e) => setFormData({...formData, retryIntervalDays: parseInt(e.target.value)})} className="bg-white border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
+                            <Input type="number" min="1" value={formData.retryIntervalDays ?? 2} onChange={(e) => setFormData({...formData, retryIntervalDays: parseInt(e.target.value)})} className="bg-background border-blue-100 font-black text-blue-900 text-lg pl-12"  size="xl" />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-bold">días</span>
                           </div>
                           <p className="text-[10px] text-blue-700/50 ml-1">Cada cuántos días reintentar el débito automáticamente durante el período de gracia.</p>
                         </div>
-                        <div className="flex items-center justify-between p-5 bg-white rounded-2xl border border-blue-100 col-span-full">
+                        <div className="flex items-center justify-between p-5 bg-background rounded-2xl border border-blue-100 col-span-full">
                           <div className="space-y-1">
                             <Label className="text-sm font-black text-blue-900">Exigir Medio de Pago al Registrarse</Label>
                             <p className="text-[10px] text-blue-700/60 font-medium">Si está activo, el tutor no podrá activar su cuenta sin cargar primero una tarjeta o medio de cobro.</p>
@@ -850,12 +850,12 @@ export default function AdminSubscriptionsPage() {
                               type="number" 
                               value={formData.aiQuotas?.totalCredits || 0} 
                               onChange={(e) => setFormData({...formData, aiQuotas: { totalCredits: parseInt(e.target.value) }})}
-                              className="bg-white border-warn/15 font-black text-warn text-xl pl-12"
+                              className="bg-background border-warn/15 font-black text-warn text-xl pl-12"
                              size="xl" />
                             <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-warn" />
                           </div>
                         </div>
-                        <div className="p-4 bg-white/40 rounded-2xl border border-warn/15/50">
+                        <div className="p-4 bg-background/40 rounded-2xl border border-warn/15/50">
                           <p className="text-[10px] text-warn/60 font-medium leading-relaxed">
                             Estos créditos se consumen por cada imagen, video o análisis generado. 1 video puede equivaler a N créditos.
                           </p>
@@ -864,7 +864,7 @@ export default function AdminSubscriptionsPage() {
 
                       {/* Regla de Negocio de Créditos */}
                       <div className="p-5 bg-primary/10/50 rounded-2xl border border-primary/15/50 flex gap-4 items-start">
-                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary shadow-sm shrink-0">
                           <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div className="space-y-1">
@@ -883,7 +883,7 @@ export default function AdminSubscriptionsPage() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                           {[0, 1, 2, 3, 4].map((idx) => (
-                            <div key={idx} className="space-y-3 p-4 bg-white rounded-2xl border border-warn/15 shadow-sm">
+                            <div key={idx} className="space-y-3 p-4 bg-background rounded-2xl border border-warn/15 shadow-sm">
                               <p className="text-[9px] font-black text-warn/40 text-center uppercase tracking-widest">Pack {idx + 1}</p>
                               <div className="space-y-1">
                                 <Label className="text-[8px] font-bold text-muted-foreground ml-1">Precio (USD)</Label>
@@ -939,7 +939,7 @@ export default function AdminSubscriptionsPage() {
               </form>
             </div>
 
-            <div className="px-8 py-6 bg-white border-t border-muted shrink-0 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="px-8 py-6 bg-background border-t border-muted shrink-0 flex flex-col md:flex-row gap-4 justify-between items-center">
               <div className="flex gap-2 items-center">
                 <Switch id="plan-is-active" name="plan-is-active" checked={formData.isActive} onCheckedChange={(c) => setFormData({...formData, isActive: c})} className="data-[state=checked]:bg-success" />
                 <Label htmlFor="plan-is-active" className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground cursor-pointer">{formData.isActive ? 'Disponible' : 'Oculto'}</Label>

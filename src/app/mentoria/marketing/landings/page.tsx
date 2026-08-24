@@ -918,7 +918,7 @@ export default function SalesLandingsDashboardPage() {
 
         {/* Modal de Prórroga de Vencimiento */}
         <Dialog open={!!extendingPage} onOpenChange={(open) => { if (!open) { setExtendingPage(null); setNewEndDate(''); } }}>
-          <DialogContent className="mw-sm">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <div className="flex items-center gap-3 mb-1">
                 <div className="w-10 h-10 rounded-2xl bg-warn/10 flex items-center justify-center shrink-0">
@@ -928,7 +928,9 @@ export default function SalesLandingsDashboardPage() {
               </div>
               <DialogDescription className="text-muted-foreground text-sm font-medium leading-relaxed pl-[3.25rem]">
                 Extendé la fecha de cierre de la landing<br />
-                <span className="font-bold text-foreground truncate block mt-0.5">&ldquo;{extendingPage?.title}&rdquo;</span>
+                <span className="font-bold text-foreground break-words line-clamp-3 mt-1" title={extendingPage?.title}>
+                  &ldquo;{extendingPage?.title}&rdquo;
+                </span>
               </DialogDescription>
             </DialogHeader>
 

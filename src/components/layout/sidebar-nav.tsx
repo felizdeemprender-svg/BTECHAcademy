@@ -107,9 +107,9 @@ export function SidebarNav() {
     {
       label: 'Automatizaciones',
       items: [
-        { name: 'Monitor', href: '/dashboard/automations/monitor', roles: ['mentor', 'admin'], icon: Activity },
-        { name: 'Configurador Global', href: '/dashboard/automations/builder', roles: ['mentor', 'admin'], icon: Cpu },
-        { name: 'Servicios', href: '/dashboard/automations/services', roles: ['mentor', 'admin'], icon: Settings },
+        { name: 'Monitor', href: '/dashboard/automations/monitor', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Activity },
+        { name: 'Configurador Global', href: '/dashboard/automations/builder', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Cpu },
+        { name: 'Servicios', href: '/dashboard/automations/services', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Settings },
       ]
     },
     {
