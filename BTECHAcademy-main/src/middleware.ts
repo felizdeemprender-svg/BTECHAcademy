@@ -23,14 +23,16 @@ export async function middleware(request: NextRequest) {
   const segments = pathname.split('/').filter(Boolean);
 
   const hostParts = hostname.split('.');
-  // Detectar cualquier dominio gestionado por Firebase o Google Cloud
+  // Detectar cualquier dominio gestionado por Firebase, Google Cloud o Vercel default
   const isFirebaseDefault = hostname.endsWith('.hosted.app') || 
                             hostname.endsWith('.web.app') || 
                             hostname.endsWith('.firebaseapp.com') ||
                             hostname.endsWith('.run.app') ||
                             hostname.endsWith('.cloudfunctions.net') ||
+                            hostname.endsWith('.vercel.app') ||
                             hostname.includes('.hosted.app') ||
                             hostname.includes('.firebaseapp.com') ||
+                            hostname.includes('.vercel.app') ||
                             hostname.includes('.run.app');
   
   // Solo permitimos lógica de subdominios en localhost o en dominios personalizados con wildcard DNS
