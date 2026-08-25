@@ -33,6 +33,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { generateLandingV2 } from '@/ai/flows/generate-landing-v2';
 import { generateBuyerPersonas } from '@/ai/flows/generate-buyer-personas';
+import { extractDocumentText } from '@/ai/flows/extract-document-text-flow';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -245,10 +246,26 @@ function V2LandingBuilderContent() {
       const course = courses?.find(c => c.id === selectedCourseId);
       if (!course) throw new Error('Curso no encontrado');
 
+      let finalDescription = course.description || '';
+      
+      const documentUrl = course.masterFileUrl || course.pdfUrl;
+      if (documentUrl) {
+        toast({ title: 'Analizando Documento Maestro...', description: 'Extrayendo contenido del syllabus.' });
+        const extractRes = await extractDocumentText({
+          documentUrl,
+          documentName: 'master.pdf'
+        });
+        if (extractRes.extractedText) {
+          finalDescription += `\n\n=== CONTENIDO DEL DOCUMENTO MAESTRO / SYLLABUS ===\n${extractRes.extractedText}`;
+        }
+      }
+
+      toast({ title: 'Generando con Genkit...', description: 'Aplicando estilos y escribiendo copy V2.' });
+
       // 1. Llamar a Genkit para generar el texto base
       const result = await generateLandingV2({
         courseTitle: course.title,
-        courseDescription: course.description || '',
+        courseDescription: finalDescription,
         mentorName: profile?.displayName || 'Mentor Experto',
         price: basePrice,
         targetAudience: targetAudience,
@@ -259,11 +276,9 @@ function V2LandingBuilderContent() {
         requestedSections: requestedSections,
       });
 
-      // 2. Consultar módulos reales del curso (o sesiones si es seguimiento) para inyectar en el syllabus
+      // 2. Consultar módulos reales del curso para inyectar en el syllabus
       let realModules: string[] = [];
-      if (course?.productType === 'followup') {
-        realModules = ['Acceso a las sesiones en vivo', 'Material de apoyo y master file', 'Soporte grupal'];
-      } else {
+      if (course?.productType !== 'followup') {
         const modulesSnap = await getDocs(query(collection(db, 'courses', selectedCourseId, 'modules'), orderBy('order', 'asc')));
         realModules = modulesSnap.docs.map(d => {
           const data = d.data();
@@ -271,9 +286,9 @@ function V2LandingBuilderContent() {
         });
       }
 
-      // 3. Reemplazar el contenido del temario (syllabus) con los módulos reales
+      // 3. Reemplazar el contenido del temario (syllabus) con los módulos reales (solo para cursos)
       const finalSections = result.sections.map((section: any) => {
-        if (section.id.startsWith('syllabus')) {
+        if (section.id.startsWith('syllabus') && course?.productType !== 'followup') {
           return {
             ...section,
             bullets: realModules.length > 0 ? realModules : ['(Aún no has agregado módulos a tu curso)']
