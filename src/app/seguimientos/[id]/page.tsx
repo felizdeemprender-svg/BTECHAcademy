@@ -46,7 +46,9 @@ import {
   AlertCircle,
   Sparkles,
   PauseCircle,
-  Play
+  Play,
+  Users,
+  UserPlus
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -79,6 +81,15 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
   const [studentEmail, setStudentEmail] = useState('');
   const [mentorEmail, setMentorEmail] = useState('');
   const [isUploadingGuide, setIsUploadingGuide] = useState(false);
+
+  // Group Mentorship States
+  const [groupEnrollments, setGroupEnrollments] = useState<any[]>([]);
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [addStudentType, setAddStudentType] = useState<'select' | 'manual'>('select');
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [manualStudentEmail, setManualStudentEmail] = useState('');
+  const [addingStudent, setAddingStudent] = useState(false);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
 
   const isMentor = profile?.roles.includes('mentor') || profile?.roles.includes('admin');
   const isStudent = profile?.roles.includes('alumno') && !isMentor;
@@ -248,12 +259,51 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       getDocs(query(collection(db, 'enrollments'), where('studentId', '==', followUp.studentId))).then(snap => {
         const mapping: Record<string, any> = {};
         snap.docs.forEach(d => {
-          const data = d.data();
-          mapping[data.courseId] = data;
+          mapping[d.data().courseId] = d.data();
         });
         setStudentEnrollments(mapping);
       });
+    } else if (followUp?.type === 'group' && followUp?.id) {
+      // Load group enrollments
+      const fetchGroupEnrollments = async () => {
+        try {
+          const q1 = query(collection(db, 'enrollments'), where('productId', '==', followUp.id));
+          const q2 = query(collection(db, 'enrollments'), where('courseId', '==', followUp.id));
+          const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+          
+          const enrollmentsMap = new Map();
+          snap1.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
+          snap2.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
+          
+          setGroupEnrollments(Array.from(enrollmentsMap.values()));
+        } catch (e) {
+          console.error("Error fetching group enrollments:", e);
+        }
+      };
+      fetchGroupEnrollments();
+
+      // Load all students for manual addition selector
+      if (isMentor) {
+        const fetchStudents = async () => {
+          const enrollQuery = query(collection(db, 'enrollments'), where('mentorId', '==', profile?.uid));
+          const snap = await getDocs(enrollQuery);
+          const studentMap = new Map();
+          snap.docs.forEach(d => {
+            const data = d.data();
+            if (data.studentEmail) {
+              studentMap.set(data.studentEmail, {
+                id: data.studentId || d.id,
+                email: data.studentEmail,
+                displayName: data.studentName || data.studentEmail
+              });
+            }
+          });
+          setAllStudents(Array.from(studentMap.values()));
+        };
+        fetchStudents();
+      }
     }
+  }, [db, followUp, isMentor, profile?.uid]);
     
     if (followUp?.mentorId) {
       getDoc(doc(db, 'users', followUp.mentorId)).then(snap => {
@@ -593,6 +643,74 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
   const totalTasks = tasks?.length || 0;
   const avgProgress = totalTasks > 0 ? tasks!.reduce((acc, t) => acc + (t.progress || 0), 0) / totalTasks : 0;
 
+  const handleAddGroupStudent = async () => {
+    setAddingStudent(true);
+    try {
+      let finalStudentId = selectedStudentId;
+      let finalStudentName = 'Alumno';
+      let finalStudentEmail = '';
+
+      if (addStudentType === 'manual') {
+        finalStudentEmail = manualStudentEmail.toLowerCase().trim();
+        finalStudentName = finalStudentEmail.split('@')[0];
+      } else {
+        const student = allStudents.find(s => s.id === selectedStudentId);
+        finalStudentId = student?.id || '';
+        finalStudentName = student?.displayName || 'Alumno';
+        finalStudentEmail = student?.email || '';
+      }
+
+      if (!finalStudentEmail && !finalStudentId) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Selecciona un alumno o ingresa un correo' });
+        setAddingStudent(false);
+        return;
+      }
+
+      const isEnrolled = groupEnrollments.some(e => 
+        (finalStudentEmail && e.inviteEmail === finalStudentEmail) ||
+        (finalStudentId && e.studentId === finalStudentId)
+      );
+
+      if (isEnrolled) {
+        toast({ variant: 'destructive', title: 'Error', description: 'El alumno ya está inscrito en esta mentoría' });
+        setAddingStudent(false);
+        return;
+      }
+
+      const newEnrollRef = doc(collection(db, 'enrollments'));
+      await setDoc(newEnrollRef, {
+        id: newEnrollRef.id,
+        courseId: followUpId, 
+        productId: followUpId,
+        productType: 'followup',
+        studentId: finalStudentId,
+        studentName: finalStudentName,
+        inviteEmail: finalStudentEmail,
+        status: 'active',
+        progress: { completedModules: [], evaluations: {} },
+        enrolledAt: serverTimestamp(),
+      });
+
+      toast({ title: 'Alumno Añadido a la Cohorte' });
+      setIsAddStudentOpen(false);
+      setManualStudentEmail('');
+      setSelectedStudentId('');
+      setGroupEnrollments(prev => [...prev, {
+        id: newEnrollRef.id,
+        studentId: finalStudentId,
+        studentName: finalStudentName,
+        inviteEmail: finalStudentEmail,
+        status: 'active',
+      }]);
+
+    } catch (e) {
+      console.error(e);
+      toast({ variant: 'destructive', title: 'Error al añadir alumno' });
+    } finally {
+      setAddingStudent(false);
+    }
+  };
+
   const isGmailSession = studentEmail?.toLowerCase().endsWith('@gmail.com') || mentorEmail?.toLowerCase().endsWith('@gmail.com') || MENTOR_ORGANIZER_EMAIL.toLowerCase().endsWith('@gmail.com');
   const isSuspended = followUp?.status === 'suspended';
 
@@ -643,10 +761,13 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
           <div className="lg:col-span-3 space-y-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <TabsList className="bg-secondary/20 p-1 rounded-2xl h-14 w-full md:w-auto justify-start gap-2">
+                <TabsList className="bg-secondary/20 p-1 rounded-2xl h-auto w-full md:w-auto justify-start flex-wrap gap-2">
                   <TabsTrigger value="sessions" className="rounded-xl px-6 font-bold gap-2"><History className="h-4 w-4" /> Sesiones y Minutas</TabsTrigger>
                   <TabsTrigger value="tasks" className="rounded-xl px-6 font-bold gap-2"><Zap className="h-4 w-4" /> Plan de Acción</TabsTrigger>
                   <TabsTrigger value="report" className="rounded-xl px-6 font-bold gap-2"><BarChart3 className="h-4 w-4" /> Reporte de Avance</TabsTrigger>
+                  {followUp?.type === 'group' && (
+                    <TabsTrigger value="alumnos" className="rounded-xl px-6 font-bold gap-2"><Users className="h-4 w-4" /> Alumnos Inscritos</TabsTrigger>
+                  )}
                 </TabsList>
                 {activeTab === 'sessions' && isMentor && !isSuspended && (
                   <Button onClick={handleAddAdditionalSession} disabled={loading} className="h-12 px-6 rounded-xl font-bold bg-accent text-white shadow-lg gap-2 shrink-0">
@@ -917,6 +1038,50 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 </Card>
               </TabsContent>
+
+              {followUp?.type === 'group' && (
+                <TabsContent value="alumnos" className="space-y-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold font-headline">Cohorte de Alumnos</h3>
+                      <p className="text-muted-foreground text-sm">Gestiona los participantes de esta mentoría grupal.</p>
+                    </div>
+                    {isMentor && (
+                      <Button onClick={() => setIsAddStudentOpen(true)} className="rounded-xl h-12 px-6 font-bold gap-2">
+                        <UserPlus className="h-4 w-4" /> Añadir Alumno
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid gap-4">
+                    {groupEnrollments.length === 0 ? (
+                      <div className="text-center py-12 bg-secondary/5 rounded-3xl border-2 border-dashed">
+                        <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                        <h4 className="text-lg font-bold">Sin alumnos inscritos</h4>
+                        <p className="text-muted-foreground">Todavía no hay alumnos asignados a esta mentoría grupal.</p>
+                      </div>
+                    ) : (
+                      groupEnrollments.map((enroll) => (
+                        <Card key={enroll.id} className="border-none shadow-sm rounded-2xl">
+                          <div className="p-6 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xl">
+                                {(enroll.studentName || enroll.inviteEmail || 'A').charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <h4 className="font-bold">{enroll.studentName || 'Alumno Pendiente'}</h4>
+                                <p className="text-sm text-muted-foreground">{enroll.inviteEmail}</p>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className={cn("rounded-full px-4", enroll.status === 'active' ? "bg-success/10 text-success border-success/20" : "bg-muted text-muted-foreground")}>
+                              {enroll.status === 'active' ? 'Activo' : 'Pendiente'}
+                            </Badge>
+                          </div>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </TabsContent>
+              )}
             </Tabs>
           </div>
 
@@ -1134,6 +1299,65 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             <DialogFooter className="pt-4">
               <Button onClick={() => handleSubmitStudentTask(answeringTaskId!)} disabled={isSubmittingTask || !studentAnswer.trim()} className="w-full h-16 rounded-xl font-bold text-xl bg-accent hover:bg-accent/90 transition-all hover:scale-[1.01] shadow-none">
                 {isSubmittingTask ? <><Loader2 className="animate-spin mr-2 h-6 w-6" /> Procesando con Gemini...</> : <><Send className="mr-3 h-6 w-6" /> Enviar para Evaluación IA</>}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Añadir Alumno a Grupo */}
+      <Dialog open={isAddStudentOpen} onOpenChange={setIsAddStudentOpen}>
+        <DialogContent className="mw-md">
+          <DialogHeader className="text-left">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><UserPlus className="text-primary h-6 w-6" /></div>
+            <DialogTitle className="text-xl md:text-2xl font-bold">Añadir Alumno</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">Inscribe un nuevo participante a la cohorte.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 pt-4">
+            <div className="flex bg-secondary/10 p-1 rounded-2xl border-2 border-transparent">
+              <Button onClick={() => setAddStudentType('select')} variant="ghost" className={cn("flex-1 h-12 rounded-xl font-bold text-xs", addStudentType === 'select' ? "bg-white shadow-sm border" : "text-muted-foreground")}>Base de Datos</Button>
+              <Button onClick={() => setAddStudentType('manual')} variant="ghost" className={cn("flex-1 h-12 rounded-xl font-bold text-xs", addStudentType === 'manual' ? "bg-white shadow-sm border" : "text-muted-foreground")}>Ingreso Manual</Button>
+            </div>
+
+            {addStudentType === 'select' ? (
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Seleccionar Alumno</Label>
+                <Select onValueChange={setSelectedStudentId} value={selectedStudentId}>
+                  <SelectTrigger className="h-14 bg-secondary/5 border-2 rounded-2xl px-4 text-left">
+                    <SelectValue placeholder="Busca por nombre o correo..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[250px] rounded-2xl">
+                    {allStudents.length === 0 ? (
+                      <SelectItem value="none" disabled className="text-muted-foreground italic rounded-xl">No hay alumnos en tu base</SelectItem>
+                    ) : allStudents.map(s => (
+                      <SelectItem key={s.id} value={s.id} className="py-3 rounded-xl cursor-pointer">
+                        <div className="flex flex-col">
+                          <span className="font-bold">{s.displayName}</span>
+                          <span className="text-[10px] text-muted-foreground">{s.email}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Correo Electrónico (Email)</Label>
+                <Input 
+                  type="email" 
+                  value={manualStudentEmail} 
+                  onChange={e => setManualStudentEmail(e.target.value)} 
+                  placeholder="alumno@ejemplo.com" 
+                  className="h-14 bg-secondary/5 border-2 rounded-2xl px-4" 
+                />
+                <p className="text-[10px] text-muted-foreground italic ml-1">Si el correo no existe, se creará un acceso temporal para el alumno.</p>
+              </div>
+            )}
+
+            <DialogFooter className="pt-4">
+              <Button onClick={handleAddGroupStudent} disabled={addingStudent || (addStudentType === 'manual' ? !manualStudentEmail : !selectedStudentId)} className="w-full h-14 rounded-2xl text-lg font-bold shadow-sm">
+                {addingStudent ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} Inscribir a la Cohorte
               </Button>
             </DialogFooter>
           </div>

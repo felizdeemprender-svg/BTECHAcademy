@@ -202,7 +202,11 @@ export function FollowUpModals({
             </div>
 
             <DialogFooter className="pt-4">
-              <Button onClick={onCreate} disabled={loading || (!isManualInvite && !formData.studentId) || (isManualInvite && !inviteEmail)} className="w-full h-14 rounded-2xl text-lg font-bold">
+              <Button 
+                onClick={onCreate} 
+                disabled={loading || !formData.title || (formData.type !== 'group' && (isManualInvite ? !inviteEmail : !formData.studentId))} 
+                className="w-full h-14 rounded-2xl text-lg font-bold"
+              >
                 {loading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} Iniciar Mentoría
               </Button>
             </DialogFooter>

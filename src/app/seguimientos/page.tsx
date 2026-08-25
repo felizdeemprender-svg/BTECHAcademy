@@ -48,16 +48,7 @@ export default function FollowUpsPage() {
     isMentor 
   } = useFollowUps();
 
-  if (isAuthLoading || !profile) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#f8fafc]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-full border-4 border-accent/20 border-t-accent animate-spin" />
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Sincronizando Accesos...</p>
-        </div>
-      </div>
-    );
-  }
+
 
   // Estados de UI
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -272,6 +263,17 @@ export default function FollowUpsPage() {
     f.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     f.studentName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isAuthLoading || !profile) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#f8fafc]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full border-4 border-accent/20 border-t-accent animate-spin" />
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Sincronizando Accesos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout>

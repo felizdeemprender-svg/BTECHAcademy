@@ -20,7 +20,8 @@ import {
   PlayCircle, 
   PauseCircle, 
   FileText, 
-  Trash2 
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { 
   DropdownMenu, 
