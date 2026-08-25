@@ -28,24 +28,27 @@ export async function processSuccessfulEnrollment({
 
     console.log(`[Enrollment] Procesando inscripción: ${normalizedEmail} -> Page: ${pageId}`);
 
-    // 1. Obtener la Sales Page para saber el courseId
+    // 1. Obtener la Sales Page para saber el courseId / productId
     const pageSnap = await db.collection('salesPages').doc(pageId).get();
     if (!pageSnap.exists) {
       throw new Error(`SalesPage ${pageId} no encontrada`);
     }
     
-    const { courseId } = pageSnap.data() || {};
-    if (!courseId) {
-      throw new Error(`Página ${pageId} no tiene un courseId asociado`);
+    const pageData = pageSnap.data() || {};
+    const productId = pageData.productId || pageData.courseId;
+    const productType = pageData.productType || 'course';
+
+    if (!productId) {
+      throw new Error(`Página ${pageId} no tiene un producto asociado`);
     }
 
     // 2. Verificar existencia previa (Idempotencia)
-    const enrollmentId = `enroll_${courseId}_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}`;
+    const enrollmentId = `enroll_${productId}_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}`;
     const enrollmentRef = db.collection('enrollments').doc(enrollmentId);
     const existingSnap = await enrollmentRef.get();
 
     if (existingSnap.exists) {
-      console.log(`[Enrollment] El alumno ${normalizedEmail} ya está inscrito en ${courseId}.`);
+      console.log(`[Enrollment] El alumno ${normalizedEmail} ya está inscrito en ${productId}.`);
       return { success: true, alreadyEnrolled: true, enrollmentId };
     }
 
@@ -74,7 +77,9 @@ export async function processSuccessfulEnrollment({
     // 4. Crear Inscripción
     const enrollmentData = {
       id: enrollmentId,
-      courseId,
+      courseId: productId, // Por retrocompatibilidad de la UI de alumnos
+      productId: productId,
+      productType: productType,
       mentorId,
       inviteEmail: normalizedEmail,
       studentId: studentId,
@@ -94,8 +99,14 @@ export async function processSuccessfulEnrollment({
 
     // Enviar correo de felicitación por Trigger Email
     try {
-      const courseSnap = await db.collection('courses').doc(courseId).get();
-      const courseTitle = courseSnap.exists ? (courseSnap.data()?.title || 'tu curso') : 'tu curso';
+      let productTitle = 'tu curso';
+      if (productType === 'followup') {
+        const followupSnap = await db.collection('followups').doc(productId).get();
+        productTitle = followupSnap.exists ? (followupSnap.data()?.title || 'tu mentoría') : 'tu mentoría';
+      } else {
+        const courseSnap = await db.collection('courses').doc(productId).get();
+        productTitle = courseSnap.exists ? (courseSnap.data()?.title || 'tu curso') : 'tu curso';
+      }
       
       let mentorName = undefined;
       let mentorEmail = undefined;
@@ -110,7 +121,7 @@ export async function processSuccessfulEnrollment({
       await sendWelcomeEmailServer({
         studentEmail: normalizedEmail,
         studentName,
-        courseTitle,
+        courseTitle: productTitle,
         mentorName,
         mentorEmail
       });
@@ -125,11 +136,11 @@ export async function processSuccessfulEnrollment({
     });
 
     // 5. Convertir el Lead asociado (si existe) → 'converted'
-    //    Buscamos por email + courseId para encontrar el lead original.
+    //    Buscamos por email + productId para encontrar el lead original.
     try {
       const leadsQuery = await db.collection('leads')
         .where('studentEmail', '==', normalizedEmail)
-        .where('courseId', '==', courseId)
+        .where('courseId', '==', productId) // Mantenemos courseId en el WHERE por compatibilidad si el lead se guardó así
         .limit(1)
         .get();
 
@@ -143,7 +154,7 @@ export async function processSuccessfulEnrollment({
         const leadReferidoId = leadDoc.data().referidoId || referidoId || null;
         console.log(`[Leads] Lead ${leadDoc.id} convertido exitosamente. Referido: ${leadReferidoId}`);
       } else {
-        console.log(`[Leads] No se encontró lead previo para ${normalizedEmail} / Curso: ${courseId}. Venta directa sin lead.`);
+        console.log(`[Leads] No se encontró lead previo para ${normalizedEmail} / Producto: ${productId}. Venta directa sin lead.`);
       }
     } catch (leadError: any) {
       // No propagamos el error — la inscripción ya fue exitosa.
@@ -151,7 +162,7 @@ export async function processSuccessfulEnrollment({
       console.error(`[Leads] Error al convertir lead (no crítico):`, leadError.message);
     }
 
-    console.log(`[Enrollment] ÉXITO: Alumno ${normalizedEmail} inscrito en curso ${courseId}`);
+    console.log(`[Enrollment] ÉXITO: Alumno ${normalizedEmail} inscrito en producto ${productId}`);
     return { success: true, enrollmentId };
 
   } catch (error: any) {

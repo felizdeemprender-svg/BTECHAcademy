@@ -205,7 +205,7 @@ export const readDocumentationTool = ai.defineTool(
     name: 'readDocumentation',
     description: 'Herramienta para leer manuales y documentación de la plataforma. Usa esta herramienta cuando necesites saber cómo funciona algo en FastoriaAcademy.',
     inputSchema: z.object({
-      filename: z.enum(['database_schema.md', 'app_routes.md', 'business_rules.md']).describe('Nombre del archivo de documentación a leer'),
+      filename: z.enum(['database_schema.md', 'app_routes.md', 'business_rules.md', 'tutor_manual.md']).describe('Nombre del archivo de documentación a leer'),
     }),
     outputSchema: z.any(),
   },

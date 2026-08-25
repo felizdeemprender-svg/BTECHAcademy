@@ -1,4 +1,4 @@
-﻿
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo, Suspense } from 'react';
@@ -206,14 +206,31 @@ function BuilderContent() {
   }, [db, profile?.uid]);
   const { data: rawCourses, isLoading: coursesLoading } = useCollection(coursesQuery);
 
+  const followupsQuery = useMemoFirebase(() => {
+    if (!profile?.uid) return null;
+    return query(collection(db, 'followups'), where('mentorId', '==', profile.uid), where('type', '==', 'group'));
+  }, [db, profile?.uid]);
+  const { data: rawFollowups, isLoading: followupsLoading } = useCollection(followupsQuery);
+
   const courses = useMemo(() => {
-    if (!rawCourses) return null;
-    // Permitimos draft y pending para que puedan adelantar el marketing 
-    // mientras se termina el contenido o auditoría.
-    return rawCourses
-      .filter(c => c.status !== 'rejected')
-      .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-  }, [rawCourses]);
+    const combined: any[] = [];
+    if (rawCourses) {
+      combined.push(...rawCourses
+        .filter(c => c.status !== 'rejected')
+        .map(c => ({ ...c, productType: 'course' }))
+      );
+    }
+    if (rawFollowups) {
+      combined.push(...rawFollowups.map(f => ({ 
+        ...f, 
+        productType: 'followup',
+        description: f.goal || 'Seguimiento grupal',
+        // Inyectar tag dummy para UI
+        tagIds: []
+      })));
+    }
+    return combined.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  }, [rawCourses, rawFollowups]);
 
   const collectionsQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
@@ -704,7 +721,9 @@ function BuilderContent() {
         id: pageId,
         mentorId: profile.uid,
         title: pageTitle || `Lanzamiento: ${course?.title}`,
-        courseId: selectedCourseId,
+        courseId: selectedCourseId, // Retenido por retrocompatibilidad
+        productId: selectedCourseId,
+        productType: course?.productType || 'course',
         campaignStatus: 'ready_to_publish',
         courseKeywords: courseTags.slice(0, 5).join(',') || 'education,business,professional',
         engineMeta: {

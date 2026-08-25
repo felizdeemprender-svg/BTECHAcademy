@@ -82,7 +82,18 @@ export function FollowUpModals({
           <div className="space-y-6 px-8 pb-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Alumno del Seguimiento</Label>
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Modalidad</Label>
+                <Tabs value={formData.type || 'individual'} onValueChange={v => setFormData({...formData, type: v as 'individual' | 'group'})} className="w-full">
+                  <TabsList className="grid grid-cols-2 h-12 bg-secondary/20 p-1 rounded-xl mb-4">
+                    <TabsTrigger value="individual" className="rounded-lg font-bold">1 a 1</TabsTrigger>
+                    <TabsTrigger value="group" className="rounded-lg font-bold">Grupal (Cohorte)</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              {(formData.type === 'individual' || !formData.type) && (
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Alumno del Seguimiento</Label>
                 <Tabs value={isManualInvite ? 'manual' : 'select'} onValueChange={v => setIsManualInvite(v === 'manual')} className="w-full">
                   <TabsList className="grid grid-cols-2 h-12 bg-secondary/20 p-1 rounded-xl mb-4">
                     <TabsTrigger value="select" className="rounded-lg font-bold gap-2"><Users className="h-3.5 w-3.5" /> Seleccionar</TabsTrigger>
@@ -125,6 +136,7 @@ export function FollowUpModals({
                   </TabsContent>
                 </Tabs>
               </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nombre del Seguimiento</Label>
@@ -138,7 +150,9 @@ export function FollowUpModals({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Guía del Plan (PDF / Imagen)</Label>
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
+                {formData.type === 'group' ? 'Archivo Maestro (PDF / Syllabus)' : 'Guía del Plan (PDF / Imagen)'}
+              </Label>
               <div className="p-6 border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-2 relative hover:bg-muted/10 transition-colors group">
                 <input 
                   type="file" 

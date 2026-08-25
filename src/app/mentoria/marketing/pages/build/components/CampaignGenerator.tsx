@@ -69,7 +69,12 @@ export function CampaignGenerator({
                     )}
                   >
                     <div className="flex flex-col gap-1">
-                      <span className="font-bold text-sm">{c.title}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm">{c.title}</span>
+                        {c.productType === 'followup' && (
+                          <Badge className="text-[9px] h-4 bg-primary/20 text-primary hover:bg-primary/30 py-0 border-none">Mentoría Grupal</Badge>
+                        )}
+                      </div>
                       <div className="flex flex-wrap gap-1">
                         {c.tagIds?.map((tid: string) => {
                           const tag = allTags?.find(t => t.id === tid);

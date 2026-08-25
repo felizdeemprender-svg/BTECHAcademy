@@ -80,14 +80,16 @@ export interface StudentTask {
 
 export interface StudentFollowUp {
   id: string;
+  type?: 'individual' | 'group';
   title: string;
   goal: string;
   mentorId: string;
-  studentId: string;
+  studentId: string; // Puede estar vacío si es 'group'
   studentName?: string;
   studentEmail?: string;
   totalSessions: number;
   status: 'active' | 'paused' | string;
+  masterFileUrl?: string; // Archivo maestro de la mentoría grupal
   createdAt?: any;
 }
 

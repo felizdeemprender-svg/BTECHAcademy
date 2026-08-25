@@ -177,7 +177,32 @@ function LandingBuilderContent() {
     if (!profile?.uid) return null;
     return query(collection(db, 'courses'), where('mentorId', '==', profile.uid));
   }, [db, profile?.uid]);
-  const { data: courses } = useCollection(coursesQuery);
+  const { data: rawCourses } = useCollection(coursesQuery);
+
+  const followupsQuery = useMemoFirebase(() => {
+    if (!profile?.uid) return null;
+    return query(collection(db, 'followups'), where('mentorId', '==', profile.uid), where('type', '==', 'group'));
+  }, [db, profile?.uid]);
+  const { data: rawFollowups } = useCollection(followupsQuery);
+
+  const courses = useMemo(() => {
+    const combined: any[] = [];
+    if (rawCourses) {
+      combined.push(...rawCourses
+        .filter(c => c.status !== 'rejected')
+        .map(c => ({ ...c, productType: 'course' }))
+      );
+    }
+    if (rawFollowups) {
+      combined.push(...rawFollowups.map(f => ({ 
+        ...f, 
+        productType: 'followup',
+        description: f.goal || 'Seguimiento grupal',
+        tagIds: []
+      })));
+    }
+    return combined.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  }, [rawCourses, rawFollowups]);
 
   const collectionsQuery = useMemoFirebase(() => query(collection(db, 'templateCollections')), [db]);
   const { data: rawCollections } = useCollection(collectionsQuery);
@@ -279,7 +304,9 @@ function LandingBuilderContent() {
         id: pageId,
         mentorId: profile.uid,
         title: title || `Landing: ${course?.title}`,
-        courseId: selectedCourseId,
+        courseId: selectedCourseId, // Legacy
+        productId: selectedCourseId,
+        productType: course?.productType || 'course',
         templateCollectionId: selectedCollectionId,
         price: price,
         targetAudience: targetAudience,

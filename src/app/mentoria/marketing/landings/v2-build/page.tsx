@@ -152,7 +152,32 @@ function V2LandingBuilderContent() {
     if (!profile?.uid) return null;
     return query(collection(db, 'courses'), where('mentorId', '==', profile.uid));
   }, [db, profile?.uid]);
-  const { data: courses } = useCollection(coursesQuery);
+  const { data: rawCourses } = useCollection(coursesQuery);
+
+  const followupsQuery = useMemoFirebase(() => {
+    if (!profile?.uid) return null;
+    return query(collection(db, 'followups'), where('mentorId', '==', profile.uid), where('type', '==', 'group'));
+  }, [db, profile?.uid]);
+  const { data: rawFollowups } = useCollection(followupsQuery);
+
+  const courses = useMemo(() => {
+    const combined: any[] = [];
+    if (rawCourses) {
+      combined.push(...rawCourses
+        .filter(c => c.status !== 'rejected')
+        .map(c => ({ ...c, productType: 'course' }))
+      );
+    }
+    if (rawFollowups) {
+      combined.push(...rawFollowups.map(f => ({ 
+        ...f, 
+        productType: 'followup',
+        description: f.goal || 'Seguimiento grupal',
+        tagIds: []
+      })));
+    }
+    return combined.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  }, [rawCourses, rawFollowups]);
 
   const stylesQuery = useMemoFirebase(() => query(collection(db, 'landingStyles')), [db]);
   const { data: styles } = useCollection<LandingStyle>(stylesQuery);
@@ -234,12 +259,17 @@ function V2LandingBuilderContent() {
         requestedSections: requestedSections,
       });
 
-      // 2. Consultar módulos reales del curso para inyectar en el syllabus
-      const modulesSnap = await getDocs(query(collection(db, 'courses', selectedCourseId, 'modules'), orderBy('order', 'asc')));
-      const realModules = modulesSnap.docs.map(d => {
-        const data = d.data();
-        return `**${data.title}**: ${data.description || 'Sin descripción.'}`;
-      });
+      // 2. Consultar módulos reales del curso (o sesiones si es seguimiento) para inyectar en el syllabus
+      let realModules: string[] = [];
+      if (course?.productType === 'followup') {
+        realModules = ['Acceso a las sesiones en vivo', 'Material de apoyo y master file', 'Soporte grupal'];
+      } else {
+        const modulesSnap = await getDocs(query(collection(db, 'courses', selectedCourseId, 'modules'), orderBy('order', 'asc')));
+        realModules = modulesSnap.docs.map(d => {
+          const data = d.data();
+          return `**${data.title}**: ${data.description || 'Sin descripción.'}`;
+        });
+      }
 
       // 3. Reemplazar el contenido del temario (syllabus) con los módulos reales
       const finalSections = result.sections.map((section: any) => {
@@ -269,7 +299,9 @@ function V2LandingBuilderContent() {
       // 4. Armar el payload para guardar directamente en salesPages
       const payload = {
         mentorId: profile.uid,
-        courseId: selectedCourseId,
+        courseId: selectedCourseId, // Legacy
+        productId: selectedCourseId,
+        productType: course?.productType || 'course',
         styleId: selectedStyleId,
         landingType: basePrice > 0 && allowedPaymentMethods.length > 0 ? (activeUntil ? 'promocion' : 'general') : 'general',
         title: title || result.marketingName || 'Nueva Landing',

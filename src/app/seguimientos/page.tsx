@@ -163,17 +163,19 @@ export default function FollowUpsPage() {
 
       await setDoc(followUpRef, {
         id: followUpId,
+        type: formData.type || 'individual',
         title: formData.title,
         goal: formData.goal,
-        studentId: finalStudentId,
-        studentName: finalStudentName,
-        studentEmail: finalStudentEmail,
+        studentId: formData.type === 'group' ? '' : finalStudentId,
+        studentName: formData.type === 'group' ? '' : finalStudentName,
+        studentEmail: formData.type === 'group' ? '' : finalStudentEmail,
         totalSessions: formData.totalSessions,
         startDate: formData.startDate,
         endDate: formData.endDate,
         mentorId: profile?.uid,
         status: 'active',
         planGuideUrl,
+        masterFileUrl: formData.type === 'group' ? planGuideUrl : null, // Reusamos el uploader de planGuide
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
