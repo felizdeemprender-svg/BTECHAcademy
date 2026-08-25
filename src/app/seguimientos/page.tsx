@@ -59,6 +59,7 @@ export default function FollowUpsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [students, setStudents] = useState<any[]>([]);
   const [guideFile, setGuideFile] = useState<File | null>(null);
+  const [masterFile, setMasterFile] = useState<File | null>(null);
   const [isManualInvite, setIsManualInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
 
@@ -149,6 +150,13 @@ export default function FollowUpsPage() {
         planGuideUrl = await getDownloadURL(uploadResult.ref);
       }
 
+      let masterFileUrl = null;
+      if (masterFile && formData.type === 'group') {
+        const masterRef = ref(storage, `followup_guides/${profile!.uid}/${Date.now()}_master_${masterFile.name}`);
+        const uploadResult = await uploadBytes(masterRef, masterFile);
+        masterFileUrl = await getDownloadURL(uploadResult.ref);
+      }
+
       const followUpId = Math.random().toString(36).substring(2, 15);
       const followUpRef = doc(db, 'followups', followUpId);
 
@@ -166,7 +174,7 @@ export default function FollowUpsPage() {
         mentorId: profile?.uid,
         status: 'active',
         planGuideUrl,
-        masterFileUrl: formData.type === 'group' ? planGuideUrl : null, // Reusamos el uploader de planGuide
+        masterFileUrl: formData.type === 'group' ? masterFileUrl : null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -329,6 +337,7 @@ export default function FollowUpsPage() {
           isManualInvite={isManualInvite} setIsManualInvite={setIsManualInvite}
           inviteEmail={inviteEmail} setInviteEmail={setInviteEmail}
           guideFile={guideFile} setGuideFile={setGuideFile}
+          masterFile={masterFile} setMasterFile={setMasterFile}
           loading={loading}
           onCreate={handleCreateFollowUp}
           onUpdate={handleUpdateFollowUp}

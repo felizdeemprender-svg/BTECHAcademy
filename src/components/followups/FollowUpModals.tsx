@@ -47,6 +47,8 @@ interface FollowUpModalsProps {
   setInviteEmail: (v: string) => void;
   guideFile: File | null;
   setGuideFile: (f: File | null) => void;
+  masterFile?: File | null;
+  setMasterFile?: (f: File | null) => void;
   loading: boolean;
   onCreate: () => void;
   onUpdate: () => void;
@@ -63,6 +65,7 @@ export function FollowUpModals({
   isManualInvite, setIsManualInvite,
   inviteEmail, setInviteEmail,
   guideFile, setGuideFile,
+  masterFile, setMasterFile,
   loading,
   onCreate,
   onUpdate,
@@ -149,9 +152,48 @@ export function FollowUpModals({
               <Textarea value={formData.goal} onChange={e => setFormData({...formData, goal: e.target.value})} placeholder="¿Qué esperamos lograr?" size="lg" className="min-h-[100px]" />
             </div>
 
+            {formData.type === 'group' && setMasterFile && (
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
+                  Archivo Maestro (Uso Interno - AI Landings)
+                </Label>
+                <div className="p-6 border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-2 relative hover:bg-muted/10 transition-colors group">
+                  <input 
+                    type="file" 
+                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                    onChange={e => setMasterFile(e.target.files?.[0] || null)}
+                  />
+                  {masterFile ? (
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold truncate">{masterFile.name}</p>
+                        <p className="text-[10px] text-muted-foreground">Documento maestro listo</p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive shrink-0 relative z-10"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMasterFile(null); }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="h-8 w-8 text-muted-foreground/40 group-hover:scale-110 transition-transform" />
+                      <p className="text-xs font-bold text-muted-foreground">Click para subir Syllabus / Documento Maestro</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
-                {formData.type === 'group' ? 'Archivo Maestro (PDF / Syllabus)' : 'Guía del Plan (PDF / Imagen)'}
+                {formData.type === 'group' ? 'Guía de Mentoría (Visible para Alumnos)' : 'Guía del Plan (Visible para Alumno)'}
               </Label>
               <div className="p-6 border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-2 relative hover:bg-muted/10 transition-colors group">
                 <input 
@@ -180,7 +222,7 @@ export function FollowUpModals({
                 ) : (
                   <>
                     <Upload className="h-8 w-8 text-muted-foreground/40 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-bold text-muted-foreground">Click para subir la guía institucional</p>
+                    <p className="text-xs font-bold text-muted-foreground">Click para subir guía para el alumno</p>
                   </>
                 )}
               </div>

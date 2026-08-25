@@ -290,18 +290,40 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         }
       };
       fetchGroupEnrollments();
+    }
+    
+    if (followUp?.mentorId) {
+      getDoc(doc(db, 'users', followUp.mentorId)).then(snap => {
+        if (snap.exists()) setMentorEmail(snap.data().email || '');
+      });
+    }
+  }, [db, followUp, isMentor, profile?.uid]);
 
-      // Load all students for manual addition selector
-      if (isMentor) {
-        const fetchStudents = async () => {
+  useEffect(() => {
+    if (isMentor) {
+      const fetchStudents = async () => {
+        const allProgramIds = [...mentorCourses.map(c => c.id), ...mentorFollowUps.map(f => f.id)];
+        let enrollments: any[] = [];
+        
+        try {
           const enrollQuery = query(collection(db, 'enrollments'), where('mentorId', '==', profile?.uid));
-          const snap = await getDocs(enrollQuery);
+          const mentorIdSnap = await getDocs(enrollQuery);
+          enrollments = [...mentorIdSnap.docs.map(d => ({ id: d.id, ...d.data() }))];
+
+          if (allProgramIds.length > 0) {
+            for (let i = 0; i < allProgramIds.length; i += 30) {
+              const chunk = allProgramIds.slice(i, i + 30);
+              const snap1 = await getDocs(query(collection(db, 'enrollments'), where('courseId', 'in', chunk)));
+              const snap2 = await getDocs(query(collection(db, 'enrollments'), where('productId', 'in', chunk)));
+              enrollments = [...enrollments, ...snap1.docs.map(d => ({ id: d.id, ...d.data() })), ...snap2.docs.map(d => ({ id: d.id, ...d.data() }))];
+            }
+          }
+
           const studentMap = new Map();
-          snap.docs.forEach(d => {
-            const data = d.data();
+          enrollments.forEach(data => {
             if (data.studentEmail) {
               const existing = studentMap.get(data.studentEmail) || {
-                id: data.studentId || d.id,
+                id: data.studentId || data.id,
                 email: data.studentEmail,
                 displayName: data.studentName || data.studentEmail,
                 enrolledProducts: new Set()
@@ -311,18 +333,18 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
               studentMap.set(data.studentEmail, existing);
             }
           });
-          setAllStudents(Array.from(studentMap.values()).map(s => ({...s, enrolledProducts: Array.from(s.enrolledProducts)})));
-        };
-        fetchStudents();
-      }
+          
+          setAllStudents(Array.from(studentMap.values()).map(s => ({
+            ...s, 
+            enrolledProducts: Array.from(s.enrolledProducts)
+          })));
+        } catch (error) {
+          console.error("Error fetching students:", error);
+        }
+      };
+      fetchStudents();
     }
-    
-    if (followUp?.mentorId) {
-      getDoc(doc(db, 'users', followUp.mentorId)).then(snap => {
-        if (snap.exists()) setMentorEmail(snap.data().email || '');
-      });
-    }
-  }, [db, followUp, isMentor, profile?.uid]);
+  }, [db, isMentor, profile?.uid, mentorCourses, mentorFollowUps]);
 
   const handleAddAdditionalSession = async () => {
     if (!followUp) return;
@@ -640,6 +662,15 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
     toast({ title: 'Tarea eliminada' });
   };
 
+  const filteredStudents = useMemo(() => {
+    return allStudents.filter(s => {
+      const matchName = (s.displayName || '').toLowerCase().includes(studentSearchTerm.toLowerCase()) || 
+                        (s.email || '').toLowerCase().includes(studentSearchTerm.toLowerCase());
+      const matchProgram = studentProgramFilter === 'all' || s.enrolledProducts.includes(studentProgramFilter);
+      return matchName && matchProgram;
+    });
+  }, [allStudents, studentSearchTerm, studentProgramFilter]);
+
   if (followUpLoading) return <DashboardLayout><div className="flex h-[60vh] items-center justify-center"><Loader2 className="animate-spin text-primary h-10 w-10" /></div></DashboardLayout>;
 
   const plannedSessionsList = sessions?.filter(s => !s.isAdditional) || [];
@@ -654,15 +685,6 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
   const completedTasks = tasks?.filter(t => t.status === 'completed').length || 0;
   const totalTasks = tasks?.length || 0;
   const avgProgress = totalTasks > 0 ? tasks!.reduce((acc, t) => acc + (t.progress || 0), 0) / totalTasks : 0;
-
-  const filteredStudents = useMemo(() => {
-    return allStudents.filter(s => {
-      const matchName = (s.displayName || '').toLowerCase().includes(studentSearchTerm.toLowerCase()) || 
-                        (s.email || '').toLowerCase().includes(studentSearchTerm.toLowerCase());
-      const matchProgram = studentProgramFilter === 'all' || s.enrolledProducts.includes(studentProgramFilter);
-      return matchName && matchProgram;
-    });
-  }, [allStudents, studentSearchTerm, studentProgramFilter]);
 
   const handleAddGroupStudent = async () => {
     setAddingStudent(true);
