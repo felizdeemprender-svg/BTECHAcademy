@@ -97,7 +97,12 @@ export function FollowUpTable({
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-bold text-sm text-foreground line-clamp-1">{f.title}</p>
-                        {f.planGuideUrl && <div className="w-2 h-2 rounded-full bg-success animate-pulse" title="Guía disponible" />}
+                        {f.type === 'group' ? (
+                          <Badge className="text-[9px] h-4 bg-primary/20 text-primary hover:bg-primary/30 py-0 border-none shrink-0">Grupal</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[9px] h-4 text-muted-foreground border-muted-foreground/30 py-0 shrink-0">1 a 1</Badge>
+                        )}
+                        {f.planGuideUrl && <div className="w-2 h-2 rounded-full bg-success animate-pulse shrink-0" title="Guía disponible" />}
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <UserCircle className="h-3 w-3 text-muted-foreground" />

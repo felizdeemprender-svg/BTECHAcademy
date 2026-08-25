@@ -73,7 +73,7 @@ export function FollowUpModals({
     <>
       {/* Dialog: Create */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="mw-2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader className="text-left">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><ClipboardList className="text-primary h-6 w-6" /></div>
             <DialogTitle className="text-xl md:text-2xl font-bold">Nuevo Seguimiento Académico</DialogTitle>
@@ -84,9 +84,9 @@ export function FollowUpModals({
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Modalidad</Label>
                 <Tabs value={formData.type || 'individual'} onValueChange={v => setFormData({...formData, type: v as 'individual' | 'group'})} className="w-full">
-                  <TabsList className="grid grid-cols-2 h-12 bg-secondary/20 p-1 rounded-xl mb-4">
-                    <TabsTrigger value="individual" className="rounded-lg font-bold">1 a 1</TabsTrigger>
-                    <TabsTrigger value="group" className="rounded-lg font-bold">Grupal (Cohorte)</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="individual">1 a 1</TabsTrigger>
+                    <TabsTrigger value="group">Grupal (Cohorte)</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -95,9 +95,9 @@ export function FollowUpModals({
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Alumno del Seguimiento</Label>
                 <Tabs value={isManualInvite ? 'manual' : 'select'} onValueChange={v => setIsManualInvite(v === 'manual')} className="w-full">
-                  <TabsList className="grid grid-cols-2 h-12 bg-secondary/20 p-1 rounded-xl mb-4">
-                    <TabsTrigger value="select" className="rounded-lg font-bold gap-2"><Users className="h-3.5 w-3.5" /> Seleccionar</TabsTrigger>
-                    <TabsTrigger value="manual" className="rounded-lg font-bold gap-2"><UserPlus className="h-3.5 w-3.5" /> Nuevo Correo</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="select" className="gap-2"><Users className="h-4 w-4" /> Seleccionar</TabsTrigger>
+                    <TabsTrigger value="manual" className="gap-2"><UserPlus className="h-4 w-4" /> Nuevo Correo</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="select" className="m-0 animate-in fade-in">

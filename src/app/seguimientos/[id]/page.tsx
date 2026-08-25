@@ -605,6 +605,11 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">{followUp?.title}</h1>
+                {followUp?.type === 'group' ? (
+                  <Badge className="bg-primary/20 text-primary border-none px-3 py-1">Grupal (Cohorte)</Badge>
+                ) : (
+                  <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground px-3 py-1">1 a 1</Badge>
+                )}
                 <Badge variant="outline" className={cn(
                   "border-none px-3 py-1",
                   isSuspended ? "bg-danger/10 text-danger" : "bg-success/10 text-success border-success/20"
