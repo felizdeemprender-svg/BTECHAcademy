@@ -65,10 +65,10 @@ export default function LandingV3() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
         <div className="relative z-10 h-full flex flex-col justify-end px-6 pb-16 md:px-16 md:pb-20">
           <div className="max-w-4xl">
-            <h1 className="font-black uppercase leading-[0.85] tracking-[-0.04em] text-white text-[13.5vw] xs:text-[14vw] sm:text-[18vw] md:text-[16vw] lg:text-[14vw] break-all sm:break-normal">
+            <h1 className="font-black uppercase leading-none tracking-tight text-white text-4xl sm:text-6xl md:text-7xl lg:text-8xl">
               FASTORIA
             </h1>
-            <h2 className="font-black uppercase leading-[0.85] tracking-[-0.04em] text-[#1CB899] text-[11vw] xs:text-[12vw] sm:text-[14vw] md:text-[12vw] lg:text-[10vw] -mt-[1vw] sm:-mt-[2vw]">
+            <h2 className="font-black uppercase leading-none tracking-tight text-[#1CB899] text-3xl sm:text-5xl md:text-6xl lg:text-7xl mt-1">
               ACADEMY
             </h2>
             <motion.p
