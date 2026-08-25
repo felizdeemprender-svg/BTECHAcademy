@@ -48,6 +48,7 @@ import {
   PauseCircle,
   Play,
   Users,
+  Search,
   UserPlus
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -90,6 +91,11 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
   const [manualStudentEmail, setManualStudentEmail] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
   const [allStudents, setAllStudents] = useState<any[]>([]);
+  
+  // Filters for Add Student Dialog
+  const [studentSearchTerm, setStudentSearchTerm] = useState('');
+  const [studentProgramFilter, setStudentProgramFilter] = useState('all');
+  const [mentorFollowUps, setMentorFollowUps] = useState<any[]>([]);
 
   const isMentor = profile?.roles.includes('mentor') || profile?.roles.includes('admin');
   const isStudent = profile?.roles.includes('alumno') && !isMentor;
@@ -247,6 +253,9 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       getDocs(query(collection(db, 'courses'), where('mentorId', '==', profile?.uid))).then(snap => {
         setMentorCourses(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       });
+      getDocs(query(collection(db, 'followups'), where('mentorId', '==', profile?.uid))).then(snap => {
+        setMentorFollowUps(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
     }
   }, [db, profile, isMentor]);
 
@@ -291,26 +300,29 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
           snap.docs.forEach(d => {
             const data = d.data();
             if (data.studentEmail) {
-              studentMap.set(data.studentEmail, {
+              const existing = studentMap.get(data.studentEmail) || {
                 id: data.studentId || d.id,
                 email: data.studentEmail,
-                displayName: data.studentName || data.studentEmail
-              });
+                displayName: data.studentName || data.studentEmail,
+                enrolledProducts: new Set()
+              };
+              if (data.courseId) existing.enrolledProducts.add(data.courseId);
+              if (data.productId) existing.enrolledProducts.add(data.productId);
+              studentMap.set(data.studentEmail, existing);
             }
           });
-          setAllStudents(Array.from(studentMap.values()));
+          setAllStudents(Array.from(studentMap.values()).map(s => ({...s, enrolledProducts: Array.from(s.enrolledProducts)})));
         };
         fetchStudents();
       }
     }
-  }, [db, followUp, isMentor, profile?.uid]);
     
     if (followUp?.mentorId) {
       getDoc(doc(db, 'users', followUp.mentorId)).then(snap => {
         if (snap.exists()) setMentorEmail(snap.data().email || '');
       });
     }
-  }, [db, followUp?.studentId, followUp?.mentorId]);
+  }, [db, followUp, isMentor, profile?.uid]);
 
   const handleAddAdditionalSession = async () => {
     if (!followUp) return;
@@ -642,6 +654,15 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
   const completedTasks = tasks?.filter(t => t.status === 'completed').length || 0;
   const totalTasks = tasks?.length || 0;
   const avgProgress = totalTasks > 0 ? tasks!.reduce((acc, t) => acc + (t.progress || 0), 0) / totalTasks : 0;
+
+  const filteredStudents = useMemo(() => {
+    return allStudents.filter(s => {
+      const matchName = (s.displayName || '').toLowerCase().includes(studentSearchTerm.toLowerCase()) || 
+                        (s.email || '').toLowerCase().includes(studentSearchTerm.toLowerCase());
+      const matchProgram = studentProgramFilter === 'all' || s.enrolledProducts.includes(studentProgramFilter);
+      return matchName && matchProgram;
+    });
+  }, [allStudents, studentSearchTerm, studentProgramFilter]);
 
   const handleAddGroupStudent = async () => {
     setAddingStudent(true);
@@ -1321,25 +1342,73 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             {addStudentType === 'select' ? (
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Seleccionar Alumno</Label>
-                <Select onValueChange={setSelectedStudentId} value={selectedStudentId}>
-                  <SelectTrigger className="h-14 bg-secondary/5 border-2 rounded-2xl px-4 text-left">
-                    <SelectValue placeholder="Busca por nombre o correo..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[250px] rounded-2xl">
-                    {allStudents.length === 0 ? (
-                      <SelectItem value="none" disabled className="text-muted-foreground italic rounded-xl">No hay alumnos en tu base</SelectItem>
-                    ) : allStudents.map(s => (
-                      <SelectItem key={s.id} value={s.id} className="py-3 rounded-xl cursor-pointer">
-                        <div className="flex flex-col">
-                          <span className="font-bold">{s.displayName}</span>
-                          <span className="text-[10px] text-muted-foreground">{s.email}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Buscar Alumno</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Nombre o correo..." 
+                        value={studentSearchTerm}
+                        onChange={(e) => setStudentSearchTerm(e.target.value)}
+                        className="pl-10 h-12 bg-secondary/5 border-2 rounded-xl"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Filtrar por Programa</Label>
+                    <Select onValueChange={setStudentProgramFilter} value={studentProgramFilter}>
+                      <SelectTrigger className="h-12 bg-secondary/5 border-2 rounded-xl px-4">
+                        <SelectValue placeholder="Todos los programas" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[250px] rounded-xl">
+                        <SelectItem value="all" className="font-bold">Todos los programas</SelectItem>
+                        {[...mentorCourses, ...mentorFollowUps].map(p => (
+                          <SelectItem key={p.id} value={p.id} className="py-2">
+                            {p.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="border-2 rounded-2xl overflow-hidden bg-secondary/5">
+                  <ScrollArea className="h-[280px]">
+                    {filteredStudents.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                        <Users className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                        <p className="text-sm font-bold text-muted-foreground">No se encontraron alumnos</p>
+                      </div>
+                    ) : (
+                      <div className="p-2 space-y-1">
+                        {filteredStudents.map(s => (
+                          <div 
+                            key={s.id} 
+                            onClick={() => setSelectedStudentId(s.id)}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border",
+                              selectedStudentId === s.id ? "bg-primary text-white border-primary shadow-md" : "hover:bg-white border-transparent hover:border-black/5"
+                            )}
+                          >
+                            <div className={cn(
+                              "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm",
+                              selectedStudentId === s.id ? "bg-white/20" : "bg-primary/10 text-primary"
+                            )}>
+                              {(s.displayName || s.email || 'A').charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm truncate">{s.displayName}</p>
+                              <p className={cn("text-[10px] truncate", selectedStudentId === s.id ? "text-white/70" : "text-muted-foreground")}>{s.email}</p>
+                            </div>
+                            {selectedStudentId === s.id && <CheckCircle2 className="h-5 w-5 shrink-0" />}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
               </div>
             ) : (
               <div className="space-y-2">
