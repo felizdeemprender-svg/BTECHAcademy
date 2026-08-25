@@ -215,14 +215,27 @@ export default function FollowUpsPage() {
         planGuideUrl = await getDownloadURL(uploadResult.ref);
       }
 
-      await updateDoc(doc(db, 'followups', selectedFollowUp.id), {
+      let masterFileUrl = selectedFollowUp.masterFileUrl;
+      if (masterFile && formData.type === 'group') {
+        const masterRef = ref(storage, `followup_guides/${profile!.uid}/${Date.now()}_master_${masterFile.name}`);
+        const uploadResult = await uploadBytes(masterRef, masterFile);
+        masterFileUrl = await getDownloadURL(uploadResult.ref);
+      }
+
+      const updateData: any = {
         title: formData.title,
         goal: formData.goal,
         startDate: formData.startDate,
         endDate: formData.endDate,
         planGuideUrl,
         updatedAt: serverTimestamp()
-      });
+      };
+
+      if (formData.type === 'group') {
+        updateData.masterFileUrl = masterFileUrl;
+      }
+
+      await updateDoc(doc(db, 'followups', selectedFollowUp.id), updateData);
 
       toast({ title: 'Mentoría Actualizada' });
       setIsEditOpen(false);

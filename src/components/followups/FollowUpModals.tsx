@@ -275,8 +275,42 @@ export function FollowUpModals({
               <Textarea value={formData.goal} onChange={e => setFormData({...formData, goal: e.target.value})} size="lg" className="min-h-[100px]" />
             </div>
 
+            {formData.type === 'group' && setMasterFile && (
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Actualizar Archivo Maestro (Opcional)</Label>
+                <div className="p-6 border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-2 relative hover:bg-muted/10 transition-colors group">
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setMasterFile(e.target.files?.[0] || null)} />
+                  {masterFile ? (
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><FileText className="h-5 w-5" /></div>
+                      <div className="flex-1 min-w-0"><p className="text-xs font-bold truncate">{masterFile.name}</p></div>
+                      <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMasterFile(null); }} className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive z-10"><X className="h-4 w-4" /></Button>
+                    </div>
+                  ) : selectedFollowUp?.masterFileUrl ? (
+                    <div className="flex items-center justify-between w-full p-2 bg-success/10 rounded-xl border border-success/15">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-success" />
+                        <span className="text-xs font-bold text-success">Maestro actual cargado</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => window.open(selectedFollowUp.masterFileUrl, '_blank')} className="text-[10px] h-7 font-bold">Ver</Button>
+                        <p className="text-[10px] text-muted-foreground italic">Sube un nuevo archivo para reemplazar</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="h-8 w-8 text-muted-foreground/40 group-hover:scale-110 transition-transform" />
+                      <p className="text-xs font-bold text-muted-foreground">Click para subir Syllabus / Documento Maestro</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Actualizar Guía del Plan (Opcional)</Label>
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
+                {formData.type === 'group' ? 'Actualizar Guía de Mentoría (Opcional)' : 'Actualizar Guía del Plan (Opcional)'}
+              </Label>
               <div className="p-6 border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-2 relative hover:bg-muted/10 transition-colors group">
                 <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setGuideFile(e.target.files?.[0] || null)} />
                 {guideFile ? (
