@@ -77,7 +77,7 @@ export function SidebarNav() {
         { name: 'Control de Tutores', href: '/courses/embajadores', roles: ['alumno'], icon: Users },
         { name: 'Mis Cursos', href: '/my-courses', roles: ['alumno'], icon: Library },
         { name: 'Mis Desafíos', href: '/tasks', roles: ['alumno'], icon: Zap },
-        { name: 'Seguimientos', href: '/seguimientos', roles: ['alumno', 'mentor', 'admin'], subPermission: 'followups_management', icon: ClipboardList },
+        { name: 'Mentorías', href: '/seguimientos', roles: ['alumno', 'mentor', 'admin'], subPermission: 'followups_management', icon: ClipboardList },
       ]
     },
     {

@@ -172,7 +172,7 @@ function V2LandingBuilderContent() {
       combined.push(...rawFollowups.map(f => ({ 
         ...f, 
         productType: 'followup',
-        description: f.goal || 'Seguimiento grupal',
+        description: f.goal || 'Mentoría grupal',
         tagIds: []
       })));
     }

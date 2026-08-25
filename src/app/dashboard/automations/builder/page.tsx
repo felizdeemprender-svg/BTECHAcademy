@@ -91,7 +91,7 @@ export default function BuilderPage() {
       case 'landing_abandonment': return 'Escribe un mensaje sutil a [Nombre_Alumno] diciendo que vimos que le interesó [Nombre_Landing] pero no completó la inscripción. Ofrécele resolver sus dudas.';
       case 'task_assigned': return 'Notifica a [Nombre_Alumno] que tiene un nuevo desafío asignado: [Nombre_Tarea]. Invítalo a revisarlo en la plataforma.';
       case 'session_scheduled': return 'Confirma a [Nombre_Alumno] su sesión agendada para [Fecha] a las [Hora] y recuérdale el enlace: [Link_Calendar].';
-      case 'session_closed': return 'Felicita a [Nombre_Alumno] por finalizar su sesión y avísale que el registro y las notas ya están disponibles en su seguimiento.';
+      case 'session_closed': return 'Felicita a [Nombre_Alumno] por finalizar su sesión y avísale que el registro y las notas ya están disponibles en su mentoría.';
       default: return 'Escribe un mensaje corto preguntándole a [Nombre_Alumno] cómo está...';
     }
   };
@@ -179,7 +179,7 @@ export default function BuilderPage() {
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="scope" checked={scope === 'followups'} onChange={() => handleScopeChange('followups')} className="text-primary focus:ring-primary h-4 w-4" />
-                        <span className="text-sm">Seguimientos</span>
+                        <span className="text-sm">Mentorías</span>
                       </label>
                     </div>
                     
@@ -484,7 +484,7 @@ export default function BuilderPage() {
                                         </li>
                                       )}
                                       
-                                      {/* Variables para Seguimientos */}
+                                      {/* Variables para Mentorías */}
                                       {triggerType === 'task_assigned' && (
                                         <li className="grid grid-cols-[110px_1fr] gap-2 items-start">
                                           <code className="bg-muted px-1 py-0.5 rounded text-primary font-medium">[Nombre_Tarea]</code>

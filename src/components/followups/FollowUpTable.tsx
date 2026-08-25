@@ -57,8 +57,9 @@ export function FollowUpTable({
 
   if (isLoading) {
     return (
-      <div className="p-20 text-center text-muted-foreground animate-pulse font-medium">
-        Sincronizando seguimientos...
+      <div className="p-20 text-center">
+        <Loader2 className="animate-spin text-primary h-8 w-8 mx-auto mb-4" />
+        <p className="text-muted-foreground font-medium">Sincronizando mentorías...</p>
       </div>
     );
   }
@@ -66,7 +67,7 @@ export function FollowUpTable({
   if (followUps.length === 0) {
     return (
       <div className="p-20 text-center italic text-muted-foreground">
-        No se encontraron registros de seguimiento.
+        <p className="text-muted-foreground font-medium">No se encontraron registros de mentoría.</p>
       </div>
     );
   }
@@ -149,9 +150,9 @@ export function FollowUpTable({
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onToggleStatus(f)} className="gap-2 py-2 cursor-pointer">
                             {f.status === 'suspended' ? (
-                              <><PlayCircle className="h-3.5 w-3.5 text-success" /> Habilitar Seguimiento</>
+                              <><PlayCircle className="h-3.5 w-3.5 text-success" /> Habilitar Mentoría</>
                             ) : (
-                              <><PauseCircle className="h-3.5 w-3.5 text-warn" /> Suspender Seguimiento</>
+                              <><PauseCircle className="h-3.5 w-3.5 text-warn" /> Suspender Mentoría</>
                             )}
                           </DropdownMenuItem>
                           {f.planGuideUrl && (
@@ -207,7 +208,6 @@ export function FollowUpTable({
               <div className="flex flex-col gap-1">
                 <span className="text-[9px] uppercase font-black text-muted-foreground tracking-tighter">Sesiones</span>
                 <div className="flex items-center gap-2">
-                   {/* Reutilizamos FollowUpStats pero solo necesitamos el valor, así que lo simulamos o extraemos lógica */}
                    <span className="text-xs font-bold">Consultar detalle →</span>
                 </div>
               </div>
@@ -220,9 +220,9 @@ export function FollowUpTable({
             <div className="flex items-center gap-2">
               <Button 
                 onClick={() => router.push(`/seguimientos/${f.id}`)}
-                className="flex-1 h-11 rounded-xl font-bold text-xs gap-2"
+                className="w-full rounded-xl font-bold h-12 flex items-center justify-center gap-2"
               >
-                Gestionar Seguimiento <ChevronRight className="h-4 w-4" />
+                Gestionar Mentoría <ChevronRight className="h-4 w-4" />
               </Button>
               {(isMentor || isAdmin) && (
                 <DropdownMenu>

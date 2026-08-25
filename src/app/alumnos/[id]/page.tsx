@@ -573,7 +573,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                 <TabsTrigger value="summary" className="rounded-xl px-6 font-bold gap-2 shrink-0"><User className="h-4 w-4" /> Información General</TabsTrigger>
                 <TabsTrigger value="profiling" className="rounded-xl px-6 font-bold gap-2 shrink-0"><BrainCircuit className="h-4 w-4" /> Perfilamiento IA</TabsTrigger>
                 <TabsTrigger value="courses" className="rounded-xl px-6 font-bold gap-2 shrink-0"><BookOpen className="h-4 w-4" /> Cursos y Desempeño</TabsTrigger>
-                <TabsTrigger value="followups" className="rounded-xl px-6 font-bold gap-2 shrink-0"><ClipboardList className="h-4 w-4" /> Seguimientos</TabsTrigger>
+                <TabsTrigger value="followups" className="rounded-xl px-6 font-bold gap-2 shrink-0"><ClipboardList className="h-4 w-4" /> Mentorías</TabsTrigger>
                 <TabsTrigger value="tasks" className="rounded-xl px-6 font-bold gap-2 shrink-0"><Zap className="h-4 w-4" /> Tareas Individuales</TabsTrigger>
                 <TabsTrigger value="notes" className="rounded-xl px-6 font-bold gap-2 shrink-0"><MessageSquare className="h-4 w-4" /> Bitácora</TabsTrigger>
               </TabsList>

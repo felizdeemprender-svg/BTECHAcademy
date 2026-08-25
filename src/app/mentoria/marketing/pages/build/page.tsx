@@ -224,7 +224,7 @@ function BuilderContent() {
       combined.push(...rawFollowups.map(f => ({ 
         ...f, 
         productType: 'followup',
-        description: f.goal || 'Seguimiento grupal',
+        description: f.goal || 'Mentoría grupal',
         // Inyectar tag dummy para UI
         tagIds: []
       })));

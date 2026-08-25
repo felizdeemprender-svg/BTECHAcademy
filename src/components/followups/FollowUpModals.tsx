@@ -76,8 +76,8 @@ export function FollowUpModals({
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader className="text-left">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><ClipboardList className="text-primary h-6 w-6" /></div>
-            <DialogTitle className="text-xl md:text-2xl font-bold">Nuevo Seguimiento Académico</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">Define el alcance del acompañamiento para el alumno.</DialogDescription>
+            <DialogTitle className="text-xl md:text-2xl font-bold">Nueva Mentoría</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">Define el alcance del programa académico.</DialogDescription>
           </DialogHeader>
           <div className="space-y-6 px-8 pb-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-6">
@@ -93,7 +93,7 @@ export function FollowUpModals({
 
               {(formData.type === 'individual' || !formData.type) && (
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Alumno del Seguimiento</Label>
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Alumno de la Mentoría</Label>
                 <Tabs value={isManualInvite ? 'manual' : 'select'} onValueChange={v => setIsManualInvite(v === 'manual')} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-4">
                     <TabsTrigger value="select" className="gap-2"><Users className="h-4 w-4" /> Seleccionar</TabsTrigger>
@@ -139,7 +139,7 @@ export function FollowUpModals({
               )}
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nombre del Seguimiento</Label>
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nombre de la Mentoría</Label>
                 <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ej: Mentoría Mentores Expertos" className=""  size="lg" />
               </div>
             </div>
@@ -203,7 +203,7 @@ export function FollowUpModals({
 
             <DialogFooter className="pt-4">
               <Button onClick={onCreate} disabled={loading || (!isManualInvite && !formData.studentId) || (isManualInvite && !inviteEmail)} className="w-full h-14 rounded-2xl text-lg font-bold">
-                {loading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} Iniciar Seguimiento
+                {loading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} Iniciar Mentoría
               </Button>
             </DialogFooter>
           </div>
@@ -215,12 +215,12 @@ export function FollowUpModals({
         <DialogContent className="mw-2xl">
           <DialogHeader className="text-left">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><Pencil className="text-primary h-6 w-6" /></div>
-            <DialogTitle className="text-xl md:text-2xl font-bold">Editar Seguimiento</DialogTitle>
+            <DialogTitle className="text-xl md:text-2xl font-bold">Editar Mentoría</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">Ajusta los parámetros del programa académico.</DialogDescription>
           </DialogHeader>
           <div className="space-y-6 px-8 pb-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-2">
-              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nombre del Seguimiento</Label>
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Nombre de la Mentoría</Label>
               <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className=""  size="lg" />
             </div>
 
@@ -286,9 +286,9 @@ export function FollowUpModals({
             <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center text-danger mx-auto mb-6">
               <AlertTriangle className="h-8 w-8" />
             </div>
-            <DialogTitle className="text-2xl font-bold mb-2">¿Eliminar Seguimiento?</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground leading-relaxed mb-8">
-              Esta acción borrará el programa y todas sus sesiones asociadas. 
+            <DialogTitle className="text-2xl font-bold mb-2">¿Eliminar Mentoría?</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Esta acción no se puede deshacer. Se eliminarán permanentemente todas las sesiones, tareas y progresos asociados a esta mentoría.
               <br/><strong>Nota:</strong> Solo se permite borrar si no existen tareas o compromisos registrados.
             </DialogDescription>
           </DialogHeader>

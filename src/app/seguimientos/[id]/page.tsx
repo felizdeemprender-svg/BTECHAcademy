@@ -333,7 +333,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         const end = new Date(start.getTime() + (sessionForm.duration || 60) * 60000);
         
         const title = `${editingSession.isAdditional ? 'Sesión Extra' : 'Sesión ' + editingSession.orderIndex}: ${followUp?.title}`;
-        const details = `Seguimiento Académico: ${followUp?.goal}\n\nMentor: ${mentorEmail || 'Mentor Institucional'}\nAlumno: ${followUp?.studentName}\n\nTemas Previstos:\n${sessionForm.topics.map((t: string) => `• ${t}`).join('\n')}`;
+        const details = `Programa de Mentoría: ${followUp?.goal}\n\nMentor: ${mentorEmail || 'Mentor Institucional'}\nAlumno: ${followUp?.studentName}\n\nTemas Previstos:\n${sessionForm.topics.map((t: string) => `• ${t}`).join('\n')}`;
         
         const attendees = [];
         const guestEmail = isMentor ? studentEmail : (mentorEmail || MENTOR_ORGANIZER_EMAIL);
@@ -401,7 +401,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d\d\d/g, '');
       
       const title = `${isAdditional ? 'Sesión Extra' : 'Sesión ' + orderIndex}: ${followUp?.title}`;
-      const details = `Seguimiento Académico: ${followUp?.goal}\n\nMentor: ${mentorEmail || 'Mentor Institucional'}\nAlumno: ${followUp?.studentName}\n\nTemas Previstos:\n${form.topics.map((t: string) => `• ${t}`).join('\n')}`;
+      const details = `Programa de Mentoría: ${followUp?.goal}\n\nMentor: ${mentorEmail || 'Mentor Institucional'}\nAlumno: ${followUp?.studentName}\n\nTemas Previstos:\n${form.topics.map((t: string) => `• ${t}`).join('\n')}`;
       
       const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
       
@@ -633,7 +633,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
           <div className="bg-danger/10 border-l-4 border-danger p-6 rounded-r-2xl flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2">
             <AlertCircle className="h-6 w-6 text-danger shrink-0 mt-0.5" />
             <div className="text-sm text-danger space-y-1">
-              <p className="font-bold">Seguimiento Suspendido Institucionalmente</p>
+              <p className="font-bold">Mentoría Suspendida Institucionalmente</p>
               <p>Este programa de acompañamiento se encuentra pausado. Las tareas y el registro de sesiones han sido inhabilitados temporalmente.</p>
             </div>
           </div>

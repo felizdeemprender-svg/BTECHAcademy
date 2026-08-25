@@ -343,7 +343,7 @@ const DashboardContent = ({
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StudentStatCard icon={Library} label="Mis Cursos" value={studentEnrollments?.length || 0} color="blue" />
                 <StudentStatCard icon={Zap} label="Desafíos Pendientes" value={pendingTasks?.length || 0} color="amber" />
-                <StudentStatCard icon={ClipboardList} label="Seguimientos" value={recentFollowUps?.length || 0} color="accent" />
+                <StudentStatCard icon={ClipboardList} label="Mentorías" value={recentFollowUps?.length || 0} color="accent" />
                 <StudentStatCard icon={Trophy} label="Logros IA" value={completedTasks?.length || 0} color="emerald" />
               </div>
             </div>
@@ -509,7 +509,7 @@ const DashboardContent = ({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 px-1">
               <div>
                 <h2 className="text-xl md:text-2xl font-bold text-foreground">
-                  {isMentor || isAdmin ? "Seguimientos Estratégicos" : "Mis Programas de Acompañamiento"}
+                  {isMentor || isAdmin ? "Mentorías Estratégicas" : "Mis Programas de Acompañamiento"}
                 </h2>
                 <p className="text-xs md:text-sm text-muted-foreground font-medium">Acompañamiento personalizado y sesiones de mentoría.</p>
               </div>

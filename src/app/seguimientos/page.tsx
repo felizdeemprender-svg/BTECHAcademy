@@ -195,11 +195,11 @@ export default function FollowUpsPage() {
         });
       }
 
-      toast({ title: 'Seguimiento Creado' });
+      toast({ title: 'Mentoría Creada' });
       setIsCreateOpen(false);
       router.push(`/seguimientos/${followUpId}`);
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Error al crear seguimiento' });
+      toast({ variant: 'destructive', title: 'Error al crear mentoría' });
     } finally {
       setLoading(false);
     }
@@ -225,7 +225,7 @@ export default function FollowUpsPage() {
         updatedAt: serverTimestamp()
       });
 
-      toast({ title: 'Seguimiento Actualizado' });
+      toast({ title: 'Mentoría Actualizada' });
       setIsEditOpen(false);
     } catch (e) {
       toast({ variant: 'destructive', title: 'Error al actualizar' });
@@ -259,7 +259,7 @@ export default function FollowUpsPage() {
       await Promise.all(sessionsSnap.docs.map(s => deleteDoc(s.ref)));
       await deleteDoc(doc(db, 'followups', selectedFollowUp.id));
       
-      toast({ title: 'Seguimiento Eliminado' });
+      toast({ title: 'Mentoría Eliminada' });
       setIsDeleteOpen(false);
     } catch (e) {
       toast({ variant: 'destructive', title: 'Error al eliminar' });
@@ -278,7 +278,7 @@ export default function FollowUpsPage() {
       <div className="space-y-8 pb-20">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Seguimientos Académicos</h1>
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Programas de Mentoría</h1>
             <p className="text-muted-foreground text-lg font-medium">Gestión de sesiones personalizadas y objetivos estratégicos.</p>
           </div>
           {(isMentor || isAdmin) && (
@@ -286,7 +286,7 @@ export default function FollowUpsPage() {
               setFormData({ title: '', goal: '', studentId: '', totalSessions: 4, startDate: '', endDate: '' });
               setIsCreateOpen(true);
             }} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
-              <Plus className="h-5 w-5" /> Nuevo Seguimiento
+              <Plus className="h-5 w-5" /> Nueva Mentoría
             </Button>
           )}
         </header>
