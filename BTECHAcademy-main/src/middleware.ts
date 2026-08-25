@@ -20,6 +20,11 @@ export async function middleware(request: NextRequest) {
     proUrl.host = 'btechacademy-pro--btechacademy-8b329.us-central1.hosted.app';
     return NextResponse.redirect(proUrl);
   }
+
+  // 0.5. Si es Vercel, no interferir con ninguna redirección
+  if (hostname.includes('vercel.app')) {
+    return NextResponse.next();
+  }
   const segments = pathname.split('/').filter(Boolean);
 
   const hostParts = hostname.split('.');
