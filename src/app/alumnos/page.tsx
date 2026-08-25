@@ -90,29 +90,28 @@ export default function AlumnosPage() {
           coursesCount: s.courseIds.size
         }));
         
-        const finalStudents = await Promise.all(studentList.map(async (s) => {
-          // Solo consultamos Firestore si tenemos un ID real (no vacío, no temporal)
+        const finalStudents = (await Promise.all(studentList.map(async (s) => {
+          // Solo listamos alumnos reales (con UID de Firebase válido)
           if (s.id && !s.id.includes('_') && !s.id.includes('@')) {
             try {
               const profileSnap = await getDoc(doc(db, 'users', s.id));
               if (profileSnap.exists()) {
                 const pData = profileSnap.data();
                 return { 
-                  ...s, 
-                  photoURL: pData.photoURL, 
-                  signInProvider: pData.signInProvider,
-                  displayName: pData.displayName || s.name
+                  ...s,
+                  displayName: pData.displayName,
+                  photoURL: pData.photoURL
                 };
               }
-            } catch (_) {
-              // Ignorar errores de perfil individual
+            } catch (e) {
+              console.warn(`Error al cargar perfil de ${s.id}:`, e);
             }
           }
-          return s;
-        }));
+          return null; // Ocultamos invitaciones sin loguear de la vista del tutor
+        }))).filter(Boolean);
 
-        finalStudents.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
-        setStudents(finalStudents);
+        finalStudents.sort((a, b) => (a?.displayName || '').localeCompare(b?.displayName || ''));
+        setStudents(finalStudents as any[]);
       } catch (e) {
         console.error("Error fetching students:", e);
       } finally {

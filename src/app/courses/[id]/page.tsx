@@ -12,6 +12,7 @@ import { useAuth } from '@/components/auth-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { EvaluationData, StudentAchievement } from '@/types/student';
 
 // Hooks
@@ -26,6 +27,8 @@ import { CourseContent } from '@/components/courses/CourseContent';
 
 export default function CourseViewerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: courseId } = use(params);
+  const searchParams = useSearchParams();
+  const isolatedModuleId = searchParams.get('isolated');
   const { profile: authProfile } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
@@ -46,6 +49,16 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
   } = useCourseProgressV3(courseId);
 
   const isCompleted = enrollment?.progress?.completedModules?.includes(activeModule?.id);
+
+  // Sync isolated module if present
+  useEffect(() => {
+    if (isolatedModuleId && modules.length > 0) {
+      const idx = modules.findIndex(m => m.id === isolatedModuleId);
+      if (idx !== -1 && idx !== activeModuleIndex) {
+        setActiveModuleIndex(idx);
+      }
+    }
+  }, [isolatedModuleId, modules, activeModuleIndex, setActiveModuleIndex]);
 
   // Sync evaluation result from enrollment when module changes
   useEffect(() => {
@@ -317,7 +330,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
 
         <div className="grid lg:grid-cols-12 gap-8 items-start">
           {/* Main Content Area */}
-          <div className="lg:col-span-8 space-y-10">
+          <div className={isolatedModuleId ? "lg:col-span-12 space-y-10 max-w-5xl mx-auto w-full" : "lg:col-span-8 space-y-10"}>
             {/* 1. Video Player */}
             <div className="space-y-4">
                 <VideoPlayer 
@@ -357,7 +370,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                     }}
                     isCompleted={isCompleted}
                     allowRetries={activeModule?.allowRetries !== false}
-                    isLastModule={activeModuleIndex === modules.length - 1}
+                    isLastModule={!!isolatedModuleId || activeModuleIndex === modules.length - 1}
                     isSupportNext={currentQuestions === activeModule?.supportQuestions && (!evaluationResult?.isSupport)}
                     primaryColor={primaryColor}
                  />
@@ -366,20 +379,22 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Sidebar Navigation */}
-          <div className="lg:col-span-4 sticky top-24">
-            <CourseNavigation 
-                modules={modules}
-                activeModuleIndex={activeModuleIndex}
-                onSelectModule={(idx) => {
-                    setActiveModuleIndex(idx);
-                    setEvaluationResult(null);
-                }}
-                completedModuleIds={enrollment?.progress?.completedModules || []}
-                courseTitle={course.title}
-                progressPercent={progressPercent}
-                primaryColor={primaryColor}
-            />
-          </div>
+          {!isolatedModuleId && (
+            <div className="lg:col-span-4 sticky top-24">
+              <CourseNavigation 
+                  modules={modules}
+                  activeModuleIndex={activeModuleIndex}
+                  onSelectModule={(idx) => {
+                      setActiveModuleIndex(idx);
+                      setEvaluationResult(null);
+                  }}
+                  completedModuleIds={enrollment?.progress?.completedModules || []}
+                  courseTitle={course.title}
+                  progressPercent={progressPercent}
+                  primaryColor={primaryColor}
+              />
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

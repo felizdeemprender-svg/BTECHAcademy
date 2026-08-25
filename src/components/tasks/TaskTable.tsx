@@ -121,7 +121,13 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
 
                 <TableCell className="text-right px-6">
                   <Button 
-                    onClick={() => onAction(task)}
+                    onClick={() => {
+                      if (type === 'pending' && (task.type === 'course' || task.type === 'module')) {
+                        window.open(task.type === 'module' ? `/courses/${task.courseId}?isolated=${task.moduleId}` : `/courses/${task.courseId}`, '_blank');
+                      } else {
+                        onAction(task);
+                      }
+                    }}
                     size="sm" 
                     variant="ghost" 
                     className={cn(
@@ -129,7 +135,9 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
                       type === 'pending' ? "text-accent hover:bg-accent/10" : "text-primary hover:bg-primary/10"
                     )}
                   >
-                    {type === 'pending' ? 'Contestar' : 'Ver Detalle'} <ChevronRight className="h-4 w-4 ml-1" />
+                    {type === 'pending' 
+                      ? (task.type === 'course' || task.type === 'module' ? 'Ir al Curso' : 'Contestar') 
+                      : 'Ver Detalle'} <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </TableCell>
               </TableRow>
@@ -184,14 +192,20 @@ export function TaskTable({ tasks, isLoading, type, onAction }: TaskTableProps) 
             </div>
 
             <Button 
-              onClick={() => onAction(task)}
+              onClick={() => {
+                if (type === 'pending' && (task.type === 'course' || task.type === 'module')) {
+                  window.open(task.type === 'module' ? `/courses/${task.courseId}?isolated=${task.moduleId}` : `/courses/${task.courseId}`, '_blank');
+                } else {
+                  onAction(task);
+                }
+              }}
               className={cn(
                 "w-full h-11 rounded-xl font-bold text-xs gap-2 shadow-lg",
                 type === 'pending' ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90"
               )}
             >
               {type === 'pending' ? (
-                <><MessageSquare className="h-4 w-4" /> Contestar Ahora</>
+                <><MessageSquare className="h-4 w-4" /> {task.type === 'course' || task.type === 'module' ? 'Ir al Curso' : 'Contestar Ahora'}</>
               ) : (
                 <><FileText className="h-4 w-4" /> Ver Retroalimentación</>
               )}

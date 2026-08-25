@@ -1,4 +1,4 @@
-﻿'use server';
+'use server';
 /**
  * @fileOverview Herramientas de Genkit para que Evo consulte la BD autónomamente.
  * Usa las cookies para garantizar la seguridad del UID.
@@ -33,11 +33,15 @@ export const getMentorDataTool = ai.defineTool(
       .where('mentorId', '==', uid)
       .get();
 
-    const landings = landingsSnap.docs.map((doc) => ({
-      id: doc.id,
-      title: doc.data().title || 'Landing sin título',
-      courseId: doc.data().courseId || 'Ninguno'
-    }));
+    const landings = landingsSnap.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title || 'Landing sin título',
+        courseId: data.courseId || 'Ninguno',
+        views: data.views || data.visits || 0
+      };
+    });
 
     if (coursesSnap.empty && landingsSnap.empty) {
       return { message: 'El mentor no tiene cursos ni landings creados aún.' };
@@ -151,7 +155,7 @@ export const queryPlatformDataTool = ai.defineTool(
     try {
       if (role === 'mentor') {
         if (collectionName === 'tasks') {
-          queryRef = adminDb.collection('users').doc(uid).collection('individualTasks');
+          queryRef = adminDb.collectionGroup('individualTasks').where('mentorId', '==', uid);
         } else if (collectionName === 'referidos') {
           queryRef = adminDb.collection('mentorInfluencers').doc(uid).collection('referidos');
         } else {
@@ -171,16 +175,22 @@ export const queryPlatformDataTool = ai.defineTool(
       }
 
       const safeLimit = Math.min(limit || 20, 50);
+      
+      // Obtener conteo total para que Evo pueda dar el número exacto
+      const countSnap = await queryRef.count().get();
+      const totalCount = countSnap.data().count;
+
       const snap = await queryRef.limit(safeLimit).get();
       
       if (snap.empty) {
-        return { message: `No hay registros en la colección ${collectionName}.` };
+        return { message: `No hay registros en la colección ${collectionName}.`, totalCount: 0 };
       }
 
       const data = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
       
       return {
         collection: collectionName,
+        totalCount: totalCount,
         countReturned: data.length,
         data: data
       };
@@ -209,3 +219,171 @@ export const readDocumentationTool = ai.defineTool(
     }
   }
 );
+
+export const getStudentsProgressTool = ai.defineTool(
+  {
+    name: 'getStudentsProgress',
+    description: 'Consulta los alumnos inscritos en los cursos del tutor y su porcentaje de avance. Úsalo para identificar qué alumno está más retrasado o ver promedios.',
+    inputSchema: z.object({
+      limit: z.number().optional().describe('Cantidad máxima de alumnos a retornar (útil para top N retrasados)'),
+      sortBy: z.enum(['progress_asc', 'progress_desc']).optional().describe('Ordenar por progreso')
+    }),
+    outputSchema: z.any(),
+  },
+  async ({ limit, sortBy }) => {
+    const context = ai.currentContext();
+    const uid = context?.uid;
+    if (!uid) throw new Error('No autorizado.');
+
+    // 1. Obtener cursos del tutor
+    const coursesSnap = await adminDb.collection('courses').where('mentorId', '==', uid).get();
+    if (coursesSnap.empty) return { message: 'No tienes cursos creados.' };
+    
+    const courseIds = coursesSnap.docs.map(doc => doc.id);
+    const coursesMap: Record<string, string> = {};
+    coursesSnap.docs.forEach(doc => coursesMap[doc.id] = doc.data().title || 'Sin título');
+
+    // 2. Obtener inscripciones
+    const allEnrollments: any[] = [];
+    for (let i = 0; i < courseIds.length; i += 30) {
+      const chunk = courseIds.slice(i, i + 30);
+      const snap = await adminDb.collection('enrollments').where('courseId', 'in', chunk).get();
+      snap.docs.forEach(doc => allEnrollments.push({ id: doc.id, ...doc.data() }));
+    }
+
+    if (allEnrollments.length === 0) return { message: 'No hay alumnos inscritos en tus cursos.' };
+
+    // 3. Obtener nombres de estudiantes
+    const studentIds = [...new Set(allEnrollments.map(e => e.studentId).filter(Boolean))];
+    const usersMap: Record<string, any> = {};
+    for (let i = 0; i < studentIds.length; i += 30) {
+      const chunk = studentIds.slice(i, i + 30);
+      const snap = await adminDb.collection('users').where('__name__', 'in', chunk).get();
+      snap.docs.forEach(doc => usersMap[doc.id] = doc.data());
+    }
+
+    // 4. Mapear datos completos
+    let results = allEnrollments.map(enroll => ({
+      enrollmentId: enroll.id,
+      studentId: enroll.studentId,
+      studentName: usersMap[enroll.studentId]?.displayName || usersMap[enroll.studentId]?.email || 'Usuario Desconocido',
+      courseId: enroll.courseId,
+      courseTitle: coursesMap[enroll.courseId],
+      progress: enroll.progress ?? 0,
+      status: enroll.status || 'activo'
+    }));
+
+    // 5. Ordenar
+    if (sortBy === 'progress_asc') {
+      results.sort((a, b) => a.progress - b.progress);
+    } else if (sortBy === 'progress_desc') {
+      results.sort((a, b) => b.progress - a.progress);
+    }
+
+    // 6. Limitar
+    if (limit) {
+      results = results.slice(0, limit);
+    }
+
+    return {
+      totalAnalyzed: allEnrollments.length,
+      data: results
+    };
+  }
+);
+
+export const getMentorAgendaTool = ai.defineTool(
+  {
+    name: 'getMentorAgenda',
+    description: 'Consulta las sesiones agendadas de todos los seguimientos del tutor. Úsalo para responder cuántas horas tiene ocupadas, su agenda o próximas citas.',
+    inputSchema: z.object({
+      startDate: z.string().optional().describe('Fecha de inicio en formato YYYY-MM-DD (ej: 2026-08-25). Si se omite, trae desde hoy.'),
+      endDate: z.string().optional().describe('Fecha de fin en formato YYYY-MM-DD. Si se omite, trae todas las futuras.')
+    }),
+    outputSchema: z.any(),
+  },
+  async ({ startDate, endDate }) => {
+    const context = ai.currentContext();
+    const uid = context?.uid;
+    if (!uid) throw new Error('No autorizado.');
+
+    try {
+      // 1. Obtener todos los seguimientos del mentor
+      const followupsSnap = await adminDb.collection('followups').where('mentorId', '==', uid).get();
+      if (followupsSnap.empty) return { message: 'No tienes seguimientos creados.' };
+
+      const followupDocs = followupsSnap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) }));
+      
+      // 2. Iterar por cada seguimiento y traer sus sesiones
+      let allSessions: any[] = [];
+      for (const fu of followupDocs) {
+        const sessionsSnap = await adminDb.collection('followups').doc(fu.id).collection('sessions').get();
+        sessionsSnap.docs.forEach(doc => {
+          const sessionData = doc.data();
+          const today = new Date().toISOString().split('T')[0];
+          
+          let status = 'Sin agendar';
+          if (sessionData.status) {
+            if (sessionData.status === 'completed') status = 'Completada';
+            else if (sessionData.status === 'cancelled') status = 'Cancelada';
+            else if (sessionData.status === 'no_show') status = 'No asistió';
+            else if (sessionData.status === 'scheduled') {
+              status = sessionData.date >= today ? 'Programada' : 'Vencida';
+            } else if (sessionData.status === 'pending') {
+              status = 'Sin agendar';
+            } else {
+              status = sessionData.status; // fallback por si hay otro string
+            }
+          } else {
+            // Fallback para documentos antiguos
+            if (sessionData.isCompleted) {
+              status = 'Completada';
+            } else if (sessionData.date) {
+              status = sessionData.date >= today ? 'Programada' : 'Vencida';
+            }
+          }
+
+          allSessions.push({
+            followupId: fu.id,
+            studentName: fu.studentName || 'Desconocido',
+            title: fu.title || 'Seguimiento',
+            date: sessionData.date || '',
+            time: sessionData.time || '00:00',
+            duration: sessionData.duration || 60,
+            isCompleted: sessionData.isCompleted || false,
+            status
+          });
+        });
+      }
+
+      if (allSessions.length === 0) return { message: 'No hay sesiones en tus seguimientos.' };
+
+      // 3. Filtrar por fechas (solo aplica a sesiones con fecha si se envían filtros)
+      if (startDate || endDate) {
+        allSessions = allSessions.filter(s => {
+          if (!s.date) return false; // Si piden un rango, omitimos las sin fecha
+          if (startDate && s.date < startDate) return false;
+          if (endDate && s.date > endDate) return false;
+          return true;
+        });
+      }
+
+      if (allSessions.length === 0) return { message: 'No hay sesiones agendadas en ese rango de fechas.' };
+
+      // 4. Ordenar y calcular total
+      allSessions.sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
+      const totalMinutes = allSessions.reduce((acc, curr) => acc + curr.duration, 0);
+      const totalHours = (totalMinutes / 60).toFixed(1);
+
+      return {
+        totalSessions: allSessions.length,
+        totalMinutesOccupied: totalMinutes,
+        totalHoursOccupied: totalHours,
+        sessions: allSessions
+      };
+    } catch (error: any) {
+      return { error: `Fallo al consultar agenda: ${error.message}` };
+    }
+  }
+);
+

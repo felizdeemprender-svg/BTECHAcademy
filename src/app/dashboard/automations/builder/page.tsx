@@ -77,6 +77,8 @@ export default function BuilderPage() {
     if (newScope === 'global') setTriggerType('inactivity');
     if (newScope === 'courses') setTriggerType('course_completion');
     if (newScope === 'landings') setTriggerType('landing_registration');
+    if (newScope === 'tasks') setTriggerType('task_assigned');
+    if (newScope === 'followups') setTriggerType('session_scheduled');
   };
 
   const getDefaultPrompt = (trigger: string) => {
@@ -87,6 +89,9 @@ export default function BuilderPage() {
       case 'module_completion': return 'Anima a [Nombre_Alumno] que acaba de terminar el [Nombre_Modulo] de [Nombre_Curso]. Dile que va por buen camino.';
       case 'landing_registration': return 'Da una cálida bienvenida a [Nombre_Alumno] por registrarse en [Nombre_Landing]. Recuérdale que revise su correo.';
       case 'landing_abandonment': return 'Escribe un mensaje sutil a [Nombre_Alumno] diciendo que vimos que le interesó [Nombre_Landing] pero no completó la inscripción. Ofrécele resolver sus dudas.';
+      case 'task_assigned': return 'Notifica a [Nombre_Alumno] que tiene un nuevo desafío asignado: [Nombre_Tarea]. Invítalo a revisarlo en la plataforma.';
+      case 'session_scheduled': return 'Confirma a [Nombre_Alumno] su sesión agendada para [Fecha] a las [Hora] y recuérdale el enlace: [Link_Calendar].';
+      case 'session_closed': return 'Felicita a [Nombre_Alumno] por finalizar su sesión y avísale que el registro y las notas ya están disponibles en su seguimiento.';
       default: return 'Escribe un mensaje corto preguntándole a [Nombre_Alumno] cómo está...';
     }
   };
@@ -168,6 +173,14 @@ export default function BuilderPage() {
                         <input type="radio" name="scope" checked={scope === 'landings'} onChange={() => handleScopeChange('landings')} className="text-primary focus:ring-primary h-4 w-4" />
                         <span className="text-sm">Landings</span>
                       </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="scope" checked={scope === 'tasks'} onChange={() => handleScopeChange('tasks')} className="text-primary focus:ring-primary h-4 w-4" />
+                        <span className="text-sm">Tareas</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="scope" checked={scope === 'followups'} onChange={() => handleScopeChange('followups')} className="text-primary focus:ring-primary h-4 w-4" />
+                        <span className="text-sm">Seguimientos</span>
+                      </label>
                     </div>
                     
                     {/* Selectores dinámicos basados en el Scope */}
@@ -218,6 +231,17 @@ export default function BuilderPage() {
                         <>
                           <option value="landing_registration">Registro Exitoso en Landing</option>
                           <option value="landing_abandonment">Abandono de Carrito (Pagos)</option>
+                        </>
+                      )}
+                      {scope === 'tasks' && (
+                        <>
+                          <option value="task_assigned">Nueva Tarea/Desafío Asignado</option>
+                        </>
+                      )}
+                      {scope === 'followups' && (
+                        <>
+                          <option value="session_scheduled">Sesión Agendada</option>
+                          <option value="session_closed">Sesión Cerrada/Completada</option>
                         </>
                       )}
                     </select>
@@ -300,6 +324,23 @@ export default function BuilderPage() {
                             <input type="number" defaultValue="2" min="1" className="flex h-8 w-16 rounded-md border border-input bg-background px-2 text-sm" />
                             <span className="text-xs text-muted-foreground">horas</span>
                           </div>
+                        </div>
+                      )}
+
+                      {/* FOLLOWUPS TRIGGERS */}
+                      {triggerType === 'task_assigned' && (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm font-medium">Se dispara al asignar un desafío/compromiso a un alumno.</p>
+                        </div>
+                      )}
+                      {triggerType === 'session_scheduled' && (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm font-medium">Se dispara al agendar una sesión sincrónica (Google Calendar).</p>
+                        </div>
+                      )}
+                      {triggerType === 'session_closed' && (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-sm font-medium">Se dispara al marcar una sesión como Completada.</p>
                         </div>
                       )}
                     </div>
@@ -441,6 +482,32 @@ export default function BuilderPage() {
                                           <code className="bg-muted px-1 py-0.5 rounded text-primary font-medium">[Nombre_Landing]</code>
                                           <span className="text-muted-foreground">Nombre de la página de captura/venta.</span>
                                         </li>
+                                      )}
+                                      
+                                      {/* Variables para Seguimientos */}
+                                      {triggerType === 'task_assigned' && (
+                                        <li className="grid grid-cols-[110px_1fr] gap-2 items-start">
+                                          <code className="bg-muted px-1 py-0.5 rounded text-primary font-medium">[Nombre_Tarea]</code>
+                                          <span className="text-muted-foreground">El título del desafío o módulo asignado.</span>
+                                        </li>
+                                      )}
+                                      {(triggerType === 'session_scheduled' || triggerType === 'session_closed') && (
+                                        <>
+                                          <li className="grid grid-cols-[110px_1fr] gap-2 items-start">
+                                            <code className="bg-muted px-1 py-0.5 rounded text-primary font-medium">[Fecha]</code>
+                                            <span className="text-muted-foreground">Fecha de la sesión.</span>
+                                          </li>
+                                          <li className="grid grid-cols-[110px_1fr] gap-2 items-start">
+                                            <code className="bg-muted px-1 py-0.5 rounded text-primary font-medium">[Hora]</code>
+                                            <span className="text-muted-foreground">Hora de la sesión.</span>
+                                          </li>
+                                          {triggerType === 'session_scheduled' && (
+                                            <li className="grid grid-cols-[110px_1fr] gap-2 items-start">
+                                              <code className="bg-muted px-1 py-0.5 rounded text-primary font-medium">[Link_Calendar]</code>
+                                              <span className="text-muted-foreground">Enlace a Google Calendar de la sesión.</span>
+                                            </li>
+                                          )}
+                                        </>
                                       )}
                                     </ul>
                                   </PopoverContent>

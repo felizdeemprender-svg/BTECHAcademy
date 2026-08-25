@@ -1,4 +1,4 @@
-export type RuleScope = 'global' | 'courses' | 'landings';
+export type RuleScope = 'global' | 'courses' | 'landings' | 'followups' | 'tasks';
 
 export type TriggerType = 
   | 'inactivity' 
@@ -8,7 +8,10 @@ export type TriggerType =
   | 'specific_date' 
   | 'birthday'
   | 'landing_registration'
-  | 'landing_abandonment';
+  | 'landing_abandonment'
+  | 'task_assigned'
+  | 'session_scheduled'
+  | 'session_closed';
 
 export type ActionType = 'dynamic_message' | 'fixed_template' | 'tag' | 'email';
 

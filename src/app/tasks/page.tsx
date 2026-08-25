@@ -64,7 +64,6 @@ export default function StudentTasksPage() {
       });
 
       const invitationId = profile!.email.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_');
-      let taskRef = doc(db, 'users', profile!.uid, 'individualTasks', task.id);
       
       const updateData = {
         answer,
@@ -77,10 +76,21 @@ export default function StudentTasksPage() {
       };
 
       try {
-        await updateDoc(taskRef, updateData);
+        if (task.followUpId) {
+          const taskRef = doc(db, 'followups', task.followUpId, 'tasks', task.id);
+          await updateDoc(taskRef, updateData);
+        } else {
+          let taskRef = doc(db, 'users', profile!.uid, 'individualTasks', task.id);
+          try {
+            await updateDoc(taskRef, updateData);
+          } catch (e) {
+            taskRef = doc(db, 'users', invitationId, 'individualTasks', task.id);
+            await updateDoc(taskRef, updateData);
+          }
+        }
       } catch (e) {
-        taskRef = doc(db, 'users', invitationId, 'individualTasks', task.id);
-        await updateDoc(taskRef, updateData);
+        console.error("Error updating task:", e);
+        throw e;
       }
 
       toast({ title: 'Desafío completado', description: 'Tu respuesta ha sido analizada por la IA.' });

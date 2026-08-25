@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { StudentPageHeader } from '@/components/student/PageHeader';
+import { AssignTaskForm, TaskFormData } from '@/components/tasks/AssignTaskForm';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +45,8 @@ import {
   Download,
   AlertCircle,
   Sparkles,
-  PauseCircle
+  PauseCircle,
+  Play
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -56,6 +59,7 @@ import { evaluateQuizPerformance } from '@/ai/flows/evaluate-quiz-performance';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Switch } from '@/components/ui/switch';
+import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 
 const MENTOR_ORGANIZER_EMAIL = 'felizdeemprender@gmail.com';
 
@@ -68,6 +72,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
+  const { connect, checkAvailability, createEvent, fetchEvents, isConnected, isConnecting } = useGoogleCalendar();
   const [activeTab, setActiveTab] = useState('sessions');
   const [mentorCourses, setMentorCourses] = useState<any[]>([]);
   const [studentEnrollments, setStudentEnrollments] = useState<Record<string, any>>({});
@@ -122,24 +127,103 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
     duration: 60,
     topics: [] as string[],
     newTopic: '',
-    minutes: ''
-  });
-
-  const [taskForm, setTaskData] = useState({
-    title: '',
-    description: '',
-    evaluationCriteria: '',
-    type: 'free' as 'free' | 'course',
-    courseId: '',
-    deadline: '',
-    allowFileUpload: false
+    minutes: '',
+    isCompleted: false,
+    calendarEventId: '',
+    calendarEventLink: ''
   });
 
   const [answeringTaskId, setAnsweringTaskId] = useState<string | null>(null);
   const [studentAnswer, setStudentAnswer] = useState('');
   const [studentFile, setStudentFile] = useState<File | null>(null);
   const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+  const [availabilityStatus, setAvailabilityStatus] = useState<'idle' | 'checking' | 'free' | 'busy'>('idle');
+  const [conflictTitle, setConflictTitle] = useState<string>('');
 
+  useEffect(() => {
+    if (!isConnected || !sessionForm.date || !sessionForm.time) {
+      setAvailabilityStatus('idle');
+      setConflictTitle('');
+      return;
+    }
+    
+    let isMounted = true;
+    const checkTimer = setTimeout(async () => {
+      try {
+        if (isMounted) setAvailabilityStatus('checking');
+        
+        const [year, month, day] = sessionForm.date.split('-');
+        const [hour, minute] = sessionForm.time.split(':');
+        const start = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+        const end = new Date(start.getTime() + (sessionForm.duration || 60) * 60000);
+        
+        const status = await checkAvailability(start.toISOString(), end.toISOString());
+        if (isMounted) {
+          if (status.isFree) {
+            setAvailabilityStatus('free');
+            setConflictTitle('');
+          } else {
+            setAvailabilityStatus('busy');
+            setConflictTitle(status.title || '');
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setAvailabilityStatus('idle');
+          setConflictTitle('');
+        }
+      }
+    }, 600);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(checkTimer);
+    };
+  }, [sessionForm.date, sessionForm.time, sessionForm.duration, isConnected, checkAvailability]);
+
+  const [googleEvents, setGoogleEvents] = useState<any[]>([]);
+  const [showGoogleEvents, setShowGoogleEvents] = useState(false);
+
+  const handleFetchEvents = async () => {
+    try {
+      setLoading(true);
+      const token = await connect();
+      if (token) {
+        const events = await fetchEvents(token);
+        setGoogleEvents(events);
+        setShowGoogleEvents(true);
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectEvent = (event: any) => {
+    if (event.start?.dateTime && event.end?.dateTime) {
+      const startDate = new Date(event.start.dateTime);
+      const endDate = new Date(event.end.dateTime);
+      const durationMs = endDate.getTime() - startDate.getTime();
+      const duration = Math.round(durationMs / 60000);
+      
+      const dateStr = startDate.toLocaleDateString('en-CA'); // YYYY-MM-DD local
+      const timeStr = startDate.toTimeString().slice(0, 5); // HH:mm local
+      
+      setSessionData({
+        ...sessionForm,
+        date: dateStr,
+        time: timeStr,
+        duration,
+        calendarEventId: event.id,
+        calendarEventLink: event.htmlLink || ''
+      });
+      setShowGoogleEvents(false);
+      toast({ title: 'Evento Importado', description: 'Se han autocompletado la fecha y hora.' });
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: 'El evento seleccionado no tiene un formato de fecha/hora válido (podría ser de todo el día).' });
+    }
+  };
   useEffect(() => {
     if (!editingSession && !answeringTaskId) {
       const timer = setTimeout(clearUILocks, 300);
@@ -192,6 +276,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       orderIndex: maxIndex + 1,
       isAdditional: true,
       isCompleted: false,
+      status: 'pending',
       topics: [],
       minutes: '',
       updatedAt: serverTimestamp()
@@ -219,33 +304,62 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       duration: session.duration || 60,
       topics: session.topics || [],
       newTopic: '',
-      minutes: session.minutes || ''
+      minutes: session.minutes || '',
+      isCompleted: session.isCompleted || false,
+      calendarEventId: session.calendarEventId || '',
+      calendarEventLink: session.calendarEventLink || ''
     });
   };
 
-  const handleSaveSession = async (shouldSchedule = false) => {
+  const handleSaveSession = async () => {
     if (!editingSession) return;
     setLoading(true);
     const ref = doc(db, 'followups', followUpId, 'sessions', editingSession.id);
+    const isNowCompleted = sessionForm.isCompleted;
+    const isScheduled = !!sessionForm.date;
     const data = {
       ...sessionForm,
-      isCompleted: sessionForm.minutes.trim().length > 0,
+      isCompleted: isNowCompleted,
+      status: isNowCompleted ? 'completed' : (isScheduled ? 'scheduled' : 'pending'),
       updatedAt: serverTimestamp()
     };
     delete (data as any).newTopic;
 
     try {
+      if (isConnected && sessionForm.date && sessionForm.time && !sessionForm.calendarEventId) {
+        const [year, month, day] = sessionForm.date.split('-');
+        const [hour, minute] = sessionForm.time.split(':');
+        const start = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+        const end = new Date(start.getTime() + (sessionForm.duration || 60) * 60000);
+        
+        const title = `${editingSession.isAdditional ? 'Sesión Extra' : 'Sesión ' + editingSession.orderIndex}: ${followUp?.title}`;
+        const details = `Seguimiento Académico: ${followUp?.goal}\n\nMentor: ${mentorEmail || 'Mentor Institucional'}\nAlumno: ${followUp?.studentName}\n\nTemas Previstos:\n${sessionForm.topics.map((t: string) => `• ${t}`).join('\n')}`;
+        
+        const attendees = [];
+        const guestEmail = isMentor ? studentEmail : (mentorEmail || MENTOR_ORGANIZER_EMAIL);
+        if (guestEmail) {
+          attendees.push({ email: guestEmail });
+        }
+
+        const event = await createEvent({
+          summary: title,
+          description: details,
+          start: { dateTime: start.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+          end: { dateTime: end.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+          attendees
+        });
+
+        (data as any).calendarEventId = event.id;
+        (data as any).calendarEventLink = event.htmlLink;
+      }
+
       await updateDoc(ref, data);
+      
       toast({ title: 'Datos Guardados', description: 'La sesión ha sido actualizada en el cronograma.' });
       
-      if (shouldSchedule && sessionForm.date && sessionForm.time) {
-        const calendarLink = generateGoogleCalendarLink(sessionForm, editingSession.orderIndex, editingSession.isAdditional);
-        if (calendarLink) window.open(calendarLink, '_blank');
-      }
-      
       setEditingSession(null);
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Error al guardar' });
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error al guardar', description: e.message || 'Verifica los permisos.' });
     } finally {
       setLoading(false);
     }
@@ -311,9 +425,9 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  const handleCreateTask = async () => {
+  const handleCreateTask = async (taskForm: TaskFormData) => {
     const isFree = taskForm.type === 'free';
-    const isValid = isFree ? !!taskForm.description : !!taskForm.courseId;
+    const isValid = isFree ? !!taskForm.description : (taskForm.type === 'module' ? !!taskForm.courseId && !!taskForm.moduleId : !!taskForm.courseId);
     if (!isValid || !followUp) return;
 
     setLoading(true);
@@ -322,7 +436,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
     
     const course = mentorCourses.find(c => c.id === taskForm.courseId);
     
-    if (taskForm.type === 'course' && taskForm.courseId) {
+    if ((taskForm.type === 'course' || taskForm.type === 'module') && taskForm.courseId) {
       const studentSnap = await getDoc(doc(db, 'users', followUp.studentId));
       const studentData = studentSnap.data();
       const targetEmail = studentData?.email?.toLowerCase().trim() || '';
@@ -386,8 +500,8 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       id: taskId,
       followUpId,
       ...taskForm,
-      title: taskForm.title || (taskForm.type === 'course' ? `Curso: ${course?.title}` : 'Desafío Libre'),
-      description: isFree ? taskForm.description : `Completar el programa académico: ${course?.title}`,
+      title: taskForm.title || (taskForm.type === 'free' ? 'Desafío Libre' : `Curso: ${course?.title}`),
+      description: isFree ? taskForm.description : (taskForm.type === 'module' ? `Completar el módulo: ${taskForm.moduleTitle}` : `Completar el programa académico: ${course?.title}`),
       courseTitle: course?.title || null,
       status: 'pending',
       progress: 0,
@@ -397,7 +511,6 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
     try {
       await setDoc(taskRef, taskData);
       toast({ title: 'Tarea Asignada' });
-      setTaskData({ title: '', description: '', evaluationCriteria: '', type: 'free', courseId: '', deadline: '', allowFileUpload: false });
     } catch (e: any) {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: taskRef.path,
@@ -575,36 +688,10 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          {!session.isCompleted && session.date && (
-                            <Button 
-                              onClick={() => {
-                                const link = generateGoogleCalendarLink(session, session.orderIndex, session.isAdditional);
-                                if (link) window.open(link, '_blank');
-                              }}
-                              variant="outline" 
-                              title="Tú serás el organizador del evento al agendarlo."
-                              className="rounded-xl font-bold h-11 px-4 gap-2 border-primary/20 text-primary bg-white shadow-sm"
-                            >
-                              <CalendarDays className="h-4 w-4" /> 
-                              {isGmailSession ? 'Agendar (Google)' : 'Agendar'}
-                            </Button>
-                          )}
-
                           {isMentor && !isSuspended && (
-                            <>
-                              {!session.isCompleted && !session.date && (
-                                <Button 
-                                  onClick={() => handleEditSession(session)}
-                                  variant="outline" 
-                                  className="rounded-xl font-bold h-11 px-4 gap-2 border-primary/20 text-primary bg-white shadow-sm"
-                                >
-                                  <CalendarDays className="h-4 w-4" /> Programar Fecha
-                                </Button>
-                              )}
-                              <Button onClick={() => handleEditSession(session)} variant={session.isCompleted ? 'outline' : 'default'} className="rounded-xl font-bold h-11 px-6 shadow-sm">
-                                {session.isCompleted ? 'Ver / Editar Minuta' : 'Registrar Sesión'}
-                              </Button>
-                            </>
+                            <Button onClick={() => handleEditSession(session)} variant={session.isCompleted ? 'outline' : 'default'} className="rounded-xl font-bold h-11 px-6 shadow-sm">
+                              {session.isCompleted ? 'Ver / Editar Minuta' : 'Registrar Sesión'}
+                            </Button>
                           )}
                           {!isMentor && session.isCompleted && (
                             <Badge className="bg-success/10 text-success border-none font-bold">Realizada</Badge>
@@ -626,78 +713,18 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
               <TabsContent value="tasks" className="space-y-8">
                 {isMentor && !isSuspended && (
-                  <Card>
-                    <CardHeader className="bg-primary/5 p-8 border-b">
-                      <CardTitle className="xl font-bold">Asignar Compromiso</CardTitle>
-                      <CardDescription>Establece objetivos pedagógicos para el alumno entre sesiones.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-8 space-y-6">
-                      <div className="grid sm:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Tipo de Tarea</Label>
-                          <div className="flex gap-4 p-4 bg-secondary/10 rounded-xl">
-                            <div className="flex items-center gap-2">
-                              <input type="radio" id="task-free" checked={taskForm.type === 'free'} onChange={() => setTaskData({...taskForm, type: 'free', courseId: ''})} className="accent-primary" />
-                              <Label htmlFor="task-free" className="text-xs font-bold cursor-pointer">Pregunta Libre</Label>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <input type="radio" id="task-course" checked={taskForm.type === 'course'} onChange={() => setTaskData({...taskForm, type: 'course'})} className="accent-primary" />
-                              <Label htmlFor="task-course" className="text-xs font-bold cursor-pointer">Vincular Curso</Label>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Fecha Límite</Label>
-                          <Input type="date" value={taskForm.deadline} onChange={e => setTaskData({...taskForm, deadline: e.target.value})} className="bg-secondary/5"  size="lg" />
-                        </div>
-                      </div>
-
-                      {taskForm.type === 'free' ? (
-                        <div className="space-y-6 animate-in slide-in-from-top-2">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Título del Desafío</Label>
-                            <Input value={taskForm.title} onChange={e => setTaskData({...taskForm, title: e.target.value})} placeholder="Ej: Análisis de Competencia" className="bg-secondary/5"  size="lg" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Consigna Detallada (Pregunta)</Label>
-                            <Textarea value={taskForm.description} onChange={e => setTaskData({...taskForm, description: e.target.value})} placeholder="Describe qué debe realizar el alumno..." size="lg" className="min-h-[100px] bg-secondary/5" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase text-accent ml-1 flex items-center gap-2"><BrainCircuit className="h-3 w-3" /> Criterios de Evaluación para la IA</Label>
-                            <Textarea value={taskForm.evaluationCriteria} onChange={e => setTaskData({...taskForm, evaluationCriteria: e.target.value})} placeholder="Indica qué puntos debe validar Gemini para calificar esta tarea..." size="lg" className="min-h-[100px] bg-accent/5 border-accent/20" />
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-dashed border-primary/10">
-                            <div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><Label className="text-xs font-bold">Habilitar Adjunto PDF</Label></div>
-                            <Switch checked={taskForm.allowFileUpload} onCheckedChange={(val) => setTaskData({...taskForm, allowFileUpload: val})} />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-2 animate-in slide-in-from-top-2">
-                          <Label className="text-[10px] font-bold uppercase ml-1 text-muted-foreground">Seleccionar Curso del Mentor</Label>
-                          <Select onValueChange={id => setTaskData({...taskForm, courseId: id})}>
-                            <SelectTrigger size="lg" className="bg-secondary/5"><SelectValue placeholder="Elegir programa..." /></SelectTrigger>
-                            <SelectContent>
-                              {mentorCourses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-2 items-start mt-4">
-                            <Info className="h-4 w-4 text-blue-600 mt-0.5" />
-                            <p className="text-[10px] text-blue-800 font-medium leading-relaxed">Al seleccionar un curso, el alumno será inscrito automáticamente. La tarea se marcará como completada cuando el curso llegue al 100%.</p>
-                          </div>
-                        </div>
-                      )}
-
-                      <Button onClick={handleCreateTask} disabled={loading || (taskForm.type === 'free' && !taskForm.description) || (taskForm.type === 'course' && !taskForm.courseId)} className="w-full h-14 rounded-2xl font-bold text-lg shadow-primary/20 bg-primary">
-                        {loading ? <Loader2 className="animate-spin mr-2" /> : <Plus className="mr-2" />} Asignar Tarea de Seguimiento
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <AssignTaskForm 
+                    mentorCourses={mentorCourses} 
+                    onSubmit={handleCreateTask} 
+                    loading={loading} 
+                  />
                 )}
 
                 <div className="space-y-4">
                   <h3 className="font-bold text-lg px-2 flex items-center gap-2 text-primary/80"><ClipboardList className="h-5 w-5" /> Plan de Acción Vigente ({tasks?.length})</h3>
                   {tasks?.map((task) => {
-                    const isLinkedCourse = task.type === 'course';
+                    const isLinkedCourse = task.type === 'course' || task.type === 'module';
+                    const isLinkedModule = task.type === 'module';
                     const enrollment = isLinkedCourse ? studentEnrollments[task.courseId] : null;
                     const courseInfo = isLinkedCourse ? mentorCourses.find(c => c.id === task.courseId) : null;
                     
@@ -707,16 +734,28 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                     let displayFeedback = task.aiFeedback;
 
                     if (isLinkedCourse && enrollment) {
-                      const completedModules = enrollment.progress?.completedModules || [];
-                      const totalModules = courseInfo?.modulesCount || 1;
-                      displayProgress = Math.min(100, Math.round((completedModules.length / totalModules) * 100));
-                      displayStatus = displayProgress >= 100 ? 'completed' : (displayProgress > 0 ? 'in_progress' : 'pending');
-                      
-                      if (displayProgress >= 100 && enrollment.progress?.evaluations) {
-                        const evals = Object.values(enrollment.progress.evaluations) as any[];
-                        if (evals.length > 0) {
-                          displayScore = Math.round(evals.reduce((sum, e) => sum + (e.score || 0), 0) / evals.length);
-                          displayFeedback = displayFeedback || "Programa completado satisfactoriamente según el registro de evaluaciones.";
+                      if (isLinkedModule && task.moduleId) {
+                        const isModuleCompleted = enrollment.progress?.completedModules?.includes(task.moduleId);
+                        displayProgress = isModuleCompleted ? 100 : 0;
+                        displayStatus = isModuleCompleted ? 'completed' : 'pending';
+                        
+                        const moduleEval = enrollment.progress?.evaluations?.[task.moduleId];
+                        if (moduleEval) {
+                          displayScore = moduleEval.score;
+                          displayFeedback = moduleEval.feedback || "Módulo completado satisfactoriamente.";
+                        }
+                      } else {
+                        const completedModules = enrollment.progress?.completedModules || [];
+                        const totalModules = courseInfo?.modulesCount || 1;
+                        displayProgress = Math.min(100, Math.round((completedModules.length / totalModules) * 100));
+                        displayStatus = displayProgress >= 100 ? 'completed' : (displayProgress > 0 ? 'in_progress' : 'pending');
+                        
+                        if (displayProgress >= 100 && enrollment.progress?.evaluations) {
+                          const evals = Object.values(enrollment.progress.evaluations) as any[];
+                          if (evals.length > 0) {
+                            displayScore = Math.round(evals.reduce((sum, e) => sum + (e.score || 0), 0) / evals.length);
+                            displayFeedback = displayFeedback || "Programa completado satisfactoriamente según el registro de evaluaciones.";
+                          }
                         }
                       }
                     }
@@ -728,7 +767,9 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                           <div className="space-y-1">
                             <h4 className="font-bold text-primary text-lg leading-tight">{task.title || task.description}</h4>
                             <div className="flex items-center gap-3">
-                              <Badge variant="secondary" className="text-[9px] uppercase font-bold tracking-widest bg-secondary/50 border-none">{isLinkedCourse ? `VINCULADO: ${task.courseTitle}` : 'CONSIGNA LIBRE'}</Badge>
+                              <Badge variant="secondary" className="text-[9px] uppercase font-bold tracking-widest bg-secondary/50 border-none">
+                                {isLinkedModule ? `MÓDULO VINCULADO` : isLinkedCourse ? `VINCULADO: ${task.courseTitle}` : 'CONSIGNA LIBRE'}
+                              </Badge>
                               {task.deadline && <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Clock className="h-3 w-3" /> Límite: {format(new Date(task.deadline), 'dd/MM/yyyy')}</span>}
                             </div>
                           </div>
@@ -749,6 +790,11 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                                 <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 text-blue-600 hover:bg-blue-50" onClick={() => handleUpdateTaskProgress(task.id, 50, 'in_progress')}>50%</Button>
                                 <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 text-success hover:bg-success/10" onClick={() => handleUpdateTaskProgress(task.id, 100, 'completed')}>Listo</Button>
                               </div>
+                            )}
+                            {isStudent && isLinkedModule && task.status !== 'completed' && !isSuspended && (
+                              <Button size="sm" onClick={() => window.open(`/courses/${task.courseId}?isolated=${task.moduleId}`, '_blank')} className="h-8 rounded-lg font-bold text-[10px] gap-2 shadow-md bg-primary">
+                                <Play className="h-3 w-3" /> Comenzar Módulo
+                              </Button>
                             )}
                             {isStudent && !isLinkedCourse && task.status !== 'completed' && !isSuspended && (
                               <Button size="sm" onClick={() => { setAnsweringTaskId(task.id); setStudentAnswer(''); setStudentFile(null); }} className="h-8 rounded-lg font-bold text-[10px] gap-2 shadow-md bg-primary">
@@ -928,8 +974,8 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
       {/* Session Editor Dialog */}
       <Dialog open={!!editingSession} onOpenChange={open => !open && setEditingSession(null)}>
-        <DialogContent className="mw-3xl">
-          <div className={cn("text-white flex justify-between items-center relative px-8 pt-8", editingSession?.isAdditional ? "bg-warn" : "bg-primary")}>
+        <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh] p-0 gap-0">
+          <div className={cn("text-white flex justify-between items-center relative px-8 pt-8 pb-8 shrink-0", editingSession?.isAdditional ? "bg-warn" : "bg-primary")}>
             <div className="relative z-10">
               <DialogTitle className="text-2xl font-bold text-white">
                 {editingSession?.isAdditional ? 'Sesión Extraordinaria' : `Sesión ${editingSession?.orderIndex}`}
@@ -939,26 +985,53 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             <Button variant="ghost" size="icon" onClick={() => setEditingSession(null)} className="rounded-full text-white hover:bg-white/10 shrink-0 relative z-10"><X className="h-6 w-6" /></Button>
             {editingSession?.isAdditional && <Zap className="absolute -right-4 -top-4 h-32 w-32 opacity-10 pointer-events-none" />}
           </div>
-          <div className="space-y-8 px-8 pb-8">
-            <div className="grid sm:grid-cols-3 gap-6">
+          <div className="space-y-8 px-8 pb-8 pt-8">
+            <div className="grid sm:grid-cols-3 gap-6 relative">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Fecha Encuentro</Label>
-                <Input type="date" value={sessionForm.date} onChange={e => setSessionData({...sessionForm, date: e.target.value})} className="bg-secondary/5 border-none font-bold"  size="lg" />
+                <Input type="date" value={sessionForm.date} onChange={e => setSessionData({...sessionForm, date: e.target.value})} className="bg-secondary/5 border font-bold rounded-xl"  size="lg" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Hora Inicio</Label>
-                <Input type="time" value={sessionForm.time} onChange={e => setSessionData({...sessionForm, time: e.target.value})} className="bg-secondary/5 border-none font-bold"  size="lg" />
+                <Input type="time" value={sessionForm.time} onChange={e => setSessionData({...sessionForm, time: e.target.value})} className="bg-secondary/5 border font-bold rounded-xl"  size="lg" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Duración (Min)</Label>
-                <Input type="number" value={sessionForm.duration} onChange={e => setSessionData({...sessionForm, duration: parseInt(e.target.value) || 0})} className="bg-secondary/5 border-none font-bold"  size="lg" />
+                <Input type="number" value={sessionForm.duration} onChange={e => setSessionData({...sessionForm, duration: parseInt(e.target.value) || 0})} className="bg-secondary/5 border font-bold rounded-xl"  size="lg" />
               </div>
             </div>
 
-            <div className="space-y-4">
+            {/* Calendar & Availability */}
+            <div className="flex flex-wrap items-center gap-4 text-xs font-bold -mt-2">
+              <Button 
+                variant="link" 
+                size="sm" 
+                className="h-auto p-0 text-primary" 
+                onClick={() => window.open(sessionForm.calendarEventLink || 'https://calendar.google.com', '_blank')}
+              >
+                <CalendarDays className="h-4 w-4 mr-1" /> 
+                {sessionForm.calendarEventLink ? 'Ver Evento en Google Calendar' : 'Abrir Google Calendar (Referencia)'}
+              </Button>
+              
+              {(sessionForm.date && sessionForm.time) && (
+                <div className="flex items-center gap-2 border-l pl-4 border-black/10">
+                  {!isConnected ? (
+                    <Button variant="ghost" size="sm" onClick={connect} className="h-8 text-primary border border-primary/20 bg-primary/5 rounded-lg">Validar Disponibilidad</Button>
+                  ) : (
+                    <>
+                      {availabilityStatus === 'checking' && <span className="flex items-center gap-2 text-muted-foreground"><Loader2 className="animate-spin h-3 w-3" /> Verificando...</span>}
+                      {availabilityStatus === 'free' && <span className="flex items-center gap-2 text-success bg-success/10 px-3 py-1.5 rounded-lg"><CheckCircle2 className="h-4 w-4" /> Libre</span>}
+                      {availabilityStatus === 'busy' && <span className="flex items-center gap-2 text-destructive bg-destructive/10 px-3 py-1.5 rounded-lg"><X className="h-4 w-4" /> Ocupado: {conflictTitle || 'Evento existente'}</span>}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 pt-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Temas Tratados / Por Tratar</Label>
               <div className="flex gap-2">
-                <Input value={sessionForm.newTopic} onChange={e => setSessionData({...sessionForm, newTopic: e.target.value})} onKeyDown={e => e.key === 'Enter' && sessionForm.newTopic && setSessionData({...sessionForm, topics: [...sessionForm.topics, sessionForm.newTopic], newTopic: ''})} placeholder="Ej: Análisis FODA..." className="flex-1 bg-secondary/5 border-none"  size="lg" />
+                <Input value={sessionForm.newTopic} onChange={e => setSessionData({...sessionForm, newTopic: e.target.value})} onKeyDown={e => e.key === 'Enter' && sessionForm.newTopic && setSessionData({...sessionForm, topics: [...sessionForm.topics, sessionForm.newTopic], newTopic: ''})} placeholder="Ej: Análisis FODA..." className="flex-1 bg-secondary/5 border rounded-xl"  size="lg" />
                 <Button onClick={() => sessionForm.newTopic && setSessionData({...sessionForm, topics: [...sessionForm.topics, sessionForm.newTopic], newTopic: ''})} className="h-12 px-6 rounded-xl font-bold bg-primary shadow-md"><Plus className="h-4 w-4" /></Button>
               </div>
               <div className="flex flex-wrap gap-2 min-h-[40px]">
@@ -975,17 +1048,20 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Minuta / Conclusiones Académicas</Label>
-              <Textarea value={sessionForm.minutes} onChange={e => setSessionData({...sessionForm, minutes: e.target.value})} placeholder="Registra las conclusiones una vez terminada la sesión..." className="min-h-[150px] p-6 bg-secondary/10 border-none leading-relaxed text-sm" />
+              <Textarea value={sessionForm.minutes} onChange={e => setSessionData({...sessionForm, minutes: e.target.value})} placeholder="Registra las conclusiones una vez terminada la sesión..." className="min-h-[150px] p-6 bg-secondary/5 border rounded-xl leading-relaxed text-sm" />
             </div>
 
-            <DialogFooter className="flex flex-col sm:flex-row gap-3">
-              {sessionForm.date && sessionForm.time && (
-                <Button onClick={() => handleSaveSession(true)} variant="outline" className="flex-1 h-14 rounded-2xl font-bold text-primary border-primary/20 gap-2 bg-white shadow-sm hover:bg-primary/5">
-                  <CalendarDays className="h-5 w-5" /> Agendar en Google Calendar
-                </Button>
-              )}
-              <Button onClick={() => handleSaveSession(false)} disabled={loading || !sessionForm.date || !sessionForm.time} className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-primary/20 bg-primary">
-                {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} {sessionForm.minutes ? 'Finalizar Sesión' : 'Guardar Datos'}
+            <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-dashed border-primary/10">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <Label className="text-xs font-bold cursor-pointer" htmlFor="toggle-completed">Marcar Sesión como Completada</Label>
+              </div>
+              <Switch id="toggle-completed" checked={sessionForm.isCompleted} onCheckedChange={(val) => setSessionData({...sessionForm, isCompleted: val})} />
+            </div>
+
+            <DialogFooter>
+              <Button onClick={handleSaveSession} disabled={loading || !sessionForm.date || !sessionForm.time || availabilityStatus === 'busy'} className="w-full h-14 rounded-xl font-bold text-lg shadow-sm bg-primary text-white">
+                {loading ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} {sessionForm.isCompleted ? 'Finalizar Sesión' : 'Guardar y Agendar'}
               </Button>
             </DialogFooter>
           </div>
@@ -1004,7 +1080,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             <BrainCircuit className="absolute -right-4 -top-4 h-32 w-32 opacity-10 pointer-events-none" />
           </div>
           <div className="space-y-6 px-8 pb-8">
-            <div className="bg-accent/5 p-6 rounded-2xl border border-accent/10">
+            <div className="bg-accent/5 p-6 rounded-xl border border-accent/10">
               <p className="text-xs font-black text-accent uppercase tracking-[0.2em] mb-2">Consigna Académica:</p>
               <p className="text-sm font-medium italic text-foreground leading-relaxed">"{tasks?.find(t => t.id === answeringTaskId)?.description}"</p>
             </div>
@@ -1015,21 +1091,21 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                 value={studentAnswer} 
                 onChange={e => setStudentAnswer(e.target.value)} 
                 placeholder="Escribe aquí tu respuesta detallada, reflexiones y hallazgos..." 
-                className="min-h-[200px] rounded-2xl p-6 bg-secondary/10 border-none leading-relaxed text-sm" 
+                className="min-h-[200px] rounded-xl p-6 bg-secondary/5 border leading-relaxed text-sm" 
               />
             </div>
 
             {tasks?.find(t => t.id === answeringTaskId)?.allowFileUpload && (
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Documento de Respaldo (PDF)</Label>
-                <div className="p-8 border-2 border-dashed rounded-2xl flex flex-col items-center gap-3 relative bg-muted/5 group hover:bg-muted/10 transition-all border-accent/20">
+                <div className="p-8 border-2 border-dashed rounded-xl flex flex-col items-center gap-3 relative bg-muted/5 group hover:bg-muted/10 transition-all border-accent/20">
                   <input 
                     type="file" 
                     accept=".pdf" 
                     className="absolute inset-0 opacity-0 cursor-pointer" 
                     onChange={e => setStudentFile(e.target.files?.[0] || null)} 
                   />
-                  <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                  <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
                     {studentFile ? <FileText className="text-accent h-7 w-7" /> : <Upload className="text-accent h-7 w-7" />}
                   </div>
                   <div className="text-center">
@@ -1051,7 +1127,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             )}
 
             <DialogFooter className="pt-4">
-              <Button onClick={() => handleSubmitStudentTask(answeringTaskId!)} disabled={isSubmittingTask || !studentAnswer.trim()} className="w-full h-16 rounded-[1.5rem] font-bold text-xl bg-accent hover:bg-accent/90 transition-all hover:scale-[1.01]">
+              <Button onClick={() => handleSubmitStudentTask(answeringTaskId!)} disabled={isSubmittingTask || !studentAnswer.trim()} className="w-full h-16 rounded-xl font-bold text-xl bg-accent hover:bg-accent/90 transition-all hover:scale-[1.01] shadow-none">
                 {isSubmittingTask ? <><Loader2 className="animate-spin mr-2 h-6 w-6" /> Procesando con Gemini...</> : <><Send className="mr-3 h-6 w-6" /> Enviar para Evaluación IA</>}
               </Button>
             </DialogFooter>

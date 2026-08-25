@@ -30,19 +30,8 @@ export function useFollowUps() {
       } else if (isMentor) {
         q = query(ref, where('mentorId', '==', profile.uid));
       } else {
-        const userEmail = profile.email?.toLowerCase().trim();
-        if (userEmail) {
-          q = query(
-            ref, 
-            or(
-              where('studentId', '==', profile.uid),
-              where('studentEmail', '==', userEmail)
-            )
-          );
-        } else {
-          // Si no hay email, solo buscamos por ID para evitar consultas inválidas
-          q = query(ref, where('studentId', '==', profile.uid));
-        }
+        // Evitamos or() que causa crashes internos en el SDK de Firebase
+        q = query(ref, where('studentId', '==', profile.uid));
       }
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -80,7 +69,7 @@ export function useFollowUps() {
       await Promise.all(followUps.map(async (fu) => {
         try {
           const sessionsSnap = await getDocs(
-            query(collection(db, 'followups', fu.id, 'sessions'), where('isCompleted', '==', true))
+            query(collection(db, 'followups', fu.id, 'sessions'), or(where('isCompleted', '==', true), where('status', '==', 'completed')))
           );
           stats[fu.id] = { consumed: sessionsSnap.size };
         } catch (e) {

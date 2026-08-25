@@ -40,6 +40,7 @@ const AlertDialogContent = React.forwardRef<
         className
       )}
       style={{ border: 'var(--modal-border)' }}
+      {...props}
     />
   </AlertDialogPortal>
 ))

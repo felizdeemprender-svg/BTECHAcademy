@@ -186,6 +186,7 @@ export default function FollowUpsPage() {
           followUpId,
           orderIndex: i + 1,
           isCompleted: false,
+          status: 'pending',
           topics: [],
           minutes: '',
           updatedAt: serverTimestamp()

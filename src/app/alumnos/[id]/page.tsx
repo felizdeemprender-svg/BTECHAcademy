@@ -39,6 +39,8 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AssignTaskForm, TaskFormData } from '@/components/tasks/AssignTaskForm';
+import { sendWelcomeEmailAction } from '@/app/actions/email-actions';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -53,6 +55,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
+  const isInvitation = studentId.includes('_');
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [attempts, setAttempts] = useState<any[]>([]);
   const [newNote, setNewNote] = useState('');
@@ -74,10 +77,6 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
   const [attemptQuestions, setAttemptQuestions] = useState<any[]>([]);
   const [loadingAttemptDetails, setLoadingAttemptDetails] = useState(false);
 
-  const [taskTitle, setTaskTitle] = useState('');
-  const [taskDesc, setTaskTitleDesc] = useState('');
-  const [taskEvaluationCriteria, setTaskEvaluationCriteria] = useState('');
-  const [allowTaskFileUpload, setAllowTaskFileUpload] = useState(false);
   const [isSendingTask, setIsSendingTask] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isTaskDetailDialogOpen, setIsTaskDetailDialogOpen] = useState(false);
@@ -109,11 +108,9 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
     }) : null, [rawNotes]);
 
   const tasksQuery = useMemoFirebase(() => {
-    if (!mentorProfile?.uid) return null;
-    return query(
-      collection(db, 'users', studentId, 'individualTasks')
-    );
-  }, [db, mentorProfile?.uid, studentId]);
+    if (!studentId) return null;
+    return query(collection(db, 'users', studentId, 'individualTasks'));
+  }, [db, studentId]);
   const { data: rawTasks } = useCollection(tasksQuery);
   const tasks = useMemo(() => rawTasks ? [...rawTasks]
     .filter(t => t.mentorId === mentorProfile?.uid)
@@ -122,6 +119,11 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
       const dateB = b.createdAt?.toDate?.() || new Date(0);
       return dateB.getTime() - dateA.getTime();
     }) : null, [rawTasks, mentorProfile?.uid]);
+
+  const mentorCoursesQuery = useMemoFirebase(() => 
+    mentorProfile?.uid ? query(collection(db, 'courses'), where('mentorId', '==', mentorProfile.uid)) : null, 
+  [db, mentorProfile?.uid]);
+  const { data: mentorCourses } = useCollection(mentorCoursesQuery);
 
   const followUpsQuery = useMemoFirebase(() => {
     if (!mentorProfile?.uid) return null;
@@ -249,32 +251,76 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
       .finally(() => setIsSavingNote(false));
   }, [db, mentorProfile, studentId, newNote, toast]);
 
-  const handleSendTask = useCallback(async () => {
-    if (!taskTitle || !mentorProfile || !studentId) return;
+  const handleSendTask = useCallback(async (taskForm: TaskFormData) => {
+    if (!mentorProfile || !studentId) return;
     setIsSendingTask(true);
     
     const taskRef = doc(collection(db, 'users', studentId, 'individualTasks'));
+    
+    let courseTitle = null;
+    if ((taskForm.type === 'course' || taskForm.type === 'module') && taskForm.courseId) {
+      // Find course title
+      const courseSnap = await getDoc(doc(db, 'courses', taskForm.courseId));
+      if (courseSnap.exists()) courseTitle = courseSnap.data().title;
+      
+      const targetEmail = studentData?.email?.toLowerCase().trim() || '';
+      let existingEnrollment = false;
+
+      if (targetEmail) {
+        const qByEmail = query(collection(db, 'enrollments'), where('courseId', '==', taskForm.courseId), where('inviteEmail', '==', targetEmail));
+        const snapByEmail = await getDocs(qByEmail);
+        if (!snapByEmail.empty) existingEnrollment = true;
+      }
+      if (!existingEnrollment) {
+        const qById = query(collection(db, 'enrollments'), where('courseId', '==', taskForm.courseId), where('studentId', '==', studentId));
+        const snapById = await getDocs(qById);
+        if (!snapById.empty) existingEnrollment = true;
+      }
+
+      if (!existingEnrollment) {
+        const newEnrollRef = doc(collection(db, 'enrollments'));
+        await setDoc(newEnrollRef, {
+          id: newEnrollRef.id,
+          courseId: taskForm.courseId,
+          studentId: studentId,
+          studentName: studentData?.displayName || 'Alumno',
+          inviteEmail: targetEmail,
+          status: 'active',
+          enrolledAt: serverTimestamp(),
+          progress: { completedModules: [] },
+          progressPercent: 0
+        });
+
+        if (targetEmail) {
+          await sendWelcomeEmailAction(
+            targetEmail,
+            studentData?.displayName || 'Alumno',
+            courseTitle || 'tu curso',
+            mentorProfile.displayName || 'Tutor',
+            mentorProfile.email || undefined
+          );
+        }
+      }
+    }
+
     const newTaskData = {
       id: taskRef.id,
+      ...taskForm,
       mentorId: mentorProfile.uid,
       mentorName: mentorProfile.displayName,
       studentId: studentId,
       studentName: studentData?.displayName || 'Alumno',
       studentEmail: studentData?.email || '',
-      title: taskTitle,
-      description: taskDesc,
-      evaluationCriteria: taskEvaluationCriteria,
-      allowFileUpload: allowTaskFileUpload,
+      title: taskForm.title || (taskForm.type === 'free' ? 'Desafío Libre' : `Curso: ${courseTitle}`),
+      description: taskForm.type === 'free' ? taskForm.description : (taskForm.type === 'module' ? `Completar el módulo: ${taskForm.moduleTitle}` : `Completar el programa académico: ${courseTitle}`),
+      courseTitle: courseTitle || null,
       status: 'pending',
+      progress: 0,
       createdAt: serverTimestamp()
     };
 
     setDoc(taskRef, newTaskData)
       .then(() => {
-        setTaskTitle('');
-        setTaskTitleDesc('');
-        setTaskEvaluationCriteria('');
-        setAllowTaskFileUpload(false);
         setIsNewTaskDialogOpen(false);
         toast({ title: 'Tarea asignada exitosamente', description: 'El alumno ha sido notificado del nuevo desafío.' });
       })
@@ -286,7 +332,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
         }));
       })
       .finally(() => setIsSendingTask(false));
-  }, [db, studentId, mentorProfile, studentData, taskTitle, taskDesc, taskEvaluationCriteria, allowTaskFileUpload, toast]);
+  }, [db, studentId, mentorProfile, studentData, toast]);
 
   const handleGenerateAIProfile = async () => {
     setIsProfileDialogOpen(false);
@@ -523,7 +569,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
         <div className="space-y-8">
             <Tabs defaultValue="summary" className="w-full">
-              <TabsList className="bg-secondary/20 p-1 rounded-2xl h-14 w-full justify-start gap-2 mb-8 overflow-x-auto">
+              <TabsList className="bg-secondary/20 p-1 rounded-xl h-14 w-full justify-start gap-2 mb-8 overflow-x-auto">
                 <TabsTrigger value="summary" className="rounded-xl px-6 font-bold gap-2 shrink-0"><User className="h-4 w-4" /> Información General</TabsTrigger>
                 <TabsTrigger value="profiling" className="rounded-xl px-6 font-bold gap-2 shrink-0"><BrainCircuit className="h-4 w-4" /> Perfilamiento IA</TabsTrigger>
                 <TabsTrigger value="courses" className="rounded-xl px-6 font-bold gap-2 shrink-0"><BookOpen className="h-4 w-4" /> Cursos y Desempeño</TabsTrigger>
@@ -562,7 +608,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                         ].map((social) => {
                           const val = studentData?.profile?.socials?.[social.id];
                           return val ? (
-                            <div key={social.id} className="p-4 bg-white border-2 border-primary/5 rounded-2xl flex items-center gap-3 shadow-sm">
+                            <div key={social.id} className="p-4 bg-white border border-primary/5 rounded-xl flex items-center gap-3 shadow-none">
                               <social.icon className="h-4 w-4 text-primary opacity-40" />
                               <div className="min-w-0">
                                 <p className="text-[10px] font-bold text-muted-foreground uppercase leading-none mb-1">{social.label}</p>
@@ -615,7 +661,8 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </h3>
                   <Button 
                     onClick={() => setIsProfileDialogOpen(true)}
-                    disabled={isGeneratingProfile}
+                    disabled={isGeneratingProfile || isInvitation}
+                    title={isInvitation ? "El usuario debe iniciar sesión primero" : ""}
                     className="rounded-xl font-bold gap-2 bg-accent hover:bg-accent/90 shadow-lg shadow-accent/20 h-10 px-6"
                   >
                     {isGeneratingProfile ? <Loader2 className="animate-spin h-4 w-4" /> : <Plus className="h-4 w-4" />} Obtener Nuevo Perfil
@@ -877,7 +924,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                             </div>
                           </header>
 
-                          <Card className="border-none rounded-lg overflow-hidden bg-white">
+                          <Card className="rounded-xl overflow-hidden bg-white shadow-none">
                             <CardContent className="p-0">
                               <ResponsiveTable
                                 columns={[
@@ -1167,6 +1214,8 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </h3>
                   <Button 
                     onClick={() => setIsNewTaskDialogOpen(true)}
+                    disabled={isInvitation}
+                    title={isInvitation ? "El usuario debe iniciar sesión primero" : ""}
                     className="rounded-xl font-bold gap-2 bg-primary shadow-lg shadow-primary/20 h-10 px-6"
                   >
                     <Plus className="h-4 w-4" /> Asignar Nueva Tarea
@@ -1284,6 +1333,8 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                   </h3>
                   <Button 
                     onClick={() => setIsNewNoteDialogOpen(true)}
+                    disabled={isInvitation}
+                    title={isInvitation ? "El usuario debe iniciar sesión primero" : ""}
                     className="rounded-xl font-bold gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-10 px-6"
                   >
                     <Plus className="h-4 w-4" /> Nueva Observación
@@ -1479,7 +1530,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                 </div>
 
                 {/* Notas Mentor */}
-                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center justify-between">
+                <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <MessageSquare className="h-5 w-5 text-primary" />
                     <div>
@@ -1511,7 +1562,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
           <div className="px-8 pt-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center"><BrainCircuit className="text-primary h-6 w-6" /></div>
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center"><BrainCircuit className="text-primary h-6 w-6" /></div>
                 <div>
                   <DialogTitle className="text-2xl font-bold">Auditoría de Evaluación</DialogTitle>
                   <DialogDescription className="text-muted-foreground">
@@ -1529,7 +1580,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
             <div className="space-y-10 pb-8">
               <div className="bg-primary/5 p-8 border border-primary/10 flex items-start gap-6">
                 <div className={cn(
-                  "w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-black text-white shrink-0",
+                  "w-20 h-20 rounded-xl flex items-center justify-center text-3xl font-black text-white shrink-0",
                   (selectedAttempt?.score || 0) >= 70 ? "bg-success" : "bg-danger"
                 )}>
                   {selectedAttempt?.score}%
@@ -1563,7 +1614,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                       }
                       
                       return (
-                        <Card key={idx} className="border-none shadow-sm rounded-2xl overflow-hidden bg-muted border-l-4 border-l-primary/20">
+                        <Card key={idx} className="shadow-none rounded-xl overflow-hidden bg-muted border border-l-4 border-l-primary/20">
                           <div className="p-6 space-y-4">
                             <div className="flex items-center justify-between">
                               <Badge variant="secondary" className="text-[9px] uppercase font-bold tracking-widest">{q.type?.replace('_', ' ')}</Badge>
@@ -1618,44 +1669,13 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
 
       {/* New Task Dialog */}
       <Dialog open={isNewTaskDialogOpen} onOpenChange={setIsNewTaskDialogOpen}>
-        <DialogContent className="mw-2xl">
-          <div className="relative px-8 pt-8">
-            <Plus className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
-            <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Send className="h-6 w-6 text-success" /> Asignar Tarea Individual</DialogTitle>
-            <DialogDescription className="text-muted-foreground mt-1">Crea un desafío personalizado para el alumno con evaluación por IA.</DialogDescription>
-          </div>
-          <ScrollArea className="max-h-[70vh] px-8">
-            <div className="space-y-6 pb-8">
-              <div className="space-y-2">
-                <Label htmlFor="task-title">Título del Desafío</Label>
-                <Input id="task-title" value={taskTitle} onChange={e => setTaskTitle(e.target.value)} placeholder="Ej: Análisis de caso práctico Módulo 2" className=""  size="lg" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="task-desc">Consigna Detallada</Label>
-                <Textarea id="task-desc" value={taskDesc} onChange={e => setTaskTitleDesc(e.target.value)} placeholder="Describe qué debe realizar el alumno..." size="lg" />
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-accent flex items-center gap-2"><BrainCircuit className="h-4 w-4" /> Criterios de Evaluación IA</Label>
-                <Textarea value={taskEvaluationCriteria} onChange={e => setTaskEvaluationCriteria(e.target.value)} placeholder="¿Qué puntos clave debe validar Gemini para calificar esta tarea?" size="lg" className="min-h-[100px] bg-accent/5 border-accent/20" />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-dashed border-primary/10">
-                <div className="flex items-center gap-3"><FileText className="h-4 w-4 text-primary" /><div className="space-y-0.5"><Label className="text-xs font-bold">Habilitar Adjunto PDF</Label><p className="text-[9px] text-muted-foreground">Permite al alumno subir evidencia.</p></div></div>
-                <Switch checked={allowTaskFileUpload} onCheckedChange={setAllowTaskFileUpload} />
-              </div>
-            </div>
-          </ScrollArea>
-          <DialogFooter className="bg-muted border-t gap-3 px-8 py-6">
-            <Button onClick={() => setIsNewTaskDialogOpen(false)} variant="ghost" className="font-bold">Cancelar</Button>
-            <Button 
-              onClick={handleSendTask} 
-              disabled={isSendingTask || !taskTitle} 
-              className="font-bold px-8"
-            >
-              {isSendingTask ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2 h-4 w-4" />} Asignar Tarea
-            </Button>
-          </DialogFooter>
+        <DialogContent className="mw-2xl p-0 bg-transparent border-none">
+          <DialogTitle className="sr-only">Asignar Tarea Individual</DialogTitle>
+          <AssignTaskForm 
+            mentorCourses={mentorCourses || []} 
+            onSubmit={handleSendTask} 
+            loading={isSendingTask} 
+          />
         </DialogContent>
       </Dialog>
 
@@ -1678,7 +1698,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
             <div className="space-y-8 pb-8">
               <div className="space-y-3">
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Target className="h-4 w-4" /> Consigna</h4>
-                <div className="p-5 bg-secondary/10 rounded-2xl text-sm leading-relaxed italic text-foreground">
+                <div className="p-5 bg-secondary/10 rounded-xl text-sm leading-relaxed italic text-foreground">
                   "{selectedTask?.description}"
                 </div>
               </div>
@@ -1716,7 +1736,11 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
               ) : (
                 <div className="p-10 text-center bg-muted/5 rounded-lg border-2 border-dashed">
                   <Clock className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4" />
-                  <p className="text-muted-foreground font-bold italic">Esperando entrega del alumno...</p>
+                  <p className="text-muted-foreground font-bold italic">
+                    {selectedTask?.type === 'course' || selectedTask?.type === 'module' 
+                      ? 'Este desafío se completará automáticamente cuando el alumno finalice el contenido.' 
+                      : 'Esperando entrega del alumno...'}
+                  </p>
                 </div>
               )}
             </div>
@@ -1732,7 +1756,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
           <div className="bg-gradient-to-br from-foreground to-foreground relative overflow-hidden shrink-0 px-8 pt-8">
             <BrainCircuit className="absolute -right-10 -top-10 h-64 w-64 opacity-10 pointer-events-none" />
             <div className="flex items-center gap-5 mb-2">
-              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md">
+              <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
                 <Sparkles className="h-7 w-7 text-success" />
               </div>
               <div>

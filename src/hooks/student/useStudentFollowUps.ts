@@ -44,7 +44,7 @@ export function useStudentFollowUps() {
             const sessionsSnap = await getDocs(
               query(
                 collection(db, 'followups', fu.id, 'sessions'), 
-                where('isCompleted', '==', true)
+                or(where('isCompleted', '==', true), where('status', '==', 'completed'))
               )
             );
             stats[fu.id] = { consumed: sessionsSnap.size };
