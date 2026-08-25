@@ -71,6 +71,7 @@ function V2LandingBuilderContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingPersonas, setIsGeneratingPersonas] = useState(false);
   const [aiPersonas, setAiPersonas] = useState<any[]>([]);
+  const [extractedMasterText, setExtractedMasterText] = useState<string | null>(null);
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
@@ -219,13 +220,32 @@ function V2LandingBuilderContent() {
     return [...courseTags, ...STRATEGIC_SEGMENTS];
   }, [selectedCourse, rawTags, aiPersonas]);
 
+  const getMasterText = async (course: any) => {
+    if (extractedMasterText !== null) return extractedMasterText;
+    const documentUrl = course.masterFileUrl || course.pdfUrl;
+    if (!documentUrl) return '';
+    
+    toast({ title: 'Analizando Documento Maestro...', description: 'Extrayendo contenido del syllabus.' });
+    const extractRes = await extractDocumentText({
+      documentUrl,
+      documentName: 'master.pdf'
+    });
+    const text = extractRes.extractedText || '';
+    setExtractedMasterText(text);
+    return text;
+  };
+
   const handleGeneratePersonas = async () => {
     if (!selectedCourse) return;
     setIsGeneratingPersonas(true);
     try {
+      const text = await getMasterText(selectedCourse);
+      let finalDescription = selectedCourse.description || '';
+      if (text) finalDescription += `\n\n=== CONTENIDO DEL DOCUMENTO MAESTRO / SYLLABUS ===\n${text}`;
+
       const result = await generateBuyerPersonas({
         courseTitle: selectedCourse.title,
-        courseDescription: selectedCourse.description || ''
+        courseDescription: finalDescription
       });
       setAiPersonas(result.personas);
     } catch (e: any) {
@@ -247,17 +267,9 @@ function V2LandingBuilderContent() {
       if (!course) throw new Error('Curso no encontrado');
 
       let finalDescription = course.description || '';
-      
-      const documentUrl = course.masterFileUrl || course.pdfUrl;
-      if (documentUrl) {
-        toast({ title: 'Analizando Documento Maestro...', description: 'Extrayendo contenido del syllabus.' });
-        const extractRes = await extractDocumentText({
-          documentUrl,
-          documentName: 'master.pdf'
-        });
-        if (extractRes.extractedText) {
-          finalDescription += `\n\n=== CONTENIDO DEL DOCUMENTO MAESTRO / SYLLABUS ===\n${extractRes.extractedText}`;
-        }
+      const text = await getMasterText(course);
+      if (text) {
+        finalDescription += `\n\n=== CONTENIDO DEL DOCUMENTO MAESTRO / SYLLABUS ===\n${text}`;
       }
 
       toast({ title: 'Generando con Genkit...', description: 'Aplicando estilos y escribiendo copy V2.' });
