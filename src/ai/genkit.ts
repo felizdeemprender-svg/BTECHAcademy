@@ -34,6 +34,9 @@ export const ai = new Proxy(genkitInstance, {
     if (prop === 'generate') {
       return (...args: any[]) => (generateWithAuditing as any)(...args);
     }
+    if (prop === 'embed') {
+      return (...args: any[]) => (embedWithAuditing as any)(...args);
+    }
     return typeof value === 'function' ? value.bind(target) : value;
   }
 });
@@ -116,6 +119,58 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
       deductCredits(uid, cost, finalActionName, role, ownerUid || undefined);
     } catch (e) {
       console.error("[Sensor IA] Error al registrar consumo:", e);
+    }
+  }
+
+  return response;
+}
+
+/**
+ * Wrapper de Auditoría para Embeddings.
+ * Estima los tokens procesados y cobra una fracción simbólica.
+ */
+export async function embedWithAuditing(options: any, actionName: string = 'ia_embedding', ownerUid: string | null = null) {
+  let uid = '';
+  let role = 'alumno';
+  const finalActionName = options.actionName || actionName;
+
+  try {
+    const { cookies } = await import('next/headers');
+    const cookieStore = await cookies();
+    uid = cookieStore.get('btech_uid')?.value || '';
+    role = cookieStore.get('btech_role')?.value || 'alumno';
+  } catch (e: any) { }
+
+  if (uid && (role === 'mentor' || role === 'marketing')) {
+    const minRequired = 0.0001; 
+    const { ok, balance } = await checkSufficientCredits(uid, minRequired, role);
+    if (!ok) {
+      throw new Error(`SALDO_INSUFICIENTE: Tu cuenta se ha quedado sin créditos de IA (Saldo actual: ${balance}).`);
+    }
+  }
+
+  const response = await genkitInstance.embed(options);
+
+  if (uid) {
+    try {
+      const contentStr = typeof options.content === 'string' ? options.content : JSON.stringify(options.content || '');
+      const estimatedTokens = Math.ceil((contentStr.length || 0) / 4);
+      // Embeddings are roughly 1/15th the price of text generation. We divide tokens by 15.
+      const billableTokens = Math.max(1, Math.floor(estimatedTokens / 15));
+      const cost = await calculateGeminiCost(billableTokens);
+      
+      console.log("--- [DEBUG IA] AUDITORÍA AUTOMÁTICA (EMBEDDING) ---");
+      console.log(`> Usuario: ${uid} (${role})`);
+      if (ownerUid) console.log(`> Referenciado a (Owner): ${ownerUid}`);
+      console.log(`> Acción Detectada: ${finalActionName}`);
+      console.log(`> Tokens Estimados (Ajustados x15): ${billableTokens}`);
+      console.log(`> Costo Proveedor: $${cost.providerCost}`);
+      console.log(`> Cobro al Tutor: $${cost.billedCost}`);
+      console.log("---------------------------------------------------");
+
+      deductCredits(uid, cost, finalActionName, role, ownerUid || undefined);
+    } catch (e) {
+      console.error("[Sensor IA] Error al registrar consumo de embedding:", e);
     }
   }
 
