@@ -6,7 +6,7 @@ import { useAuth } from '@/components/auth-context';
 import { useFirestore, useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, getDocs, query, where, collection } from 'firebase/firestore';
 import { LandingStyle, StyleBrand, resolveStyleBrand } from '@/lib/landing-styles';
-import { parseBrandFile, brandsToDTCG } from '@/lib/landing-styles/dtcg';
+import { parseBrandFile, brandsToDTCG, DEFAULT_BRAND_TOKENS } from '@/lib/landing-styles/dtcg';
 import { getRootDomain } from '@/lib/utils';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,14 +16,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { 
   User, 
   Users,
-   Globe, 
+  Globe, 
   Linkedin, 
   Twitter, 
   Palette, 
   Save, 
+  Plus,
+  Edit2,
   Loader2, 
   Camera,
   Instagram,
@@ -116,6 +119,17 @@ export default function SettingsPage() {
     activeBrandName: ''
   });
   const [origin, setOrigin] = useState('');
+
+  const [brandEditorOpen, setBrandEditorOpen] = useState(false);
+  const [brandForm, setBrandForm] = useState({
+    originalName: '',
+    name: '',
+    primary: '#3B2D86',
+    secondary: '#8B5CF6',
+    accent: '#D8B4FE',
+    headingFont: 'Inter',
+    bodyFont: 'Inter'
+  });
 
   const hasLoadedProfile = useRef(false);
 
@@ -425,6 +439,78 @@ export default function SettingsPage() {
     a.download = `${brand.name.toLowerCase().replace(/\s+/g, '-')}-tokens.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleOpenBrandEditor = (brand?: StyleBrand) => {
+    if (brand) {
+      setBrandForm({
+        originalName: brand.name,
+        name: brand.name,
+        primary: brand.palette.primary,
+        secondary: brand.palette.secondary,
+        accent: brand.palette.accent,
+        headingFont: brand.typography?.headingFont || 'Mulish',
+        bodyFont: brand.typography?.bodyFont || 'Lato'
+      });
+    } else {
+      setBrandForm({
+        originalName: '',
+        name: '',
+        primary: '#3B2D86',
+        secondary: '#8B5CF6',
+        accent: '#D8B4FE',
+        headingFont: 'Inter',
+        bodyFont: 'Inter'
+      });
+    }
+    setBrandEditorOpen(true);
+  };
+
+  const handleSaveBrandEditor = () => {
+    if (!brandForm.name.trim()) {
+      toast({ variant: 'destructive', title: 'El brand debe tener un nombre' });
+      return;
+    }
+    
+    if (brandForm.name !== brandForm.originalName && formData.myBrands.some(b => b.name === brandForm.name)) {
+      toast({ variant: 'destructive', title: 'Ya existe un brand con ese nombre' });
+      return;
+    }
+
+    const newBrand: StyleBrand = {
+      name: brandForm.name,
+      description: 'Brand creado en el editor visual',
+      palette: {
+        primary: brandForm.primary,
+        secondary: brandForm.secondary,
+        accent: brandForm.accent,
+        name: brandForm.name
+      },
+      typography: {
+        headingFont: brandForm.headingFont,
+        bodyFont: brandForm.bodyFont,
+        headingScale: 1.1,
+        bodyScale: 1,
+        name: brandForm.name
+      },
+      tokens: { ...DEFAULT_BRAND_TOKENS }
+    };
+
+    setFormData(prev => {
+      let updatedBrands = [...prev.myBrands];
+      if (brandForm.originalName) {
+        updatedBrands = updatedBrands.map(b => b.name === brandForm.originalName ? newBrand : b);
+        if (prev.activeBrandName === brandForm.originalName) {
+          prev.activeBrandName = brandForm.name;
+        }
+      } else {
+        updatedBrands.push(newBrand);
+      }
+      return { ...prev, myBrands: updatedBrands };
+    });
+
+    setBrandEditorOpen(false);
+    toast({ title: brandForm.originalName ? 'Brand actualizado' : 'Brand creado exitosamente' });
   };
 
   const sub = profile?.subscription;
@@ -927,12 +1013,15 @@ export default function SettingsPage() {
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mis brands (web personal)</Label>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="rounded-full font-bold" onClick={handleDownloadTemplate}>
-                            <Download className="h-4 w-4 mr-1.5" /> Plantilla
+                        <div className="flex flex-wrap justify-end gap-2 mt-2 md:mt-0">
+                          <Button variant="default" size="sm" className="rounded-full font-bold shadow-md" onClick={() => handleOpenBrandEditor()}>
+                            <Plus className="h-4 w-4 mr-1.5" /> Crear Brand
                           </Button>
-                          <Button variant="outline" size="sm" className="rounded-full font-bold" onClick={() => brandFileInputRef.current?.click()}>
-                            <Upload className="h-4 w-4 mr-1.5" /> Cargar brand (.json)
+                          <Button variant="outline" size="sm" className="rounded-full font-bold" onClick={handleDownloadTemplate} title="Descargar plantilla base">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="rounded-full font-bold" onClick={() => brandFileInputRef.current?.click()} title="Cargar archivo JSON">
+                            <Upload className="h-4 w-4" />
                           </Button>
                         </div>
                         <input type="file" ref={brandFileInputRef} className="hidden" accept=".json,application/json" onChange={handleBrandFile} />
@@ -972,6 +1061,14 @@ export default function SettingsPage() {
                                         )}
                                       >
                                         {isActive ? 'Activo' : 'Activar'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenBrandEditor(brand)}
+                                        className="text-[10px] font-black text-border hover:text-primary transition-colors px-1"
+                                        title="Editar brand"
+                                      >
+                                        <Edit2 className="h-4 w-4" />
                                       </button>
                                       <button
                                         type="button"
@@ -1102,6 +1199,112 @@ export default function SettingsPage() {
           </Tabs>
         </Card>
       </div>
+      <Dialog open={brandEditorOpen} onOpenChange={setBrandEditorOpen}>
+        <DialogContent className="sm:max-w-md p-6 border-2 border-border shadow-2xl rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold uppercase tracking-widest text-primary">
+              {brandForm.originalName ? 'Editar Brand' : 'Crear Brand'}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Configura los colores base y fuentes. El sistema generará el resto.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 my-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Nombre del Brand</Label>
+              <Input 
+                value={brandForm.name} 
+                onChange={e => setBrandForm({...brandForm, name: e.target.value})} 
+                className="bg-muted/50 h-12 rounded-xl border-border" 
+                placeholder="Ej. Mi Marca Premium"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Primary</Label>
+                <div className="flex flex-col gap-2">
+                  <Input 
+                    type="color" 
+                    value={brandForm.primary} 
+                    onChange={e => setBrandForm({...brandForm, primary: e.target.value})}
+                    className="h-10 w-full p-1 rounded-lg border-2 cursor-pointer"
+                  />
+                  <Input 
+                    value={brandForm.primary} 
+                    onChange={e => setBrandForm({...brandForm, primary: e.target.value})}
+                    className="h-8 text-xs font-mono px-2"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Secondary</Label>
+                <div className="flex flex-col gap-2">
+                  <Input 
+                    type="color" 
+                    value={brandForm.secondary} 
+                    onChange={e => setBrandForm({...brandForm, secondary: e.target.value})}
+                    className="h-10 w-full p-1 rounded-lg border-2 cursor-pointer"
+                  />
+                  <Input 
+                    value={brandForm.secondary} 
+                    onChange={e => setBrandForm({...brandForm, secondary: e.target.value})}
+                    className="h-8 text-xs font-mono px-2"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Accent</Label>
+                <div className="flex flex-col gap-2">
+                  <Input 
+                    type="color" 
+                    value={brandForm.accent} 
+                    onChange={e => setBrandForm({...brandForm, accent: e.target.value})}
+                    className="h-10 w-full p-1 rounded-lg border-2 cursor-pointer"
+                  />
+                  <Input 
+                    value={brandForm.accent} 
+                    onChange={e => setBrandForm({...brandForm, accent: e.target.value})}
+                    className="h-8 text-xs font-mono px-2"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Tipografía Títulos</Label>
+                <Input 
+                  value={brandForm.headingFont} 
+                  onChange={e => setBrandForm({...brandForm, headingFont: e.target.value})}
+                  className="bg-muted/50 h-10 rounded-xl"
+                  placeholder="Ej. Inter"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Tipografía Cuerpo</Label>
+                <Input 
+                  value={brandForm.bodyFont} 
+                  onChange={e => setBrandForm({...brandForm, bodyFont: e.target.value})}
+                  className="bg-muted/50 h-10 rounded-xl"
+                  placeholder="Ej. Inter"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" className="rounded-xl font-bold h-12 px-6" onClick={() => setBrandEditorOpen(false)}>
+              Cancelar
+            </Button>
+            <Button className="rounded-xl font-bold h-12 px-8" onClick={handleSaveBrandEditor}>
+              <Save className="w-4 h-4 mr-2" />
+              Guardar Brand
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
