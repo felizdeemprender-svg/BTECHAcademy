@@ -247,7 +247,7 @@ export default function SalesLandingsDashboardPage() {
       const term = searchTerm.toLowerCase();
       return (
         p.title?.toLowerCase().includes(term) ||
-        courseMap[p.courseId]?.toLowerCase().includes(term) ||
+        courseMap[p.courseId]?.title?.toLowerCase().includes(term) ||
         p.type?.toLowerCase().includes(term)
       );
     });

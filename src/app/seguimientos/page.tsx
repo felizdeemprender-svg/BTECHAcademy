@@ -63,7 +63,16 @@ export default function FollowUpsPage() {
   const [isManualInvite, setIsManualInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    type?: string;
+    title: string;
+    goal: string;
+    studentId: string;
+    totalSessions: number;
+    startDate: string;
+    endDate: string;
+  }>({
+    type: 'individual',
     title: '',
     goal: '',
     studentId: '',
