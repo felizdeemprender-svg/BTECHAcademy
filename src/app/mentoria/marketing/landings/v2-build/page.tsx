@@ -74,6 +74,7 @@ function V2LandingBuilderContent() {
   const [extractedMasterText, setExtractedMasterText] = useState<string | null>(null);
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [courseFilter, setCourseFilter] = useState<'all' | 'course' | 'followup'>('all');
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
   const [basePrice, setBasePrice] = useState<number>(49900);
   const [anchorPrice, setAnchorPrice] = useState<number>(0);
@@ -403,10 +404,17 @@ function V2LandingBuilderContent() {
           <div className="grid md:grid-cols-2 gap-8 animate-in fade-in">
             <Card className="p-8 space-y-8">
               <div className="space-y-4">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">1. Programa Académico</Label>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">1. Programa Académico</Label>
+                  <div className="flex bg-muted p-1 rounded-lg">
+                    <button onClick={() => setCourseFilter('all')} className={cn("px-3 py-1 text-[10px] font-bold rounded-md transition-colors", courseFilter === 'all' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground")}>Todos</button>
+                    <button onClick={() => setCourseFilter('course')} className={cn("px-3 py-1 text-[10px] font-bold rounded-md transition-colors", courseFilter === 'course' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground")}>Cursos</button>
+                    <button onClick={() => setCourseFilter('followup')} className={cn("px-3 py-1 text-[10px] font-bold rounded-md transition-colors", courseFilter === 'followup' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground")}>Mentorías</button>
+                  </div>
+                </div>
                 <ScrollArea className="h-64 rounded-2xl border p-2 bg-muted">
                   <div className="space-y-2">
-                    {courses?.map(c => (
+                    {courses?.filter(c => courseFilter === 'all' || c.productType === courseFilter).map(c => (
                       <div key={c.id} onClick={() => handleCourseSelect(c.id)} className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer font-bold text-sm", selectedCourseId === c.id ? "bg-white border-primary shadow-sm text-primary" : "bg-white border-transparent text-foreground hover:border-primary/20")}>
                         {c.title}
                       </div>
