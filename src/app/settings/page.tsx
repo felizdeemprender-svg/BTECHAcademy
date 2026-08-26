@@ -33,6 +33,7 @@ import {
   Check,
   MessageCircle,
   Upload,
+  Download,
   Image as ImageIcon,
   Phone,
   CreditCard,
@@ -345,6 +346,31 @@ export default function SettingsPage() {
   };
 
   const brandFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDownloadTemplate = () => {
+    const template = {
+      "$schema": "https://design-tokens.github.io/community-group/format/",
+      "mi-marca-personal": {
+        "$description": "Design tokens de marca (DTCG/W3C format). Completa los valores HEX y fuentes.",
+        "color": {
+          "primary": { "$type": "color", "$value": "#760464", "$description": "Color principal" },
+          "secondary": { "$type": "color", "$value": "#b288b9", "$description": "Color secundario" },
+          "accent": { "$type": "color", "$value": "#d3bba8", "$description": "Color de acento" }
+        },
+        "typography": {
+          "headingFont": { "$type": "fontFamily", "$value": "Mulish", "$description": "Tipografía para títulos" },
+          "bodyFont": { "$type": "fontFamily", "$value": "Lato", "$description": "Tipografía para cuerpo" }
+        }
+      }
+    };
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plantilla-brand.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleBrandFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -893,9 +919,14 @@ export default function SettingsPage() {
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mis brands (web personal)</Label>
-                        <Button variant="outline" size="sm" className="rounded-full font-bold" onClick={() => brandFileInputRef.current?.click()}>
-                          <Upload className="h-4 w-4 mr-1.5" /> Cargar brand (.json)
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="rounded-full font-bold" onClick={handleDownloadTemplate}>
+                            <Download className="h-4 w-4 mr-1.5" /> Plantilla
+                          </Button>
+                          <Button variant="outline" size="sm" className="rounded-full font-bold" onClick={() => brandFileInputRef.current?.click()}>
+                            <Upload className="h-4 w-4 mr-1.5" /> Cargar brand (.json)
+                          </Button>
+                        </div>
                         <input type="file" ref={brandFileInputRef} className="hidden" accept=".json,application/json" onChange={handleBrandFile} />
                       </div>
                       <p className="text-xs text-muted-foreground -mt-3">
