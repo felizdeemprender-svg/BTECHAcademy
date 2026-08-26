@@ -19,13 +19,49 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useAuth } from '@/components/auth-context';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 
 export default function BuilderPage() {
+  const { profile } = useAuth();
+  const db = useFirestore();
+  
   const [isOpen, setIsOpen] = useState(false);
-  const [scope, setScope] = useState('global'); // global, courses, landings
+  const [scope, setScope] = useState('global'); // global, courses, landings, tasks, followups
   const [triggerType, setTriggerType] = useState('inactivity');
+  const [targetId, setTargetId] = useState('all');
+  const [targetModuleId, setTargetModuleId] = useState('all');
   const [rules, setRules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Queries para Cursos y Landings
+  const coursesQuery = useMemoFirebase(() => {
+    if (!profile) return null;
+    if (profile.roles?.includes('admin')) return query(collection(db, 'courses'));
+    return query(collection(db, 'courses'), where('mentorId', '==', profile.uid));
+  }, [db, profile]);
+  const { data: courses = [] } = useCollection(coursesQuery);
+
+  const landingsQuery = useMemoFirebase(() => {
+    if (!profile) return null;
+    if (profile.roles?.includes('admin')) return query(collection(db, 'salesPages'));
+    return query(collection(db, 'salesPages'), where('mentorId', '==', profile.uid));
+  }, [db, profile]);
+  const { data: landings = [] } = useCollection(landingsQuery);
+
+  const followupsQuery = useMemoFirebase(() => {
+    if (!profile) return null;
+    if (profile.roles?.includes('admin')) return query(collection(db, 'followups'));
+    return query(collection(db, 'followups'), where('mentorId', '==', profile.uid));
+  }, [db, profile]);
+  const { data: followups = [] } = useCollection(followupsQuery);
+
+  const modulesQuery = useMemoFirebase(() => {
+    if (scope !== 'courses' || triggerType !== 'module_completion' || targetId === 'all') return null;
+    return query(collection(db, 'courses', targetId, 'modules'), orderBy('order', 'asc'));
+  }, [db, scope, triggerType, targetId]);
+  const { data: modules = [] } = useCollection(modulesQuery);
   
   // Estado para los medios de envío
   const [channels, setChannels] = useState({
@@ -74,6 +110,8 @@ export default function BuilderPage() {
 
   const handleScopeChange = (newScope: string) => {
     setScope(newScope);
+    setTargetId('all');
+    setTargetModuleId('all');
     if (newScope === 'global') setTriggerType('inactivity');
     if (newScope === 'courses') setTriggerType('course_completion');
     if (newScope === 'landings') setTriggerType('landing_registration');
@@ -101,7 +139,13 @@ export default function BuilderPage() {
       const newRule = {
         name: `Regla ${triggerType} - ${scope}`,
         scope,
-        trigger: { type: triggerType, config: {} },
+        trigger: { 
+          type: triggerType, 
+          config: { 
+            targetId, 
+            ...(triggerType === 'module_completion' ? { moduleId: targetModuleId } : {}) 
+          } 
+        },
         channels,
         actions: actions.map(a => ({ id: String(a.id), type: a.type, config: a.config })),
         isActive: true
@@ -187,21 +231,45 @@ export default function BuilderPage() {
                     {scope === 'courses' && (
                       <div className="mt-3 pt-3 border-t border-border">
                         <label className="text-xs font-semibold">Selecciona los Cursos donde aplicará:</label>
-                        <select className="flex h-9 w-full mt-1 rounded-md border border-input bg-background px-3 text-sm">
-                          <option>Todos los cursos</option>
-                          <option>Emprendimiento 101 (Ary)</option>
-                          <option>Ventas Avanzadas (Lu Belotti)</option>
+                        <select 
+                          value={targetId}
+                          onChange={(e) => setTargetId(e.target.value)}
+                          className="flex h-9 w-full mt-1 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                          <option value="all">Todos los cursos</option>
+                          {courses?.map(c => (
+                            <option key={c.id} value={c.id}>{c.title}</option>
+                          ))}
                         </select>
                       </div>
                     )}
                     {scope === 'landings' && (
                       <div className="mt-3 pt-3 border-t border-border">
                         <label className="text-xs font-semibold">Selecciona las Landings donde aplicará:</label>
-                        <select className="flex h-9 w-full mt-1 rounded-md border border-input bg-background px-3 text-sm">
-                          <option>Todas las landings activas</option>
-                          <option>Landing Principal - Ary</option>
-                          <option>Webinar Masterclass - Lu Belotti</option>
-                          <option>Promo Verano 2026</option>
+                        <select 
+                          value={targetId}
+                          onChange={(e) => setTargetId(e.target.value)}
+                          className="flex h-9 w-full mt-1 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                          <option value="all">Todas las landings activas</option>
+                          {landings?.map(l => (
+                            <option key={l.id} value={l.id}>{l.name || l.title || 'Landing Sin Nombre'}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {scope === 'followups' && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <label className="text-xs font-semibold">Selecciona las Mentorías donde aplicará:</label>
+                        <select 
+                          value={targetId}
+                          onChange={(e) => setTargetId(e.target.value)}
+                          className="flex h-9 w-full mt-1 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                          <option value="all">Todas las mentorías activas</option>
+                          {followups?.map(f => (
+                            <option key={f.id} value={f.id}>{f.title || f.studentName || 'Mentoría Sin Título'}</option>
+                          ))}
                         </select>
                       </div>
                     )}
@@ -299,10 +367,22 @@ export default function BuilderPage() {
                       {triggerType === 'module_completion' && (
                         <div className="flex flex-col gap-2">
                           <label className="text-sm font-medium">¿Cuál módulo?</label>
-                          <select className="flex h-9 w-full max-w-xs mt-1 rounded-md border border-input bg-background px-3 text-sm">
-                            <option>Módulo 1: Introducción</option>
-                            <option>Módulo 2: Avanzado</option>
-                          </select>
+                          {targetId === 'all' ? (
+                            <p className="text-xs text-muted-foreground p-2 bg-background border border-input rounded-md">
+                              Debes seleccionar un curso específico arriba para poder elegir un módulo.
+                            </p>
+                          ) : (
+                            <select 
+                              value={targetModuleId}
+                              onChange={(e) => setTargetModuleId(e.target.value)}
+                              className="flex h-9 w-full max-w-xs mt-1 rounded-md border border-input bg-background px-3 text-sm"
+                            >
+                              <option value="all">Selecciona un módulo...</option>
+                              {modules?.map(m => (
+                                <option key={m.id} value={m.id}>{m.title}</option>
+                              ))}
+                            </select>
+                          )}
                         </div>
                       )}
                       {triggerType === 'course_enrollment' && (

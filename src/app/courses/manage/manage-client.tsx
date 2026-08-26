@@ -97,25 +97,25 @@ function EnrollmentRow({ enrollment, totalModules, onApprove, onToggleStatus, on
 
   return (
     <div className={cn("flex flex-col gap-2 p-3 bg-white rounded border transition-colors", enrollment.isInvited ? "border-warn bg-warn/10/20 shadow-sm" : "border-border/50 hover:border-accent/30")}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className={cn("w-8 h-8 rounded flex items-center justify-center font-bold text-xs uppercase border", enrollment.isInvited ? "bg-warn/15 text-warn border-warn/20" : "bg-primary/5 text-primary")}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className={cn("w-8 h-8 rounded flex items-center justify-center font-bold text-xs uppercase border shrink-0", enrollment.isInvited ? "bg-warn/15 text-warn border-warn/20" : "bg-primary/5 text-primary")}>
             {enrollment.studentName?.[0] || <Mail className="h-3 w-3" />}
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-col flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <p className="font-bold text-xs text-foreground truncate max-w-[150px]">{enrollment.studentName || 'Alumno'}</p>
-              {studentProfile?.signInProvider === 'google.com' && <Globe className="h-2.5 w-2.5 text-accent" />}
+              {studentProfile?.signInProvider === 'google.com' && <Globe className="h-2.5 w-2.5 text-accent shrink-0" />}
               {(enrollment.isInvited || enrollment.isDirect) && (
                 <Badge className={cn(
-                  "border-none text-[8px] h-4 px-1.5 uppercase font-bold tracking-widest shadow-none",
+                  "border-none text-[8px] h-4 px-1.5 uppercase font-bold tracking-widest shadow-none shrink-0",
                   enrollment.isDirect ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-warn/15 text-warn hover:bg-warn/20"
                 )}>
                   {enrollment.isDirect ? 'Carga Directa' : 'Invitado'}
                 </Badge>
               )}
             </div>
-            <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">{enrollment.inviteEmail}</p>
+            <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{enrollment.inviteEmail}</p>
             <div className="flex items-center gap-2 mt-1">
               <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden w-20">
                 <div 

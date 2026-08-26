@@ -446,6 +446,106 @@ export default function SubscriptionConfigForm({
         </CardContent>
       </Card>
 
+      {/* Límites y Funcionalidades */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <span>⚙️</span> Límites y Funcionalidades
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label htmlFor="hasCustomBranding">Tokens y Brands (Custom Branding)</Label>
+              <p className="text-sm text-muted-foreground">
+                Permite al tutor asignar sus propios tokens de diseño y marcas a sus landings
+              </p>
+            </div>
+            <Switch
+              id="hasCustomBranding"
+              checked={config.limits?.hasCustomBranding || false}
+              onCheckedChange={(checked) => 
+                setConfig(prev => ({ 
+                  ...prev, 
+                  limits: { ...prev.limits!, hasCustomBranding: checked } 
+                }))
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+            <div className="space-y-1">
+              <Label htmlFor="hasAnalytics">Analíticas Avanzadas</Label>
+              <p className="text-sm text-muted-foreground">
+                Habilita el dashboard de métricas de retención y conversión
+              </p>
+            </div>
+            <Switch
+              id="hasAnalytics"
+              checked={config.limits?.hasAnalytics || false}
+              onCheckedChange={(checked) => 
+                setConfig(prev => ({ 
+                  ...prev, 
+                  limits: { ...prev.limits!, hasAnalytics: checked } 
+                }))
+              }
+            />
+          </div>
+          
+          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+            <div className="space-y-1">
+              <Label htmlFor="hasPrioritySupport">Soporte Prioritario</Label>
+              <p className="text-sm text-muted-foreground">
+                Acceso a canal directo y resolución en 24hs
+              </p>
+            </div>
+            <Switch
+              id="hasPrioritySupport"
+              checked={config.limits?.hasPrioritySupport || false}
+              onCheckedChange={(checked) => 
+                setConfig(prev => ({ 
+                  ...prev, 
+                  limits: { ...prev.limits!, hasPrioritySupport: checked } 
+                }))
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
+            <div>
+              <Label htmlFor="maxCourses">Máx. Cursos Activos</Label>
+              <Input
+                id="maxCourses"
+                type="number"
+                min="1"
+                value={config.limits?.maxCourses || 3}
+                onChange={(e) => 
+                  setConfig(prev => ({ 
+                    ...prev, 
+                    limits: { ...prev.limits!, maxCourses: parseInt(e.target.value) || 3 } 
+                  }))
+                }
+              />
+            </div>
+            <div>
+              <Label htmlFor="maxStudents">Máx. Alumnos por Curso</Label>
+              <Input
+                id="maxStudents"
+                type="number"
+                min="1"
+                value={config.limits?.maxStudents || 50}
+                onChange={(e) => 
+                  setConfig(prev => ({ 
+                    ...prev, 
+                    limits: { ...prev.limits!, maxStudents: parseInt(e.target.value) || 50 } 
+                  }))
+                }
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Observaciones */}
       <Card>
         <CardHeader>
