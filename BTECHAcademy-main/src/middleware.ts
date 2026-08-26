@@ -67,10 +67,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. Saltamos si es una ruta reservada, API o archivo estático
+  // Las rutas /landing* son landings públicos (ej: /landing2) y no se enmascaran
   if (
-    pathname.includes('.') || 
-    pathname.startsWith('/api') || 
+    pathname.includes('.') ||
+    pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
+    (segments[0] && segments[0].startsWith('landing')) ||
     RESERVED_PATHS.includes(segments[0])
   ) {
     return NextResponse.next();
