@@ -1,8 +1,7 @@
 'use server';
 
 import { adminDb } from '@/firebase/admin';
-import { textEmbedding004 } from '@genkit-ai/google-genai';
-import { embed } from 'genkit';
+import { ai } from '@/ai/genkit';
 import { cookies } from 'next/headers';
 
 export async function ingestFaqsFromText(rawText: string) {
@@ -28,11 +27,11 @@ export async function ingestFaqsFromText(rawText: string) {
         const answer = parts[1].trim();
 
         if (question && answer) {
-          // Generar embedding
-          const embeddingVector = await embed({
-            model: textEmbedding004,
-            text: question,
+          const embedResult = await ai.embed({
+            embedder: 'googleai/text-embedding-004',
+            content: question + "\n" + answer
           });
+          const embeddingVector = embedResult[0].embedding;
 
           await adminDb.collection('knowledgeBase').add({
             mentorId: uid,

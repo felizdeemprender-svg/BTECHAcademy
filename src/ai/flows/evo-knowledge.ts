@@ -1,8 +1,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { adminDb } from '@/firebase/admin';
-import { textEmbedding004 } from '@genkit-ai/google-genai';
-import { embed } from 'genkit';
 
 function cosineSimilarity(A: number[], B: number[]) {
   let dotProduct = 0;
@@ -34,10 +32,11 @@ export const searchKnowledgeBaseTool = ai.defineTool(
     try {
       console.log(`[RAG] Generando embedding para: "${query}"`);
       
-      const queryVector = await embed({
-        model: textEmbedding004,
-        text: query,
+      const embedResult = await ai.embed({
+        embedder: 'googleai/text-embedding-004',
+        content: query,
       });
+      const queryVector = embedResult[0].embedding;
 
       const snapshot = await adminDb.collection('knowledgeBase').where('mentorId', '==', uid).get();
       
