@@ -42,49 +42,6 @@ import {
 
 function toDate(value: any): Date | null {
   if (!value) return null;
-'use client';
-
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
-import { useAuth } from '@/components/auth-context';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { 
-  collection, query, where, getDocs, doc, 
-  serverTimestamp, getDoc, writeBatch, collectionGroup, orderBy, deleteDoc, setDoc
-} from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Target, Plus, Search, Loader2, Users, BookOpen, 
-  CheckCircle2, BrainCircuit, X, Zap, 
-  UserPlus, Info, ClipboardList, Send, Trash2, Clock,
-  AlertTriangle, Eye, BarChart3, ChevronRight, FileText, Download
-} from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Progress } from '@/components/ui/progress';
-import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { differenceInDays } from 'date-fns';
-import { 
-  Table, TableHeader, TableRow, TableHead, TableBody, TableCell 
-} from '@/components/ui/table';
-
-function toDate(value: any): Date | null {
-  if (!value) return null;
   if (typeof value?.toDate === 'function') return value.toDate();
   if (typeof value?.seconds === 'number') return new Date(value.seconds * 1000);
   const d = new Date(value);
@@ -647,6 +604,45 @@ export default function MentorChallengesPage() {
             <Trash2 className="h-4 w-4" /> Limpiar
           </Button>
           )}
+            <Button onClick={() => setIsCreateOpen(true)} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
+              <Plus className="h-5 w-5" /> Nuevo Desafío
+            </Button>
+          </div>
+        </header>
+
+        <SmartFilterBar 
+          placeholder="Filtrar desafíos por nombre..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
+
+        <Tabs defaultValue="recent" className="space-y-6">
+          <TabsList className="bg-secondary/20 p-1 rounded-2xl h-14">
+            <TabsTrigger value="recent" className="rounded-xl font-bold text-sm px-8 data-[state=active]:shadow-lg">
+              🔥 Desafíos Recientes
+              <Badge className="ml-2 bg-primary/10 text-primary border-none shadow-none text-[10px]">{filteredAndCategorized.recent.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="old" className="rounded-xl font-bold text-sm px-8 data-[state=active]:shadow-lg">
+              📦 Archivo Histórico
+              <Badge className="ml-2 bg-muted text-muted-foreground border-none shadow-none text-[10px]">{filteredAndCategorized.old.length}</Badge>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="recent" className="animate-in fade-in duration-500">
+            {tasksLoading ? (
+              <div className="h-60 bg-muted animate-pulse rounded-lg" />
+            ) : (
+              <ChallengeTable list={filteredAndCategorized.recent} setSelectedGroup={setSelectedGroup} handleDeleteGroup={handleDeleteGroup} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="old" className="animate-in fade-in duration-500">
+            <ChallengeTable list={filteredAndCategorized.old} setSelectedGroup={setSelectedGroup} handleDeleteGroup={handleDeleteGroup} />
+          </TabsContent>
+        </Tabs>
+
+        {/* Dialog: Challenge Details (Student List) */}
+        <Dialog open={!!selectedGroup} onOpenChange={open => !open && setSelectedGroup(null)}>
           <DialogContent className="mw-4xl h-[85vh] flex flex-col">
             <div className="shrink-0 relative px-8 pt-8">
               <BarChart3 className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
