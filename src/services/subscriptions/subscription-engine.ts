@@ -6,7 +6,7 @@ import {
   sendPaymentFailedEmail,
   sendAccountSuspendedEmail,
 } from '@/lib/emails/subscription';
-import { createMercadoPagoSession } from '@/services/payments/mercadopago';
+import { processPaymentSession } from '@/services/payments/orchestrator';
 
 type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'suspended' | 'canceled';
 
@@ -92,7 +92,6 @@ export async function processBilling(tutorId: string): Promise<'success' | 'fail
   // Buscar el método de pago del sistema (el administrador cobra al tutor)
   const methodsSnap = await db.collection('systemPaymentMethods')
     .where('isActive', '==', true)
-    .where('type', '==', 'mercadopago')
     .limit(1)
     .get();
 
@@ -101,24 +100,22 @@ export async function processBilling(tutorId: string): Promise<'success' | 'fail
     return 'failed';
   }
 
-  const systemPaymentConfig = methodsSnap.docs[0].data().config;
+    const activeMethod = methodsSnap.docs[0].data();
+    const systemPaymentConfig = activeMethod.config;
+    const gateway = activeMethod.type;
 
-  try {
-    // Generar preferencia de pago (el tutor deberá aprobarla desde su email o usar preaprobación)
-    // En una integración completa con Getnet/MP Preapproval, esto sería un débito automático sin redirección.
-    // Por ahora generamos la preferencia y registramos el intento.
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://fastoriaacademy.ai';
-
-    await createMercadoPagoSession({
-      pageId: `sub_${tutorId}`,
-      title: `Suscripción Fastoria - ${plan.name}`,
-      price: plan.price,
-      studentEmail: user.email,
-      studentName: user.displayName || 'Tutor',
-      mentorId: 'system',
-      mpAccessToken: systemPaymentConfig.accessToken,
-      baseUrl,
-    });
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://fastoriaacademy.ai';
+  
+      await processPaymentSession(gateway, systemPaymentConfig, {
+        pageId: `sub_${tutorId}`,
+        title: `Suscripción Fastoria - ${plan.name}`,
+        price: plan.price,
+        studentEmail: user.email,
+        studentName: user.displayName || 'Tutor',
+        mentorId: 'system',
+        baseUrl,
+      });
 
     // Cobro generado exitosamente - actualizar nextBillingAt
     const billingCycleMonths = plan.billingCycleMonths ?? 1;

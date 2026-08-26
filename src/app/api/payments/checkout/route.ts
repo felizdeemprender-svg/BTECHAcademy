@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/firebase/admin';
-import { createMercadoPagoSession } from '@/services/payments/mercadopago';
-import { createGetnetSession } from '@/services/payments/getnet';
+import { processPaymentSession } from '@/services/payments/orchestrator';
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,38 +61,18 @@ export async function POST(req: NextRequest) {
       : origin;
 
     // 4. Factory / Orquestador: Derivar a la Pasarela Correspondiente
-    if (gateway === 'mercadopago') {
-      const mpResult = await createMercadoPagoSession({
-        pageId,
-        title,
-        price,
-        studentEmail,
-        studentName,
-        mentorId,
-        referidoId,
-        mpAccessToken: paymentConfig.accessToken,
-        baseUrl
-      });
-      return NextResponse.json(mpResult);
+    const result = await processPaymentSession(gateway, paymentConfig, {
+      pageId,
+      title,
+      price,
+      studentEmail,
+      studentName,
+      mentorId,
+      referidoId,
+      baseUrl
+    });
 
-    } else if (gateway === 'getnet') {
-      const getnetResult = await createGetnetSession({
-        pageId,
-        title,
-        price,
-        studentEmail,
-        studentName,
-        mentorId,
-        clientId: paymentConfig.clientId,
-        clientSecret: paymentConfig.clientSecret,
-        sellerId: paymentConfig.sellerId,
-        baseUrl
-      });
-      return NextResponse.json(getnetResult);
-
-    } else {
-      return NextResponse.json({ error: `Pasarela ${gateway} no soportada.` }, { status: 400 });
-    }
+    return NextResponse.json(result);
 
   } catch (error: any) {
     console.error(`[Checkout Orchestrator] Error:`, error);
