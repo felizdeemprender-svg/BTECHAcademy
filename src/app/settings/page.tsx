@@ -6,7 +6,7 @@ import { useAuth } from '@/components/auth-context';
 import { useFirestore, useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, getDocs, query, where, collection } from 'firebase/firestore';
 import { LandingStyle, StyleBrand, resolveStyleBrand } from '@/lib/landing-styles';
-import { parseBrandFile } from '@/lib/landing-styles/dtcg';
+import { parseBrandFile, brandsToDTCG } from '@/lib/landing-styles/dtcg';
 import { getRootDomain } from '@/lib/utils';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -408,15 +408,23 @@ export default function SettingsPage() {
     toast({ title: `Brand activo: ${name}` });
   };
 
-  const handleRemoveBrand = (name: string) => {
-    setFormData(prev => {
-      const myBrands = prev.myBrands.filter(b => b.name !== name);
-      const activeBrandName = prev.activeBrandName === name
-        ? (myBrands[0]?.name || '')
-        : prev.activeBrandName;
-      return { ...prev, myBrands, activeBrandName };
-    });
+  const handleRemoveBrand = (brandName: string) => {
+    setFormData({ ...formData, myBrands: formData.myBrands.filter((b) => b.name !== brandName) });
+    if (formData.activeBrandName === brandName) {
+      setFormData((prev) => ({ ...prev, activeBrandName: '' }));
+    }
     toast({ title: 'Brand eliminado' });
+  };
+
+  const handleDownloadBrand = (brand: any) => {
+    const json = brandsToDTCG([brand]);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${brand.name.toLowerCase().replace(/\s+/g, '-')}-tokens.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const sub = profile?.subscription;
@@ -940,45 +948,96 @@ export default function SettingsPage() {
                               <div
                                 key={brand.name}
                                 className={cn(
-                                  "border-2 rounded-xl p-4 transition-all",
-                                  isActive ? "border-success bg-success/10/60" : "border-border bg-white"
+                                  "border-2 rounded-xl p-4 transition-all flex flex-col justify-between",
+                                  isActive ? "border-success bg-success/5 md:col-span-2 lg:col-span-3" : "border-border bg-white hover:border-primary/50"
                                 )}
                               >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex -space-x-1.5">
-                                    <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-30" style={{ backgroundColor: brand.palette.primary }} />
-                                    <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-20" style={{ backgroundColor: brand.palette.secondary }} />
-                                    <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-10" style={{ backgroundColor: brand.palette.accent }} />
+                                <div>
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex -space-x-1.5">
+                                      <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-30" style={{ backgroundColor: brand.palette.primary }} />
+                                      <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-20" style={{ backgroundColor: brand.palette.secondary }} />
+                                      <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-10" style={{ backgroundColor: brand.palette.accent }} />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleActivateBrand(brand.name)}
+                                        disabled={isActive}
+                                        className={cn(
+                                          "text-[10px] font-black uppercase tracking-widest rounded-full px-2.5 py-1 transition-colors mr-1",
+                                          isActive
+                                            ? "bg-success text-white cursor-default"
+                                            : "bg-muted text-muted-foreground hover:bg-success/15 hover:text-success"
+                                        )}
+                                      >
+                                        {isActive ? 'Activo' : 'Activar'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDownloadBrand(brand)}
+                                        className="text-[10px] font-black text-border hover:text-primary transition-colors px-1"
+                                        title="Descargar tokens"
+                                      >
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveBrand(brand.name)}
+                                        className="text-[10px] font-black text-border hover:text-danger transition-colors px-1"
+                                        title="Eliminar brand"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
                                   </div>
-                                  <div className="flex gap-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleActivateBrand(brand.name)}
-                                      disabled={isActive}
-                                      className={cn(
-                                        "text-[10px] font-black uppercase tracking-widest rounded-full px-2.5 py-1 transition-colors",
-                                        isActive
-                                          ? "bg-success text-white cursor-default"
-                                          : "bg-muted text-muted-foreground hover:bg-success/15 hover:text-success"
-                                      )}
-                                    >
-                                      {isActive ? 'Activo' : 'Activar'}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveBrand(brand.name)}
-                                      className="text-[10px] font-black text-border hover:text-danger transition-colors px-1"
-                                      title="Eliminar brand"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </button>
-                                  </div>
+                                  <p className="font-bold text-sm text-foreground mt-3">{brand.name}</p>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">{brand.description || 'Sin descripción'}</p>
+                                  
+                                  {!isActive && (
+                                    <p className="text-[10px] font-mono text-muted-foreground mt-2 truncate">
+                                      {brand.typography?.headingFont} · {brand.palette.primary}
+                                    </p>
+                                  )}
                                 </div>
-                                <p className="font-bold text-sm text-foreground mt-2">{brand.name}</p>
-                                <p className="text-[10px] text-muted-foreground truncate">{brand.description || 'Sin descripción'}</p>
-                                <p className="text-[10px] font-mono text-muted-foreground mt-1">
-                                  {brand.typography?.headingFont} · {brand.palette.primary} · modo {brand.tokens?.themeMode}
-                                </p>
+                                
+                                {isActive && (
+                                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 p-4 bg-white rounded-xl border border-success/20 shadow-sm">
+                                    <div className="space-y-1.5">
+                                      <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Primary</p>
+                                      <div className="flex items-center gap-2 text-xs font-mono font-medium">
+                                        <div className="w-5 h-5 rounded-full border shadow-sm" style={{ backgroundColor: brand.palette.primary }} />
+                                        {brand.palette.primary}
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Secondary</p>
+                                      <div className="flex items-center gap-2 text-xs font-mono font-medium">
+                                        <div className="w-5 h-5 rounded-full border shadow-sm" style={{ backgroundColor: brand.palette.secondary }} />
+                                        {brand.palette.secondary}
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Accent</p>
+                                      <div className="flex items-center gap-2 text-xs font-mono font-medium">
+                                        <div className="w-5 h-5 rounded-full border shadow-sm" style={{ backgroundColor: brand.palette.accent }} />
+                                        {brand.palette.accent}
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Títulos</p>
+                                      <p className="text-xs font-mono font-medium truncate" style={{ fontFamily: brand.typography?.headingFont }}>
+                                        {brand.typography?.headingFont}
+                                      </p>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Cuerpo</p>
+                                      <p className="text-xs font-mono font-medium truncate" style={{ fontFamily: brand.typography?.bodyFont }}>
+                                        {brand.typography?.bodyFont}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
