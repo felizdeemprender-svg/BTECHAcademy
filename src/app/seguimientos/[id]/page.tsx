@@ -6,7 +6,7 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { sendWelcomeEmailAction } from '@/app/actions/email-actions';
 import { useFirestore, useDoc, useCollection, useMemoFirebase, useFirebase } from '@/firebase';
-import { collection, query, where, doc, updateDoc, setDoc, serverTimestamp, orderBy, getDocs, deleteDoc, getDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, setDoc, serverTimestamp, orderBy, getDocs, deleteDoc, getDoc, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
