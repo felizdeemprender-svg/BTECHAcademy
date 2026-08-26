@@ -61,19 +61,18 @@ export default function FastoriaV3Landing() {
       {/* Floating Top Navbar Glassmorphism 2.0 */}
       <nav className="fixed top-4 inset-x-0 mx-auto z-50 w-[94%] max-w-6xl">
         <div className="backdrop-blur-2xl bg-black/60 border border-white/10 rounded-full px-5 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)] flex items-center justify-between transition-all">
-          <Link href="/v3" className="flex items-center gap-2.5 group">
+          <Link href="/landing1" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#1CB899] to-emerald-400 flex items-center justify-center text-slate-950 font-black text-sm shadow-[0_0_15px_rgba(28,184,153,0.5)] group-hover:scale-105 transition-transform">
               F
             </div>
             <span className="font-black tracking-tight text-lg text-white">
               FASTORIA<span className="text-[#1CB899]">.</span>
-              <span className="text-[10px] font-mono text-[#1CB899] bg-[#1CB899]/10 px-2 py-0.5 rounded-full ml-2 border border-[#1CB899]/30">v3-os</span>
             </span>
           </Link>
 
           <div className="hidden md:flex items-center gap-7 text-xs font-bold uppercase tracking-wider text-slate-400">
             <a href="#identificacion" className="hover:text-[#1CB899] transition-colors">Para quién</a>
-            <a href="#cockpit" className="hover:text-[#1CB899] transition-colors">Cockpit</a>
+            <a href="#problema" className="hover:text-[#1CB899] transition-colors">Problema</a>
             <a href="#propuesta" className="hover:text-[#1CB899] transition-colors">Recorrido</a>
             <a href="#diferencial" className="hover:text-[#1CB899] transition-colors">Diferencial</a>
             <a href="#evo" className="hover:text-[#1CB899] transition-colors">Evo IA</a>
@@ -150,24 +149,11 @@ export default function FastoriaV3Landing() {
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </button>
             </Link>
-            <a href="#cockpit" className="w-full sm:w-auto">
+            <a href="#identificacion" className="w-full sm:w-auto">
               <button className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold text-sm border border-white/15 backdrop-blur-xl transition-all flex items-center justify-center gap-2">
-                Ver Cockpit en Vivo
+                Ver cómo funciona
               </button>
             </a>
-          </motion.div>
-
-          {/* ========================================================================= */}
-          {/* LIVE COMMAND CENTER (Reemplaza el reproductor previo por software interactivo vivo) */}
-          {/* ========================================================================= */}
-          <motion.div
-            id="cockpit"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-14"
-          >
-            <InteractiveCommandCenter />
           </motion.div>
 
         </div>
