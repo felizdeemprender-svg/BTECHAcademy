@@ -321,8 +321,9 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
           const studentMap = new Map();
           enrollments.forEach(data => {
-            const userEmail = data.inviteEmail || data.studentEmail || data.email;
-            if (userEmail) {
+            const rawEmail = data.inviteEmail || data.studentEmail || data.email;
+            if (rawEmail) {
+              const userEmail = rawEmail.toLowerCase().trim();
               const existing = studentMap.get(userEmail) || {
                 id: data.studentId || data.userId || data.id,
                 email: userEmail,
@@ -1465,7 +1466,9 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-bold text-sm truncate">{s.displayName}</p>
-                              <p className={cn("text-[10px] truncate", selectedStudentIds.includes(s.id) ? "text-white/70" : "text-muted-foreground")}>{s.email}</p>
+                              {s.displayName !== s.email && (
+                                <p className={cn("text-[10px] truncate", selectedStudentIds.includes(s.id) ? "text-white/70" : "text-muted-foreground")}>{s.email}</p>
+                              )}
                             </div>
                             {selectedStudentIds.includes(s.id) && <CheckCircle2 className="h-5 w-5 shrink-0" />}
                           </div>
