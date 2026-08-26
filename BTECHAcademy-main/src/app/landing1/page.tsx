@@ -76,7 +76,6 @@ export default function FastoriaV3Landing() {
             <a href="#propuesta" className="hover:text-[#1CB899] transition-colors">Recorrido</a>
             <a href="#diferencial" className="hover:text-[#1CB899] transition-colors">Diferencial</a>
             <a href="#evo" className="hover:text-[#1CB899] transition-colors">Evo IA</a>
-            <a href="#roi" className="hover:text-[#1CB899] transition-colors">Calculadora</a>
             <a href="#pricing" className="hover:text-[#1CB899] transition-colors">Precios</a>
           </div>
 
@@ -614,26 +613,7 @@ export default function FastoriaV3Landing() {
         </div>
       </section>
 
-      {/* ========================================================================= */}
-      {/* 8. CALCULADORA DE ROI (Sección Interactiva Exclusiva v3) */}
-      {/* ========================================================================= */}
-      <section id="roi" className="py-24 px-6 relative z-10 border-t border-white/10">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block">
-              // ESCALABILIDAD
-            </span>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
-              Calculá tus ingresos con Fastoria.
-            </h2>
-            <p className="mt-3 text-slate-400 text-base">
-              Descubrí tu potencial de facturación según tu audiencia y modelo de precios.
-            </p>
-          </div>
 
-          <RoiCalculator />
-        </div>
-      </section>
 
       {/* ========================================================================= */}
       {/* 9. TODO LO QUE TENÉS EN FASTORIA (4 Pilares) */}
