@@ -931,7 +931,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
                     return (
                       <Card key={task.id} className="p-6 rounded-3xl border-none shadow-sm bg-white hover:shadow-md transition-all relative group">
-                        {isMentor && !isSuspended && <Button variant="ghost" size="icon" onClick={() => handleDeleteTask(task.id)} className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-destructive rounded-full hover:bg-destructive/10"><X className="h-4 w-4" /></Button>}
+                        {isMentor && !isSuspended && displayStatus !== 'completed' && <Button variant="ghost" size="icon" onClick={() => handleDeleteTask(task.id)} className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-destructive rounded-full hover:bg-destructive/10"><X className="h-4 w-4" /></Button>}
                         <div className="flex justify-between items-start mb-4">
                           <div className="space-y-1">
                             <h4 className="font-bold text-primary text-lg leading-tight">{task.title || task.description}</h4>

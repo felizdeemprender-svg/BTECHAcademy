@@ -42,6 +42,49 @@ import {
 
 function toDate(value: any): Date | null {
   if (!value) return null;
+'use client';
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
+import { useAuth } from '@/components/auth-context';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { 
+  collection, query, where, getDocs, doc, 
+  serverTimestamp, getDoc, writeBatch, collectionGroup, orderBy, deleteDoc, setDoc
+} from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Target, Plus, Search, Loader2, Users, BookOpen, 
+  CheckCircle2, BrainCircuit, X, Zap, 
+  UserPlus, Info, ClipboardList, Send, Trash2, Clock,
+  AlertTriangle, Eye, BarChart3, ChevronRight, FileText, Download
+} from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
+import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { differenceInDays } from 'date-fns';
+import { 
+  Table, TableHeader, TableRow, TableHead, TableBody, TableCell 
+} from '@/components/ui/table';
+
+function toDate(value: any): Date | null {
+  if (!value) return null;
   if (typeof value?.toDate === 'function') return value.toDate();
   if (typeof value?.seconds === 'number') return new Date(value.seconds * 1000);
   const d = new Date(value);
@@ -49,7 +92,7 @@ function toDate(value: any): Date | null {
 }
 
 // Subcomponente de Tabla (Fuera para mayor claridad)
-const ChallengeTable = ({ list, setSelectedGroup }: { list: any[], setSelectedGroup: (g: any) => void }) => (
+const ChallengeTable = ({ list, setSelectedGroup, handleDeleteGroup }: { list: any[], setSelectedGroup: (g: any) => void, handleDeleteGroup?: (g: any) => void }) => (
   <div className="space-y-4">
     {/* Vista Desktop: Tabla */}
     <Card className="hidden md:block border rounded-lg overflow-hidden bg-white">
@@ -112,14 +155,21 @@ const ChallengeTable = ({ list, setSelectedGroup }: { list: any[], setSelectedGr
                     </div>
                   </TableCell>
                   <TableCell className="text-right px-6">
-                    <Button 
-                      onClick={() => setSelectedGroup(group)}
-                      size="sm" 
-                      variant="ghost" 
-                      className="rounded-xl h-9 px-4 font-bold text-primary hover:bg-primary/10 transition-colors"
-                    >
-                      Analizar <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
+                    <div className="flex justify-end items-center gap-2">
+                      {group.completed === 0 && handleDeleteGroup && (
+                        <Button size="icon" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteGroup(group)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button 
+                        onClick={() => setSelectedGroup(group)}
+                        size="sm" 
+                        variant="ghost" 
+                        className="rounded-xl h-9 px-4 font-bold text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        Analizar <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -157,6 +207,11 @@ const ChallengeTable = ({ list, setSelectedGroup }: { list: any[], setSelectedGr
                   <span className="text-[9px] font-black uppercase text-muted-foreground">Cumplimiento</span>
                   <span className="text-sm font-black text-primary">{percent}%</span>
                 </div>
+                {group.completed === 0 && handleDeleteGroup && (
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteGroup(group)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button 
                   onClick={() => setSelectedGroup(group)}
                   size="sm" 
@@ -516,6 +571,28 @@ export default function MentorChallengesPage() {
     });
   };
 
+  const handleDeleteGroup = async (group: any) => {
+    if (group.completed > 0) {
+      return toast({ variant: 'destructive', title: 'No se puede eliminar', description: 'El desafío ya tiene alumnos que lo han completado.' });
+    }
+    setLoading(true);
+    try {
+      const batch = writeBatch(db);
+      group.tasks.forEach((task: any) => {
+        if(task.studentId && task.id) {
+          const ref = doc(db, 'users', task.studentId, 'individualTasks', task.id);
+          batch.delete(ref);
+        }
+      });
+      await batch.commit();
+      toast({ title: 'Desafío grupal eliminado' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Error al eliminar el desafío grupal' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePurgeTasks = async () => {
     if (!allTasks || allTasks.length === 0) return;
     setLoading(true);
@@ -570,45 +647,6 @@ export default function MentorChallengesPage() {
             <Trash2 className="h-4 w-4" /> Limpiar
           </Button>
           )}
-            <Button onClick={() => setIsCreateOpen(true)} className="h-12 px-8 rounded-xl font-bold flex items-center gap-2">
-              <Plus className="h-5 w-5" /> Nuevo Desafío
-            </Button>
-          </div>
-        </header>
-
-        <SmartFilterBar 
-          placeholder="Filtrar desafíos por nombre..."
-          value={searchTerm}
-          onChange={setSearchTerm}
-        />
-
-        <Tabs defaultValue="recent" className="space-y-6">
-          <TabsList className="bg-secondary/20 p-1 rounded-2xl h-14">
-            <TabsTrigger value="recent" className="rounded-xl font-bold text-sm px-8 data-[state=active]:shadow-lg">
-              🔥 Desafíos Recientes
-              <Badge className="ml-2 bg-primary/10 text-primary border-none shadow-none text-[10px]">{filteredAndCategorized.recent.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="old" className="rounded-xl font-bold text-sm px-8 data-[state=active]:shadow-lg">
-              📦 Archivo Histórico
-              <Badge className="ml-2 bg-muted text-muted-foreground border-none shadow-none text-[10px]">{filteredAndCategorized.old.length}</Badge>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="recent" className="animate-in fade-in duration-500">
-            {tasksLoading ? (
-              <div className="h-60 bg-muted animate-pulse rounded-lg" />
-            ) : (
-              <ChallengeTable list={filteredAndCategorized.recent} setSelectedGroup={setSelectedGroup} />
-            )}
-          </TabsContent>
-
-          <TabsContent value="old" className="animate-in fade-in duration-500">
-            <ChallengeTable list={filteredAndCategorized.old} setSelectedGroup={setSelectedGroup} />
-          </TabsContent>
-        </Tabs>
-
-        {/* Dialog: Challenge Details (Student List) */}
-        <Dialog open={!!selectedGroup} onOpenChange={open => !open && setSelectedGroup(null)}>
           <DialogContent className="mw-4xl h-[85vh] flex flex-col">
             <div className="shrink-0 relative px-8 pt-8">
               <BarChart3 className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
