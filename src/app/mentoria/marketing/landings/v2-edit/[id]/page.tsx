@@ -113,9 +113,20 @@ export default function V2LandingEditorPage() {
           }
 
           if (data.courseId) {
-            const courseSnap = await getDoc(doc(db, 'courses', data.courseId));
+            let courseSnap = await getDoc(doc(db, 'courses', data.courseId));
             if (courseSnap.exists()) {
               setCourseData(courseSnap.data());
+            } else {
+              // Si no existe en courses, podría ser una mentoría grupal
+              courseSnap = await getDoc(doc(db, 'followups', data.courseId));
+              if (courseSnap.exists()) {
+                const fData = courseSnap.data();
+                setCourseData({
+                  ...fData,
+                  title: fData.goal || 'Mentoría',
+                  description: fData.goal || ''
+                });
+              }
             }
           }
 
