@@ -80,6 +80,7 @@ export default function SalesLandingsDashboardPage() {
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [courseFilter, setCourseFilter] = useState<'all' | 'course' | 'followup'>('all');
   const [openCourses, setOpenCourses] = useState<string[]>([]);
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({});
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -118,6 +119,13 @@ export default function SalesLandingsDashboardPage() {
     return query(collection(db, 'courses'), where('mentorId', '==', profile.uid));
   }, [db, profile?.uid]);
   const { data: courses } = useCollection(coursesQuery);
+
+  // Consulta de mentorías (followups grupales)
+  const followupsQuery = useMemoFirebase(() => {
+    if (!profile?.uid) return null;
+    return query(collection(db, 'followups'), where('mentorId', '==', profile.uid), where('type', '==', 'group'));
+  }, [db, profile?.uid]);
+  const { data: rawFollowups } = useCollection(followupsQuery);
 
   // Consulta de referidos del mentor para nombres de embajadores
   const referidosQuery = useMemoFirebase(() => {
@@ -224,10 +232,11 @@ export default function SalesLandingsDashboardPage() {
   }, [db, selectedStatsPage?.id]);
 
   const courseMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    courses?.forEach((c: any) => { map[c.id] = c.title; });
+    const map: Record<string, { title: string, productType: 'course' | 'followup' }> = {};
+    courses?.forEach((c: any) => { map[c.id] = { title: c.title, productType: 'course' }; });
+    rawFollowups?.forEach((f: any) => { map[f.id] = { title: f.goal || 'Mentoría grupal', productType: 'followup' }; });
     return map;
-  }, [courses]);
+  }, [courses, rawFollowups]);
 
   // Agrupar landings por curso
   const groupedByCourse = useMemo(() => {
@@ -243,11 +252,14 @@ export default function SalesLandingsDashboardPage() {
       );
     });
 
-    const groups: Record<string, { courseName: string; pages: any[] }> = {};
+    const groups: Record<string, { courseName: string; productType: 'course' | 'followup' | 'unknown'; pages: any[] }> = {};
     filtered.forEach((page: any) => {
       const cId = page.courseId || '__sin_curso__';
-      const cName = courseMap[cId] || (cId === '__sin_curso__' ? 'Sin Curso Asignado' : `Curso ${cId.substring(0, 6)}…`);
-      if (!groups[cId]) groups[cId] = { courseName: cName, pages: [] };
+      const mapInfo = courseMap[cId];
+      const cName = mapInfo ? mapInfo.title : (cId === '__sin_curso__' ? 'Sin Curso Asignado' : `Curso ${cId.substring(0, 6)}…`);
+      const pType = mapInfo ? mapInfo.productType : 'unknown';
+
+      if (!groups[cId]) groups[cId] = { courseName: cName, productType: pType, pages: [] };
       groups[cId].pages.push(page);
     });
 
@@ -381,15 +393,21 @@ export default function SalesLandingsDashboardPage() {
           </Button>
         </header>
 
-        {/* Buscador */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por curso, título o tipo…"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="pl-11 bg-white border-border/50 shadow-sm font-medium"
-           size="lg" />
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar landing o curso..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 rounded-xl border-border/50 bg-white"
+            />
+          </div>
+          <div className="flex bg-muted p-1 rounded-xl w-fit border border-border/50">
+            <button onClick={() => setCourseFilter('all')} className={cn("px-4 py-1.5 text-xs font-bold rounded-lg transition-colors", courseFilter === 'all' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground")}>Todos</button>
+            <button onClick={() => setCourseFilter('course')} className={cn("px-4 py-1.5 text-xs font-bold rounded-lg transition-colors", courseFilter === 'course' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground")}>Cursos</button>
+            <button onClick={() => setCourseFilter('followup')} className={cn("px-4 py-1.5 text-xs font-bold rounded-lg transition-colors", courseFilter === 'followup' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground")}>Mentorías</button>
+          </div>
         </div>
 
         {/* Contenido */}
@@ -422,7 +440,9 @@ export default function SalesLandingsDashboardPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {Object.entries(groupedByCourse).map(([courseId, group]) => {
+            {Object.entries(groupedByCourse)
+              .filter(([_, group]) => courseFilter === 'all' || group.productType === courseFilter)
+              .map(([courseId, group]) => {
               const isOpen = openCourses.includes(courseId);
               return (
                 <div key={courseId} className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
@@ -432,8 +452,11 @@ export default function SalesLandingsDashboardPage() {
                     className="w-full flex items-center justify-between px-6 py-4 hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <BookOpen className="h-4 w-4 text-primary" />
+                      <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", group.productType === 'followup' ? "bg-accent/10" : "bg-primary/10")}>
+                        {group.productType === 'followup' 
+                          ? <Users className="h-4 w-4 text-accent" />
+                          : <BookOpen className="h-4 w-4 text-primary" />
+                        }
                       </div>
                       <div className="text-left">
                         <p className="font-bold text-foreground text-sm leading-tight">{group.courseName}</p>
