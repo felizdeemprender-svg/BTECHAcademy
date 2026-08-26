@@ -328,8 +328,13 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                 id: data.studentId || data.userId || data.id,
                 email: userEmail,
                 displayName: data.studentName || data.displayName || userEmail,
+                hasLoggedIn: false,
                 enrolledProducts: new Set()
               };
+              if (data.studentId || data.userId) existing.hasLoggedIn = true;
+              if ((data.studentId || data.userId) && existing.id === data.id) {
+                existing.id = data.studentId || data.userId;
+              }
               if (data.courseId) existing.enrolledProducts.add(data.courseId);
               if (data.productId) existing.enrolledProducts.add(data.productId);
               studentMap.set(userEmail, existing);
@@ -666,6 +671,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
   const filteredStudents = useMemo(() => {
     return allStudents.filter(s => {
+      if (!s.hasLoggedIn) return false;
       const matchName = (s.displayName || '').toLowerCase().includes(studentSearchTerm.toLowerCase()) || 
                         (s.email || '').toLowerCase().includes(studentSearchTerm.toLowerCase());
       const matchProgram = studentProgramFilter === 'all' || s.enrolledProducts.includes(studentProgramFilter);
