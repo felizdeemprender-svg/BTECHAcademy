@@ -321,16 +321,17 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
           const studentMap = new Map();
           enrollments.forEach(data => {
-            if (data.studentEmail) {
-              const existing = studentMap.get(data.studentEmail) || {
-                id: data.studentId || data.id,
-                email: data.studentEmail,
-                displayName: data.studentName || data.studentEmail,
+            const userEmail = data.inviteEmail || data.studentEmail || data.email;
+            if (userEmail) {
+              const existing = studentMap.get(userEmail) || {
+                id: data.studentId || data.userId || data.id,
+                email: userEmail,
+                displayName: data.studentName || data.displayName || userEmail,
                 enrolledProducts: new Set()
               };
               if (data.courseId) existing.enrolledProducts.add(data.courseId);
               if (data.productId) existing.enrolledProducts.add(data.productId);
-              studentMap.set(data.studentEmail, existing);
+              studentMap.set(userEmail, existing);
             }
           });
           
