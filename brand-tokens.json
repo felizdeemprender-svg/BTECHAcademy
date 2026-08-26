@@ -1,5 +1,4 @@
 {
-  "$schema": "https://design-tokens.github.io/community-group/format/draft/draft.json",
   "description": "FastoriaAcademy — Brand Design Tokens (DTCG/W3C format). Edit this file to change the brand globally.",
   "fastoria": {
     "color": {
