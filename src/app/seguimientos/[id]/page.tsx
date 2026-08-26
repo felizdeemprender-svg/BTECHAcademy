@@ -87,7 +87,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
   const [groupEnrollments, setGroupEnrollments] = useState<any[]>([]);
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [addStudentType, setAddStudentType] = useState<'select' | 'manual'>('select');
-  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [manualStudentEmail, setManualStudentEmail] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
   const [allStudents, setAllStudents] = useState<any[]>([]);
@@ -690,66 +690,108 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
   const handleAddGroupStudent = async () => {
     setAddingStudent(true);
     try {
-      let finalStudentId = selectedStudentId;
-      let finalStudentName = 'Alumno';
-      let finalStudentEmail = '';
-
       if (addStudentType === 'manual') {
-        finalStudentEmail = manualStudentEmail.toLowerCase().trim();
-        finalStudentName = finalStudentEmail.split('@')[0];
+        let finalStudentEmail = manualStudentEmail.toLowerCase().trim();
+        let finalStudentName = finalStudentEmail.split('@')[0];
+        
+        if (!finalStudentEmail) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Ingresa un correo' });
+          setAddingStudent(false);
+          return;
+        }
+
+        const isEnrolled = groupEnrollments.some(e => e.inviteEmail === finalStudentEmail);
+        if (isEnrolled) {
+          toast({ variant: 'destructive', title: 'Error', description: 'El alumno ya está inscrito en esta mentoría' });
+          setAddingStudent(false);
+          return;
+        }
+
+        const newEnrollRef = doc(collection(db, 'enrollments'));
+        await setDoc(newEnrollRef, {
+          id: newEnrollRef.id,
+          courseId: followUpId, 
+          productId: followUpId,
+          productType: 'followup',
+          studentId: '',
+          studentName: finalStudentName,
+          inviteEmail: finalStudentEmail,
+          status: 'active',
+          progress: { completedModules: [], evaluations: {} },
+          enrolledAt: serverTimestamp(),
+        });
+
+        toast({ title: 'Alumno Añadido a la Cohorte' });
+        setIsAddStudentOpen(false);
+        setManualStudentEmail('');
+        setGroupEnrollments(prev => [...prev, {
+          id: newEnrollRef.id,
+          studentId: '',
+          studentName: finalStudentName,
+          inviteEmail: finalStudentEmail,
+          status: 'active',
+        }]);
+
       } else {
-        const student = allStudents.find(s => s.id === selectedStudentId);
-        finalStudentId = student?.id || '';
-        finalStudentName = student?.displayName || 'Alumno';
-        finalStudentEmail = student?.email || '';
+        const studentsToAdd = allStudents.filter(s => selectedStudentIds.includes(s.id));
+        if (studentsToAdd.length === 0) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Selecciona al menos un alumno' });
+          setAddingStudent(false);
+          return;
+        }
+
+        const batch = writeBatch(db);
+        const newEnrollments: any[] = [];
+        
+        for (const student of studentsToAdd) {
+            const finalStudentEmail = student.email || '';
+            const finalStudentId = student.id || '';
+            
+            const isEnrolled = groupEnrollments.some(e => 
+                (finalStudentEmail && e.inviteEmail === finalStudentEmail) ||
+                (finalStudentId && e.studentId === finalStudentId)
+            );
+
+            if (isEnrolled) continue;
+
+            const newEnrollRef = doc(collection(db, 'enrollments'));
+            batch.set(newEnrollRef, {
+                id: newEnrollRef.id,
+                courseId: followUpId, 
+                productId: followUpId,
+                productType: 'followup',
+                studentId: finalStudentId,
+                studentName: student.displayName || 'Alumno',
+                inviteEmail: finalStudentEmail,
+                status: 'active',
+                progress: { completedModules: [], evaluations: {} },
+                enrolledAt: serverTimestamp(),
+            });
+
+            newEnrollments.push({
+                id: newEnrollRef.id,
+                studentId: finalStudentId,
+                studentName: student.displayName || 'Alumno',
+                inviteEmail: finalStudentEmail,
+                status: 'active',
+            });
+        }
+        
+        await batch.commit();
+
+        if (newEnrollments.length > 0) {
+            toast({ title: `${newEnrollments.length} alumnos añadidos a la cohorte` });
+            setGroupEnrollments(prev => [...prev, ...newEnrollments]);
+        } else {
+            toast({ title: 'No se añadieron alumnos (ya estaban inscritos)' });
+        }
+
+        setIsAddStudentOpen(false);
+        setSelectedStudentIds([]);
       }
-
-      if (!finalStudentEmail && !finalStudentId) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Selecciona un alumno o ingresa un correo' });
-        setAddingStudent(false);
-        return;
-      }
-
-      const isEnrolled = groupEnrollments.some(e => 
-        (finalStudentEmail && e.inviteEmail === finalStudentEmail) ||
-        (finalStudentId && e.studentId === finalStudentId)
-      );
-
-      if (isEnrolled) {
-        toast({ variant: 'destructive', title: 'Error', description: 'El alumno ya está inscrito en esta mentoría' });
-        setAddingStudent(false);
-        return;
-      }
-
-      const newEnrollRef = doc(collection(db, 'enrollments'));
-      await setDoc(newEnrollRef, {
-        id: newEnrollRef.id,
-        courseId: followUpId, 
-        productId: followUpId,
-        productType: 'followup',
-        studentId: finalStudentId,
-        studentName: finalStudentName,
-        inviteEmail: finalStudentEmail,
-        status: 'active',
-        progress: { completedModules: [], evaluations: {} },
-        enrolledAt: serverTimestamp(),
-      });
-
-      toast({ title: 'Alumno Añadido a la Cohorte' });
-      setIsAddStudentOpen(false);
-      setManualStudentEmail('');
-      setSelectedStudentId('');
-      setGroupEnrollments(prev => [...prev, {
-        id: newEnrollRef.id,
-        studentId: finalStudentId,
-        studentName: finalStudentName,
-        inviteEmail: finalStudentEmail,
-        status: 'active',
-      }]);
-
     } catch (e) {
       console.error(e);
-      toast({ variant: 'destructive', title: 'Error al añadir alumno' });
+      toast({ variant: 'destructive', title: 'Error al añadir alumnos' });
     } finally {
       setAddingStudent(false);
     }
@@ -1409,23 +1451,23 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                         {filteredStudents.map(s => (
                           <div 
                             key={s.id} 
-                            onClick={() => setSelectedStudentId(s.id)}
+                            onClick={() => setSelectedStudentIds(prev => prev.includes(s.id) ? prev.filter(id => id !== s.id) : [...prev, s.id])}
                             className={cn(
                               "flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border",
-                              selectedStudentId === s.id ? "bg-primary text-white border-primary shadow-md" : "hover:bg-white border-transparent hover:border-black/5"
+                              selectedStudentIds.includes(s.id) ? "bg-primary text-white border-primary shadow-md" : "hover:bg-white border-transparent hover:border-black/5"
                             )}
                           >
                             <div className={cn(
                               "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm",
-                              selectedStudentId === s.id ? "bg-white/20" : "bg-primary/10 text-primary"
+                              selectedStudentIds.includes(s.id) ? "bg-white/20" : "bg-primary/10 text-primary"
                             )}>
                               {(s.displayName || s.email || 'A').charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-bold text-sm truncate">{s.displayName}</p>
-                              <p className={cn("text-[10px] truncate", selectedStudentId === s.id ? "text-white/70" : "text-muted-foreground")}>{s.email}</p>
+                              <p className={cn("text-[10px] truncate", selectedStudentIds.includes(s.id) ? "text-white/70" : "text-muted-foreground")}>{s.email}</p>
                             </div>
-                            {selectedStudentId === s.id && <CheckCircle2 className="h-5 w-5 shrink-0" />}
+                            {selectedStudentIds.includes(s.id) && <CheckCircle2 className="h-5 w-5 shrink-0" />}
                           </div>
                         ))}
                       </div>
@@ -1448,7 +1490,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             )}
 
             <DialogFooter className="pt-4">
-              <Button onClick={handleAddGroupStudent} disabled={addingStudent || (addStudentType === 'manual' ? !manualStudentEmail : !selectedStudentId)} className="w-full h-14 rounded-2xl text-lg font-bold shadow-sm">
+              <Button onClick={handleAddGroupStudent} disabled={addingStudent || (addStudentType === 'manual' ? !manualStudentEmail : selectedStudentIds.length === 0)} className="w-full h-14 rounded-2xl text-lg font-bold shadow-sm">
                 {addingStudent ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} Inscribir a la Cohorte
               </Button>
             </DialogFooter>
