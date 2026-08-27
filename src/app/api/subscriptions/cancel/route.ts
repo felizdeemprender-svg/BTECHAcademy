@@ -41,8 +41,7 @@ export async function POST(req: Request) {
         console.error(`[Cancel API] Falló cancelación en Stripe:`, error.message);
       }
     } else if (gateway === 'getnet') {
-      // ej: await getnet.cancelSubscription(gatewaySubscriptionId);
-      console.log(`[Cancel API] Cancelando suscripción en GetNet: ${gatewaySubscriptionId}`);
+      console.log(`[Cancel API] Cancelación en GetNet delegada manualmente: ${gatewaySubscriptionId}`);
     }
 
     // Actualizamos el estado interno a cancelado. En un entorno real,

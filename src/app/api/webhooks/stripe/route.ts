@@ -51,9 +51,6 @@ export async function POST(req: Request) {
         // Es una suscripción comprada?
         if (session.mode === 'subscription' && session.subscription && meta.mentorId) {
            const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
-           // En este caso, el mentorId de la metadata indica a QUIEN le compramos?
-           // Ojo, `handleSubscriptionCreated` asume que se le crea al TUTOR.
-           // Si el tutor compró la suscripción a Fastoria (Fase 1), el mentorId de la metadata ES el tutor.
            await handleSubscriptionCreated(meta.mentorId, subId, 'stripe');
         }
         break;

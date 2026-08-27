@@ -98,7 +98,7 @@ export async function handleSubscriptionCreated(tutorId: string, subscriptionId:
         console.error(`[SubscriptionEngine] No se pudo cancelar suscripción de Stripe ${oldSubId}:`, error.message);
       }
     } else if (oldGateway === 'getnet') {
-      // ej: await getnet.cancelSubscription(oldSubId);
+      console.log(`[SubscriptionEngine] Cancelación en GetNet delegada manualmente o pendiente de SDK para ${oldSubId}`);
     }
   }
 
