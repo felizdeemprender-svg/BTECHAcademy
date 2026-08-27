@@ -26,14 +26,14 @@ export interface SubscriptionPermissions {
 export interface TutorSubscription {
   name?: string;           // Nombre del plan asigando
   status: SubscriptionStatus;
-  type: 'free' | 'fixed' | 'percentage';
+  type: 'free' | 'fixed' | 'mixed';
   hasPremiumAI?: boolean;  // Si el abono incluye motor IA Premium
   isEnterprise?: boolean;  // Identifica si es un perfil de Empresa
   startDate?: string;      // Fecha de inicio (ISO)
   endDate?: string;        // Fecha de fin (ISO)
   hasCustomPage: boolean;
   fixedAmount?: number;
-  percentageRate?: number;
+
   requiresFreeCourses: boolean;
   freeCoursesCount: number;
   invitationsPerCourse: number;

@@ -8,7 +8,7 @@ export interface UserSubscriptionLimits {
 
 export interface UserSubscription {
   status: 'active' | 'inactive' | 'trial' | 'cancelled' | 'none' | 'past_due' | 'suspended' | 'expired';
-  type: 'free' | 'fixed' | 'percentage';
+  type: 'free' | 'fixed' | 'mixed';
   planId?: string;
   planName?: string;
   name?: string;
@@ -18,7 +18,7 @@ export interface UserSubscription {
   startDate?: string;
   endDate?: string;
   fixedAmount?: number;
-  percentageRate?: number;
+
   requiresFreeCourses?: boolean;
   freeCoursesCount?: number;
   invitationsPerCourse?: number;
@@ -42,6 +42,15 @@ export interface UserSubscription {
     lastPaymentDate?: any;
     nextPaymentDate?: any;
     paymentHistory: any[];
+    stripeCustomerId?: string;
+    defaultPaymentMethodId?: string;
+  };
+  billingCycle?: {
+    currentCycleStart?: any;
+    currentCycleEnd?: any;
+    promotionalCycleIndex?: number;
+    cancelAtPeriodEnd?: boolean;
+    monthlySalesAmount?: number; // Ventas acumuladas en el ciclo para calcular regalías
   };
   updatedAt?: any;
   updatedBy?: string;
