@@ -6,14 +6,12 @@ import {
   sendPaymentFailedEmail,
   sendAccountSuspendedEmail,
 } from '@/lib/emails/subscription';
-import { processPaymentSession } from '@/services/payments/orchestrator';
 
 type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'suspended' | 'canceled';
 
 /**
- * MOTOR DE SUSCRIPCIONES
+ * MOTOR DE SUSCRIPCIONES (WEBHOOK DRIVEN)
  * Servicio centralizado que maneja el ciclo de vida completo de una suscripción.
- * Nunca hay lógica de billing duplicada: todo pasa por aquí.
  */
 
 /** Activa el período de prueba cuando un tutor se registra */
@@ -77,74 +75,58 @@ export async function processTrialEndingReminder(tutorId: string) {
   }
 }
 
-/** Intenta cobrar la mensualidad a un tutor */
-export async function processBilling(tutorId: string): Promise<'success' | 'failed'> {
+/** Invocado por Webhook: Cuando una suscripción es creada exitosamente en la pasarela */
+export async function handleSubscriptionCreated(tutorId: string, subscriptionId: string, gateway: string) {
+  const db = getAdminFirestore();
+  await db.collection('users').doc(tutorId).update({
+    'subscription.gateway': gateway,
+    'subscription.gatewaySubscriptionId': subscriptionId,
+  });
+  console.log(`[SubscriptionEngine] Suscripción externa enlazada: ${tutorId} → ${subscriptionId} (${gateway})`);
+}
+
+/** Invocado por Webhook: Cuando se cobra exitosamente la recurrencia */
+export async function handlePaymentSucceeded(tutorId: string, nextBillingDate?: Date) {
   const db = getAdminFirestore();
 
   const userDoc = await db.collection('users').doc(tutorId).get();
   const user = userDoc.data();
   if (!user) throw new Error(`Usuario ${tutorId} no encontrado`);
 
+  // Si estaba suspendido, reactivarlo
+  if (user.subscription?.status === 'suspended') {
+    await reactivateTutor(tutorId);
+  }
+
   const planDoc = await db.collection('subscriptionPlans').doc(user.subscription?.planId).get();
-  const plan = planDoc.data();
-  if (!plan) throw new Error(`Plan no encontrado para ${tutorId}`);
+  const plan = planDoc.data() || { name: 'Plan Actual' };
 
-  // Buscar el método de pago del sistema (el administrador cobra al tutor)
-  const methodsSnap = await db.collection('systemPaymentMethods')
-    .where('isActive', '==', true)
-    .limit(1)
-    .get();
-
-  if (methodsSnap.empty) {
-    console.error(`[SubscriptionEngine] No hay métodos de pago del sistema para cobrar a ${tutorId}`);
-    return 'failed';
-  }
-
-    const activeMethod = methodsSnap.docs[0].data();
-    const systemPaymentConfig = activeMethod.config;
-    const gateway = activeMethod.type;
-
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://fastoriaacademy.ai';
-  
-      await processPaymentSession(gateway, systemPaymentConfig, {
-        pageId: `sub_${tutorId}`,
-        title: `Suscripción Fastoria - ${plan.name}`,
-        price: plan.price,
-        studentEmail: user.email,
-        studentName: user.displayName || 'Tutor',
-        mentorId: 'system',
-        baseUrl,
-      });
-
-    // Cobro generado exitosamente - actualizar nextBillingAt
+  // Si la pasarela no nos dice la fecha, asumimos 1 mes o lo que diga el plan
+  let nextBillingAt = nextBillingDate;
+  if (!nextBillingAt) {
     const billingCycleMonths = plan.billingCycleMonths ?? 1;
-    const nextBillingAt = addMonths(new Date(), billingCycleMonths);
-
-    await db.collection('users').doc(tutorId).update({
-      'subscription.status': 'active' as SubscriptionStatus,
-      'subscription.nextBillingAt': nextBillingAt,
-      'subscription.gracePeriodEndsAt': null,
-      'subscription.lastBilledAt': new Date(),
-    });
-
-    await sendSubscriptionActivatedEmail(
-      user.email,
-      user.displayName || 'Tutor',
-      plan.name,
-      format(nextBillingAt, 'dd/MM/yyyy')
-    );
-
-    console.log(`[SubscriptionEngine] Cobro exitoso: ${tutorId}`);
-    return 'success';
-  } catch (error) {
-    console.error(`[SubscriptionEngine] Error procesando cobro para ${tutorId}:`, error);
-    return 'failed';
+    nextBillingAt = addMonths(new Date(), billingCycleMonths);
   }
+
+  await db.collection('users').doc(tutorId).update({
+    'subscription.status': 'active' as SubscriptionStatus,
+    'subscription.nextBillingAt': nextBillingAt,
+    'subscription.gracePeriodEndsAt': null,
+    'subscription.lastBilledAt': new Date(),
+  });
+
+  await sendSubscriptionActivatedEmail(
+    user.email,
+    user.displayName || 'Tutor',
+    plan.name,
+    format(nextBillingAt, 'dd/MM/yyyy')
+  );
+
+  console.log(`[SubscriptionEngine] Pago recurrente exitoso (Webhook): ${tutorId}. Próximo cobro: ${format(nextBillingAt, 'dd/MM/yyyy')}`);
 }
 
-/** Maneja un cobro fallido: activa el período de gracia y envía email */
-export async function handleBillingFailure(tutorId: string) {
+/** Invocado por Webhook: Cuando falla un cobro (activa Dunning) */
+export async function handlePaymentFailed(tutorId: string) {
   const db = getAdminFirestore();
 
   const userDoc = await db.collection('users').doc(tutorId).get();
@@ -169,7 +151,12 @@ export async function handleBillingFailure(tutorId: string) {
     format(gracePeriodEndsAt, 'dd/MM/yyyy')
   );
 
-  console.log(`[SubscriptionEngine] Cobro fallido para ${tutorId}. Gracia hasta ${format(gracePeriodEndsAt, 'dd/MM/yyyy')}`);
+  console.log(`[SubscriptionEngine] Pago recurrente fallido (Webhook) para ${tutorId}. Gracia hasta ${format(gracePeriodEndsAt, 'dd/MM/yyyy')}`);
+}
+
+/** Invocado por Webhook: Cuando la suscripción es cancelada definitivamente */
+export async function handleSubscriptionCanceled(tutorId: string) {
+  await suspendTutor(tutorId);
 }
 
 /** Suspende la cuenta de un tutor y pausa sus landings */
@@ -207,9 +194,6 @@ export async function suspendTutor(tutorId: string) {
 /** Reactiva la cuenta de un tutor tras cobro exitoso post-suspensión */
 export async function reactivateTutor(tutorId: string) {
   const db = getAdminFirestore();
-
-  const userDoc = await db.collection('users').doc(tutorId).get();
-  const plan = userDoc.data()?.subscription;
 
   await db.collection('users').doc(tutorId).update({
     'subscription.status': 'active' as SubscriptionStatus,

@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 import { firebaseConfig } from './config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -75,3 +76,8 @@ export function getAdminStorage() {
 }
 
 export const adminStorage = getAdminStorage();
+
+export function getAdminAuth() {
+  const app = getAdminApp();
+  return getAuth(app);
+}

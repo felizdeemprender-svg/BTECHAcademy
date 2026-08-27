@@ -10,6 +10,9 @@ export interface PaymentSessionParams {
   mentorId: string;
   baseUrl: string;
   referidoId?: string;
+  mode?: 'payment' | 'subscription';
+  planId?: string;
+  priceId?: string;
 }
 
 export async function processPaymentSession(gateway: string, paymentConfig: any, params: PaymentSessionParams) {

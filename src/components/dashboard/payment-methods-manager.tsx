@@ -70,6 +70,10 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
     name: '',
     type: 'mercadopago',
     isActive: true,
+    capabilities: {
+      directPayment: true,
+      subscription: false
+    },
     config: {
       publicKey: '',
       accessToken: '',
@@ -90,6 +94,10 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
         name: method.name,
         type: method.type || 'mercadopago',
         isActive: method.isActive ?? true,
+        capabilities: {
+          directPayment: method.capabilities?.directPayment ?? true,
+          subscription: method.capabilities?.subscription ?? false
+        },
         config: {
           publicKey: method.config?.publicKey || '',
           accessToken: method.config?.accessToken || '',
@@ -108,6 +116,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
         name: '', 
         type: 'mercadopago', 
         isActive: true,
+        capabilities: { directPayment: true, subscription: false },
         config: { publicKey: '', accessToken: '', clientId: '', clientSecret: '', sellerId: '', alias: '', cbu: '', bankName: '', titularName: '' } 
       });
     }
@@ -252,9 +261,21 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                       </div>
                       <div>
                         <p className="font-black text-lg text-foreground">{method.name}</p>
-                        <Badge variant="outline" className="text-[9px] uppercase font-black text-muted-foreground mt-1 border-border">
-                          {method.type === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <Badge variant="outline" className="text-[9px] uppercase font-black text-muted-foreground border-border">
+                            {method.type === 'mercadopago' ? 'Mercado Pago' : method.type === 'getnet' ? 'Getnet' : 'Transferencia'}
+                          </Badge>
+                          {method.capabilities?.directPayment && (
+                            <Badge variant="outline" className="text-[9px] uppercase font-black text-primary border-primary/20 bg-primary/5">
+                              Único
+                            </Badge>
+                          )}
+                          {method.capabilities?.subscription && (
+                            <Badge variant="outline" className="text-[9px] uppercase font-black text-success border-success/20 bg-success/5">
+                              Suscripción
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
@@ -496,6 +517,33 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                 </div>
               </div>
             )}
+
+            <div className="space-y-4">
+              <Label className="text-xs font-black uppercase tracking-widest text-foreground">Capacidades Soportadas</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-2xl border border-muted">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-foreground">Cobro Directo (Único)</Label>
+                    <p className="text-[10px] text-muted-foreground font-medium">Permitir cobros de una sola vez.</p>
+                  </div>
+                  <Switch 
+                    checked={formData.capabilities.directPayment}
+                    onCheckedChange={(val) => setFormData({...formData, capabilities: { ...formData.capabilities, directPayment: val }})}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-2xl border border-muted">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-foreground">Suscripciones Automáticas</Label>
+                    <p className="text-[10px] text-muted-foreground font-medium">Permitir cobros recurrentes delegados.</p>
+                  </div>
+                  <Switch 
+                    checked={formData.capabilities.subscription}
+                    onCheckedChange={(val) => setFormData({...formData, capabilities: { ...formData.capabilities, subscription: val }})}
+                    disabled={formData.type === 'transfer'}
+                  />
+                </div>
+              </div>
+            </div>
 
             <div className="flex items-center justify-between p-6 bg-muted rounded-3xl border border-muted">
               <div className="space-y-1">
