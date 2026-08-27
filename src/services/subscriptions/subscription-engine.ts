@@ -1,5 +1,6 @@
 import { getAdminFirestore } from '@/firebase/admin';
 import { format, addDays, addMonths } from 'date-fns';
+import Stripe from 'stripe';
 import {
   sendTrialEndingEmail,
   sendSubscriptionActivatedEmail,
@@ -78,6 +79,29 @@ export async function processTrialEndingReminder(tutorId: string) {
 /** Invocado por Webhook: Cuando una suscripción es creada exitosamente en la pasarela */
 export async function handleSubscriptionCreated(tutorId: string, subscriptionId: string, gateway: string) {
   const db = getAdminFirestore();
+  
+  const userDoc = await db.collection('users').doc(tutorId).get();
+  const user = userDoc.data();
+  
+  // Si el usuario ya tenía una suscripción en una pasarela, la cancelamos para que "una pise a la otra"
+  if (user?.subscription?.gatewaySubscriptionId && user.subscription.gatewaySubscriptionId !== subscriptionId) {
+    const oldGateway = user.subscription.gateway;
+    const oldSubId = user.subscription.gatewaySubscriptionId;
+    console.log(`[SubscriptionEngine] Reemplazo de suscripción. Cancelando anterior externa: ${oldSubId} (${oldGateway})`);
+    
+    if (oldGateway === 'stripe') {
+      try {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-06-20' as any });
+        await stripe.subscriptions.cancel(oldSubId);
+        console.log(`[SubscriptionEngine] Suscripción anterior de Stripe cancelada: ${oldSubId}`);
+      } catch (error: any) {
+        console.error(`[SubscriptionEngine] No se pudo cancelar suscripción de Stripe ${oldSubId}:`, error.message);
+      }
+    } else if (oldGateway === 'getnet') {
+      // ej: await getnet.cancelSubscription(oldSubId);
+    }
+  }
+
   await db.collection('users').doc(tutorId).update({
     'subscription.gateway': gateway,
     'subscription.gatewaySubscriptionId': subscriptionId,

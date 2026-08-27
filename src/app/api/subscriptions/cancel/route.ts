@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminAuth, getAdminFirestore } from '@/firebase/admin';
+import Stripe from 'stripe';
 
 export async function POST(req: Request) {
   try {
@@ -32,8 +33,13 @@ export async function POST(req: Request) {
 
     // Aquí iría el llamado a la API real de la pasarela para cancelar
     if (gateway === 'stripe') {
-      // ej: await stripe.subscriptions.update(gatewaySubscriptionId, { cancel_at_period_end: true });
-      console.log(`[Cancel API] Cancelando suscripción en Stripe: ${gatewaySubscriptionId}`);
+      try {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-06-20' as any });
+        await stripe.subscriptions.cancel(gatewaySubscriptionId);
+        console.log(`[Cancel API] Cancelando suscripción en Stripe: ${gatewaySubscriptionId}`);
+      } catch (error: any) {
+        console.error(`[Cancel API] Falló cancelación en Stripe:`, error.message);
+      }
     } else if (gateway === 'getnet') {
       // ej: await getnet.cancelSubscription(gatewaySubscriptionId);
       console.log(`[Cancel API] Cancelando suscripción en GetNet: ${gatewaySubscriptionId}`);

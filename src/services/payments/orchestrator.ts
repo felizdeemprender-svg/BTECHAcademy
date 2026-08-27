@@ -1,5 +1,6 @@
 import { createMercadoPagoSession } from './mercadopago';
 import { createGetnetSession } from './getnet';
+import { createStripeSession } from './stripe';
 
 export interface PaymentSessionParams {
   pageId: string;
@@ -13,6 +14,7 @@ export interface PaymentSessionParams {
   mode?: 'payment' | 'subscription';
   planId?: string;
   priceId?: string;
+  currency?: string;
 }
 
 export async function processPaymentSession(gateway: string, paymentConfig: any, params: PaymentSessionParams) {
@@ -27,6 +29,12 @@ export async function processPaymentSession(gateway: string, paymentConfig: any,
       clientId: paymentConfig.clientId,
       clientSecret: paymentConfig.clientSecret,
       sellerId: paymentConfig.sellerId,
+    });
+  } else if (gateway === 'stripe') {
+    return await createStripeSession({
+      ...params,
+      stripeSecretKey: paymentConfig.secretKey, // Asumiremos que el tutor guarda 'secretKey' para Stripe
+      currency: paymentConfig.currency || 'usd',
     });
   } else {
     throw new Error(`Pasarela de pago no soportada: ${gateway}`);

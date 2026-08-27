@@ -79,6 +79,9 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
       accessToken: '',
       clientId: '',
       clientSecret: '',
+      secretKey: '',
+      webhookSecret: '',
+      currency: 'usd',
       sellerId: '',
       alias: '',
       cbu: '',
@@ -103,6 +106,9 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
           accessToken: method.config?.accessToken || '',
           clientId: method.config?.clientId || '',
           clientSecret: method.config?.clientSecret || '',
+          secretKey: method.config?.secretKey || '',
+          webhookSecret: method.config?.webhookSecret || '',
+          currency: method.config?.currency || 'usd',
           sellerId: method.config?.sellerId || '',
           alias: method.config?.alias || '',
           cbu: method.config?.cbu || '',
@@ -117,7 +123,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
         type: 'mercadopago', 
         isActive: true,
         capabilities: { directPayment: true, subscription: false },
-        config: { publicKey: '', accessToken: '', clientId: '', clientSecret: '', sellerId: '', alias: '', cbu: '', bankName: '', titularName: '' } 
+        config: { publicKey: '', accessToken: '', clientId: '', clientSecret: '', secretKey: '', webhookSecret: '', currency: 'usd', sellerId: '', alias: '', cbu: '', bankName: '', titularName: '' } 
       });
     }
     setIsDialogOpen(true);
@@ -136,6 +142,11 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
 
     if (formData.type === 'getnet' && (!formData.config.clientId || !formData.config.clientSecret || !formData.config.sellerId)) {
       toast({ variant: 'destructive', title: 'Credenciales incompletas', description: 'Client ID, Client Secret y Seller ID son obligatorios para Getnet.' });
+      return;
+    }
+
+    if (formData.type === 'stripe' && (!formData.config.secretKey)) {
+      toast({ variant: 'destructive', title: 'Credenciales incompletas', description: 'Secret Key es obligatoria para Stripe.' });
       return;
     }
 
@@ -263,7 +274,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                         <p className="font-black text-lg text-foreground">{method.name}</p>
                         <div className="flex flex-wrap gap-1 mt-1">
                           <Badge variant="outline" className="text-[9px] uppercase font-black text-muted-foreground border-border">
-                            {method.type === 'mercadopago' ? 'Mercado Pago' : method.type === 'getnet' ? 'Getnet' : 'Transferencia'}
+                            {method.type === 'mercadopago' ? 'Mercado Pago' : method.type === 'getnet' ? 'Getnet' : method.type === 'stripe' ? 'Stripe' : 'Transferencia'}
                           </Badge>
                           {method.capabilities?.directPayment && (
                             <Badge variant="outline" className="text-[9px] uppercase font-black text-primary border-primary/20 bg-primary/5">
@@ -362,7 +373,7 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                     <SelectItem value="mercadopago" className="font-bold py-3">Mercado Pago</SelectItem>
                     <SelectItem value="getnet" className="font-bold py-3">Getnet (Santander)</SelectItem>
                     <SelectItem value="transfer" className="font-bold py-3">Transferencia Bancaria</SelectItem>
-                    <SelectItem value="stripe" disabled className="py-3 opacity-50">Stripe (Dólares - Próximamente)</SelectItem>
+                    <SelectItem value="stripe" className="font-bold py-3">Stripe (Global)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -465,6 +476,74 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   <Info className="h-4 w-4 text-danger shrink-0" />
                   <p className="text-[10px] text-danger leading-relaxed font-medium">
                     Encuentra estas credenciales en el <a href="https://developers.globalgetnet.com/" target="_blank" className="font-bold underline">Developer Portal</a> de Getnet.
+                  </p>
+                </div>
+              </div>
+            ) : formData.type === 'stripe' ? (
+              <div className="p-8 bg-indigo-500/10 rounded-lg border border-indigo-500/15 space-y-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <ShieldCheck className="h-5 w-5 text-indigo-500" />
+                  <span className="text-xs font-black uppercase tracking-widest text-indigo-500">Credenciales Stripe (Global)</span>
+                </div>
+                
+                <div className="space-y-3 relative">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">Secret Key (sk_live_... o sk_test_...)</Label>
+                  <div className="relative">
+                    <Input 
+                      type={showSecret ? "text" : "password"}
+                      value={formData.config.secretKey} 
+                      onChange={e => setFormData({...formData, config: { ...formData.config, secretKey: e.target.value }})} 
+                      placeholder="sk_live_..." 
+                      className="bg-white border-none px-6 font-mono text-xs pr-14 shadow-sm"
+                     size="xl" />
+                    <button 
+                      type="button"
+                      onClick={() => setShowSecret(!showSecret)}
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-indigo-500 transition-colors"
+                    >
+                      {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3 relative">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">Webhook Secret (whsec_...) (Opcional)</Label>
+                  <div className="relative">
+                    <Input 
+                      type={showSecret ? "text" : "password"}
+                      value={formData.config.webhookSecret} 
+                      onChange={e => setFormData({...formData, config: { ...formData.config, webhookSecret: e.target.value }})} 
+                      placeholder="whsec_..." 
+                      className="bg-white border-none px-6 font-mono text-xs pr-14 shadow-sm"
+                     size="xl" />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-medium ml-1">Requerido para validar eventos en modo Producción de forma segura.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Divisa de Cobro (ISO 3 Letras)</Label>
+                  <Select 
+                    value={formData.config.currency || 'usd'} 
+                    onValueChange={(val) => setFormData({...formData, config: { ...formData.config, currency: val }})}
+                  >
+                    <SelectTrigger className="bg-white border-none px-6 font-bold text-foreground shadow-sm h-12">
+                      <SelectValue placeholder="usd" />
+                    </SelectTrigger>
+                    <SelectContent className="border-none">
+                      <SelectItem value="usd" className="font-bold py-3">Dólares (USD)</SelectItem>
+                      <SelectItem value="eur" className="font-bold py-3">Euros (EUR)</SelectItem>
+                      <SelectItem value="mxn" className="font-bold py-3">Pesos Mexicanos (MXN)</SelectItem>
+                      <SelectItem value="ars" className="font-bold py-3">Pesos Argentinos (ARS)</SelectItem>
+                      <SelectItem value="cop" className="font-bold py-3">Pesos Colombianos (COP)</SelectItem>
+                      <SelectItem value="clp" className="font-bold py-3">Pesos Chilenos (CLP)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-indigo-500/15">
+                  <Info className="h-4 w-4 text-indigo-500 shrink-0" />
+                  <p className="text-[10px] text-indigo-500 leading-relaxed font-medium">
+                    Consigue tu API Key en el <a href="https://dashboard.stripe.com/apikeys" target="_blank" className="font-bold underline">Dashboard de Stripe</a>. Recuerda configurar el Webhook hacia <code className="bg-white px-1 py-0.5 rounded">/api/webhooks/stripe</code>.
                   </p>
                 </div>
               </div>

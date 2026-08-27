@@ -68,19 +68,24 @@ export default function SettingsSubscriptionsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-6">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Próximo Cobro</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Próximo Cobro / Vencimiento</p>
                   <p className="text-lg font-bold flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
                     {sub?.nextBillingAt ? (
                       format(sub.nextBillingAt.toDate ? sub.nextBillingAt.toDate() : new Date(sub.nextBillingAt), 'dd/MM/yyyy')
-                    ) : 'No disponible'}
+                    ) : (
+                      <span className="text-success font-black">Plan Gratuito Permanente</span>
+                    )}
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Método de Pago</p>
                   <p className="text-lg font-bold flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-primary" />
-                    {sub?.gateway === 'stripe' ? 'Tarjeta de Crédito (Stripe)' : sub?.gateway === 'getnet' ? 'Tarjeta (Getnet)' : 'No registrado'}
+                    {sub?.gateway === 'stripe' ? 'Tarjeta de Crédito (Stripe)' 
+                      : sub?.gateway === 'getnet' ? 'Tarjeta (Getnet)' 
+                      : (!sub?.gateway && sub?.status === 'active') ? 'Otorgado por el Administrador (Sin cargo)' 
+                      : 'No registrado'}
                   </p>
                 </div>
               </div>
@@ -90,7 +95,7 @@ export default function SettingsSubscriptionsPage() {
                   <p className="text-xs text-muted-foreground mt-1">Si tienes problemas con tu facturación, contáctanos a soporte.</p>
                 </div>
                 <div className="mt-6 flex gap-3">
-                  {sub?.status === 'active' || sub?.status === 'trialing' || sub?.status === 'past_due' ? (
+                  {(sub?.status === 'active' || sub?.status === 'trialing' || sub?.status === 'past_due') && sub?.gateway ? (
                     <Button 
                       variant="outline" 
                       className="border-danger/20 text-danger hover:bg-danger/10 hover:text-danger rounded-xl font-bold"
