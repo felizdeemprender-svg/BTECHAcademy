@@ -47,6 +47,8 @@ export default function FastoriaV3Landing() {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+
   return (
     <div className="min-h-screen bg-[#070A12] text-[#F1F5F9] selection:bg-[#00F5A0]/20 selection:text-[#00F5A0] overflow-x-hidden font-sans relative">
       
@@ -58,45 +60,81 @@ export default function FastoriaV3Landing() {
         <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:32px_32px] opacity-40" />
       </div>
 
-      {/* Floating Top Navbar Glassmorphism 2.0 */}
-      <nav className="fixed top-4 inset-x-0 mx-auto z-50 w-[94%] max-w-6xl">
-        <div className="backdrop-blur-2xl bg-black/60 border border-white/10 rounded-full px-5 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)] flex items-center justify-between transition-all">
-          <Link href="/landing1" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#1CB899] to-emerald-400 flex items-center justify-center text-slate-950 font-black text-sm shadow-[0_0_15px_rgba(28,184,153,0.5)] group-hover:scale-105 transition-transform">
+      {/* Floating HUD Capsule Navbar (Modern Raycast / Linear 2026 Style) */}
+      <nav className="fixed top-5 inset-x-0 mx-auto z-50 w-[94%] max-w-5xl">
+        <motion.div 
+          initial={{ y: -40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="backdrop-blur-2xl bg-[#090D16]/80 border border-white/15 rounded-2xl px-4 py-2.5 shadow-[0_10px_40px_rgba(0,0,0,0.6)] flex items-center justify-between transition-all"
+        >
+          {/* Logo con Status Live */}
+          <Link href="/landing1" className="flex items-center gap-3 group">
+            <div className="relative w-8 h-8 rounded-xl bg-gradient-to-tr from-[#1CB899] via-emerald-400 to-[#00F5A0] flex items-center justify-center text-slate-950 font-black text-sm shadow-[0_0_20px_rgba(0,245,160,0.4)] group-hover:scale-105 transition-transform">
               F
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#090D16] animate-pulse" />
             </div>
-            <span className="font-black tracking-tight text-lg text-white">
-              FASTORIA<span className="text-[#1CB899]">.</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="font-black tracking-tight text-sm text-white leading-none">
+                FASTORIA<span className="text-[#00F5A0]">.</span>
+              </span>
+              <span className="text-[9px] font-mono text-emerald-400/80 font-bold uppercase tracking-widest mt-0.5">
+                ● LIVE OS
+              </span>
+            </div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-7 text-xs font-bold uppercase tracking-wider text-slate-400">
-            <a href="#identificacion" className="hover:text-[#1CB899] transition-colors">Para quién</a>
-            <a href="#problema" className="hover:text-[#1CB899] transition-colors">Problema</a>
-            <a href="#propuesta" className="hover:text-[#1CB899] transition-colors">Recorrido</a>
-            <a href="#diferencial" className="hover:text-[#1CB899] transition-colors">Diferencial</a>
-            <a href="#evo" className="hover:text-[#1CB899] transition-colors">Evo IA</a>
-            <a href="#pricing" className="hover:text-[#1CB899] transition-colors">Precios</a>
+          {/* Links con Sliding Pill Magnética */}
+          <div className="hidden md:flex items-center gap-1 p-1 bg-white/[0.03] border border-white/10 rounded-xl">
+            {[
+              { id: 'identificacion', label: 'Para quién' },
+              { id: 'problema', label: 'El Problema' },
+              { id: 'propuesta', label: 'Recorrido' },
+              { id: 'diferencial', label: 'Diferencial' },
+              { id: 'evo', label: 'Evo IA' },
+              { id: 'pricing', label: 'Planes' },
+            ].map((item) => (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                onMouseEnter={() => setHoveredNav(item.id)}
+                onMouseLeave={() => setHoveredNav(null)}
+                className="relative px-3.5 py-1.5 text-xs font-bold text-slate-300 hover:text-white transition-colors"
+              >
+                {hoveredNav === item.id && (
+                  <motion.div
+                    layoutId="nav-hover-pill"
+                    transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                    className="absolute inset-0 bg-white/10 rounded-lg -z-10 shadow-inner"
+                  />
+                )}
+                {item.label}
+              </a>
+            ))}
           </div>
 
-          <div className="flex items-center gap-2.5">
+          {/* CTAs */}
+          <div className="flex items-center gap-3">
             <Link href="/auth">
-              <span className="hidden sm:inline-block px-4 py-2 text-xs font-bold text-slate-300 hover:text-white transition-colors">
+              <span className="hidden sm:inline-block text-xs font-bold text-slate-400 hover:text-white transition-colors px-2">
                 Ingresar
               </span>
             </Link>
             <Link href="/auth">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-[#1CB899] hover:bg-[#18a287] text-slate-950 text-xs font-black px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-[0_0_20px_rgba(28,184,153,0.4)] transition-all flex items-center gap-1.5"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                className="relative group overflow-hidden rounded-xl p-[1px] font-bold"
               >
-                <span>Empezar Gratis</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span className="absolute inset-0 bg-gradient-to-r from-[#1CB899] via-emerald-300 to-[#00F5A0] animate-pulse" />
+                <span className="relative block px-4 py-2 rounded-[11px] bg-slate-950 text-[#00F5A0] group-hover:bg-slate-900 transition-colors text-xs font-black flex items-center gap-1.5">
+                  <span>Empezar Gratis</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </span>
               </motion.button>
             </Link>
           </div>
-        </div>
+        </motion.div>
       </nav>
 
       {/* ========================================================================= */}
@@ -163,18 +201,36 @@ export default function FastoriaV3Landing() {
       {/* ========================================================================= */}
       <section id="identificacion" className="py-24 px-6 relative z-10 border-y border-white/10">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block">
+          <div className="max-w-3xl mx-auto mb-16">
+            <motion.span 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block"
+            >
               // IDENTIFICACIÓN
-            </span>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+            </motion.span>
+            <motion.h2 
+              initial={{ opacity: 0, x: -60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl md:text-5xl font-black text-white tracking-tight"
+            >
               ¿Vivís de lo que sabés?
-            </h2>
-            <p className="mt-4 text-base md:text-lg text-slate-400 font-normal leading-relaxed">
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-4 text-base md:text-lg text-slate-400 font-normal leading-relaxed"
+            >
               Sos <strong className="text-white">coach</strong>. <strong className="text-white">Consultor</strong>. <strong className="text-white">Mentor</strong>. <strong className="text-white">Capacitador</strong>. <strong className="text-white">Terapeuta</strong>. <strong className="text-white">Profesional</strong>. <strong className="text-white">Creador</strong>.
               <br />
               Quizás vendés un curso. Quizás una mentoría. Quizás sesiones individuales. O combinás todo eso.
-            </p>
+            </motion.p>
             <p className="mt-3 text-sm text-slate-500 font-medium">
               Fastoria está pensada para transformar todo ese conocimiento en productos y servicios que puedas crear, vender y gestionar desde un mismo lugar.
             </p>
@@ -205,16 +261,34 @@ export default function FastoriaV3Landing() {
       {/* ========================================================================= */}
       <section id="problema" className="py-24 px-6 relative z-10">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-rose-400 font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block">
+          <div className="max-w-3xl mx-auto mb-16">
+            <motion.span 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-rose-400 font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block"
+            >
               // EL PROBLEMA
-            </span>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+            </motion.span>
+            <motion.h2 
+              initial={{ opacity: 0, x: -60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl md:text-5xl font-black text-white tracking-tight"
+            >
               Tu negocio no debería necesitar 8 herramientas para funcionar.
-            </h2>
-            <p className="mt-4 text-base md:text-lg text-slate-400">
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-4 text-base md:text-lg text-slate-400"
+            >
               La fragmentación habitual desgasta tu tiempo y divide la experiencia de tus alumnos.
-            </p>
+            </motion.p>
           </div>
 
           <div className="grid lg:grid-cols-12 gap-8 items-center">
@@ -274,25 +348,39 @@ export default function FastoriaV3Landing() {
                 </div>
               </SpotlightCard>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
+            {/* ========================================================================= */}
       {/* 4. LA PROPUESTA — Una plataforma, todo el recorrido */}
       {/* ========================================================================= */}
       <section id="propuesta" className="py-24 px-6 relative z-10 border-t border-white/10">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block">
+          <div className="max-w-3xl mx-auto mb-16">
+            <motion.span 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block"
+            >
               // LA PROPUESTA
-            </span>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+            </motion.span>
+            <motion.h2 
+              initial={{ opacity: 0, x: -60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl md:text-5xl font-black text-white tracking-tight"
+            >
               Desde lo que sabés hasta un negocio que crece.
-            </h2>
-            <p className="mt-3 text-slate-400 text-base">
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-3 text-slate-400 text-base"
+            >
               Una plataforma integral que cubre cada etapa de tu proceso.
-            </p>
+            </motion.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -362,15 +450,33 @@ export default function FastoriaV3Landing() {
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             
             <div className="lg:col-span-6">
-              <span className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block">
+              <motion.span 
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block"
+              >
                 // DIFERENCIAL
-              </span>
-              <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
+              </motion.span>
+              <motion.h2 
+                initial={{ opacity: 0, x: -60 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight"
+              >
                 No todo lo que sabés tiene que convertirse en un curso.
-              </h2>
-              <p className="mt-5 text-base md:text-lg text-slate-400 font-normal leading-relaxed">
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-5 text-base md:text-lg text-slate-400 font-normal leading-relaxed"
+              >
                 Podés vender un curso, una mentoría, un proceso de coaching, un paquete de sesiones, un programa o una combinación de todo.
-              </p>
+              </motion.p>
               <div className="mt-6 inline-flex items-center gap-2 font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl text-sm">
                 <Check className="w-4 h-4" />
                 Y gestionarlo todo desde Fastoria.
@@ -436,15 +542,33 @@ export default function FastoriaV3Landing() {
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             
             <div className="lg:col-span-6 space-y-6">
-              <span className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] block">
+              <motion.span 
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] block"
+              >
                 // INTELIGENCIA ARTIFICIAL NATIVA
-              </span>
-              <h2 className="text-4xl md:text-6xl font-black text-white tracking-tight">
+              </motion.span>
+              <motion.h2 
+                initial={{ opacity: 0, x: -60 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="text-4xl md:text-6xl font-black text-white tracking-tight"
+              >
                 Conocé a Evo.
-              </h2>
-              <p className="text-lg text-slate-300 font-semibold">
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0, x: -40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                className="text-lg text-slate-300 font-semibold"
+              >
                 Tu IA dentro de Fastoria.
-              </p>
+              </motion.p>
               <p className="text-slate-400 text-sm md:text-base font-normal leading-relaxed">
                 Evo acompaña al profesional mientras crea y gestiona su negocio. Diseñado para tareas concretas: estructuración de temarios, campañas, contenidos y seguimiento de alumnos.
               </p>
@@ -613,20 +737,30 @@ export default function FastoriaV3Landing() {
         </div>
       </section>
 
-
-
       {/* ========================================================================= */}
       {/* 9. TODO LO QUE TENÉS EN FASTORIA (4 Pilares) */}
       {/* ========================================================================= */}
       <section className="py-24 px-6 relative z-10 border-t border-white/10">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block">
+          <div className="max-w-3xl mx-auto mb-16">
+            <motion.span 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block"
+            >
               // STACK COMPLETO
-            </span>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+            </motion.span>
+            <motion.h2 
+              initial={{ opacity: 0, x: -60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl md:text-5xl font-black text-white tracking-tight"
+            >
               Todo lo que tenés en Fastoria.
-            </h2>
+            </motion.h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -680,16 +814,34 @@ export default function FastoriaV3Landing() {
       {/* ========================================================================= */}
       <section id="pricing" className="py-24 px-6 relative z-10 border-t border-white/10">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <span className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block">
+          <div className="max-w-3xl mx-auto mb-12">
+            <motion.span 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block"
+            >
               // PLANES & PRECIOS
-            </span>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+            </motion.span>
+            <motion.h2 
+              initial={{ opacity: 0, x: -60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl md:text-5xl font-black text-white tracking-tight"
+            >
               Un plan para cada momento de tu negocio.
-            </h2>
-            <p className="mt-3 text-slate-400 text-base">
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-3 text-slate-400 text-base"
+            >
               Empezá donde estás. Crecé cuando lo necesites.
-            </p>
+            </motion.p>
 
             {/* Toggle Mensual / Anual */}
             <div className="mt-8 inline-flex items-center p-1.5 bg-white/[0.05] border border-white/10 rounded-full">
@@ -930,13 +1082,25 @@ export default function FastoriaV3Landing() {
       {/* ========================================================================= */}
       <section className="py-24 px-6 relative z-10 border-t border-white/10">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <span className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block">
+          <div className="max-w-3xl mx-auto mb-16">
+            <motion.span 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[#1CB899] font-mono text-xs font-bold uppercase tracking-[0.25em] mb-3 block"
+            >
               // FAQ
-            </span>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+            </motion.span>
+            <motion.h2 
+              initial={{ opacity: 0, x: -60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl md:text-5xl font-black text-white tracking-tight"
+            >
               ¿Tenés dudas? Te las respondemos.
-            </h2>
+            </motion.h2>
           </div>
 
           <div className="space-y-3">
