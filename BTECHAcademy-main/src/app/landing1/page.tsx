@@ -348,7 +348,11 @@ export default function FastoriaV3Landing() {
                 </div>
               </SpotlightCard>
             </div>
-            {/* ========================================================================= */}
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
       {/* 4. LA PROPUESTA — Una plataforma, todo el recorrido */}
       {/* ========================================================================= */}
       <section id="propuesta" className="py-24 px-6 relative z-10 border-t border-white/10">
