@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminFirestore } from '@/firebase/admin';
+export const dynamic = 'force-dynamic';
 import { processPaymentSession } from '@/services/payments/orchestrator';
 
 export async function POST(req: NextRequest) {

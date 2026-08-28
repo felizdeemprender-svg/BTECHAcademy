@@ -8,36 +8,44 @@ import { checkSufficientCredits, calculateGeminiCost, deductCredits } from '@/li
 /**
  * Motor Genkit Original (Instancia interna)
  */
-const genkitInstance = genkit({
-  plugins: [
-    googleAI({
-      apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY
-    }),
-  ],
-  model: 'googleai/gemini-2.5-flash',
-  config: {
-    safetySettings: [
-      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-    ]
+let _genkitInstance: any = null;
+
+function getGenkitInstance() {
+  if (!_genkitInstance) {
+    _genkitInstance = genkit({
+      plugins: [
+        googleAI({
+          apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || 'DUMMY_KEY_FOR_BUILD'
+        }),
+      ],
+      model: 'googleai/gemini-2.5-flash',
+      config: {
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+        ]
+      }
+    } as any);
   }
-} as any);
+  return _genkitInstance;
+}
 
 /**
  * Proxy Global: Intercepta todas las llamadas a ai.generate() para auditarlas automáticamente.
  */
-export const ai = new Proxy(genkitInstance, {
+export const ai = new Proxy({}, {
   get(target, prop, receiver) {
-    const value = Reflect.get(target, prop, receiver);
     if (prop === 'generate') {
       return (...args: any[]) => (generateWithAuditing as any)(...args);
     }
     if (prop === 'embed') {
       return (...args: any[]) => (embedWithAuditing as any)(...args);
     }
-    return typeof value === 'function' ? value.bind(target) : value;
+    const instance = getGenkitInstance();
+    const value = Reflect.get(instance, prop, receiver);
+    return typeof value === 'function' ? value.bind(instance) : value;
   }
 });
 
@@ -99,7 +107,7 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
     role
   };
 
-  const response = await genkitInstance.generate(generateOptions);
+  const response = await getGenkitInstance().generate(generateOptions);
 
   // 3. Auditoría Silenciosa (No bloquea la IA si falla)
   if (uid && response.usage) {
@@ -149,7 +157,7 @@ export async function embedWithAuditing(options: any, actionName: string = 'ia_e
     }
   }
 
-  const response = await genkitInstance.embed(options);
+  const response = await getGenkitInstance().embed(options);
 
   if (uid) {
     try {

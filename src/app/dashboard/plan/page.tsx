@@ -41,6 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useFirestore } from '@/firebase';
@@ -109,7 +110,7 @@ function PlanContentInner() {
           setCourseCount(coursesSnap.data().count);
 
           // Estudiantes únicos (aproximado por enrollements)
-          const studentsQuery = query(collection(db, 'enrollments'), where('tutorId', '==', user.uid));
+          const studentsQuery = query(collection(db, 'enrollments'), where('mentorId', '==', user.uid));
           const studentsSnap = await getDocs(studentsQuery);
           const uniqueStudents = new Set(studentsSnap.docs.map(d => d.data().studentId));
           setStudentCount(uniqueStudents.size);
@@ -242,11 +243,18 @@ function PlanContentInner() {
         {/* Header con Estatus */}
         <section className="space-y-8">
           <div>
-            <h1 className="text-4xl font-black text-foreground tracking-tight">Mi Plan y Capacidad</h1>
-            <p className="text-muted-foreground font-medium">Gestiona los límites y recursos de tu academia.</p>
+            <h1 className="text-4xl font-black text-foreground tracking-tight">Suscripción y Capacidad</h1>
+            <p className="text-muted-foreground font-medium">Gestiona los límites, recursos y facturación de tu academia.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <Tabs defaultValue="capacidad" className="w-full">
+            <TabsList className="bg-secondary/10 p-1.5 rounded-none border-b h-16 w-full justify-start gap-2 px-6 mb-8">
+              <TabsTrigger value="capacidad" className="rounded-xl gap-2 font-bold px-6 h-11"><Layers className="h-4 w-4" /> Capacidad</TabsTrigger>
+              <TabsTrigger value="facturacion" className="rounded-xl gap-2 font-bold px-6 h-11 text-warn bg-warn/10/50 border-warn/15"><CreditCard className="h-4 w-4" /> Facturación</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="capacidad" className="m-0 space-y-12">
+              <div className="grid md:grid-cols-3 gap-6">
             {/* Tarjeta de Plan Actual */}
             <Card className="md:col-span-1 bg-primary text-white relative group">
               <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
@@ -399,6 +407,145 @@ function PlanContentInner() {
               </div>
             </div>
           </div>
+          </TabsContent>
+
+          {/* Nueva Pestaña de Facturación */}
+          <TabsContent value="facturacion" className="m-0 space-y-8">
+            {(() => {
+              const billing = profile?.billingCycle;
+              const hasCard = profile?.payment?.stripeCustomerId;
+              
+              // Cálculo de regalía estimado en frontend (es un espejo del backend cron)
+              let royaltiesAmount = 0;
+              let currentPercentage = 0;
+              const sales = billing?.monthlySalesAmount || 0;
+              
+              if (sub?.type === 'mixed' && currentPlan?.pricing?.revenueShare) {
+                const { freeStudentsIncluded = 0, tiers = [] } = currentPlan.pricing.revenueShare;
+                const studentsForTier = Math.max(0, studentCount - freeStudentsIncluded);
+                const matchingTier = tiers.find((t: any) => studentsForTier >= t.min && (t.max === -1 || t.max === 0 || studentsForTier <= t.max));
+                if (matchingTier) {
+                  currentPercentage = matchingTier.percentage;
+                  royaltiesAmount = sales * (currentPercentage / 100);
+                }
+              }
+
+              const fixedAmount = sub?.fixedAmount || 0;
+              let discountPercent = 0;
+              const promoIndex = billing?.promotionalCycleIndex || 0;
+
+              if (currentPlan && currentPlan.promotions && currentPlan.promotions.periods) {
+                let elapsed = 0;
+                for (const period of currentPlan.promotions.periods) {
+                  if (promoIndex >= elapsed && promoIndex < elapsed + period.cycleCount) {
+                    discountPercent = period.discountPercent;
+                    break;
+                  }
+                  elapsed += period.cycleCount;
+                }
+              }
+
+              const discountedFixedAmount = fixedAmount * (1 - (discountPercent / 100));
+              const estimatedTotal = discountedFixedAmount + royaltiesAmount;
+
+              const cStart = billing?.currentCycleStart?.toDate ? billing.currentCycleStart.toDate() : (billing?.currentCycleStart ? new Date(billing.currentCycleStart) : new Date());
+              const cEnd = billing?.currentCycleEnd?.toDate ? billing.currentCycleEnd.toDate() : (billing?.currentCycleEnd ? new Date(billing.currentCycleEnd) : new Date());
+
+              return (
+                <div className="grid md:grid-cols-3 gap-8">
+                  {/* Panel Izquierdo: Resumen y Deuda */}
+                  <div className="md:col-span-2 space-y-8">
+                    <Card className="p-8 border-none bg-primary text-white shadow-xl">
+                      <div className="flex justify-between items-start mb-8">
+                        <div>
+                          <p className="text-primary/40 font-bold uppercase tracking-widest text-xs mb-1">Total a Pagar (Estimado)</p>
+                          <h2 className="text-6xl font-black">${estimatedTotal.toFixed(2)}</h2>
+                        </div>
+                        <div className="text-right">
+                          <Badge className="bg-white/20 text-white border-none uppercase tracking-widest text-[10px]">Ciclo Actual</Badge>
+                          <p className="text-xs font-bold mt-2 opacity-80">{format(cStart, 'dd/MM/yy')} al {format(cEnd, 'dd/MM/yy')}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/20">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-widest font-bold opacity-60">Abono Fijo</p>
+                          <p className="text-xl font-bold">${discountedFixedAmount.toFixed(2)}</p>
+                          {discountPercent > 0 && (
+                            <p className="text-xs text-success-foreground bg-success/20 inline-block px-2 rounded-full mt-1">Descuento {discountPercent}%</p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-widest font-bold opacity-60">Regalías ({currentPercentage}%)</p>
+                          <p className="text-xl font-bold">${royaltiesAmount.toFixed(2)}</p>
+                          <p className="text-xs opacity-60 mt-1">Base: ${sales.toFixed(2)} vendidas</p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card className="p-8 space-y-6 bg-white border-muted">
+                      <h3 className="text-xl font-black border-b pb-4">Detalle de Regalías</h3>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                            <Users className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <p className="font-bold">Total Alumnos Activos</p>
+                            <p className="text-sm text-muted-foreground">Tu comisión depende de este número.</p>
+                          </div>
+                        </div>
+                        <p className="text-3xl font-black">{studentCount}</p>
+                      </div>
+
+                      {currentPlan?.pricing?.revenueShare?.freeStudentsIncluded > 0 && (
+                        <div className="flex items-center justify-between opacity-70">
+                          <p className="text-sm font-bold">Alumnos de Gracia (Excluidos de regalía)</p>
+                          <p className="text-sm font-bold">-{currentPlan.pricing.revenueShare.freeStudentsIncluded}</p>
+                        </div>
+                      )}
+                      
+                      <div className="bg-muted p-4 rounded-xl flex items-center justify-between">
+                        <p className="text-sm font-bold uppercase tracking-widest">Regalía Aplicada</p>
+                        <Badge className="bg-warn text-white border-none">{currentPercentage}%</Badge>
+                      </div>
+                    </Card>
+                  </div>
+
+                  {/* Panel Derecho: Método de Pago */}
+                  <div className="md:col-span-1 space-y-6">
+                    <Card className="p-6 border-muted bg-white text-center">
+                      <div className="mx-auto w-16 h-16 rounded-full bg-success/10 text-success flex items-center justify-center mb-4">
+                        {hasCard ? <Check className="h-8 w-8" /> : <CreditCard className="h-8 w-8" />}
+                      </div>
+                      <h3 className="text-xl font-black mb-2">{hasCard ? 'Tarjeta Guardada' : 'No tienes tarjeta'}</h3>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        {hasCard 
+                          ? 'Los cobros se realizarán automáticamente a tu tarjeta al finalizar tu ciclo.' 
+                          : 'Debes configurar una tarjeta para que el sistema pueda cobrar tu abono a fin de mes.'}
+                      </p>
+                      <Button 
+                        onClick={async () => {
+                          const res = await fetch('/api/payments/setup-billing', { 
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId: user?.uid })
+                          });
+                          const data = await res.json();
+                          if (data.url) window.location.href = data.url;
+                          else toast({ variant: 'destructive', title: 'Error', description: 'No se pudo generar enlace de configuración.' });
+                        }}
+                        className={cn("w-full h-12 rounded-xl font-bold", hasCard ? "bg-muted text-foreground" : "bg-primary text-white")}
+                      >
+                        {hasCard ? 'Cambiar Tarjeta' : 'Configurar Tarjeta Ahora'}
+                      </Button>
+                    </Card>
+                  </div>
+                </div>
+              );
+            })()}
+          </TabsContent>
+          </Tabs>
         </section>
 
         {/* Sección de Upgrades y Créditos */}

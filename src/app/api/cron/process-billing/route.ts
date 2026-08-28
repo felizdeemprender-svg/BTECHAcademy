@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/firebase/admin';
+export const dynamic = 'force-dynamic';
 import { chargeTutorMonthlyBill } from '@/services/payments/orchestrator';
 
 export async function GET(request: Request) {
@@ -58,14 +59,29 @@ export async function GET(request: Request) {
       // --- PASO C: Calcular Regalías ---
       let royaltiesAmount = 0;
       const sales = billing.monthlySalesAmount || 0;
+      let activeStudentsCount = 0;
       
-      if (sub.type === 'mixed') {
-        // Encontrar el tier que aplique (simplificado)
-        if (plan && plan.pricing && plan.pricing.tiers) {
-          const matchingTier = plan.pricing.tiers.find((t: any) => sales >= t.min && (t.max === -1 || sales <= t.max));
-          if (matchingTier) {
-            royaltiesAmount = sales * (matchingTier.percentage / 100);
-          }
+      if (sub.type === 'mixed' && plan?.pricing?.revenueShare) {
+        // Contar la cantidad de alumnos únicos activos del tutor
+        const enrollmentsSnap = await adminDb.collection('enrollments')
+          .where('mentorId', '==', doc.id)
+          .where('status', '==', 'active')
+          .get();
+        
+        const uniqueStudents = new Set();
+        enrollmentsSnap.forEach(e => uniqueStudents.add(e.data().studentId));
+        activeStudentsCount = uniqueStudents.size;
+        
+        const { freeStudentsIncluded = 0, tiers = [] } = plan.pricing.revenueShare;
+        
+        // Calcular estudiantes sujetos a comisión
+        const studentsForTier = Math.max(0, activeStudentsCount - freeStudentsIncluded);
+        
+        // Encontrar el tier que aplique basado en la cantidad de alumnos
+        const matchingTier = tiers.find((t: any) => studentsForTier >= t.min && (t.max === -1 || t.max === 0 || studentsForTier <= t.max));
+        
+        if (matchingTier) {
+          royaltiesAmount = sales * (matchingTier.percentage / 100);
         }
       }
 

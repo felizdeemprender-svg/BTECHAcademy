@@ -97,15 +97,23 @@ export async function processSuccessfulEnrollment({
 
     await enrollmentRef.set(enrollmentData);
 
-    // Enviar correo de felicitación por Trigger Email
+    // Enviar correo de felicitación por Trigger Email y actualizar regalías
     try {
       let productTitle = 'tu curso';
+      let productPrice = 0;
+
       if (productType === 'followup') {
         const followupSnap = await db.collection('followups').doc(productId).get();
-        productTitle = followupSnap.exists ? (followupSnap.data()?.title || 'tu mentoría') : 'tu mentoría';
+        if (followupSnap.exists) {
+          productTitle = followupSnap.data()?.title || 'tu mentoría';
+          productPrice = followupSnap.data()?.price || 0;
+        }
       } else {
         const courseSnap = await db.collection('courses').doc(productId).get();
-        productTitle = courseSnap.exists ? (courseSnap.data()?.title || 'tu curso') : 'tu curso';
+        if (courseSnap.exists) {
+          productTitle = courseSnap.data()?.title || 'tu curso';
+          productPrice = courseSnap.data()?.price || 0;
+        }
       }
       
       let mentorName = undefined;
@@ -115,6 +123,14 @@ export async function processSuccessfulEnrollment({
         if (mentorSnap.exists) {
           mentorName = mentorSnap.data()?.displayName;
           mentorEmail = mentorSnap.data()?.email;
+        }
+        
+        // Sumar la venta al acumulador del tutor si tiene precio > 0
+        if (productPrice > 0) {
+          await db.collection('users').doc(mentorId).update({
+            'billingCycle.monthlySalesAmount': FieldValue.increment(productPrice)
+          });
+          console.log(`[Enrollment] Sumados $${productPrice} a las ventas del tutor ${mentorId}`);
         }
       }
 
@@ -126,7 +142,7 @@ export async function processSuccessfulEnrollment({
         mentorEmail
       });
     } catch (emailErr) {
-      console.error('[Enrollment] Error al enviar correo de bienvenida:', emailErr);
+      console.error('[Enrollment] Error en post-enrollment (correo o regalías):', emailErr);
     }
 
     // 4. Actualizar estadísticas de la página de forma atómica

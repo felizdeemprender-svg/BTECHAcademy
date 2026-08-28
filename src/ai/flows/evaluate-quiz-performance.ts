@@ -10,10 +10,16 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
-const ai = genkit({
-  plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY })],
-  model: 'googleai/gemini-2.5-flash',
-} as any);
+let _ai: any = null;
+function getAi() {
+  if (!_ai) {
+    _ai = genkit({
+      plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || 'DUMMY_KEY_FOR_BUILD' })],
+      model: 'googleai/gemini-2.5-flash',
+    } as any);
+  }
+  return _ai;
+}
 import { z } from 'genkit';
 
 const EvaluationInputSchema = z.object({
@@ -39,7 +45,7 @@ export async function evaluateQuizPerformance(input: EvaluationInput): Promise<E
   return evaluateQuizPerformanceFlow(input);
 }
 
-const prompt = ai.definePrompt({
+const prompt = getAi().definePrompt({
   name: 'evaluateQuizPerformancePrompt',
   input: { 
     schema: z.object({
@@ -76,7 +82,7 @@ Instrucciones para la evaluación:
 5. Identifica claramente las fortalezas demostradas y las áreas que requieren más estudio o repaso.`,
 });
 
-const evaluateQuizPerformanceFlow = ai.defineFlow(
+const evaluateQuizPerformanceFlow = getAi().defineFlow(
   {
     name: 'evaluateQuizPerformanceFlow',
     inputSchema: EvaluationInputSchema,
