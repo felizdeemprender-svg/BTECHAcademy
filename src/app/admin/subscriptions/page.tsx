@@ -103,6 +103,8 @@ interface SubscriptionPlan {
       students_view: boolean;
       followups_management: boolean;
       marketing_access: boolean;
+      automations_access: boolean;
+      landing_access: boolean;
     };
     limits: {
       maxCourses: number;
@@ -135,7 +137,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
     promotions: { periods: [] },
     lifecycle: { trialReminderDays: 0, gracePeriodDays: 0, retryIntervalDays: 0, requiresPaymentMethod: false },
     entitlements: {
-      permissions: { academic_management: false, mentor_challenges: false, students_view: false, followups_management: false, marketing_access: false },
+      permissions: { academic_management: false, mentor_challenges: false, students_view: false, followups_management: false, marketing_access: false, automations_access: false, landing_access: false },
       limits: { maxCourses: 3, maxStudents: 50, hasCustomBranding: false, hasAnalytics: false, hasPrioritySupport: false },
       aiQuotas: { totalCredits: 0, hasPremiumAI: false, rechargeOptions: [] },
       invitationsPerCourse: 5
@@ -154,7 +156,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
     promotions: { periods: [{ name: 'Mes de Gracia', cycleCount: 1, discountPercent: 100 }, { name: 'Descuento 50%', cycleCount: 2, discountPercent: 50 }] },
     lifecycle: { trialReminderDays: 5, gracePeriodDays: 7, retryIntervalDays: 2, requiresPaymentMethod: true },
     entitlements: {
-      permissions: { academic_management: true, mentor_challenges: false, students_view: true, followups_management: false, marketing_access: false },
+      permissions: { academic_management: true, mentor_challenges: false, students_view: true, followups_management: false, marketing_access: false, automations_access: false, landing_access: false },
       limits: { maxCourses: 10, maxStudents: 200, hasCustomBranding: false, hasAnalytics: true, hasPrioritySupport: false },
       aiQuotas: { totalCredits: 100, hasPremiumAI: false, rechargeOptions: [] },
       invitationsPerCourse: 5
@@ -186,7 +188,7 @@ export default function AdminSubscriptionsPage() {
     promotions: { periods: [] },
     lifecycle: { trialReminderDays: 5, gracePeriodDays: 7, retryIntervalDays: 2, requiresPaymentMethod: true },
     entitlements: {
-      permissions: { academic_management: false, mentor_challenges: false, students_view: false, followups_management: false, marketing_access: false },
+      permissions: { academic_management: false, mentor_challenges: false, students_view: false, followups_management: false, marketing_access: false, automations_access: false, landing_access: false },
       limits: { maxCourses: 10, maxStudents: 200, hasCustomBranding: false, hasAnalytics: true, hasPrioritySupport: false },
       aiQuotas: { totalCredits: 1000, hasPremiumAI: false, rechargeOptions: Array(5).fill({ price: 0, credits: 0 }) },
       invitationsPerCourse: 5
@@ -302,7 +304,7 @@ export default function AdminSubscriptionsPage() {
                 promotions: { periods: [] },
                 lifecycle: { trialReminderDays: 5, gracePeriodDays: 7, retryIntervalDays: 2, requiresPaymentMethod: true },
                 entitlements: {
-                  permissions: { academic_management: false, mentor_challenges: false, students_view: false, followups_management: false, marketing_access: false },
+                  permissions: { academic_management: false, mentor_challenges: false, students_view: false, followups_management: false, marketing_access: false, automations_access: false, landing_access: false },
                   limits: { maxCourses: 10, maxStudents: 200, hasCustomBranding: false, hasAnalytics: true, hasPrioritySupport: false },
                   aiQuotas: { totalCredits: 1000, hasPremiumAI: false, rechargeOptions: Array(5).fill({ price: 0, credits: 0 }) },
                   invitationsPerCourse: 5
@@ -385,8 +387,8 @@ export default function AdminSubscriptionsPage() {
                   hideOnMobile: true,
                   cell: (plan) => (
                     <div className="flex flex-col items-center gap-1">
-                      <span className="text-xs font-bold text-foreground">{plan.limits.maxCourses === -1 ? '∞' : plan.limits.maxCourses} cursos</span>
-                      <span className="text-[10px] text-muted-foreground font-semibold">{plan.limits.maxStudents === -1 ? '∞' : plan.limits.maxStudents} alumnos</span>
+                      <span className="text-xs font-bold text-foreground">{plan.entitlements?.limits?.maxCourses === -1 ? '∞' : (plan.entitlements?.limits?.maxCourses ?? '?')} cursos</span>
+                      <span className="text-[10px] text-muted-foreground font-semibold">{plan.entitlements?.limits?.maxStudents === -1 ? '∞' : (plan.entitlements?.limits?.maxStudents ?? '?')} alumnos</span>
                     </div>
                   ),
                 },
@@ -765,15 +767,15 @@ export default function AdminSubscriptionsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       <div className="space-y-2">
                         <Label htmlFor="planMaxCourses" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tope de Cursos Publicados</Label>
-                        <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.entitlements?.limits.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...formData.entitlements!, limits: { ...formData.entitlements!.limits, maxCourses: isNaN(val) ? 0 : val } } }); }} placeholder="10 (-1 = ∞)" className="border-border" size="lg" />
+                        <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.entitlements?.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), limits: { ...(formData.entitlements?.limits || {}), maxCourses: isNaN(val) ? 0 : val } as any } as any }); }} placeholder="10 (-1 = ∞)" className="border-border" size="lg" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tope de Alumnos (Base)</Label>
-                        <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.entitlements?.limits.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...formData.entitlements!, limits: { ...formData.entitlements!.limits, maxStudents: isNaN(val) ? 0 : val } } }); }} placeholder="200 (-1 = ∞)" className="border-border" size="lg" />
+                        <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.entitlements?.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), limits: { ...(formData.entitlements?.limits || {}), maxStudents: isNaN(val) ? 0 : val } as any } as any }); }} placeholder="200 (-1 = ∞)" className="border-border" size="lg" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="planInvitationsPerCourse" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Alumnos Invitados por Curso</Label>
-                        <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.entitlements?.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...formData.entitlements!, invitationsPerCourse: isNaN(val) ? 0 : val } }); }} placeholder="5" className="border-border" size="lg" />
+                        <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.entitlements?.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), invitationsPerCourse: isNaN(val) ? 0 : val } as any }); }} placeholder="5" className="border-border" size="lg" />
                       </div>
                     </div>
 
@@ -786,7 +788,8 @@ export default function AdminSubscriptionsPage() {
                           { k: 'marketing_access', l: 'Campañas de Lanzamiento AI', i: Rocket },
                           { k: 'followups_management', l: 'Tickets de Seguimiento', i: ClipboardList },
                           { k: 'mentor_challenges', l: 'Emitir Desafíos', i: Target },
-                          { k: 'automations_access', l: 'Configurar Evo Automations', i: Sparkles }
+                          { k: 'automations_access', l: 'Configurar Evo Automations', i: Sparkles },
+                          { k: 'landing_access', l: 'Landings y Embajadores', i: LayoutIcon }
                         ].map(perm => (
                           <div key={perm.k} className="flex items-center justify-between p-3 rounded-xl bg-muted border border-muted hover:bg-muted transition-colors">
                             <div className="flex items-center gap-3">
@@ -796,7 +799,7 @@ export default function AdminSubscriptionsPage() {
                             <Switch
                               id={`perm-${perm.k}`}
                               checked={(formData.entitlements?.permissions as any)?.[perm.k] || false}
-                              onCheckedChange={(c) => setFormData({ ...formData, entitlements: { ...formData.entitlements!, permissions: { ...formData.entitlements!.permissions, [perm.k]: c } as any } })}
+                              onCheckedChange={(c) => setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), permissions: { ...(formData.entitlements?.permissions || {}), [perm.k]: c } as any } as any })}
                             />
                           </div>
                         ))}
@@ -864,8 +867,8 @@ export default function AdminSubscriptionsPage() {
                           <div className="relative">
                             <Input
                               type="number"
-                              value={formData.entitlements?.aiQuotas.totalCredits || 0}
-                              onChange={(e) => setFormData({ ...formData, entitlements: { ...formData.entitlements!, aiQuotas: { ...formData.entitlements!.aiQuotas, totalCredits: parseInt(e.target.value) } } })}
+                              value={formData.entitlements?.aiQuotas?.totalCredits || 0}
+                              onChange={(e) => setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), aiQuotas: { ...(formData.entitlements?.aiQuotas || {}), totalCredits: parseInt(e.target.value) } as any } as any })}
                               className="bg-background border-warn/15 font-black text-warn text-xl pl-12"
                               size="xl" />
                             <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-warn" />
@@ -906,11 +909,11 @@ export default function AdminSubscriptionsPage() {
                                 <Input
                                   type="number"
                                   placeholder="0.00"
-                                  value={formData.entitlements?.aiQuotas.rechargeOptions?.[idx]?.price || 0}
+                                  value={formData.entitlements?.aiQuotas?.rechargeOptions?.[idx]?.price || 0}
                                   onChange={(e) => {
-                                    const newOptions = [...(formData.entitlements?.aiQuotas.rechargeOptions || Array(5).fill({ price: 0, credits: 0 }))];
-                                    newOptions[idx] = { ...newOptions[idx], price: parseFloat(e.target.value) };
-                                    setFormData({ ...formData, entitlements: { ...formData.entitlements!, aiQuotas: { ...formData.entitlements!.aiQuotas, rechargeOptions: newOptions } } });
+                                    const newOptions = [...(formData.entitlements?.aiQuotas?.rechargeOptions || Array(5).fill({ price: 0, credits: 0 }))];
+                                    newOptions[idx] = { ...newOptions[idx], price: parseFloat(e.target.value) || 0 };
+                                    setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), aiQuotas: { ...(formData.entitlements?.aiQuotas || {}), rechargeOptions: newOptions } as any } as any });
                                   }}
                                   className="h-9 rounded-lg bg-muted border-none text-center font-bold text-xs"
                                 />
@@ -920,11 +923,11 @@ export default function AdminSubscriptionsPage() {
                                 <Input
                                   type="number"
                                   placeholder="0"
-                                  value={formData.entitlements?.aiQuotas.rechargeOptions?.[idx]?.credits || 0}
+                                  value={formData.entitlements?.aiQuotas?.rechargeOptions?.[idx]?.credits || 0}
                                   onChange={(e) => {
-                                    const newOptions = [...(formData.entitlements?.aiQuotas.rechargeOptions || Array(5).fill({ price: 0, credits: 0 }))];
-                                    newOptions[idx] = { ...newOptions[idx], credits: parseInt(e.target.value) };
-                                    setFormData({ ...formData, entitlements: { ...formData.entitlements!, aiQuotas: { ...formData.entitlements!.aiQuotas, rechargeOptions: newOptions } } });
+                                    const newOptions = [...(formData.entitlements?.aiQuotas?.rechargeOptions || Array(5).fill({ price: 0, credits: 0 }))];
+                                    newOptions[idx] = { ...newOptions[idx], credits: parseInt(e.target.value) || 0 };
+                                    setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), aiQuotas: { ...(formData.entitlements?.aiQuotas || {}), rechargeOptions: newOptions } as any } as any });
                                   }}
                                   className="h-9 rounded-lg bg-warn/10 border-none text-center font-bold text-xs text-warn"
                                 />
@@ -944,8 +947,8 @@ export default function AdminSubscriptionsPage() {
                         </div>
                         <Switch
                           id="plan-has-ai-tab"
-                          checked={formData.entitlements?.aiQuotas.hasPremiumAI || false}
-                          onCheckedChange={(c) => setFormData({ ...formData, entitlements: { ...formData.entitlements!, aiQuotas: { ...formData.entitlements!.aiQuotas, hasPremiumAI: c } } })}
+                          checked={formData.entitlements?.aiQuotas?.hasPremiumAI || false}
+                          onCheckedChange={(c) => setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), aiQuotas: { ...(formData.entitlements?.aiQuotas || {}), hasPremiumAI: c } as any } as any })}
                           className="data-[state=checked]:bg-warn"
                         />
                       </div>

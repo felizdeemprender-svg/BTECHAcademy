@@ -162,6 +162,21 @@ service cloud.firestore {
       match /individualTasks/{taskId} {
         allow read, list: if isSignedIn();
       }
+
+      match /invoices/{invoiceId} {
+        allow read, list: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+        allow write: if false; // Only backend cron creates invoices
+      }
+
+      match /ai_transactions/{txId} {
+        allow read, list: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+        allow write: if false; // Only backend creates transactions
+      }
+
+      match /ai_usage_daily/{dateId} {
+        allow read, list: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+        allow write: if false; // Only backend creates usage
+      }
     }
 
     match /followups/{followUpId} {

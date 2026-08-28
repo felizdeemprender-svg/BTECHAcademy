@@ -86,12 +86,29 @@ export async function GET(request: Request) {
       }
 
       const totalToCharge = discountedFixedAmount + royaltiesAmount;
+      let chargeStatus = 'pending';
+      let chargeReason = null;
 
       // --- PASO D: Ejecutar el Cobro ---
       if (totalToCharge > 0) {
         const stripeCustomerId = user.payment?.stripeCustomerId;
         if (!stripeCustomerId) {
-          results.push({ userId: doc.id, success: false, reason: 'No Stripe Customer ID' });
+          chargeStatus = 'failed';
+          chargeReason = 'No Stripe Customer ID';
+          results.push({ userId: doc.id, success: false, reason: chargeReason });
+          
+          await doc.ref.collection('invoices').doc(cycleEnd.toISOString().split('T')[0]).set({
+            cycleStart: billing.currentCycleStart,
+            cycleEnd: billing.currentCycleEnd,
+            planId: sub.planId,
+            planName: sub.planName || plan?.name || 'Plan',
+            fixedAmount, discountPercent, discountedFixedAmount,
+            salesAmount: sales, activeStudentsCount,
+            royaltiesAmount, totalCharged: totalToCharge,
+            status: chargeStatus, failureReason: chargeReason,
+            createdAt: new Date(),
+          });
+
           // Pasar a past_due
           await doc.ref.update({
             'subscription.status': 'past_due',
@@ -108,17 +125,47 @@ export async function GET(request: Request) {
         );
 
         if (!chargeResult.success) {
-          results.push({ userId: doc.id, success: false, reason: chargeResult.error });
+          chargeStatus = 'failed';
+          chargeReason = chargeResult.error;
+          results.push({ userId: doc.id, success: false, reason: chargeReason });
+          
+          await doc.ref.collection('invoices').doc(cycleEnd.toISOString().split('T')[0]).set({
+            cycleStart: billing.currentCycleStart,
+            cycleEnd: billing.currentCycleEnd,
+            planId: sub.planId,
+            planName: sub.planName || plan?.name || 'Plan',
+            fixedAmount, discountPercent, discountedFixedAmount,
+            salesAmount: sales, activeStudentsCount,
+            royaltiesAmount, totalCharged: totalToCharge,
+            status: chargeStatus, failureReason: chargeReason,
+            createdAt: new Date(),
+          });
+
           // Pasar a past_due
           await doc.ref.update({
             'subscription.status': 'past_due',
             'subscription.gracePeriodEndsAt': new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           });
           continue;
+        } else {
+          chargeStatus = 'paid';
         }
+      } else {
+        chargeStatus = 'paid'; // Si es 0, es gratis, se considera pagado
       }
 
       // --- PASO E: Renovación Exitosa ---
+      await doc.ref.collection('invoices').doc(cycleEnd.toISOString().split('T')[0]).set({
+        cycleStart: billing.currentCycleStart,
+        cycleEnd: billing.currentCycleEnd,
+        planId: sub.planId,
+        planName: sub.planName || plan?.name || 'Plan',
+        fixedAmount, discountPercent, discountedFixedAmount,
+        salesAmount: sales, activeStudentsCount,
+        royaltiesAmount, totalCharged: totalToCharge,
+        status: chargeStatus, failureReason: null,
+        createdAt: new Date(),
+      });
       // Calcular próxima fecha según el ciclo del plan
       const nextCycleEnd = new Date(cycleEnd);
       const monthsToAdd = plan?.pricing?.billingCycleMonths || 1;

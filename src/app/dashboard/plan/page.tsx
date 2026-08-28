@@ -27,7 +27,13 @@ import {
   Clock,
   Info,
   Palette,
-  Globe
+  Globe,
+  Receipt,
+  ChevronRight,
+  AlertTriangle,
+  XCircle,
+  CheckCircle2,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,9 +51,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useFirestore } from '@/firebase';
-import { collection, query, where, getCountFromServer, getDocs } from 'firebase/firestore';
+import { collection, query, where, getCountFromServer, getDocs, orderBy } from 'firebase/firestore';
 import { differenceInDays, format } from 'date-fns';
-
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 export default function MyPlanPage() {
   return (
     <Suspense fallback={
@@ -84,6 +91,183 @@ function PlanContentInner() {
     email: ''
   });
 
+  // Facturación History States
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(true);
+  const [selectedCycle, setSelectedCycle] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingLiveDetails, setLoadingLiveDetails] = useState(false);
+  const [liveEnrollments, setLiveEnrollments] = useState<any[]>([]);
+  const [liveCoursesMap, setLiveCoursesMap] = useState<Record<string, string>>({});
+  
+  // Daily AI Usage
+  const [dailyUsage, setDailyUsage] = useState<any[]>([]);
+  const [loadingDailyUsage, setLoadingDailyUsage] = useState(false);
+  const [selectedUsageCycleId, setSelectedUsageCycleId] = useState<string>('current');
+
+  useEffect(() => {
+    async function fetchInvoices() {
+      if (!user) return;
+      try {
+        const q = query(
+          collection(db, 'users', user.uid, 'invoices'),
+          orderBy('cycleEnd', 'desc')
+        );
+        const snapshot = await getDocs(q);
+        const inv = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setInvoices(inv);
+      } catch (error) {
+        console.error('Error fetching invoices:', error);
+      } finally {
+        setLoadingInvoices(false);
+      }
+    }
+    fetchInvoices();
+  }, [user, db]);
+
+  useEffect(() => {
+    async function fetchDailyUsage() {
+      if (!user) return;
+      
+      let startDateStr: string | null = null;
+      let endDateStr: string | null = null;
+
+      if (selectedUsageCycleId === 'current') {
+        const billing = profile?.billingCycle;
+        if (!billing?.currentCycleStart) return;
+        
+        let startDate: Date;
+        if (billing.currentCycleStart.toDate) {
+          startDate = billing.currentCycleStart.toDate();
+        } else if (billing.currentCycleStart.seconds) {
+          startDate = new Date(billing.currentCycleStart.seconds * 1000);
+        } else {
+          startDate = new Date(billing.currentCycleStart);
+        }
+        if (!isNaN(startDate.getTime())) {
+          startDateStr = startDate.toISOString().split('T')[0];
+        }
+      } else {
+        // Encontrar la factura pasada
+        const invoice = invoices.find(inv => inv.id === selectedUsageCycleId);
+        if (invoice?.cycleStart && invoice?.cycleEnd) {
+          const s = invoice.cycleStart.toDate ? invoice.cycleStart.toDate() : new Date(invoice.cycleStart.seconds ? invoice.cycleStart.seconds * 1000 : invoice.cycleStart);
+          const e = invoice.cycleEnd.toDate ? invoice.cycleEnd.toDate() : new Date(invoice.cycleEnd.seconds ? invoice.cycleEnd.seconds * 1000 : invoice.cycleEnd);
+          startDateStr = s.toISOString().split('T')[0];
+          endDateStr = e.toISOString().split('T')[0];
+        }
+      }
+
+      if (!startDateStr) return;
+      
+      setLoadingDailyUsage(true);
+      try {
+        let constraints = [where('date', '>=', startDateStr)];
+        if (endDateStr) {
+          constraints.push(where('date', '<=', endDateStr));
+        }
+
+        const q = query(
+          collection(db, 'users', user.uid, 'ai_usage_daily'),
+          ...constraints,
+          orderBy('date', 'asc')
+        );
+        
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => {
+          const d = doc.data();
+          // Solo para mostrar la fecha de manera más legible
+          const day = d.date ? d.date.split('-')[2] : doc.id.split('-')[2] || '?';
+          return {
+            name: day,
+            date: d.date || doc.id,
+            text: d.text || 0,
+            image: d.image || 0,
+            video: d.video || 0,
+            audio: d.audio || 0,
+            alumnos: d.alumnos || 0
+          };
+        });
+        setDailyUsage(data);
+      } catch (error: any) {
+        console.error('Error fetching daily usage:', error);
+        toast({ variant: 'destructive', title: 'Error fetching daily usage', description: error?.message || String(error) });
+      } finally {
+        setLoadingDailyUsage(false);
+      }
+    }
+    fetchDailyUsage();
+  }, [user, db, profile, selectedUsageCycleId, invoices]);
+
+  const fetchLiveDetails = async () => {
+    if (!user) return;
+    setLoadingLiveDetails(true);
+    try {
+      const q = query(
+        collection(db, 'enrollments'),
+        where('mentorId', '==', user.uid),
+        where('status', '==', 'active')
+      );
+      const snap = await getDocs(q);
+      const enrolls = snap.docs.map(d => d.data());
+      
+      const uniqueCourseIds = Array.from(new Set(enrolls.map(e => e.courseId).filter(Boolean)));
+      const courseMap: Record<string, string> = {};
+      
+      if (uniqueCourseIds.length > 0) {
+        const cQ = query(
+          collection(db, 'courses'),
+          where('mentorId', '==', user.uid)
+        );
+        const cSnap = await getDocs(cQ);
+        cSnap.docs.forEach(doc => {
+          courseMap[doc.id] = doc.data().title || 'Curso sin título';
+        });
+      }
+
+      setLiveEnrollments(enrolls);
+      setLiveCoursesMap(courseMap);
+    } catch (error) {
+      console.error('Error fetching live enrollments:', error);
+    } finally {
+      setLoadingLiveDetails(false);
+    }
+  };
+
+  const openCycleModal = (cycleData: any, isCurrent: boolean) => {
+    setSelectedCycle({ ...cycleData, isCurrent });
+    setIsModalOpen(true);
+    if (isCurrent) {
+      fetchLiveDetails();
+    }
+  };
+
+  const handlePauseSubscription = async () => {
+    if (!confirm('¿Estás seguro de que quieres pausar tu suscripción? Perderás acceso a las funciones premium al final del período actual. Para volver, deberás suscribirte nuevamente.')) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/subscriptions/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) throw new Error('Error al pausar');
+      toast({ title: 'Suscripción pausada', description: 'No se realizarán próximos cobros.' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Error al pausar la suscripción' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getInvoiceStatus = (status: string) => {
+    switch (status) {
+      case 'paid': return <Badge className="bg-success text-white border-none">Pagado</Badge>;
+      case 'failed': return <Badge className="bg-warn text-white border-none">Fallido</Badge>;
+      case 'pending': return <Badge variant="outline">Pendiente</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -105,7 +289,7 @@ function PlanContentInner() {
 
         // Fetch actual counts if mentor
         if (user) {
-          const coursesQuery = query(collection(db, 'courses'), where('tutorId', '==', user.uid));
+          const coursesQuery = query(collection(db, 'courses'), where('mentorId', '==', user.uid));
           const coursesSnap = await getCountFromServer(coursesQuery);
           setCourseCount(coursesSnap.data().count);
 
@@ -274,6 +458,26 @@ function PlanContentInner() {
                   <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
                   <span className="text-xs font-bold text-primary/15">Sincronizado con Producción</span>
                 </div>
+                <div className="pt-6 border-t border-white/10 mt-6 flex flex-col sm:flex-row gap-3">
+                  {(sub?.status === 'active' || sub?.status === 'trialing' || sub?.status === 'past_due') ? (
+                    <Button 
+                      variant="outline" 
+                      className="bg-white/10 text-white border-white/20 hover:bg-white hover:text-primary rounded-xl font-bold transition-colors w-full sm:w-auto"
+                      onClick={handlePauseSubscription}
+                    >
+                      Pausar Suscripción
+                    </Button>
+                  ) : null}
+
+                  {(!sub?.status || sub?.status === 'canceled' || sub?.status === 'suspended') ? (
+                    <Button 
+                      className="rounded-xl font-bold w-full sm:w-auto bg-white text-primary hover:bg-white/90"
+                      onClick={() => document.getElementById('credits-section')?.scrollIntoView({ behavior: 'smooth' })}
+                    >
+                      Renovar Suscripción
+                    </Button>
+                  ) : null}
+                </div>
               </CardContent>
             </Card>
 
@@ -350,6 +554,52 @@ function PlanContentInner() {
                     />
                   </div>
                 </div>
+
+                {dailyUsage.length > 0 && (
+                  <div className="md:col-span-4 mt-6 pt-6 border-t border-muted">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                      <h4 className="text-sm font-bold opacity-70">Consumo Diario del Ciclo</h4>
+                      <Select value={selectedUsageCycleId} onValueChange={setSelectedUsageCycleId}>
+                        <SelectTrigger className="w-full sm:w-[220px] bg-white border-muted">
+                          <SelectValue placeholder="Ciclo actual" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="current" className="font-bold text-primary">Ciclo actual</SelectItem>
+                          {invoices.map((inv) => (
+                            <SelectItem key={inv.id} value={inv.id}>
+                              {format(new Date(inv.cycleStart?.seconds ? inv.cycleStart.seconds * 1000 : (inv.cycleStart?.toDate ? inv.cycleStart.toDate() : inv.cycleStart)), 'MMM d, yyyy')} - {format(new Date(inv.cycleEnd?.seconds ? inv.cycleEnd.seconds * 1000 : (inv.cycleEnd?.toDate ? inv.cycleEnd.toDate() : inv.cycleEnd)), 'MMM d, yyyy')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="h-64 w-full">
+                      {loadingDailyUsage ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary/20" />
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={dailyUsage} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} opacity={0.5} />
+                            <YAxis fontSize={10} axisLine={false} tickLine={false} opacity={0.5} />
+                            <Tooltip 
+                              contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                              itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                              labelStyle={{ color: '#888', marginBottom: '8px' }}
+                            />
+                            <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '10px' }} iconType="circle" />
+                            <Line type="monotone" dataKey="text" name="Texto (Tutor)" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                            <Line type="monotone" dataKey="image" name="Imágenes (Tutor)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                            <Line type="monotone" dataKey="video" name="Videos (Tutor)" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                            <Line type="monotone" dataKey="audio" name="Audios (Tutor)" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                            <Line type="monotone" dataKey="alumnos" name="Alumnos" stroke="#ef4444" strokeWidth={3} dot={{ r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="md:col-span-1 flex justify-center md:justify-end">
                   {currentPlan?.rechargeOptions?.some((opt: any) => opt.credits > 0 && opt.price > 0) && (
@@ -448,10 +698,22 @@ function PlanContentInner() {
               const discountedFixedAmount = fixedAmount * (1 - (discountPercent / 100));
               const estimatedTotal = discountedFixedAmount + royaltiesAmount;
 
-              const cStart = billing?.currentCycleStart?.toDate ? billing.currentCycleStart.toDate() : (billing?.currentCycleStart ? new Date(billing.currentCycleStart) : new Date());
-              const cEnd = billing?.currentCycleEnd?.toDate ? billing.currentCycleEnd.toDate() : (billing?.currentCycleEnd ? new Date(billing.currentCycleEnd) : new Date());
+              let cStart = new Date();
+              if (billing?.currentCycleStart) {
+                if (billing.currentCycleStart.toDate) cStart = billing.currentCycleStart.toDate();
+                else if (billing.currentCycleStart.seconds) cStart = new Date(billing.currentCycleStart.seconds * 1000);
+                else cStart = new Date(billing.currentCycleStart);
+              }
+              
+              let cEnd = new Date();
+              if (billing?.currentCycleEnd) {
+                if (billing.currentCycleEnd.toDate) cEnd = billing.currentCycleEnd.toDate();
+                else if (billing.currentCycleEnd.seconds) cEnd = new Date(billing.currentCycleEnd.seconds * 1000);
+                else cEnd = new Date(billing.currentCycleEnd);
+              }
 
               return (
+                <>
                 <div className="grid md:grid-cols-3 gap-8">
                   {/* Panel Izquierdo: Resumen y Deuda */}
                   <div className="md:col-span-2 space-y-8">
@@ -518,11 +780,11 @@ function PlanContentInner() {
                       <div className="mx-auto w-16 h-16 rounded-full bg-success/10 text-success flex items-center justify-center mb-4">
                         {hasCard ? <Check className="h-8 w-8" /> : <CreditCard className="h-8 w-8" />}
                       </div>
-                      <h3 className="text-xl font-black mb-2">{hasCard ? 'Tarjeta Guardada' : 'No tienes tarjeta'}</h3>
+                      <h3 className="text-xl font-black mb-2">{hasCard ? 'Medio de Pago Guardado' : 'Sin medio de pago'}</h3>
                       <p className="text-sm text-muted-foreground mb-6">
                         {hasCard 
-                          ? 'Los cobros se realizarán automáticamente a tu tarjeta al finalizar tu ciclo.' 
-                          : 'Debes configurar una tarjeta para que el sistema pueda cobrar tu abono a fin de mes.'}
+                          ? 'Los cobros se realizarán automáticamente a tu medio de pago al finalizar tu ciclo.' 
+                          : 'Debes configurar un medio de pago para que el sistema pueda cobrar tu abono a fin de mes.'}
                       </p>
                       <Button 
                         onClick={async () => {
@@ -537,11 +799,120 @@ function PlanContentInner() {
                         }}
                         className={cn("w-full h-12 rounded-xl font-bold", hasCard ? "bg-muted text-foreground" : "bg-primary text-white")}
                       >
-                        {hasCard ? 'Cambiar Tarjeta' : 'Configurar Tarjeta Ahora'}
+                        {hasCard ? 'Cambiar Medio de Pago' : 'Configurar Medio de Pago'}
                       </Button>
                     </Card>
                   </div>
                 </div>
+
+                {/* Historial de Ciclos (Lista) */}
+                <div className="space-y-6 mt-12 pt-8 border-t border-muted">
+                  <h2 className="text-2xl font-black text-foreground flex items-center gap-2">
+                    <Receipt className="h-6 w-6 text-primary" /> Historial de Ciclos
+                  </h2>
+
+                  <div className="bg-white rounded-3xl border-2 shadow-sm overflow-hidden flex flex-col">
+                    {/* Fila: Ciclo en Curso */}
+                    <div 
+                      onClick={() => openCycleModal({ 
+                        cycleStart: cStart, 
+                        cycleEnd: cEnd, 
+                        fixedAmount: fixedAmount, 
+                        discountedFixedAmount: discountedFixedAmount,
+                        discountPercent: discountPercent,
+                        salesAmount: sales, 
+                        totalCharged: estimatedTotal,
+                        activeStudentsCount: studentCount,
+                        royaltiesAmount: royaltiesAmount,
+                        royaltiesPercentage: currentPercentage
+                      }, true)}
+                      className="flex items-center justify-between p-6 border-b hover:bg-muted/30 cursor-pointer transition-colors group"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-lg">Ciclo en Curso</span>
+                          <Badge variant="outline" className="text-[10px] uppercase tracking-widest text-primary border-primary/20 bg-primary/5">Estimado</Badge>
+                        </div>
+                        <span className="text-sm text-muted-foreground font-medium">
+                          {format(cStart, 'dd MMM yyyy')} - {format(cEnd, 'dd MMM yyyy')}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-8">
+                        <div className="hidden md:block text-right">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Abono Base</p>
+                          <p className="font-bold">${discountedFixedAmount.toFixed(2)}</p>
+                        </div>
+                        {sub?.type === 'mixed' && (
+                          <div className="hidden md:block text-right">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Regalías Prov.</p>
+                            <p className="font-bold text-muted-foreground">Variable</p>
+                          </div>
+                        )}
+                        <div className="text-right">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">A Pagar (Aprox)</p>
+                          <p className="font-black text-xl text-primary">${estimatedTotal.toFixed(2)}</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                    </div>
+
+                    {loadingInvoices && (
+                      <div className="py-12 flex justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/30" />
+                      </div>
+                    )}
+
+                    {/* Fila: Historial ya cobrado */}
+                    {invoices.map((inv) => {
+                      const sStart = inv.cycleStart?.toDate ? inv.cycleStart.toDate() : new Date(inv.cycleStart);
+                      const sEnd = inv.cycleEnd?.toDate ? inv.cycleEnd.toDate() : new Date(inv.cycleEnd);
+
+                      return (
+                        <div 
+                          key={inv.id}
+                          onClick={() => openCycleModal(inv, false)}
+                          className="flex items-center justify-between p-6 border-b hover:bg-muted/30 cursor-pointer transition-colors group last:border-b-0"
+                        >
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-lg">{format(sStart, 'MMMM yyyy')}</span>
+                              {getInvoiceStatus(inv.status)}
+                            </div>
+                            <span className="text-sm text-muted-foreground font-medium">
+                              {format(sStart, 'dd MMM yyyy')} - {format(sEnd, 'dd MMM yyyy')}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-8">
+                            <div className="hidden md:block text-right">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Abono Base</p>
+                              <p className="font-bold">${(inv.discountedFixedAmount ?? inv.fixedAmount ?? 0).toFixed(2)}</p>
+                            </div>
+                            {sub?.type === 'mixed' && (
+                              <div className="hidden md:block text-right">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Regalías</p>
+                                <p className="font-bold">${(inv.royaltiesAmount || 0).toFixed(2)}</p>
+                              </div>
+                            )}
+                            <div className="text-right">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Monto Cobrado</p>
+                              <p className="font-black text-xl">${(inv.totalCharged || 0).toFixed(2)}</p>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {!loadingInvoices && invoices.length === 0 && (
+                      <div className="px-8 py-12 text-center">
+                        <p className="text-muted-foreground font-medium">Aún no hay ciclos de facturación cerrados.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                </>
               );
             })()}
           </TabsContent>

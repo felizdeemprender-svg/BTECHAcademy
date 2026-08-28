@@ -91,8 +91,8 @@ export function SidebarNav() {
     {
       label: 'Landings',
       items: [
-        { name: 'Landings de Venta', href: '/mentoria/marketing/landings', roles: ['admin', 'marketing', 'mentor'], icon: LayoutIcon },
-        { name: 'Control de Embajadores', href: '/mentoria/influencers', roles: ['mentor', 'admin'], icon: Users },
+        { name: 'Landings de Venta', href: '/mentoria/marketing/landings', roles: ['admin', 'marketing', 'mentor'], subPermission: 'landing_access', icon: LayoutIcon },
+        { name: 'Control de Embajadores', href: '/mentoria/influencers', roles: ['mentor', 'admin'], subPermission: 'landing_access', icon: Users },
       ]
     },
     {
@@ -134,7 +134,7 @@ export function SidebarNav() {
       items: [
         { name: 'Evo', href: '/evo', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Sparkles },
         { name: 'Mi Perfil', href: '/settings', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Settings },
-        { name: 'Mi Suscripción', href: '/settings/subscriptions', roles: ['mentor', 'admin'], icon: CreditCard },
+        { name: 'Mi Plan y Facturación', href: '/dashboard/plan', roles: ['mentor', 'admin'], icon: CreditCard },
         { name: 'Métodos de Cobro', href: '/dashboard/payment-methods', roles: ['mentor', 'admin'], icon: Wallet },
         { name: 'Transferencias', href: '/dashboard/transfers', roles: ['mentor', 'admin'], icon: ArrowLeftRight },
         { name: 'Motores de Publicación', href: '/dashboard/publishing-engines', roles: ['mentor', 'admin'], icon: Cpu },
@@ -177,12 +177,14 @@ export function SidebarNav() {
 
       // Check sub-permission if exists (only for non-students)
       if (item.subPermission && !profile.roles.includes('alumno')) {
-        return isSuperAdmin || profile.mentorPermissions?.includes(item.subPermission);
+        // Allow admins to bypass subPermissions
+        return isSuperAdmin || profile.roles.includes('admin') || profile.mentorPermissions?.includes(item.subPermission);
       }
 
-      // Check marketing access
-      if (item.href.startsWith('/mentoria/marketing')) {
+      // Check marketing access (excluding landings which is covered by subPermission)
+      if (item.href.startsWith('/mentoria/marketing') && item.href !== '/mentoria/marketing/landings') {
         return isSuperAdmin ||
+          profile.roles.includes('admin') ||
           profile.roles.includes('marketing') ||
           canAccessMarketingTools(profile.mentorPermissions || []);
       }

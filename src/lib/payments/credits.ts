@@ -163,6 +163,28 @@ export async function deductCredits(
       expiresAt: expiresAt
     });
 
+    // 2.5 Registro de consumo diario permanente (Para gráficas históricas sin TTL)
+    const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const dailyRef = adminDb.collection('users').doc(targetUid).collection('ai_usage_daily').doc(dateStr);
+    
+    let category = 'text';
+    const actionLower = action.toLowerCase();
+    
+    if (isReferential) {
+      category = 'alumnos';
+    } else {
+      if (actionLower.includes('image')) category = 'image';
+      else if (actionLower.includes('video')) category = 'video';
+      else if (actionLower.includes('audio')) category = 'audio';
+    }
+
+    batch.set(dailyRef, {
+      timestamp: FieldValue.serverTimestamp(),
+      date: dateStr,
+      total: FieldValue.increment(amount),
+      [category]: FieldValue.increment(amount)
+    }, { merge: true });
+
     // 3. Cobro real
     if (contextRole === 'admin' && !ownerUid) {
       // Los administradores no pagan por su propio consumo personal

@@ -56,6 +56,11 @@ export async function setupTutorBilling(tutorId: string, email: string, baseUrl:
   // En un flujo real, buscarías en firestore si el tutor ya tiene stripeCustomerId.
   // Aquí creamos uno temporalmente o asumimos que lo creamos on the fly.
   
+  if ((process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_for_build').startsWith('sk_test_dummy')) {
+    // Si estamos en desarrollo sin una llave real, simulamos el éxito para no bloquear la UI
+    return { url: `${baseUrl}/admin/billing?success=true&session_id=mock_session_123`, customerId: 'cus_mock123' };
+  }
+
   const customer = await platformStripe.customers.create({
     email: email,
     metadata: { tutorId },

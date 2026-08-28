@@ -15,9 +15,10 @@ import { ResponsiveTable } from '@/components/ui/responsive-table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, User as UserIcon, GraduationCap, Search, Trash2, UserPlus, Loader2, Save, Globe, Info, KeyRound, Fingerprint, Target, Zap, Users as UsersIcon, ClipboardList, Check, Rocket, ExternalLink } from 'lucide-react';
+import { Shield, User as UserIcon, GraduationCap, Search, Trash2, UserPlus, Loader2, Save, Globe, Info, KeyRound, Fingerprint, Target, Zap, Users as UsersIcon, ClipboardList, Check, Rocket, ExternalLink, LayoutIcon, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { generatePermissionsFromPlan } from '@/lib/subscription-permissions';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -34,6 +35,9 @@ const MENTOR_SUB_PERMISSIONS = [
   { id: 'mentor_challenges', label: 'Desafíos (Mentor)', icon: Target, desc: 'Tareas y evaluación IA' },
   { id: 'students_view', label: 'Alumnos', icon: UsersIcon, desc: 'Comunidad y expedientes' },
   { id: 'followups_management', label: 'Seguimientos', icon: ClipboardList, desc: 'Sesiones y tutorías' },
+  { id: 'marketing_access', label: 'Campañas y Marketing', icon: Rocket, desc: 'Motor de emails' },
+  { id: 'landing_access', label: 'Landings y Embajadores', icon: LayoutIcon, desc: 'Sitios y afiliados' },
+  { id: 'automations_access', label: 'Evo Automations', icon: Sparkles, desc: 'Flujos automáticos' },
 ];
 
 export default function AdminUsersPage() {
@@ -178,7 +182,7 @@ export default function AdminUsersPage() {
       planName: plan.name, // Sincronizado con el sistema de facturación
       name: plan.name, // Mantener por compatibilidad con el Select local
       isEnterprise: plan.isEnterprise || false,
-      hasPremiumAI: plan.hasPremiumAI === true,
+      hasPremiumAI: plan.entitlements?.aiQuotas?.hasPremiumAI === true || plan.hasPremiumAI === true,
       startDate,
       endDate,
       hasCustomPage: plan.hasCustomPage || false,
@@ -186,32 +190,36 @@ export default function AdminUsersPage() {
       percentageRate: plan.percentageRate || 0,
       requiresFreeCourses: plan.requiresFreeCourses || false,
       freeCoursesCount: plan.freeCoursesCount || 0,
-      invitationsPerCourse: plan.invitationsPerCourse || 0,
+      invitationsPerCourse: plan.entitlements?.invitationsPerCourse || plan.invitationsPerCourse || 0,
       aiQuotas: {
-        totalCredits: plan.aiQuotas?.totalCredits || 0,
+        totalCredits: plan.entitlements?.aiQuotas?.totalCredits || plan.aiQuotas?.totalCredits || 0,
         usedCredits: 0 // Reset de uso al asignar nuevo plan manual si es necesario, o mantener previo
       },
-      rechargeOptions: plan.rechargeOptions || [],
+      rechargeOptions: plan.entitlements?.aiQuotas?.rechargeOptions || plan.rechargeOptions || [],
       observations: `Plan ${plan.name} asignado manualmente por admin`,
       autoRenew: true,
       limits: {
-        maxCourses: plan.limits?.maxCourses || 0,
-        maxStudents: plan.limits?.maxStudents || 0,
-        hasCustomBranding: plan.limits?.hasCustomBranding || false,
-        hasAnalytics: plan.limits?.hasAnalytics || false,
-        hasPrioritySupport: plan.limits?.hasPrioritySupport || false
+        maxCourses: plan.entitlements?.limits?.maxCourses || plan.limits?.maxCourses || 0,
+        maxStudents: plan.entitlements?.limits?.maxStudents || plan.limits?.maxStudents || 0,
+        hasCustomBranding: plan.entitlements?.limits?.hasCustomBranding || plan.limits?.hasCustomBranding || false,
+        hasAnalytics: plan.entitlements?.limits?.hasAnalytics || plan.limits?.hasAnalytics || false,
+        hasPrioritySupport: plan.entitlements?.limits?.hasPrioritySupport || plan.limits?.hasPrioritySupport || false
       },
       publicProfile: {
         enabled: plan.hasCustomPage || false,
-        showStats: true,
-        showContact: true,
-        allowPublicCourses: true
+        showStats: false,
+        showContact: false,
+        allowPublicCourses: false
       }
     };
+    
+    // Auto-populate mentor permissions based on the new plan
+    const planPermissions = generatePermissionsFromPlan(plan);
 
     setPendingUser({
       ...pendingUser,
-      subscription
+      subscription,
+      mentorPermissions: planPermissions
     });
   };
 
@@ -700,7 +708,7 @@ export default function AdminUsersPage() {
 
         {/* Dialog: Add User */}
         <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-          <DialogContent className="mw-xl">
+          <DialogContent className="max-w-xl">
             <div className="px-8 pt-8">
               <DialogTitle className="text-xl font-bold flex items-center gap-3"><UserPlus className="h-6 w-6 text-accent" /> Alta Institucional</DialogTitle>
               <DialogDescription className="text-muted-foreground text-xs mt-2 uppercase tracking-widest font-bold">Pre-registro de identidad y capacidades</DialogDescription>
@@ -797,7 +805,7 @@ export default function AdminUsersPage() {
 
         {/* Dialog: Permissions Editor */}
         <Dialog open={isPermissionsOpen} onOpenChange={setIsPermissionsOpen}>
-          <DialogContent className="mw-2xl">
+          <DialogContent className="max-w-3xl">
             <div className="px-10 pt-10 relative overflow-hidden">
               <Shield className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
               <DialogTitle className="text-2xl font-bold flex items-center gap-3 relative z-10"><Shield className="h-7 w-7 text-accent" /> Gestionar Permisos</DialogTitle>
@@ -823,7 +831,7 @@ export default function AdminUsersPage() {
                     {[
                       { id: 'alumno', label: 'Alumno', icon: UserIcon, desc: 'Acceso al catálogo y progreso educativo.' },
                       { id: 'mentor', label: 'Mentor', icon: GraduationCap, desc: 'Gestión académica y creación de contenidos.' },
-                      { id: 'marketing', label: 'Marketing', icon: Rocket, desc: 'Gestión de ventas y páginas de aterrizaje.' },
+                      { id: 'marketing', label: 'Marketing', icon: Rocket, desc: 'Gestión de campañas y flujos de marketing.' },
                       { id: 'admin', label: 'Admin', icon: Shield, desc: 'Control total de la infraestructura global.' }
                     ].map((role) => {
                       const isSuperAdminAccount = pendingUser?.email?.toLowerCase() === SUPER_ADMIN_EMAIL;
