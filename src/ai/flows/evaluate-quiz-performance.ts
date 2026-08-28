@@ -88,7 +88,7 @@ const evaluateQuizPerformanceFlow = getAi().defineFlow(
     inputSchema: EvaluationInputSchema,
     outputSchema: EvaluationOutputSchema,
   },
-  async (input) => {
+  async (input: EvaluationInput) => {
     // Combinamos las preguntas y respuestas en un formato plano y fácil de leer para Handlebars
     const evaluationData = input.questions.map((q, i) => {
       // Las respuestas vienen en un objeto donde las llaves son los índices como strings
