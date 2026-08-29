@@ -227,11 +227,12 @@ export function VideoProductionPanel({
             </SelectTrigger>
             <SelectContent className="bg-white border-border text-foreground">
               <SelectItem value="off" className="text-xs hover:bg-muted focus:bg-muted">Desactivada</SelectItem>
-              <SelectItem value="dalia" className="text-xs hover:bg-muted focus:bg-muted">Dalia (Soft ES)</SelectItem>
-              <SelectItem value="jorge" className="text-xs hover:bg-muted focus:bg-muted">Jorge (Pro ES)</SelectItem>
-              <SelectItem value="mateo" className="text-xs hover:bg-muted focus:bg-muted">Alvaro (Mateo)</SelectItem>
-              <SelectItem value="elena" className="text-xs hover:bg-muted focus:bg-muted">Elena (Soft MX)</SelectItem>
-              <SelectItem value="gerardo" className="text-xs hover:bg-muted focus:bg-muted">Gerardo (Pro MX)</SelectItem>
+              <SelectItem value="mateo" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Alvaro/Mateo (Gratis)</SelectItem>
+              <SelectItem value="elena" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Elena (Gratis)</SelectItem>
+              <SelectItem value="carlos" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Carlos (Gratis)</SelectItem>
+              <SelectItem value="dalia" className="text-xs hover:bg-muted focus:bg-muted text-warn">Dalia (Premium)</SelectItem>
+              <SelectItem value="jorge" className="text-xs hover:bg-muted focus:bg-muted text-warn">Jorge (Premium)</SelectItem>
+              <SelectItem value="gerardo" className="text-xs hover:bg-muted focus:bg-muted text-warn">Gerardo (Premium)</SelectItem>
             </SelectContent>
           </Select>
         </div>

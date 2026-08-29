@@ -82,231 +82,191 @@ export default function AiPricingAdminPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-8 pb-20">
+      <div className="max-w-6xl mx-auto space-y-8 pb-20">
         <header>
           <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Ecosistema Económico IA</h1>
           <p className="text-muted-foreground mt-2">Configura los costos base de proveedores y tu margen de rentabilidad.</p>
         </header>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="group transition-all">
-            <CardHeader className="bg-muted border-b pb-6 relative">
-              <div className="absolute top-4 right-4 p-2 bg-primary/15 rounded-xl text-primary">
-                <BrainCircuit className="w-6 h-6" />
-              </div>
-              <CardTitle className="text-xl font-black text-foreground">Generación de Texto (Omni)</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium">Costo por 1 Millón de tokens</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01"
-                    value={config.geminiPricePerMillionTokens} 
-                    onChange={e => handleNumChange('geminiPricePerMillionTokens', e.target.value)} 
-                    className="font-bold border-muted focus:border-primary"
-                   size="lg" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
-                  <div className="relative">
-                    <Input 
-                      type="number" 
-                      value={config.geminiMarkupPercentage} 
-                      onChange={e => handleNumChange('geminiMarkupPercentage', e.target.value)} 
-                      className="pl-8 font-bold border-muted focus:border-primary"
-                     size="lg" />
-                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-5 rounded-2xl bg-primary/10 border border-primary/15 flex justify-between items-center">
-                <span className="text-xs font-black text-foreground uppercase">Precio de Venta</span>
-                <span className="text-2xl font-black text-primary">
-                  ${(config.geminiPricePerMillionTokens * (1 + config.geminiMarkupPercentage / 100)).toFixed(4)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+        <Card className="overflow-hidden border-muted">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left whitespace-nowrap">
+              <thead className="bg-muted text-muted-foreground uppercase text-[10px] font-black tracking-widest">
+                <tr>
+                  <th className="px-6 py-5 rounded-tl-xl">Motor de IA</th>
+                  <th className="px-6 py-5">Unidad de Medida</th>
+                  <th className="px-6 py-5">Costo Real (A Nosotros) USD</th>
+                  <th className="px-6 py-5">Margen (%)</th>
+                  <th className="px-6 py-5 rounded-tr-xl">Cobro al Tutor USD</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-muted">
+                {/* ---------------- CORTE: TEXTO ---------------- */}
+                <tr className="bg-muted/50 border-t-4 border-muted">
+                  <td colSpan={5} className="px-6 py-2 text-xs font-black text-muted-foreground uppercase tracking-widest">
+                    Generación de Texto & LLMs
+                  </td>
+                </tr>
+                {/* Texto */}
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-primary/15 rounded-xl text-primary"><BrainCircuit className="w-5 h-5" /></div>
+                      <span className="font-bold text-foreground text-base">Texto (Gemini AI)</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 font-medium text-muted-foreground">Por 1 Millón tokens</td>
+                  <td className="px-6 py-5">
+                    <Input type="number" step="0.01" value={config.geminiPricePerMillionTokens} onChange={e => handleNumChange('geminiPricePerMillionTokens', e.target.value)} className="w-28 font-bold h-10 border-muted focus:border-primary" />
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="relative w-28">
+                      <Input type="number" value={config.geminiMarkupPercentage} onChange={e => handleNumChange('geminiMarkupPercentage', e.target.value)} className="pl-8 font-bold h-10 border-muted focus:border-primary" />
+                      <span className="absolute left-3 top-3 text-muted-foreground font-black text-xs">%</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="font-black text-xl text-primary">${(config.geminiPricePerMillionTokens * (1 + config.geminiMarkupPercentage / 100)).toFixed(4)}</span>
+                  </td>
+                </tr>
 
-          <Card className="group transition-all">
-            <CardHeader className="bg-muted border-b pb-6 relative">
-              <div className="absolute top-4 right-4 p-2 bg-warn/15 rounded-xl text-warn">
-                <Mic className="w-6 h-6" />
-              </div>
-              <CardTitle className="text-xl font-black text-foreground">Voces TTS (Pagas)</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium">Costo por 1 Millón de caracteres (Voces Edge son gratuitas)</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
-                  <Input 
-                    type="number" 
-                    step="0.1"
-                    value={config.ttsPricePerMillionChars} 
-                    onChange={e => handleNumChange('ttsPricePerMillionChars', e.target.value)} 
-                    className="font-bold border-muted focus:border-warn"
-                   size="lg" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
-                  <div className="relative">
-                    <Input 
-                      type="number" 
-                      value={config.ttsMarkupPercentage} 
-                      onChange={e => handleNumChange('ttsMarkupPercentage', e.target.value)} 
-                      className="pl-8 font-bold border-muted focus:border-warn"
-                     size="lg" />
-                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-5 rounded-2xl bg-warn/10 border border-warn/15 flex justify-between items-center">
-                <span className="text-xs font-black text-warn uppercase">Precio de Venta</span>
-                <span className="text-2xl font-black text-warn">
-                  ${(config.ttsPricePerMillionChars * (1 + config.ttsMarkupPercentage / 100)).toFixed(2)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                {/* ---------------- CORTE: AUDIO ---------------- */}
+                <tr className="bg-muted/50 border-t-4 border-muted">
+                  <td colSpan={5} className="px-6 py-2 text-xs font-black text-muted-foreground uppercase tracking-widest">
+                    Audio y Voces (Text-to-Speech)
+                  </td>
+                </tr>
+                {/* TTS Edge (Gratuito) */}
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-success/15 rounded-xl text-success"><Mic className="w-5 h-5" /></div>
+                      <div>
+                        <span className="font-bold text-foreground text-base block">Voces Estándar (Edge)</span>
+                        <span className="text-[10px] text-muted-foreground">Mateo, Elena, Carlos</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 font-medium text-muted-foreground">Cualquier uso</td>
+                  <td className="px-6 py-5"><span className="text-muted-foreground font-bold pl-4">$0.00</span></td>
+                  <td className="px-6 py-5"><span className="text-muted-foreground font-bold pl-4">0%</span></td>
+                  <td className="px-6 py-5"><span className="font-black text-xl text-success">$0.00</span></td>
+                </tr>
 
-        <div className="grid md:grid-cols-2 gap-6 mt-6">
-          <Card className="group transition-all">
-            <CardHeader className="bg-muted border-b pb-6 relative">
-              <div className="absolute top-4 right-4 p-2 bg-danger/15 rounded-xl text-danger">
-                <ImageIcon className="w-6 h-6" />
-              </div>
-              <CardTitle className="text-xl font-black text-foreground">Imágenes (SDXL)</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium">Costo por cada 100 imágenes</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
-                  <Input 
-                    type="number" 
-                    step="0.1"
-                    value={config.imagePricePerHundred} 
-                    onChange={e => handleNumChange('imagePricePerHundred', e.target.value)} 
-                    className="font-bold border-muted focus:border-danger"
-                   size="lg" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
-                  <div className="relative">
-                    <Input 
-                      type="number" 
-                      value={config.imageMarkupPercentage} 
-                      onChange={e => handleNumChange('imageMarkupPercentage', e.target.value)} 
-                      className="pl-8 font-bold border-muted focus:border-danger"
-                     size="lg" />
-                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-5 rounded-2xl bg-danger/10 border border-danger/15 flex justify-between items-center">
-                <span className="text-xs font-black text-danger uppercase">Precio de Venta</span>
-                <span className="text-2xl font-black text-danger">
-                  ${(config.imagePricePerHundred * (1 + config.imageMarkupPercentage / 100)).toFixed(2)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+                {/* TTS Premium */}
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-warn/15 rounded-xl text-warn"><Mic className="w-5 h-5" /></div>
+                      <div>
+                        <span className="font-bold text-foreground text-base block">Voces Premium (Google TTS)</span>
+                        <span className="text-[10px] text-muted-foreground">Modelos Neural2 Alta Fidelidad</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 font-medium text-muted-foreground">Por 1 Millón chars</td>
+                  <td className="px-6 py-5">
+                    <Input type="number" step="0.1" value={config.ttsPricePerMillionChars} onChange={e => handleNumChange('ttsPricePerMillionChars', e.target.value)} className="w-28 font-bold h-10 border-muted focus:border-warn" />
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="relative w-28">
+                      <Input type="number" value={config.ttsMarkupPercentage} onChange={e => handleNumChange('ttsMarkupPercentage', e.target.value)} className="pl-8 font-bold h-10 border-muted focus:border-warn" />
+                      <span className="absolute left-3 top-3 text-muted-foreground font-black text-xs">%</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="font-black text-xl text-warn">${(config.ttsPricePerMillionChars * (1 + config.ttsMarkupPercentage / 100)).toFixed(2)}</span>
+                  </td>
+                </tr>
 
-          <Card className="group transition-all">
-            <CardHeader className="bg-muted border-b pb-6 relative">
-              <div className="absolute top-4 right-4 p-2 bg-blue-100 rounded-xl text-blue-600">
-                <Film className="w-6 h-6" />
-              </div>
-              <CardTitle className="text-xl font-black text-foreground">Video Ensamble (FFmpeg)</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium">Costo por Minuto de Renderizado Clásico</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01"
-                    value={config.videoPricePerMinute} 
-                    onChange={e => handleNumChange('videoPricePerMinute', e.target.value)} 
-                    className="font-bold border-muted focus:border-blue-500"
-                   size="lg" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
-                  <div className="relative">
-                    <Input 
-                      type="number" 
-                      value={config.videoMarkupPercentage} 
-                      onChange={e => handleNumChange('videoMarkupPercentage', e.target.value)} 
-                      className="pl-8 font-bold border-muted focus:border-blue-500"
-                     size="lg" />
-                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-5 rounded-2xl bg-blue-50 border border-blue-100 flex justify-between items-center">
-                <span className="text-xs font-black text-blue-900 uppercase">Precio de Venta</span>
-                <span className="text-2xl font-black text-blue-600">
-                  ${(config.videoPricePerMinute * (1 + config.videoMarkupPercentage / 100)).toFixed(2)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+                {/* ---------------- CORTE: IMÁGENES ---------------- */}
+                <tr className="bg-muted/50 border-t-4 border-muted">
+                  <td colSpan={5} className="px-6 py-2 text-xs font-black text-muted-foreground uppercase tracking-widest">
+                    Generación de Imágenes
+                  </td>
+                </tr>
+                {/* Imagen */}
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-danger/15 rounded-xl text-danger"><ImageIcon className="w-5 h-5" /></div>
+                      <span className="font-bold text-foreground text-base">Imágenes (Google Imagen)</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 font-medium text-muted-foreground">Por 100 imágenes</td>
+                  <td className="px-6 py-5">
+                    <Input type="number" step="0.1" value={config.imagePricePerHundred} onChange={e => handleNumChange('imagePricePerHundred', e.target.value)} className="w-28 font-bold h-10 border-muted focus:border-danger" />
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="relative w-28">
+                      <Input type="number" value={config.imageMarkupPercentage} onChange={e => handleNumChange('imageMarkupPercentage', e.target.value)} className="pl-8 font-bold h-10 border-muted focus:border-danger" />
+                      <span className="absolute left-3 top-3 text-muted-foreground font-black text-xs">%</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="font-black text-xl text-danger">${(config.imagePricePerHundred * (1 + config.imageMarkupPercentage / 100)).toFixed(2)}</span>
+                  </td>
+                </tr>
 
-          <Card className="group transition-all">
-            <CardHeader className="bg-muted border-b pb-6 relative">
-              <div className="absolute top-4 right-4 p-2 bg-indigo-100 rounded-xl text-indigo-600">
-                <Film className="w-6 h-6" />
-              </div>
-              <CardTitle className="text-xl font-black text-foreground">Video IA (Omni/Vertex)</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium">Costo por Minuto de Generación IA pura</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Costo Base (USD)</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01"
-                    value={config.omniPricePerMinute} 
-                    onChange={e => handleNumChange('omniPricePerMinute', e.target.value)} 
-                    className="font-bold border-muted focus:border-indigo-500"
-                   size="lg" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Margen (%)</Label>
-                  <div className="relative">
-                    <Input 
-                      type="number" 
-                      value={config.omniMarkupPercentage} 
-                      onChange={e => handleNumChange('omniMarkupPercentage', e.target.value)} 
-                      className="pl-8 font-bold border-muted focus:border-indigo-500"
-                     size="lg" />
-                    <span className="absolute left-3 top-3 text-muted-foreground font-black">%</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-5 rounded-2xl bg-indigo-50 border border-indigo-100 flex justify-between items-center">
-                <span className="text-xs font-black text-indigo-600 uppercase">Precio de Venta</span>
-                <span className="text-2xl font-black text-indigo-600">
-                  ${(config.omniPricePerMinute * (1 + config.omniMarkupPercentage / 100)).toFixed(2)}
-                </span>
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-2">Nota: Al generar video IA, al usuario se le cobrará este costo más el costo de Ensamble (FFmpeg) de forma sumada.</p>
-            </CardContent>
-          </Card>
-        </div>
+                {/* ---------------- CORTE: VIDEO ---------------- */}
+                <tr className="bg-muted/50 border-t-4 border-muted">
+                  <td colSpan={5} className="px-6 py-2 text-xs font-black text-muted-foreground uppercase tracking-widest">
+                    Producción de Video
+                  </td>
+                </tr>
+                {/* Video FFmpeg */}
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-blue-100 rounded-xl text-blue-600"><Film className="w-5 h-5" /></div>
+                      <span className="font-bold text-foreground text-base">Video (Ensamble FFmpeg)</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 font-medium text-muted-foreground">Por Minuto Render</td>
+                  <td className="px-6 py-5">
+                    <Input type="number" step="0.01" value={config.videoPricePerMinute} onChange={e => handleNumChange('videoPricePerMinute', e.target.value)} className="w-28 font-bold h-10 border-muted focus:border-blue-500" />
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="relative w-28">
+                      <Input type="number" value={config.videoMarkupPercentage} onChange={e => handleNumChange('videoMarkupPercentage', e.target.value)} className="pl-8 font-bold h-10 border-muted focus:border-blue-500" />
+                      <span className="absolute left-3 top-3 text-muted-foreground font-black text-xs">%</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="font-black text-xl text-blue-600">${(config.videoPricePerMinute * (1 + config.videoMarkupPercentage / 100)).toFixed(2)}</span>
+                  </td>
+                </tr>
+
+                {/* Video Omni */}
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-indigo-100 rounded-xl text-indigo-600"><Film className="w-5 h-5" /></div>
+                      <div>
+                        <span className="font-bold text-foreground text-base block">Video (Google Veo 2)</span>
+                        <span className="text-[10px] text-muted-foreground">Se suma al costo de FFmpeg</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 font-medium text-muted-foreground">Por Minuto Generado</td>
+                  <td className="px-6 py-5">
+                    <Input type="number" step="0.01" value={config.omniPricePerMinute} onChange={e => handleNumChange('omniPricePerMinute', e.target.value)} className="w-28 font-bold h-10 border-muted focus:border-indigo-500" />
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="relative w-28">
+                      <Input type="number" value={config.omniMarkupPercentage} onChange={e => handleNumChange('omniMarkupPercentage', e.target.value)} className="pl-8 font-bold h-10 border-muted focus:border-indigo-500" />
+                      <span className="absolute left-3 top-3 text-muted-foreground font-black text-xs">%</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="font-black text-xl text-indigo-600">${(config.omniPricePerMinute * (1 + config.omniMarkupPercentage / 100)).toFixed(2)}</span>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </Card>
 
         <div className="flex justify-end pt-8">
           <Button 
