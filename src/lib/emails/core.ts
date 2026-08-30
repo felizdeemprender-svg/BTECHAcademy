@@ -1,6 +1,6 @@
 import { getAdminFirestore } from '@/firebase/admin';
 
-export const PLATFORM_URL = 'https://felizdeemprender.com'; // O el dominio que uses
+export const PLATFORM_URL = 'https://fastoria.com.ar'; // O el dominio que uses
 export const BRAND_COLOR = '#3B2D86';
 export const BRAND_NAME = 'Feliz de Emprender';
 export const ADMIN_SENDER_NAME = 'Equipo de Feliz de Emprender';

@@ -18,11 +18,11 @@ export async function sendWelcomeEmailServer(params: WelcomeEmailParams): Promis
   }
 
   const subject = `¡Felicidades por tu ingreso a ${courseTitle}! 🚀`;
-  const signature = mentorName || BRAND_NAME;
+  const signature = mentorName || 'El equipo de Fastoria';
 
   const header = `
     <div style="text-align: center; margin-bottom: 24px;">
-      <h1 style="color: ${BRAND_COLOR}; margin: 0; font-size: 26px;">¡Bienvenido/a a ${BRAND_NAME}!</h1>
+      <h1 style="color: ${BRAND_COLOR}; margin: 0; font-size: 26px;">¡${mentorName ? mentorName + ' te da la bienvenida' : 'Bienvenido/a'} a Fastoria!</h1>
     </div>
   `;
 
@@ -37,7 +37,7 @@ export async function sendWelcomeEmailServer(params: WelcomeEmailParams): Promis
     </p>
     ${ctaButton('Acceder a mis cursos', `${PLATFORM_URL}/auth/login`)}
     <p style="font-size: 14px; color: #6b7280; line-height: 1.6; border-top: 1px solid #f3f4f6; padding-top: 16px; margin-top: 24px;">
-      Si tenés alguna duda, respondé a este correo y te ayudamos.
+      Si tenés alguna duda, por favor comunicate directamente con tu tutor. (No respondas a este correo).
     </p>
   `;
 
@@ -47,8 +47,7 @@ export async function sendWelcomeEmailServer(params: WelcomeEmailParams): Promis
     to: normalizedEmail,
     subject,
     html,
-    fromName: signature,
-    replyTo: mentorEmail
+    fromName: signature
   });
 
   console.log(`[WelcomeEmail] Encolado para: ${normalizedEmail}`);
