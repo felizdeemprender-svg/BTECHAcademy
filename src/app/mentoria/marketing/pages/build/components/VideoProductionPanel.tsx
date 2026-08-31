@@ -227,12 +227,17 @@ export function VideoProductionPanel({
             </SelectTrigger>
             <SelectContent className="bg-white border-border text-foreground">
               <SelectItem value="off" className="text-xs hover:bg-muted focus:bg-muted">Desactivada</SelectItem>
-              <SelectItem value="mateo" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Alvaro/Mateo (Gratis)</SelectItem>
-              <SelectItem value="elena" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Elena (Gratis)</SelectItem>
-              <SelectItem value="carlos" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Carlos (Gratis)</SelectItem>
-              <SelectItem value="dalia" className="text-xs hover:bg-muted focus:bg-muted text-warn">Dalia (Premium)</SelectItem>
-              <SelectItem value="jorge" className="text-xs hover:bg-muted focus:bg-muted text-warn">Jorge (Premium)</SelectItem>
-              <SelectItem value="gerardo" className="text-xs hover:bg-muted focus:bg-muted text-warn">Gerardo (Premium)</SelectItem>
+              <SelectItem value="alvaro" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Alvaro (España - Hombre)</SelectItem>
+              <SelectItem value="elvira" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Elvira (España - Mujer)</SelectItem>
+              <SelectItem value="ximena" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Ximena (España - Mujer)</SelectItem>
+              <SelectItem value="paloma" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Paloma (Latino - Mujer)</SelectItem>
+              <SelectItem value="alonso" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Alonso (Latino - Hombre)</SelectItem>
+              <SelectItem value="jorge" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Jorge (México - Hombre)</SelectItem>
+              <SelectItem value="dalia" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Dalia (México - Mujer)</SelectItem>
+              <SelectItem value="tomas" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Tomas (Argentina - Hombre)</SelectItem>
+              <SelectItem value="elena" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Elena (Argentina - Mujer)</SelectItem>
+              <SelectItem value="gonzalo" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Gonzalo (Colombia - Hombre)</SelectItem>
+              <SelectItem value="salome" className="text-xs hover:bg-muted focus:bg-muted text-success font-bold">Salomé (Colombia - Mujer)</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -534,24 +534,41 @@ function PlanContentInner() {
                   <p className="text-sm text-muted-foreground font-medium">Consumo de tokens para creación de contenidos, imágenes y videos.</p>
                 </div>
 
-                <div className="md:col-span-2 flex items-center gap-12">
-                  <div className="text-center space-y-1">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Saldo Disponible</p>
-                    <p className="text-5xl font-black text-foreground">
-                      {(((sub?.aiQuotas?.totalCredits || 0) - (sub?.aiQuotas?.usedCredits || 0)) + (profile?.credits?.balance || 0)).toFixed(5)}
+                <div className="md:col-span-2 grid grid-cols-2 gap-4 md:gap-8 items-center">
+                  <div className="text-center space-y-3">
+                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">Saldo Abono (Suscripción)</p>
+                    <p className="text-4xl md:text-5xl font-black text-foreground">
+                      {((sub?.aiQuotas?.totalCredits || 0) - (sub?.aiQuotas?.usedCredits || 0)).toFixed(5)}
                     </p>
-                  </div>
-                  <div className="h-16 w-px bg-muted hidden md:block" />
-                  <div className="flex-1 space-y-4">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                      <span className="text-muted-foreground">Progreso de Consumo</span>
-                      <span className="text-primary">Total: {sub?.aiQuotas?.totalCredits || 0}</span>
+                    <div className="space-y-1 w-full max-w-[180px] mx-auto pt-2">
+                      <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                        <span>Progreso</span>
+                        <span>Total: {sub?.aiQuotas?.totalCredits || 0}</span>
+                      </div>
+                      <Progress 
+                        value={sub?.aiQuotas?.totalCredits > 0 ? ((sub?.aiQuotas?.usedCredits || 0) / sub?.aiQuotas?.totalCredits) * 100 : 0} 
+                        className="h-2 bg-muted" 
+                        indicatorClassName="bg-primary" 
+                      />
                     </div>
-                    <Progress 
-                      value={sub?.aiQuotas?.totalCredits > 0 ? ((sub?.aiQuotas?.usedCredits || 0) / sub?.aiQuotas?.totalCredits) * 100 : 0} 
-                      className="h-3 bg-muted" 
-                      indicatorClassName="bg-warn" 
-                    />
+                  </div>
+                  
+                  <div className="text-center space-y-3 border-l border-muted pl-4 md:pl-8">
+                    <p className="text-[10px] font-black text-success uppercase tracking-widest">Saldo Extra (Recargas)</p>
+                    <p className="text-4xl md:text-5xl font-black text-foreground">
+                      {(profile?.credits?.balance || 0).toFixed(5)}
+                    </p>
+                    <div className="space-y-1 w-full max-w-[180px] mx-auto pt-2">
+                      <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                        <span>Estado</span>
+                        <span>Ilimitado</span>
+                      </div>
+                      <Progress 
+                        value={100} 
+                        className="h-2 bg-muted" 
+                        indicatorClassName="bg-success" 
+                      />
+                    </div>
                   </div>
                 </div>
 

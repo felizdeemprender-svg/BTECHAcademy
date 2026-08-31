@@ -250,6 +250,8 @@ export default function V2LandingEditorPage() {
             contextHint,
             engine: 'free',
             channel: 'landing',
+            uid: profile?.uid,
+            role: profile?.role,
           }),
         });
 

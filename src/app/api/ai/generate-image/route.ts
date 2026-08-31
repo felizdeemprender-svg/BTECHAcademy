@@ -3,7 +3,7 @@ import { generateImagePromptFlow } from '@/ai/flows/generate-image-prompt';
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, keywords, courseTitle, contextHint, engine, channel } = await req.json();
+    const { prompt, keywords, courseTitle, contextHint, engine, channel, uid, role } = await req.json();
 
     const finalKeywords = keywords || 'education, online course, professional';
     let finalPrompt = prompt || 'professional corporate training photo';
@@ -72,6 +72,18 @@ export async function POST(req: NextRequest) {
     } else {
       throw new Error('La IA Premium no devolvió una imagen en el formato esperado.');
     }
+
+    // Cobrar por la imagen generada
+    if (uid) {
+      try {
+        const { calculateImageCost, deductCredits } = await import('@/lib/payments/credits');
+        const cost = await calculateImageCost(1);
+        await deductCredits(uid, cost, 'image_generation_premium', role || 'tutor');
+      } catch (err) {
+        console.warn('[generate-image] No se pudo deducir créditos:', err);
+      }
+    }
+
     return NextResponse.json({ 
       imageDataUrl: `data:image/jpeg;base64,${base64Img}`, 
       generatedPrompt: promptPremium 

@@ -68,7 +68,7 @@ export const generateVideoFlow = ai.defineFlow({
   let finalVideoPath: string | undefined;
 
   // 1. Cobro por adelantado (Centralización de facturación en Genkit)
-  const isAdmin = role === 'admin' || role === 'tutor';
+  const isAdmin = role === 'admin';
   if (uid && !isSmokeTest && !isAdmin) {
     try {
       const cost = await calculateVideoCost(totalDuration, 'omni');

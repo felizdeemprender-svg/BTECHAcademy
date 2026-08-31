@@ -408,9 +408,9 @@ async function runBranchF(jobId: string, body: GenerateRequest, adn: any, landin
   // Billing (mismo patrón que Branch B)
   try {
     const { calculateVideoCost, deductCredits } = await import('@/lib/payments/credits');
-    const isAdmin = role === 'admin' || role === 'tutor';
+    const isAdmin = role === 'admin';
     if (uid && !body.isSmokeTest && !isAdmin) {
-      const cost = await calculateVideoCost(durationSeconds);
+      const cost = await calculateVideoCost(durationSeconds, 'omni');
       await deductCredits(uid, cost, 'video_long', role || 'alumno');
     }
   } catch (e) {

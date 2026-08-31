@@ -203,6 +203,14 @@ export async function deductCredits(
           'subscription.aiQuotas.usedCredits': FieldValue.increment(amount),
           'credits.lastUsed': FieldValue.serverTimestamp()
         });
+      } else if (subAvailable > 0) {
+        // Prioridad 1.5: Agotar Suscripción y descontar el resto del Saldo Extra
+        const remainder = amount - subAvailable;
+        batch.update(targetRef, {
+          'subscription.aiQuotas.usedCredits': FieldValue.increment(subAvailable),
+          'credits.balance': FieldValue.increment(-remainder),
+          'credits.lastUsed': FieldValue.serverTimestamp()
+        });
       } else {
         // Prioridad 2: Saldo Extra
         batch.update(targetRef, {

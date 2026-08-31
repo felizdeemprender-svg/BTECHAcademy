@@ -87,7 +87,9 @@ export function ImageEditor({
           courseTitle: courseTitle || '',
           contextHint: aiPromptHint || (description ? `Descripción: ${description}. ` : '') + (label || ''),
           engine,
-          channel
+          channel,
+          uid: profile?.uid,
+          role: profile?.role
         }),
       });
 

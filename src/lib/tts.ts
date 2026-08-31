@@ -22,18 +22,18 @@ if (!existsSync(CACHE_DIR)) mkdirSync(CACHE_DIR, { recursive: true });
 const EDGE_VOICE_MAPPING: Record<string, string> = {
   'sofia': 'es-ES-ElviraNeural',
   'mateo': 'es-ES-AlvaroNeural',
-  'ximena': 'es-MX-DaliaNeural',
   'diego': 'es-MX-JorgeNeural',
   'dalia': 'es-MX-DaliaNeural',
   'jorge': 'es-MX-JorgeNeural',
   'alvaro': 'es-ES-AlvaroNeural',
   'elvira': 'es-ES-ElviraNeural',
-  'paloma': 'es-ES-PalomaNeural',
-  'abrils': 'es-ES-AbrilNeural',
-  'esteban': 'es-AR-EstebanNeural',
+  'ximena': 'es-ES-XimenaNeural',
+  'paloma': 'es-US-PalomaNeural',
+  'alonso': 'es-US-AlonsoNeural',
+  'tomas': 'es-AR-TomasNeural',
   'elena': 'es-AR-ElenaNeural',
-  'andres': 'es-CO-AndresNeural',
-  'gonzalo': 'es-CL-GonzaloNeural'
+  'gonzalo': 'es-CO-GonzaloNeural',
+  'salome': 'es-CO-SalomeNeural'
 };
 
 // 🎙️ Mapeo de Voces para Google (Legacy)

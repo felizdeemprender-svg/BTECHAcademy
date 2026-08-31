@@ -35,7 +35,7 @@ function getGenkitInstance() {
 /**
  * Proxy Global: Intercepta todas las llamadas a ai.generate() para auditarlas automáticamente.
  */
-export const ai = new Proxy({}, {
+export const ai: any = new Proxy({}, {
   get(target, prop, receiver) {
     if (prop === 'generate') {
       return (...args: any[]) => (generateWithAuditing as any)(...args);

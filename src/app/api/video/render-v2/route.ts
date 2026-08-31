@@ -277,11 +277,22 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
     // ── PASO 6: Facturación ─────────────────────────────────────────────────
     try {
       const { calculateVideoCost, deductCredits } = await import('@/lib/payments/credits');
-      const isAdmin = role === 'admin' || role === 'tutor';
+      const isAdmin = role === 'admin';
       if (uid && !isSmokeTest && !isAdmin) {
         const totalDuration = engineSlices.reduce((acc, s) => acc + s.duration, 0);
         const cost = await calculateVideoCost(totalDuration);
+        
+        console.log("--- [DEBUG IA] AUDITORÍA AUTOMÁTICA (FFMPEG/RENDER V2) ---");
+        console.log(`> Usuario: ${uid} (${role})`);
+        console.log(`> Acción Detectada: ${isCarousel ? 'video_carousel_v2' : 'video_render_v2'}`);
+        console.log(`> Duración Total: ${totalDuration.toFixed(2)}s`);
+        console.log(`> Costo Proveedor: $${cost.providerCost}`);
+        console.log(`> Cobro al Tutor: $${cost.billedCost}`);
+        console.log("----------------------------------------------------------");
+        
         await deductCredits(uid, cost, isCarousel ? 'video_carousel_v2' : 'video_render_v2', role || 'alumno');
+      } else if (isAdmin) {
+        console.log(`>>> [BILLING] Consumo de Admin (Gratis): render-v2 para UID ${uid}`);
       }
     } catch (e) {
       console.error('[Billing V2] Error al procesar cobro:', e);
