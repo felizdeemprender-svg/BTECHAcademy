@@ -57,6 +57,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { FileUploadArea } from '@/components/ui/file-upload-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { evaluateQuizPerformance } from '@/ai/flows/evaluate-quiz-performance';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -147,8 +148,10 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
     minutes: '',
     isCompleted: false,
     calendarEventId: '',
-    calendarEventLink: ''
+    calendarEventLink: '',
+    files: [] as {name: string, url: string}[]
   });
+  const [sessionUploadFiles, setSessionUploadFiles] = useState<File[]>([]);
 
   const [answeringTaskId, setAnsweringTaskId] = useState<string | null>(null);
   const [studentAnswer, setStudentAnswer] = useState('');
@@ -398,8 +401,10 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       minutes: session.minutes || '',
       isCompleted: session.isCompleted || false,
       calendarEventId: session.calendarEventId || '',
-      calendarEventLink: session.calendarEventLink || ''
+      calendarEventLink: session.calendarEventLink || '',
+      files: session.files || []
     });
+    setSessionUploadFiles([]);
   };
 
   const handleSaveSession = async () => {
@@ -443,6 +448,15 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         (data as any).calendarEventId = event.id;
         (data as any).calendarEventLink = event.htmlLink;
       }
+
+      let uploadedFiles = [...(sessionForm.files || [])];
+      for (const file of sessionUploadFiles) {
+        const fileRef = ref(storage, `followups/${followUpId}/sessions/${editingSession.id}/${Date.now()}_${file.name}`);
+        const uploadResult = await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(uploadResult.ref);
+        uploadedFiles.push({ name: file.name, url });
+      }
+      (data as any).files = uploadedFiles;
 
       await updateDoc(ref, data);
       
@@ -728,7 +742,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
           enrolledAt: serverTimestamp(),
         });
 
-        toast({ title: 'Alumno Añadido a la Cohorte' });
+        toast({ title: 'Alumno Añadido al Grupo' });
         setIsAddStudentOpen(false);
         setManualStudentEmail('');
         setGroupEnrollments(prev => [...prev, {
@@ -787,7 +801,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         await batch.commit();
 
         if (newEnrollments.length > 0) {
-            toast({ title: `${newEnrollments.length} alumnos añadidos a la cohorte` });
+            toast({ title: `${newEnrollments.length} alumnos añadidos al grupo` });
             setGroupEnrollments(prev => [...prev, ...newEnrollments]);
         } else {
             toast({ title: 'No se añadieron alumnos (ya estaban inscritos)' });
@@ -817,7 +831,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">{followUp?.title}</h1>
                 {followUp?.type === 'group' ? (
-                  <Badge className="bg-primary/20 text-primary border-none px-3 py-1">Grupal (Cohorte)</Badge>
+                  <Badge className="bg-primary/20 text-primary border-none px-3 py-1">Grupal (Grupo)</Badge>
                 ) : (
                   <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground px-3 py-1">1 a 1</Badge>
                 )}
@@ -923,6 +937,16 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                             {session.topics.map((t: string, i: number) => <Badge key={i} className="bg-primary/10 text-primary border-none text-[9px] uppercase font-bold">{t}</Badge>)}
                           </div>
                           <p className="text-sm text-muted-foreground italic line-clamp-2 bg-muted/20 p-4 rounded-xl border border-black/5 leading-relaxed">"{session.minutes}"</p>
+                          {session.files && session.files.length > 0 && (
+                            <div className="flex flex-wrap gap-2 pt-2 border-t border-muted">
+                              {session.files.map((file: any, i: number) => (
+                                <a key={i} href={file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors">
+                                  <FileText className="h-3.5 w-3.5" />
+                                  <span className="truncate max-w-[150px]">{file.name}</span>
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </Card>
@@ -1136,7 +1160,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                 <TabsContent value="alumnos" className="space-y-6">
                   <div className="flex justify-between items-center mb-6">
                     <div>
-                      <h3 className="text-xl font-bold font-headline">Cohorte de Alumnos</h3>
+                      <h3 className="text-xl font-bold font-headline">Grupo de Alumnos</h3>
                       <p className="text-muted-foreground text-sm">Gestiona los participantes de esta mentoría grupal.</p>
                     </div>
                     {isMentor && (
@@ -1314,6 +1338,43 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
               <Textarea value={sessionForm.minutes} onChange={e => setSessionData({...sessionForm, minutes: e.target.value})} placeholder="Registra las conclusiones una vez terminada la sesión..." className="min-h-[150px] p-6 bg-secondary/5 border rounded-xl leading-relaxed text-sm" />
             </div>
 
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Archivos Adjuntos (Minuta)</Label>
+              <div className="flex flex-col gap-2">
+                {sessionForm.files && sessionForm.files.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {sessionForm.files.map((f, i) => (
+                      <Badge key={i} className="bg-blue-50 text-blue-600 border-blue-200 py-1.5 px-3 rounded-lg gap-2 font-medium">
+                        <FileText className="h-3.5 w-3.5" /> {f.name}
+                        <button onClick={() => setSessionData({...sessionForm, files: sessionForm.files.filter((_, idx) => idx !== i)})} className="hover:text-destructive text-muted-foreground ml-1"><X className="h-3 w-3" /></button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {sessionUploadFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {sessionUploadFiles.map((f, i) => (
+                      <Badge key={`new-${i}`} className="bg-orange-50 text-orange-600 border-orange-200 py-1.5 px-3 rounded-lg gap-2 font-medium">
+                        <Upload className="h-3.5 w-3.5" /> {f.name}
+                        <button onClick={() => setSessionUploadFiles(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-destructive text-muted-foreground ml-1"><X className="h-3 w-3" /></button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <FileUploadArea 
+                  multiple={true} 
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setSessionUploadFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                    }
+                  }}
+                  title="Adjuntar Archivos"
+                  description="Cualquier formato es admitido."
+                  className="rounded-xl p-8"
+                />
+              </div>
+            </div>
+
             <div className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-dashed border-primary/10">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -1404,7 +1465,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
           <DialogHeader className="text-left">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"><UserPlus className="text-primary h-6 w-6" /></div>
             <DialogTitle className="text-xl md:text-2xl font-bold">Añadir Alumno</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">Inscribe un nuevo participante a la cohorte.</DialogDescription>
+            <DialogDescription className="text-sm text-muted-foreground">Inscribe un nuevo participante al grupo.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 pt-4">
@@ -1500,7 +1561,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
 
             <DialogFooter className="pt-4">
               <Button onClick={handleAddGroupStudent} disabled={addingStudent || (addStudentType === 'manual' ? !manualStudentEmail : selectedStudentIds.length === 0)} className="w-full h-14 rounded-2xl text-lg font-bold shadow-sm">
-                {addingStudent ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} Inscribir a la Cohorte
+                {addingStudent ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 className="mr-2" />} Inscribir al Grupo
               </Button>
             </DialogFooter>
           </div>

@@ -48,6 +48,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { generateQuizQuestions } from '@/ai/flows/generate-quiz-questions';
 import { extractDocumentText } from '@/ai/flows/extract-document-text-flow';
+import { FileUploadArea } from '@/components/ui/file-upload-area';
 import { ImageEditor } from '@/components/courses/ImageEditor';
 import { uploadPendingImagesInObject } from '@/lib/upload-base64';
 import { 
@@ -857,37 +858,34 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                     </TabsList>
                     
                     <TabsContent value="text" className="space-y-6">
-                      <div className="p-10 border-2 border-dashed rounded-3xl flex flex-col items-center gap-4 cursor-pointer relative bg-muted/5">
-                        <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
-                        {isProcessingFile ? <Loader2 className="animate-spin h-10 w-10 text-primary" /> : <Upload className="h-10 w-10 text-primary" />}
-                        <div className="text-center">
-                          <p className="font-bold">Añadir Bibliografía o Material</p>
-                          <p className="text-xs text-muted-foreground">Admite cualquier formato para el alumno.</p>
-                        </div>
-                      </div>
+                      <FileUploadArea 
+                        multiple={true} 
+                        onChange={handleFileUpload}
+                        isProcessing={isProcessingFile}
+                        title="Añadir Bibliografía o Material"
+                        description="Admite cualquier formato para el alumno."
+                        className="rounded-3xl p-6"
+                      />
                       
-                      <div className="space-y-3">
+                      <div className="space-y-2 mt-4">
                         {currentModule.supportMaterials.map((mat) => {
                           const compatible = isCompatibleWithAI(mat.fileBlob, mat.name);
                           return (
-<div key={mat.id} className={cn(
-"flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
-                              mat.isMaster ? "bg-primary/5 border-primary shadow-sm" : "bg-white border-border/50"
-                            )}>
-                              <div className="flex items-center gap-3">
-                                <div className={cn("p-2 rounded-xl", mat.isMaster ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
-                                  {mat.isMaster ? <BrainCircuit className="h-5 w-5" /> : <FileCheck className="h-5 w-5" />}
+                            <div key={mat.id} className={cn("flex items-center justify-between p-3 rounded-xl border", mat.isMaster ? "bg-primary/5 border-primary shadow-sm" : "bg-white border-border")}>
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", mat.isMaster ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
+                                  {mat.isMaster ? <BrainCircuit className="h-4 w-4" /> : <FileCheck className="h-4 w-4" />}
                                 </div>
-                                <div>
-                                  <p className="text-sm font-bold truncate max-w-[200px]">{mat.name}</p>
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{mat.name}</p>
                                   {mat.isMaster ? (
-                                    <Badge className="bg-primary text-[8px] h-4 uppercase">Documento Maestro (Privado)</Badge>
+                                    <Badge className="bg-primary text-[10px] h-5 px-2">Maestro</Badge>
                                   ) : compatible ? (
-                                    <p className="text-[9px] font-bold text-muted-foreground uppercase">Compatible con IA</p>
+                                    <p className="text-[10px] text-muted-foreground hidden sm:block">Compatible AI</p>
                                   ) : null}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex gap-2 shrink-0">
                                 {!mat.isMaster && compatible && (
                                   <Button variant="ghost" size="sm" onClick={() => {
                                     if (currentModule) {
@@ -896,9 +894,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                         supportMaterials: currentModule.supportMaterials.map(m => ({ ...m, isMaster: m.id === mat.id }))
                                       });
                                     }
-                                  }} className="text-[10px] font-bold h-8 rounded-lg gap-1">
-                                    <Star className="h-3 w-3" /> Hacer Maestro
-                                  </Button>
+                                  }} className="text-xs font-bold h-8 hidden sm:flex"><Star className="h-3 w-3 mr-1" /> Marcar Maestro</Button>
                                 )}
                                 <Button variant="ghost" size="icon" onClick={() => {
                                   if (currentModule) {
@@ -907,9 +903,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                       supportMaterials: currentModule.supportMaterials.filter(m => m.id !== mat.id)
                                     });
                                   }
-                                }} className="text-destructive h-8 w-8">
-                                  <X className="h-4 w-4" />
-                                </Button>
+                                }} className="text-destructive h-8 w-8"><X className="h-4 w-4" /></Button>
                               </div>
                             </div>
                           );

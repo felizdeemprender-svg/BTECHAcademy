@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileUploadArea } from '@/components/ui/file-upload-area';
 import { 
   ClipboardList, 
   Users, 
@@ -27,8 +28,12 @@ import {
   Loader2, 
   AlertTriangle, 
   Trash2,
-  Save
+  Save,
+  BrainCircuit,
+  FileCheck,
+  Star
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 
 interface FollowUpModalsProps {
@@ -89,7 +94,7 @@ export function FollowUpModals({
                 <Tabs value={formData.type || 'individual'} onValueChange={v => setFormData({...formData, type: v as 'individual' | 'group'})} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-4">
                     <TabsTrigger value="individual">1 a 1</TabsTrigger>
-                    <TabsTrigger value="group">Grupal (Cohorte)</TabsTrigger>
+                    <TabsTrigger value="group">Grupal (Grupo)</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -152,78 +157,66 @@ export function FollowUpModals({
               <Textarea value={formData.goal} onChange={e => setFormData({...formData, goal: e.target.value})} placeholder="¿Qué esperamos lograr?" size="lg" className="min-h-[100px]" />
             </div>
 
-            {formData.type === 'group' && setMasterFile && (
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
-                  Archivo Maestro (Uso Interno - AI Landings)
-                </Label>
-                <div className="p-6 border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-2 relative hover:bg-muted/10 transition-colors group">
-                  <input 
-                    type="file" 
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
-                    onChange={e => setMasterFile(e.target.files?.[0] || null)}
-                  />
-                  {masterFile ? (
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold truncate">{masterFile.name}</p>
-                        <p className="text-[10px] text-muted-foreground">Documento maestro listo</p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive shrink-0 relative z-10"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMasterFile(null); }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="h-8 w-8 text-muted-foreground/40 group-hover:scale-110 transition-transform" />
-                      <p className="text-xs font-bold text-muted-foreground">Click para subir Syllabus / Documento Maestro</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
-                {formData.type === 'group' ? 'Guía de Mentoría (Visible para Alumnos)' : 'Guía del Plan (Visible para Alumno)'}
+                Materiales de la Mentoría
               </Label>
-              <div className="p-6 border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-2 relative hover:bg-muted/10 transition-colors group">
-                <input 
-                  type="file" 
-                  className="absolute inset-0 opacity-0 cursor-pointer" 
-                  onChange={e => setGuideFile(e.target.files?.[0] || null)}
-                />
-                {guideFile ? (
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                      <FileText className="h-5 w-5" />
+              <FileUploadArea 
+                multiple={true}
+                onChange={(e) => {
+                   const files = Array.from(e.target.files || []);
+                   if (!files.length) return;
+                   if (!guideFile) {
+                     setGuideFile(files[0]);
+                     if (files[1] && setMasterFile && formData.type === 'group') setMasterFile(files[1]);
+                   } else if (!masterFile && setMasterFile && formData.type === 'group') {
+                     setMasterFile(files[0]);
+                   } else {
+                     setGuideFile(files[0]);
+                   }
+                }}
+                title="Cargar Materiales"
+                description="Máx. 2 archivos (Guía y Maestro). PDF, DOCX o TXT."
+                className="p-6 rounded-2xl mb-4 bg-muted/5 border-dashed border-2 hover:bg-muted/10 transition-colors"
+              />
+              <div className="space-y-2 mt-4">
+                {masterFile && (
+                  <div className="flex items-center justify-between p-3 rounded-xl border bg-primary/5 border-primary shadow-sm">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary text-white">
+                        <BrainCircuit className="h-4 w-4" />
+                      </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{masterFile.name}</p>
+                        <Badge className="bg-primary text-[10px] h-5 px-2">Maestro</Badge>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate">{guideFile.name}</p>
-                      <p className="text-[10px] text-muted-foreground">Documento listo</p>
+                    <div className="flex gap-2 shrink-0">
+                      <Button variant="ghost" size="icon" onClick={() => setMasterFile?.(null)} className="text-destructive h-8 w-8"><X className="h-4 w-4" /></Button>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive shrink-0 relative z-10"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGuideFile(null); }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </div>
-                ) : (
-                  <>
-                    <Upload className="h-8 w-8 text-muted-foreground/40 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-bold text-muted-foreground">Click para subir guía para el alumno</p>
-                  </>
+                )}
+                {guideFile && (
+                  <div className="flex items-center justify-between p-3 rounded-xl border bg-white border-border">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
+                        <FileCheck className="h-4 w-4" />
+                      </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{guideFile.name}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      {formData.type === 'group' && setMasterFile && (
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          const temp = masterFile;
+                          setMasterFile(guideFile);
+                          setGuideFile(temp || null);
+                        }} className="text-xs font-bold h-8 hidden sm:flex"><Star className="h-3 w-3 mr-1" /> Marcar Maestro</Button>
+                      )}
+                      <Button variant="ghost" size="icon" onClick={() => setGuideFile(null)} className="text-destructive h-8 w-8"><X className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -275,66 +268,78 @@ export function FollowUpModals({
               <Textarea value={formData.goal} onChange={e => setFormData({...formData, goal: e.target.value})} size="lg" className="min-h-[100px]" />
             </div>
 
-            {formData.type === 'group' && setMasterFile && (
-              <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Actualizar Archivo Maestro (Opcional)</Label>
-                <div className="p-6 border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-2 relative hover:bg-muted/10 transition-colors group">
-                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setMasterFile(e.target.files?.[0] || null)} />
-                  {masterFile ? (
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><FileText className="h-5 w-5" /></div>
-                      <div className="flex-1 min-w-0"><p className="text-xs font-bold truncate">{masterFile.name}</p></div>
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMasterFile(null); }} className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive z-10"><X className="h-4 w-4" /></Button>
-                    </div>
-                  ) : selectedFollowUp?.masterFileUrl ? (
-                    <div className="flex items-center justify-between w-full p-2 bg-success/10 rounded-xl border border-success/15">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-success" />
-                        <span className="text-xs font-bold text-success">Maestro actual cargado</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => window.open(selectedFollowUp.masterFileUrl, '_blank')} className="text-[10px] h-7 font-bold">Ver</Button>
-                        <p className="text-[10px] text-muted-foreground italic">Sube un nuevo archivo para reemplazar</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="h-8 w-8 text-muted-foreground/40 group-hover:scale-110 transition-transform" />
-                      <p className="text-xs font-bold text-muted-foreground">Click para subir Syllabus / Documento Maestro</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">
-                {formData.type === 'group' ? 'Actualizar Guía de Mentoría (Opcional)' : 'Actualizar Guía del Plan (Opcional)'}
+                Materiales de la Mentoría
               </Label>
-              <div className="p-6 border-2 border-dashed rounded-2xl bg-muted/5 flex flex-col items-center gap-2 relative hover:bg-muted/10 transition-colors group">
-                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setGuideFile(e.target.files?.[0] || null)} />
-                {guideFile ? (
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><FileText className="h-5 w-5" /></div>
-                    <div className="flex-1 min-w-0"><p className="text-xs font-bold truncate">{guideFile.name}</p></div>
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGuideFile(null); }} className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive z-10"><X className="h-4 w-4" /></Button>
-                  </div>
-                ) : selectedFollowUp?.planGuideUrl ? (
-                  <div className="flex items-center justify-between w-full p-2 bg-success/10 rounded-xl border border-success/15">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-success" />
-                      <span className="text-xs font-bold text-success">Guía actual cargada</span>
+              <FileUploadArea 
+                multiple={true}
+                onChange={(e) => {
+                   const files = Array.from(e.target.files || []);
+                   if (!files.length) return;
+                   if (!guideFile && !selectedFollowUp?.planGuideUrl) {
+                     setGuideFile(files[0]);
+                     if (files[1] && setMasterFile && formData.type === 'group') setMasterFile(files[1]);
+                   } else if (!masterFile && (!selectedFollowUp?.masterFileUrl) && setMasterFile && formData.type === 'group') {
+                     setMasterFile(files[0]);
+                   } else {
+                     setGuideFile(files[0]);
+                   }
+                }}
+                title="Cargar Materiales"
+                description="Máx. 2 archivos (Guía y Maestro). PDF, DOCX o TXT."
+                className="p-6 rounded-2xl mb-4 bg-muted/5 border-dashed border-2 hover:bg-muted/10 transition-colors"
+              />
+              <div className="space-y-2 mt-4">
+                {(masterFile || selectedFollowUp?.masterFileUrl) && (
+                  <div className="flex items-center justify-between p-3 rounded-xl border bg-primary/5 border-primary shadow-sm">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary text-white">
+                        <BrainCircuit className="h-4 w-4" />
+                      </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{masterFile ? masterFile.name : 'Maestro actual'}</p>
+                        <Badge className="bg-primary text-[10px] h-5 px-2">Maestro</Badge>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => window.open(selectedFollowUp.planGuideUrl, '_blank')} className="text-[10px] h-7 font-bold">Ver</Button>
-                      <p className="text-[10px] text-muted-foreground italic">Sube un nuevo archivo para reemplazar</p>
+                    <div className="flex gap-2 shrink-0">
+                      {!masterFile && selectedFollowUp?.masterFileUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => window.open(selectedFollowUp.masterFileUrl, '_blank')} className="text-[10px] font-bold h-8 hidden sm:flex">Ver</Button>
+                      )}
+                      {masterFile && (
+                        <Button variant="ghost" size="icon" onClick={() => setMasterFile?.(null)} className="text-destructive h-8 w-8"><X className="h-4 w-4" /></Button>
+                      )}
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <Upload className="h-8 w-8 text-muted-foreground/40 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-bold text-muted-foreground">Subir nueva versión del plan</p>
-                  </>
+                )}
+                {(guideFile || selectedFollowUp?.planGuideUrl) && (
+                  <div className="flex items-center justify-between p-3 rounded-xl border bg-white border-border">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
+                        <FileCheck className="h-4 w-4" />
+                      </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{guideFile ? guideFile.name : 'Guía actual'}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      {formData.type === 'group' && setMasterFile && (
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          if (guideFile) {
+                            const temp = masterFile;
+                            setMasterFile(guideFile);
+                            setGuideFile(temp || null);
+                          }
+                        }} className="text-xs font-bold h-8 hidden sm:flex" disabled={!guideFile}><Star className="h-3 w-3 mr-1" /> Marcar Maestro</Button>
+                      )}
+                      {!guideFile && selectedFollowUp?.planGuideUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => window.open(selectedFollowUp.planGuideUrl, '_blank')} className="text-[10px] font-bold h-8 hidden sm:flex">Ver</Button>
+                      )}
+                      {guideFile && (
+                        <Button variant="ghost" size="icon" onClick={() => setGuideFile(null)} className="text-destructive h-8 w-8"><X className="h-4 w-4" /></Button>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

@@ -650,7 +650,7 @@ export default function SalesLandingsDashboardPage() {
                                 className={cn(
                                   'h-8 w-8 rounded-xl flex items-center justify-center transition-colors',
                                   isConfirmDelete
-                                    ? 'text-danger bg-danger/10 animate-pulse'
+                                    ? 'text-white bg-danger animate-pulse shadow-lg shadow-danger/20'
                                     : 'text-muted-foreground hover:text-danger hover:bg-danger/10'
                                 )}
                               >

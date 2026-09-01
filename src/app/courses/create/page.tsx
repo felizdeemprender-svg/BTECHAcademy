@@ -792,18 +792,32 @@ export default function CreateCoursePage() {
                 <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({ ...currentModule, contentType: v as any })}>
                   <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full grid-cols-2 max-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
                   <TabsContent value="text" className="space-y-6">
-                    <div className="p-12 border-2 border-dashed rounded-lg flex flex-col items-center gap-4 relative bg-muted/5 hover:bg-muted/10 transition-all group">
-                      <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
-                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">{currentModule.isProcessing ? <Loader2 className="animate-spin text-primary" /> : <Upload className="text-primary" />}</div>
-                      <div className="text-center"><p className="font-bold text-lg">Cargar Materiales</p><p className="text-sm text-muted-foreground">PDF, Word o TXT.</p></div>
-                    </div>
-<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <FileUploadArea 
+                      multiple={true} 
+                      onChange={handleFileUpload}
+                      isProcessing={currentModule.isProcessing}
+                      title="Cargar Materiales"
+                      description="PDF, Word o TXT."
+                      className="p-6"
+                    />
+                    <div className="space-y-2 mt-4">
                       {currentModule.supportMaterials.map((mat) => {
                         const compatible = isCompatibleWithAI(mat.fileBlob);
                         return (
-                          <div key={mat.id} className={cn("flex items-center justify-between p-5 rounded-2xl border-2", mat.isMaster ? "bg-primary/5 border-primary shadow-md" : "bg-white border-border/50")}>
-                            <div className="flex items-center gap-4"><div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", mat.isMaster ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>{mat.isMaster ? <BrainCircuit className="h-5 w-5" /> : <FileCheck className="h-5 w-5" />}</div><div><p className="font-bold text-sm">{mat.name}</p>{mat.isMaster && <Badge className="bg-primary text-[8px] h-4 uppercase mt-1">Maestro para IA</Badge>}</div></div>
-                            <div className="flex gap-2">{!mat.isMaster && compatible && <Button variant="ghost" size="sm" onClick={() => setAsMaster(mat.id)} className="text-[10px] font-bold h-9 rounded-xl"><Star className="h-3 w-3 mr-1" /> Marcar Maestro</Button>}<Button variant="ghost" size="icon" onClick={() => removeMaterial(mat.id)} className="text-destructive h-9 w-9 rounded-xl"><X className="h-4 w-4" /></Button></div>
+                          <div key={mat.id} className={cn("flex items-center justify-between p-3 rounded-xl border", mat.isMaster ? "bg-primary/5 border-primary shadow-sm" : "bg-white border-border")}>
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", mat.isMaster ? "bg-primary text-white" : "bg-muted text-muted-foreground")}>
+                                {mat.isMaster ? <BrainCircuit className="h-4 w-4" /> : <FileCheck className="h-4 w-4" />}
+                              </div>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{mat.name}</p>
+                                {mat.isMaster && <Badge className="bg-primary text-[10px] h-5 px-2">Maestro</Badge>}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                              {!mat.isMaster && compatible && <Button variant="ghost" size="sm" onClick={() => setAsMaster(mat.id)} className="text-xs font-bold h-8 hidden sm:flex"><Star className="h-3 w-3 mr-1" /> Marcar Maestro</Button>}
+                              <Button variant="ghost" size="icon" onClick={() => removeMaterial(mat.id)} className="text-destructive h-8 w-8"><X className="h-4 w-4" /></Button>
+                            </div>
                           </div>
                         );
                       })}
