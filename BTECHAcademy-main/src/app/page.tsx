@@ -16,8 +16,10 @@ import {
 import { 
   IoLogoWhatsapp, IoLogoInstagram, IoMailOutline, IoGlobeOutline 
 } from 'react-icons/io5';
+import { useAuth } from '@/components/auth-context';
 
 export default function FastoriaLanding() {
+  const { user } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [activeBrandTheme, setActiveBrandTheme] = useState<'teal' | 'violet' | 'amber'>('teal');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -122,21 +124,36 @@ export default function FastoriaLanding() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <Link href="/auth">
-              <span className="hidden sm:inline-block px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors">
-                Ingresar
-              </span>
-            </Link>
-            <Link href="/auth">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-md transition-all flex items-center gap-1.5"
-              >
-                <span>Empezar</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </motion.button>
-            </Link>
+            {user ? (
+              <Link href="/dashboard">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-[#1CB899] hover:bg-[#18a287] text-white text-xs font-bold px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <span>Ir a mi Campus</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </motion.button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth">
+                  <span className="hidden sm:inline-block px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors">
+                    Ingresar
+                  </span>
+                </Link>
+                <Link href="/auth">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <span>Empezar</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </motion.button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </motion.nav>
@@ -191,14 +208,14 @@ export default function FastoriaLanding() {
             transition={{ duration: 0.6, delay: 0.3, ease: EASE }}
             className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5"
           >
-            <Link href="/auth" className="w-full sm:w-auto">
+            <Link href={user ? "/dashboard" : "/auth"} className="w-full sm:w-auto">
               <motion.button
                 whileHover={{ scale: 1.03, y: -1 }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                 className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#1CB899] hover:bg-[#18a287] text-white font-black text-sm shadow-xl shadow-[#1CB899]/25 hover:shadow-2xl hover:shadow-[#1CB899]/35 transition-colors flex items-center justify-center gap-2 group"
               >
-                Empezar con Fastoria
+                {user ? "Continuar a mi Campus" : "Empezar con Fastoria"}
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </motion.button>
             </Link>

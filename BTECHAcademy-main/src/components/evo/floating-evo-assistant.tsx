@@ -261,7 +261,7 @@ export function FloatingEvoAssistant() {
 
   const activeDecision = decisionTree.find((option) => option.id === activeDecisionId) ?? null;
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || pathname === '/' || pathname?.startsWith('/auth')) {
     return null;
   }
 

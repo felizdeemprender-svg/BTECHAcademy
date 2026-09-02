@@ -32,6 +32,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+fastoria-commercial-bundle/
+fastoria-commercial-landing.zip
+INTEGRATION_PROMPT_FOR_AI.md
 
 # typescript
 *.tsbuildinfo
