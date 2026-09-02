@@ -32,6 +32,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+fastoria-commercial-bundle/
+fastoria-commercial-landing.zip
+INTEGRATION_PROMPT_FOR_AI.md
 
 # typescript
 *.tsbuildinfo
@@ -69,3 +72,5 @@ public/tts_cache/
 scripts/check-tutor.ts
 scripts/delete-ghost.ts
 test_tts_v2.mp3
+
+.vercel

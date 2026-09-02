@@ -104,3 +104,36 @@
 @font-face { font-family: 'calibri.ttf'; src: url('/fonts/calibri.ttf') format('truetype'); font-weight: normal; font-style: normal; }
 @font-face { font-family: 'trebucbd.ttf'; src: url('/fonts/trebucbd.ttf') format('truetype'); font-weight: bold; font-style: normal; }
 @font-face { font-family: 'impact.ttf'; src: url('/fonts/impact.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+
+/* Landing page overrides — Inter for all headings */
+.landing h1, .landing h2, .landing h3, .landing h4, .landing h5, .landing h6 {
+  font-family: 'Inter', sans-serif;
+}
+
+/* ===== Landing animations ===== */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animate-gradient-text {
+  background-size: 200% auto;
+  animation: gradientShift 6s ease infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(28, 184, 153, 0.3); }
+  50% { box-shadow: 0 0 20px 4px rgba(28, 184, 153, 0.45); }
+}
+.animate-glow-pulse {
+  animation: glowPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+.typing-dot {
+  animation: typingDot 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }

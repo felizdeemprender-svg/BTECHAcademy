@@ -20,17 +20,24 @@ export async function middleware(request: NextRequest) {
     proUrl.host = 'btechacademy-pro--btechacademy-8b329.us-central1.hosted.app';
     return NextResponse.redirect(proUrl);
   }
+
+  // 0.5. Si es Vercel, no interferir con ninguna redirección
+  if (hostname.includes('vercel.app')) {
+    return NextResponse.next();
+  }
   const segments = pathname.split('/').filter(Boolean);
 
   const hostParts = hostname.split('.');
-  // Detectar cualquier dominio gestionado por Firebase o Google Cloud
+  // Detectar cualquier dominio gestionado por Firebase, Google Cloud o Vercel default
   const isFirebaseDefault = hostname.endsWith('.hosted.app') || 
                             hostname.endsWith('.web.app') || 
                             hostname.endsWith('.firebaseapp.com') ||
                             hostname.endsWith('.run.app') ||
                             hostname.endsWith('.cloudfunctions.net') ||
+                            hostname.endsWith('.vercel.app') ||
                             hostname.includes('.hosted.app') ||
                             hostname.includes('.firebaseapp.com') ||
+                            hostname.includes('.vercel.app') ||
                             hostname.includes('.run.app');
   
   // Solo permitimos lógica de subdominios en localhost o en dominios personalizados con wildcard DNS
@@ -60,10 +67,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. Saltamos si es una ruta reservada, API o archivo estático
+  // Las rutas /landing* son landings públicos (ej: /landing2) y no se enmascaran
   if (
-    pathname.includes('.') || 
-    pathname.startsWith('/api') || 
+    pathname.includes('.') ||
+    pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
+    (segments[0] && segments[0].startsWith('landing')) ||
     RESERVED_PATHS.includes(segments[0])
   ) {
     return NextResponse.next();
