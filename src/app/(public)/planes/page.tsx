@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,7 +35,9 @@ import { useAuth } from '@/components/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-export default function PricingPage() {
+function PricingPageContent() {
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get('plan');
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [plans, setPlans] = useState<any[]>([]);
@@ -64,7 +67,18 @@ export default function PricingPage() {
         const plansData = await plansRes.json();
         const methodsData = await methodsRes.json();
         
-        if (plansData.plans) setPlans(plansData.plans);
+        if (plansData.plans) {
+          setPlans(plansData.plans);
+          if (planParam) {
+            const matching = plansData.plans.find(
+              (p: any) => p.id === planParam || p.name?.toLowerCase() === planParam.toLowerCase()
+            );
+            if (matching) {
+              setSelectedPlan(matching);
+              setShowCheckout(true);
+            }
+          }
+        }
         if (methodsData.methods) {
           setPaymentMethods(methodsData.methods);
           if (methodsData.methods.length === 1) {
@@ -79,6 +93,19 @@ export default function PricingPage() {
     };
     fetchData();
   }, []);
+
+  // Auto-open checkout if plan param exists in URL
+  useEffect(() => {
+    if (planParam && plans.length > 0 && !showCheckout) {
+      const matching = plans.find(
+        (p: any) => p.id === planParam || p.name?.toLowerCase() === planParam.toLowerCase()
+      );
+      if (matching) {
+        setSelectedPlan(matching);
+        setShowCheckout(true);
+      }
+    }
+  }, [planParam, plans, showCheckout]);
 
   // Sync with user profile if logged in
   useEffect(() => {
@@ -451,5 +478,19 @@ export default function PricingPage() {
       
       <LandingFooter />
     </div>
+  );
+}
+
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8 gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-sm font-bold text-muted-foreground animate-pulse">Cargando planes...</p>
+      </div>
+    }>
+      <PricingPageContent />
+    </Suspense>
   );
 }

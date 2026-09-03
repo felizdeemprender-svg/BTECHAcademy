@@ -17,10 +17,61 @@ import {
   IoLogoWhatsapp, IoLogoInstagram, IoMailOutline, IoGlobeOutline 
 } from 'react-icons/io5';
 import { useAuth } from '@/components/auth-context';
+import { cn } from '@/lib/utils';
 
 export default function FastoriaLanding() {
   const { user } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [apiPlans, setApiPlans] = useState<any[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState<boolean>(true);
+
+  useEffect(() => {
+    fetch('/api/plans')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.plans && Array.isArray(data.plans)) {
+          const active = data.plans.filter((p: any) => p.isActive !== false);
+          active.sort((a: any, b: any) => (Number(a.price) || 0) - (Number(b.price) || 0));
+          setApiPlans(active);
+        }
+      })
+      .catch((err) => console.error('[Landing] Error loading plans from API:', err))
+      .finally(() => setLoadingPlans(false));
+  }, []);
+
+  const getPlanPricing = (plan: any) => {
+    const base = Number(plan.price) || 0;
+    const activePromo = plan.promotions?.periods?.find((pr: any) => {
+      if (!pr.isActive) return false;
+      const now = Date.now();
+      const s = pr.startDate ? new Date(pr.startDate).getTime() : 0;
+      const e = pr.endDate ? new Date(pr.endDate).getTime() : Infinity;
+      return now >= s && now <= e;
+    });
+
+    let effectiveMonthly = base;
+    let promoLabel = '';
+
+    if (activePromo) {
+      if (activePromo.discountPercentage) {
+        effectiveMonthly = base * (1 - activePromo.discountPercentage / 100);
+        promoLabel = activePromo.discountPercentage + '% OFF';
+      } else if (activePromo.discountAmount) {
+        effectiveMonthly = Math.max(0, base - activePromo.discountAmount);
+        promoLabel = activePromo.name || 'Promoción Especial';
+      }
+    }
+
+    if (billingPeriod === 'annual') {
+      effectiveMonthly = Math.round(effectiveMonthly * (10 / 12) * 100) / 100;
+    }
+
+    return {
+      priceStr: effectiveMonthly === 0 ? '0' : effectiveMonthly.toFixed(2),
+      originalPriceStr: activePromo ? base.toFixed(2) : null,
+      promoLabel: promoLabel || (billingPeriod === 'annual' ? '2 meses bonificados' : '')
+    };
+  };
   const [activeBrandTheme, setActiveBrandTheme] = useState<'teal' | 'violet' | 'amber'>('teal');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -1215,179 +1266,169 @@ export default function FastoriaLanding() {
             </div>
           </Reveal>
 
-          {/* Pricing Cards */}
+          {/* Dynamic Pricing Cards */}
           <motion.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-60px' }}
-            className="grid lg:grid-cols-3 gap-8 items-stretch"
+            className={cn(
+              "grid grid-cols-1 gap-8 items-stretch",
+              apiPlans.length === 1 ? "max-w-md mx-auto" :
+              apiPlans.length === 2 ? "md:grid-cols-2 max-w-4xl mx-auto" :
+              "md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto"
+            )}
           >
-
-            {/* INICIAL */}
-            <Tilt max={7} className="h-full">
-            <motion.div variants={staggerItem} whileHover={{ y: -4 }} className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between h-full">
-              <div>
-                <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">MOMENTO 01</div>
-                <h3 className="text-2xl font-black text-slate-900">INICIAL — CREÁ</h3>
-                <p className="text-sm font-medium text-slate-500 mt-2 mb-6">
-                  Para empezar a transformar tu conocimiento en productos y servicios.
-                </p>
-
-                <div className="mb-6 pb-6 border-b border-slate-100">
-                  <div className="flex items-baseline gap-1 overflow-hidden">
-                    <AnimatePresence mode="popLayout" initial={false}>
-                      <motion.span
-                        key={`price-inicial-${billingPeriod}`}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -16 }}
-                        transition={{ duration: 0.25, ease: EASE }}
-                        className="text-3xl font-black text-slate-900"
-                      >
-                        ARS {getPrice(25000)}
-                      </motion.span>
-                    </AnimatePresence>
-                    <span className="text-xs font-bold text-slate-400">/ mes</span>
+            {loadingPlans ? (
+              [1, 2].map((k) => (
+                <div key={k} className="h-[520px] bg-white rounded-3xl border border-slate-200 p-8 shadow-sm animate-pulse flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="h-4 bg-slate-200 rounded w-1/4" />
+                    <div className="h-8 bg-slate-200 rounded w-1/2" />
+                    <div className="h-12 bg-slate-200 rounded w-3/4" />
+                    <div className="space-y-2 pt-6">
+                      <div className="h-4 bg-slate-100 rounded w-full" />
+                      <div className="h-4 bg-slate-100 rounded w-5/6" />
+                      <div className="h-4 bg-slate-100 rounded w-4/6" />
+                    </div>
                   </div>
-                  <span className="text-[11px] font-semibold text-emerald-600 block mt-1">Precio de lanzamiento</span>
+                  <div className="h-12 bg-slate-200 rounded-xl" />
                 </div>
-
-                <ul className="space-y-3 text-sm font-bold text-slate-700 mb-8">
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> 5 productos</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> 100 alumnos</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> 1 crédito IA mensual</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> Campus y entregas</li>
-                </ul>
+              ))
+            ) : apiPlans.length === 0 ? (
+              <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                <p className="text-slate-500 font-bold text-base">Próximamente nuevos planes disponibles.</p>
+                <Link href="/planes" className="mt-4 inline-block text-xs font-bold text-[#1CB899] hover:underline">
+                  Ver página de planes
+                </Link>
               </div>
+            ) : (
+              apiPlans.map((plan, idx) => {
+                const pricing = getPlanPricing(plan);
+                const isFeatured = plan.isRecommended || plan.isPopular || (apiPlans.length >= 3 ? idx === 1 : idx === apiPlans.length - 1);
 
-              <Link href="/auth">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full py-3.5 rounded-xl border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white font-bold text-sm transition-colors"
-                >
-                  Elegir Inicial
-                </motion.button>
-              </Link>
-            </motion.div>
-            </Tilt>
+                return (
+                  <Tilt key={plan.id || idx} max={7} className="h-full">
+                    <motion.div
+                      variants={staggerItem}
+                      whileHover={{ y: isFeatured ? -8 : -4 }}
+                      className={cn(
+                        "rounded-3xl p-8 flex flex-col justify-between h-full transition-all relative",
+                        isFeatured
+                          ? "bg-[#0F172A] text-white border-2 border-[#1CB899] shadow-2xl lg:-translate-y-2"
+                          : "bg-white text-slate-900 border border-slate-200 shadow-sm hover:shadow-md"
+                      )}
+                    >
+                      {isFeatured && (
+                        <motion.div
+                          animate={{ y: [0, -2, 0] }}
+                          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                          className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#1CB899] text-[#0F172A] text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-md"
+                        >
+                          Recomendado
+                        </motion.div>
+                      )}
 
-            {/* EXPANSIÓN (Recomendado) */}
-            <Tilt max={7} className="h-full">
-            <motion.div
-              variants={staggerItem}
-              whileHover={{ y: -8 }}
-              className="bg-[#0F172A] text-white rounded-3xl border-2 border-[#1CB899] p-8 shadow-2xl relative flex flex-col justify-between lg:-translate-y-2 h-full"
-            >
-              <motion.div
-                animate={{ y: [0, -2, 0] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#1CB899] text-[#0F172A] text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-md"
-              >
-                Recomendado
-              </motion.div>
+                      <div>
+                        <div className={cn("text-xs font-black uppercase tracking-widest mb-1", isFeatured ? "text-[#1CB899]" : "text-slate-400")}>
+                          {`PLAN 0${idx + 1}`}
+                        </div>
+                        <h3 className={cn("text-2xl font-black", isFeatured ? "text-white" : "text-slate-900")}>
+                          {plan.name}
+                        </h3>
+                        <p className={cn("text-sm font-medium mt-2 mb-6", isFeatured ? "text-slate-300" : "text-slate-500")}>
+                          {plan.description || (idx === 0 ? 'Para comenzar tu academia digital con bases sólidas.' : idx === 1 ? 'Para mentores y academias en fase de expansión activa.' : 'Para grandes operaciones y academias consolidadas.')}
+                        </p>
 
-              <div>
-                <div className="text-xs font-black text-[#1CB899] uppercase tracking-widest mb-1">MOMENTO 02</div>
-                <h3 className="text-2xl font-black text-white">EXPANSIÓN — CRECÉ</h3>
-                <p className="text-sm font-medium text-slate-300 mt-2 mb-6">
-                  Para cuando ya tenés alumnos y querés desarrollar tu negocio.
-                </p>
+                        <div className={cn("mb-6 pb-6 border-b", isFeatured ? "border-slate-800" : "border-slate-100")}>
+                          <div className="flex items-baseline gap-1.5 overflow-hidden">
+                            <span className={cn("text-xs font-black uppercase", isFeatured ? "text-[#1CB899]" : "text-slate-400")}>USD</span>
+                            <AnimatePresence mode="popLayout" initial={false}>
+                              <motion.span
+                                key={`price-${plan.id}-${billingPeriod}`}
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -16 }}
+                                transition={{ duration: 0.25, ease: EASE }}
+                                className={cn("text-4xl font-black", isFeatured ? "text-white" : "text-slate-900")}
+                              >
+                                ${pricing.priceStr}
+                              </motion.span>
+                            </AnimatePresence>
+                            <span className="text-xs font-bold text-slate-400">/ mes</span>
+                          </div>
+                          {pricing.originalPriceStr && (
+                            <span className="text-xs line-through text-slate-400 font-bold block mt-1">
+                              Antes: USD ${pricing.originalPriceStr}
+                            </span>
+                          )}
+                          {pricing.promoLabel && (
+                            <span className={cn("text-[11px] font-semibold block mt-1", isFeatured ? "text-[#1CB899]" : "text-emerald-600")}>
+                              {pricing.promoLabel}
+                            </span>
+                          )}
+                        </div>
 
-                <div className="mb-6 pb-6 border-b border-slate-800">
-                  <div className="flex items-baseline gap-1 overflow-hidden">
-                    <AnimatePresence mode="popLayout" initial={false}>
-                      <motion.span
-                        key={`price-expansion-${billingPeriod}`}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -16 }}
-                        transition={{ duration: 0.25, ease: EASE }}
-                        className="text-3xl font-black text-white"
-                      >
-                        ARS {getPrice(50000)}
-                      </motion.span>
-                    </AnimatePresence>
-                    <span className="text-xs font-bold text-slate-400">/ mes</span>
-                  </div>
-                  <span className="text-[11px] font-semibold text-[#1CB899] block mt-1">Precio de lanzamiento</span>
-                </div>
+                        <ul className={cn("space-y-3 text-sm font-bold mb-8", isFeatured ? "text-slate-200" : "text-slate-700")}>
+                          <li className="flex items-center gap-2.5">
+                            <Check className="w-4 h-4 text-[#1CB899] shrink-0" />
+                            {plan.limits?.maxCourses === -1 || (plan.limits?.maxCourses && plan.limits.maxCourses >= 100) ? 'Cursos ilimitados' : `Hasta ${plan.limits?.maxCourses || 5} cursos`}
+                          </li>
+                          <li className="flex items-center gap-2.5">
+                            <Check className="w-4 h-4 text-[#1CB899] shrink-0" />
+                            {plan.limits?.maxStudents === -1 || (plan.limits?.maxStudents && plan.limits.maxStudents >= 5000) ? 'Alumnos ilimitados' : `Hasta ${plan.limits?.maxStudents || 100} alumnos`}
+                          </li>
+                          {Boolean(plan.aiQuotas?.totalCredits > 0) && (
+                            <li className="flex items-center gap-2.5">
+                              <Zap className="w-4 h-4 text-amber-500 shrink-0" />
+                              {plan.aiQuotas.totalCredits} créditos Evo IA mensuales
+                            </li>
+                          )}
+                          {Boolean(plan.limits?.hasAnalytics) && (
+                            <li className="flex items-center gap-2.5">
+                              <Check className="w-4 h-4 text-[#1CB899] shrink-0" />
+                              Analíticas y métricas de retención
+                            </li>
+                          )}
+                          {Boolean(plan.limits?.hasPrioritySupport) && (
+                            <li className="flex items-center gap-2.5">
+                              <Check className="w-4 h-4 text-[#1CB899] shrink-0" />
+                              Soporte prioritario VIP
+                            </li>
+                          )}
+                          {Array.isArray(plan.features) && plan.features.map((feature: string, fIdx: number) => (
+                            <li key={fIdx} className="flex items-center gap-2.5">
+                              <Check className="w-4 h-4 text-[#1CB899] shrink-0" />
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
 
-                <ul className="space-y-3 text-sm font-bold text-slate-200 mb-8">
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> 15 productos</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> 500 alumnos</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> 3 créditos IA mensuales</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> Seguimientos y mentorías</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> Campañas comerciales con IA</li>
-                </ul>
-              </div>
-
-              <Link href="/auth">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full py-3.5 rounded-xl bg-[#1CB899] hover:bg-[#18a287] text-[#0F172A] font-black text-sm shadow-lg transition-colors"
-                >
-                  Elegir Expansión
-                </motion.button>
-              </Link>
-            </motion.div>
-            </Tilt>
-
-            {/* FULL */}
-            <Tilt max={7} className="h-full">
-            <motion.div variants={staggerItem} whileHover={{ y: -4 }} className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between h-full">
-              <div>
-                <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">MOMENTO 03</div>
-                <h3 className="text-2xl font-black text-slate-900">FULL — ESCALÁ</h3>
-                <p className="text-sm font-medium text-slate-500 mt-2 mb-6">
-                  Para cuando Fastoria se convierte en una pieza central de tu operación.
-                </p>
-
-                <div className="mb-6 pb-6 border-b border-slate-100">
-                  <div className="flex items-baseline gap-1 overflow-hidden">
-                    <AnimatePresence mode="popLayout" initial={false}>
-                      <motion.span
-                        key={`price-full-${billingPeriod}`}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -16 }}
-                        transition={{ duration: 0.25, ease: EASE }}
-                        className="text-3xl font-black text-slate-900"
-                      >
-                        ARS {getPrice(150000)}
-                      </motion.span>
-                    </AnimatePresence>
-                    <span className="text-xs font-bold text-slate-400">/ mes</span>
-                  </div>
-                  <span className="text-[11px] font-semibold text-emerald-600 block mt-1">Precio de lanzamiento</span>
-                </div>
-
-                <ul className="space-y-3 text-sm font-bold text-slate-700 mb-8">
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> 50 productos</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> 2.000 alumnos</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> 10 créditos IA mensuales</li>
-                  <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#1CB899]" /> Prioridad en soporte</li>
-                </ul>
-              </div>
-
-              <Link href="/auth">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full py-3.5 rounded-xl border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white font-bold text-sm transition-colors"
-                >
-                  Elegir Full
-                </motion.button>
-              </Link>
-            </motion.div>
-            </Tilt>
-
+                      <Link href={`/planes?plan=${plan.id}`}>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          className={cn(
+                            "w-full py-3.5 rounded-xl font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer",
+                            isFeatured
+                              ? "bg-[#1CB899] hover:bg-[#18a287] text-[#0F172A]"
+                              : "border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white"
+                          )}
+                        >
+                          <span>Elegir {plan.name}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </motion.button>
+                      </Link>
+                    </motion.div>
+                  </Tilt>
+                );
+              })
+            )}
           </motion.div>
 
           <p className="text-center text-xs text-slate-400 mt-8 font-medium">
-            * Los precios en ARS corresponden a valores de lanzamiento y están sujetos a actualización periódica. Facturación anual bonifica 2 meses equivalentes.
+            * Los precios están expresados en USD. Facturación anual bonifica 2 meses equivalentes. Cancelás cuando quieras.
           </p>
         </div>
       </section>
