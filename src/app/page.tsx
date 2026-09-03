@@ -136,23 +136,16 @@ export default function FastoriaLanding() {
                 </motion.button>
               </Link>
             ) : (
-              <>
-                <Link href="/auth">
-                  <span className="hidden sm:inline-block px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors">
-                    Ingresar
-                  </span>
-                </Link>
-                <Link href="/auth">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-md transition-all flex items-center gap-1.5"
-                  >
-                    <span>Empezar</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </motion.button>
-                </Link>
-              </>
+              <Link href="/auth">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <span>Ingresar</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </motion.button>
+              </Link>
             )}
           </div>
         </div>
