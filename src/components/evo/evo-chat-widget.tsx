@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { MessageSquare, X, Send, Bot, User, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -11,6 +12,8 @@ interface ChatMessage {
 }
 
 export function EvoChatWidget() {
+  const pathname = usePathname();
+  if (pathname === '/') return null;
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', content: '¡Hola! Soy Evo, tu agente personal. Conozco a todos tus alumnos y sus cursos. ¿En qué puedo ayudarte hoy?' }

@@ -159,6 +159,7 @@ export default function FastoriaLanding() {
 
           <div className="hidden md:flex items-center gap-7 text-xs font-bold uppercase tracking-wider text-slate-600">
             {[
+              ['/courses', 'Cursos'],
               ['#identificacion', 'Para quién'],
               ['#problema', 'Problema'],
               ['#propuesta', 'Cómo funciona'],
