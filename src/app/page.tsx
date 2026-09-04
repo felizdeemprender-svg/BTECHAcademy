@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, MotionConfig, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Reveal, staggerContainer, staggerItem, Float, Tilt, EASE } from '@/components/ui/animations';
 import { DemoPlayer } from '@/components/remotion/DemoPlayer';
 import { 
@@ -148,9 +149,16 @@ export default function FastoriaLanding() {
             <motion.div
               whileHover={{ rotate: -8, scale: 1.08 }}
               transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-              className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#1CB899] to-emerald-400 flex items-center justify-center text-white font-black text-sm shadow-sm shadow-[#1CB899]/30"
+              className="w-8 h-8 relative flex items-center justify-center"
             >
-              F
+              <Image
+                src="/logoF.png"
+                alt="Fastoria Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8 object-contain drop-shadow-sm"
+                priority
+              />
             </motion.div>
             <span className="font-black tracking-tight text-lg text-slate-900">
               FASTORIA<span className="text-[#1CB899]">.</span>
@@ -1762,8 +1770,14 @@ export default function FastoriaLanding() {
       <footer id="footer" className="relative z-10 py-16 px-6 border-t border-slate-800 bg-[#0A0F1D] text-white">
         <div className="container mx-auto max-w-xl text-center">
           {/* Logo */}
-          <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10">
-            <span className="text-base font-black text-[#1CB899]">//</span>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Image
+              src="/logoF.png"
+              alt="Fastoria Logo"
+              width={40}
+              height={40}
+              className="w-10 h-10 object-contain drop-shadow-md"
+            />
           </div>
 
           {/* Links */}
