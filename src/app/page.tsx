@@ -158,8 +158,8 @@ export default function FastoriaLanding() {
           </Link>
 
           <div className="hidden md:flex items-center gap-7 text-xs font-bold uppercase tracking-wider text-slate-600">
+            <Link href='/courses' className='relative group px-3.5 py-1.5 rounded-full bg-[#1CB899]/15 text-[#1CB899] font-black border border-[#1CB899]/30 hover:bg-[#1CB899] hover:text-white transition-all shadow-sm flex items-center gap-1.5'><span>Cursos</span><span className='w-1.5 h-1.5 rounded-full bg-[#1CB899] group-hover:bg-white animate-pulse' /></Link>
             {[
-              ['/courses', 'Cursos'],
               ['#identificacion', 'Para quién'],
               ['#problema', 'Problema'],
               ['#propuesta', 'Cómo funciona'],
@@ -176,6 +176,7 @@ export default function FastoriaLanding() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Link href='/courses' className='md:hidden flex items-center gap-1 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full bg-[#1CB899]/15 text-[#1CB899] border border-[#1CB899]/30 hover:bg-[#1CB899] hover:text-white transition-all shadow-sm'>Cursos</Link>
             {user ? (
               <Link href="/dashboard">
                 <motion.button
