@@ -1,6 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
 
 import { useAuth } from '@/components/auth-context';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
