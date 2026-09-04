@@ -34,6 +34,6 @@ jobs:
       - name: Deploy to Firebase Hosting
         run: |
           firebase experiments:enable webframeworks
-          firebase deploy --only hosting --token "$FIREBASE_TOKEN"
+          firebase deploy --only hosting --project btechacademy-8b329 --token "$FIREBASE_TOKEN"
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
