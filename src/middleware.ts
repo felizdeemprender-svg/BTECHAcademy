@@ -15,12 +15,6 @@ export async function middleware(request: NextRequest) {
   const hostHeader = request.headers.get('host') || '';
   const hostname = forwardedHost || hostHeader;
 
-  // 0. REDIRECCIÓN DE DOMINIOS LEGACY (Firebase Hosting -> App Hosting)
-  if (hostname.endsWith('.web.app') || hostname.endsWith('.firebaseapp.com')) {
-    const proUrl = request.nextUrl.clone();
-    proUrl.host = 'btechacademy-pro--btechacademy-8b329.us-central1.hosted.app';
-    return NextResponse.redirect(proUrl);
-  }
   const segments = pathname.split('/').filter(Boolean);
 
   const hostParts = hostname.split('.');
