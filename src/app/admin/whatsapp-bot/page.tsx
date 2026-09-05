@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   MessageSquare,
   QrCode,
@@ -31,6 +32,8 @@ import {
   Trash2,
   ExternalLink,
   Zap,
+  PhoneCall,
+  Loader2,
 } from 'lucide-react';
 import { IoLogoWhatsapp } from 'react-icons/io5';
 
@@ -61,6 +64,7 @@ export default function WhatsAppBotAdminPage() {
   const [saving, setSaving] = useState(false);
   const [syncingPlans, setSyncingPlans] = useState(false);
   const [refreshingQr, setRefreshingQr] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Status state
   const [botStatus, setBotStatus] = useState<{
@@ -71,8 +75,9 @@ export default function WhatsAppBotAdminPage() {
     phone?: string;
   }>({
     instance: 'fastoria',
-    state: 'open',
-    phone: '+54 9 11 5744-8819',
+    state: 'close',
+    qrCode: '',
+    phone: '',
   });
 
   // Settings state
@@ -115,18 +120,44 @@ Reglas clave:
   const [newCategory, setNewCategory] = useState('general');
   const [newContent, setNewContent] = useState('');
 
+  // Fetch status helper
+  const fetchStatus = async () => {
+    try {
+      const statusRes = await fetch('/api/admin/whatsapp-bot?action=status');
+      if (statusRes.ok) {
+        const data = await statusRes.json();
+        setBotStatus({
+          instance: data.instance || 'fastoria',
+          state: data.state || 'close',
+          qrCode: data.qrCode || '',
+          pairingCode: data.pairingCode || '',
+          phone: data.phone || '',
+        });
+        return data;
+      }
+    } catch (err: any) {
+      console.warn('Error al consultar estado:', err.message);
+    }
+    return null;
+  };
+
   // Load initial data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Load status
-        const statusRes = await fetch('/api/admin/whatsapp-bot?action=status');
-        if (statusRes.ok) {
-          const data = await statusRes.json();
-          if (data.state) {
-            setBotStatus((prev) => ({ ...prev, ...data }));
-          }
+        const statusData = await fetchStatus();
+
+        // Si está cerrado y no hay QR, intentar conectar para obtenerlo
+        if (statusData && statusData.state !== 'open' && !statusData.qrCode) {
+          fetch('/api/admin/whatsapp-bot?action=connect', { method: 'POST' })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.qrCode) {
+                setBotStatus((prev) => ({ ...prev, qrCode: data.qrCode, state: data.state || 'connecting' }));
+              }
+            })
+            .catch(() => {});
         }
 
         // Load settings
@@ -155,6 +186,17 @@ Reglas clave:
 
     fetchData();
   }, []);
+
+  // Polling cada 6 segundos mientras no esté conectado
+  useEffect(() => {
+    if (botStatus.state === 'open') return;
+
+    const interval = setInterval(() => {
+      fetchStatus();
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [botStatus.state]);
 
   // Save Settings
   const handleSaveSettings = async () => {
@@ -284,12 +326,17 @@ Reglas clave:
         method: 'POST',
       });
       const data = await res.json();
-      if (data.state) {
-        setBotStatus((prev) => ({ ...prev, state: data.state }));
+      if (data) {
+        setBotStatus((prev) => ({
+          ...prev,
+          state: data.state || 'connecting',
+          qrCode: data.qrCode || prev.qrCode,
+          pairingCode: data.pairingCode || prev.pairingCode,
+        }));
       }
       toast({
-        title: 'Sesión actualizada',
-        description: 'Se verificó la conexión con Evolution API.',
+        title: 'Solicitud de QR enviada',
+        description: 'Se solicitó un nuevo código QR a Evolution API.',
       });
     } catch (err) {
       toast({
@@ -301,6 +348,41 @@ Reglas clave:
       setRefreshingQr(false);
     }
   };
+
+  // Logout / Disconnect
+  const handleLogout = async () => {
+    if (!confirm('¿Estás seguro de que deseas desconectar la línea de WhatsApp?')) return;
+    try {
+      setLoggingOut(true);
+      await fetch('/api/admin/whatsapp-bot?action=logout', { method: 'POST' });
+      setBotStatus({
+        instance: 'fastoria',
+        state: 'close',
+        qrCode: '',
+        phone: '',
+      });
+      toast({
+        title: 'Sesión cerrada',
+        description: 'Se desconectó la sesión de WhatsApp.',
+      });
+      handleRefreshQr();
+    } catch (err) {
+      toast({
+        title: 'Error al desconectar',
+        description: 'No se pudo cerrar la sesión.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
+  const isQrBase64 = botStatus.qrCode?.startsWith('data:image') || botStatus.qrCode?.startsWith('iVBORw0KGgo');
+  const qrImageSrc = isQrBase64
+    ? botStatus.qrCode?.startsWith('data:image')
+      ? botStatus.qrCode
+      : `data:image/png;base64,${botStatus.qrCode}`
+    : null;
 
   return (
     <DashboardLayout>
@@ -351,21 +433,21 @@ Reglas clave:
               className="gap-2 border-primary/20 hover:bg-primary/5 text-xs font-semibold"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncingPlans ? 'animate-spin text-primary' : ''}`} />
-              {syncingPlans ? 'Sincronizando Planes...' : 'Sincronizar Catálogo'}
+              {syncingPlans ? 'Sincronizando...' : 'Sincronizar Catálogo'}
             </Button>
           </div>
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="settings" className="space-y-6">
+        <Tabs defaultValue="connection" className="space-y-6">
           <TabsList className="grid grid-cols-3 max-w-md bg-muted/60 p-1 rounded-xl">
-            <TabsTrigger value="settings" className="gap-2 text-xs font-semibold rounded-lg">
-              <Sparkles className="w-3.5 h-3.5" />
-              Comportamiento & IA
-            </TabsTrigger>
             <TabsTrigger value="connection" className="gap-2 text-xs font-semibold rounded-lg">
               <QrCode className="w-3.5 h-3.5" />
               Conexión & QR
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2 text-xs font-semibold rounded-lg">
+              <Sparkles className="w-3.5 h-3.5" />
+              Comportamiento & IA
             </TabsTrigger>
             <TabsTrigger value="rag" className="gap-2 text-xs font-semibold rounded-lg">
               <Database className="w-3.5 h-3.5" />
@@ -373,7 +455,140 @@ Reglas clave:
             </TabsTrigger>
           </TabsList>
 
-          {/* TAB 1: COMUNICACIÓN & IA */}
+          {/* TAB 1: CONEXIÓN & QR */}
+          <TabsContent value="connection" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="border border-border/80 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <QrCode className="w-4 h-4 text-primary" />
+                    Vinculación de WhatsApp
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Escanea el código QR desde la aplicación WhatsApp en tu teléfono para autorizar la instancia de Fastoria.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center justify-center p-6 space-y-4">
+                  {botStatus.state === 'open' ? (
+                    <div className="text-center py-6 space-y-3">
+                      <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+                        <CheckCircle2 className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-lg font-bold text-foreground">Instancia Vinculada y Activa</h3>
+                      <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                        {botStatus.phone ? (
+                          <>Línea <span className="font-mono font-bold text-foreground">+{botStatus.phone}</span> conectada y respondiendo en tiempo real.</>
+                        ) : (
+                          <>El bot está en línea y respondiendo mensajes en tiempo real.</>
+                        )}
+                      </p>
+
+                      <div className="pt-4">
+                        <Button
+                          onClick={handleLogout}
+                          disabled={loggingOut}
+                          variant="destructive"
+                          size="sm"
+                          className="gap-2 text-xs font-semibold"
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                          {loggingOut ? 'Desconectando...' : 'Desconectar / Cambiar Número'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="p-4 bg-white rounded-2xl border-2 border-emerald-500/20 shadow-md flex flex-col items-center justify-center min-w-[240px] min-h-[240px]">
+                        {qrImageSrc ? (
+                          <img
+                            src={qrImageSrc}
+                            alt="Código QR de WhatsApp"
+                            className="w-56 h-56 object-contain rounded-lg"
+                          />
+                        ) : botStatus.qrCode ? (
+                          <QRCodeSVG
+                            value={botStatus.qrCode}
+                            size={220}
+                            level="M"
+                            includeMargin={false}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-3 p-6 text-center text-muted-foreground">
+                            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                            <p className="text-xs font-medium">Generando código QR desde Evolution API...</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {botStatus.pairingCode && (
+                        <div className="p-2.5 bg-muted/60 rounded-xl border text-center">
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Código de Emparejamiento</p>
+                          <p className="text-sm font-mono font-black text-primary tracking-widest">{botStatus.pairingCode}</p>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                        <span>Actualización automática en tiempo real</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 w-full pt-2">
+                    <Button
+                      onClick={handleRefreshQr}
+                      disabled={refreshingQr}
+                      variant="outline"
+                      className="flex-1 gap-2 text-xs font-semibold"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${refreshingQr ? 'animate-spin' : ''}`} />
+                      {refreshingQr ? 'Solicitando...' : 'Generar / Refrescar QR'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-border/80 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-amber-500" />
+                    Instrucciones de Vinculación
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Pasos sencillos para conectar tu línea de WhatsApp institucional.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-xs">
+                  <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
+                    <li className="leading-relaxed">
+                      Abre <strong>WhatsApp</strong> en el teléfono donde reside la línea comercial.
+                    </li>
+                    <li className="leading-relaxed">
+                      Toca en <strong>Menú (tres puntos)</strong> o <strong>Configuración</strong> y selecciona <strong>Dispositivos vinculados</strong>.
+                    </li>
+                    <li className="leading-relaxed">
+                      Toca en <strong>Vincular un dispositivo</strong> y apunta la cámara hacia el código QR mostrado a la izquierda.
+                    </li>
+                    <li className="leading-relaxed">
+                      Una vez vinculado, el estado cambiará automáticamente a <strong className="text-emerald-600">Conectado (En Línea)</strong>.
+                    </li>
+                  </ol>
+
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-900 dark:text-amber-200">
+                    <p className="font-semibold flex items-center gap-1.5 mb-1">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      Recomendación importante:
+                    </p>
+                    <p className="text-[11px] leading-relaxed">
+                      Utiliza una línea con WhatsApp Business para mayor estabilidad y soporte en la atención a alumnos y clientes.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* TAB 2: COMUNICACIÓN & IA */}
           <TabsContent value="settings" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main settings */}
@@ -566,92 +781,6 @@ Reglas clave:
                   </CardContent>
                 </Card>
               </div>
-            </div>
-          </TabsContent>
-
-          {/* TAB 2: CONEXIÓN & QR */}
-          <TabsContent value="connection" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border border-border/80 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <QrCode className="w-4 h-4 text-primary" />
-                    Vinculación de WhatsApp
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Escanea el código QR desde la aplicación WhatsApp en tu teléfono para autorizar la instancia de Fastoria.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center p-6 space-y-4">
-                  {botStatus.state === 'open' ? (
-                    <div className="text-center py-8 space-y-3">
-                      <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto">
-                        <CheckCircle2 className="w-8 h-8" />
-                      </div>
-                      <h3 className="text-lg font-bold text-foreground">Instancia Vinculada y Activa</h3>
-                      <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                        El número <span className="font-mono font-bold text-foreground">{botStatus.phone}</span> está respondiendo y procesando mensajes en tiempo real.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-white rounded-2xl border shadow-inner flex flex-col items-center">
-                      <div className="w-52 h-52 bg-slate-100 flex items-center justify-center rounded-xl text-slate-400 font-mono text-xs">
-                        [ Código QR de Evolution API ]
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-3 w-full pt-2">
-                    <Button
-                      onClick={handleRefreshQr}
-                      disabled={refreshingQr}
-                      variant="outline"
-                      className="flex-1 gap-2 text-xs font-semibold"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${refreshingQr ? 'animate-spin' : ''}`} />
-                      Verificar / Refrescar QR
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-border/80 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-amber-500" />
-                    Instrucciones de Vinculación
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Pasos sencillos para conectar tu línea de WhatsApp institucional.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 text-xs">
-                  <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
-                    <li className="leading-relaxed">
-                      Abre <strong>WhatsApp</strong> en el teléfono donde reside la línea comercial.
-                    </li>
-                    <li className="leading-relaxed">
-                      Toca en <strong>Menú (tres puntos)</strong> o <strong>Configuración</strong> y selecciona <strong>Dispositivos vinculados</strong>.
-                    </li>
-                    <li className="leading-relaxed">
-                      Toca en <strong>Vincular un dispositivo</strong> y apunta la cámara hacia el código QR mostrado a la izquierda.
-                    </li>
-                    <li className="leading-relaxed">
-                      Una vez vinculado, el estado cambiará automáticamente a <strong className="text-emerald-600">Conectado (En Línea)</strong>.
-                    </li>
-                  </ol>
-
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-900 dark:text-amber-200">
-                    <p className="font-semibold flex items-center gap-1.5 mb-1">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      Recomendación importante:
-                    </p>
-                    <p className="text-[11px] leading-relaxed">
-                      Utiliza una línea con WhatsApp Business para mayor estabilidad y soporte en la atención a alumnos y clientes.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
 

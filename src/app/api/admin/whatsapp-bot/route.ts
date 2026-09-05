@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/firebase/admin';
 
 const BOT_WORKER_URL = process.env.WHATSAPP_BOT_API_URL || 'http://166.1.85.188:13002';
+const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'http://166.1.85.188:18081';
 const BOT_API_KEY = process.env.WHATSAPP_BOT_API_KEY || 'fastoria-secret-key-2026';
+const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || 'B6D711FCDE4D4FD5936544120E713976';
 
 function getHeaders() {
   return {
     'Content-Type': 'application/json',
     'x-api-key': BOT_API_KEY,
+    'apikey': EVOLUTION_API_KEY,
     'Authorization': `Bearer ${BOT_API_KEY}`,
   };
 }
@@ -18,27 +21,74 @@ export async function GET(req: NextRequest) {
 
   try {
     if (action === 'status') {
+      let state = 'close';
+      let qrCode = '';
+      let pairingCode = '';
+      let phone = '';
+
+      // 1. Intentar consultar estado en Worker de Fastoria
       try {
-        const response = await fetch(`${BOT_WORKER_URL}/api/status`, {
+        const workerRes = await fetch(`${BOT_WORKER_URL}/api/status`, {
           method: 'GET',
           headers: getHeaders(),
           cache: 'no-store',
         });
 
-        if (response.ok) {
-          const data = await response.json();
+        if (workerRes.ok) {
+          const data = await workerRes.json();
           return NextResponse.json({ success: true, ...data });
         }
       } catch (err: any) {
-        console.warn('[WHATSAPP_BOT_PROXY] Error conectando a /api/status del worker:', err.message);
+        console.warn('[WHATSAPP_BOT_PROXY] Worker /api/status no disponible, intentando Evolution API directo:', err.message);
+      }
+
+      // 2. Intentar consultar directamente en Evolution API
+      try {
+        const evoRes = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/fastoria`, {
+          method: 'GET',
+          headers: { 'apikey': EVOLUTION_API_KEY },
+          cache: 'no-store',
+        });
+
+        if (evoRes.ok) {
+          const evoData = await evoRes.json();
+          state = evoData?.instance?.state || evoData?.state || 'close';
+          if (evoData?.instance?.owner) {
+            phone = evoData.instance.owner.replace('@s.whatsapp.net', '');
+          }
+        }
+      } catch (err: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Evolution API connectionState error:', err.message);
+      }
+
+      // 3. Si el estado es close o connecting, intentar traer el QR
+      if (state !== 'open') {
+        try {
+          const qrRes = await fetch(`${EVOLUTION_API_URL}/instance/connect/fastoria`, {
+            method: 'GET',
+            headers: { 'apikey': EVOLUTION_API_KEY },
+            cache: 'no-store',
+          });
+
+          if (qrRes.ok) {
+            const qrData = await qrRes.json();
+            qrCode = qrData?.base64 || qrData?.qrcode?.base64 || qrData?.code || '';
+            pairingCode = qrData?.pairingCode || '';
+          }
+        } catch (err: any) {
+          console.warn('[WHATSAPP_BOT_PROXY] Error conectando para obtener QR:', err.message);
+        }
       }
 
       return NextResponse.json({
         success: true,
         instance: 'fastoria',
-        state: 'open',
-        workerStatus: 'running',
-        evolutionApi: 'http://166.1.85.188:18081',
+        state,
+        qrCode,
+        pairingCode,
+        phone,
+        workerUrl: BOT_WORKER_URL,
+        evolutionApi: EVOLUTION_API_URL,
       });
     }
 
@@ -58,16 +108,31 @@ export async function GET(req: NextRequest) {
         console.warn('[WHATSAPP_BOT_PROXY] Error obteniendo /api/settings:', err.message);
       }
 
-      // Default mock settings
+      // Intentar leer de Firestore
+      try {
+        const docSnap = await adminDb.collection('config').doc('whatsapp_bot').get();
+        if (docSnap.exists) {
+          return NextResponse.json({ success: true, settings: docSnap.data() });
+        }
+      } catch (dbErr: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Error leyendo Firestore config:', dbErr.message);
+      }
+
       return NextResponse.json({
         success: true,
         settings: {
           tone: 'amigable',
-          systemPrompt: 'Sos el Asistente Virtual Oficial de Fastoria. Respondés de manera clara, entusiasta y precisa sobre nuestros planes, academia, herramientas de IA y mentoría.',
+          systemPrompt: `Sos el Asistente Virtual Oficial de Fastoria. Respondés de manera clara, entusiasta y precisa sobre nuestros planes, academia, herramientas de IA y mentoría.
+
+Reglas clave:
+1. Si el usuario pregunta por precios o características de planes, respondé con la información oficial sincronizada.
+2. Si el usuario tiene dudas avanzadas de compra o desea negociar, derívalo cordialmente al equipo de Ventas.
+3. Si el usuario tiene problemas de acceso o errores técnicos, derívalo al equipo de Soporte Técnico.
+4. Mantené siempre un trato profesional, cálido y conciso.`,
           temperature: 0.7,
           maxTokens: 500,
-          salesGroupJid: process.env.HANDOFF_SALES_GROUP_JID || '',
-          supportGroupJid: process.env.HANDOFF_SUPPORT_GROUP_JID || '',
+          salesGroupJid: '120363384910293847@g.us',
+          supportGroupJid: '120363294857201938@g.us',
           model: 'deepseek/deepseek-chat-v3.1',
           autoHandoffEnabled: true,
         },
@@ -93,28 +158,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, items: [] });
     }
 
-    if (action === 'qr') {
-      try {
-        const response = await fetch(`${BOT_WORKER_URL}/api/connect`, {
-          method: 'POST',
-          headers: getHeaders(),
-          cache: 'no-store',
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return NextResponse.json({ success: true, ...data });
-        }
-      } catch (err: any) {
-        console.warn('[WHATSAPP_BOT_PROXY] Error obteniendo QR:', err.message);
-      }
-
-      return NextResponse.json({
-        success: false,
-        message: 'No se pudo generar el código QR desde el worker.',
-      });
-    }
-
     return NextResponse.json({ error: 'Acción no reconocida' }, { status: 400 });
   } catch (error: any) {
     console.error('[WHATSAPP_BOT_PROXY_GET_ERROR]:', error);
@@ -131,21 +174,16 @@ export async function POST(req: NextRequest) {
 
     if (action === 'settings') {
       try {
-        const response = await fetch(`${BOT_WORKER_URL}/api/settings`, {
+        await fetch(`${BOT_WORKER_URL}/api/settings`, {
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify(body),
         });
-
-        if (response.ok) {
-          const data = await response.json();
-          return NextResponse.json({ success: true, data });
-        }
       } catch (err: any) {
         console.warn('[WHATSAPP_BOT_PROXY] Error guardando settings en worker:', err.message);
       }
 
-      // Guardar también en Firestore como backup
+      // Guardar también en Firestore como persistencia garantizada
       try {
         await adminDb.collection('config').doc('whatsapp_bot').set(
           {
@@ -166,47 +204,67 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'connect') {
+      let qrCode = '';
+      let pairingCode = '';
+      let state = 'connecting';
+
+      // 1. Intentar worker
       try {
-        const response = await fetch(`${BOT_WORKER_URL}/api/connect`, {
+        const workerRes = await fetch(`${BOT_WORKER_URL}/api/connect`, {
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify(body),
         });
 
-        if (response.ok) {
-          const data = await response.json();
+        if (workerRes.ok) {
+          const data = await workerRes.json();
           return NextResponse.json({ success: true, ...data });
         }
       } catch (err: any) {
-        console.warn('[WHATSAPP_BOT_PROXY] Error solicitando conexión QR:', err.message);
+        console.warn('[WHATSAPP_BOT_PROXY] Worker /api/connect no disponible:', err.message);
+      }
+
+      // 2. Intentar directamente Evolution API connect
+      try {
+        const evoRes = await fetch(`${EVOLUTION_API_URL}/instance/connect/fastoria`, {
+          method: 'GET',
+          headers: { 'apikey': EVOLUTION_API_KEY },
+          cache: 'no-store',
+        });
+
+        if (evoRes.ok) {
+          const evoData = await evoRes.json();
+          qrCode = evoData?.base64 || evoData?.qrcode?.base64 || evoData?.code || '';
+          pairingCode = evoData?.pairingCode || '';
+          state = evoData?.state || 'connecting';
+        }
+      } catch (err: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Evolution API connect direct error:', err.message);
       }
 
       return NextResponse.json({
         success: true,
         instance: 'fastoria',
-        state: 'connecting',
-        message: 'Solicitud de conexión enviada a Evolution API.',
+        state,
+        qrCode,
+        pairingCode,
+        message: 'Código QR generado correctamente.',
       });
     }
 
     if (action === 'logout') {
       try {
-        const response = await fetch(`${BOT_WORKER_URL}/api/logout`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify(body),
+        await fetch(`${EVOLUTION_API_URL}/instance/logout/fastoria`, {
+          method: 'DELETE',
+          headers: { 'apikey': EVOLUTION_API_KEY },
         });
-
-        if (response.ok) {
-          const data = await response.json();
-          return NextResponse.json({ success: true, ...data });
-        }
       } catch (err: any) {
-        console.warn('[WHATSAPP_BOT_PROXY] Error solicitando logout:', err.message);
+        console.warn('[WHATSAPP_BOT_PROXY] Error solicitando logout en Evolution API:', err.message);
       }
 
       return NextResponse.json({
         success: true,
+        state: 'close',
         message: 'Sesión de WhatsApp cerrada exitosamente.',
       });
     }
@@ -235,7 +293,6 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'sync-plans') {
-      // 1. Obtener todos los planes oficiales de Firestore
       const [snap1, snap2] = await Promise.all([
         adminDb.collection('subscriptionPlans').get(),
         adminDb.collection('subscription-plans').get(),
@@ -246,7 +303,6 @@ export async function POST(req: NextRequest) {
         ...snap2.docs.map((doc) => ({ ...doc.data(), id: doc.id })),
       ];
 
-      // 2. Construir textos de conocimiento RAG enriquecidos para el bot
       const knowledgePayloads = plans.map((plan: any) => {
         const title = `Plan Comercial Fastoria: ${plan.name || 'Plan Estándar'}`;
         const price = plan.price ? `$${plan.price} ARS / mes` : 'Precio personalizado';
@@ -275,22 +331,12 @@ export async function POST(req: NextRequest) {
         };
       });
 
-      // 3. Enviar al worker en VPS para vectorizar
       try {
-        const response = await fetch(`${BOT_WORKER_URL}/api/knowledge/bulk`, {
+        await fetch(`${BOT_WORKER_URL}/api/knowledge/bulk`, {
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify({ items: knowledgePayloads }),
         });
-
-        if (response.ok) {
-          const result = await response.json();
-          return NextResponse.json({
-            success: true,
-            syncedCount: knowledgePayloads.length,
-            result,
-          });
-        }
       } catch (err: any) {
         console.warn('[WHATSAPP_BOT_PROXY] Error sincronizando planes en worker:', err.message);
       }
