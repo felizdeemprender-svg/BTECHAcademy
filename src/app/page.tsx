@@ -1494,12 +1494,12 @@ export default function FastoriaLanding() {
       {/* ========================================================================= */}
       <section id="integraciones" className="relative z-10 py-24 px-6 overflow-hidden bg-slate-50/50 border-t border-slate-200/60">
         <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes scrollLeft {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+          @keyframes scrollRight {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
           }
           .integrations-track {
-            animation: scrollLeft 22s linear infinite;
+            animation: scrollRight 22s linear infinite;
           }
           .integrations-track:hover {
             animation-play-state: paused;
