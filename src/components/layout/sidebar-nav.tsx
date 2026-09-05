@@ -25,7 +25,8 @@ import {
   ReceiptText,
   Wallet,
   Sparkles,
-  ArrowLeftRight
+  ArrowLeftRight,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-context';
@@ -123,6 +124,7 @@ export function SidebarNav() {
         { name: 'Facturación', href: '/admin/billing', roles: ['admin'], icon: ReceiptText, group: 'COMERCIAL' },
         { name: 'Moderación IA', href: '/admin/moderation', roles: ['admin'], icon: ShieldAlert, group: 'IA' },
         { name: 'Ecosistema Económico IA', href: '/admin/ai-pricing', roles: ['admin'], icon: Cpu, group: 'IA' },
+        { name: 'Bot de WhatsApp', href: '/admin/whatsapp-bot', roles: ['admin'], icon: MessageSquare, group: 'IA' },
         { name: 'Gestión de ADNs', href: '/admin/adns', roles: ['admin'], icon: FileBox, group: 'IA' },
         { name: 'Tema del Sistema', href: '/admin/theme', roles: ['admin'], icon: Palette, group: 'APARIENCIA' },
         { name: 'Estilos de Landing', href: '/admin/styles', roles: ['admin'], icon: LayoutIcon, group: 'APARIENCIA' },

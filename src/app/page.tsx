@@ -1,5 +1,7 @@
 'use client';
 
+import { WhatsAppFloatingButton } from '@/components/ui/whatsapp-floating-button';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, MotionConfig, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
@@ -1814,6 +1816,8 @@ export default function FastoriaLanding() {
           </div>
         </div>
       </footer>
+
+      <WhatsAppFloatingButton />
 
     </div>
   );
