@@ -145,23 +145,23 @@ export default function FastoriaLanding() {
         className="fixed top-4 inset-x-0 mx-auto z-50 w-[94%] max-w-6xl"
       >
         <div className={`backdrop-blur-xl rounded-full px-5 py-3 flex items-center justify-between transition-all duration-300 ${scrolled ? 'bg-white/95 border border-slate-200 shadow-xl shadow-slate-900/10' : 'bg-white/70 border border-transparent shadow-lg shadow-slate-900/5'}`}>
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link href="/" className="flex items-center gap-1 group">
             <motion.div
               whileHover={{ rotate: -8, scale: 1.08 }}
               transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-              className="w-8 h-8 relative flex items-center justify-center"
+              className="w-7 h-7 relative flex items-center justify-center -mr-0.5"
             >
               <Image
                 src="/logoF.png"
                 alt="Fastoria Logo"
-                width={32}
-                height={32}
-                className="w-8 h-8 object-contain drop-shadow-sm"
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain drop-shadow-sm"
                 priority
               />
             </motion.div>
             <span className="font-black tracking-tight text-lg text-slate-900">
-              FASTORIA<span className="text-[#1CB899]">.</span>
+              ASTORIA<span className="text-[#1CB899]">.</span>
             </span>
           </Link>
 
