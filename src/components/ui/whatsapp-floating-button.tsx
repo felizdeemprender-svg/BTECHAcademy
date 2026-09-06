@@ -11,7 +11,7 @@ interface WhatsAppFloatingButtonProps {
 }
 
 export function WhatsAppFloatingButton({
-  phoneNumber = '541157448819',
+  phoneNumber = '5491176411666',
   defaultMessage = '¡Hola Fastoria! Quisiera hacer una consulta sobre la plataforma y los planes.'
 }: WhatsAppFloatingButtonProps) {
   const [showTooltip, setShowTooltip] = useState(true);

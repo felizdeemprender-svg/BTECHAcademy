@@ -78,6 +78,12 @@ interface ConversationItem {
   last_message_at?: string;
   last_message_time?: string;
   inbound_count?: number;
+  total_messages?: number;
+  notes?: string;
+  tags?: string[];
+  lead_status?: 'nuevo' | 'interesado' | 'cliente' | 'cerrado' | 'seguimiento' | string;
+  assigned_agent?: string;
+  email?: string;
 }
 
 interface ChatMessage {
@@ -89,6 +95,14 @@ interface ChatMessage {
   handled_by?: string;
   created_at: string;
 }
+
+const CANNED_RESPONSES = [
+  { label: '👋 Saludo', text: '¡Hola! Te escribe un asesor del equipo de Fastoria. ¿En qué podemos ayudarte hoy?' },
+  { label: '💎 Planes y Precios', text: 'Contamos con planes diseñados a tu medida: Básico ($9.999), Pro ($19.999) y Elite ($39.999) con créditos de IA, landings y mentoría. Podés ver el detalle en https://fastoria.com.ar/planes' },
+  { label: '💳 Medios de Pago', text: 'Aceptamos transferencias bancarias, tarjetas de crédito/débito y Mercado Pago con activación inmediata.' },
+  { label: '🤖 Demo de IA', text: 'Con Fastoria podés generar guiones, voces clonadas y videos de alta conversión con un solo clic. ¿Te gustaría agendar una demo en vivo?' },
+  { label: '🤝 Asesor Comercial', text: 'Te derivo con un especialista comercial para coordinar una reunión y evaluar el mejor plan para tu proyecto.' },
+];
 
 export default function WhatsAppBotAdminPage() {
   const { profile } = useAuth();
@@ -128,8 +142,8 @@ Reglas clave:
 4. Mantené siempre un trato profesional, cálido y conciso.`,
     temperature: 0.7,
     maxTokens: 500,
-    salesGroupJid: '120363384910293847@g.us',
-    supportGroupJid: '120363294857201938@g.us',
+    salesGroupJid: '120363412233530296@g.us',
+    supportGroupJid: '120363413305659507@g.us',
     model: 'deepseek/deepseek-chat-v3.1',
     autoHandoffEnabled: true,
   });
@@ -165,11 +179,36 @@ Reglas clave:
   const [replyText, setReplyText] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const [chatSearch, setChatSearch] = useState('');
+  const [filterMode, setFilterMode] = useState<'all' | 'BOT' | 'HUMAN' | 'interesado' | 'cliente'>('all');
+
+  // CRM Profile State (for current active conversation)
+  const [crmDisplayName, setCrmDisplayName] = useState('');
+  const [crmEmail, setCrmEmail] = useState('');
+  const [crmStatus, setCrmStatus] = useState<string>('nuevo');
+  const [crmNotes, setCrmNotes] = useState('');
+  const [crmTags, setCrmTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState('');
+  const [savingCrm, setSavingCrm] = useState(false);
+  const [transferring, setTransferring] = useState<string | null>(null);
 
   // Auto scroll to bottom of chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Sync CRM state when active conversation changes
+  useEffect(() => {
+    if (selectedPhone) {
+      const active = conversations.find((c) => c.phone === selectedPhone);
+      if (active) {
+        setCrmDisplayName(active.display_name || '');
+        setCrmEmail(active.email || '');
+        setCrmStatus(active.lead_status || 'nuevo');
+        setCrmNotes(active.notes || '');
+        setCrmTags(Array.isArray(active.tags) ? active.tags : []);
+      }
+    }
+  }, [selectedPhone, conversations]);
 
   // Check direct instance status from Evolution API
   const checkDirectEvolution = async () => {
@@ -285,14 +324,13 @@ Reglas clave:
   };
 
   // Send human message from admin dashboard
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!selectedPhone || !replyText.trim() || sendingReply) return;
+  const handleSendMessage = async (textCustom?: string) => {
+    const textToSend = (textCustom || replyText).trim();
+    if (!selectedPhone || !textToSend || sendingReply) return;
 
-    const textToSend = replyText.trim();
     try {
       setSendingReply(true);
-      setReplyText('');
+      if (!textCustom) setReplyText('');
 
       const res = await fetch('/api/admin/whatsapp-bot?action=send-message', {
         method: 'POST',
@@ -320,35 +358,126 @@ Reglas clave:
         description: err.message || 'No se pudo enviar el mensaje por WhatsApp.',
         variant: 'destructive',
       });
-      setReplyText(textToSend);
+      if (!textCustom) setReplyText(textToSend);
     } finally {
       setSendingReply(false);
     }
   };
 
-  // Toggle Bot Resume / Takeover
-  const handleResumeBot = async (phone: string) => {
+  // Toggle Mode (Takeover / Resume Bot)
+  const handleToggleMode = async (phone: string, targetMode: 'BOT' | 'HUMAN') => {
     try {
-      const res = await fetch('/api/admin/whatsapp-bot?action=resume-bot', {
+      const res = await fetch('/api/admin/whatsapp-bot?action=toggle-mode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, mode: targetMode }),
       });
+
       if (res.ok) {
         toast({
-          title: 'Bot IA Reanudado',
-          description: 'El asistente automático responderá los próximos mensajes de este contacto.',
+          title: targetMode === 'BOT' ? 'Bot IA Reanudado' : 'Control Tomado (Modo Humano)',
+          description:
+            targetMode === 'BOT'
+              ? 'El asistente virtual volverá a responder automáticamente.'
+              : 'El bot ha sido pausado para este chat. Podés atenderlo manualmente.',
         });
         await fetchConversations(true);
-        await fetchMessages(phone, true);
       }
     } catch (err: any) {
       toast({
         title: 'Error',
-        description: 'No se pudo reactivar el bot para este chat.',
+        description: 'No se pudo cambiar el modo de la conversación.',
         variant: 'destructive',
       });
     }
+  };
+
+  // Transfer conversation to WhatsApp group (Ventas / Soporte)
+  const handleTransferGroup = async (department: 'ventas' | 'soporte') => {
+    if (!selectedPhone) return;
+    try {
+      setTransferring(department);
+      const res = await fetch('/api/admin/whatsapp-bot?action=transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: selectedPhone,
+          department,
+          reason: `Derivación manual de ${profile?.displayName || 'Asesor'} desde el Live Chat Fastoria`,
+        }),
+      });
+
+      if (res.ok) {
+        toast({
+          title: `Derivado al grupo de ${department === 'ventas' ? 'Ventas' : 'Soporte'}`,
+          description: 'Se envió una tarjeta de derivación con el historial al grupo oficial de WhatsApp.',
+        });
+        await fetchConversations(true);
+      } else {
+        throw new Error('Error al transferir');
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Error al derivar',
+        description: err.message || 'No se pudo enviar la derivación al grupo de WhatsApp.',
+        variant: 'destructive',
+      });
+    } finally {
+      setTransferring(null);
+    }
+  };
+
+  // Save CRM Profile
+  const handleSaveCrmProfile = async () => {
+    if (!selectedPhone) return;
+    try {
+      setSavingCrm(true);
+      const res = await fetch(`/api/admin/whatsapp-bot?action=update-conversation&phone=${encodeURIComponent(selectedPhone)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          display_name: crmDisplayName,
+          email: crmEmail,
+          lead_status: crmStatus,
+          notes: crmNotes,
+          tags: crmTags,
+          assigned_agent: profile?.displayName || 'Asesor Fastoria',
+        }),
+      });
+
+      if (res.ok) {
+        toast({
+          title: 'Ficha del Cliente Guardada',
+          description: 'Los datos y notas internas fueron actualizados con éxito.',
+        });
+        await fetchConversations(true);
+      } else {
+        throw new Error('Error al actualizar ficha');
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Error al guardar',
+        description: err.message || 'No se pudo guardar la ficha del cliente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingCrm(false);
+    }
+  };
+
+  // Add a tag to CRM profile
+  const handleAddTag = () => {
+    if (!newTagInput.trim()) return;
+    const tag = newTagInput.trim();
+    if (!crmTags.includes(tag)) {
+      setCrmTags([...crmTags, tag]);
+    }
+    setNewTagInput('');
+  };
+
+  // Remove tag from CRM profile
+  const handleRemoveTag = (tagToRemove: string) => {
+    setCrmTags(crmTags.filter((t) => t !== tagToRemove));
   };
 
   // Load initial data
@@ -591,40 +720,69 @@ Reglas clave:
       : `data:image/png;base64,${botStatus.qrCode}`
     : null;
 
+  // Filtered conversations with multi-field search and mode tabs
   const filteredConversations = conversations.filter((c) => {
     const q = chatSearch.toLowerCase();
-    return (
+    const matchesSearch =
       c.phone.toLowerCase().includes(q) ||
       (c.display_name && c.display_name.toLowerCase().includes(q)) ||
-      (c.last_message && c.last_message.toLowerCase().includes(q))
-    );
+      (c.last_message && c.last_message.toLowerCase().includes(q)) ||
+      (c.notes && c.notes.toLowerCase().includes(q)) ||
+      (c.tags && c.tags.some((t) => t.toLowerCase().includes(q)));
+
+    if (!matchesSearch) return false;
+
+    if (filterMode === 'BOT') return c.mode === 'BOT';
+    if (filterMode === 'HUMAN') return c.mode === 'HUMAN';
+    if (filterMode === 'interesado') return c.lead_status === 'interesado';
+    if (filterMode === 'cliente') return c.lead_status === 'cliente';
+
+    return true;
   });
 
   const activeConversation = conversations.find((c) => c.phone === selectedPhone);
+  const botModeCount = conversations.filter((c) => c.mode === 'BOT').length;
+  const humanModeCount = conversations.filter((c) => c.mode === 'HUMAN').length;
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-8">
+      <div className="space-y-6 max-w-[1600px] mx-auto p-4 md:p-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5">
           <div>
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl border border-emerald-500/20">
                 <IoLogoWhatsapp className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                  Bot de WhatsApp & Live Chat
+                <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                  WhatsApp CRM & Live Chat
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    Fastoria Pro
+                  </span>
                 </h1>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Bandeja de mensajes en vivo, IA conversacional con RAG y derivación a asesores.
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Bandeja en vivo, toma de control instantánea, gestión CRM de clientes y derivaciones a WhatsApp.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border bg-background text-xs font-semibold shadow-sm">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Quick Metrics */}
+            <div className="hidden lg:flex items-center gap-2 bg-muted/40 px-3 py-1.5 rounded-xl border text-xs">
+              <span className="text-muted-foreground">Chats: <strong className="text-foreground">{conversations.length}</strong></span>
+              <span className="text-border">|</span>
+              <span className="text-purple-600 font-semibold flex items-center gap-1">
+                <Bot className="w-3 h-3" /> {botModeCount} Bot
+              </span>
+              <span className="text-border">|</span>
+              <span className="text-blue-600 font-semibold flex items-center gap-1">
+                <UserCheck className="w-3 h-3" /> {humanModeCount} Asesor
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border bg-background text-xs font-semibold shadow-xs">
               <span
                 className={`w-2.5 h-2.5 rounded-full ${
                   botStatus.state === 'open'
@@ -636,7 +794,7 @@ Reglas clave:
               />
               <span>
                 {botStatus.state === 'open'
-                  ? `Conectado (${botStatus.phone ? '+' + botStatus.phone : 'En Línea'})`
+                  ? `+${botStatus.phone || '1176411666'} En Línea`
                   : botStatus.state === 'connecting'
                   ? 'Conectando...'
                   : 'Desconectado'}
@@ -657,11 +815,11 @@ Reglas clave:
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
           <TabsList className="grid grid-cols-4 max-w-xl bg-muted/60 p-1 rounded-xl">
             <TabsTrigger value="chat" className="gap-2 text-xs font-semibold rounded-lg">
               <MessageSquare className="w-3.5 h-3.5" />
-              Live Chat & Mensajes
+              Live Chat & CRM
             </TabsTrigger>
             <TabsTrigger value="connection" className="gap-2 text-xs font-semibold rounded-lg">
               <QrCode className="w-3.5 h-3.5" />
@@ -677,48 +835,98 @@ Reglas clave:
             </TabsTrigger>
           </TabsList>
 
-          {/* TAB 0: LIVE CHAT / BANDEJA DE MENSAJES */}
+          {/* TAB 0: LIVE CHAT & CRM WORKSPACE */}
           <TabsContent value="chat" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 min-h-[620px]">
-              {/* Sidebar de Chats */}
-              <Card className="md:col-span-4 flex flex-col border border-border/80 shadow-sm overflow-hidden h-[620px]">
-                <CardHeader className="p-3.5 border-b bg-muted/20 space-y-2">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[680px]">
+              
+              {/* COL 1: CONVERSATIONS LIST & SEARCH (3.5 cols) */}
+              <Card className="lg:col-span-4 xl:col-span-3 flex flex-col border border-border shadow-xs overflow-hidden h-[700px]">
+                <CardHeader className="p-3 border-b bg-muted/20 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4 text-emerald-600" />
-                      Conversaciones ({conversations.length})
+                    <CardTitle className="text-xs font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+                      <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      Conversaciones ({filteredConversations.length})
                     </CardTitle>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
                       onClick={() => fetchConversations()}
                       disabled={loadingConversations}
                       title="Actualizar lista"
                     >
-                      <RefreshCw className={`w-3.5 h-3.5 ${loadingConversations ? 'animate-spin' : ''}`} />
+                      <RefreshCw className={`w-3 h-3 ${loadingConversations ? 'animate-spin' : ''}`} />
                     </Button>
                   </div>
+
+                  {/* Search Bar */}
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar por teléfono o nombre..."
+                      placeholder="Buscar por nombre, cel, notas..."
                       value={chatSearch}
                       onChange={(e) => setChatSearch(e.target.value)}
                       className="pl-8 text-xs h-8 bg-background"
                     />
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px] no-scrollbar">
+                    <button
+                      onClick={() => setFilterMode('all')}
+                      className={`px-2 py-0.5 rounded-full font-semibold transition shrink-0 ${
+                        filterMode === 'all'
+                          ? 'bg-foreground text-background shadow-xs'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      Todos ({conversations.length})
+                    </button>
+                    <button
+                      onClick={() => setFilterMode('BOT')}
+                      className={`px-2 py-0.5 rounded-full font-semibold transition shrink-0 ${
+                        filterMode === 'BOT'
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20'
+                      }`}
+                    >
+                      🤖 Bot ({botModeCount})
+                    </button>
+                    <button
+                      onClick={() => setFilterMode('HUMAN')}
+                      className={`px-2 py-0.5 rounded-full font-semibold transition shrink-0 ${
+                        filterMode === 'HUMAN'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20'
+                      }`}
+                    >
+                      👤 Humano ({humanModeCount})
+                    </button>
+                    <button
+                      onClick={() => setFilterMode('interesado')}
+                      className={`px-2 py-0.5 rounded-full font-semibold transition shrink-0 ${
+                        filterMode === 'interesado'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
+                      }`}
+                    >
+                      🔥 Leads
+                    </button>
                   </div>
                 </CardHeader>
 
                 <CardContent className="p-0 flex-1 overflow-y-auto divide-y divide-border/40">
                   {loadingConversations && conversations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground gap-2">
-                      <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
-                      <p className="text-xs">Cargando chats de WhatsApp...</p>
+                      <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+                      <p className="text-xs">Cargando conversaciones...</p>
                     </div>
                   ) : filteredConversations.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground text-xs">
-                      {chatSearch ? 'No se encontraron conversaciones con ese filtro.' : 'Aún no hay conversaciones registradas.'}
+                    <div className="p-8 text-center text-muted-foreground text-xs space-y-1">
+                      <p className="font-semibold text-foreground">Sin resultados</p>
+                      <p className="text-muted-foreground text-[11px]">
+                        {chatSearch ? 'No hay chats que coincidan con la búsqueda.' : 'Aún no hay mensajes registrados.'}
+                      </p>
                     </div>
                   ) : (
                     filteredConversations.map((conv) => {
@@ -730,16 +938,16 @@ Reglas clave:
 
                       return (
                         <div
-                          key={conv.id}
+                          key={conv.id || conv.phone}
                           onClick={() => setSelectedPhone(conv.phone)}
-                          className={`p-3.5 cursor-pointer transition flex items-start gap-3 text-left ${
+                          className={`p-3 cursor-pointer transition flex items-start gap-2.5 text-left ${
                             isSelected
                               ? 'bg-primary/10 border-l-4 border-primary'
                               : 'hover:bg-muted/40'
                           }`}
                         >
-                          <div className="w-9 h-9 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-emerald-500/20">
-                            {conv.display_name ? conv.display_name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
+                          <div className="w-8 h-8 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20">
+                            {conv.display_name ? conv.display_name.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />}
                           </div>
 
                           <div className="flex-1 min-w-0">
@@ -748,7 +956,7 @@ Reglas clave:
                                 {conv.display_name || displayPhone}
                               </span>
                               <span
-                                className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
+                                className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase shrink-0 ${
                                   conv.mode === 'HUMAN'
                                     ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/20'
                                     : 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/20'
@@ -762,10 +970,24 @@ Reglas clave:
                               {conv.last_message || 'Sin mensajes'}
                             </p>
 
-                            <div className="flex items-center justify-between text-[10px] text-muted-foreground/60 mt-1">
-                              <span className="font-mono">{displayPhone}</span>
+                            {/* Tags and Lead Status preview */}
+                            <div className="flex items-center justify-between gap-1 mt-1 text-[10px] text-muted-foreground/70">
+                              <div className="flex items-center gap-1 overflow-hidden">
+                                {conv.lead_status && conv.lead_status !== 'nuevo' && (
+                                  <span className="text-[9px] font-semibold px-1 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                                    {conv.lead_status}
+                                  </span>
+                                )}
+                                {conv.tags && conv.tags.length > 0 && (
+                                  <span className="text-[9px] text-muted-foreground truncate max-w-[90px]">
+                                    #{conv.tags[0]}
+                                  </span>
+                                )}
+                              </div>
                               {conv.last_message_at && (
-                                <span>{new Date(conv.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                <span className="font-mono text-[9px] shrink-0">
+                                  {new Date(conv.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
                               )}
                             </div>
                           </div>
@@ -776,78 +998,86 @@ Reglas clave:
                 </CardContent>
               </Card>
 
-              {/* Ventana de Chat en Vivo */}
-              <Card className="md:col-span-8 flex flex-col border border-border/80 shadow-sm overflow-hidden h-[620px]">
+              {/* COL 2: LIVE CHAT MESSAGES & COMPOSER (5.5 cols) */}
+              <Card className="lg:col-span-5 xl:col-span-6 flex flex-col border border-border shadow-xs overflow-hidden h-[700px]">
                 {selectedPhone ? (
                   <>
                     {/* Header del Chat */}
-                    <div className="p-3.5 border-b bg-muted/20 flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-sm shadow-sm border border-emerald-500/20">
-                          {activeConversation?.display_name ? activeConversation.display_name.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
+                    <div className="p-3 border-b bg-muted/20 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-500/20">
+                          {activeConversation?.display_name ? activeConversation.display_name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
                         </div>
-                        <div>
-                          <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-xs text-foreground truncate flex items-center gap-1.5">
                             {activeConversation?.display_name || selectedPhone}
                             <span
-                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                              className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full ${
                                 activeConversation?.mode === 'HUMAN'
                                   ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/20'
-                                  : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                                  : 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/20'
                               }`}
                             >
-                              {activeConversation?.mode === 'HUMAN' ? '👤 Atención Humana' : '🤖 IA Activa'}
+                              {activeConversation?.mode === 'HUMAN' ? '👤 Modo Asesor' : '🤖 IA Activa'}
                             </span>
                           </h3>
-                          <p className="text-[11px] text-muted-foreground font-mono">
-                            {selectedPhone.includes('@lid') ? 'Identificador WhatsApp LID' : `+${selectedPhone}`}
+                          <p className="text-[10px] text-muted-foreground font-mono truncate">
+                            {selectedPhone.includes('@lid') ? 'WhatsApp LID' : `+${selectedPhone}`}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      {/* Mode Toggle Switch & Actions */}
+                      <div className="flex items-center gap-1.5">
                         {activeConversation?.mode === 'HUMAN' ? (
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-1.5 text-xs font-semibold border-purple-500/30 text-purple-600 hover:bg-purple-500/10"
-                            onClick={() => handleResumeBot(selectedPhone)}
+                            className="h-7 px-2.5 text-[11px] font-semibold border-purple-500/40 text-purple-600 hover:bg-purple-500/10 gap-1.5"
+                            onClick={() => handleToggleMode(selectedPhone, 'BOT')}
                           >
-                            <Bot className="w-3.5 h-3.5" />
-                            Reanudar Bot IA
+                            <Bot className="w-3 h-3 text-purple-600" />
+                            Devolver al Bot IA
                           </Button>
                         ) : (
-                          <div className="text-[11px] px-2.5 py-1 bg-muted rounded-md text-muted-foreground flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>La IA responde automáticamente</span>
-                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2.5 text-[11px] font-semibold border-blue-500/40 text-blue-600 hover:bg-blue-500/10 gap-1.5"
+                            onClick={() => handleToggleMode(selectedPhone, 'HUMAN')}
+                          >
+                            <UserCheck className="w-3 h-3 text-blue-600" />
+                            Tomar Control (Modo Humano)
+                          </Button>
                         )}
 
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
                           onClick={() => fetchMessages(selectedPhone)}
                           disabled={loadingMessages}
                           title="Actualizar mensajes"
                         >
-                          <RefreshCw className={`w-3.5 h-3.5 ${loadingMessages ? 'animate-spin' : ''}`} />
+                          <RefreshCw className={`w-3 h-3 ${loadingMessages ? 'animate-spin' : ''}`} />
                         </Button>
                       </div>
                     </div>
 
-                    {/* Feed de Mensajes */}
-                    <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-muted/10">
+                    {/* Messages Feed */}
+                    <div className="flex-1 p-3.5 overflow-y-auto space-y-2.5 bg-muted/10">
                       {loadingMessages && messages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground gap-2">
-                          <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+                          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
                           <p className="text-xs">Cargando mensajes del chat...</p>
                         </div>
                       ) : messages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground text-xs p-6">
-                          <MessageSquare className="w-8 h-8 text-muted-foreground/40 mb-2" />
-                          <p>No hay mensajes registrados en esta conversación.</p>
-                          <p className="text-[11px] mt-1 text-muted-foreground/70">Escribe abajo para iniciar una respuesta manual por WhatsApp.</p>
+                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground text-xs p-6 space-y-1">
+                          <MessageSquare className="w-6 h-6 text-muted-foreground/40 mb-1" />
+                          <p className="font-semibold text-foreground">Sin mensajes previos</p>
+                          <p className="text-[11px] text-muted-foreground/70">
+                            Escribe una respuesta abajo o selecciona una plantilla rápida para enviar por WhatsApp.
+                          </p>
                         </div>
                       ) : (
                         messages.map((msg) => {
@@ -863,7 +1093,7 @@ Reglas clave:
                               }`}
                             >
                               <div
-                                className={`max-w-[82%] sm:max-w-[70%] rounded-2xl p-3 shadow-xs text-xs space-y-1 ${
+                                className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-2.5 text-xs space-y-1 shadow-xs ${
                                   isInbound
                                     ? 'bg-background border border-border text-foreground rounded-tl-none'
                                     : isBot
@@ -871,13 +1101,13 @@ Reglas clave:
                                     : 'bg-primary text-primary-foreground rounded-tr-none'
                                 }`}
                               >
-                                {/* Remitente Badge */}
+                                {/* Sender Tag & Time */}
                                 <div className="flex items-center justify-between gap-3 text-[10px] opacity-85 font-semibold pb-0.5">
                                   <span>
                                     {isInbound
-                                      ? activeConversation?.display_name || 'Cliente'
+                                      ? activeConversation?.display_name || 'Cliente WhatsApp'
                                       : isBot
-                                      ? '🤖 Asistente Virtual Fastoria'
+                                      ? '🤖 Bot IA Fastoria'
                                       : `👤 ${msg.handled_by || 'Asesor Fastoria'}`}
                                   </span>
                                   {msg.created_at && (
@@ -887,7 +1117,7 @@ Reglas clave:
                                   )}
                                 </div>
 
-                                <p className="leading-relaxed whitespace-pre-wrap select-text">{msg.content}</p>
+                                <p className="leading-relaxed whitespace-pre-wrap select-text text-[11.5px]">{msg.content}</p>
 
                                 {!isInbound && (
                                   <div className="flex justify-end pt-0.5">
@@ -902,9 +1132,27 @@ Reglas clave:
                       <div ref={messagesEndRef} />
                     </div>
 
+                    {/* Canned Responses Toolbar (Respuestas Rápidas) */}
+                    <div className="px-3 py-1.5 bg-muted/30 border-t flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider shrink-0 mr-1 flex items-center gap-1">
+                        <Zap className="w-2.5 h-2.5 text-amber-500" /> Snippets:
+                      </span>
+                      {CANNED_RESPONSES.map((snip, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setReplyText(snip.text)}
+                          className="px-2 py-0.5 text-[10.5px] font-semibold bg-background border border-border/80 hover:border-primary/40 hover:bg-primary/5 rounded-md text-foreground transition shrink-0"
+                          title="Hacer clic para insertar en el mensaje"
+                        >
+                          {snip.label}
+                        </button>
+                      ))}
+                    </div>
+
                     {/* Composer / Barra de Respuesta */}
                     <div className="p-3 border-t bg-background">
-                      <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+                      <div className="flex items-end gap-2">
                         <Textarea
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
@@ -914,16 +1162,16 @@ Reglas clave:
                               handleSendMessage();
                             }
                           }}
-                          placeholder="Escribe un mensaje de WhatsApp... (Enter para enviar, Shift+Enter para nueva línea)"
+                          placeholder="Escribe un mensaje de WhatsApp... (Enter para enviar)"
                           rows={2}
                           className="text-xs resize-none flex-1 leading-relaxed"
                           disabled={sendingReply}
                         />
                         <Button
-                          type="submit"
+                          onClick={() => handleSendMessage()}
                           disabled={!replyText.trim() || sendingReply}
                           size="sm"
-                          className="h-10 px-4 gap-1.5 font-semibold shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          className="h-12 px-4 font-semibold shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
                         >
                           {sendingReply ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -934,16 +1182,28 @@ Reglas clave:
                             </>
                           )}
                         </Button>
-                      </form>
-                      <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />
-                        Al responder manualmente, el bot se pausará automáticamente para este chat para que puedas dialogar sin interferencias.
-                      </p>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1.5">
+                        <span className="flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />
+                          Al enviar una respuesta manual, el chat pasa a modo Humano.
+                        </span>
+                        {!selectedPhone.includes('@lid') && (
+                          <a
+                            href={`https://wa.me/${selectedPhone}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-600 hover:underline flex items-center gap-1 font-semibold"
+                          >
+                            Abrir WhatsApp Web <ArrowRight className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full p-8 text-center text-muted-foreground">
-                    <MessageCircle className="w-12 h-12 text-muted-foreground/30 mb-3" />
+                    <MessageCircle className="w-10 h-10 text-muted-foreground/30 mb-2" />
                     <h4 className="font-bold text-sm text-foreground">Selecciona una conversación</h4>
                     <p className="text-xs max-w-sm mt-1">
                       Elige un chat de la lista izquierda para ver el historial y responder directamente desde Fastoria a WhatsApp.
@@ -951,6 +1211,183 @@ Reglas clave:
                   </div>
                 )}
               </Card>
+
+              {/* COL 3: FICHA DEL CLIENTE / CRM PROFILE (3.5 cols) */}
+              <Card className="lg:col-span-3 xl:col-span-3 flex flex-col border border-border shadow-xs overflow-hidden h-[700px]">
+                <CardHeader className="p-3 border-b bg-muted/20 flex flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-primary" />
+                    Ficha del Cliente (CRM)
+                  </CardTitle>
+                  <Button
+                    onClick={handleSaveCrmProfile}
+                    disabled={savingCrm || !selectedPhone}
+                    size="sm"
+                    className="h-6 px-2 text-[10px] font-semibold gap-1 bg-primary text-primary-foreground"
+                  >
+                    {savingCrm ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Save className="w-2.5 h-2.5" />}
+                    Guardar
+                  </Button>
+                </CardHeader>
+
+                <CardContent className="p-3.5 flex-1 overflow-y-auto space-y-4 text-xs">
+                  {selectedPhone ? (
+                    <>
+                      {/* Nombre y Teléfono */}
+                      <div className="space-y-3 p-3 bg-muted/30 rounded-xl border">
+                        <div>
+                          <Label className="text-[11px] text-muted-foreground font-semibold">Nombre del Contacto</Label>
+                          <Input
+                            value={crmDisplayName}
+                            onChange={(e) => setCrmDisplayName(e.target.value)}
+                            placeholder="Ej: Martín Rodríguez"
+                            className="h-7 text-xs mt-1 bg-background"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-[11px] text-muted-foreground font-semibold">Correo Electrónico</Label>
+                          <Input
+                            type="email"
+                            value={crmEmail}
+                            onChange={(e) => setCrmEmail(e.target.value)}
+                            placeholder="ejemplo@correo.com"
+                            className="h-7 text-xs mt-1 bg-background"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-[11px] text-muted-foreground font-semibold">Estado del Lead</Label>
+                          <Select value={crmStatus} onValueChange={setCrmStatus}>
+                            <SelectTrigger className="h-7 text-xs mt-1 bg-background">
+                              <SelectValue placeholder="Seleccionar estado" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="nuevo">🟡 Nuevo Contacto</SelectItem>
+                              <SelectItem value="interesado">🟢 Interesado / Prospecto</SelectItem>
+                              <SelectItem value="cliente">🔵 Cliente Activo</SelectItem>
+                              <SelectItem value="seguimiento">🟣 En Seguimiento</SelectItem>
+                              <SelectItem value="cerrado">⚪ Cerrado / No Interesado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Etiquetas / Tags */}
+                      <div className="space-y-2">
+                        <Label className="text-[11px] text-muted-foreground font-semibold flex items-center justify-between">
+                          <span>Etiquetas del Lead</span>
+                          <span className="text-[10px] font-normal">{crmTags.length} asignadas</span>
+                        </Label>
+                        <div className="flex flex-wrap gap-1 min-h-[28px] p-1.5 bg-muted/20 border rounded-lg">
+                          {crmTags.length === 0 ? (
+                            <span className="text-[10px] text-muted-foreground/60 italic p-1">Sin etiquetas</span>
+                          ) : (
+                            crmTags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20"
+                              >
+                                #{tag}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveTag(tag)}
+                                  className="hover:text-destructive transition"
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </button>
+                              </span>
+                            ))
+                          )}
+                        </div>
+
+                        <div className="flex gap-1.5">
+                          <Input
+                            value={newTagInput}
+                            onChange={(e) => setNewTagInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddTag();
+                              }
+                            }}
+                            placeholder="Nueva etiqueta (ej: Plan Pro)..."
+                            className="h-7 text-xs bg-background"
+                          />
+                          <Button
+                            type="button"
+                            onClick={handleAddTag}
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-xs font-semibold shrink-0"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Notas Internas del Asesor */}
+                      <div className="space-y-1.5">
+                        <Label className="text-[11px] text-muted-foreground font-semibold flex items-center justify-between">
+                          <span>Notas Internas del Asesor</span>
+                          <span className="text-[10px] font-normal text-muted-foreground">Privado</span>
+                        </Label>
+                        <Textarea
+                          value={crmNotes}
+                          onChange={(e) => setCrmNotes(e.target.value)}
+                          placeholder="Escribe notas sobre intereses del cliente, presupuesto o acuerdos..."
+                          rows={4}
+                          className="text-xs resize-none bg-background leading-relaxed"
+                        />
+                      </div>
+
+                      {/* Acciones de Derivación a Grupos */}
+                      <div className="space-y-2 pt-2 border-t">
+                        <Label className="text-[11px] text-muted-foreground font-semibold">Derivación a Grupos WhatsApp</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            type="button"
+                            onClick={() => handleTransferGroup('ventas')}
+                            disabled={transferring !== null}
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-[11px] font-semibold border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 gap-1"
+                          >
+                            {transferring === 'ventas' ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Users className="w-3 h-3" />
+                            )}
+                            Grupo Ventas
+                          </Button>
+
+                          <Button
+                            type="button"
+                            onClick={() => handleTransferGroup('soporte')}
+                            disabled={transferring !== null}
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-[11px] font-semibold border-blue-500/30 hover:bg-blue-500/10 text-blue-700 dark:text-blue-300 gap-1"
+                          >
+                            {transferring === 'soporte' ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <PhoneCall className="w-3 h-3" />
+                            )}
+                            Grupo Soporte
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full p-4 text-center text-muted-foreground text-xs space-y-2">
+                      <User className="w-8 h-8 text-muted-foreground/30" />
+                      <p>Selecciona un contacto para visualizar y editar su ficha de cliente.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
             </div>
           </TabsContent>
 

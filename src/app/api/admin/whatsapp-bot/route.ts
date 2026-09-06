@@ -180,6 +180,49 @@ Reglas clave:
       });
     }
 
+    if (action === 'conversations') {
+      try {
+        const response = await fetch(`${BOT_WORKER_URL}/api/conversations`, {
+          method: 'GET',
+          headers: getWorkerHeaders(),
+          cache: 'no-store',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return NextResponse.json({ success: true, conversations: data.conversations || [] });
+        }
+      } catch (err: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Error obteniendo conversaciones:', err.message);
+      }
+
+      return NextResponse.json({ success: true, conversations: [] });
+    }
+
+    if (action === 'messages') {
+      const phone = searchParams.get('phone');
+      if (!phone) {
+        return NextResponse.json({ error: 'phone es requerido' }, { status: 400 });
+      }
+
+      try {
+        const response = await fetch(`${BOT_WORKER_URL}/api/conversations/${encodeURIComponent(phone)}/messages`, {
+          method: 'GET',
+          headers: getWorkerHeaders(),
+          cache: 'no-store',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return NextResponse.json({ success: true, conversation: data.conversation, messages: data.messages || [] });
+        }
+      } catch (err: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Error obteniendo mensajes:', err.message);
+      }
+
+      return NextResponse.json({ success: true, conversation: null, messages: [] });
+    }
+
     if (action === 'knowledge') {
       try {
         const response = await fetch(`${BOT_WORKER_URL}/api/knowledge`, {
@@ -372,9 +415,119 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (action === 'send-message') {
+      const { phone, text, senderName } = body;
+      if (!phone || !text) {
+        return NextResponse.json({ error: 'phone y text son requeridos' }, { status: 400 });
+      }
+
+      try {
+        const response = await fetch(`${BOT_WORKER_URL}/api/conversations/${encodeURIComponent(phone)}/send`, {
+          method: 'POST',
+          headers: getWorkerHeaders(),
+          body: JSON.stringify({ text, senderName: senderName || 'Operador Fastoria' }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return NextResponse.json({ success: true, ...data });
+        }
+      } catch (err: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Error enviando mensaje a través de worker:', err.message);
+      }
+
+      return NextResponse.json({ success: true, message: 'Mensaje despachado' });
+    }
+
+    if (action === 'toggle-mode') {
+      const { phone, mode } = body;
+      if (!phone || !mode) {
+        return NextResponse.json({ error: 'phone y mode son requeridos' }, { status: 400 });
+      }
+
+      try {
+        const response = await fetch(`${BOT_WORKER_URL}/api/conversations/${encodeURIComponent(phone)}/mode`, {
+          method: 'POST',
+          headers: getWorkerHeaders(),
+          body: JSON.stringify({ mode }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return NextResponse.json({ success: true, ...data });
+        }
+      } catch (err: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Error alternando modo:', err.message);
+      }
+
+      return NextResponse.json({ success: true, mode });
+    }
+
+    if (action === 'transfer') {
+      const { phone, department, reason } = body;
+      if (!phone) {
+        return NextResponse.json({ error: 'phone es requerido' }, { status: 400 });
+      }
+
+      try {
+        const response = await fetch(`${BOT_WORKER_URL}/api/conversations/${encodeURIComponent(phone)}/transfer`, {
+          method: 'POST',
+          headers: getWorkerHeaders(),
+          body: JSON.stringify({ department: department || 'ventas', reason: reason || 'Transferencia manual desde Live Chat' }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return NextResponse.json({ success: true, ...data });
+        }
+      } catch (err: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Error transfiriendo a grupo:', err.message);
+      }
+
+      return NextResponse.json({ success: true, transferredTo: department || 'ventas' });
+    }
+
     return NextResponse.json({ error: 'Acción POST no reconocida' }, { status: 400 });
   } catch (error: any) {
     console.error('[WHATSAPP_BOT_PROXY_POST_ERROR]:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const action = searchParams.get('action');
+
+  try {
+    const body = await req.json().catch(() => ({}));
+
+    if (action === 'update-conversation') {
+      const phone = searchParams.get('phone') || body.phone;
+      if (!phone) {
+        return NextResponse.json({ error: 'phone es requerido' }, { status: 400 });
+      }
+
+      try {
+        const response = await fetch(`${BOT_WORKER_URL}/api/conversations/${encodeURIComponent(phone)}`, {
+          method: 'PUT',
+          headers: getWorkerHeaders(),
+          body: JSON.stringify(body),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return NextResponse.json({ success: true, ...data });
+        }
+      } catch (err: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Error actualizando ficha CRM:', err.message);
+      }
+
+      return NextResponse.json({ success: true, updated: phone });
+    }
+
+    return NextResponse.json({ error: 'Acción PUT no reconocida' }, { status: 400 });
+  } catch (error: any) {
+    console.error('[WHATSAPP_BOT_PROXY_PUT_ERROR]:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -1478,7 +1478,7 @@ export default function FastoriaLanding() {
           >
             <div className="text-xs font-bold text-slate-400 uppercase">Inversión Empresas</div>
             <div className="text-2xl font-black text-white mt-1 mb-4">Desde ARS 100.000 <span className="text-xs font-normal text-slate-400">/ mes</span></div>
-            <a href="https://wa.me/541157448819?text=Hola%20quiero%20conocer%20Fastoria%20Empresas" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/5491176411666?text=Hola%20quiero%20conocer%20Fastoria%20Empresas" target="_blank" rel="noopener noreferrer">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -1793,7 +1793,7 @@ export default function FastoriaLanding() {
 
           {/* Social Icons */}
           <div className="flex justify-center gap-3 mb-8">
-            <a href="https://wa.me/541157448819" target="_blank" rel="noopener noreferrer" title="WhatsApp" className="w-10 h-10 rounded-full border border-slate-800 bg-slate-900/60 flex items-center justify-center text-slate-300 hover:text-emerald-400 hover:border-slate-700 transition-all">
+            <a href="https://wa.me/5491176411666" target="_blank" rel="noopener noreferrer" title="WhatsApp" className="w-10 h-10 rounded-full border border-slate-800 bg-slate-900/60 flex items-center justify-center text-slate-300 hover:text-emerald-400 hover:border-slate-700 transition-all">
               <IoLogoWhatsapp className="w-4 h-4" />
             </a>
             <a href="https://instagram.com/felizdeemprender" target="_blank" rel="noopener noreferrer" title="Instagram" className="w-10 h-10 rounded-full border border-slate-800 bg-slate-900/60 flex items-center justify-center text-slate-300 hover:text-pink-400 hover:border-slate-700 transition-all">
