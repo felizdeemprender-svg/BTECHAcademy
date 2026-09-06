@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { useAuth } from '@/components/auth-context';
@@ -22,7 +22,19 @@ import { SubscriptionAlert } from '@/components/dashboard/subscription-alert';
 import { Logo } from '@/components/logo';
 import { EvoChatWidget } from "@/components/evo/evo-chat-widget";
 
-export function DashboardLayout({ children }: { children: React.ReactNode }) {
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  defaultSidebarOpen?: boolean;
+  fullWidth?: boolean;
+  noPadding?: boolean;
+}
+
+export function DashboardLayout({ 
+  children,
+  defaultSidebarOpen = true,
+  fullWidth = false,
+  noPadding = false,
+}: DashboardLayoutProps) {
   const { user, profile, logout, isLoading } = useAuth();
   const router = useRouter();
 
@@ -35,7 +47,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const handleLogout = async () => {
     try {
       await logout();
-      // Forzamos redirección inmediata tras el cierre de sesión exitoso
       router.replace('/auth');
     } catch (error) {
       console.error("Error during manual logout:", error);
@@ -55,7 +66,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultSidebarOpen}>
       <div className="flex h-dvh bg-background overflow-hidden font-body w-full">
         <Sidebar collapsible="offcanvas" className="border-r border-[hsl(var(--sidebar-border))]">
           <SidebarHeader className="p-6">
@@ -90,24 +101,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 onClick={handleLogout}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Cerrar sesión
+                Cerrar sesi�n
               </Button>
             </div>
           </SidebarFooter>
         </Sidebar>
 
         <SidebarInset className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-background">
-          <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b bg-background/50 backdrop-blur-md sticky top-0 z-10">
-            <SidebarTrigger className="-ml-1 h-10 w-10 rounded-xl hover:bg-primary/5 text-primary" />
+          <header className="flex h-14 shrink-0 items-center gap-2 px-4 border-b bg-background/50 backdrop-blur-md sticky top-0 z-10">
+            <SidebarTrigger className="-ml-1 h-9 w-9 rounded-xl hover:bg-primary/5 text-primary" />
             <div className="h-4 w-px bg-border mx-2" />
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 truncate">
-                Panel Institucional • FastoriaAcademy
+                Panel Institucional � FastoriaAcademy
               </p>
             </div>
           </header>
           <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
-            {/* Banner de alerta de suscripción (past_due / suspended) */}
             {profile?.subscription?.status && profile.subscription.status !== 'active' && profile.subscription.status !== 'trialing' && (
               <SubscriptionAlert
                 status={profile.subscription.status}
@@ -115,8 +125,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 trialEndsAt={profile.subscription.trialEndsAt}
               />
             )}
-            <div className="flex-1 p-4 lg:p-8">
-              <div className="max-w-7xl mx-auto pb-12">
+            <div className={`flex-1 ${noPadding ? 'p-2 sm:p-4' : 'p-4 lg:p-8'}`}>
+              <div className={`${fullWidth ? 'w-full' : 'max-w-7xl mx-auto'} pb-6`}>
                 {children}
               </div>
             </div>

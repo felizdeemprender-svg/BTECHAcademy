@@ -107,7 +107,7 @@ const CANNED_RESPONSES = [
 export default function WhatsAppBotAdminPage() {
   const { profile } = useAuth();
   const { toast } = useToast();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -191,10 +191,14 @@ Reglas clave:
   const [savingCrm, setSavingCrm] = useState(false);
   const [transferring, setTransferring] = useState<string | null>(null);
 
-  // Auto scroll to bottom of chat
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior,
+      });
+    }
+  };
 
   // Sync CRM state when active conversation changes
   useEffect(() => {
@@ -314,7 +318,26 @@ Reglas clave:
       const res = await fetch(`/api/admin/whatsapp-bot?action=messages&phone=${encodeURIComponent(phone)}&_t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
-        setMessages(data.messages || []);
+        const incoming: ChatMessage[] = data.messages || [];
+        setMessages((prev) => {
+          if (
+            prev.length === incoming.length &&
+            prev.length > 0 &&
+            prev[prev.length - 1]?.id === incoming[incoming.length - 1]?.id &&
+            prev[prev.length - 1]?.content === incoming[incoming.length - 1]?.content
+          ) {
+            return prev;
+          }
+
+          const container = chatContainerRef.current;
+          if (container) {
+            const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 140;
+            if (isNearBottom || prev.length === 0) {
+              setTimeout(() => scrollToBottom('smooth'), 50);
+            }
+          }
+          return incoming;
+        });
       }
     } catch (e: any) {
       console.warn('Error cargando mensajes:', e.message);
@@ -348,7 +371,7 @@ Reglas clave:
           description: 'Respuesta despachada directamente al WhatsApp del cliente.',
         });
         await fetchMessages(selectedPhone, true);
-        await fetchConversations(true);
+        await fetchConversations(true); setTimeout(() => scrollToBottom('smooth'), 60);
       } else {
         throw new Error('Error al despachar el mensaje');
       }
@@ -381,7 +404,7 @@ Reglas clave:
               ? 'El asistente virtual volverá a responder automáticamente.'
               : 'El bot ha sido pausado para este chat. Podés atenderlo manualmente.',
         });
-        await fetchConversations(true);
+        await fetchConversations(true); setTimeout(() => scrollToBottom('smooth'), 60);
       }
     } catch (err: any) {
       toast({
@@ -412,7 +435,7 @@ Reglas clave:
           title: `Derivado al grupo de ${department === 'ventas' ? 'Ventas' : 'Soporte'}`,
           description: 'Se envió una tarjeta de derivación con el historial al grupo oficial de WhatsApp.',
         });
-        await fetchConversations(true);
+        await fetchConversations(true); setTimeout(() => scrollToBottom('smooth'), 60);
       } else {
         throw new Error('Error al transferir');
       }
@@ -450,7 +473,7 @@ Reglas clave:
           title: 'Ficha del Cliente Guardada',
           description: 'Los datos y notas internas fueron actualizados con éxito.',
         });
-        await fetchConversations(true);
+        await fetchConversations(true); setTimeout(() => scrollToBottom('smooth'), 60);
       } else {
         throw new Error('Error al actualizar ficha');
       }
@@ -518,7 +541,9 @@ Reglas clave:
   // Polling for selected conversation messages and list
   useEffect(() => {
     if (selectedPhone) {
-      fetchMessages(selectedPhone);
+      fetchMessages(selectedPhone).then(() => {
+        setTimeout(() => scrollToBottom('auto'), 60);
+      });
     }
   }, [selectedPhone]);
 
@@ -745,8 +770,8 @@ Reglas clave:
   const humanModeCount = conversations.filter((c) => c.mode === 'HUMAN').length;
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 max-w-[1600px] mx-auto p-4 md:p-6">
+    <DashboardLayout defaultSidebarOpen={false} fullWidth={true} noPadding={true}>
+      <div className="space-y-6 w-full p-2 sm:p-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5">
           <div>
@@ -837,10 +862,10 @@ Reglas clave:
 
           {/* TAB 0: LIVE CHAT & CRM WORKSPACE */}
           <TabsContent value="chat" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[680px]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-13.5rem)] min-h-[580px]">
               
               {/* COL 1: CONVERSATIONS LIST & SEARCH (3.5 cols) */}
-              <Card className="lg:col-span-4 xl:col-span-3 flex flex-col border border-border shadow-xs overflow-hidden h-[700px]">
+              <Card className="lg:col-span-4 xl:col-span-3 flex flex-col border border-border shadow-xs overflow-hidden h-full">
                 <CardHeader className="p-3 border-b bg-muted/20 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-xs font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
@@ -999,7 +1024,7 @@ Reglas clave:
               </Card>
 
               {/* COL 2: LIVE CHAT MESSAGES & COMPOSER (5.5 cols) */}
-              <Card className="lg:col-span-5 xl:col-span-6 flex flex-col border border-border shadow-xs overflow-hidden h-[700px]">
+              <Card className="lg:col-span-5 xl:col-span-6 flex flex-col border border-border shadow-xs overflow-hidden h-full">
                 {selectedPhone ? (
                   <>
                     {/* Header del Chat */}
@@ -1065,7 +1090,7 @@ Reglas clave:
                     </div>
 
                     {/* Messages Feed */}
-                    <div className="flex-1 p-3.5 overflow-y-auto space-y-2.5 bg-muted/10">
+                    <div ref={chatContainerRef} className="flex-1 p-3.5 overflow-y-auto space-y-2.5 bg-muted/10 custom-scrollbar">
                       {loadingMessages && messages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground gap-2">
                           <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
@@ -1129,7 +1154,7 @@ Reglas clave:
                           );
                         })
                       )}
-                      <div ref={messagesEndRef} />
+                      
                     </div>
 
                     {/* Canned Responses Toolbar (Respuestas Rápidas) */}
@@ -1213,7 +1238,7 @@ Reglas clave:
               </Card>
 
               {/* COL 3: FICHA DEL CLIENTE / CRM PROFILE (3.5 cols) */}
-              <Card className="lg:col-span-3 xl:col-span-3 flex flex-col border border-border shadow-xs overflow-hidden h-[700px]">
+              <Card className="lg:col-span-3 xl:col-span-3 flex flex-col border border-border shadow-xs overflow-hidden h-full">
                 <CardHeader className="p-3 border-b bg-muted/20 flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-primary" />
