@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +36,12 @@ import {
   Loader2,
 } from 'lucide-react';
 import { IoLogoWhatsapp } from 'react-icons/io5';
+
+const DIRECT_EVO_URL = 'https://bilon.pagarqr.ar/fastoria-evolution';
+const DIRECT_EVO_HEADERS = {
+  'x-internal-proxy-token': 'fastoria_proxy_token_98374fa21bc894de01',
+  'apikey': 'fastoria_evo_key_8f92a10b45cd2e1a87',
+};
 
 interface BotSettings {
   tone: string;
@@ -120,23 +126,54 @@ Reglas clave:
   const [newCategory, setNewCategory] = useState('general');
   const [newContent, setNewContent] = useState('');
 
+  // Fetch direct QR from Evolution API (Client-side ultra-fast fallback)
+  const fetchDirectQr = async () => {
+    try {
+      const evoRes = await fetch(`${DIRECT_EVO_URL}/instance/connect/fastoria`, {
+        headers: DIRECT_EVO_HEADERS,
+      });
+      if (evoRes.ok) {
+        const evoData = await evoRes.json();
+        const qr = evoData?.base64 || evoData?.qrcode?.base64 || evoData?.code || '';
+        if (qr) {
+          setBotStatus((prev) => ({
+            ...prev,
+            qrCode: qr,
+            pairingCode: evoData?.pairingCode || prev.pairingCode,
+            state: evoData?.state || 'close',
+          }));
+          return true;
+        }
+      }
+    } catch (e: any) {
+      console.warn('Direct QR fetch warning:', e.message);
+    }
+    return false;
+  };
+
   // Fetch status helper
   const fetchStatus = async () => {
     try {
-      const statusRes = await fetch('/api/admin/whatsapp-bot?action=status');
+      const statusRes = await fetch(`/api/admin/whatsapp-bot?action=status&_t=${Date.now()}`);
       if (statusRes.ok) {
         const data = await statusRes.json();
-        setBotStatus({
+        setBotStatus((prev) => ({
           instance: data.instance || 'fastoria',
           state: data.state || 'close',
-          qrCode: data.qrCode || '',
-          pairingCode: data.pairingCode || '',
-          phone: data.phone || '',
-        });
+          qrCode: data.qrCode || prev.qrCode,
+          pairingCode: data.pairingCode || prev.pairingCode,
+          phone: data.phone || prev.phone,
+        }));
+
+        // Si no vino QR del proxy y la sesión no está abierta, llamar directo
+        if (data.state !== 'open' && !data.qrCode) {
+          await fetchDirectQr();
+        }
         return data;
       }
     } catch (err: any) {
       console.warn('Error al consultar estado:', err.message);
+      await fetchDirectQr();
     }
     return null;
   };
@@ -146,19 +183,7 @@ Reglas clave:
     const fetchData = async () => {
       try {
         setLoading(true);
-        const statusData = await fetchStatus();
-
-        // Si está cerrado y no hay QR, intentar conectar para obtenerlo
-        if (statusData && statusData.state !== 'open' && !statusData.qrCode) {
-          fetch('/api/admin/whatsapp-bot?action=connect', { method: 'POST' })
-            .then((res) => res.json())
-            .then((data) => {
-              if (data.qrCode) {
-                setBotStatus((prev) => ({ ...prev, qrCode: data.qrCode, state: data.state || 'connecting' }));
-              }
-            })
-            .catch(() => {});
-        }
+        await fetchStatus();
 
         // Load settings
         const settingsRes = await fetch('/api/admin/whatsapp-bot?action=settings');
@@ -322,21 +347,25 @@ Reglas clave:
   const handleRefreshQr = async () => {
     try {
       setRefreshingQr(true);
-      const res = await fetch('/api/admin/whatsapp-bot?action=connect', {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (data) {
-        setBotStatus((prev) => ({
-          ...prev,
-          state: data.state || 'connecting',
-          qrCode: data.qrCode || prev.qrCode,
-          pairingCode: data.pairingCode || prev.pairingCode,
-        }));
+      // Intentar primero directo
+      const directSuccess = await fetchDirectQr();
+      if (!directSuccess) {
+        const res = await fetch('/api/admin/whatsapp-bot?action=connect', {
+          method: 'POST',
+        });
+        const data = await res.json();
+        if (data) {
+          setBotStatus((prev) => ({
+            ...prev,
+            state: data.state || 'connecting',
+            qrCode: data.qrCode || prev.qrCode,
+            pairingCode: data.pairingCode || prev.pairingCode,
+          }));
+        }
       }
       toast({
-        title: 'Solicitud de QR enviada',
-        description: 'Se solicitó un nuevo código QR a Evolution API.',
+        title: 'Código QR actualizado',
+        description: 'Se solicitó el código QR a Evolution API.',
       });
     } catch (err) {
       toast({
@@ -515,7 +544,7 @@ Reglas clave:
                         ) : (
                           <div className="flex flex-col items-center gap-3 p-6 text-center text-muted-foreground">
                             <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-                            <p className="text-xs font-medium">Generando código QR desde Evolution API...</p>
+                            <p className="text-xs font-medium">Cargando código QR desde Evolution API...</p>
                           </div>
                         )}
                       </div>
