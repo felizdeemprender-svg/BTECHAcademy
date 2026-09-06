@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/firebase/admin';
 
-const BOT_WORKER_URL = process.env.WHATSAPP_BOT_API_URL || 'http://166.1.85.188:13002';
-const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'http://166.1.85.188:18081';
-const BOT_API_KEY = process.env.WHATSAPP_BOT_API_KEY || 'fastoria-secret-key-2026';
-const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || 'B6D711FCDE4D4FD5936544120E713976';
+// URLs seguras a través del reverse proxy SSL de Nginx en el VPS
+const BOT_WORKER_URL = process.env.WHATSAPP_BOT_API_URL || 'https://bilon.pagarqr.ar/fastoria-worker';
+const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'https://bilon.pagarqr.ar/fastoria-evolution';
 
-function getHeaders() {
+const INTERNAL_PROXY_TOKEN = process.env.WHATSAPP_INTERNAL_PROXY_TOKEN || 'fastoria_proxy_token_98374fa21bc894de01';
+const BOT_API_KEY = process.env.WHATSAPP_BOT_API_KEY || 'fastoria_secret_api_key_2026';
+const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || 'fastoria_evo_key_8f92a10b45cd2e1a87';
+
+function getWorkerHeaders() {
   return {
     'Content-Type': 'application/json',
+    'x-internal-proxy-token': INTERNAL_PROXY_TOKEN,
     'x-api-key': BOT_API_KEY,
-    'apikey': EVOLUTION_API_KEY,
     'Authorization': `Bearer ${BOT_API_KEY}`,
+  };
+}
+
+function getEvoHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'x-internal-proxy-token': INTERNAL_PROXY_TOKEN,
+    'apikey': EVOLUTION_API_KEY,
   };
 }
 
@@ -26,27 +37,11 @@ export async function GET(req: NextRequest) {
       let pairingCode = '';
       let phone = '';
 
-      // 1. Intentar consultar estado en Worker de Fastoria
-      try {
-        const workerRes = await fetch(`${BOT_WORKER_URL}/api/status`, {
-          method: 'GET',
-          headers: getHeaders(),
-          cache: 'no-store',
-        });
-
-        if (workerRes.ok) {
-          const data = await workerRes.json();
-          return NextResponse.json({ success: true, ...data });
-        }
-      } catch (err: any) {
-        console.warn('[WHATSAPP_BOT_PROXY] Worker /api/status no disponible, intentando Evolution API directo:', err.message);
-      }
-
-      // 2. Intentar consultar directamente en Evolution API
+      // 1. Consultar estado en Evolution API
       try {
         const evoRes = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/fastoria`, {
           method: 'GET',
-          headers: { 'apikey': EVOLUTION_API_KEY },
+          headers: getEvoHeaders(),
           cache: 'no-store',
         });
 
@@ -61,12 +56,12 @@ export async function GET(req: NextRequest) {
         console.warn('[WHATSAPP_BOT_PROXY] Evolution API connectionState error:', err.message);
       }
 
-      // 3. Si el estado es close o connecting, intentar traer el QR
+      // 2. Si no está conectado, obtener el código QR de conexión
       if (state !== 'open') {
         try {
           const qrRes = await fetch(`${EVOLUTION_API_URL}/instance/connect/fastoria`, {
             method: 'GET',
-            headers: { 'apikey': EVOLUTION_API_KEY },
+            headers: getEvoHeaders(),
             cache: 'no-store',
           });
 
@@ -80,6 +75,21 @@ export async function GET(req: NextRequest) {
         }
       }
 
+      // 3. Consultar datos adicionales del Worker
+      let workerData: any = {};
+      try {
+        const workerRes = await fetch(`${BOT_WORKER_URL}/api/status`, {
+          method: 'GET',
+          headers: getWorkerHeaders(),
+          cache: 'no-store',
+        });
+        if (workerRes.ok) {
+          workerData = await workerRes.json();
+        }
+      } catch (err: any) {
+        console.warn('[WHATSAPP_BOT_PROXY] Error worker status:', err.message);
+      }
+
       return NextResponse.json({
         success: true,
         instance: 'fastoria',
@@ -87,8 +97,8 @@ export async function GET(req: NextRequest) {
         qrCode,
         pairingCode,
         phone,
-        workerUrl: BOT_WORKER_URL,
-        evolutionApi: EVOLUTION_API_URL,
+        workerStatus: workerData?.status || 'running',
+        workerInfo: workerData,
       });
     }
 
@@ -96,7 +106,7 @@ export async function GET(req: NextRequest) {
       try {
         const response = await fetch(`${BOT_WORKER_URL}/api/settings`, {
           method: 'GET',
-          headers: getHeaders(),
+          headers: getWorkerHeaders(),
           cache: 'no-store',
         });
 
@@ -143,7 +153,7 @@ Reglas clave:
       try {
         const response = await fetch(`${BOT_WORKER_URL}/api/knowledge`, {
           method: 'GET',
-          headers: getHeaders(),
+          headers: getWorkerHeaders(),
           cache: 'no-store',
         });
 
@@ -176,14 +186,14 @@ export async function POST(req: NextRequest) {
       try {
         await fetch(`${BOT_WORKER_URL}/api/settings`, {
           method: 'POST',
-          headers: getHeaders(),
+          headers: getWorkerHeaders(),
           body: JSON.stringify(body),
         });
       } catch (err: any) {
         console.warn('[WHATSAPP_BOT_PROXY] Error guardando settings en worker:', err.message);
       }
 
-      // Guardar también en Firestore como persistencia garantizada
+      // Guardar en Firestore como backup
       try {
         await adminDb.collection('config').doc('whatsapp_bot').set(
           {
@@ -208,27 +218,10 @@ export async function POST(req: NextRequest) {
       let pairingCode = '';
       let state = 'connecting';
 
-      // 1. Intentar worker
-      try {
-        const workerRes = await fetch(`${BOT_WORKER_URL}/api/connect`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify(body),
-        });
-
-        if (workerRes.ok) {
-          const data = await workerRes.json();
-          return NextResponse.json({ success: true, ...data });
-        }
-      } catch (err: any) {
-        console.warn('[WHATSAPP_BOT_PROXY] Worker /api/connect no disponible:', err.message);
-      }
-
-      // 2. Intentar directamente Evolution API connect
       try {
         const evoRes = await fetch(`${EVOLUTION_API_URL}/instance/connect/fastoria`, {
           method: 'GET',
-          headers: { 'apikey': EVOLUTION_API_KEY },
+          headers: getEvoHeaders(),
           cache: 'no-store',
         });
 
@@ -256,7 +249,7 @@ export async function POST(req: NextRequest) {
       try {
         await fetch(`${EVOLUTION_API_URL}/instance/logout/fastoria`, {
           method: 'DELETE',
-          headers: { 'apikey': EVOLUTION_API_KEY },
+          headers: getEvoHeaders(),
         });
       } catch (err: any) {
         console.warn('[WHATSAPP_BOT_PROXY] Error solicitando logout en Evolution API:', err.message);
@@ -273,7 +266,7 @@ export async function POST(req: NextRequest) {
       try {
         const response = await fetch(`${BOT_WORKER_URL}/api/knowledge`, {
           method: 'POST',
-          headers: getHeaders(),
+          headers: getWorkerHeaders(),
           body: JSON.stringify(body),
         });
 
@@ -334,7 +327,7 @@ export async function POST(req: NextRequest) {
       try {
         await fetch(`${BOT_WORKER_URL}/api/knowledge/bulk`, {
           method: 'POST',
-          headers: getHeaders(),
+          headers: getWorkerHeaders(),
           body: JSON.stringify({ items: knowledgePayloads }),
         });
       } catch (err: any) {
@@ -366,7 +359,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const response = await fetch(`${BOT_WORKER_URL}/api/knowledge/${id}`, {
       method: 'DELETE',
-      headers: getHeaders(),
+      headers: getWorkerHeaders(),
     });
 
     if (response.ok) {
