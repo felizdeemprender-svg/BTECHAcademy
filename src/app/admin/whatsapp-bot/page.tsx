@@ -126,9 +126,36 @@ Reglas clave:
   const [newCategory, setNewCategory] = useState('general');
   const [newContent, setNewContent] = useState('');
 
-  // Fetch direct QR from Evolution API (Client-side ultra-fast fallback)
-  const fetchDirectQr = async () => {
+  // Check direct instance status from Evolution API
+  const checkDirectEvolution = async () => {
     try {
+      // 1. Fetch instances list to get owner phone and open connection status
+      const instRes = await fetch(`${DIRECT_EVO_URL}/instance/fetchInstances`, {
+        headers: DIRECT_EVO_HEADERS,
+      });
+
+      if (instRes.ok) {
+        const instances = await instRes.json();
+        const inst = Array.isArray(instances)
+          ? instances.find((i: any) => i.name === 'fastoria')
+          : instances;
+
+        if (inst && inst.connectionStatus === 'open') {
+          const phoneNum = inst.ownerJid
+            ? inst.ownerJid.replace('@s.whatsapp.net', '')
+            : inst.number || '';
+
+          setBotStatus((prev) => ({
+            ...prev,
+            state: 'open',
+            phone: phoneNum,
+            qrCode: '',
+          }));
+          return true;
+        }
+      }
+
+      // 2. If not open, try to get QR
       const evoRes = await fetch(`${DIRECT_EVO_URL}/instance/connect/fastoria`, {
         headers: DIRECT_EVO_HEADERS,
       });
@@ -140,13 +167,13 @@ Reglas clave:
             ...prev,
             qrCode: qr,
             pairingCode: evoData?.pairingCode || prev.pairingCode,
-            state: evoData?.state || 'close',
+            state: evoData?.state || 'connecting',
           }));
           return true;
         }
       }
     } catch (e: any) {
-      console.warn('Direct QR fetch warning:', e.message);
+      console.warn('Direct Evolution fetch warning:', e.message);
     }
     return false;
   };
@@ -165,15 +192,14 @@ Reglas clave:
           phone: data.phone || prev.phone,
         }));
 
-        // Si no vino QR del proxy y la sesión no está abierta, llamar directo
-        if (data.state !== 'open' && !data.qrCode) {
-          await fetchDirectQr();
+        if (data.state !== 'open') {
+          await checkDirectEvolution();
         }
         return data;
       }
     } catch (err: any) {
       console.warn('Error al consultar estado:', err.message);
-      await fetchDirectQr();
+      await checkDirectEvolution();
     }
     return null;
   };
@@ -347,25 +373,10 @@ Reglas clave:
   const handleRefreshQr = async () => {
     try {
       setRefreshingQr(true);
-      // Intentar primero directo
-      const directSuccess = await fetchDirectQr();
-      if (!directSuccess) {
-        const res = await fetch('/api/admin/whatsapp-bot?action=connect', {
-          method: 'POST',
-        });
-        const data = await res.json();
-        if (data) {
-          setBotStatus((prev) => ({
-            ...prev,
-            state: data.state || 'connecting',
-            qrCode: data.qrCode || prev.qrCode,
-            pairingCode: data.pairingCode || prev.pairingCode,
-          }));
-        }
-      }
+      await checkDirectEvolution();
       toast({
-        title: 'Código QR actualizado',
-        description: 'Se solicitó el código QR a Evolution API.',
+        title: 'Estado verificado',
+        description: 'Se consultó el estado de conexión con Evolution API.',
       });
     } catch (err) {
       toast({
@@ -383,7 +394,13 @@ Reglas clave:
     if (!confirm('¿Estás seguro de que deseas desconectar la línea de WhatsApp?')) return;
     try {
       setLoggingOut(true);
+      await fetch(`${DIRECT_EVO_URL}/instance/logout/fastoria`, {
+        method: 'DELETE',
+        headers: DIRECT_EVO_HEADERS,
+      }).catch(() => {});
+
       await fetch('/api/admin/whatsapp-bot?action=logout', { method: 'POST' });
+
       setBotStatus({
         instance: 'fastoria',
         state: 'close',
@@ -435,7 +452,7 @@ Reglas clave:
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-background text-xs font-semibold">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border bg-background text-xs font-semibold shadow-sm">
               <span
                 className={`w-2.5 h-2.5 rounded-full ${
                   botStatus.state === 'open'
@@ -494,7 +511,7 @@ Reglas clave:
                     Vinculación de WhatsApp
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Escanea el código QR desde la aplicación WhatsApp en tu teléfono para autorizar la instancia de Fastoria.
+                    Estado de la sesión oficial de Fastoria en Evolution API.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center justify-center p-6 space-y-4">
@@ -506,7 +523,7 @@ Reglas clave:
                       <h3 className="text-lg font-bold text-foreground">Instancia Vinculada y Activa</h3>
                       <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                         {botStatus.phone ? (
-                          <>Línea <span className="font-mono font-bold text-foreground">+{botStatus.phone}</span> conectada y respondiendo en tiempo real.</>
+                          <>Línea <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">+{botStatus.phone}</span> vinculada y respondiendo en tiempo real.</>
                         ) : (
                           <>El bot está en línea y respondiendo mensajes en tiempo real.</>
                         )}
@@ -571,7 +588,7 @@ Reglas clave:
                       className="flex-1 gap-2 text-xs font-semibold"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${refreshingQr ? 'animate-spin' : ''}`} />
-                      {refreshingQr ? 'Solicitando...' : 'Generar / Refrescar QR'}
+                      {refreshingQr ? 'Verificando...' : 'Verificar / Actualizar Estado'}
                     </Button>
                   </div>
                 </CardContent>

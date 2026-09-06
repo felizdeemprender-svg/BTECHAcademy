@@ -37,23 +37,54 @@ export async function GET(req: NextRequest) {
       let pairingCode = '';
       let phone = '';
 
-      // 1. Consultar estado en Evolution API
+      // 1. Consultar fetchInstances en Evolution API (estado real y número conectado)
       try {
-        const evoRes = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/fastoria`, {
+        const evoRes = await fetch(`${EVOLUTION_API_URL}/instance/fetchInstances`, {
           method: 'GET',
           headers: getEvoHeaders(),
           cache: 'no-store',
         });
 
         if (evoRes.ok) {
-          const evoData = await evoRes.json();
-          state = evoData?.instance?.state || evoData?.state || 'close';
-          if (evoData?.instance?.owner) {
-            phone = evoData.instance.owner.replace('@s.whatsapp.net', '');
+          const instances = await evoRes.json();
+          const inst = Array.isArray(instances)
+            ? instances.find((i: any) => i.name === 'fastoria')
+            : instances;
+          
+          if (inst) {
+            state = inst.connectionStatus === 'open' ? 'open' : inst.connectionStatus || 'close';
+            if (inst.ownerJid) {
+              phone = inst.ownerJid.replace('@s.whatsapp.net', '');
+            } else if (inst.number) {
+              phone = inst.number;
+            }
           }
         }
       } catch (err: any) {
-        console.warn('[WHATSAPP_BOT_PROXY] Evolution API connectionState error:', err.message);
+        console.warn('[WHATSAPP_BOT_PROXY] Evolution API fetchInstances error:', err.message);
+      }
+
+      // Si no detectó open, verificar connectionState
+      if (state !== 'open') {
+        try {
+          const connRes = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/fastoria`, {
+            method: 'GET',
+            headers: getEvoHeaders(),
+            cache: 'no-store',
+          });
+          if (connRes.ok) {
+            const connData = await connRes.json();
+            const connState = connData?.instance?.state || connData?.state;
+            if (connState === 'open') {
+              state = 'open';
+              if (connData?.instance?.owner) {
+                phone = connData.instance.owner.replace('@s.whatsapp.net', '');
+              }
+            }
+          }
+        } catch (err: any) {
+          console.warn('[WHATSAPP_BOT_PROXY] connectionState error:', err.message);
+        }
       }
 
       // 2. Si no está conectado, obtener el código QR de conexión
