@@ -439,28 +439,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, message: 'Mensaje despachado' });
     }
 
-    if (action === 'toggle-mode') {
-      const { phone, mode } = body;
-      if (!phone || !mode) {
-        return NextResponse.json({ error: 'phone y mode son requeridos' }, { status: 400 });
+    if (action === 'toggle-mode' || action === 'resume-bot') {
+      const phone = body.phone;
+      const targetMode = action === 'resume-bot' ? 'BOT' : (body.mode || 'BOT');
+      if (!phone) {
+        return NextResponse.json({ error: 'phone es requerido' }, { status: 400 });
       }
 
       try {
         const response = await fetch(`${BOT_WORKER_URL}/api/conversations/${encodeURIComponent(phone)}/mode`, {
           method: 'POST',
           headers: getWorkerHeaders(),
-          body: JSON.stringify({ mode }),
+          body: JSON.stringify({ mode: targetMode }),
         });
 
         if (response.ok) {
           const data = await response.json();
           return NextResponse.json({ success: true, ...data });
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          return NextResponse.json({ error: errData.error || errData.message || 'Error al cambiar modo' }, { status: response.status });
         }
       } catch (err: any) {
         console.warn('[WHATSAPP_BOT_PROXY] Error alternando modo:', err.message);
+        return NextResponse.json({ error: err.message }, { status: 500 });
       }
-
-      return NextResponse.json({ success: true, mode });
     }
 
     if (action === 'transfer') {
