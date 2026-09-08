@@ -1598,19 +1598,19 @@ export default function FastoriaLanding() {
             {[
               {
                 quote: "Pasé de gestionar mis alumnos en tres herramientas y planillas a hacerlo todo desde Fastoria en una sola vista.",
-                name: "Mariana Costa",
+                name: "Federico D´Odorico",
                 role: "Consultora de Negocios",
                 metric: "Ahorró 8 hs semanales",
               },
               {
                 quote: "El sistema de seguimiento individual me permitió vender mentorías a un ticket mucho más alto con total profesionalismo.",
-                name: "Carlos Méndez",
-                role: "Mentor Ejecutivo",
+                name: "Agustina Stein",
+                role: "Mentora Ejecutiva",
                 metric: "+120 alumnos activos",
               },
               {
                 quote: "Con Evo armo la estructura de las clases y los textos de venta en minutos. La integración con cobros directos es impecable.",
-                name: "Sofía Valenzuela",
+                name: "Milagros Falduto",
                 role: "Capacitadora Digital",
                 metric: "Lanzamiento en 48 hs",
               },
