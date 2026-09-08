@@ -431,11 +431,9 @@ export default function FastoriaLanding() {
                 whileHover={{ scale: 1.03, y: -2 }}
                 className="bg-[#0F172A] text-white p-6 rounded-2xl border border-slate-800 shadow-xl text-center w-full lg:w-64 shrink-0"
               >
-                <div className="text-[10px] font-black text-[#1CB899] uppercase tracking-widest mb-1">
-                  CENTRALIZADO EN FASTORIA
+                <div className="text-lg font-black tracking-tight leading-snug">
+                  Centraliza tu negocio en <span className="text-[#1CB899]">FASTORIA</span>
                 </div>
-                <div className="text-xl font-black tracking-tight">TU NEGOCIO</div>
-                <div className="text-xs text-slate-400 mt-1 font-medium">1 plataforma, 0 caos operativo</div>
               </motion.div>
             </div>
           </Reveal>
