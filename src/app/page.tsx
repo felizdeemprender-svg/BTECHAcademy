@@ -662,17 +662,8 @@ export default function FastoriaLanding() {
                 whileHover={{ y: -4 }}
                 className="bg-white rounded-3xl border border-slate-200 p-7 md:p-8 shadow-xl relative"
               >
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                  <div>
-                    <span className="text-[10px] font-black text-[#1CB899] uppercase tracking-wider bg-[#1CB899]/10 px-2.5 py-1 rounded-md">
-                      Producto Híbrido Ficticio
-                    </span>
-                    <h3 className="text-xl font-black text-slate-900 mt-2">Programa de Liderazgo Ejecutivo</h3>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs font-bold text-slate-400">Modalidad</span>
-                    <div className="text-xs font-black text-slate-800">Mixta (360°)</div>
-                  </div>
+                <div className="pb-4 border-b border-slate-100">
+                  <h3 className="text-xl font-black text-slate-900">Programa de Liderazgo Ejecutivo</h3>
                 </div>
 
                 <div className="py-5 space-y-3">
