@@ -64,6 +64,11 @@ service-account.json
 scratch/
 tmp/
 fonts-cache/
+# dev/test artifacts
+.dev-server*.log
+test-results/
+public/adns/debug-adn-*
+public/adns/test-adn/
 
 public/tts_cache/
 scripts/check-tutor.ts
