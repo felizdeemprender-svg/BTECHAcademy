@@ -1,6 +1,6 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
-import { checkSufficientCredits, calculateGeminiCost, deductCredits } from '@/lib/payments/credits';
+import { checkSufficientCredits, calculateGeminiCost, calculateEmbeddingCost, deductCredits } from '@/lib/payments/credits';
 
 /**
  * Motor Genkit Original con Sensor de Identidad BTECH
@@ -50,6 +50,22 @@ export const ai: any = new Proxy({}, {
 });
 
 /**
+ * Proxy Secundario: Mantiene las trazas de observabilidad pero omite explícitamente el cobro de saldo.
+ */
+export const aiUnbilled: any = new Proxy({}, {
+  get(target, prop, receiver) {
+    if (prop === 'generate') {
+      // Pasamos un flag en las opciones para saltar la validación y deducción de créditos
+      return (options: any, actionName?: string, ownerUid?: string) => 
+        (generateWithAuditing as any)({ ...options, skipBilling: true }, actionName, ownerUid);
+    }
+    const instance = getGenkitInstance();
+    const value = Reflect.get(instance, prop, receiver);
+    return typeof value === 'function' ? value.bind(instance) : value;
+  }
+});
+
+/**
  * Verifica que las API keys críticas estén disponibles.
  */
 export function validateAiConfig() {
@@ -90,12 +106,19 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
     console.warn("[Sensor IA] Aviso: Ejecución sin contexto de identidad.");
   }
 
-  // 1. Verificar saldo (Solo para Mentores/Marketing)
-  if (uid && (role === 'mentor' || role === 'marketing')) {
+  if (role === 'alumno' && !ownerUid) {
+    throw new Error('ACCESO_DENEGADO: Las acciones de IA de los alumnos requieren un tutor asociado (ownerUid) para facturación.');
+  }
+
+  const targetUidToCheck = ownerUid || uid;
+  const roleToCheck = ownerUid ? 'mentor' : role; // If it's delegated, we treat the owner as a mentor (paying)
+
+  // 1. Verificar saldo
+  if (!options.skipBilling && targetUidToCheck && (roleToCheck === 'mentor' || roleToCheck === 'marketing')) {
     const minRequired = 0.001; 
-    const { ok, balance } = await checkSufficientCredits(uid, minRequired, role);
+    const { ok, balance } = await checkSufficientCredits(targetUidToCheck, minRequired, roleToCheck);
     if (!ok) {
-      throw new Error(`SALDO_INSUFICIENTE: Tu cuenta se ha quedado sin créditos de IA (Saldo actual: ${balance}). Por favor, dirígete a la pestaña "Suscripción" en el panel lateral para recargar saldo y continuar.`);
+      throw new Error(`SALDO_INSUFICIENTE: Tu cuenta (o la del tutor) se ha quedado sin créditos de IA (Saldo actual: ${balance}). Por favor, dirígete a la pestaña "Suscripción" en el panel lateral para recargar saldo y continuar.`);
     }
   }
 
@@ -121,10 +144,12 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
       console.log(`> Acción Detectada: ${finalActionName}`);
       console.log(`> Tokens: ${tokens}`);
       console.log(`> Costo Proveedor: $${cost.providerCost}`);
-      console.log(`> Cobro al Tutor: $${cost.billedCost}`);
+      console.log(`> Cobro al Tutor: $${options.skipBilling ? 0 : cost.billedCost} ${options.skipBilling ? '(SKIP BILLING)' : ''}`);
       console.log("---------------------------------------");
 
-      deductCredits(uid, cost, finalActionName, role, ownerUid || undefined);
+      if (!options.skipBilling) {
+        deductCredits(uid, cost, finalActionName, role, ownerUid || undefined);
+      }
     } catch (e) {
       console.error("[Sensor IA] Error al registrar consumo:", e);
     }
@@ -149,11 +174,18 @@ export async function embedWithAuditing(options: any, actionName: string = 'ia_e
     role = cookieStore.get('btech_role')?.value || 'alumno';
   } catch (e: any) { }
 
-  if (uid && (role === 'mentor' || role === 'marketing')) {
+  if (role === 'alumno' && !ownerUid) {
+    throw new Error('ACCESO_DENEGADO: Las acciones de IA de los alumnos requieren un tutor asociado (ownerUid) para facturación.');
+  }
+
+  const targetUidToCheck = ownerUid || uid;
+  const roleToCheck = ownerUid ? 'mentor' : role;
+
+  if (targetUidToCheck && (roleToCheck === 'mentor' || roleToCheck === 'marketing')) {
     const minRequired = 0.0001; 
-    const { ok, balance } = await checkSufficientCredits(uid, minRequired, role);
+    const { ok, balance } = await checkSufficientCredits(targetUidToCheck, minRequired, roleToCheck);
     if (!ok) {
-      throw new Error(`SALDO_INSUFICIENTE: Tu cuenta se ha quedado sin créditos de IA (Saldo actual: ${balance}).`);
+      throw new Error(`SALDO_INSUFICIENTE: Tu cuenta (o la del tutor) se ha quedado sin créditos de IA (Saldo actual: ${balance}).`);
     }
   }
 
@@ -163,15 +195,13 @@ export async function embedWithAuditing(options: any, actionName: string = 'ia_e
     try {
       const contentStr = typeof options.content === 'string' ? options.content : JSON.stringify(options.content || '');
       const estimatedTokens = Math.ceil((contentStr.length || 0) / 4);
-      // Embeddings are roughly 1/15th the price of text generation. We divide tokens by 15.
-      const billableTokens = Math.max(1, Math.floor(estimatedTokens / 15));
-      const cost = await calculateGeminiCost(billableTokens);
+      const cost = await calculateEmbeddingCost(estimatedTokens);
       
       console.log("--- [DEBUG IA] AUDITORÍA AUTOMÁTICA (EMBEDDING) ---");
       console.log(`> Usuario: ${uid} (${role})`);
       if (ownerUid) console.log(`> Referenciado a (Owner): ${ownerUid}`);
       console.log(`> Acción Detectada: ${finalActionName}`);
-      console.log(`> Tokens Estimados (Ajustados x15): ${billableTokens}`);
+      console.log(`> Tokens Estimados: ${estimatedTokens}`);
       console.log(`> Costo Proveedor: $${cost.providerCost}`);
       console.log(`> Cobro al Tutor: $${cost.billedCost}`);
       console.log("---------------------------------------------------");

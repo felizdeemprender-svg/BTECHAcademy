@@ -16,7 +16,7 @@ export const executeBigQuerySQLTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ sqlQuery, rationale }) => {
+  async ({ sqlQuery, rationale }: any) => {
     const context = ai.currentContext();
     const uid = context?.uid;
     const role = context?.role;

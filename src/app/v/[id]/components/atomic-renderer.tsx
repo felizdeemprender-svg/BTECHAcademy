@@ -104,7 +104,7 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
   
   // Extraer el footer si existe para no renderizarlo en el flujo normal
   const footerSection = allSections.find((s: any) => s.id.startsWith('footer'));
-  const regularSections = allSections.filter((s: any) => !s.id.startsWith('footer'));
+  const regularSections = allSections.filter((s: any) => !s.id.startsWith('footer') && s.isVisible !== false);
 
   const sections = regularSections.sort((a: any, b: any) => {
     const aBase = a.id.split('_')[0];
@@ -118,39 +118,39 @@ export function AtomicRenderer({ page, onPurchase, mentorProfile }: { page: any;
     <div
       className={cn("w-full flex flex-col font-body", isFlashSale ? "bg-[var(--bg)] text-[var(--fg)]" : "bg-[var(--page-bg)] text-[var(--page-fg)]")}
       style={{
-        ['--page-bg' as any]: pageBg,
-        ['--page-fg' as any]: pageFg,
-        ['--primary' as any]: primaryColor,
-        ['--secondary' as any]: secondaryColor,
-        ['--accent' as any]: accentColor,
-        ['--component-radius' as any]: componentRadius,
-        ['--component-border' as any]: componentBorder,
-        ['--component-shadow' as any]: componentShadow,
-        ['--component-bg' as any]: componentBg,
-        ['--section-padding' as any]: sectionPadding,
-        ['--content-gap' as any]: contentGap,
-         ['--transition-duration' as any]: transitionDuration,
-         ['--surface-muted' as any]: surfaceMuted,
-         ['--section-alt' as any]: sectionBgAlt,
-        ['--on-dark' as any]: onDark,
-        ['--cta-shadow' as any]: ctaShadow,
-        ['--radius-pill' as any]: buttonRadius,
-        ['--font-display' as any]: `${fontHeading}, system-ui, sans-serif`,
-        ['--font-mono' as any]: fontMono,
-        ['--hero-overlay' as any]: heroOverlay,
-        ['--hero-overlay-color' as any]: overlayColor,
+        '--page-bg': pageBg,
+        '--page-fg': pageFg,
+        '--primary': primaryColor,
+        '--secondary': secondaryColor,
+        '--accent': accentColor,
+        '--component-radius': componentRadius,
+        '--component-border': componentBorder,
+        '--component-shadow': componentShadow,
+        '--component-bg': componentBg,
+        '--section-padding': sectionPadding,
+        '--content-gap': contentGap,
+         '--transition-duration': transitionDuration,
+         '--surface-muted': surfaceMuted,
+         '--section-alt': sectionBgAlt,
+        '--on-dark': onDark,
+        '--cta-shadow': ctaShadow,
+        '--radius-pill': buttonRadius,
+        '--font-display': `${fontHeading}, system-ui, sans-serif`,
+        '--font-mono': fontMono,
+        '--hero-overlay': heroOverlay,
+        '--hero-overlay-color': overlayColor,
         ...styleVars,
         ...(isFlashSale ? {
-          ['--bg' as any]: secondaryColor,
-          ['--surface' as any]: componentBg,
-          ['--fg' as any]: primaryColor,
-          ['--fg-2' as any]: fg2Color,
-          ['--muted' as any]: mutedColor,
-          ['--border' as any]: primaryColor,
-          ['--accent-text' as any]: darkenHex(accentColor, 0.22),
-          ['--cta-shadow' as any]: `0 10px 0 ${primaryColor}`,
-          ['--radius-pill' as any]: '999px',
-          ['--accent-muted' as any]: darkenHex(accentColor, 0.08),
+          '--bg': secondaryColor,
+          '--surface': componentBg,
+          '--fg': primaryColor,
+          '--fg-2': fg2Color,
+          '--muted': mutedColor,
+          '--border': primaryColor,
+          '--accent-text': darkenHex(accentColor, 0.22),
+          '--cta-shadow': `0 10px 0 ${primaryColor}`,
+          '--radius-pill': '999px',
+          '--accent-muted': darkenHex(accentColor, 0.08),
         } : {})
       }}
     >

@@ -51,7 +51,7 @@ export function CourseNavigation({
                 <span>Tu Progreso</span>
                 <span>{progressPercent}%</span>
             </div>
-            <Progress value={progressPercent} className="h-1.5 rounded-full bg-white" style={{'--progress-foreground': primaryColor} as any} />
+            <Progress value={progressPercent} className="h-1.5 rounded-full bg-white" style={{'--progress-foreground': primaryColor} as React.CSSProperties} />
         </div>
       </div>
 

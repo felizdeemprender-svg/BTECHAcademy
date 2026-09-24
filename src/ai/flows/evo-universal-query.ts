@@ -23,7 +23,7 @@ export const universalFirestoreQueryTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ collection, isCollectionGroup, filters, aggregation, aggregationField, orderByField, orderByDirection, limit }) => {
+  async ({ collection, isCollectionGroup, filters, aggregation, aggregationField, orderByField, orderByDirection, limit }: any) => {
     const context = ai.currentContext();
     const uid = context?.uid;
     const role = context?.role;
@@ -39,7 +39,7 @@ export const universalFirestoreQueryTool = ai.defineTool(
       if (role === 'mentor' && !isCollectionGroup) {
         // Algunas colecciones usan mentorId, otras userId.
         // Si no está en los filtros, obligamos a que lo tenga o avisamos.
-        const hasSecurityFilter = filters?.some(f => (f.field === 'mentorId' || f.field === 'userId' || f.field === 'studentId') && f.value === uid);
+        const hasSecurityFilter = filters?.some((f: any) => (f.field === 'mentorId' || f.field === 'userId' || f.field === 'studentId') && f.value === uid);
         if (!hasSecurityFilter && !['users'].includes(collection)) {
           // Inyectar filtro por defecto para mentorId
           queryRef = queryRef.where('mentorId', '==', uid);

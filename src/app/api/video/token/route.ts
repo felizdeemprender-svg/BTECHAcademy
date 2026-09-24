@@ -1,31 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getAdminAuth } from '@/firebase/admin';
+import { SignJWT, jwtVerify } from 'jose';
+import { rateLimitConfigs } from '@/lib/rate-limit';
+import { sanitizeError } from '@/lib/error-sanitizer';
 
-// Clave secreta para firmar tokens (en producción usar variable de entorno)
-const SECRET_KEY = process.env.VIDEO_TOKEN_SECRET || 'btech-video-secret-2024-dev';
+const SECRET_KEY = process.env.VIDEO_TOKEN_SECRET || '';
+const encoder = new TextEncoder();
 
-// Generar token simple (en producción usar JWT real)
-function generateToken(payload: any): string {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const body = btoa(JSON.stringify(payload));
-  const signature = btoa(`${header}.${body}.${SECRET_KEY}`);
-  return `${header}.${body}.${signature}`;
+if (!SECRET_KEY || SECRET_KEY.length < 32) {
+  console.error('[Video Token] VIDEO_TOKEN_SECRET no configurada o muy corta (mín 32 chars)');
 }
 
-// Verificar token
-function verifyToken(token: string): any {
+async function generateToken(payload: Record<string, any>): Promise<string> {
+  if (!SECRET_KEY || SECRET_KEY.length < 32) {
+    throw new Error('VIDEO_TOKEN_SECRET no configurada');
+  }
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('2h')
+    .sign(encoder.encode(SECRET_KEY));
+}
+
+async function verifyToken(token: string): Promise<Record<string, any> | null> {
+  if (!SECRET_KEY || SECRET_KEY.length < 32) {
+    return null;
+  }
   try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    
-    const payload = JSON.parse(atob(parts[1]));
-    const now = Math.floor(Date.now() / 1000);
-    
-    if (payload.exp && payload.exp < now) {
-      return null; // Token expirado
+    const { payload } = await jwtVerify(token, encoder.encode(SECRET_KEY));
+    return payload as Record<string, any>;
+  } catch {
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPER: Verificar Firebase ID Token (Authorization: Bearer <token>)
+// ─────────────────────────────────────────────────────────────────────────────
+async function verifyAuth(req: NextRequest): Promise<{ uid: string; role: string } | null> {
+  try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return null;
     }
-    
-    return payload;
+
+    const token = authHeader.split('Bearer ')[1];
+    if (!token) {
+      return null;
+    }
+
+    const decoded = await getAdminAuth().verifyIdToken(token);
+    return {
+      uid: decoded.uid,
+      role: decoded.role || 'alumno'
+    };
   } catch {
     return null;
   }
@@ -33,10 +61,21 @@ function verifyToken(token: string): any {
 
 export async function POST(request: NextRequest) {
   try {
-    // Validar referrer para prevenir peticiones externas
+    // Rate limiting
+    const rateLimitResponse = await rateLimitConfigs.video(request);
+    if (rateLimitResponse) return rateLimitResponse;
+
+    const auth = await verifyAuth(request);
+    if (!auth) {
+      return NextResponse.json(
+        { error: 'No autenticado' },
+        { status: 401 }
+      );
+    }
+
     const referrer = request.headers.get('referer');
     const origin = request.headers.get('origin');
-    
+
     const allowedDomains = [
       'http://localhost:9002',
       'https://FastoriaAcademy-8b329.web.app',
@@ -45,8 +84,8 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_APP_URL
     ].filter(Boolean);
 
-    const isAllowedReferrer = allowedDomains.some(domain => 
-      (referrer && referrer.includes(domain as string)) || 
+    const isAllowedReferrer = allowedDomains.some(domain =>
+      (referrer && referrer.includes(domain as string)) ||
       (origin && origin.includes(domain as string))
     ) || process.env.NODE_ENV === 'development';
 
@@ -60,7 +99,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { videoUrl, courseId } = body;
 
-    // Validar campos requeridos
     if (!videoUrl) {
       return NextResponse.json(
         { error: 'videoUrl es requerido' },
@@ -68,21 +106,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Obtener UID de las cookies
-    const cookieStore = await cookies();
-    const uid = cookieStore.get('btech_uid')?.value;
+    const uid = auth.uid;
 
-    if (!uid) {
-      return NextResponse.json(
-        { error: 'No autenticado' },
-        { status: 401 }
-      );
-    }
-
-    // NOTA: En desarrollo simplificamos la validación
-    // En producción agregar validación de permisos de curso con Firebase Admin
-
-    // Extraer videoId de la URL
     let videoId = '';
     if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
       if (videoUrl.includes('v=')) videoId = videoUrl.split('v=')[1].split('&')[0];
@@ -93,50 +118,39 @@ export async function POST(request: NextRequest) {
 
     if (!videoId) {
       return NextResponse.json(
-        { error: 'URLde video no válida' },
+        { error: 'URL de video no válida' },
         { status: 400 }
       );
     }
 
-    // Generar token con expiración (2 horas)
-    const now = Math.floor(Date.now() / 1000);
-    const exp = now + (2 * 60 * 60); // 2 horas
-
     const tokenPayload = {
       uid,
       videoId,
-      courseId: courseId || null,
-      iat: now,
-      exp
+      courseId: courseId || null
     };
 
-    const token = generateToken(tokenPayload);
+    const token = await generateToken(tokenPayload);
 
-    return NextResponse.json({
-      success: true,
-      token,
-      videoId,
-      expiresAt: exp
-    }, {
-      headers: {
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-XSS-Protection': '1; mode=block',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Content-Security-Policy': "default-src 'self'"
-      }
-    });
-
-  } catch (error) {
-    console.error('Error generando token de video:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
+      { success: true, token, videoId, expiresAt: Math.floor(Date.now() / 1000) + 7200 },
+      {
+        headers: {
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'X-XSS-Protection': '1; mode=block',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+          'Content-Security-Policy': "default-src 'self'"
+        }
+      }
     );
+
+  } catch (err: any) {
+    console.error('Error generando token de video:', err);
+    const { message, status } = sanitizeError(err, 'video/token');
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
-// Validar token (para uso interno)
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get('token');
@@ -148,7 +162,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const payload = verifyToken(token);
+  const payload = await verifyToken(token);
 
   if (!payload) {
     return NextResponse.json(
@@ -159,6 +173,8 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     valid: true,
-    videoId: payload.videoId
+    videoId: payload.videoId,
+    uid: payload.uid,
+    courseId: payload.courseId
   });
 }

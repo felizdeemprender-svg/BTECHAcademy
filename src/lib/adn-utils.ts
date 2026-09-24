@@ -1,97 +1,35 @@
-import path from 'path';
-import fsPromises from 'fs/promises';
-import fs from 'fs';
+import { adminDb } from '@/firebase/admin';
+
+const ADNS_BASE_DIR = process.cwd() + '/public/adns';
 
 /**
- * Resuelve la ruta absoluta del directorio de ADNs garantizando un único punto de verdad.
+ * Valida que un adnId sea seguro (sin path traversal)
+ * Solo permite: letras, números, guión bajo, guión medio
  */
-export async function getAdnsDir(): Promise<string> {
-  let adnsDir = path.join(process.cwd(), 'public', 'adns');
-  try {
-    await fsPromises.stat(adnsDir);
-    return adnsDir;
-  } catch {
-    // Fallback 1: Standalone build
-    const fallback1 = path.join(process.cwd(), '..', '..', 'public', 'adns');
-    try {
-      await fsPromises.stat(fallback1);
-      return fallback1;
-    } catch {
-      // Fallback 2: Fastoria Studio
-      const fallback2 = path.join(process.cwd(), '..', 'btech-studio', 'public', 'adns');
-      try {
-        await fsPromises.stat(fallback2);
-        return fallback2;
-      } catch {
-        throw new Error(`[ADN Utils] No se pudo encontrar el directorio de ADNs en ninguna de las rutas esperadas.`);
-      }
-    }
-  }
+export function validateAdnId(adnId: string): boolean {
+  return /^[a-zA-Z0-9_-]+$/.test(adnId);
 }
 
 /**
- * Carga un ADN completo (sea Modular 2.0 o Legacy 1.0)
+ * Obtiene la ruta segura del directorio ADN
+ * Lanza error si adnId no es válido
  */
-export async function loadAdnConfig(adnId: string): Promise<any> {
-  const adnsDir = await getAdnsDir();
-  const adnList = await fsPromises.readdir(adnsDir);
-  const targetAdnName = adnList.find(f => f.startsWith(adnId || '01')) || '01_CINEMA';
-  const targetPath = path.join(adnsDir, targetAdnName);
-  
-  const targetStat = await fsPromises.stat(targetPath);
-  let adnConfig: any;
-
-  if (targetStat.isDirectory()) {
-    // CARGA MODULAR (Nuevo Sistema 2.0)
-    const getJson = async (name: string) => {
-      try {
-        const p = path.join(targetPath, name);
-        return JSON.parse(await fsPromises.readFile(p, 'utf-8'));
-      } catch (e) {
-        return {};
-      }
-    };
-
-    const manifest = await getJson('manifest.json');
-    const engine = await getJson('engine.json');
-    const motion = await getJson('motion.json');
-    const composition = await getJson('composition.json');
-    const globalFx = await getJson('global-fx.json');
-    const typography = await getJson('typography.json');
-    const blueprint = await getJson('blueprint.json');
-
-    // RECONSTRUCCIÓN LÓGICA (Bypass para compatibilidad con motor Legacy)
-    const scenesRules: Record<string, any> = {};
-    if (typography.segment_styles) {
-      Object.entries(typography.segment_styles).forEach(([segment, styles]: [string, any]) => {
-        scenesRules[segment] = {
-          text_styling: {
-            fontsize: styles.text?.fontSize || 64,
-            color: styles.text?.primaryColor?.split('@')[0] || "#FFFFFF",
-            uppercase: styles.text?.uppercase || false,
-            font_path: styles.text?.fontName || "Inter-Black.ttf"
-          }
-        };
-      });
-      // Aseguramos un default
-      scenesRules['default'] = scenesRules['GANCHO'] || Object.values(scenesRules)[0] || {};
-    }
-
-    adnConfig = {
-      ...manifest,
-      ...engine,
-      ...motion,
-      ...composition,
-      ...globalFx,
-      scenes_rules: scenesRules, 
-      typography_engine: typography,
-      default_blueprint: blueprint,
-      slices: blueprint.slices || [], // Flatten slices to root for easy access
-    };
-  } else {
-    // CARGA LEGACY (Archivo JSON único)
-    adnConfig = JSON.parse(await fsPromises.readFile(targetPath, 'utf-8'));
+export function getSafeAdnDir(adnId: string): string {
+  if (!validateAdnId(adnId)) {
+    throw new Error('ID de ADN inválido: solo se permiten letras, números, _ y -');
   }
+  return `${ADNS_BASE_DIR}/${adnId}`;
+}
 
-  return adnConfig;
+export async function loadAdnConfig(adnId: string) {
+  if (!validateAdnId(adnId)) {
+    throw new Error('ID de ADN inválido');
+  }
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  
+  const adnDir = getSafeAdnDir(adnId);
+  const blueprintPath = path.join(adnDir, 'blueprint.json');
+  const content = await fs.readFile(blueprintPath, 'utf-8');
+  return JSON.parse(content);
 }

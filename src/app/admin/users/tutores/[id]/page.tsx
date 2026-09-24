@@ -98,13 +98,11 @@ export default function TutorDetailPage() {
         setStudents(studentsList);
       }
 
-      const landingsQuery = query(
-        collection(db, 'salesPages'),
-        where('mentorId', '==', tutorId),
-        orderBy('createdAt', 'desc')
-      );
-      const landingsSnap = await getDocs(landingsQuery);
-      const landingsList = landingsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      const landingsRes = await fetch(`/api/sales-pages?type=all&mentorId=${tutorId}`);
+      let landingsList = [];
+      if (landingsRes.ok) {
+        landingsList = await landingsRes.json();
+      }
       setLandings(landingsList);
 
     } catch (e) {

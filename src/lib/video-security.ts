@@ -1,32 +1,75 @@
-// Utilidades de seguridad para videos
+// Utilidades de seguridad para videos - AES-GCM (Web Crypto API)
+// Reemplaza XOR reversible por encriptación auténtica
 
-// Clave de encriptación simple (en producción usar una más robusta)
-const ENCRYPTION_KEY = 'btech-video-encryption-2024';
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
-// Encriptar string simple (XOR-based para desarrollo)
-export function encryptVideoToken(data: string): string {
-  let result = '';
-  for (let i = 0; i < data.length; i++) {
-    result += String.fromCharCode(
-      data.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length)
-    );
+// Derivar key desde env (32 bytes para AES-256)
+async function getEncryptionKey(): Promise<CryptoKey> {
+  const rawKey = process.env.VIDEO_ENCRYPTION_KEY || '';
+  if (!rawKey || rawKey.length < 32) {
+    throw new Error('VIDEO_ENCRYPTION_KEY no configurada (mín 32 chars)');
   }
-  return btoa(result); // Base64 para hacerlo seguro para URLs
+  
+  const keyData = encoder.encode(rawKey.slice(0, 32));
+  return crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt', 'decrypt']
+  );
 }
 
-// Desencriptar string
-export function decryptVideoToken(encrypted: string): string {
+// Encriptar con AES-GCM (autenticado, no reversible sin key)
+export async function encryptVideoToken(data: string): Promise<string> {
+  const key = await getEncryptionKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV para AES-GCM
+  const encoded = encoder.encode(data);
+  
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encoded
+  );
+  
+  // Combinar IV + ciphertext + authTag y codificar en base64url
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(encrypted), iv.length);
+  
+  return btoa(String.fromCharCode(...combined))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+// Desencriptar con AES-GCM (falla si token manipulado)
+export async function decryptVideoToken(encrypted: string): Promise<string> {
   try {
-    const decoded = atob(encrypted);
-    let result = '';
-    for (let i = 0; i < decoded.length; i++) {
-      result += String.fromCharCode(
-        decoded.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length)
-      );
+    const key = await getEncryptionKey();
+    
+    // Decodificar base64url
+    const binary = atob(
+      encrypted.replace(/-/g, '+').replace(/_/g, '/')
+    );
+    const combined = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      combined[i] = binary.charCodeAt(i);
     }
-    return result;
+    
+    const iv = combined.slice(0, 12);
+    const ciphertext = combined.slice(12);
+    
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      ciphertext
+    );
+    
+    return decoder.decode(decrypted);
   } catch {
-    return '';
+    return ''; // Token inválido, manipulado o key incorrecta
   }
 }
 
@@ -44,8 +87,8 @@ export function extractVideoId(url: string): string | null {
   return null;
 }
 
-// Generar URL segura de YouTube con token
-export function generateSecureYouTubeUrl(videoId: string, token: string): string {
+// Generar URL segura de YouTube con token encriptado
+export async function generateSecureYouTubeUrl(videoId: string, token: string): Promise<string> {
   const baseUrl = 'https://www.youtube-nocookie.com/embed/';
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const params = new URLSearchParams({
@@ -59,17 +102,16 @@ export function generateSecureYouTubeUrl(videoId: string, token: string): string
     widgetid: '1'
   });
   
-  // Agregar token encriptado como parámetro
-  const encryptedToken = encryptVideoToken(token);
+  const encryptedToken = await encryptVideoToken(token);
   params.append('token', encryptedToken);
   
   return `${baseUrl}${videoId}?${params.toString()}`;
 }
 
-// Validar token del iframe
-export function validateIframeToken(token: string): boolean {
+// Validar token del iframe (AES-GCM: falla si manipulado)
+export async function validateIframeToken(token: string): Promise<boolean> {
   try {
-    const decrypted = decryptVideoToken(token);
+    const decrypted = await decryptVideoToken(token);
     if (!decrypted) return false;
     
     // Verificar estructura del token (JWT simple)

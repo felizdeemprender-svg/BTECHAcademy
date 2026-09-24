@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
+import { validateAdnId, getSafeAdnDir } from '@/lib/adn-utils';
 
 export async function POST(req: Request) {
+  const adminUid = await verifyAdmin(req);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   try {
     const { adnId } = await req.json();
     if (!adnId) return NextResponse.json({ success: false, error: "Falta ID del ADN" }, { status: 400 });
 
-    const adnsDir = path.join(process.cwd(), 'public', 'adns', adnId);
+    if (!validateAdnId(adnId)) {
+      return NextResponse.json({ success: false, error: "ID inválido: solo letras, números, _ y -" }, { status: 400 });
+    }
+
+    const adnsDir = getSafeAdnDir(adnId);
     
     // 1. Verificar existencia de carpeta
     try {

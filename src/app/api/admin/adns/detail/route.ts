@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
 import { loadAdnConfig } from '@/lib/adn-utils';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
 
 export async function POST(req: Request) {
+  const adminUid = await verifyAdmin(req);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   try {
     const { adnId } = await req.json();
     if (!adnId) return NextResponse.json({ success: false, error: "Falta ID del ADN" }, { status: 400 });

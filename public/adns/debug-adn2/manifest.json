@@ -1,0 +1,15 @@
+{
+  "id": "debug-adn2",
+  "name": "Test",
+  "engine_requirements": {
+    "ffmpeg_build": "ffmpeg 6.1-master",
+    "features": [
+      "xfade",
+      "sidechain",
+      "loudnorm"
+    ]
+  },
+  "ai_prompts": {
+    "instruction": "Genera contenido para el estilo Test"
+  }
+}

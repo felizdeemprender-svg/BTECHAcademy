@@ -27,6 +27,27 @@ export async function calculateGeminiCost(tokens: number): Promise<CostBreakdown
 }
 
 /**
+ * Calcula el costo en créditos de un Embedding.
+ */
+export async function calculateEmbeddingCost(tokens: number): Promise<CostBreakdown> {
+  const pricingSnap = await adminDb.collection('config').doc('ai_pricing').get();
+  const pricing = pricingSnap.data() || {};
+  
+  // Precio base específico para embeddings de Google (por millón de tokens)
+  const baseCost = pricing.embeddingPricePerMillionTokens || 0.02; // Google's embedding model is typically much cheaper (e.g. 0.02)
+  const markup = pricing.embeddingMarkupPercentage || 30;
+
+  const rawProviderCost = (tokens / 1000000) * baseCost;
+  const pricePerMillion = baseCost * (1 + markup / 100);
+  const rawBilledCost = (tokens / 1000000) * pricePerMillion;
+  
+  return {
+    providerCost: Number(rawProviderCost.toFixed(5)),
+    billedCost: Number(rawBilledCost.toFixed(5))
+  };
+}
+
+/**
  * Calcula el costo de un renderizado de video por minuto.
  */
 export async function calculateVideoCost(durationSeconds: number, engine: 'ffmpeg' | 'omni' = 'ffmpeg'): Promise<CostBreakdown> {

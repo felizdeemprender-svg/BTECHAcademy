@@ -1,4 +1,4 @@
-async function test() {
+async function testPollinations() {
   const prompt = "High quality marketing photo for an online course about business, professional. Context: Imagen 1. Photorealistic, clean background, professional lighting, 4:3 aspect ratio. No text overlays.";
   const encoded = encodeURIComponent(prompt);
   const url = `https://image.pollinations.ai/prompt/${encoded}?width=800&height=600&seed=123&nologo=true`;
@@ -15,4 +15,4 @@ async function test() {
     console.log("Error:", e);
   }
 }
-test();
+testPollinations();

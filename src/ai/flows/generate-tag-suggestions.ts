@@ -41,10 +41,10 @@ const generateTagSuggestionsFlow = ai.defineFlow(
     inputSchema: TagSuggestionInputSchema,
     outputSchema: TagSuggestionOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     let existingTagsStr = '';
     if (input.existingTags && input.existingTags.length > 0) {
-      existingTagsStr = input.existingTags.map(t => `"${t}"`).join(', ');
+      existingTagsStr = input.existingTags.map((t: any) => `"${t}"`).join(', ');
     }
 
     const { generateWithAuditing } = await import('../genkit');

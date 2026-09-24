@@ -58,7 +58,7 @@ export function SidebarNav() {
       !profile?.roles.includes('admin') &&
       !profile?.roles.includes('marketing') &&
       !canAccessMarketingTools(profile?.mentorPermissions || [])) {
-      return items.filter(item => !item.href.startsWith('/mentoria/marketing'));
+      return items.filter(item => !item.href.startsWith('/marketing'));
     }
     return items;
   };
@@ -77,8 +77,8 @@ export function SidebarNav() {
         { name: 'Catálogo', href: '/courses', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: BookOpen },
         { name: 'Control de Tutores', href: '/courses/embajadores', roles: ['alumno'], icon: Users },
         { name: 'Mis Cursos', href: '/my-courses', roles: ['alumno'], icon: Library },
-        { name: 'Mis Desafíos', href: '/tasks', roles: ['alumno'], icon: Zap },
-        { name: 'Mentorías', href: '/seguimientos', roles: ['alumno', 'mentor', 'admin'], subPermission: 'followups_management', icon: ClipboardList },
+        { name: 'Mis Desafíos', href: '/mentoria/tasks', roles: ['alumno'], icon: Zap },
+        { name: 'Mentorías', href: '/mentoria/seguimientos', roles: ['alumno', 'mentor', 'admin'], subPermission: 'followups_management', icon: ClipboardList },
       ]
     },
     {
@@ -86,31 +86,32 @@ export function SidebarNav() {
       items: [
         { name: 'Gestión Académica', href: '/courses/manage', roles: ['mentor', 'admin'], subPermission: 'academic_management', icon: GraduationCap },
         { name: 'Desafíos (Mentor)', href: '/mentoria/desafios', roles: ['mentor', 'admin'], subPermission: 'mentor_challenges', icon: Target },
-        { name: 'Alumnos', href: '/alumnos', roles: ['mentor', 'admin'], subPermission: 'students_view', icon: Users },
+        { name: 'Alumnos', href: '/mentoria/alumnos', roles: ['mentor', 'admin'], subPermission: 'students_view', icon: Users },
       ]
     },
     {
       label: 'Landings',
       items: [
-        { name: 'Landings de Venta', href: '/mentoria/marketing/landings', roles: ['admin', 'marketing', 'mentor'], subPermission: 'landing_access', icon: LayoutIcon },
-        { name: 'Control de Embajadores', href: '/mentoria/influencers', roles: ['mentor', 'admin'], subPermission: 'landing_access', icon: Users },
+        { name: 'Landings de Venta', href: '/marketing/landings', roles: ['admin', 'marketing', 'mentor'], subPermission: 'landing_access', icon: LayoutIcon },
+        { name: 'Control de Embajadores', href: '/marketing/influencers', roles: ['mentor', 'admin'], subPermission: 'landing_access', icon: Users },
       ]
     },
     {
       label: 'Campañas',
       items: filterMarketingItems([
-        { name: 'Mis Campañas', href: '/mentoria/marketing', roles: ['admin', 'marketing', 'mentor'], icon: Rocket },
-        { name: 'Centro de Mando', href: '/mentoria/marketing/execution', roles: ['admin', 'marketing', 'mentor'], icon: Cpu },
-        { name: 'Track de Campañas', href: '/mentoria/marketing/track', roles: ['admin', 'marketing', 'mentor'], icon: Activity },
-        { name: 'Generación de Contenido', href: '/mentoria/marketing/pages', roles: ['admin', 'marketing', 'mentor'], icon: FileBox },
+        { name: 'Mis Campañas', href: '/marketing', roles: ['admin', 'marketing', 'mentor'], icon: Rocket },
+        { name: 'Centro de Mando', href: '/marketing/execution', roles: ['admin', 'marketing', 'mentor'], icon: Cpu },
+        { name: 'Track de Campañas', href: '/marketing/track', roles: ['admin', 'marketing', 'mentor'], icon: Activity },
+        { name: 'Generación de Contenido', href: '/marketing/pages', roles: ['admin', 'marketing', 'mentor'], icon: FileBox },
       ])
     },
     {
-      label: 'Automatizaciones',
+      label: 'Automatizaciones & Canales',
       items: [
-        { name: 'Monitor', href: '/dashboard/automations/monitor', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Activity },
-        { name: 'Configurador Global', href: '/dashboard/automations/builder', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Cpu },
-        { name: 'Servicios', href: '/dashboard/automations/services', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Settings },
+        { name: 'Bot de WhatsApp', href: '/automations/whatsapp', roles: ['admin'], icon: MessageSquare },
+        { name: 'Monitor', href: '/automations/monitor', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Activity },
+        { name: 'Configurador Global', href: '/automations/builder', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Cpu },
+        { name: 'Servicios', href: '/automations/services', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Settings },
       ]
     },
     {
@@ -124,7 +125,6 @@ export function SidebarNav() {
         { name: 'Facturación', href: '/admin/billing', roles: ['admin'], icon: ReceiptText, group: 'COMERCIAL' },
         { name: 'Moderación IA', href: '/admin/moderation', roles: ['admin'], icon: ShieldAlert, group: 'IA' },
         { name: 'Ecosistema Económico IA', href: '/admin/ai-pricing', roles: ['admin'], icon: Cpu, group: 'IA' },
-        { name: 'Bot de WhatsApp', href: '/admin/whatsapp-bot', roles: ['admin'], icon: MessageSquare, group: 'IA' },
         { name: 'Gestión de ADNs', href: '/admin/adns', roles: ['admin'], icon: FileBox, group: 'IA' },
         { name: 'Tema del Sistema', href: '/admin/theme', roles: ['admin'], icon: Palette, group: 'APARIENCIA' },
         { name: 'Estilos de Landing', href: '/admin/styles', roles: ['admin'], icon: LayoutIcon, group: 'APARIENCIA' },
@@ -184,7 +184,7 @@ export function SidebarNav() {
       }
 
       // Check marketing access (excluding landings which is covered by subPermission)
-      if (item.href.startsWith('/mentoria/marketing') && item.href !== '/mentoria/marketing/landings') {
+      if (item.href.startsWith('/marketing') && item.href !== '/marketing/landings') {
         return isSuperAdmin ||
           profile.roles.includes('admin') ||
           profile.roles.includes('marketing') ||

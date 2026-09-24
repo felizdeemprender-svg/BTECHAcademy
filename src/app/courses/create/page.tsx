@@ -55,6 +55,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-context';
+import { FileUploadArea } from '@/components/ui/file-upload-area';
 import { resolveProfileBrand } from '@/lib/landing-styles';
 import { useFirebase, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, serverTimestamp, setDoc, query, where, updateDoc, getDocs, getDoc, orderBy } from 'firebase/firestore';
@@ -479,7 +480,7 @@ export default function CreateCoursePage() {
       
       if (result && 'error' in result) throw new Error(result.error);
 
-      const questionsWithIds = result.map(q => ({
+      const questionsWithIds = result.map((q: any) => ({
         ...q,
         id: generateId(),
         options: q.options || (q.type === 'multiple_choice' ? ['', '', '', ''] : null)

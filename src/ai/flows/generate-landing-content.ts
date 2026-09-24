@@ -6,7 +6,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { CLASSIC_STYLE_CONFIG } from '@/app/mentoria/marketing/templates/styles/classic-style-config';
+import { CLASSIC_STYLE_CONFIG } from '@/app/marketing/templates/styles/classic-style-config';
 
 const LandingFilledSchema = z.object({
   type: z.string(),
@@ -102,7 +102,7 @@ const generateLandingFlow = ai.defineFlow(
     inputSchema: GenerateLandingInputSchema,
     outputSchema: GenerateLandingOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     // Obtener configuración del estilo seleccionado
     const selectedStyleId = input.styleId || 'classic';
     let styleConfig = null;
@@ -139,7 +139,7 @@ Tu tarea es llenar la estructura de 3 Landings de Venta para el curso: "${input.
 
 DATOS CLAVE (OBLIGATORIO RESPETAR):
 - Precio del Curso: $${input.price} (Usa este dato para justificar la inversión y el valor).
-- Misión: ${missionDirectives[input.mission]} (Define el OBJETIVO estratégico).
+- Misión: ${missionDirectives[input.mission as keyof typeof missionDirectives]} (Define el OBJETIVO estratégico).
 - Público Objetivo: ${input.targetAudience} (Define el LENGUAJE y el tono).
 - Directivas de Copy: ${input.templateDirectives}
 ${styleSpecificInstructions}

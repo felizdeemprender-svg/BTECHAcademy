@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { generateLandingContent } from '@/ai/flows/generate-landing-content';
-import { CLASSIC_STYLE_CONFIG } from '@/app/mentoria/marketing/templates/styles/classic-style-config';
+import { CLASSIC_STYLE_CONFIG } from '@/app/marketing/templates/styles/classic-style-config';
 
 export async function POST(req: Request) {
   try {

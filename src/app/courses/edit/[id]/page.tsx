@@ -377,7 +377,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       
       if (result && 'error' in result) throw new Error(result.error);
 
-      const questionsWithIds = result.map(q => ({
+      const questionsWithIds = result.map((q: any) => ({
         ...q,
         id: generateId(),
         options: q.options || (q.type === 'multiple_choice' ? ['', '', '', ''] : undefined)

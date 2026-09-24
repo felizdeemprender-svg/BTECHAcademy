@@ -54,7 +54,7 @@ const refineVariantFlow = ai.defineFlow(
     inputSchema: RefineVariantInputSchema,
     outputSchema: RefineVariantOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { output } = await prompt(input);
     if (!output) throw new Error('No se pudo refinar la variante con la IA.');
     return output;

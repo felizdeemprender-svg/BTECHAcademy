@@ -60,7 +60,7 @@ const generateLandingV2Flow = ai.defineFlow(
     inputSchema: GenerateLandingV2InputSchema,
     outputSchema: LandingV2FilledSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const style = getLandingStyle(input.styleId);
     if (!style) {
       throw new Error(`Estilo no encontrado: ${input.styleId}`);
@@ -72,7 +72,7 @@ const generateLandingV2Flow = ai.defineFlow(
     // Si el usuario proporcionó requestedSections (Paso 2 config), usamos eso y sufijamos para repetidas.
     // Si no, caemos en el default de availableSections.
     const requiredSections = input.requestedSections && input.requestedSections.length > 0
-      ? input.requestedSections.map((rs, idx) => {
+      ? input.requestedSections.map((rs: any, idx: any) => {
           const secDef = style.availableSections.find(s => s.id === rs.id);
           return {
             id: `${rs.id}_${idx}`,
@@ -157,7 +157,7 @@ const regenerateSectionV2Flow = ai.defineFlow(
     inputSchema: RegenerateSectionInputSchema,
     outputSchema: LandingSectionContentSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const style = getLandingStyle(input.styleId);
     
     const promptText = `Actúa como un Copywriter Senior experto en Venta de Infoproductos.

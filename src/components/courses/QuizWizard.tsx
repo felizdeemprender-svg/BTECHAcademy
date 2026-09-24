@@ -103,7 +103,7 @@ export function QuizWizard({
           </div>
           <span className="text-xs font-bold text-muted-foreground">{Math.round(progress)}% completado</span>
         </div>
-        <Progress value={progress} className="h-2 rounded-full bg-secondary/20" style={{'--progress-foreground': primaryColor} as any} />
+        <Progress value={progress} className="h-2 rounded-full bg-secondary/20" style={{'--progress-foreground': primaryColor} as React.CSSProperties} />
       </div>
 
       {/* Question Card */}

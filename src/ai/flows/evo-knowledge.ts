@@ -24,7 +24,7 @@ export const searchKnowledgeBaseTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ query }) => {
+  async ({ query }: any) => {
     const context = ai.currentContext();
     const uid = context?.uid;
     if (!uid) throw new Error('No autorizado');

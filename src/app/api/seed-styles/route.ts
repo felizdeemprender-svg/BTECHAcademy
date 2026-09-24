@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/firebase/admin';
 import { LANDING_STYLES } from '@/lib/landing-styles';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminUid = await verifyAdmin(request);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   try {
     const batch = adminDb.batch();
     const stylesRef = adminDb.collection('landingStyles');

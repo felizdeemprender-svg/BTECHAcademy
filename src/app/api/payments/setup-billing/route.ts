@@ -1,27 +1,19 @@
 import { NextResponse } from 'next/server';
-import { getAdminFirestore } from '@/firebase/admin';
-export const dynamic = 'force-dynamic';
-import { setupTutorBilling } from '@/services/payments/orchestrator';
 
+import { resolveGateway } from '@/lib/api/gateway';
+import { handleSetupBilling } from '@/lib/api/payment-handlers';
+
+export const dynamic = 'force-dynamic';
+
+/** Pública por contrato legacy: setup Stripe del tutor. */
 export async function POST(req: Request) {
   try {
-    const { userId } = await req.json();
-    if (!userId) {
-      return NextResponse.json({ error: 'Falta userId' }, { status: 400 });
-    }
-
-    const db = getAdminFirestore();
-    const userSnap = await db.collection('users').doc(userId).get();
-    if (!userSnap.exists) {
-      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
-    }
-    const email = userSnap.data()?.email;
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
-
-    const { url } = await setupTutorBilling(userId, email, baseUrl);
-    return NextResponse.json({ url });
-  } catch (error: any) {
+    const gateway = await resolveGateway();
+    const body = await req.json();
+    return handleSetupBilling(gateway, null, body);
+  } catch (error: unknown) {
     console.error('[SetupBilling] Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -26,7 +26,19 @@ export const FEATURE_FLAGS = {
   
   // Lista de userIds que tienen acceso al nuevo sistema (beta testing)
   BETA_USERS: [] as string[],
+
+  // Habilita los hooks nuevos de mentoría/campañas (consumen /api/*).
+  // false = páginas actuales (Firestore directo), true = nueva arquitectura.
+  // Admins (lista total) y alumnos (detalle) mantienen rutas legacy por forks.
+  NEW_MENTORING_API: true,
 };
+
+/**
+ * Indica si los hooks nuevos de mentoría/campañas están habilitados.
+ */
+export function isNewMentoringApiEnabled(): boolean {
+  return FEATURE_FLAGS.NEW_MENTORING_API;
+}
 
 /**
  * Verifica si un usuario específico tiene acceso al nuevo sistema

@@ -67,7 +67,7 @@ const generateSalesCopyFlow = ai.defineFlow(
     inputSchema: SalesCopyInputSchema,
     outputSchema: SalesCopyOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { output } = await prompt(input);
     if (!output) throw new Error('No se pudo generar el copy publicitario con la IA.');
     return output;

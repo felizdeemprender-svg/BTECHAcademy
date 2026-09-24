@@ -275,7 +275,7 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
       {getSecureUrl(url) ? (
         <iframe
           ref={iframeRef}
-          src={getSecureUrl(url)}
+          src={getSecureUrl(url) as string | undefined}
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen

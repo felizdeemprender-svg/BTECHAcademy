@@ -3,10 +3,10 @@ import { getRootDomain, getSubdomain } from '@/lib/utils';
 
 const RESERVED_PATHS = [
   'admin', 'api', 'auth', 'courses', 'dashboard', 'mentoria', 
-  'my-courses', 'seguimientos', 'settings', 'tasks', 'v', 
+  'my-courses', 'settings', 'v', 
   'about', 'services', 'privacy', 'terms', 'favicon.ico', 
-  'globals.css', 'tutor-access-denied', 'upgrade-required', 'abonos', 'ai-assistant', 'alumnos',
-  'tutor', 'planes', 'evo', 'styles-demo', 'preview-style' // Rutas reservadas oficiales
+  'globals.css', 'tutor-access-denied', 'upgrade-required', 'ai-assistant', 'alumnos',
+  'tutor', 'planes', 'evo', 'styles-demo', 'preview-style', 'marketing', 'automations', 'referidos' // Rutas reservadas oficiales
 ];
 
 export async function middleware(request: NextRequest) {

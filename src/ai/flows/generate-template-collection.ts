@@ -11,7 +11,7 @@ import {
   validateAdsTemplates
 } from '@/lib/template-validator';
 import { analyzeColorSimilarity, generateColorRecommendations } from '@/lib/color-matcher';
-import { CLASSIC_STYLE_CONFIG } from '@/app/mentoria/marketing/templates/styles/classic-style-config';
+import { CLASSIC_STYLE_CONFIG } from '@/app/marketing/templates/styles/classic-style-config';
 
 const DesignTokensSchema = z.object({
   primary: z.string().describe('Color primario (Hex)'),
@@ -120,7 +120,7 @@ const generateTemplateCollectionFlow = ai.defineFlow(
     inputSchema: CollectionInputSchema,
     outputSchema: CollectionOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     // Obtener configuración específica del estilo seleccionado
     const selectedStyleId = input.styleId || 'classic';
     let styleConfig = null;

@@ -2,11 +2,17 @@ import { NextResponse } from 'next/server';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { firebaseConfig } from '@/firebase/config';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
 
 const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(firebaseApp, 'default');
 
-export async function GET() {
+export async function GET(req: Request) {
+  const adminUid = await verifyAdmin(req);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   try {
     const [coursesSnap, salesPagesSnap, usersSnap] = await Promise.all([
       getDocs(collection(db, 'courses')),

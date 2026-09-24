@@ -36,7 +36,7 @@ const generateBuyerPersonasFlow = ai.defineFlow(
     inputSchema: GeneratePersonasInputSchema,
     outputSchema: PersonasOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const promptText = `Actúa como un Experto en Marketing de Respuesta Directa y Analista de Comportamiento del Consumidor.
 Tu tarea es definir EXACTAMENTE 6 Buyer Personas (Perfiles de Comprador Ideal) estratégicamente distintos para el siguiente infoproducto:
 

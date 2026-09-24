@@ -1,6 +1,11 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   output: 'standalone',
   typescript: {
     ignoreBuildErrors: true,
@@ -28,7 +33,8 @@ const nextConfig: NextConfig = {
     '@genkit-ai/core', 
     '@genkit-ai/ai',
     '@opentelemetry/api',
-    '@opentelemetry/sdk-node'
+    '@opentelemetry/sdk-node',
+    'pdf-parse'
   ],
   async headers() {
     return [

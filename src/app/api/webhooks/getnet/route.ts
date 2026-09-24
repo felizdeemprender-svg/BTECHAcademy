@@ -1,69 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminFirestore } from '@/firebase/admin';
-import { processSuccessfulEnrollment } from '@/lib/payments/enrollment';
+import { verifyGetnetSignature, getWebhookSecret } from '@/lib/webhooks/verify-signature';
+import { resolveGateway } from '@/lib/api/gateway';
+import { processGetnetWebhook } from '@/domain/commerce/use-cases/getnet-webhook-use-case';
 
 export async function POST(req: NextRequest) {
   try {
-    const payload = await req.json();
-    console.log('[Getnet Webhook] Payload recibido:', payload);
+    const verification = await verifyGetnetSignature(req, getWebhookSecret('getnet'));
 
-    const status = payload.status; 
-    const orderId = payload.order_id;
-    const paymentId = payload.payment_id;
-
-    if (!orderId) {
-      return NextResponse.json({ error: 'Order ID no encontrado en payload' }, { status: 400 });
+    if (!verification.valid) {
+      return NextResponse.json({ error: verification.error }, { status: 401 });
     }
 
-    const db = getAdminFirestore();
+    const payload = verification.event!;
+    console.log('[Getnet Webhook] Payload verificado:', payload);
 
-    // 1. Buscar la orden pendiente
-    const orderRef = db.collection('pending_orders').doc(orderId);
-    const orderDoc = await orderRef.get();
-
-    if (!orderDoc.exists) {
-      console.error('[Getnet Webhook] Orden no encontrada:', orderId);
-      return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 });
-    }
-
-    const orderData = orderDoc.data()!;
-
-    // Si el pago está aprobado
-    if (status === 'APPROVED' || status === 'AUTHORIZED') {
-      
-      // Construir el externalReference simulado para que enrollment.ts lo entienda igual que MP
-      const externalReference = JSON.stringify({
-        pageId: orderData.landingId,
-        studentEmail: orderData.buyerEmail,
-        studentName: orderData.buyerName,
-        mentorId: orderData.tutorId,
-        referidoId: orderData.referidoId || null
-      });
-
-      // Llamar al servicio unificado de Enrollment (el mismo de Mercado Pago)
-      await processSuccessfulEnrollment({
-        paymentId: paymentId || payload.id || orderId,
-        externalReference,
-        status: 'approved'
-      });
-
-      // Marcar orden como completada
-      await orderRef.update({
-        status: 'completed',
-        updatedAt: new Date()
-      });
-
-    } else {
-      // Registrar que falló o fue cancelada
-      await orderRef.update({
-        status: status || 'failed',
-        updatedAt: new Date(),
-        lastPayload: payload
-      });
-      console.log(`[Getnet Webhook] Orden ${orderId} actualizada con status: ${status}`);
-    }
-
-    return NextResponse.json({ received: true });
+    const gateway = await resolveGateway();
+    return processGetnetWebhook(gateway, {
+      status: payload.status,
+      orderId: payload.order_id,
+      paymentId: payload.payment_id || payload.id,
+      payload,
+    });
   } catch (error: any) {
     console.error('[Getnet Webhook Error]', error);
     return NextResponse.json({ error: 'Error procesando webhook' }, { status: 500 });

@@ -47,7 +47,7 @@ const tutorChatFlow = ai.defineFlow(
     inputSchema: TutorChatInputSchema,
     outputSchema: TutorChatOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { output } = await prompt(input);
     if (!output) throw new Error('No se pudo generar respuesta del tutor.');
     return output;

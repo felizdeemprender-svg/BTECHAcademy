@@ -20,7 +20,7 @@ async function main() {
     const dailyUsage: Record<string, Record<string, any>> = {};
     let restoredCount = 0;
     
-    const batches = [];
+    const batches: any[] = [];
     let currentBatch = adminDb.batch();
     let opCount = 0;
 

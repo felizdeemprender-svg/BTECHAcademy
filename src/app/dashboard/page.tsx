@@ -50,6 +50,7 @@ import { StudentFollowUpCard } from '@/components/student/FollowUpCard';
 import { useStudentEnrollments } from '@/hooks/student/useStudentEnrollments';
 import { useStudentTasks } from '@/hooks/student/useStudentTasks';
 import { useStudentFollowUps } from '@/hooks/student/useStudentFollowUps';
+import { useApiSalesPages } from '@/hooks/use-api-sales-pages';
 
 export default function DashboardPage() {
   return (
@@ -139,11 +140,12 @@ function DashboardInner() {
   }, [activeCampaigns]);
 
   // --- NUEVA QUERY: RESUMEN DE MARKETING ---
-  const marketingStatsQuery = useMemoFirebase(() => {
-    if (!profile?.uid || isAuthLoading || (!isMentor && !isAdmin)) return null;
-    return query(collection(db, 'salesPages'), where('mentorId', '==', profile.uid), limit(50));
-  }, [db, profile?.uid, isMentor, isAdmin, isAuthLoading]);
-  const { data: rawMarketingPages } = useCollection(marketingStatsQuery);
+  const skipMarketing = !profile?.uid || isAuthLoading || (!isMentor && !isAdmin);
+  const { data: rawMarketingPages } = useApiSalesPages({
+    type: 'all',
+    mentorId: profile?.uid,
+    skip: skipMarketing
+  });
 
   const aggregateMarketingStats = useMemoFirebase(() => {
     if (!rawMarketingPages) return { clicks: 0, conversions: 0, impacts: 0 };
@@ -291,7 +293,7 @@ const DashboardContent = ({
                     </div>
                   ))}
                 </div>
-                <Link href="/mentoria/marketing/execution" className="w-full md:w-auto">
+                <Link href="/marketing/execution" className="w-full md:w-auto">
                   <Button className="w-full h-12 md:h-14 px-8 rounded-xl md:rounded-2xl font-bold bg-accent hover:bg-accent/90 gap-2">
                     Ir al Centro de Mando <ArrowRight className="h-5 w-5" />
                   </Button>

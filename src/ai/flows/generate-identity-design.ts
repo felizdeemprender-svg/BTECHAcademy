@@ -150,7 +150,7 @@ const generateIdentityDesignFlow = ai.defineFlow(
     inputSchema: DesignInputSchema,
     outputSchema: IdentityDesignSchema,
   },
-  async (input): Promise<IdentityDesign> => {
+  async (input: any): Promise<IdentityDesign> => {
     const { output } = await ai.generate({
       prompt: `Actúa como un Director de Arte y Diseñador Gráfico experto. Tu tarea es generar una identidad visual profesional basada en las directivas del usuario.
 
@@ -186,7 +186,7 @@ const generateIdentityDesignBatchFlow = ai.defineFlow(
     inputSchema: DesignInputSchema,
     outputSchema: IdentityDesignArraySchema,
   },
-  async (input): Promise<IdentityDesignArray> => {
+  async (input: any): Promise<IdentityDesignArray> => {
     const { output } = await ai.generate({
       prompt: `Actúa como un Director de Arte y Diseñador Gráfico experto. Tu tarea es generar 5 identidades visuales únicas y profesionales basadas en las directivas del usuario.
 

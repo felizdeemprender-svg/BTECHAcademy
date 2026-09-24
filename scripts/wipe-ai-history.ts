@@ -8,7 +8,7 @@ async function main() {
     let deletedUsage = 0;
     let deletedTransactions = 0;
 
-    const batches = [];
+    const batches: any[] = [];
     let currentBatch = adminDb.batch();
     let opCount = 0;
 

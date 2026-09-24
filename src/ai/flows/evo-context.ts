@@ -145,7 +145,7 @@ export const queryPlatformDataTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ collectionName, role, limit }) => {
+  async ({ collectionName, role, limit }: any) => {
     const context = ai.currentContext();
     const uid = context?.uid;
     if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit.');
@@ -209,7 +209,7 @@ export const readDocumentationTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ filename }) => {
+  async ({ filename }: any) => {
     try {
       const docsPath = path.join(process.cwd(), 'src', 'ai', 'docs', filename);
       const content = await fs.readFile(docsPath, 'utf-8');
@@ -230,7 +230,7 @@ export const getStudentsProgressTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ limit, sortBy }) => {
+  async ({ limit, sortBy }: any) => {
     const context = ai.currentContext();
     const uid = context?.uid;
     if (!uid) throw new Error('No autorizado.');
@@ -302,7 +302,7 @@ export const getMentorAgendaTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ startDate, endDate }) => {
+  async ({ startDate, endDate }: any) => {
     const context = ai.currentContext();
     const uid = context?.uid;
     if (!uid) throw new Error('No autorizado.');

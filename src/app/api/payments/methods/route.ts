@@ -1,25 +1,14 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/firebase/admin';
 
+import { resolveGateway } from '@/lib/api/gateway';
+import { handleListSystemMethods } from '@/lib/api/payment-handlers';
+
+/** Pública por contrato legacy: métodos del sistema activos. */
 export async function GET() {
   try {
-    const methodsSnap = await adminDb.collection('systemPaymentMethods')
-      .where('isActive', '==', true)
-      .get();
-
-    const methods = methodsSnap.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        name: data.name,
-        type: data.type, // 'mercadopago', 'paypal', 'stripe', etc.
-        description: data.description,
-        icon: data.icon
-      };
-    });
-
-    return NextResponse.json({ methods });
-  } catch (error: any) {
+    const gateway = await resolveGateway();
+    return handleListSystemMethods(gateway, null);
+  } catch (error: unknown) {
     console.error('[API_PAYMENT_METHODS_ERROR]:', error);
     return NextResponse.json({ error: 'Error al cargar métodos de pago' }, { status: 500 });
   }

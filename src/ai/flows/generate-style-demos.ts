@@ -7,7 +7,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { CLASSIC_STYLE_CONFIG } from '@/app/mentoria/marketing/templates/styles/classic-style-config';
+import { CLASSIC_STYLE_CONFIG } from '@/app/marketing/templates/styles/classic-style-config';
 
 const DemoVariantSchema = z.object({
   variant: z.string().describe('ID de la variante (minimal, balanced, detailed)'),
@@ -73,7 +73,7 @@ const generateStyleDemosFlow = ai.defineFlow(
     inputSchema: GenerateStyleDemosInputSchema,
     outputSchema: GenerateStyleDemosOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     // Obtener configuración específica del estilo
     const selectedStyleId = input.styleId || 'classic';
     let styleConfig = null;

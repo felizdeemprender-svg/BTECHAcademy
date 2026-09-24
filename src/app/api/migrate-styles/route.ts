@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { adminDb } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { StyleTokens } from '@/lib/landing-styles';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
 
 function migrateTokens(oldDoc: Record<string, any>): StyleTokens | null {
   if (oldDoc.tokens) return null;
@@ -39,7 +40,12 @@ function migrateTokens(oldDoc: Record<string, any>): StyleTokens | null {
   } as StyleTokens;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const adminUid = await verifyAdmin(request);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   try {
     const snap = await adminDb.collection('landingStyles').get();
     const batch = adminDb.batch();

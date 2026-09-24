@@ -48,7 +48,7 @@ const generateModerationSuggestionsFlow = ai.defineFlow(
     inputSchema: ModerationSuggestionInputSchema,
     outputSchema: ModerationSuggestionOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { output } = await prompt(input);
     if (!output) throw new Error('No se pudieron generar sugerencias de moderación para este contexto.');
     return output;

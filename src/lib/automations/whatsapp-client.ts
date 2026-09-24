@@ -4,7 +4,11 @@
  */
 
 const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'http://localhost:8080';
-const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || 'global-api-key-here';
+
+if (!process.env.EVOLUTION_API_KEY) {
+  throw new Error('EVOLUTION_API_KEY no configurada en variables de entorno');
+}
+const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
 
 export interface WhatsAppInstance {
   instanceName: string; // Típicamente tutorId

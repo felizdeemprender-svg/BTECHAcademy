@@ -19,7 +19,7 @@ export const enrollStudentTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ studentEmail, courseId }) => {
+  async ({ studentEmail, courseId }: any) => {
     const context = ai.currentContext();
     const uid = context?.uid;
     if (!uid) throw new Error('No autorizado.');
@@ -71,7 +71,7 @@ export const formatCrmNotesTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ studentNameOrEmail, noteContent }) => {
+  async ({ studentNameOrEmail, noteContent }: any) => {
     const context = ai.currentContext();
     const uid = context?.uid;
     if (!uid) throw new Error('No autorizado.');

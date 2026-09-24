@@ -38,7 +38,7 @@ const extractDocumentTextFlow = ai.defineFlow(
     inputSchema: ExtractDocumentTextInputSchema,
     outputSchema: ExtractDocumentTextOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     let currentDataUri = input.documentDataUri;
 
     // Si viene una URL, descargamos el archivo en el servidor para evitar bloqueos de CORS en el navegador
@@ -119,18 +119,28 @@ const extractDocumentTextFlow = ai.defineFlow(
     // 3. Manejo de PDF (.pdf)
     if (currentDataUri.includes('application/pdf') || input.documentName.toLowerCase().endsWith('.pdf')) {
       try {
-        const { text, finishReason } = await ai.generate({
-          prompt: [
-            { text: `Actúa como un transcriptor académico de alta precisión. Extrae TODO el contenido textual educativo de este PDF. Ignora pies de página repetitivos, números de página y elementos puramente decorativos.` },
-            { media: { url: currentDataUri, contentType: 'application/pdf' } },
-          ],
+        const base64Part = currentDataUri.split(',')[1];
+        if (!base64Part) throw new Error("Archivo PDF vacío.");
+        const buffer = Buffer.from(base64Part, 'base64');
+        
+        // Extraemos texto localmente con pdf-parse
+        const { PDFParse } = await import('pdf-parse');
+        const parser = new PDFParse({ data: buffer });
+        const pdfData = await parser.getText();
+        await parser.destroy();
+        const fullText = pdfData.text;
+
+        if (!fullText || fullText.trim().length < 10) {
+          throw new Error('No se pudo extraer texto seleccionable del PDF. ¿Es una imagen escaneada?');
+        }
+
+        // Enviamos el texto a Gemini para limpieza (igual que hacemos con Word)
+        const { text } = await ai.generate({
+          prompt: `Actúa como un transcriptor experto. Limpia este texto extraído de un PDF, corrige saltos de línea rotos, mantén la jerarquía educativa y omite elementos de encabezado/pie de página repetitivos o ruido:\n\n${fullText.substring(0, 50000)}`,
           config: { temperature: 0.1 },
         });
 
-        if (finishReason !== 'stop') return { error: `Procesamiento de PDF incompleto: ${finishReason}` };
-        if (!text || text.trim().length < 10) return { error: 'No se detectó texto extraíble en el PDF.' };
-
-        return { extractedText: text.trim() };
+        return { extractedText: text || fullText.trim() };
       } catch (error: any) {
         return { error: `Gemini falló al procesar el PDF: ${error.message}` };
       }

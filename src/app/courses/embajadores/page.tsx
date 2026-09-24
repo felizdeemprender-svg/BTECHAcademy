@@ -78,23 +78,17 @@ export default function EmbajadoresBoardPage() {
       for (const mentorId of associatedMentors) {
         const mentorData = tutorMap.get(mentorId) || {};
 
-        const landingsQuery = query(
-          collection(db, 'salesPages'),
-          where('mentorId', '==', mentorId),
-          where('referidoId', '==', profile.uid)
-        );
-        const landingsSnap = await getDocs(landingsQuery);
-
-        const relevantLandings = landingsSnap.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...(docSnap.data() as any),
-        }));
+        const landingsRes = await fetch(`/api/sales-pages?type=all&mentorId=${mentorId}&referidoId=${profile.uid}`);
+        let relevantLandings = [];
+        if (landingsRes.ok) {
+          relevantLandings = await landingsRes.json();
+        }
 
         if (relevantLandings.length === 0) {
           continue;
         }
 
-        const relevantLandingIds = relevantLandings.map((landing) => landing.id);
+        const relevantLandingIds = relevantLandings.map((landing: any) => landing.id);
 
         const coursesSnap = await getDocs(
           query(collection(db, 'courses'), where('mentorId', '==', mentorId))
@@ -142,7 +136,7 @@ export default function EmbajadoresBoardPage() {
           });
         }
 
-        const tutorCourses = relevantLandings.map((landing) => {
+        const tutorCourses = relevantLandings.map((landing: any) => {
           const course = courseMap[landing.courseId];
           const leadStats = landingLeadStats[landing.id] || { total: 0, converted: 0 };
 
@@ -162,7 +156,7 @@ export default function EmbajadoresBoardPage() {
         const totalLeads = influencerLeads[profile.uid]?.total || 0;
         const totalConverted = influencerLeads[profile.uid]?.converted || 0;
         const totalClicks = Math.max(
-          relevantLandings.reduce((acc, landing) => acc + (landing.stats?.totalClicks || 0), 0),
+          relevantLandings.reduce((acc: number, landing: any) => acc + (landing.stats?.totalClicks || 0), 0),
           totalLeads,
           totalConverted
         );

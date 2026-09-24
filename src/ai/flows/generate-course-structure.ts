@@ -59,7 +59,7 @@ const generateCourseStructureFlow = ai.defineFlow(
     inputSchema: GenerateCourseStructureInputSchema,
     outputSchema: GenerateCourseStructureOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { generateWithAuditing } = await import('../genkit');
 
     const result = await generateWithAuditing({

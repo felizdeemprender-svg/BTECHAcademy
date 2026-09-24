@@ -4,9 +4,7 @@
 import { useState, useEffect, use, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth-context';
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
-import { createOrFindLead, REFERIDO_SESSION_KEY, LANDING_SESSION_KEY } from '@/lib/leads/manage-lead';
+import { REFERIDO_SESSION_KEY, LANDING_SESSION_KEY } from '@/lib/leads/manage-lead';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -84,12 +82,15 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const searchParams = useSearchParams();
   const variantIdx = parseInt(searchParams.get('v') || '0');
 
-  const db = useFirestore();
   const { toast } = useToast();
   const { profile } = useAuth(); // Obtener perfil del usuario logueado
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [page, setPage] = useState<any>(null);
+  const [course, setCourse] = useState<any>(null);
+  const [modules, setModules] = useState<any[]>([]);
   const [mentorProfile, setMentorProfile] = useState<any>(null);
   const [mentorPaymentMethods, setMentorPaymentMethods] = useState<any[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -129,34 +130,31 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   const isPreview = searchParams.get('preview') === 'true';
 
-  const pageRef = useMemoFirebase(() => {
-    if (isPreview) return doc(db, 'templateCollections', id);
-    return doc(db, 'salesPages', id);
-  }, [db, id, isPreview]);
-  
-  const { data: rawPage, isLoading: pageLoading } = useDoc(pageRef);
-
-  // Normalizar los datos si es una previsualización de un templateCollection
-  const page = useMemo(() => {
-    if (!rawPage) return null;
-    if (isPreview) {
-      return {
-        ...rawPage,
-        isActive: true, // Forzar activo
-        aiContent: rawPage.assets, // Mapear assets a aiContent
-        price: 0, // Precio falso
-        mentorId: rawPage.ownerId || "W7oR0f2q39bU0Ff10w4yv9FmZ6D3", // Default a Felipe si falta
-        courseId: null,
-      };
-    }
-    return rawPage;
-  }, [rawPage, isPreview]);
-
-  const courseRef = useMemoFirebase(() => page?.courseId ? doc(db, 'courses', page.courseId) : null, [db, page?.courseId]);
-  const { data: course } = useDoc(courseRef);
-
-  const modulesQuery = useMemoFirebase(() => page?.courseId ? query(collection(db, 'courses', page.courseId, 'modules'), orderBy('order', 'asc')) : null, [db, page?.courseId]);
-  const { data: modules } = useCollection(modulesQuery);
+  // API Data Fetching
+  useEffect(() => {
+    let isMounted = true;
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`/api/sales-pages/${id}/public?preview=${isPreview}&t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) {
+          if (isMounted) setPageLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (isMounted) {
+          setPage(data.page);
+          setCourse(data.course);
+          setModules(data.modules || []);
+          setPageLoading(false);
+        }
+      } catch (e) {
+        console.error('Error fetching landing page data:', e);
+        if (isMounted) setPageLoading(false);
+      }
+    };
+    fetchData();
+    return () => { isMounted = false; };
+  }, [id, isPreview]);
 
   // Validar vigencia de la landing (debe ir DESPUÉS de declarar `page`)
   useEffect(() => {
@@ -183,7 +181,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
   // Registrar acceso/vista automáticamente al cargar la landing
   useEffect(() => {
-    if (pageLoading || !page?.isActive || isPreview) return;
+    if (pageLoading || page?.isActive === false || isPreview) return;
 
     const sessionTrackKey = `tracked_view_${id}`;
     if (sessionStorage.getItem(sessionTrackKey)) return;
@@ -193,23 +191,14 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
 
     const trackView = async () => {
       try {
-        const { setDoc, increment, doc } = await import('firebase/firestore');
-        const pRef = doc(db, 'salesPages', id);
-
         const source = searchParams.get('s') || searchParams.get('source') || 'direct';
         const channel = searchParams.get('c') || searchParams.get('channel') || 'direct';
 
-        await setDoc(pRef, {
-          stats: {
-            totalClicks: increment(1),
-            channelBreakdown: {
-              [channel]: { clicks: increment(1) }
-            },
-            sourceBreakdown: {
-              [source]: { clicks: increment(1) }
-            }
-          }
-        }, { merge: true });
+        await fetch(`/api/sales-pages/${id}/track`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source, channel }),
+        });
       } catch (e) {
         console.warn('[Tracking] Error registering page view:', e);
         // Si falla la red, permitimos reintentar en la próxima carga
@@ -218,7 +207,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
     };
 
     trackView();
-  }, [db, id, pageLoading, page, searchParams]);
+  }, [id, pageLoading, page, searchParams]);
 
 
   useEffect(() => {
@@ -309,14 +298,17 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
     let leadReferidoId = activeReferidoId || page?.referidoId || null;
     if (page?.courseId) {
       try {
-        await createOrFindLead(
-          db,
-          id,
-          page.courseId,
-          leadReferidoId,
-          studentEmail,
-          studentName
-        );
+        await fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: studentEmail,
+            name: studentName,
+            mentorId: leadReferidoId,
+            courseId: page.courseId,
+            landingId: id,
+          })
+        });
       } catch (leadError) {
         // No bloqueamos el flujo de pago si el lead falla
         console.warn('[Lead] Error al crear lead (no crítico):', leadError);
@@ -334,8 +326,11 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || data.error || 'Error al procesar inscripción');
         try {
-          const { setDoc, increment, doc } = await import('firebase/firestore');
-          await setDoc(doc(db, 'salesPages', id), { stats: { conversions: increment(1) } }, { merge: true });
+          await fetch(`/api/sales-pages/${id}/track-conversion`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ source, channel }),
+          });
         } catch (e) {}
         toast({ title: '¡Inscripción exitosa!', description: 'Redirigiendo a tu curso...' });
         window.location.href = data.redirectUrl || '/my-courses';
@@ -377,17 +372,14 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       if (!response.ok) throw new Error(data.message || data.error || 'Error al conectar con MercadoPago');
 
       try {
-        const { setDoc, increment, doc } = await import('firebase/firestore');
-        await setDoc(doc(db, 'salesPages', id), {
-          stats: {
-            conversions: increment(1),
-            channelBreakdown: { [channel]: { conversions: increment(1) } },
-            sourceBreakdown: { [source]: { conversions: increment(1) } }
-          }
-        }, { merge: true });
+        await fetch(`/api/sales-pages/${id}/track-conversion`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source, channel }),
+        });
       } catch (e) {}
 
-      setPaymentInitPoint(data.init_point);
+      setPaymentInitPoint(data.redirectUrl || data.init_point);
       toast({ title: '¡Preferencia generada!', description: 'Escanea el QR o usá el botón para pagar.' });
 
     } catch (e: any) {
@@ -402,29 +394,46 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   };
 
   if (pageLoading) return <div className="flex h-screen items-center justify-center bg-white"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
-  if (!page || !page.isActive) return <div className="flex h-screen items-center justify-center"><p className="font-bold text-muted-foreground uppercase tracking-widest">Página no disponible.</p></div>;
+  if (!page || page.isActive === false) return <div className="flex h-screen items-center justify-center"><p className="font-bold text-muted-foreground uppercase tracking-widest">Página no disponible.</p></div>;
+
+  type ContentShape = {
+    themeMode?: string;
+    videoUrl?: string;
+    designTokens?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+      typography?: { headingFont?: string; bodyFont?: string };
+      fontHeading?: string;
+      fontBody?: string;
+      styleTokens?: {
+        themeMode?: string;
+        extraTokens?: { navbarHeight?: string };
+      };
+    };
+  };
 
   // Selección dinámica de la variante o V2
   const isV2 = !!page.content?.sections;
   const landings = page.aiContent?.landings || [];
-  const content = isV2 ? page.content : (landings[variantIdx] || page.aiContent?.landing);
+  const content = (isV2 ? page.content : (landings[variantIdx] || page.aiContent?.landing)) as ContentShape;
   const price = typeof page.price === 'number' ? page.price : 49990;
 
   if (!content) return <div className="flex h-screen items-center justify-center"><p className="font-bold text-muted-foreground">Contenido en proceso de generación...</p></div>;
 
   // Extract template design tokens
-  const tokens = (content as any)?.designTokens || {};
+  const tokens = content?.designTokens || {};
   const primaryColor = tokens.primary || page.branding?.primaryColor || '#3B2D86';
   const secondaryColor = tokens.secondary || '#F1F5F9';
   const accentColor = tokens.accent || '#FACC15';
   // Altura del navbar: proviene del token per-style (navbarHeight en extraTokens del brand).
-  const navbarHeight = (tokens as any)?.styleTokens?.extraTokens?.navbarHeight || '64px';
+  const navbarHeight = tokens?.styleTokens?.extraTokens?.navbarHeight || '64px';
   const fontHeading = tokens.typography?.headingFont || tokens.fontHeading || 'inherit';
   const fontBody = tokens.typography?.bodyFont || tokens.fontBody || 'inherit';
   const socials = mentorProfile?.profile?.socials || {};
 
   // Theme Modes
-  const themeMode = content.themeMode || (content as any)?.designTokens?.styleTokens?.themeMode || 'light';
+  const themeMode = content.themeMode || content?.designTokens?.styleTokens?.themeMode || 'light';
   const isDark = themeMode === 'dark';
   const isGlass = themeMode === 'glass';
 
@@ -468,10 +477,10 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       className={cn("min-h-screen pb-24 selection:bg-primary/20", bgBase, textBase)}
       style={{
         fontFamily: fontBody,
-        ['--primary' as any]: primaryColor,
-        ['--secondary' as any]: secondaryColor,
-        ['--accent' as any]: accentColor,
-        ['--navbar-height' as any]: navbarHeight,
+        '--primary': primaryColor,
+        '--secondary': secondaryColor,
+        '--accent': accentColor,
+        '--navbar-height': navbarHeight,
       }}
     >
       {/* Dynamic Font Injection */}

@@ -129,6 +129,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
       const result = await evaluateQuizPerformance({
         questions: targetQuestions,
         answers: userAnswers,
+        tutorUid: course?.mentorId || authProfile?.uid || '',
         studentName: authProfile?.displayName
       });
 

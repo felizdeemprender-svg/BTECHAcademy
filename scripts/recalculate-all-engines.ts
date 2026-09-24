@@ -34,7 +34,7 @@ async function main() {
     let updatedLogsCount = 0;
     
     // We will batch process
-    const batches = [];
+    const batches: any[] = [];
     let currentBatch = adminDb.batch();
     let opCount = 0;
 

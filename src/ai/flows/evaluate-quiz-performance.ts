@@ -1,25 +1,5 @@
 'use server';
-/**
- * @fileOverview Un flujo de Genkit para evaluar el desempeño de un alumno en un examen.
- * Analiza las respuestas del alumno en comparación con las respuestas correctas y proporciona feedback pedagógico.
- * NOTA: Este flujo usa la instancia interna de Genkit (sin proxy de créditos) porque es un
- * servicio al alumno que no debe cobrar saldo al mentor/tutor.
- */
-
-// Usamos la instancia interna para NO pasar por el proxy de créditos (no cobrar al tutor)
-import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/google-genai';
-
-let _ai: any = null;
-function getAi() {
-  if (!_ai) {
-    _ai = genkit({
-      plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || 'DUMMY_KEY_FOR_BUILD' })],
-      model: 'googleai/gemini-2.5-flash',
-    } as any);
-  }
-  return _ai;
-}
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const EvaluationInputSchema = z.object({
@@ -30,6 +10,7 @@ const EvaluationInputSchema = z.object({
   })),
   answers: z.record(z.any()),
   studentName: z.string().optional(),
+  tutorUid: z.string().describe('ID del tutor dueño del curso para facturación de la IA'),
 });
 export type EvaluationInput = z.infer<typeof EvaluationInputSchema>;
 
@@ -45,45 +26,7 @@ export async function evaluateQuizPerformance(input: EvaluationInput): Promise<E
   return evaluateQuizPerformanceFlow(input);
 }
 
-const prompt = getAi().definePrompt({
-  name: 'evaluateQuizPerformancePrompt',
-  input: { 
-    schema: z.object({
-      studentName: z.string().optional(),
-      evaluationData: z.array(z.object({
-        index: z.number(),
-        question: z.string(),
-        type: z.string(),
-        correctAnswer: z.string(),
-        studentAnswer: z.string(),
-      }))
-    })
-  },
-  output: { schema: EvaluationOutputSchema },
-  prompt: `Actúa como un mentor experto y empático. Tu tarea es evaluar las respuestas de un alumno a un examen de un módulo.
-
-Datos del examen:
-Alumno: {{{studentName}}}
-
-Preguntas y Respuestas del Alumno:
-{{#each evaluationData}}
-Pregunta {{index}}: {{{question}}}
-Tipo de pregunta: {{{type}}}
-Respuesta Correcta Esperada: {{{correctAnswer}}}
-Respuesta que dio el Alumno: {{{studentAnswer}}}
----
-{{/each}}
-
-Instrucciones para la evaluación:
-1. Evalúa la precisión de cada respuesta comparándola con la esperada.
-2. Para las respuestas de tipo "free_response" (libre), sé flexible pero busca que el alumno haya capturado los conceptos clave mencionados en la respuesta esperada.
-3. Calcula un puntaje final de 0 a 100 basado en el acierto general.
-4. Redacta un feedback motivador en segunda persona (ej: "Has demostrado un gran dominio...") que ayude al alumno a entender su progreso.
-5. Identifica claramente las fortalezas demostradas y las áreas que requieren más estudio o repaso.`,
-});
-
-const evaluateQuizPerformanceFlow = getAi().defineFlow(
-  {
+const evaluateQuizPerformanceFlow = ai.defineFlow({
     name: 'evaluateQuizPerformanceFlow',
     inputSchema: EvaluationInputSchema,
     outputSchema: EvaluationOutputSchema,
@@ -121,10 +64,29 @@ const evaluateQuizPerformanceFlow = getAi().defineFlow(
       };
     });
 
-    const { output } = await prompt({
-      studentName: input.studentName || 'Estudiante',
-      evaluationData
-    });
+    const promptText = `Actúa como un mentor experto y empático. Tu tarea es evaluar las respuestas de un alumno a un examen de un módulo.
+
+Datos del examen:
+Alumno: ${input.studentName || 'Estudiante'}
+
+Preguntas y Respuestas del Alumno:
+${evaluationData.map(d => `Pregunta ${d.index}: ${d.question}
+Tipo de pregunta: ${d.type}
+Respuesta Correcta Esperada: ${d.correctAnswer}
+Respuesta que dio el Alumno: ${d.studentAnswer}
+---`).join('\n')}
+
+Instrucciones para la evaluación:
+1. Evalúa la precisión de cada respuesta comparándola con la esperada.
+2. Para las respuestas de tipo "free_response" (libre), sé flexible pero busca que el alumno haya capturado los conceptos clave mencionados en la respuesta esperada.
+3. Calcula un puntaje final de 0 a 100 basado en el acierto general.
+4. Redacta un feedback motivador en segunda persona (ej: "Has demostrado un gran dominio...") que ayude al alumno a entender su progreso.
+5. Identifica claramente las fortalezas demostradas y las áreas que requieren más estudio o repaso.`;
+
+    const { output } = await ai.generate({
+      prompt: promptText,
+      output: { schema: EvaluationOutputSchema }
+    }, 'quiz_evaluation', input.tutorUid);
 
     if (!output) throw new Error('No se pudo generar la evaluación del desempeño mediante la IA.');
     return output;

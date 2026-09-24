@@ -1,16 +1,21 @@
 import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getActiveRules, saveAutomationLog } from '@/lib/automations/db';
 import { sendWhatsAppMessage } from '@/lib/automations/whatsapp-client';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
 // import { generateDynamicMessage } from '@/lib/ai/prompts'; // Placeholder para la IA
 
 /**
  * Endpoint protegido para ejecutar el Motor de Reglas (Cron Job)
  * Puede ser llamado por Vercel Cron, un worker externo, o manualmente para pruebas.
  */
-export async function GET(request: Request) {
-  // 1. Verificación de seguridad básica para el Cron
+export async function GET(request: NextRequest) {
+  // 1. Verificación de seguridad: requiere admin auth O CRON_SECRET válido
   const authHeader = request.headers.get('authorization');
-  if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const isAdmin = await verifyAdmin(request);
+  const isValidCronSecret = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  
+  if (!isAdmin && !isValidCronSecret) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 

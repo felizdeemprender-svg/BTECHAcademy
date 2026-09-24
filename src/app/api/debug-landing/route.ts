@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/firebase/admin';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
 
 export async function POST(req: Request) {
+  const adminUid = await verifyAdmin(req);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'No id' });
@@ -15,6 +21,11 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
+  const adminUid = await verifyAdmin(req);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'No id' });

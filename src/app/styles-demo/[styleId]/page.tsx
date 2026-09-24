@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { getLandingStyle } from "@/lib/landing-styles";
-import { LandingMockup } from "@/app/mentoria/marketing/templates/components/template-mockups";
+import { LandingMockup } from "@/app/marketing/templates/components/template-mockups";
 import { cn } from "@/lib/utils";
 
 export default function StyleDemoPage() {
@@ -33,7 +33,7 @@ export default function StyleDemoPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">Estilo no encontrado</h1>
           <p className="text-muted-foreground mb-4">El estilo solicitado no existe.</p>
-          <Link href="/mentoria/marketing/templates">
+          <Link href="/marketing/templates">
             <Button>Volver a Templates</Button>
           </Link>
         </div>
@@ -50,7 +50,7 @@ export default function StyleDemoPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <Link href="/mentoria/marketing/templates">
+              <Link href="/marketing/templates">
                 <Button variant="ghost" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Volver

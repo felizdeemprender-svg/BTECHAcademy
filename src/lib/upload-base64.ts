@@ -21,6 +21,11 @@ export const uploadPendingImagesInObject = async (
 
   const walkAndUpload = (currentObj: any, pathMemo = '') => {
     if (typeof currentObj !== 'object' || currentObj === null) return;
+    
+    // 🔥 Skip Firestore FieldValue, Timestamp, and React Elements
+    if (typeof currentObj.toDate === 'function' || currentObj._methodName === 'serverTimestamp' || currentObj.isEqual || currentObj.$$typeof) {
+      return;
+    }
 
     for (const key in currentObj) {
       if (Object.prototype.hasOwnProperty.call(currentObj, key)) {

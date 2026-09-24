@@ -374,7 +374,7 @@ export default function ManageCoursesClient() {
     try {
       // Eliminar landings asociadas primero
       for (const landing of associatedLandings) {
-        await deleteDoc(doc(db, 'salesPages', landing.id));
+        await fetch(`/api/sales-pages?id=${landing.id}`, { method: 'DELETE' });
       }
       // Eliminar curso
       const docRef = doc(db, 'courses', selectedId);
@@ -862,8 +862,11 @@ export default function ManageCoursesClient() {
             setIsCheckingLandings(true);
             setIsDeleteDialogOpen(true); 
             try {
-              const snap = await getDocs(query(collection(db, 'salesPages'), where('courseId', '==', course.id)));
-              setAssociatedLandings(snap.docs.map(d => ({ id: d.id, title: d.data().title || 'Landing sin título' })));
+              const res = await fetch(`/api/sales-pages?courseId=${course.id}`);
+              const data = await res.json();
+              if (data.pages) {
+                setAssociatedLandings(data.pages.map((p: any) => ({ id: p.id, title: p.title || 'Landing sin título' })));
+              }
             } catch(e) { console.error(e); }
             setIsCheckingLandings(false);
           }} className="text-destructive font-bold gap-2 py-2 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /> Eliminar Programa</DropdownMenuItem>

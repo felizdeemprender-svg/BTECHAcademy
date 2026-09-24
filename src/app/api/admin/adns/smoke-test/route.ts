@@ -2,11 +2,22 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
+import { validateAdnId, getSafeAdnDir } from '@/lib/adn-utils';
 
 export async function POST(req: Request) {
+  const adminUid = await verifyAdmin(req);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   try {
     const { adnId, format, isFull } = await req.json();
     if (!adnId || !format) return NextResponse.json({ success: false, error: "Faltan parámetros" }, { status: 400 });
+
+    if (!validateAdnId(adnId)) {
+      return NextResponse.json({ success: false, error: "ID inválido: solo letras, números, _ y -" }, { status: 400 });
+    }
 
     // 1. Mapear resoluciones
     const resolutions: Record<string, string> = {
@@ -18,7 +29,8 @@ export async function POST(req: Request) {
     const resolution = resolutions[format] || '1080x1920';
 
     // 2. Obtener el blueprint para sacar una escena real
-    const blueprintPath = path.join(process.cwd(), 'public', 'adns', adnId, 'blueprint.json');
+    const adnsDir = getSafeAdnDir(adnId);
+    const blueprintPath = path.join(adnsDir, 'blueprint.json');
     let scenes: any[] = [{
       text: "PRUEBA DE HUMO EVO",
       segment_label: "GANCHO",

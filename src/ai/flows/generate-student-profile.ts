@@ -6,6 +6,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { checkSufficientCredits, calculateGeminiCost, deductCredits } from '@/lib/payments/credits';
+import { cookies } from 'next/headers';
 
 const PerformanceDataSchema = z.object({
   courseTitle: z.string(),
@@ -114,9 +116,37 @@ const generateStudentProfileFlow = ai.defineFlow(
     inputSchema: StudentProfileInputSchema,
     outputSchema: StudentProfileOutputSchema,
   },
-  async (input) => {
-    const { output } = await prompt(input);
+  async (input: any) => {
+    // 1. Identidad y Cobro Inicial
+    let uid = '';
+    let role = 'mentor';
+    try {
+      const cookieStore = await cookies();
+      uid = cookieStore.get('btech_uid')?.value || '';
+      role = cookieStore.get('btech_role')?.value || 'mentor';
+    } catch(e) {}
+
+    if (uid && role === 'mentor') {
+      const { ok, balance } = await checkSufficientCredits(uid, 0.001, role);
+      if (!ok) throw new Error(`SALDO_INSUFICIENTE: Saldo de IA agotado (${balance}).`);
+    }
+
+    // 2. Generación
+    const response = await prompt(input);
+    const output = response.output;
     if (!output) throw new Error('No se pudo generar el perfil con el enfoque solicitado.');
+
+    // 3. Auditoría y Cobro de Tokens
+    if (uid && response.usage) {
+      try {
+        const tokens = response.usage.totalTokens || 0;
+        const cost = await calculateGeminiCost(tokens);
+        await deductCredits(uid, cost, 'ai_profile_generation', role);
+      } catch (e) {
+        console.error('[Genkit:ProfileFlow] Error cobrando tokens:', e);
+      }
+    }
+
     return output;
   }
 );

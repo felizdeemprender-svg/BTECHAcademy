@@ -1,14 +1,23 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
-import path from 'path';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
+import { validateAdnId, getSafeAdnDir } from '@/lib/adn-utils';
 
-// POST: Alta de ADN (Crea la carpeta y archivos básicos)
 export async function POST(req: Request) {
+  const adminUid = await verifyAdmin(req);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   try {
     const { id, name, version, target_format } = await req.json();
     if (!id) return NextResponse.json({ success: false, error: "Falta ID" }, { status: 400 });
 
-    const adnDir = path.join(process.cwd(), 'public', 'adns', id);
+    if (!validateAdnId(id)) {
+      return NextResponse.json({ success: false, error: "ID inválido: solo letras, números, _ y -" }, { status: 400 });
+    }
+
+    const adnDir = getSafeAdnDir(id);
     
     // Crear carpeta
     await fs.mkdir(adnDir, { recursive: true });
@@ -28,7 +37,7 @@ export async function POST(req: Request) {
       }
     };
 
-    await fs.writeFile(path.join(adnDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+    await fs.writeFile(`${adnDir}/manifest.json`, JSON.stringify(manifest, null, 2));
 
     return NextResponse.json({ success: true, message: "ADN creado correctamente" });
   } catch (error: any) {
@@ -36,13 +45,21 @@ export async function POST(req: Request) {
   }
 }
 
-// DELETE: Eliminación física
 export async function DELETE(req: Request) {
+  const adminUid = await verifyAdmin(req);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   try {
     const { adnId } = await req.json();
     if (!adnId) return NextResponse.json({ success: false, error: "Falta ID del ADN" }, { status: 400 });
 
-    const adnsDir = path.join(process.cwd(), 'public', 'adns', adnId);
+    if (!validateAdnId(adnId)) {
+      return NextResponse.json({ success: false, error: "ID inválido: solo letras, números, _ y -" }, { status: 400 });
+    }
+
+    const adnsDir = getSafeAdnDir(adnId);
     
     try {
       await fs.rm(adnsDir, { recursive: true, force: true });

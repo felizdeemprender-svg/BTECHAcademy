@@ -89,7 +89,7 @@ const generateCoordinationFlow = ai.defineFlow(
     inputSchema: CoordinationInputSchema,
     outputSchema: CoordinationOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { output } = await prompt(input);
     if (!output) throw new Error('Fallo al coordinar la estrategia de campaña.');
     return output;

@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
-import path from 'path';
 import AdmZip from 'adm-zip';
 import { ADNValidator } from '@/validation/adn-validator';
+import { verifyAdmin } from '@/lib/auth/verify-admin';
+import { validateAdnId, getSafeAdnDir } from '@/lib/adn-utils';
 
 export async function POST(req: Request) {
+  const adminUid = await verifyAdmin(req);
+  if (!adminUid) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File;
@@ -56,6 +62,15 @@ export async function POST(req: Request) {
       const typography = getJson('typography.json');
       const blueprint = getJson('blueprint.json');
 
+      // Validar adnId del manifest
+      const adnId = manifest.id;
+      if (!validateAdnId(adnId)) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "ID inválido en manifest: solo letras, números, _ y -" 
+        }, { status: 400 });
+      }
+
       // Ensamblar objeto ADN virtual respetando la jerarquía del Schema
       const virtualAdn = {
         ...manifest,
@@ -79,8 +94,7 @@ export async function POST(req: Request) {
       }
 
       // 4. Si es válido, guardar físicamente
-      const adnId = manifest.id;
-      const targetDir = path.join(process.cwd(), 'public', 'adns', adnId);
+      const targetDir = getSafeAdnDir(adnId);
       await fs.mkdir(targetDir, { recursive: true });
       
       // Extraer los 7 archivos validados

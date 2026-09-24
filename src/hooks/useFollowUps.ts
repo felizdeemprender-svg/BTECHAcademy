@@ -5,7 +5,7 @@ import { useFirestore, useMemoFirebase } from '@/firebase';
 import { useAuth } from '@/components/auth-context';
 import { StudentFollowUp, FollowUpSessionStats } from '@/types/student';
 
-export function useFollowUps() {
+export function useFollowUps(enabled = true) {
   const { profile, isLoading: isAuthLoading } = useAuth();
   const db = useFirestore();
   const [followUps, setFollowUps] = useState<StudentFollowUp[]>([]);
@@ -17,6 +17,14 @@ export function useFollowUps() {
   const isMentor = profile?.roles.includes('mentor');
 
   useEffect(() => {
+    // Apagado (nueva arquitectura): sin suscripción, roles igual disponibles
+    if (!enabled) {
+      setFollowUps([]);
+      setSessionStats({});
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
     // No iniciar si el auth está cargando o no hay perfil con roles
     if (isAuthLoading || !profile?.uid || !profile?.roles) return;
 
@@ -58,7 +66,7 @@ export function useFollowUps() {
       setError(err.message);
       setIsLoading(false);
     }
-  }, [db, profile?.uid, profile?.email, profile?.roles, isAuthLoading, isAdmin, isMentor]);
+  }, [db, profile?.uid, profile?.email, profile?.roles, isAuthLoading, isAdmin, isMentor, enabled]);
 
   // Fetch session stats
   useEffect(() => {

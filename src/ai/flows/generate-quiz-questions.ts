@@ -70,7 +70,7 @@ const generateQuizQuestionsFlow = ai.defineFlow(
     inputSchema: GenerateQuizQuestionsInputSchema,
     outputSchema: GenerateQuizQuestionsOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     // Truncamos contenido para evitar timeouts
     const contentToUse = input.content.length > 15000 ? input.content.substring(0, 15000) : input.content;
     

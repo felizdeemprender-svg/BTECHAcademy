@@ -46,7 +46,7 @@ const generateCourseTopicsFlow = ai.defineFlow(
     inputSchema: GenerateCourseTopicsInputSchema,
     outputSchema: GenerateCourseTopicsOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { output } = await prompt(input);
     if (!output) {
       throw new Error('Failed to generate course topics.');

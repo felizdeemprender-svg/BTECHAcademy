@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
+ * Valida formato de Google Drive File ID
+ * Drive IDs son alfanuméricos + _ - (aprox 25-44 chars)
+ */
+function validateDriveFileId(fileId: string): boolean {
+  // Formato típico: 1BxiMVs0XRA5nFMdKvBd3 (alfanumérico + _ -)
+  return /^[a-zA-Z0-9_-]{20,50}$/.test(fileId);
+}
+
+/**
  * Proxy de descarga para evitar errores de CORS y asegurar el nombre del archivo.
  * Descarga el binario desde Google Drive y lo sirve con el Content-Disposition correcto.
  */
@@ -12,6 +21,13 @@ export async function GET(req: NextRequest) {
 
   if (!fileId || !token) {
     return NextResponse.json({ error: 'Faltan parámetros id o token' }, { status: 400 });
+  }
+
+  // Validar formato de fileId (previene SSRF)
+  if (!validateDriveFileId(fileId)) {
+    return NextResponse.json({ 
+      error: 'ID de archivo inválido: formato no reconocido' 
+    }, { status: 400 });
   }
 
   try {
@@ -64,9 +80,9 @@ export async function GET(req: NextRequest) {
 
     // Si Google nos devuelve HTML, es una página de error enmascarada
     if (contentType.includes('text/html')) {
-        const htmlSnippet = await driveRes.text();
-        console.error(`[DownloadProxy:Error] Google devolvió HTML en lugar de video: ${htmlSnippet.substring(0, 200)}...`);
-        return NextResponse.json({ error: 'Google devolvió una página de error. Es posible que el archivo aún se esté procesando o que el token haya expirado.' }, { status: 403 });
+      const htmlSnippet = await driveRes.text();
+      console.error(`[DownloadProxy:Error] Google devolvió HTML en lugar de video: ${htmlSnippet.substring(0, 200)}...`);
+      return NextResponse.json({ error: 'Google devolvió una página de error. Es posible que el archivo aún se esté procesando o que el token haya expirado.' }, { status: 403 });
     }
 
     console.log(`[DownloadProxy:Ready] Stream de video validado de Drive.`);

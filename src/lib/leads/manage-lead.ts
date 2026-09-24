@@ -23,54 +23,43 @@ import { Lead } from '@/types/referido';
  * @returns El lead creado o el existente (con `wasExisting: true`)
  */
 export async function createOrFindLead(
-  db: any,
+  db: any, // Mantenemos la firma por retrocompatibilidad, pero no se usará
   landingId: string,
   courseId: string,
   referidoId: string | null,
   studentEmail: string,
   studentName: string
 ): Promise<{ lead: Lead; wasExisting: boolean }> {
-  const { collection, query, where, getDocs, limit, doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+  
+  try {
+    const response = await fetch('/api/leads', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: studentEmail,
+        name: studentName,
+        mentorId: referidoId,
+        courseId,
+        landingId
+      })
+    });
 
-  const normalizedEmail = studentEmail.toLowerCase().trim();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
 
-  // 1. Buscar si ya existe un lead para este email + curso
-  const leadsRef = collection(db, 'leads');
-  const existingQuery = query(
-    leadsRef,
-    where('studentEmail', '==', normalizedEmail),
-    where('courseId', '==', courseId),
-    limit(1)
-  );
-
-  const existingSnap = await getDocs(existingQuery);
-
-  if (!existingSnap.empty) {
-    // Ya existe un lead → respetar atribución original (anti-colisión)
-    const existingLead = { id: existingSnap.docs[0].id, ...existingSnap.docs[0].data() } as Lead;
-    console.log(`[Leads] Lead existente encontrado para ${normalizedEmail} / Curso: ${courseId}. Referido original: ${existingLead.referidoId}`);
-    return { lead: existingLead, wasExisting: true };
+    const data = await response.json();
+    return {
+      lead: data.lead,
+      wasExisting: data.wasExisting
+    };
+  } catch (error) {
+    console.error('[Leads] Error calling /api/leads', error);
+    throw error;
   }
-
-  // 2. No existe → crear nuevo lead
-  const leadId = `lead_${courseId}_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}_${Date.now()}`;
-  const leadRef = doc(db, 'leads', leadId);
-
-  const newLead: Omit<Lead, 'id'> = {
-    landingId,
-    courseId,
-    referidoId: referidoId || null,
-    studentName,
-    studentEmail: normalizedEmail,
-    status: 'pending',
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
-
-  await setDoc(leadRef, newLead);
-
-  console.log(`[Leads] Nuevo lead creado: ${leadId} | Referido: ${referidoId || 'orgánico'}`);
-  return { lead: { id: leadId, ...newLead } as Lead, wasExisting: false };
 }
 
 /**

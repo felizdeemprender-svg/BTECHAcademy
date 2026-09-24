@@ -58,7 +58,7 @@ export const generateVideoFlow = ai.defineFlow({
     result: z.any().optional(),
     error: z.string().optional()
   })
-}, async (input) => {
+}, async (input: any) => {
   const { jobId, uid, role, adn, scenes, formato, marketingName, audioUrl, enable_tts, isSmokeTest, googleToken } = input;
   
   validateApiKey();

@@ -12,7 +12,7 @@ export const generateImagePromptFlow = ai.defineFlow({
   name: 'generateImagePrompt',
   inputSchema: generateImagePromptInputSchema,
   outputSchema: z.string(),
-}, async (input) => {
+}, async (input: any) => {
   const { keywords = '', contextHint = '', courseTitle = '', channel = 'video' } = input;
 
   const isLanding = channel === 'landing';
