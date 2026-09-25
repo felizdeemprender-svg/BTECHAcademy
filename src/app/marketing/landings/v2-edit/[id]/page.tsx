@@ -42,6 +42,26 @@ export default function V2LandingEditorPage() {
   const [styleData, setStyleData] = useState<any>(null);
   const [courseData, setCourseData] = useState<any>(null);
    const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [defaultBundleInfos, setDefaultBundleInfos] = useState<Record<string, any>>({});
+  
+  useEffect(() => {
+    if (!landingData?.bundleItems?.length || !db) return;
+    const fetchDefaults = async () => {
+      const infos: Record<string, any> = {};
+      for (const item of landingData.bundleItems) {
+        if (!infos[item.productId]) {
+           const collectionName = (item.productType === 'followup' || item.productType === 'mentoria_individual') ? 'followups' : 'courses';
+           const dRef = doc(db, collectionName, item.productId);
+           const snap = await getDoc(dRef);
+           if (snap.exists()) {
+              infos[item.productId] = snap.data();
+           }
+        }
+      }
+      setDefaultBundleInfos(infos);
+    };
+    fetchDefaults();
+  }, [landingData?.bundleItems, db]);
    const [activeUntilStr, setActiveUntilStr] = useState('');
    const [mobileView, setMobileView] = useState<'list' | 'editor'>('list');
 
@@ -161,6 +181,7 @@ export default function V2LandingEditorPage() {
         oldPrice: landingData.oldPrice,
         activeUntil: landingData.activeUntil || null,
         isActive: true,
+        bundleItems: landingData.bundleItems || undefined,
       });
 
       const token = await user?.getIdToken();
@@ -188,7 +209,15 @@ export default function V2LandingEditorPage() {
     setIsRegenerating(true);
     try {
       const baseId = activeSectionId.split('_')[0];
-      const styleSec = styleData?.availableSections?.find((s: any) => s.id === baseId);
+      const styleSec = baseId === 'bundleGrid' ? { 
+  id: 'bundleGrid', 
+  name: 'Grilla de Combo', 
+  description: 'Muestra los productos incluidos en el paquete.',
+  fields: [
+    { id: 'headline', label: 'Título', type: 'text' },
+    { id: 'subheadline', label: 'Subtítulo', type: 'text' }
+  ]
+} : styleData?.availableSections?.find((s: any) => s.id === baseId);
 
       const result = await regenerateSectionV2({
         courseTitle: courseData.title,
@@ -198,7 +227,8 @@ export default function V2LandingEditorPage() {
         styleId: landingData.styleId || 'classic',
         sectionId: activeSectionId,
         sectionName: styleSec?.name || 'Sección',
-        sectionDescription: styleSec?.description
+        sectionDescription: styleSec?.description,
+        productType: courseData.productType
       });
 
       // Maintain existing image and video URLs so they are not lost
@@ -504,7 +534,15 @@ export default function V2LandingEditorPage() {
                   return aIdx - bIdx;
                 }).map((sec: any) => {
                   const baseId = sec.id.split('_')[0];
-                  const styleSec = styleData?.availableSections?.find((s: any) => s.id === baseId);
+                  const styleSec = baseId === 'bundleGrid' ? { 
+  id: 'bundleGrid', 
+  name: 'Grilla de Combo', 
+  description: 'Muestra los productos incluidos en el paquete.',
+  fields: [
+    { id: 'headline', label: 'Título', type: 'text' },
+    { id: 'subheadline', label: 'Subtítulo', type: 'text' }
+  ]
+} : styleData?.availableSections?.find((s: any) => s.id === baseId);
                   const displayTitle = styleSec?.name || sec.name || sec.id;
                   
                   return (
@@ -555,7 +593,15 @@ export default function V2LandingEditorPage() {
                 <h2 className="text-xl font-black text-foreground">
                   {activeSectionId === 'global_settings' ? 'Configuración Visual Global' : activeSectionId === 'page_data' ? 'Datos de la Página' : `Editando: ${(() => {
                     const baseId = activeSection.id?.split('_')[0];
-                    const styleSec = styleData?.availableSections?.find((s: any) => s.id === baseId);
+                    const styleSec = baseId === 'bundleGrid' ? { 
+  id: 'bundleGrid', 
+  name: 'Grilla de Combo', 
+  description: 'Muestra los productos incluidos en el paquete.',
+  fields: [
+    { id: 'headline', label: 'Título', type: 'text' },
+    { id: 'subheadline', label: 'Subtítulo', type: 'text' }
+  ]
+} : styleData?.availableSections?.find((s: any) => s.id === baseId);
                     return styleSec?.name || activeSection?.name || activeSection?.id;
                   })()}`}
                 </h2>
@@ -694,7 +740,15 @@ export default function V2LandingEditorPage() {
                   {/* Visibilidad de la Sección */}
                   {(() => {
                     const baseId = activeSection.id.split('_')[0];
-                    const activeSectionStyle = styleData?.availableSections?.find((s: any) => s.id === baseId);
+                    const activeSectionStyle = baseId === 'bundleGrid' ? { 
+  id: 'bundleGrid', 
+  name: 'Grilla de Combo', 
+  description: 'Muestra los productos incluidos en el paquete.',
+  fields: [
+    { id: 'headline', label: 'Título', type: 'text' },
+    { id: 'subheadline', label: 'Subtítulo', type: 'text' }
+  ]
+} : styleData?.availableSections?.find((s: any) => s.id === baseId);
                     
                     if (!activeSectionStyle) return null;
 
@@ -738,6 +792,69 @@ export default function V2LandingEditorPage() {
                       />
                     </div>
                   )}
+                  {activeSection.id.startsWith('bundleGrid') && landingData?.bundleItems && (
+                    <div className="space-y-4 pt-4 border-t border-muted">
+                      <Label className="font-bold text-foreground">Cursos en el Combo</Label>
+                      <p className="text-xs text-muted-foreground mb-4">Puedes cambiar el orden y personalizar el texto para esta página de ventas. (Si dejas el texto en blanco, se usará el original del curso).</p>
+                      {landingData.bundleItems.map((item: any, idx: number) => (
+                        <div key={idx} className="p-4 border rounded-xl space-y-3 bg-white">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold bg-muted px-2 py-1 rounded">Item {idx + 1} - {defaultBundleInfos[item.productId]?.title || 'Cargando...'}</span>
+                            <div className="flex gap-2">
+                               <button 
+                                 disabled={idx === 0} 
+                                 onClick={() => {
+                                   const newItems = [...landingData.bundleItems];
+                                   const temp = newItems[idx - 1];
+                                   newItems[idx - 1] = newItems[idx];
+                                   newItems[idx] = temp;
+                                   setLandingData({ ...landingData, bundleItems: newItems });
+                                 }}
+                                 className="text-xs text-primary hover:underline disabled:opacity-50"
+                               >Subir</button>
+                               <button 
+                                 disabled={idx === landingData.bundleItems.length - 1} 
+                                 onClick={() => {
+                                   const newItems = [...landingData.bundleItems];
+                                   const temp = newItems[idx + 1];
+                                   newItems[idx + 1] = newItems[idx];
+                                   newItems[idx] = temp;
+                                   setLandingData({ ...landingData, bundleItems: newItems });
+                                 }}
+                                 className="text-xs text-primary hover:underline disabled:opacity-50"
+                               >Bajar</button>
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Título Personalizado</Label>
+                            <Input 
+                              placeholder={defaultBundleInfos[item.productId]?.title || 'Título original por defecto'} 
+                              value={item.customTitle || ''} 
+                              onChange={(e) => {
+                                const newItems = [...landingData.bundleItems];
+                                newItems[idx] = { ...newItems[idx], customTitle: e.target.value };
+                                setLandingData({ ...landingData, bundleItems: newItems });
+                              }}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Descripción Personalizada</Label>
+                            <Textarea 
+                              placeholder={defaultBundleInfos[item.productId]?.description || 'Descripción original por defecto'} 
+                              value={item.customDescription || ''} 
+                              onChange={(e) => {
+                                const newItems = [...landingData.bundleItems];
+                                newItems[idx] = { ...newItems[idx], customDescription: e.target.value };
+                                setLandingData({ ...landingData, bundleItems: newItems });
+                              }}
+                              className="min-h-[80px]"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {activeSection.id.startsWith('heroVideo') && (
                     <div className="space-y-3 pt-4 border-t border-muted">
                       <Label className="font-bold text-foreground">Oferta Relámpago (Hero)</Label>
@@ -828,7 +945,15 @@ export default function V2LandingEditorPage() {
                   {/* Inputs Multimedia */}
                   {(() => {
                     const baseId = activeSection.id.split('_')[0];
-                    const activeSectionStyle = styleData?.availableSections?.find((s: any) => s.id === baseId);
+                    const activeSectionStyle = baseId === 'bundleGrid' ? { 
+  id: 'bundleGrid', 
+  name: 'Grilla de Combo', 
+  description: 'Muestra los productos incluidos en el paquete.',
+  fields: [
+    { id: 'headline', label: 'Título', type: 'text' },
+    { id: 'subheadline', label: 'Subtítulo', type: 'text' }
+  ]
+} : styleData?.availableSections?.find((s: any) => s.id === baseId);
                     const acceptsVideo = activeSectionStyle?.contentType === 'video' || activeSectionStyle?.contentType === 'mixed';
                     const acceptsImage = activeSectionStyle?.contentType === 'mixed' || activeSectionStyle?.contentType === 'image';
 

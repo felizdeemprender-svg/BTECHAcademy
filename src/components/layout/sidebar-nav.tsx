@@ -102,7 +102,6 @@ export function SidebarNav() {
         { name: 'Mis Campañas', href: '/marketing', roles: ['admin', 'marketing', 'mentor'], icon: Rocket },
         { name: 'Centro de Mando', href: '/marketing/execution', roles: ['admin', 'marketing', 'mentor'], icon: Cpu },
         { name: 'Track de Campañas', href: '/marketing/track', roles: ['admin', 'marketing', 'mentor'], icon: Activity },
-        { name: 'Generación de Contenido', href: '/marketing/pages', roles: ['admin', 'marketing', 'mentor'], icon: FileBox },
       ])
     },
     {

@@ -61,7 +61,8 @@ export async function generateVariantContent(
   courseDescription?: string,
   targetAudience?: string,
   mission: 'venta' | 'autoridad' | 'lanzamiento' | 'leads' = 'venta',
-  landingContext?: string
+  landingContext?: string,
+  productType?: string
 ): Promise<any> {
   console.log(`[AI:Flow] Generando contenido para: ${variant.platform} - ${variant.type} | Misión: ${mission}`);
   
@@ -92,7 +93,9 @@ export async function generateVariantContent(
     ? `== ESTRATEGIA ESPECIFICA DE ESTA PIEZA (PRIORIDAD SOBRE GENERAL) ==\n- Vector de Venta: ${customVector || 'Usar general'}\n- Tono comercial: ${customTone || 'Usar general'}`
     : `== USAR ESTRATEGIA GENERAL DE LA CAMPAÑA: ${mission.toUpperCase()} ==`;
   
-  const courseContext = courseTitle ? `\n\n== CONTEXTO DEL PRODUCTO ==\n- Curso/Producto a vender: "${courseTitle}"\n- Descripción: ${courseDescription || 'N/A'}\n- Información de la Landing (¡EXTRAE HECHOS DE AQUÍ!): ${landingContext ? landingContext : 'No provista.'}` : '';
+  const productNoun = productType === 'mentoria_individual' ? 'Mentoría Individual 1-a-1' : productType === 'followup' ? 'Mentoría Grupal' : 'Curso/Producto';
+
+  const courseContext = courseTitle ? `\n\n== CONTEXTO DEL PRODUCTO ==\n- ${productNoun} a vender: "${courseTitle}"\n- Descripción: ${courseDescription || 'N/A'}\n- Información de la Landing (¡EXTRAE HECHOS DE AQUÍ!): ${landingContext ? landingContext : 'No provista.'}` : '';
 
   const injectedAdnRule = `${strategyContext}${courseContext}\n\n== REGLAS DE NARRATIVA DUAL (OBLIGATORIO) ==
 Tu misión es coordinar lo que se OYE con lo que se VE:
@@ -100,8 +103,8 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
 2. PANTALLA (text): Refuerzo visual. Frases ultra-cortas (2-4 palabras) que clavan el concepto.
 
 == REGLA DE CIERRE COMERCIAL (CRÍTICO) ==
-¡ESTO ES UNA VENTA DE CURSOS! No te quedes solo atacando los síntomas o el dolor. La ÚLTIMA escena (CTA) DEBE ser un llamado a la acción DIRECTO y EXPLÍCITO para COMPRAR O UNIRSE AL CURSO. 
-- Debes mencionar explícitamente el curso (ej: "Únete a [Nombre del Curso]").
+¡ESTO ES UNA VENTA DE ${productNoun.toUpperCase()}! No te quedes solo atacando los síntomas o el dolor. La ÚLTIMA escena (CTA) DEBE ser un llamado a la acción DIRECTO y EXPLÍCITO para COMPRAR O UNIRSE AL ${productNoun.toUpperCase()}. 
+- Debes mencionar explícitamente el producto (ej: "Únete a [Nombre]").
 - Debes decirles cómo conseguirlo (ej: "Haz clic en el enlace de mi perfil", "Ve al link en mi bio").
 
 [LIMITACIONES ESPECÍFICAS DEL ADN]
@@ -152,9 +155,9 @@ Tu tarea es realizar un "MAQUETADO DE CONTENIDO ADN 2.0" fusionando estrategia c
 === MISIÓN ESTRATÉGICA ===
 ${missionTones[mission]}
 
-=== REGLA DE ORO: EL CURSO ES EL REY (FUSIÓN DE NICHO) ===
-1. EJE CENTRAL: El curso trata sobre "${courseTitle}". Descripción: "${courseDescription}". 
-2. IGNORA INDUSTRIAS AJENAS: Si el blueprint menciona una industria distinta, usa solo su estructura técnica y aplícala 100% al nicho del curso.
+=== REGLA DE ORO: EL PRODUCTO ES EL REY (FUSIÓN DE NICHO) ===
+1. EJE CENTRAL: El ${productNoun.toLowerCase()} trata sobre "${courseTitle}". Descripción: "${courseDescription}". 
+2. IGNORA INDUSTRIAS AJENAS: Si el blueprint menciona una industria distinta, usa solo su estructura técnica y aplícala 100% al nicho del ${productNoun.toLowerCase()}.
 3. HABLA EL LENGUAJE DEL EXPERTO: Usa terminología técnica específica. Prohibido el relleno genérico.
 4. ANCLAJE CONTEXTUAL (FLEXIBLE): Evita la abstracción. Extrae los diferenciales reales de la "Información de la Landing" que más aporten a la venta. Dependiendo del caso, resalta la metodología, las herramientas o los módulos prácticos. Usa el sentido común para elegir el dato más persuasivo sin forzar listas aburridas o métricas irrelevantes.
 5. AUTORIDAD DEL TUTOR (SIN SATURAR): Si hay un tutor experto, usa su autoridad para validar la solución de forma natural (ej: nombrando su expertise una sola vez en un punto clave). No repitas su nombre en cada escena para no saturar.

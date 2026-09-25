@@ -6,10 +6,11 @@ export interface WelcomeEmailParams {
   courseTitle: string;
   mentorName?: string;
   mentorEmail?: string;
+  productType?: string;
 }
 
 export async function sendWelcomeEmailServer(params: WelcomeEmailParams): Promise<void> {
-  const { studentName, studentEmail, courseTitle, mentorName, mentorEmail } = params;
+  const { studentName, studentEmail, courseTitle, mentorName, mentorEmail, productType } = params;
   
   const normalizedEmail = studentEmail.toLowerCase().trim();
   if (!normalizedEmail) {
@@ -28,14 +29,18 @@ export async function sendWelcomeEmailServer(params: WelcomeEmailParams): Promis
 
   const body = `
     <p style="font-size: 16px; color: #374151; line-height: 1.6;">Hola <strong>${studentName}</strong>,</p>
-    <p style="font-size: 16px; color: #374151; line-height: 1.6;">¡Felicidades! Has sido inscrito/a exitosamente en el curso:</p>
+    <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+      ${productType === 'mentoria_individual' ? '¡Felicidades! Has reservado exitosamente tu lugar en la mentoría 1-a-1:' : '¡Felicidades! Has sido inscrito/a exitosamente en el programa:'}
+    </p>
     <div style="background-color: #f3f4f6; border-left: 4px solid ${BRAND_COLOR}; padding: 12px 20px; margin: 20px 0; border-radius: 4px;">
       <p style="margin: 0; font-size: 18px; font-weight: bold; color: #1f2937;">${courseTitle}</p>
     </div>
-    <p style="font-size: 16px; color: #374151; line-height: 1.6;">
-      Ya tenés el acceso habilitado. Para comenzar, iniciá sesión con tu correo <strong>${normalizedEmail}</strong>.
-    </p>
-    ${ctaButton('Acceder a mis cursos', `${PLATFORM_URL}/auth/login`)}
+    ${productType === 'mentoria_individual' 
+      ? `<p style="font-size: 16px; color: #374151; line-height: 1.6;">Por favor, comunícate con tu mentor respondiendo a este correo o ingresando a la plataforma para coordinar la fecha y hora de tu reunión.</p>
+         ${ctaButton('Acceder a mi panel', `${PLATFORM_URL}/auth/login`)}` 
+      : `<p style="font-size: 16px; color: #374151; line-height: 1.6;">Ya tenés el acceso habilitado. Para comenzar, iniciá sesión con tu correo <strong>${normalizedEmail}</strong>.</p>
+         ${ctaButton('Acceder a mis cursos', `${PLATFORM_URL}/auth/login`)}`
+    }
     <p style="font-size: 14px; color: #6b7280; line-height: 1.6; border-top: 1px solid #f3f4f6; padding-top: 16px; margin-top: 24px;">
       Si tenés alguna duda, por favor comunicate directamente con tu tutor. (No respondas a este correo).
     </p>

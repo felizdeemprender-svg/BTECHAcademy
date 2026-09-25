@@ -62,7 +62,7 @@ export function StudentFollowUpCard({
             </div>
           </div>
           
-          <Link href={`/seguimientos/${id}`}>
+          <Link href={`/mentoria/seguimientos/${id}`}>
             <Button 
               variant="ghost" 
               size="icon" 

@@ -12,6 +12,7 @@ export const ManualEnrollmentInputSchema = z.object({
 export type ManualEnrollmentInput = z.infer<typeof ManualEnrollmentInputSchema>;
 
 export interface CourseInfo {
+  productType?: string;
   id: string;
   title: string;
   mentorId: string;
@@ -34,6 +35,7 @@ export interface ManualEnrollmentEmailService {
     studentEmail: string;
     studentName: string;
     courseTitle: string;
+    productType?: string;
   }): Promise<void>;
 }
 
@@ -101,6 +103,7 @@ export async function manualEnrollment(
       studentEmail: normalizedEmail,
       studentName: student.name,
       courseTitle: course.title,
+      productType: course.productType,
     });
   } catch (e) {
     console.error('[ManualEnrollment] Error sending welcome email:', e);

@@ -91,6 +91,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const [page, setPage] = useState<any>(null);
   const [course, setCourse] = useState<any>(null);
   const [modules, setModules] = useState<any[]>([]);
+  const [bundleProducts, setBundleProducts] = useState<any[]>([]);
   const [mentorProfile, setMentorProfile] = useState<any>(null);
   const [mentorPaymentMethods, setMentorPaymentMethods] = useState<any[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -145,6 +146,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           setPage(data.page);
           setCourse(data.course);
           setModules(data.modules || []);
+          setBundleProducts(data.bundleProducts || []);
           setPageLoading(false);
         }
       } catch (e) {
@@ -515,7 +517,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       {/* Renderizado Condicional: V2 (Atomic) vs V1 (Monolítico) */}
       <div style={{ scrollMarginTop: 'var(--navbar-height)' }}>
         {isV2 ? (
-          <AtomicRenderer page={page} onPurchase={handlePurchase} mentorProfile={mentorProfile} />
+          <AtomicRenderer page={page} onPurchase={handlePurchase} mentorProfile={mentorProfile} bundleProducts={bundleProducts} />
         ) : (
         <>
           {/* Hero Section */}

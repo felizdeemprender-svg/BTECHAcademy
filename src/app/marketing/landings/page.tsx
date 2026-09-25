@@ -489,7 +489,7 @@ export default function SalesLandingsDashboardPage() {
             </p>
             {!searchTerm && (
               <Button
-                onClick={() => router.push('/marketing/landings/build')}
+                onClick={() => router.push('/marketing/landings/v2-build')}
                 variant="link"
                 className="font-bold text-primary mt-3"
               >
@@ -563,8 +563,7 @@ export default function SalesLandingsDashboardPage() {
                         const TypeIcon = typeInfo.icon;
                         const isConfirmDelete = confirmDeleteId === page.id;
                         const isDeleting = deletingIds[page.id];
-                        const isV2 = !!page.content?.sections;
-                        const variantsCount = isV2 ? 1 : (page.aiContent?.landings?.length || (page.aiContent?.landing ? 1 : 0));
+                        const variantsCount = 1;
 
                         return (
                           <div
@@ -577,8 +576,8 @@ export default function SalesLandingsDashboardPage() {
                               {variantsCount > 0 && (
                                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                                   {Array.from({ length: variantsCount }, (_, v) => {
-                                    const label = isV2 ? 'Ver Landing' : (page.aiContent?.landings?.[v]?.marketingName || `Variante ${v + 1}`);
-                                    const link = isV2 ? `/v/${page.id}` : `/v/${page.id}?v=${v}`;
+                                    const label = 'Ver Landing';
+                                    const link = `/v/${page.id}`;
                                     return (
                                       <button
                                         key={v}
@@ -684,7 +683,7 @@ export default function SalesLandingsDashboardPage() {
                               </button>
                               {/* Editar */}
                               <button
-                                onClick={() => router.push(isV2 ? `/marketing/landings/v2-edit/${page.id}` : `/marketing/landings/build?id=${page.id}`)}
+                                onClick={() => router.push(`/marketing/landings/v2-edit/${page.id}`)}
                                 title="Editar"
                                 className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
                               >

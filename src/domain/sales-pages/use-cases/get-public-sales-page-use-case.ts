@@ -67,10 +67,52 @@ export class GetPublicSalesPageUseCase {
       }
     }
 
+    let bundleProducts: any[] = [];
+    if (page.bundleItems && page.bundleItems.length > 0) {
+      for (const item of page.bundleItems) {
+        let p: any = { id: item.productId, productType: item.productType, salesPageId: item.salesPageId };
+        
+        let courseData = null;
+        if (item.productType === 'followup' || item.productType === 'mentoria_individual') {
+          const docRef = await adminDb.collection('followups').doc(item.productId).get();
+          if (docRef.exists) courseData = docRef.data();
+        } else {
+          const docRef = await adminDb.collection('courses').doc(item.productId).get();
+          if (docRef.exists) courseData = docRef.data();
+        }
+        
+        // Use catalog image as priority for combo thumbnails
+        if (courseData) {
+          p.imageUrl = courseData.thumbnail || courseData.coverUrl || courseData.imageUrl || null;
+          if (!p.title) p.title = courseData.title || courseData.goal;
+          if (!p.description) p.description = courseData.description;
+        }
+
+        // Priorizar datos de la Landing (salesPageId) si existe y si faltaba la imagen o texto
+        if (item.salesPageId) {
+          const spSnap = await adminDb.collection('salesPages').doc(item.salesPageId).get();
+          if (spSnap.exists) {
+            const spData = spSnap.data();
+            const heroSection = spData?.content?.sections?.find((s: any) => s.id.startsWith('heroVideo'));
+            if (!p.title) p.title = heroSection?.title || spData?.title;
+            if (!p.description) p.description = heroSection?.subtitle || spData?.description;
+            if (!p.imageUrl) p.imageUrl = heroSection?.imageUrl || spData?.imageUrl;
+          }
+        }
+        
+        // Priorizar customTitle y customDescription si están definidos en el combo
+        if (item.customTitle) p.title = item.customTitle;
+        if (item.customDescription) p.description = item.customDescription;
+        
+        bundleProducts.push(p);
+      }
+    }
+
     return {
       page,
       course,
-      modules
+      modules,
+      bundleProducts
     };
   }
 }

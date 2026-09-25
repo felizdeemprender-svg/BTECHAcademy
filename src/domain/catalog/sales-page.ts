@@ -55,6 +55,12 @@ export const SalesPageSchema = z.object({
   stats: z.unknown().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
+  bundleItems: z.array(z.object({
+    productId: z.string(),
+    salesPageId: z.string().nullish(),
+    customTitle: z.string().nullish(),
+    customDescription: z.string().nullish(),
+  }).passthrough()).optional(),
 });
 export type SalesPage = z.infer<typeof SalesPageSchema>;
 

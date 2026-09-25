@@ -108,7 +108,9 @@ export function FollowUpTable({
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <UserCircle className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{f.studentName}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                          {f.type === 'group' ? 'Varios Alumnos' : f.studentName}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -131,7 +133,7 @@ export function FollowUpTable({
                 <TableCell className="text-right px-6">
                   <div className="flex justify-end items-center gap-2">
                     <Button 
-                      onClick={() => router.push(`/seguimientos/${f.id}`)}
+                      onClick={() => router.push(`/mentoria/seguimientos/${f.id}`)}
                       size="sm" 
                       variant="ghost" 
                       className="rounded-xl h-9 px-4 font-bold text-primary hover:bg-primary/10 transition-colors"
@@ -192,7 +194,9 @@ export function FollowUpTable({
                   <p className="font-bold text-sm text-foreground leading-tight">{f.title}</p>
                   <div className="flex items-center gap-1.5 mt-1">
                     <UserCircle className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">{f.studentName}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                      {f.type === 'group' ? 'Varios Alumnos' : f.studentName}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -220,7 +224,7 @@ export function FollowUpTable({
 
             <div className="flex items-center gap-2">
               <Button 
-                onClick={() => router.push(`/seguimientos/${f.id}`)}
+                onClick={() => router.push(`/mentoria/seguimientos/${f.id}`)}
                 className="w-full rounded-xl font-bold h-12 flex items-center justify-center gap-2"
               >
                 Gestionar Mentoría <ChevronRight className="h-4 w-4" />

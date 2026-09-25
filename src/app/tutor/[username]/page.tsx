@@ -288,7 +288,7 @@ export default function TutorProfilePage({ params }: { params: Promise<{ usernam
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="lg" className="flex-1">
-                  <Link href="/services">
+                  <Link href="/#pricing">
                     <CreditCard className="h-5 w-5 mr-2" />
                     Planes para Tutores
                   </Link>

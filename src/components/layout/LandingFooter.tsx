@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { Sparkles, Globe } from 'lucide-react';
@@ -28,12 +28,12 @@ export function LandingFooter() {
           </div>
           
           <div className="space-y-6">
-            <h4 className="text-white font-black uppercase tracking-widest text-xs">Empresa</h4>
+            <h4 className="text-white font-black uppercase tracking-widest text-xs">Plataforma</h4>
             <ul className="space-y-4 text-primary-foreground/60 font-medium text-sm">
-              <li><Link href="/about" className="hover:text-accent transition-colors">Sobre Nosotros</Link></li>
-              <li><Link href="/services" className="hover:text-accent transition-colors">Servicios</Link></li>
-              <li><Link href="/case-studies" className="hover:text-accent transition-colors">Casos de Éxito</Link></li>
-              <li><Link href="/contact" className="hover:text-accent transition-colors">Contacto</Link></li>
+              <li><Link href="/" className="hover:text-accent transition-colors">Inicio</Link></li>
+              <li><Link href="/#pricing" className="hover:text-accent transition-colors">Planes y Precios</Link></li>
+              <li><Link href="/#faq" className="hover:text-accent transition-colors">Preguntas Frecuentes</Link></li>
+              <li><Link href="/auth" className="hover:text-accent transition-colors">Ingresar</Link></li>
             </ul>
           </div>
 

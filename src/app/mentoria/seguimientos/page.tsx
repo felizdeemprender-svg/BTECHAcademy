@@ -226,7 +226,7 @@ export default function FollowUpsPage() {
         }, await getToken());
         toast({ title: 'Mentoría Creada' });
         setIsCreateOpen(false);
-        router.push(`/seguimientos/${id}`);
+        router.push(`/mentoria/seguimientos/${id}`);
       } catch (e) {
         toast({ variant: 'destructive', title: 'Error al crear mentoría', description: e instanceof Error ? e.message : undefined });
       } finally {
@@ -291,7 +291,7 @@ export default function FollowUpsPage() {
 
       toast({ title: 'Mentoría Creada' });
       setIsCreateOpen(false);
-      router.push(`/seguimientos/${followUpId}`);
+      router.push(`/mentoria/seguimientos/${followUpId}`);
     } catch (e) {
       toast({ variant: 'destructive', title: 'Error al crear mentoría' });
     } finally {

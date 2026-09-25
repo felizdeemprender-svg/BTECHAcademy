@@ -1161,7 +1161,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                           align: 'right',
                           hideOnMobile: true,
                           cell: (f: any) => (
-                            <Link href={`/seguimientos/${f.id}`}>
+                            <Link href={`/mentoria/seguimientos/${f.id}`}>
                               <Button variant="ghost" className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10">
                                 Detalle <ChevronRight className="h-4 w-4" />
                               </Button>
@@ -1196,7 +1196,7 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
                         </div>
                       )}
                       mobileCardFooter={(f: any) => (
-                        <Link href={`/seguimientos/${f.id}`} className="w-full">
+                        <Link href={`/mentoria/seguimientos/${f.id}`} className="w-full">
                           <Button variant="ghost" className="w-full h-11 rounded-xl font-bold text-primary gap-2 hover:bg-primary/10 text-xs">
                             Detalle <ChevronRight className="h-4 w-4" />
                           </Button>

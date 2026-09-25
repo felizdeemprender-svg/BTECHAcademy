@@ -12,7 +12,8 @@ export class FirestoreCommerceGateway implements CommerceGateway {
       id: doc.id,
       productId: data.productId as string | undefined,
       courseId: data.courseId as string | undefined,
-      productType: data.productType as string | undefined
+      productType: data.productType as string | undefined,
+      bundleItems: data.bundleItems as any[] | undefined
     };
   }
   

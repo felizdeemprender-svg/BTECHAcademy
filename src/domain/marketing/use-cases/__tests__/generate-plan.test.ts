@@ -1,18 +1,24 @@
-import { describe, expect, it } from 'vitest';
-import { generatePlan } from '../generate-plan';
+import { describe, expect, it, vi } from 'vitest';
+import { generateCoordinationPlan } from '../generate-plan';
+import { CoordinationPlanner } from '../../coordination-planner';
 
-describe('generatePlan', () => {
-  it('debe generar un plan basado en los parámetros', async () => {
-    // Si la función interactúa con un servicio externo o LLM, 
-    // en un unit test real se inyectaría una dependencia mockeada.
-    // Aquí verificamos que devuelva la estructura esperada si es puramente determinista o mockeable.
-    const result = await generatePlan({
-      mission: 'venta',
+describe('generateCoordinationPlan', () => {
+  it('debe generar un plan basado en los parametros', async () => {
+    const mockPlanner: CoordinationPlanner = {
+      generate: vi.fn().mockResolvedValue({
+        strategyName: 'flash_sale',
+        logic: 'logic',
+        timeline: [{ day: 1, phase: 'launch', variantIndex: 0, action: 'send_email', channels: ['Email'] }]
+      })
+    };
+    
+    const result = await generateCoordinationPlan(mockPlanner, {
+      campaignTitle: 'Title',
+      strategyType: 'flash_sale',
       durationDays: 7,
-      platforms: ['instagram']
+      targetAudience: 'Everyone',
     });
 
-    expect(result).toBeDefined();
-    expect(result.timeline).toBeInstanceOf(Array);
+    expect(result.ok).toBe(true);
   });
 });

@@ -40,6 +40,7 @@ const GenerateLandingV2InputSchema = z.object({
     title: z.string(),
     required: z.boolean(),
   })).optional(),
+  productType: z.string().optional(),
 });
 export type GenerateLandingV2Input = z.infer<typeof GenerateLandingV2InputSchema>;
 
@@ -86,10 +87,12 @@ const generateLandingV2Flow = ai.defineFlow(
           description: s.description
         }));
 
+    const productNoun = input.productType === 'mentoria_individual' ? 'Mentoría Individual 1-a-1' : input.productType === 'followup' ? 'Mentoría Grupal' : 'Curso/Producto';
+
     const promptText = `Actúa como un Copywriter Senior de Respuesta Directa experto en Venta de Infoproductos.
 Tu tarea es redactar el contenido de UNA Landing Page de altísima conversión.
 
-DATOS CLAVE DEL CURSO:
+DATOS CLAVE DEL ${productNoun.toUpperCase()}:
 - Título: "${input.courseTitle}"
 - Descripción: "${input.courseDescription}"
 - Creador/Mentor: ${input.mentorName}
@@ -137,6 +140,7 @@ const RegenerateSectionInputSchema = z.object({
   sectionId: z.string().describe('El ID de la sección actual (ej: "narrativeSections_0")'),
   sectionName: z.string().describe('El nombre de la sección (ej: "Sección Narrativa")'),
   sectionDescription: z.string().optional().describe('La descripción de lo que debe hacer la sección según el estilo'),
+  productType: z.string().optional(),
 });
 
 export type RegenerateSectionInput = z.infer<typeof RegenerateSectionInputSchema>;
@@ -160,10 +164,12 @@ const regenerateSectionV2Flow = ai.defineFlow(
   async (input: any) => {
     const style = getLandingStyle(input.styleId);
     
+    const productNoun = input.productType === 'mentoria_individual' ? 'Mentoría Individual 1-a-1' : input.productType === 'followup' ? 'Mentoría Grupal' : 'Curso/Producto';
+    
     const promptText = `Actúa como un Copywriter Senior experto en Venta de Infoproductos.
 Tu tarea es RE-ESCRIBIR exclusivamente el contenido de UNA sola sección de una Landing Page de altísima conversión.
 
-DATOS CLAVE DEL CURSO (Para dar contexto):
+DATOS CLAVE DEL ${productNoun.toUpperCase()} (Para dar contexto):
 - Título: "${input.courseTitle}"
 - Descripción: "${input.courseDescription}"
 - Mentor: ${input.mentorName}

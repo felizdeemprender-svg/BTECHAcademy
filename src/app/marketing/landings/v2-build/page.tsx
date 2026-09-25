@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase, useFirebase } from '@/firebase';
 import { collection, query, where, doc, setDoc, serverTimestamp, getDoc, updateDoc, Timestamp, getDocs, addDoc, orderBy } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,8 +73,10 @@ function V2LandingBuilderContent() {
   const [isGeneratingPersonas, setIsGeneratingPersonas] = useState(false);
   const [aiPersonas, setAiPersonas] = useState<any[]>([]);
   const [extractedMasterText, setExtractedMasterText] = useState<string | null>(null);
+  const [masterFile, setMasterFile] = useState<File | null>(null);
 
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [isComboMode, setIsComboMode] = useState(false);
   const [courseFilter, setCourseFilter] = useState<'all' | 'course' | 'followup'>('all');
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
   const [basePrice, setBasePrice] = useState<number>(49900);
@@ -98,8 +101,14 @@ function V2LandingBuilderContent() {
   const [referidos, setReferidos] = useState<{ id: string; displayName: string; email: string }[]>([]);
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState<string[]>(['mercadopago', 'transfer']);
 
-  const isMercadoPagoActive = !!profile?.profile?.mercadopago?.accessToken || !!profile?.mercadopago?.accessToken;
-  const isTransferActive = !!profile?.profile?.bankDetails?.cbu || !!profile?.profile?.bankDetails?.alias || !!profile?.bankDetails?.cbu || !!profile?.bankDetails?.alias;
+  const paymentMethodsQuery = useMemoFirebase(() => {
+    if (!profile?.uid) return null;
+    return query(collection(db, 'users', profile.uid, 'paymentMethods'));
+  }, [db, profile?.uid]);
+  const { data: rawPaymentMethods } = useCollection(paymentMethodsQuery);
+
+  const isMercadoPagoActive = !!profile?.profile?.mercadopago?.accessToken || !!profile?.mercadopago?.accessToken || (rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'mercadopago' && pm.isActive !== false));
+  const isTransferActive = !!profile?.profile?.bankDetails?.cbu || !!profile?.profile?.bankDetails?.alias || !!profile?.bankDetails?.cbu || !!profile?.bankDetails?.alias || (rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'transfer' && pm.isActive !== false));
 
   const cleanUndefined = (obj: any): any => {
     if (Array.isArray(obj)) return obj.map(v => v === undefined ? null : cleanUndefined(v));
@@ -159,7 +168,7 @@ function V2LandingBuilderContent() {
 
   const followupsQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
-    return query(collection(db, 'followups'), where('mentorId', '==', profile.uid));
+    return query(collection(db, 'followups'), where('mentorId', '==', profile.uid), where('type', '==', 'group'));
   }, [db, profile?.uid]);
   const { data: rawFollowups } = useCollection(followupsQuery);
 
@@ -179,6 +188,15 @@ function V2LandingBuilderContent() {
         tagIds: []
       })));
     }
+
+    combined.push({
+      id: 'mentoria_individual_base',
+      title: 'Mentoría Individual (1-a-1)',
+      description: 'Servicio de mentoría individual personalizada.',
+      productType: 'mentoria_individual',
+      tagIds: []
+    });
+
     return combined.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
   }, [rawCourses, rawFollowups]);
 
@@ -208,7 +226,7 @@ function V2LandingBuilderContent() {
   const tagsQuery = useMemoFirebase(() => query(collection(db, 'tags')), [db]);
   const { data: rawTags } = useCollection(tagsQuery);
 
-  const selectedCourse = useMemo(() => courses?.find(c => c.id === selectedCourseId), [courses, selectedCourseId]);
+  const selectedCourse = useMemo(() => courses?.find(c => c.id === selectedProductIds[0]), [courses, selectedProductIds]);
 
   const dynamicProfiles = useMemo(() => {
     if (aiPersonas.length > 0) return aiPersonas;
@@ -223,7 +241,16 @@ function V2LandingBuilderContent() {
 
   const getMasterText = async (course: any) => {
     if (extractedMasterText !== null) return extractedMasterText;
-    const documentUrl = course.masterFileUrl || course.pdfUrl;
+    
+    let documentUrl = course.masterFileUrl || course.pdfUrl;
+
+    if (!documentUrl && masterFile) {
+      toast({ title: 'Subiendo Documento Maestro...' });
+      const masterRef = ref(storage, `followup_guides/${profile?.uid}/${Date.now()}_master_${masterFile.name}`);
+      const uploadResult = await uploadBytes(masterRef, masterFile);
+      documentUrl = await getDownloadURL(uploadResult.ref);
+    }
+
     if (!documentUrl) return '';
     
     toast({ title: 'Analizando Documento Maestro...', description: 'Extrayendo contenido del syllabus.' });
@@ -260,39 +287,74 @@ function V2LandingBuilderContent() {
     setStep(2);
   };
 
-  const handleGenerate = async () => {
-    if (!profile?.uid || !selectedCourseId || !selectedStyleId) return;
+    const handleGenerate = async () => {
+    if (!profile?.uid || selectedProductIds.length === 0 || !selectedStyleId) return;
     setIsGenerating(true);
     try {
-      const course = courses?.find(c => c.id === selectedCourseId);
-      if (!course) throw new Error('Curso no encontrado');
+                  const isBundle = isComboMode;
+      let finalDescription = '';
+      let bundleItems: any[] = [];
+      let mainCourse: any = null;
+      let courseTitleForAi = '';
 
-      let finalDescription = course.description || '';
-      const text = await getMasterText(course);
-      if (text) {
-        finalDescription += `\n\n=== CONTENIDO DEL DOCUMENTO MAESTRO / SYLLABUS ===\n${text}`;
+      if (isBundle) {
+        if (selectedProductIds.length < 2) throw new Error('Debes seleccionar al menos 2 landings para armar un Combo.');
+        const selectedLandings = myLandings?.filter(l => selectedProductIds.includes(l.id)) || [];
+        if (selectedLandings.length === 0) throw new Error('Error interno: No pude encontrar las landings seleccionadas en tu cuenta.');
+
+        finalDescription = `ESTO ES UN COMBO DE ${selectedLandings.length} PRODUCTOS. EL OBJETIVO ES VENDER EL PAQUETE COMPLETO. DEBES MENCIONAR EXPLÍCITAMENTE EL NOMBRE DE CADA PRODUCTO INCLUIDO Y ARMAR UNA COMPARATIVA DE VALOR (VALUE STACKING) PARA DEMOSTRAR LO MUCHO QUE AHORRAN. NO ESCRIBAS UN TEMARIO (SYLLABUS), SÓLO BENEFICIOS Y LA PILA DE VALOR DEL COMBO.\n\n`;
+
+        for (const landing of selectedLandings) {
+          bundleItems.push({ 
+            salesPageId: landing.id,
+            productId: landing.productId || landing.courseId || '', 
+            productType: landing.productType || 'course' 
+          });
+
+          finalDescription += `=== PRODUCTO INCLUIDO: ${landing.title || 'Producto'} ===\n`;
+          if (landing.content?.sections) {
+            const copyText = landing.content.sections
+              .map((s: any) => `${s.headline || ''} ${s.subheadline || ''} ${s.content || ''}`)
+              .join('\n');
+            finalDescription += `RESUMEN DE SU LANDING ORIGINAL:\n${copyText.substring(0, 800)}\n\n`;
+          }
+        }
+        courseTitleForAi = title || 'Súper Combo Exclusivo';
+      } else {
+        const selectedCourses = courses?.filter(c => selectedProductIds.includes(c.id)) || [];
+        if (selectedCourses.length === 0) throw new Error('Error: Curso no encontrado. Intenta seleccionarlo de nuevo.');
+        mainCourse = selectedCourses[0];
+        courseTitleForAi = mainCourse.title;
+
+        // Single product
+        finalDescription = mainCourse.description || '';
+        const text = await getMasterText(mainCourse);
+        if (text) {
+          finalDescription += `\n\n=== CONTENIDO DEL DOCUMENTO MAESTRO / SYLLABUS ===\n${text}`;
+        }
       }
 
       toast({ title: 'Generando con Genkit...', description: 'Aplicando estilos y escribiendo copy V2.' });
 
       // 1. Llamar a Genkit para generar el texto base
       const result = await generateLandingV2({
-        courseTitle: course.title,
+        courseTitle: courseTitleForAi,
         courseDescription: finalDescription,
         mentorName: profile?.displayName || 'Mentor Experto',
         price: basePrice,
         targetAudience: targetAudience,
         styleId: selectedStyleId,
-        directives: templateDirectives,
+        directives: templateDirectives + (isBundle ? " [ESTO ES UN COMBO. Haz un pitch de Value Stacking integrando todo esto]" : ""),
         colorPaletteName,
         typographyVariantName,
         requestedSections: requestedSections,
+        productType: isBundle ? 'combo' : mainCourse.productType,
       });
 
       // 2. Consultar módulos reales del curso para inyectar en el syllabus
       let realModules: string[] = [];
-      if (course?.productType !== 'followup') {
-        const modulesSnap = await getDocs(query(collection(db, 'courses', selectedCourseId, 'modules'), orderBy('order', 'asc')));
+      if (!isBundle && mainCourse?.productType !== 'followup') {
+        const modulesSnap = await getDocs(query(collection(db, 'courses', mainCourse.id, 'modules'), orderBy('order', 'asc')));
         realModules = modulesSnap.docs.map(d => {
           const data = d.data();
           return `**${data.title}**: ${data.description || 'Sin descripción.'}`;
@@ -301,7 +363,7 @@ function V2LandingBuilderContent() {
 
       // 3. Reemplazar el contenido del temario (syllabus) con los módulos reales (solo para cursos)
       const finalSections = result.sections.map((section: any) => {
-        if (section.id.startsWith('syllabus') && course?.productType !== 'followup') {
+        if (section.id.startsWith('syllabus') && !isBundle && mainCourse?.productType !== 'followup') {
           return {
             ...section,
             bullets: realModules.length > 0 ? realModules : ['(Aún no has agregado módulos a tu curso)']
@@ -309,6 +371,14 @@ function V2LandingBuilderContent() {
         }
         return section;
       });
+
+      if (isBundle) {
+        finalSections.splice(1, 0, {
+          id: 'bundleGrid_' + Date.now(),
+          title: '¿Qué incluye este Combo?',
+          content: 'Obtén acceso inmediato a todos estos programas de formación con un descuento único.'
+        });
+      }
 
       const finalData = {
         ...result,
@@ -325,11 +395,11 @@ function V2LandingBuilderContent() {
       };
 
       // 4. Armar el payload para guardar directamente en salesPages
-      const payload = {
+      const payload: any = {
         mentorId: profile.uid,
-        courseId: selectedCourseId, // Legacy
-        productId: selectedCourseId,
-        productType: course?.productType || 'course',
+        courseId: isBundle ? 'combo' : mainCourse.id, // Legacy
+        productId: isBundle ? 'combo' : mainCourse.id,
+        productType: isBundle ? 'combo' : (mainCourse?.productType || 'course'),
         styleId: selectedStyleId,
         landingType: basePrice > 0 && allowedPaymentMethods.length > 0 ? (activeUntil ? 'promocion' : 'general') : 'general',
         title: title || result.marketingName || 'Nueva Landing',
@@ -348,6 +418,10 @@ function V2LandingBuilderContent() {
         status: 'published',
         isActive: true
       };
+
+      if (isBundle) {
+         payload.bundleItems = bundleItems;
+      }
 
       // 5. Guardar y redirigir
       const safePayload = cleanUndefined(payload);
@@ -368,10 +442,12 @@ function V2LandingBuilderContent() {
   };
 
   const handleCourseSelect = (id: string) => {
-    if (selectedCourseId !== id) {
-      setSelectedCourseId(id);
-      setTitle('');
+    if (isComboMode) {
+      setSelectedProductIds(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
+    } else {
+      setSelectedProductIds([id]);
     }
+    setTitle('');
   };
 
   const handleStyleSelect = (style: LandingStyle) => {
@@ -382,6 +458,7 @@ function V2LandingBuilderContent() {
     
     // Inicializar secciones basadas en la configuración por defecto del estilo
     const initialSections = style.availableSections
+      .filter((sec: LandingStyleSection) => isComboMode ? !["syllabus", "mentorProfile"].includes(sec.id) : true)
       .filter((sec: LandingStyleSection) => style.defaultVisibility?.[sec.id] || sec.required)
       .map((sec: LandingStyleSection) => ({ id: sec.id, title: sec.name, required: sec.required }));
     setRequestedSections(initialSections);
@@ -405,7 +482,24 @@ function V2LandingBuilderContent() {
             <Card className="p-8 space-y-8">
               <div className="space-y-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">1. Programa Académico</Label>
+                  <div className="flex flex-col gap-1">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+                        1. Programa Académico
+                      </Label>
+                      <label className="flex items-center gap-2 mt-2 cursor-pointer bg-primary/5 px-3 py-2 rounded-lg border border-primary/20 w-max transition-colors hover:bg-primary/10">
+                        <input 
+                            type="checkbox" 
+                            checked={isComboMode}
+                            onChange={(e) => {
+                              setIsComboMode(e.target.checked);
+                              // Limpiar siempre la selección al cambiar de modo porque son colecciones distintas (cursos vs salesPages)
+                              setSelectedProductIds([]);
+                            }}
+                          className="w-4 h-4 accent-primary"
+                        />
+                        <span className="text-xs font-semibold text-primary">Modo Combo (Múltiples productos)</span>
+                      </label>
+                    </div>
                   <div className="flex bg-muted p-1 rounded-lg">
                     <button onClick={() => setCourseFilter('all')} className={cn("px-3 py-1 text-[10px] font-bold rounded-md transition-colors", courseFilter === 'all' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground")}>Todos</button>
                     <button onClick={() => setCourseFilter('course')} className={cn("px-3 py-1 text-[10px] font-bold rounded-md transition-colors", courseFilter === 'course' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground")}>Cursos</button>
@@ -414,13 +508,26 @@ function V2LandingBuilderContent() {
                 </div>
                 <ScrollArea className="h-64 rounded-2xl border p-2 bg-muted">
                   <div className="space-y-2">
-                    {courses?.filter(c => courseFilter === 'all' || c.productType === courseFilter).map(c => (
-                      <div key={c.id} onClick={() => handleCourseSelect(c.id)} className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer font-bold text-sm", selectedCourseId === c.id ? "bg-white border-primary shadow-sm text-primary" : "bg-white border-transparent text-foreground hover:border-primary/20")}>
-                        {c.title}
-                      </div>
-                    ))}
+                    {isComboMode 
+                      ? myLandings?.filter(l => l.landingType !== 'embajador' && l.productType !== 'combo').map(l => (
+                        <div key={l.id} onClick={() => handleCourseSelect(l.id)} className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer font-bold text-sm flex items-center justify-between", selectedProductIds.includes(l.id) ? "bg-primary/5 border-primary shadow-sm text-primary" : "bg-white border-transparent text-foreground hover:border-primary/20")}>
+                          <span className="truncate mr-2">{l.title || 'Landing sin título'}</span> <Badge variant="secondary" className="text-[10px] shrink-0">Landing</Badge>
+                        </div>
+                      ))
+                      : courses?.filter(c => courseFilter === 'all' || (courseFilter === 'followup' ? c.productType === 'followup' || c.productType === 'mentoria_individual' : c.productType === courseFilter)).map(c => (
+                        <div key={c.id} onClick={() => handleCourseSelect(c.id)} className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer font-bold text-sm flex items-center justify-between", selectedProductIds.includes(c.id) ? "bg-primary/5 border-primary shadow-sm text-primary" : "bg-white border-transparent text-foreground hover:border-primary/20")}>
+                          <span className="truncate">{c.title}</span>
+                        </div>
+                      ))}
                   </div>
                 </ScrollArea>
+                {selectedCourse?.productType === 'mentoria_individual' && (
+                  <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Label className="text-xs font-bold text-muted-foreground mb-1 block">Documento Maestro (Opcional)</Label>
+                    <Input type="file" onChange={(e) => setMasterFile(e.target.files?.[0] || null)} className="text-xs h-9 bg-white" />
+                    <p className="text-[10px] text-muted-foreground mt-1">Sube el PDF de tu mentoría para extraer el syllabus y usarlo de base en la landing.</p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -451,12 +558,12 @@ function V2LandingBuilderContent() {
                 </ScrollArea>
               </div>
               
-              <Button disabled={!selectedCourseId || !selectedStyleId} onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold">Continuar al Enfoque <ArrowRight className="ml-2 h-5 w-5" /></Button>
+              <Button disabled={selectedProductIds.length === 0 || !selectedStyleId} onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold">Continuar al Enfoque <ArrowRight className="ml-2 h-5 w-5" /></Button>
             </Card>
             
-            <div className="bg-muted rounded-lg border-2 border-dashed flex flex-col items-center justify-center p-12 text-center relative overflow-hidden">
+            <div className="bg-muted rounded-lg border-2 border-dashed flex flex-col items-center justify-center p-4 md:p-6 lg:p-12 text-center relative overflow-hidden">
               {selectedStyleId ? (
-                  <div className="max-w-sm space-y-6 z-10">
+                  <div className="max-w-sm w-full space-y-6 z-10">
                     <div className="w-24 h-24 mx-auto bg-white rounded-3xl p-2 border-4 border-muted overflow-hidden relative">
                       {selectedStyle?.thumbnail ? (
                         <img src={selectedStyle.thumbnail} alt={selectedStyle.name} className="w-full h-full object-cover rounded-xl" />
@@ -855,7 +962,7 @@ function V2LandingBuilderContent() {
                 </div>
                 
                 <div className="grid gap-3">
-                  {selectedStyle?.availableSections.map((sec: LandingStyleSection) => {
+                  {selectedStyle?.availableSections.filter((sec: LandingStyleSection) => isComboMode ? !["syllabus", "mentorProfile"].includes(sec.id) : true).map((sec: LandingStyleSection) => {
                     const instances = requestedSections.filter((rs: any) => rs.id === sec.id);
                     const isActive = instances.length > 0;
                     
