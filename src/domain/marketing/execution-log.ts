@@ -20,6 +20,7 @@ export const ExecutionLogSchema = z.object({
   variantIndex: z.number().int().min(0).max(2).optional(),
   time: z.string().optional(),
   videoName: z.string().optional(),
+  format: z.string().optional(),
   status: ExecutionStatusSchema,
   mode: ExecutionModeSchema,
   provider: z.string().min(1, 'proveedor vacío'),

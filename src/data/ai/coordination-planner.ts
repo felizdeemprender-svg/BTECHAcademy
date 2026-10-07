@@ -18,6 +18,9 @@ export class GenkitCoordinationPlanner implements CoordinationPlanner {
       strategyType: input.strategyType,
       durationDays: input.durationDays,
       targetAudience: input.targetAudience,
+      availableVideos: input.availableVideos,
+      productData: input.productData,
+      activePlatforms: input.activePlatforms,
     });
     // Valida la salida IA al shape canónico (canales, variante, horarios).
     return CoordinationOutputSchema.parse(raw);

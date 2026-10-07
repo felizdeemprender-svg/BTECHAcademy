@@ -152,8 +152,8 @@ describe('handleCreateCampaign', () => {
       mentorId: 'm1',
       title: 'C',
       autoPilot: true,
-      status: 'active',
-      isActive: true,
+      status: 'draft',
+      isActive: false,
     });
   });
 });

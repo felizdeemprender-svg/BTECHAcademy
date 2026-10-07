@@ -12,6 +12,7 @@ describe('Create & Delete SalesPage Use Cases', () => {
       update: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
+      listByMentor: vi.fn().mockResolvedValue([]),
     } as any;
   });
 

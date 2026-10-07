@@ -5,7 +5,7 @@
  */
 import { z } from 'zod';
 
-export const PlatformSchema = z.enum(['instagram', 'tiktok', 'linkedin', 'twitter', 'x']);
+export const PlatformSchema = z.enum(['instagram', 'tiktok', 'linkedin', 'twitter', 'x', 'youtube']);
 export type Platform = z.infer<typeof PlatformSchema>;
 
 export interface TimeSlot {
@@ -54,6 +54,13 @@ export const PLATFORM_TIME_SLOTS: Record<Platform, PlatformSlots> = {
     moderate: [
       { time: '08:00', label: 'Camino al Trabajo: Tránsito Mediano (Noticias Rápidas)' },
       { time: '18:30', label: 'Vuelta a Casa: Tránsito Mediano (Cierre del Día)' },
+    ],
+  },
+  youtube: {
+    peak: { time: '15:00', label: 'Tarde: Alto Impacto (Videos Largos y Shorts)' },
+    moderate: [
+      { time: '12:00', label: 'Mediodía: Tránsito Mediano (Pausa de Estudio/Trabajo)' },
+      { time: '20:00', label: 'Noche: Tránsito Mediano (Entretenimiento/Educación)' },
     ],
   },
 };

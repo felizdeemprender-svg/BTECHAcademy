@@ -21,6 +21,9 @@ export class DeleteSalesPageUseCase {
       throw new Error('Unauthorized: You do not own this SalesPage and cannot delete it');
     }
 
+    // Se permite el borrado de landings tipo campaign_pack porque el orquestador 
+    // solo las toma como referencia, según reglas de negocio.
+
     await this.repo.delete(request.pageId);
   }
 }

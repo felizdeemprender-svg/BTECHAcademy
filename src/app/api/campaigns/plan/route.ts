@@ -12,6 +12,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const caller = await authenticateCaller(request);
     const body: unknown = await request.json().catch(() => null);
+    console.log('[API campaigns/plan] RECEIVED BODY:', body);
     return await handleGeneratePlan(new GenkitCoordinationPlanner(), caller, body);
   } catch (error) {
     console.error('[API campaigns/plan]', error);

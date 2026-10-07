@@ -33,6 +33,7 @@ function campaign(): Campaign {
     startDate: '2026-01-01',
     autoPilot: true,
     status: 'active',
+    productionStatus: 'ready_to_publish',
     isActive: true,
     executionLogs: [],
     strategy: { strategyName: 'S', logic: 'L', timeline: timeline as Campaign['strategy']['timeline'] },
@@ -68,19 +69,19 @@ describe('buildDispatchLogs', () => {
       {},
       NOW.toISOString(),
     );
-    expect(logs).toHaveLength(6);
-    expect(logs.filter((l) => l.channel === 'Social')).toHaveLength(5);
-    expect(logs[5].channel).toBe('Email');
-    expect(logs[5].time).toBe('09:00');
+    expect(logs).toHaveLength(7);
+    expect(logs.filter((l) => l.channel === 'Social')).toHaveLength(6);
+    expect(logs[6].channel).toBe('Email');
+    expect(logs[6].time).toBe('09:00');
     expect(logs[0].mode).toBe('sandbox');
-    expect(logs[0].responseId).toBe('instagram_1_0_0');
+    expect(logs[0].responseId).toBe('instagram_1_0_0_0');
   });
 
   it('respeta socialSchedule y marca producción con credenciales', () => {
     const withSchedule = [
       {
         ...timeline[0],
-        socialSchedule: { instagram: { videoName: 'V-E special', time: '18:00' } },
+        socialSchedule: { instagram: [{ videoName: 'V-E special', time: '18:00' }] },
       },
     ];
     const logs = buildDispatchLogs(
@@ -114,7 +115,7 @@ describe('executeCampaignStep', () => {
     const result = await executeCampaignStep(repo, { id: 'c1', credentials: {}, now: NOW });
     if (!isOk(result)) throw new Error('se esperaba ok');
     expect(result.value.currentDay).toBe(1);
-    expect(result.value.logsAppended).toBe(6);
+    expect(result.value.logsAppended).toBe(7);
     expect(repo.appended).toHaveLength(1);
   });
 

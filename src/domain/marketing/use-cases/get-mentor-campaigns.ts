@@ -23,6 +23,7 @@ export interface CampaignSummary {
   readonly today: TimelineEvent[];
   readonly progressPercent: number;
   readonly executable: boolean;
+  readonly productionStatus: Campaign['productionStatus'];
 }
 
 export interface GetMentorCampaignsInput {
@@ -72,5 +73,6 @@ function summarize(campaign: Campaign, now: Date): CampaignSummary {
     today: todayActions(timeline, currentDay),
     progressPercent: campaignProgressPercent(timeline, currentDay),
     executable: isExecutableCampaign(campaign),
+    productionStatus: campaign.productionStatus,
   };
 }

@@ -78,6 +78,16 @@ export async function POST(req: NextRequest) {
       try {
         const { calculateImageCost, deductCredits } = await import('@/lib/payments/credits');
         const cost = await calculateImageCost(1);
+        
+        const isAdmin = role === 'admin';
+        console.log("--- [DEBUG IA] AUDITORÍA AUTOMÁTICA (IMAGEN PREMIUM) ---");
+        console.log(`> Usuario: ${uid} (${role})`);
+        console.log(`> Acción Detectada: image_generation_premium`);
+        console.log(`> Cantidad: 1 imagen`);
+        console.log(`> Costo Proveedor: $${cost.providerCost}`);
+        console.log(`> Cobro al Tutor: $${isAdmin ? '0 (Admin Gratis)' : cost.billedCost}`);
+        console.log("----------------------------------------------------------");
+
         await deductCredits(uid, cost, 'image_generation_premium', role || 'tutor');
       } catch (err) {
         console.warn('[generate-image] No se pudo deducir créditos:', err);

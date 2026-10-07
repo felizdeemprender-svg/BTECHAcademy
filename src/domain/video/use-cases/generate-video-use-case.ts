@@ -105,7 +105,7 @@ export class GenerateVideoUseCase {
 
       switch (branch) {
         case 'A':
-          await this.runBranchA(jobId, body, adn);
+          await this.runBranchA(jobId, body, adn, uid, role);
           break;
         case 'B':
           await this.runBranchB(jobId, body, adn, landing, uid, role);
@@ -143,32 +143,54 @@ export class GenerateVideoUseCase {
     }));
   }
 
-  private async runBranchA(jobId: string, body: GenerateVideoRequest, adn: any) {
+  private async runBranchA(jobId: string, body: GenerateVideoRequest, adn: any, uid: string, role: string) {
     await this.videoJobRepo.updateJob(jobId, { status: 'processing', progress: 5, stage: 'Cargando configuración ADN...', branch: 'A' });
 
     const [width, height] = (RESOLUTIONS[body.formato] || '1080x1920').split('x').map(Number);
-    const scenes = this.buildScenesFromAdn(adn, width, height);
+    
+    // Si la request trae scenes generadas (ej. por AI), usarlas en vez de las hardcodeadas del ADN
+    let scenes;
+    if (body.scenes && body.scenes.length > 0) {
+      scenes = body.scenes.map((s: any) => ({
+        imageUrl: s.imageUrl || `https://placehold.co/${width}x${height}/1e293b/ffffff.jpg?text=Escena`,
+        text: s.text || '',
+        subtitle: s.subtitle || '',
+        watermark: s.watermark || '',
+        voiceover: s.voiceover || s.text || '',
+        segment_label: s.segment_label || 'VALOR',
+        duration: Number(s.duration) || 5
+      }));
+    } else {
+      scenes = this.buildScenesFromAdn(adn, width, height);
+    }
 
     const renderPayload = {
       jobId,
       scenes,
       resolution: RESOLUTIONS[body.formato] || '1080x1920',
       adnId: body.adnId || '01_CINEMA',
-      audioUrl: adn.background_music_url,
-      enable_tts: true,
-      voice_id: adn.audio_engine?.voice_id || 'mateo',
+      audioUrl: body.audioUrl || adn.background_music_url,
+      enable_tts: body.enable_tts !== false,
+      voice_id: body.voiceId || adn.audio_engine?.voice_id || 'mateo',
       audioEffect: 'auto',
       marketingName: body.marketingName || 'EvoAssetV2',
+        campaignTitle: (body as any).campaignTitle,
       googleToken: body.googleToken,
       isSmokeTest: body.isSmokeTest,
-      isCarousel: false
+      isCarousel: false,
+      salesPageId: body.salesPageId || body.cursoId,
+      uid,
+      role
     };
+
+    console.log(`[GenerateVideoUseCase] Encolando FFmpeg. googleToken presente?`, !!body.googleToken);
 
     const origin = process.env.APP_URL || `http://127.0.0.1:9002`;
     const res = await fetch(`${origin}/api/video/render-v2`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(renderPayload)
+      body: JSON.stringify(renderPayload),
+      signal: AbortSignal.timeout(3600000) // 1 hora de timeout para evitar UND_ERR_HEADERS_TIMEOUT
     });
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Error al encolar render FFmpeg.');
@@ -310,7 +332,7 @@ export class GenerateVideoUseCase {
     const safeBaseName = (body.marketingName || 'EvoAssetV2').replace(/[^a-zA-Z0-9]/g, '_');
     let resultPayload: Record<string, any> = {};
     if (body.googleToken) {
-      const rootFolderId = await getOrCreateFolder(body.googleToken, 'Aplicacion EVO V2');
+      const rootFolderId = await getOrCreateFolder(body.googleToken, 'Fastoria');
       const campaignFolderId = await getOrCreateFolder(body.googleToken, `Pack_${safeBaseName}`, rootFolderId);
       const mainFile = await uploadToDrive(videoPath, body.googleToken, `${safeBaseName}_long_${Date.now()}.mp4`, 'video/mp4', campaignFolderId);
       resultPayload = { webViewLink: mainFile.webViewLink, driveId: mainFile.id, downloadUrl: mainFile.webContentLink };
@@ -373,3 +395,6 @@ export class GenerateVideoUseCase {
     return landing;
   }
 }
+
+
+

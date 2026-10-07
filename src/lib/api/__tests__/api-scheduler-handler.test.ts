@@ -186,7 +186,7 @@ describe('handleRunScheduler', () => {
     const now = new Date('2026-06-15T12:00:00.000Z');
     const old = new Date('2026-01-01T12:00:00.000Z');
     const already = {
-      day: 1, channel: 'Social', platform: 'instagram', status: 'success',
+      day: 1, channel: 'Social', platform: 'instagram', status: 'success', videoName: 'Video 1'
     };
     const gateway = new FakeGateway({
       campaigns: {

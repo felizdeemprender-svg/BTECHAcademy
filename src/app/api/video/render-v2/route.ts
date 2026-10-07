@@ -36,6 +36,7 @@ interface RenderRequest {
   isCarousel?: boolean;
   platform?: string;
   marketingName?: string;
+  campaignTitle?: string;
   isSmokeTest?: boolean;
   // datos del tutor para cobro y tracking
   uid?: string;
@@ -72,6 +73,20 @@ async function updateJob(jobId: string, data: Record<string, any>) {
   } catch (e) {
     console.error('[JobQueue] Error actualizando job en Firestore:', e);
   }
+}
+
+async function uploadToFirebaseStorage(filePath: string, destination: string): Promise<string> {
+  const bucket = adminDb.collection('fake').firestore.constructor.name === 'Firestore' // hack to check we are initialized, but let's just use the imported adminStorage
+    ? (await import('@/firebase/admin')).adminStorage.bucket()
+    : (await import('@/firebase/admin')).adminStorage.bucket();
+  
+  const file = bucket.file(destination);
+  await bucket.upload(filePath, {
+    destination: destination,
+    metadata: { contentType: 'video/mp4' }
+  });
+  const [url] = await file.getSignedUrl({ action: 'read', expires: '01-01-2050' });
+  return url;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -236,40 +251,129 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
     // ── PASO 5: Subir a Google Drive ────────────────────────────────────────
     await updateJob(jobId, { progress: 80, stage: 'Subiendo video a Google Drive...' });
 
-    const safeBaseName = (marketingName || 'EvoAssetV2').replace(/[^a-zA-Z0-9]/g, '_');
+    const safeBaseName = (marketingName || 'EvoAssetV2').replace(/[\\/:*?"<>|]/g, '_');
+    const safeCampaignName = (body.campaignTitle || 'Campañas').replace(/[\\/:*?"<>|]/g, '_');
     let resultPayload: Record<string, any> = {};
 
     if (typeof renderResult === 'string') {
       // VIDEO ÚNICO
       let driveLink = '', driveId = '', downloadUrl = '';
+      let isDrive = false;
+
       if (googleToken) {
-        const rootFolderId = await getOrCreateFolder(googleToken, 'Aplicacion EVO V2');
-        const campaignFolderId = await getOrCreateFolder(googleToken, `Pack_${safeBaseName}`, rootFolderId);
-        const mainFile = await uploadToDrive(renderResult, googleToken, `${safeBaseName}_${Date.now()}.mp4`, 'video/mp4', campaignFolderId);
-        driveLink = mainFile.webViewLink;
-        driveId = mainFile.id;
-        downloadUrl = mainFile.webContentLink;
+        console.log(`>>> [DEBUG DRIVE] Google Token presente. Iniciando subida a Drive...`);
+        try {
+          const rootFolderId = await getOrCreateFolder(googleToken, 'fastoria');
+          const staticCampanasFolderId = await getOrCreateFolder(googleToken, 'Campañas', rootFolderId);
+          const campaignFolderId = await getOrCreateFolder(googleToken, safeCampaignName, staticCampanasFolderId);
+          const pieceFolderId = await getOrCreateFolder(googleToken, safeBaseName, campaignFolderId);
+          
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const mainFile = await uploadToDrive(renderResult, googleToken, `${safeBaseName}_${timestamp}.mp4`, 'video/mp4', pieceFolderId);
+          
+          driveLink = mainFile.webViewLink;
+          driveId = mainFile.id;
+          downloadUrl = mainFile.webContentLink;
+          isDrive = true;
+          console.log(`>>> [DEBUG DRIVE] Subida exitosa. Link: ${driveLink}`);
+        } catch (driveErr: any) {
+          console.error(`>>> [DEBUG DRIVE] Error al subir a Drive. Cayendo a fallback Firebase Storage:`, driveErr.message);
+        }
+      } else {
+        console.log(`>>> [DEBUG DRIVE] No hay Google Token. Cayendo a fallback Firebase Storage.`);
       }
-      resultPayload = { webViewLink: driveLink, driveId, downloadUrl };
+
+      // FALLBACK A FIREBASE STORAGE SI DRIVE FALLÓ O NO HABÍA TOKEN
+      if (!isDrive) {
+        console.log(`>>> [DEBUG STORAGE] Subiendo video a Firebase Storage...`);
+        try {
+          const storageDest = `campaigns/videos/${safeBaseName}_${Date.now()}.mp4`;
+          driveLink = await uploadToFirebaseStorage(renderResult, storageDest);
+          driveId = 'firebase_storage'; // Bandera para saber que no está en Drive
+          downloadUrl = driveLink;
+          console.log(`>>> [DEBUG STORAGE] Subida exitosa. Link temporal: ${driveLink}`);
+        } catch (storageErr: any) {
+          console.error(`>>> [DEBUG STORAGE] Error fatal subiendo a Firebase:`, storageErr.message);
+        }
+      }
+
+      let resultPayloadToReturn: Record<string, any> = { webViewLink: driveLink, driveId, downloadUrl };
+      if (googleToken && isDrive) {
+        try {
+          const r = await getOrCreateFolder(googleToken, 'fastoria');
+          const cStatic = await getOrCreateFolder(googleToken, 'Campañas', r);
+          const c = await getOrCreateFolder(googleToken, safeCampaignName, cStatic);
+          const p = await getOrCreateFolder(googleToken, safeBaseName, c);
+          resultPayloadToReturn.folderId = p;
+          resultPayloadToReturn.campaignFolderId = c;
+        } catch(e) {}
+      }
+      resultPayload = resultPayloadToReturn;
 
     } else if (typeof renderResult === 'object' && renderResult.success && renderResult.slices) {
       // CARRUSEL (múltiples videos)
       const driveLinks: string[] = [], driveIds: string[] = [], downloadUrls: string[] = [];
+      let isDrive = false;
+
       if (googleToken) {
-        const rootFolderId = await getOrCreateFolder(googleToken, 'Aplicacion EVO V2');
-        const campaignFolderId = await getOrCreateFolder(googleToken, `Pack_${safeBaseName}`, rootFolderId);
-        for (let i = 0; i < renderResult.slices.length; i++) {
-          await updateJob(jobId, {
-            progress: 80 + Math.round((i / renderResult.slices.length) * 15),
-            stage: `Subiendo placa ${i + 1} de ${renderResult.slices.length}...`
-          });
-          const mainFile = await uploadToDrive(renderResult.slices[i].path, googleToken, `${safeBaseName}_slide_${i + 1}_${Date.now()}.mp4`, 'video/mp4', campaignFolderId);
-          driveLinks.push(mainFile.webViewLink);
-          driveIds.push(mainFile.id);
-          downloadUrls.push(mainFile.webContentLink);
+        console.log(`>>> [DEBUG DRIVE] Google Token presente para Carrusel. Iniciando subida...`);
+        try {
+          const rootFolderId = await getOrCreateFolder(googleToken, 'fastoria');
+          const staticCampanasFolderId = await getOrCreateFolder(googleToken, 'Campañas', rootFolderId);
+          const campaignFolderId = await getOrCreateFolder(googleToken, safeCampaignName, staticCampanasFolderId);
+          const pieceFolderId = await getOrCreateFolder(googleToken, safeBaseName, campaignFolderId);
+          for (let i = 0; i < renderResult.slices.length; i++) {
+            await updateJob(jobId, {
+              progress: 80 + Math.round((i / renderResult.slices.length) * 15),
+              stage: `Subiendo placa ${i + 1} de ${renderResult.slices.length}...`
+            });
+            const mainFile = await uploadToDrive(renderResult.slices[i].path, googleToken, `${safeBaseName}_slide_${i + 1}.mp4`, 'video/mp4', pieceFolderId);
+            driveLinks.push(mainFile.webViewLink);
+            driveIds.push(mainFile.id);
+            downloadUrls.push(mainFile.webContentLink);
+          }
+          isDrive = true;
+          console.log(`>>> [DEBUG DRIVE] Carrusel subido con éxito.`);
+        } catch (driveErr: any) {
+          console.error(`>>> [DEBUG DRIVE] Error al subir Carrusel a Drive. Cayendo a fallback Firebase Storage:`, driveErr.message);
+        }
+      } else {
+        console.log(`>>> [DEBUG DRIVE] No hay Google Token. Cayendo a fallback Firebase Storage para Carrusel.`);
+      }
+
+      // FALLBACK A FIREBASE STORAGE SI DRIVE FALLÓ O NO HABÍA TOKEN
+      if (!isDrive) {
+        console.log(`>>> [DEBUG STORAGE] Subiendo Carrusel a Firebase Storage...`);
+        try {
+          for (let i = 0; i < renderResult.slices.length; i++) {
+            await updateJob(jobId, {
+              progress: 80 + Math.round((i / renderResult.slices.length) * 15),
+              stage: `Subiendo placa ${i + 1} a Storage temporal...`
+            });
+            const storageDest = `campaigns/videos/${safeBaseName}_slide_${i + 1}_${Date.now()}.mp4`;
+            const fbLink = await uploadToFirebaseStorage(renderResult.slices[i].path, storageDest);
+            driveLinks.push(fbLink);
+            driveIds.push('firebase_storage');
+            downloadUrls.push(fbLink);
+          }
+          console.log(`>>> [DEBUG STORAGE] Carrusel subido con éxito a Storage Temporal.`);
+        } catch (storageErr: any) {
+          console.error(`>>> [DEBUG STORAGE] Error fatal subiendo Carrusel a Firebase:`, storageErr.message);
         }
       }
-      resultPayload = { webViewLink: driveLinks.join(','), driveId: driveIds.join(','), downloadUrl: downloadUrls.join(',') };
+
+      let resultPayloadToReturnCarousel: Record<string, any> = { webViewLink: driveLinks.join(','), driveId: driveIds.join(','), downloadUrl: downloadUrls.join(',') };
+      if (googleToken && isDrive) {
+        try {
+          const r = await getOrCreateFolder(googleToken, 'fastoria');
+          const cStatic = await getOrCreateFolder(googleToken, 'Campañas', r);
+          const c = await getOrCreateFolder(googleToken, safeCampaignName, cStatic);
+          const p = await getOrCreateFolder(googleToken, safeBaseName, c);
+          resultPayloadToReturnCarousel.folderId = p;
+          resultPayloadToReturnCarousel.campaignFolderId = c;
+        } catch(e) {}
+      }
+      resultPayload = resultPayloadToReturnCarousel;
     } else {
       throw new Error('El motor de renderizado devolvió un resultado inesperado.');
     }
@@ -305,6 +409,34 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
       stage: 'Completado',
       result: resultPayload
     });
+
+    const salesPageId = (body as any).salesPageId;
+    if (salesPageId && (resultPayload.downloadUrl || resultPayload.webViewLink || resultPayload.videoPath)) {
+      try {
+        const spDoc = await adminDb.collection('salesPages').doc(salesPageId).get();
+        if (spDoc.exists) {
+           const d = spDoc.data();
+           const socials = d?.aiContent?.socials || [];
+           let updated = false;
+           for (let s of socials) {
+              if (s.marketingName === body.marketingName) {
+                 if (!s.production_notes) s.production_notes = {};
+                 s.production_notes.video_url = resultPayload.downloadUrl || resultPayload.webViewLink || resultPayload.videoPath;
+                 s.production_notes.video_drive_id = resultPayload.driveId;
+                 s.production_notes.video_download_url = resultPayload.downloadUrl;
+                 s.videoJobId = jobId;
+                 updated = true;
+              }
+           }
+           if (updated) {
+              await adminDb.collection('salesPages').doc(salesPageId).update({
+                 'aiContent.socials': socials
+              });
+              console.log(`[JobQueue] Updated salesPage ${salesPageId} with video URL for ${body.marketingName}`);
+           }
+        }
+      } catch(e) { console.error("Error updating salesPage:", e); }
+    }
 
     console.log(`✅ [JobQueue] Job ${jobId} completado.`);
 

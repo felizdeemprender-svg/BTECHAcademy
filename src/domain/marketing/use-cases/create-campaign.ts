@@ -46,19 +46,28 @@ export async function createCampaign(
   }
   try {
     const id = parsed.data.id ?? randomCampaignId();
-    await repo.create({
-      id,
-      mentorId: parsed.data.mentorId,
-      title: parsed.data.title,
-      salesPageId: parsed.data.salesPageId,
-      courseId: parsed.data.courseId ?? null,
-      strategy: parsed.data.strategy,
-      startDate: parsed.data.startDate,
-      autoPilot: true,
-      status: 'active',
-      isActive: true,
-      executionLogs: [],
-    });
+      const totalPieces = parsed.data.strategy.timeline.reduce((acc, event) => {
+        if (!event.socialSchedule) return acc + 1; // Fallback legacy
+        return acc + Object.values(event.socialSchedule).reduce((sum: number, posts: any) => {
+          return sum + (Array.isArray(posts) ? posts.length : 1);
+        }, 0);
+      }, 0);
+
+      await repo.create({
+        id,
+        mentorId: parsed.data.mentorId,
+        title: parsed.data.title,
+        salesPageId: parsed.data.salesPageId,
+        courseId: parsed.data.courseId ?? null,
+        strategy: parsed.data.strategy,
+        startDate: parsed.data.startDate,
+        autoPilot: true,
+        status: 'draft',
+        productionStatus: 'producing',
+        isActive: false,
+        progress: { sealed: 0, total: totalPieces || parsed.data.strategy.timeline.length },
+        executionLogs: [],
+      });
     return ok({ id });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

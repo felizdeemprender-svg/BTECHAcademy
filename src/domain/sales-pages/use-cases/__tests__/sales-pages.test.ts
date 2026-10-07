@@ -22,6 +22,7 @@ describe('Sales Pages Use Cases', () => {
     
     // Clear all mocks before each test
     vi.clearAllMocks();
+    mockRepo.listByMentor.mockResolvedValue([]);
   });
 
   describe('CreateSalesPageUseCase (Clonación/Creación)', () => {

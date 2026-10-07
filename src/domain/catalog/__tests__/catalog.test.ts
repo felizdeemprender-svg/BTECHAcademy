@@ -203,6 +203,6 @@ describe('sales-page', () => {
 
   it('rechaza sin título y tipos desconocidos', () => {
     expect(() => SalesPageSchema.parse(basePage({ title: '' }))).toThrow();
-    expect(() => SalesPageSchema.parse(basePage({ type: 'funnel' }))).toThrow();
+    expect(() => SalesPageSchema.parse(basePage({ type: 'desconocido' }))).toThrow();
   });
 });

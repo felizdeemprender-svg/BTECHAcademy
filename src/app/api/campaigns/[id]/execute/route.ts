@@ -17,7 +17,10 @@ export async function POST(
   try {
     const caller = await authenticateCaller(request);
     const { id } = await params;
-    return await handleExecuteCampaign(await resolveGateway(), caller, id);
+    const url = new URL(request.url);
+    const forceDay = url.searchParams.get('day');
+    
+    return await handleExecuteCampaign(await resolveGateway(), caller, id, forceDay ? parseInt(forceDay, 10) : undefined);
   } catch (error) {
     console.error('[API campaigns/:id/execute]', error);
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });

@@ -400,6 +400,7 @@ function V2LandingBuilderContent() {
         courseId: isBundle ? 'combo' : mainCourse.id, // Legacy
         productId: isBundle ? 'combo' : mainCourse.id,
         productType: isBundle ? 'combo' : (mainCourse?.productType || 'course'),
+        type: 'landing_page',
         styleId: selectedStyleId,
         landingType: basePrice > 0 && allowedPaymentMethods.length > 0 ? (activeUntil ? 'promocion' : 'general') : 'general',
         title: title || result.marketingName || 'Nueva Landing',

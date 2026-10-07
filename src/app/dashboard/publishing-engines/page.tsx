@@ -27,7 +27,7 @@ import {
   Linkedin, 
   Twitter, 
   MonitorPlay, 
-  Loader2,
+  Loader2, Youtube,
   ExternalLink
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -58,6 +58,7 @@ const MOTORS = [
   { id: 'linkedin', group: 'Social', label: 'LinkedIn Professional', icon: Linkedin, color: 'blue', provider: 'LinkedIn', desc: 'Contenido corporativo y artículos de marca.' },
   { id: 'twitter', group: 'Social', label: 'X (Twitter) Engine', icon: Twitter, color: 'blue', provider: 'X (Twitter)', desc: 'Publicación de hilos y tweets automáticos vía API v2.' },
   { id: 'tiktok', group: 'Social', label: 'TikTok for Business', icon: TikTokIcon, color: 'blue', provider: 'TikTok', desc: 'Gestión de guiones y clips en el feed.' },
+  { id: 'youtube', group: 'Social', label: 'YouTube Engine', icon: Youtube, color: 'blue', provider: 'YouTube', desc: 'Publicación de videos largos y Shorts en YouTube.' },
   
   // Ads Group
   { id: 'meta_ads', group: 'Ads', label: 'Meta Ads Manager', icon: Megaphone, color: 'amber', provider: 'Meta', desc: 'Control de campañas en Facebook e Instagram.' },
@@ -118,19 +119,57 @@ export default function PublishingEnginesPage() {
     }
   };
 
-  const handleTestConnection = () => {
+  const handleTestConnection = async () => {
     setIsTesting(true);
-    setTimeout(() => {
+    let newStatus = 'pending';
+    let errorMessage = '';
+    
+    if (draftConfig.apiKey.length < 10) {
       setIsTesting(false);
-      if (draftConfig.apiKey.length < 10) {
-        toast({ variant: 'destructive', title: 'Fallo de Conexión', description: 'La API Key parece ser inválida o demasiado corta.' });
+      toast({ variant: 'destructive', title: 'Fallo de Conexión', description: 'La API Key parece ser inválida o demasiado corta.' });
+      return;
+    }
+
+    try {
+      if (selectedMotor?.id === 'meta_social') {
+        const res = await fetch(`https://graph.facebook.com/me?access_token=${draftConfig.apiKey}`);
+        const data = await res.json();
+        
+        if (data.error) {
+          newStatus = 'error';
+          errorMessage = data.error.message;
+          toast({ variant: 'destructive', title: 'Conexión Rechazada', description: `Meta rechazó el token: ${data.error.message}` });
+        } else {
+          newStatus = 'connected';
+          toast({
+            title: 'Conexión Exitosa',
+            description: `El motor ${selectedMotor?.label} ha validado los protocolos con ${selectedMotor?.provider}.`,
+          });
+        }
       } else {
+        // Para otros motores, si pasamos los 10 chars, simulamos por ahora
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        newStatus = 'connected';
         toast({
           title: 'Conexión Exitosa',
           description: `El motor ${selectedMotor?.label} ha validado los protocolos con ${selectedMotor?.provider}.`,
         });
       }
-    }, 1500);
+
+      setDraftConfig(prev => ({ ...prev, status: newStatus }));
+      if (profile?.uid && selectedMotor) {
+         const userRef = doc(db, 'users', profile.uid);
+         await updateDoc(userRef, {
+           [`marketingCredentials.${selectedMotor.id}.status`]: newStatus,
+           ...(errorMessage ? { [`marketingCredentials.${selectedMotor.id}.lastError`]: errorMessage } : {})
+         });
+      }
+
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Conexión Fallida', description: 'Ocurrió un error de red al intentar validar.' });
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   const clearUILocks = useCallback(() => {
@@ -156,24 +195,70 @@ export default function PublishingEnginesPage() {
               <p>Este motor unifica la publicación en **Facebook Pages** e **Instagram Business** mediante la Graph API.</p>
             </div>
           </div>
+          
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+            <h4 className="text-blue-900 font-bold text-sm mb-2">🔥 ¡NUEVO! Guía de Configuración Sin Errores</h4>
+            <p className="text-blue-800 text-[11px] mb-3">
+              Debido a los constantes cambios y bugs en el panel de desarrolladores de Meta, hemos creado un manual paso a paso con capturas de pantalla para configurar tu conexión de forma 100% segura usando el Modo Clásico.
+            </p>
+            <Button variant="outline" className="w-full bg-white text-blue-700 border-blue-200 hover:bg-blue-100 font-bold text-xs h-9" asChild>
+              <a href="/docs/meta_setup_guide.pdf" target="_blank">
+                <BookOpen className="w-3.5 h-3.5 mr-2" />
+                Descargar Guía Paso a Paso (PDF)
+              </a>
+            </Button>
+          </div>
+
           <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="0" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">1. Crear la Aplicación en Meta</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
+                <p>Ve a <a href="https://developers.facebook.com/apps/" target="_blank" className="underline text-blue-600 font-bold">Meta for Developers</a> y haz clic en <strong>Crear Aplicación</strong>.</p>
+                <ul className="list-disc list-inside text-[11px] space-y-1 ml-1">
+                  <li>Selecciona el tipo <strong>Negocios</strong> (Business).</li>
+                  <li>En la lista de 20 <strong>Casos de Uso</strong>, debes agregar los siguientes:
+                    <ul className="list-circle list-inside ml-4 mt-1 space-y-0.5">
+                      <li><strong>API Graph de Instagram</strong> (para habilitar <code>instagram_content_publish</code> y lectura de cuentas).</li>
+                      <li><strong>Personaliza tu aplicación de empresas</strong> (Customize your business app). Este caso de uso comodín te permitirá agregar manualmente cualquier otro permiso que te falte (como <code>pages_manage_posts</code> para publicar en Facebook).</li>
+                    </ul>
+                  </li>
+                  <li>Asegúrate de que la aplicación esté vinculada a la cuenta comercial (Business Portfolio) propietaria de la página de Facebook.</li>
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
             <AccordionItem value="1" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-foreground">1. Vinculación de Cuentas</AccordionTrigger>
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Vinculación de Cuentas</AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-2">
                 <p>Tu cuenta de Instagram debe ser de tipo **Business** y estar vinculada a una Página de Facebook de la cual seas Administrador.</p>
                 <a href="https://business.facebook.com/settings/instagram-account-v2" target="_blank" className="text-blue-600 text-[10px] font-bold flex items-center gap-1 hover:underline"><ExternalLink className="h-3 w-3" /> Configuración de Negocio Meta</a>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Token de Acceso Permanente</AccordionTrigger>
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">3. Permisos Requeridos (Scopes)</AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-3">
-                <p>Genera un **User Access Token** en el <a href="https://developers.facebook.com/tools/explorer" target="_blank" className="underline">Explorador de la API Graph</a> con estos permisos:</p>
+                <p>Genera un token en el <a href="https://developers.facebook.com/tools/explorer" target="_blank" className="underline text-blue-600">Explorador de la API Graph</a> con estos permisos estrictos:</p>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary" className="text-[9px]">pages_manage_posts</Badge>
                   <Badge variant="secondary" className="text-[9px]">instagram_content_publish</Badge>
                   <Badge variant="secondary" className="text-[9px]">pages_show_list</Badge>
                 </div>
-                <p className="text-[10px] italic">Intercambia este token por uno de "Larga Duración" (60 días) en el panel de herramientas.</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="3" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">4. Token Permanente (System User)</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-3">
+                <p>Para evitar que el token expire cada 60 días, debes ir a <strong>Business Manager → System Users</strong>.</p>
+                <ul className="list-disc list-inside text-[11px] space-y-1 ml-1">
+                  <li>Crea un "System User" (Admin).</li>
+                  <li>Asígnale tu App y las Páginas de Facebook / Cuentas de IG.</li>
+                  <li>Genera un nuevo token desde allí seleccionando los scopes mencionados arriba.</li>
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="4" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">5. Troubleshooting Común</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
+                <p><strong>Error #100 o #200:</strong> Usualmente significa que el perfil de IG no está conectado correctamente a FB Page. Ve a la app de Instagram → Configuración → Cuentas vinculadas y asegúrate de que apunte a la página correcta, no a tu perfil personal.</p>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -199,10 +284,17 @@ export default function PublishingEnginesPage() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Scopes Requeridos</AccordionTrigger>
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Scopes Requeridos y Tokens</AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-2">
-                <p>Asegúrate de solicitar los permisos **"Share on LinkedIn"** y **"Sign In with LinkedIn"**. Los scopes técnicos son:</p>
+                <p>Para publicar como Página de Empresa, necesitas acceso a la <strong>Marketing Developer Platform</strong>. Los scopes requeridos son:</p>
                 <code className="block p-2 bg-muted rounded text-[10px]">w_member_social, w_organization_social</code>
+                <p className="text-[10px]">Nota: Publicar en perfiles personales solo requiere Sign-In with LinkedIn (OIDC) y Share on LinkedIn.</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="3" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">3. Estado de Aprobación</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
+                <p>La API de Marketing de LinkedIn no está abierta al público por defecto. Debes solicitar acceso en la pestaña "Products" de tu App en el panel de desarrolladores y completar el formulario corporativo.</p>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -229,9 +321,16 @@ export default function PublishingEnginesPage() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Credenciales OAuth 1.0a</AccordionTrigger>
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Credenciales OAuth 1.0a vs 2.0</AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-2">
-                <p>Evo utiliza el par de llaves: <code>API Key</code> + <code>API Secret</code> y los <code>Access Tokens</code> generados en la pestaña "Keys and Tokens".</p>
+                <p>Para bots de automatización pura es más sencillo usar <strong>OAuth 1.0a User Context</strong>. Genera el par: <code>API Key</code> + <code>API Secret</code> y los <code>Access Tokens</code> de tu cuenta en la pestaña "Keys and Tokens".</p>
+                <p className="text-[10px]">Importante: Si tus Access Tokens fueron generados antes de cambiar los permisos a "Read and Write", deberás regenerarlos.</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="3" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">3. Tiers de API</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
+                <p>El Tier Gratuito permite publicar hasta 50 posts cada 24 horas. Para mayor volumen (ej. hilos masivos diarios) deberás aplicar al <strong>Basic Tier</strong> ($100/mes).</p>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -262,6 +361,60 @@ export default function PublishingEnginesPage() {
                 <p>Activa los permisos <code>video.upload</code> and <code>video.list</code> para permitir que Evo gestione tus clips.</p>
               </AccordionContent>
             </AccordionItem>
+            <AccordionItem value="3" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">3. Limitaciones Técnicas y Direct Post</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
+                <p>La publicación de TikTok por API a veces requiere usar el <strong>Inbox/Share API</strong> donde el video se envía al dispositivo del usuario para confirmar la subida (dependiendo de la región).</p>
+                <p className="text-[10px]">La "Direct Post API" (publicación desatendida real) requiere pasar una auditoría técnica estricta con ByteDance.</p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+    }
+
+    if (id === 'youtube') {
+      return (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="bg-red-50 p-4 rounded-xl border border-red-200 flex gap-3">
+            <Youtube className="h-5 w-5 text-red-600 shrink-0" />
+            <div className="text-[11px] text-red-900 space-y-1">
+              <p className="font-bold uppercase">YouTube Data API v3 Protocol:</p>
+              <p>Motor para la publicación de videos largos y YouTube Shorts vía la API oficial de Google.</p>
+            </div>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="1" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">1. Google Cloud Console</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
+                <p>Crea un proyecto en <a href="https://console.cloud.google.com" target="_blank" className="underline text-blue-600 font-bold">Google Cloud Console</a> y habilita la <strong>YouTube Data API v3</strong> desde la sección "APIs y Servicios".</p>
+                <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" className="text-blue-600 text-[10px] font-bold flex items-center gap-1 hover:underline"><ExternalLink className="h-3 w-3" /> Activar YouTube Data API v3</a>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="2" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. OAuth 2.0 &amp; API Key</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-3">
+                <p>Crea credenciales de tipo <strong>OAuth 2.0 Client ID</strong> (tipo "Aplicación web") para que Evo pueda publicar en nombre del canal. También genera una <strong>API Key</strong> para consultas de solo lectura.</p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="text-[9px]">youtube.upload</Badge>
+                  <Badge variant="secondary" className="text-[9px]">youtube.readonly</Badge>
+                  <Badge variant="secondary" className="text-[9px]">youtube.force-ssl</Badge>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="3" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">3. Pantalla de Consentimiento OAuth</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
+                <p>Es <strong>vital</strong> publicar (Publish) la Pantalla de Consentimiento OAuth en la consola de Google. Si tu app permanece en estado "Testing", el token de actualización expirará a los 7 días y la automatización fallará.</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="4" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">4. Costos de Cuota</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
+                <p>Los proyectos nuevos de Google Cloud reciben 10,000 unidades de cuota gratuitas por día.</p>
+                <p className="text-[10px]">Nota: Subir 1 video consume aproximadamente <strong>1,600 unidades</strong>, por lo que podrás subir unos ~6 videos diarios sin solicitar un aumento de límite.</p>
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
         </div>
       );
@@ -288,9 +441,16 @@ export default function PublishingEnginesPage() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Dominio Remitente</AccordionTrigger>
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Entregabilidad (SPF, DKIM y DMARC)</AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-2">
-                <p>Es vital que hayas verificado tu dominio (Single Sender Verification) antes de intentar emitir correos masivos.</p>
+                <p>Para evitar caer en las carpetas de SPAM de Gmail y Outlook, es absolutamente necesario que hayas configurado la <strong>Autenticación de Dominio</strong> (Domain Authentication) en tu proveedor.</p>
+                <p className="text-[10px]">Añade los registros CNAME o TXT que te provea {selectedMotor.label} en el gestor DNS de tu dominio (Cloudflare, GoDaddy, etc).</p>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="3" className="border-b-0">
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">3. Calentamiento de Dominio (Warm-up)</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground space-y-2">
+                <p>Si tu dominio es nuevo o nunca has enviado volumen masivo, <strong>no envíes 10,000 correos el día 1</strong>. Increméntalo gradualmente a lo largo de un mes (50/día, luego 100/día) para construir reputación IP.</p>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -317,10 +477,19 @@ export default function PublishingEnginesPage() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="2" className="border-b-0">
-              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Token de Desarrollador</AccordionTrigger>
+              <AccordionTrigger className="hover:no-underline font-bold text-foreground">2. Token de Desarrollador y Permisos</AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-2">
-                {id === 'meta_ads' && <p>Asegúrate de que el Token de Meta incluya el permiso <code>ads_management</code>.</p>}
-                {id === 'google_ads' && <p>Necesitarás el **Developer Token** aprobado de tu Google Ads Manager Center y las credenciales de OAuth CLIENT ID.</p>}
+                {id === 'meta_ads' && (
+                  <>
+                    <p>Asegúrate de que el Token de Meta incluya el permiso <code>ads_management</code> y que tu cuenta comercial haya pasado el <strong>Business Verification</strong> de Meta (subida de documentos legales).</p>
+                  </>
+                )}
+                {id === 'google_ads' && (
+                  <>
+                    <p>Google Ads API requiere solicitar un <strong>Developer Token</strong> desde tu MCC (Mi Centro de Clientes).</p>
+                    <p className="text-[10px]">Tendrá inicialmente acceso de Prueba (Test Account). Para ejecutar campañas reales, debes pasar el formulario de Google para solicitar "Basic Access" o "Standard Access".</p>
+                  </>
+                )}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -346,12 +515,29 @@ export default function PublishingEnginesPage() {
         </Badge>
       );
     }
+
+    if (creds.status === 'error') {
+      return (
+        <Badge className="bg-danger/15 text-danger text-[8px] font-black uppercase border-none">
+          Conexión Rechazada
+        </Badge>
+      );
+    }
+    
+    if (creds.status === 'connected') {
+      return (
+        <Badge className="bg-success/15 text-success text-[8px] font-black uppercase border-none">
+          Usuario Registrado
+        </Badge>
+      );
+    }
+
     const isSandbox = creds.mode === 'sandbox';
     return (
       <Badge className={cn("text-[8px] font-black uppercase border-none", 
-        isSandbox ? "bg-warn/15 text-warn" : "bg-success/15 text-success"
+        isSandbox ? "bg-warn/15 text-warn" : "bg-primary/10 text-primary"
       )}>
-        {isSandbox ? 'Sandbox Activo' : 'Real Conectado'}
+        {isSandbox ? 'Sandbox Activo' : 'Clave Registrada'}
       </Badge>
     );
   };

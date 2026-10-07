@@ -5,7 +5,9 @@ export const generateImagePromptInputSchema = z.object({
   keywords: z.string().optional(),
   contextHint: z.string().optional(),
   courseTitle: z.string().optional(),
-  channel: z.string().optional()
+  channel: z.string().optional(),
+  uid: z.string().optional(),
+  role: z.string().optional()
 });
 
 export const generateImagePromptFlow = ai.defineFlow({
@@ -49,9 +51,14 @@ export const generateImagePromptFlow = ai.defineFlow({
     Generate the prompt now:
   `;
 
-  const { text } = await ai.generate({
-    prompt,
-  });
+  const { text } = await ai.generate(
+    { 
+      prompt,
+      context: { uid: input.uid, role: input.role }
+    } as any,
+    'generate_image_prompt',
+    input.uid
+  );
 
   return text.trim();
 });

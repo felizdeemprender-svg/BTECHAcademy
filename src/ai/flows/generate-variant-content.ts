@@ -10,7 +10,7 @@ import path from 'path';
 import fs from 'fs/promises';
 
 const SceneContentSchema = z.object({
-  segment_label: z.string().describe('CRÍTICO: Copia exactamente el nombre de la etiqueta solicitada en la secuencia (ej: GANCHO, VALOR, CTA). No repitas la misma si la secuencia pide distintas.'),
+  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: Usa la etapa narrativa correcta. El primer slide suele ser GANCHO, el medio VALOR, el final CIERRE y CTA.'),
   text: z.string().describe('Texto de impacto visual ultra-corto (2-4 palabras).'),
   subtitle: z.string().describe('Texto secundario o de apoyo (6-8 palabras). Obligatorio generar.'),
   watermark: z.string().describe('El @usuario (handle) de la red social.'),
@@ -25,7 +25,7 @@ const SceneContentSchema = z.object({
 });
 
 const SocialSlideSchema = z.object({
-  segment_label: z.string().describe('CRÍTICO: Copia exactamente el nombre de la etiqueta solicitada en la secuencia (ej: GANCHO, VALOR, CTA). No repitas la misma si la secuencia pide distintas.'),
+  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: Usa la etapa narrativa correcta.'),
   text: z.string().describe('Texto visual para la placa.'),
   subtitle: z.string().describe('Subtítulo de apoyo. Obligatorio generar.'),
   watermark: z.string().describe('El @usuario (handle) de la red social.'),
@@ -51,6 +51,7 @@ const VariantContentSchema = z.object({
     watermark_text: z.string().optional(),
     music_url: z.string().optional(),
     music_duration: z.number().optional(),
+    target_url: z.string().optional().describe('URL prioritaria para el CTA. Usa la URL del producto si la campaña es de un curso específico, sino usa la URL genérica del mentor.'),
   }).optional().describe('Notas de producción para la pieza.'),
 });
 
@@ -62,7 +63,9 @@ export async function generateVariantContent(
   targetAudience?: string,
   mission: 'venta' | 'autoridad' | 'lanzamiento' | 'leads' = 'venta',
   landingContext?: string,
-  productType?: string
+  productType?: string,
+  uid?: string,
+  role?: string
 ): Promise<any> {
   console.log(`[AI:Flow] Generando contenido para: ${variant.platform} - ${variant.type} | Misión: ${mission}`);
   
@@ -105,7 +108,8 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
 == REGLA DE CIERRE COMERCIAL (CRÍTICO) ==
 ¡ESTO ES UNA VENTA DE ${productNoun.toUpperCase()}! No te quedes solo atacando los síntomas o el dolor. La ÚLTIMA escena (CTA) DEBE ser un llamado a la acción DIRECTO y EXPLÍCITO para COMPRAR O UNIRSE AL ${productNoun.toUpperCase()}. 
 - Debes mencionar explícitamente el producto (ej: "Únete a [Nombre]").
-- Debes decirles cómo conseguirlo (ej: "Haz clic en el enlace de mi perfil", "Ve al link en mi bio").
+- Debes decirles cómo conseguirlo e incluir una llamada directa hacia el enlace (Ej: "Haz clic en el enlace del producto", "Ve a nuestra landing page").
+- La metadata del video debe priorizar la URL del producto en el campo target_url.
 
 [LIMITACIONES ESPECÍFICAS DEL ADN]
 - GANCHO: ${adnDef.ai_prompts?.GANCHO || ''}
@@ -135,18 +139,29 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
   try {
   const isLinkedinDoc = (variant.platform?.toLowerCase() === 'linkedin') && (variant.type === 'document' || variant.type === 'carousel');
   const isAiEngine = variant.production_notes?.video_engine && variant.production_notes.video_engine !== 'ffmpeg';
+  const requestedFormat = variant.format || 'reel';
 
   let dualNarrativeInstruction = '';
-  if (isLinkedinDoc) {
-    dualNarrativeInstruction = `== REGLA ESPECIAL PARA LINKEDIN (DOCUMENTO/PDF) ==
-- NO HAY LOCUCIÓN NI MÚSICA. Todo el valor debe estar en el TEXTO de las placas ('text').
-- EL TEXTO EN PANTALLA DEBE SER EXTENSO: Genera un párrafo educativo sólido y persuasivo (mínimo 30 palabras) en el campo 'text' para cada slide.
-- No uses frases cortas. Cada placa debe entregar un "Dato" o concepto completo que aporte valor por sí mismo sin necesidad de leer nada más.
-- El campo 'voiceover' sigue siendo requerido por el esquema pero puedes usarlo para notas internas del mentor.`;
+  if (isLinkedinDoc || requestedFormat === 'carousel') {
+    dualNarrativeInstruction = `== REGLA ESPECIAL PARA CARRUSEL / PDF ==
+- EL TEXTO EN PANTALLA ('text') DEBE SER CORTO Y DE ALTO IMPACTO: Frases cortas, potentes y legibles (Máximo 15 palabras por placa). El texto en la placa visual NUNCA debe ser un guión largo.
+- EL GUION NARRATIVO O TEXTO EXTENSO va exclusivamente en el campo 'voiceover' (usado como locución o contexto de la placa) y en el 'caption' de la publicación.
+- Recuerda: 'text' es lo que el usuario lee rápido al deslizar la imagen, debe atrapar la atención de inmediato.`;
+  } else if (requestedFormat === 'story') {
+    dualNarrativeInstruction = `== REGLA DE NARRATIVA PARA STORIES (15s) ==
+- Las Stories son efímeras y altamente interactivas.
+- El 'text' en pantalla debe ser ENORME pero ultra corto (máximo 20 caracteres).
+- Sugiere la ubicación de un STICKER interactivo (Encuesta, Link, Pregunta) en el campo 'production_notes'.
+- La 'voiceover' debe ser muy cercana, estilo "hablando a la cámara selfie", máximo 15 segundos hablados.`;
   } else {
-    dualNarrativeInstruction = `REGLA DE NARRATIVA DUAL:
+    dualNarrativeInstruction = `REGLA DE NARRATIVA DUAL (VIDEO VERTICAL/CUADRADO - REELS):
 - La VOZ (voiceover) lleva la carga emocional y técnica detallada. Es un guion hablado (lo que dice el presentador).
-- LA PANTALLA (text) reafirma con frases de PODER (3-5 palabras) que subrayan el beneficio técnico.`;
+- LA PANTALLA (text y subtitle) reafirma con frases de PODER.
+
+🚨 CRÍTICO PARA RENDERING FFmpeg: LÍMITE ESTRICTO DE CARACTERES EN PANTALLA 🚨
+- El campo 'text' NUNCA debe superar los 30 caracteres (aprox 2-4 palabras).
+- El campo 'subtitle' NUNCA debe superar los 40 caracteres (aprox 5-7 palabras).
+- Si ignoras esto, los textos se saldrán de la pantalla del video y arruinarás la exportación. Sé ultra conciso.`;
   }
 
   const generatePrompt = `Actúa como un Director Creativo y Guionista Senior especializado en Marketing Cinético.
@@ -167,9 +182,9 @@ ${missionTones[mission]}
 Debes generar exactamente ${expectedCount} escenas con los siguientes segment_label EXACTOS en este orden:
 ${sequenceList}
 
-2. PANTALLA (text): Frases 
-    - TEXTO IMPACTO: 2-4 palabras máximo, estilo Punchy.
-    - SUBTÍTULO: Una frase corta de apoyo que dé contexto al texto de impacto. ¡OBLIGATORIO!.
+2. PANTALLA (text y subtitle): LÍMITES ESTRICTOS PARA VIDEO
+    - TEXTO IMPACTO ('text'): MÁXIMO 30 CARACTERES. Punchy.
+    - SUBTÍTULO ('subtitle'): MÁXIMO 40 CARACTERES. De apoyo. ¡OBLIGATORIO!.
     - MARCA DE AGUA (watermark): Inserta el handle exacto "${variant.handle ? (variant.handle.startsWith('@') ? variant.handle : '@'+variant.handle) : '@usuario'}" en cada escena.
 3. BACKGROUNDS (media_hint): Escribe keywords descriptivas para la generación visual. IMPORTANTE: Usa términos de género neutro (ej: "person", "speaker", "professional") y NUNCA asumas género masculino ("businessman", "hombre", "tutor"). Esto evita corromper las imágenes de referencia si el usuario sube a una mujer.
 4. VOZ (voiceover): Relato fluido, persuasivo y experto. ¡LÍMITE ESTRICTO DE TIEMPO!: El texto generado no debe requerir más segundos al ser hablado que la duración máxima asignada a la escena. Sé muy conciso.
@@ -210,7 +225,7 @@ ${injectedAdnRule}
 
 3. TEXTOS DE ACOMPAÑAMIENTO:
    - Genera un 'hook' relevante al curso. 
-   - Genera un 'caption' persuasivo y adaptado a la plataforma ("Nicho-Persona").
+   - Genera un 'caption' persuasivo y adaptado a la plataforma ("Nicho-Persona"). DEBES INCLUIR EXPLICÍTAMENTE la variable "{URL_PRODUCTO}" en el copy para que el sistema inyecte el link real después. Si consideras que es de branding personal, incluye "{URL_MENTOR}".
    - Genera un array de 'hashtags'.
 
 REGLAS FINALES:
@@ -224,11 +239,24 @@ Devuelve un objeto JSON que siga el ContentBreakdown Schema.`;
 
   while (attempts < maxAttempts) {
     try {
-      const { output } = await ai.generate({
-        prompt: generatePrompt,
-        output: { schema: VariantContentSchema },
-        config: { temperature: 0.8 }
-      });
+      const { output } = await ai.generate(
+        {
+          prompt: generatePrompt,
+          output: { schema: VariantContentSchema },
+          config: { 
+            temperature: 0.8,
+            safetySettings: [
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+            ]
+          },
+          context: { uid, role }
+        } as any,
+        'generate_variant_content',
+        uid
+      );
       parsed = output;
       break; // Success
     } catch (genErr: any) {
@@ -270,7 +298,7 @@ Devuelve un objeto JSON que siga el ContentBreakdown Schema.`;
         }
     }
 
-    const result = {
+    const result: any = {
       ...parsed,
       production_notes: {
         visual_style: 'Cinematic',
@@ -281,6 +309,43 @@ Devuelve un objeto JSON que siga el ContentBreakdown Schema.`;
       scenes: finalScenes,
       slides: finalSlides
     };
+
+    // --- REEMPLAZO DINÁMICO DE VARIABLES ---
+    let username = variant.handle || '@tutor';
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.fastoria.com';
+    let targetUrl = `${baseUrl}/`;
+
+    if (uid) {
+        const { adminDb } = await import('@/firebase/admin');
+        const userDoc = await adminDb.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            if (userData?.instagram) {
+               username = userData.instagram.startsWith('@') ? userData.instagram : `@${userData.instagram}`;
+            } else if (userData?.displayName) {
+               username = `@${userData.displayName.replace(/\s+/g, '').toLowerCase()}`;
+            }
+        }
+    }
+
+    if (variant.cursoId || variant.campaignId || variant.salesPageId) {
+        targetUrl = `${baseUrl}/v/${variant.salesPageId || variant.campaignId || variant.cursoId}`;
+    }
+
+    if (result.caption) {
+        result.caption = result.caption
+            .replace(/{URL_PRODUCTO}/g, targetUrl)
+            .replace(/{URL_MENTOR}/g, targetUrl)
+            .replace(/@usuario/gi, username);
+    }
+    
+    const replaceWatermark = (item: any) => {
+        if (item.watermark && (item.watermark === '@usuario' || item.watermark.includes('usuario'))) {
+            item.watermark = username;
+        }
+    };
+    if (result.scenes) result.scenes.forEach(replaceWatermark);
+    if (result.slides) result.slides.forEach(replaceWatermark);
 
     return result;
   } catch (error: any) {

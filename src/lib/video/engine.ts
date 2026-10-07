@@ -210,6 +210,8 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
   <dir>${fontsDir}</dir>
   <cachedir>${path.join(workDir, 'fontscache').replace(/\\/g, '/')}</cachedir>
   <config></config>
+  <dir>/usr/share/fonts</dir>
+  <dir>C:/Windows/Fonts</dir>
 </fontconfig>`;
     fs.writeFileSync(fontsConfPath, fontsConfContent);
 
@@ -416,7 +418,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     '-filter_complex',
     `[1:a]${musicFx},afade=t=in:st=0:d=0.5[music]; [2:a]${voiceFx},adelay=200|200,aresample=44100,asplit=2[v_trigger][v_final]; [music][v_trigger]sidechaincompress=threshold=${sChain.threshold}:ratio=${sChain.ratio}:attack=${sChain.attack}:release=${sChain.release}[bg_ducked]; [bg_ducked][v_final]amix=inputs=2:duration=first,loudnorm=I=-16:TP=-1.5:LRA=11[aout]`,
     '-map', '0:v:0', '-map', '[aout]',
-    '-c:v', 'libx264', '-preset', 'ultrafast', '-threads', '0', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-ar', '44100', '-y', finalPath
+    '-c:v', 'libx264', '-preset', 'fast', '-profile:v', 'high', '-movflags', 'faststart', '-threads', '0', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-ar', '44100', '-y', finalPath
   ];
   console.log(`[FFmpeg:FinalCommand] ${finalMixArgs.join(' ')}`);
   await runFfmpeg(finalMixArgs);
@@ -553,9 +555,9 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
       else assAlignment = 2;
     }
 
-    const marginV = s.marginV || (type === 'sub' ? 120 : type === 'mark' ? 50 : 280);
-    const marginL = s.marginH || s.marginL || 50;
-    const marginR = s.marginH || s.marginR || 50;
+    const marginV = s.marginV || Math.round(height * (type === 'sub' ? 0.08 : type === 'mark' ? 0.04 : 0.15));
+    const marginL = s.marginH || s.marginL || Math.round(width * 0.07);
+    const marginR = s.marginH || s.marginR || Math.round(width * 0.07);
 
     let borderStyle = 1;
     let outlineWidth = 0;
@@ -588,33 +590,62 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
   const sub = resolveStyle(subStyle, 'sub');
   const mark = resolveStyle(markStyle, 'mark');
 
-  // Prevención de Overlap (Title vs Subtitle) calculando line breaks
-  if (subtitle && (t.assAlignment === 1 || t.assAlignment === 2 || t.assAlignment === 3)) {
+  // --- SEGURIDAD: LÍMITES VERTICALES Y ESCALADO DINÁMICO ---
+  const safeAreaHeight = height - (height * 0.15) * 2; // 15% top, 15% bottom limit
+  const availableWidth = width - (t.marginL + t.marginR);
+  
+  // Calcular líneas de título estimadas
+  const titleCharWidth = t.fontSize * 0.55;
+  const titleCharsPerLine = Math.max(1, Math.floor(availableWidth / titleCharWidth));
+  let titleLines = 0;
+  const cleanTitle = text.replace(/\\N/g, '\n').replace(/\\n/g, '\n');
+  for (const line of cleanTitle.split('\n')) {
+     titleLines += Math.max(1, Math.ceil(line.length / titleCharsPerLine));
+  }
+  let estimatedTitleHeight = titleLines * t.fontSize * 1.2;
+
+  // Calcular líneas de subtítulo estimadas
+  let estimatedSubHeight = 0;
+  if (subtitle) {
     const subAvailableWidth = width - (sub.marginL + sub.marginR);
     const subCharWidth = sub.fontSize * 0.55;
     const subCharsPerLine = Math.max(1, Math.floor(subAvailableWidth / subCharWidth));
-    
     let subLines = 0;
     const cleanSub = subtitle.replace(/\\N/g, '\n').replace(/\\n/g, '\n');
     for (const line of cleanSub.split('\n')) {
        subLines += Math.max(1, Math.ceil(line.length / subCharsPerLine));
     }
+    estimatedSubHeight = subLines * sub.fontSize * 1.2;
     
-    const estimatedSubHeight = subLines * sub.fontSize * 1.2;
-    const subTopEdge = sub.marginV + estimatedSubHeight;
-    const gap = 30; // 30px gap entre sub y title
-    
-    const requiredTitleMargin = subTopEdge + gap;
-    if (t.marginV < requiredTitleMargin) {
-      t.marginV = Math.round(requiredTitleMargin);
+    // Prevención de Overlap (Subtitle empuja al Title hacia arriba en formatos horizontales/cuadrados)
+    if (t.assAlignment === 1 || t.assAlignment === 2 || t.assAlignment === 3) {
+      const subTopEdge = sub.marginV + estimatedSubHeight;
+      const gap = Math.round(height * 0.02); // Gap proporcional
+      const requiredTitleMargin = subTopEdge + gap;
+      if (t.marginV < requiredTitleMargin) {
+        t.marginV = Math.round(requiredTitleMargin);
+      }
     }
   }
+
+  // Comprobar desbordamiento total y aplicar escalado de emergencia (Shrink to fit)
+  const totalHeightNeeded = estimatedTitleHeight + estimatedSubHeight + (t.marginV - sub.marginV);
+  if (totalHeightNeeded > safeAreaHeight) {
+    const scaleFactor = Math.max(0.6, safeAreaHeight / totalHeightNeeded); // Máximo achica un 40%
+    t.fontSize = Math.round(t.fontSize * scaleFactor);
+    if (subtitle) {
+      sub.fontSize = Math.round(sub.fontSize * scaleFactor);
+    }
+    console.log(`⚠️ [Engine] Texto desborda límites (${totalHeightNeeded}px > ${safeAreaHeight}px). Reduciendo tamaño de fuente al ${Math.round(scaleFactor * 100)}%`);
+  }
+  // --- FIN SEGURIDAD ---
 
   let ass = `[Script Info]
 ScriptType: v4.00+
 PlayResX: ${width}
 PlayResY: ${height}
 ScaledBorderAndShadow: yes
+WrapStyle: 1
 
 [v4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding

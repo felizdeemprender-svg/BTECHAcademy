@@ -16,6 +16,12 @@ export const CoordinationInputSchema = z.object({
   strategyType: StrategyTypeSchema,
   durationDays: z.number().int().min(1).default(7),
   targetAudience: z.string().default(''),
+  availableVideos: z.array(z.string()).optional(),
+  productData: z.object({
+    price: z.number().optional(),
+    productType: z.string().optional()
+  }).optional(),
+  activePlatforms: z.array(z.string()).optional(),
 });
 export type CoordinationInput = z.infer<typeof CoordinationInputSchema>;
 

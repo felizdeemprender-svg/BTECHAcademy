@@ -5,8 +5,9 @@
  */
 import { NextResponse } from 'next/server';
 
-import type { Result } from '@/domain/shared/result';
-import type { DomainError } from '@/domain/shared/errors';
+import { ok, err, type Result } from '@/domain/shared/result';
+import { validationError, type DomainError } from '@/domain/shared/errors';
+import { CampaignPatchSchema } from '@/domain/marketing/campaign-repository';
 import {
   getCampaignDetail,
   getMentorCampaigns,
@@ -21,6 +22,7 @@ import {
   type CredentialsMap,
 } from '@/domain/marketing/use-cases/execute-campaign';
 import { FirestoreCampaignRepository } from '@/data/firestore/campaign-repo';
+import { FirestoreSalesPageRepository } from '@/data/firestore/sales-page-repo';
 import type { FirestoreGateway } from '@/data/firestore/gateway';
 
 import { canAccessMentorData, type Caller } from './mentor-auth';
@@ -78,19 +80,21 @@ export async function handlePatchCampaign(
   body: unknown,
 ): Promise<NextResponse> {
   if (!caller) return unauthorized();
-  const patch = (body ?? {}) as { strategy?: unknown; autoPilot?: unknown };
-  if (patch.strategy !== undefined) {
-    return handleOwnerWrite(gateway, caller, id, (repo) =>
-      updateCampaignStrategy(repo, { id, strategy: patch.strategy }),
-    );
+  const patch = (body ?? {}) as { strategy?: unknown; autoPilot?: unknown; startDate?: unknown; title?: unknown };
+  
+  if (Object.keys(patch).length > 0) {
+    return handleOwnerWrite(gateway, caller, id, async (repo) => {
+      const parsed = CampaignPatchSchema.safeParse(patch);
+      if (!parsed.success) {
+        return err(validationError('Estrategia inválida', parsed.error.flatten()));
+      }
+      await repo.update(id, parsed.data);
+      return ok(undefined);
+    });
   }
-  if (typeof patch.autoPilot === 'boolean') {
-    return handleOwnerWrite(gateway, caller, id, (repo) =>
-      setCampaignAutoPilot(repo, { id, autoPilot: patch.autoPilot as boolean }),
-    );
-  }
+
   return NextResponse.json(
-    { error: 'Nada para actualizar (strategy o autoPilot)' },
+    { error: 'Nada para actualizar' },
     { status: 400 },
   );
 }
@@ -104,17 +108,43 @@ export async function handleDeleteCampaign(
   caller: Caller | null,
   id: string,
 ): Promise<NextResponse> {
-  return handleOwnerWrite(gateway, caller, id, (repo) => removeCampaign(repo, id));
+  if (!caller) return unauthorized();
+  const repo = new FirestoreCampaignRepository(gateway);
+  const existing = await repo.findById(id);
+  if (!existing) {
+    return NextResponse.json({ error: `Campaña ${id} no encontrada` }, { status: 404 });
+  }
+  if (!canAccessMentorData(caller, existing.mentorId)) return forbidden();
+
+  const result = await removeCampaign(repo, id);
+  
+  if (result.ok && existing.salesPageId) {
+    try {
+      const salesPageRepo = new FirestoreSalesPageRepository(gateway);
+      const page = await salesPageRepo.findById(existing.salesPageId);
+      if (page && page.type === 'campaign_pack') {
+        console.log(`[CascadeDelete] Borrando pack multimedia ${page.id} asociado a la campaña ${id}`);
+        await gateway.deleteDoc('salesPages', existing.salesPageId);
+      }
+    } catch (e) {
+      console.error(`[CascadeDelete] Falló al borrar pack asociado ${existing.salesPageId}`, e);
+    }
+  }
+
+  return toApiResponse(result);
 }
 
 /**
  * POST /api/campaigns/[id]/execute. Disparo manual del día actual.
  * Las credenciales se leen del documento del llamante (no viajan en el body).
  */
+import { MetaGraphPublisher } from '@/infrastructure/social/instagram-publisher';
+
 export async function handleExecuteCampaign(
   gateway: FirestoreGateway,
   caller: Caller | null,
   id: string,
+  forceDay?: number
 ): Promise<NextResponse> {
   if (!caller) return unauthorized();
   const repo = new FirestoreCampaignRepository(gateway);
@@ -123,7 +153,16 @@ export async function handleExecuteCampaign(
     return NextResponse.json({ error: `Campaña ${id} no encontrada` }, { status: 404 });
   }
   if (!canAccessMentorData(caller, existing.mentorId)) return forbidden();
+  
+  // Extraer los socials históricos desde la SalesPage (si existen)
+  let fallbackSocials: any[] = [];
+  if (existing.salesPageId) {
+    const spDoc = await gateway.getDoc('salesPages', existing.salesPageId);
+    fallbackSocials = spDoc?.data()?.aiContent?.socials || [];
+  }
+
   const userSnap = await gateway.getDoc('users', caller.uid);
   const credentials = ((userSnap?.data()?.marketingCredentials ?? {}) as CredentialsMap);
-  return toApiResponse(await executeCampaignStep(repo, { id, credentials }));
+  const publisher = new MetaGraphPublisher();
+  return toApiResponse(await executeCampaignStep(repo, { id, credentials, fallbackSocials, forceDay }, publisher));
 }

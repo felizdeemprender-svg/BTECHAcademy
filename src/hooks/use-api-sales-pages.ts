@@ -43,7 +43,9 @@ export function useApiSalesPages(options: UseApiSalesPagesOptions = {}) {
         throw new Error(`Failed to fetch sales pages: ${res.status} ${text}`);
       }
       const json = await res.json();
-      setData(json);
+      // Normalize: toApiResponse wraps in { data: [...] }, plain routes return [...]
+      const pages = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : json);
+      setData(pages);
     } catch (err: any) {
       console.error(err);
       setError(err);

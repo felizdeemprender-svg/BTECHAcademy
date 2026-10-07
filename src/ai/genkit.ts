@@ -90,20 +90,25 @@ export function validateApiKey(): string {
  * Este es el "Cerebro" que identifica al usuario y le cobra.
  */
 export async function generateWithAuditing(options: any, actionName: string = 'ia_generation', ownerUid: string | null = null) {
-  let uid = '';
-  let role = 'alumno';
+  let uid = options.context?.uid || '';
+  let role = options.context?.role || '';
   const finalActionName = options.actionName || actionName;
 
-  // Sensor de Identidad (Cookies)
-  try {
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    uid = cookieStore.get('btech_uid')?.value || '';
-    role = cookieStore.get('btech_role')?.value || 'alumno';
-    
-    console.log(`>>> [AUDIT] Identidad detectada: UID=${uid}, ROLE=${role}, ACCION=${finalActionName}`);
-  } catch (e: any) {
-    console.warn("[Sensor IA] Aviso: Ejecución sin contexto de identidad.");
+  // Sensor de Identidad (Cookies) - solo si no viene inyectado en el contexto
+  if (!uid || !role) {
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      uid = uid || cookieStore.get('btech_uid')?.value || '';
+      role = role || cookieStore.get('btech_role')?.value || 'alumno';
+      
+      console.log(`>>> [AUDIT] Identidad detectada (Cookies): UID=${uid}, ROLE=${role}, ACCION=${finalActionName}`);
+    } catch (e: any) {
+      console.warn("[Sensor IA] Aviso: Ejecución sin contexto de identidad desde cookies.");
+      if (!role) role = 'alumno';
+    }
+  } else {
+    console.log(`>>> [AUDIT] Identidad provista en Contexto: UID=${uid}, ROLE=${role}, ACCION=${finalActionName}`);
   }
 
   if (role === 'alumno' && !ownerUid) {
@@ -133,13 +138,13 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
   const response = await getGenkitInstance().generate(generateOptions);
 
   // 3. Auditoría Silenciosa (No bloquea la IA si falla)
-  if (uid && response.usage) {
+  if (targetUidToCheck && response.usage) {
     try {
       const tokens = response.usage.totalTokens || 0;
       const cost = await calculateGeminiCost(tokens);
       
       console.log("--- [DEBUG IA] AUDITORÍA AUTOMÁTICA ---");
-      console.log(`> Usuario: ${uid} (${role})`);
+      console.log(`> Usuario: ${uid || 'background_worker'} (${role})`);
       if (ownerUid) console.log(`> Referenciado a (Owner): ${ownerUid}`);
       console.log(`> Acción Detectada: ${finalActionName}`);
       console.log(`> Tokens: ${tokens}`);
@@ -148,7 +153,9 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
       console.log("---------------------------------------");
 
       if (!options.skipBilling) {
-        deductCredits(uid, cost, finalActionName, role, ownerUid || undefined);
+        deductCredits(uid, cost, finalActionName, role, ownerUid || undefined).catch(e => {
+          console.error("[Billing] Error asíncrono en deductCredits:", e);
+        });
       }
     } catch (e) {
       console.error("[Sensor IA] Error al registrar consumo:", e);
@@ -191,14 +198,14 @@ export async function embedWithAuditing(options: any, actionName: string = 'ia_e
 
   const response = await getGenkitInstance().embed(options);
 
-  if (uid) {
+  if (targetUidToCheck) {
     try {
       const contentStr = typeof options.content === 'string' ? options.content : JSON.stringify(options.content || '');
       const estimatedTokens = Math.ceil((contentStr.length || 0) / 4);
       const cost = await calculateEmbeddingCost(estimatedTokens);
       
       console.log("--- [DEBUG IA] AUDITORÍA AUTOMÁTICA (EMBEDDING) ---");
-      console.log(`> Usuario: ${uid} (${role})`);
+      console.log(`> Usuario: ${uid || 'background_worker'} (${role})`);
       if (ownerUid) console.log(`> Referenciado a (Owner): ${ownerUid}`);
       console.log(`> Acción Detectada: ${finalActionName}`);
       console.log(`> Tokens Estimados: ${estimatedTokens}`);
@@ -206,7 +213,9 @@ export async function embedWithAuditing(options: any, actionName: string = 'ia_e
       console.log(`> Cobro al Tutor: $${cost.billedCost}`);
       console.log("---------------------------------------------------");
 
-      deductCredits(uid, cost, finalActionName, role, ownerUid || undefined);
+      deductCredits(uid, cost, finalActionName, role, ownerUid || undefined).catch(e => {
+        console.error("[Billing] Error asíncrono en deductCredits (embedding):", e);
+      });
     } catch (e) {
       console.error("[Sensor IA] Error al registrar consumo de embedding:", e);
     }

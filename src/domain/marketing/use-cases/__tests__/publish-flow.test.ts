@@ -129,8 +129,8 @@ describe('createCampaign', () => {
     expect(repo.created[0]).toMatchObject({
       id: 'camp-test',
       autoPilot: true,
-      status: 'active',
-      isActive: true,
+      status: 'draft',
+      isActive: false,
     });
   });
 

@@ -29,6 +29,7 @@ function campaign(): Campaign {
     startDate: '2026-01-01',
     autoPilot: true,
     status: 'active',
+    productionStatus: 'ready_to_publish',
     isActive: true,
     executionLogs: [],
     strategy: strategy as Campaign['strategy'],

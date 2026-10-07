@@ -877,14 +877,14 @@ export default function CreateCoursePage() {
 
                 <div className="pt-8 border-t flex flex-col gap-6">
                   <div className="flex flex-col md:flex-row justify-between items-center gap-4"><h3 className="font-bold text-xl flex items-center gap-2"><CheckCircle2 className="h-6 w-6 text-primary" /> Evaluaciones</h3><div className="flex flex-wrap gap-3"><Button onClick={() => addManualQuestion(false)} variant="outline" className="rounded-2xl gap-2 font-bold h-12 border-2"><Plus className="h-4 w-4" /> Añadir Pregunta</Button><Button onClick={() => { setAiTargetType('main'); setAiFlowStep(1); setIsAiModalOpen(true); }} className="rounded-2xl gap-2 bg-accent h-12 text-white"><Sparkles className="h-4 w-4" /> Generar con IA</Button></div></div>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{currentModule.questions.map((q, idx) => renderQuestionEditor(q, idx, false))}</div>
+                  <div className="space-y-6">{currentModule.questions.map((q, idx) => renderQuestionEditor(q, idx, false))}</div>
                 </div>
                 <div className="bg-success/10/50 p-8 rounded-lg border-2 border-success/15 space-y-6">
                   <div className="flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-2xl bg-success text-white flex items-center justify-center"><Zap className="h-6 w-6" /></div><div><h3 className="font-bold text-success">Refuerzo Automático</h3></div></div><Switch checked={currentModule.enableSupportQuestions} onCheckedChange={(val) => setCurrentModule({ ...currentModule, enableSupportQuestions: val })} /></div>
                   {currentModule.enableSupportQuestions && (
                     <div className="pt-6 space-y-6 border-t border-success/20">
                       <div className="flex flex-col md:flex-row justify-between items-center gap-4"><h4 className="font-bold text-success">Evaluación de Soporte</h4><div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={() => addManualQuestion(true)}><Plus className="h-3 w-3 mr-1" /> Añadir Manual</Button><Button size="sm" className="bg-success text-white rounded-xl font-bold" onClick={() => { setAiTargetType('support'); setAiFlowStep(1); setIsAiModalOpen(true); }}><Sparkles className="h-3 w-3 mr-1" /> Generar Soporte con IA</Button></div></div>
-                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{currentModule.supportQuestions.map((q, idx) => renderQuestionEditor(q, idx, true))}</div>
+                      <div className="space-y-6">{currentModule.supportQuestions.map((q, idx) => renderQuestionEditor(q, idx, true))}</div>
                     </div>
                   )}
                 </div>

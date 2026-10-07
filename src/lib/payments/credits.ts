@@ -148,7 +148,8 @@ export async function deductCredits(
   try {
     const batch = adminDb.batch();
     const targetUid = ownerUid || uid;
-    const isReferential = !!ownerUid && ownerUid !== uid;
+    const actorUid = uid || targetUid;
+    const isReferential = !!ownerUid && ownerUid !== actorUid;
 
     // Resolve billed cost vs provider cost
     const amount = typeof amountOrBreakdown === 'number' ? amountOrBreakdown : amountOrBreakdown.billedCost;
@@ -161,7 +162,7 @@ export async function deductCredits(
     const expiresAt = new Date(now.getTime() + (90 * 24 * 60 * 60 * 1000)); // +90 días
 
     batch.set(auditRef, {
-      actorUid: uid,
+      actorUid: actorUid,
       targetUid: targetUid,
       role: contextRole,
       action: action,
@@ -174,7 +175,7 @@ export async function deductCredits(
     });
 
     // 2. Registro en el historial del usuario (Visible para ellos, auto-borrado en 90 días)
-    const transactionsRef = adminDb.collection('users').doc(uid).collection('ai_transactions');
+    const transactionsRef = adminDb.collection('users').doc(actorUid).collection('ai_transactions');
     batch.set(transactionsRef.doc(), {
       amount,
       action,

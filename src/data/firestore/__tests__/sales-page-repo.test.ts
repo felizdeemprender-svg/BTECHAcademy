@@ -101,7 +101,7 @@ describe('FirestoreSalesPageRepository', () => {
 describe('mapSalesPageDoc', () => {
   it('throw con type desconocido o sin título', () => {
     expect(() =>
-      mapSalesPageDoc('x', { mentorId: 'm', title: 'T', type: 'funnel' }),
+      mapSalesPageDoc('x', { mentorId: 'm', title: 'T', type: 'desconocido' }),
     ).toThrow();
     expect(() => mapSalesPageDoc('x', { mentorId: 'm', title: '', type: 'campaign_pack' })).toThrow();
   });

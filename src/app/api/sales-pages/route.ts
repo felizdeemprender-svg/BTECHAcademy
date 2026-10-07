@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       data
     });
 
-    return NextResponse.json({ success: true, pageId });
+    return NextResponse.json({ success: true, pageId, updatedTitle: data.title });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: error.message.includes('Unauthorized') ? 403 : 500 });
   }
@@ -114,7 +114,7 @@ export async function PUT(req: NextRequest) {
       data
     });
 
-    return NextResponse.json({ success: true, pageId });
+    return NextResponse.json({ success: true, pageId, updatedTitle: data.title });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: error.message.includes('Unauthorized') ? 403 : 500 });
   }

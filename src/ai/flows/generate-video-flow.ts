@@ -43,6 +43,7 @@ const generateVideoInputSchema = z.object({
   scenes: z.array(SceneSchema).optional(),
   formato: z.string().optional().default('9:16'),
   marketingName: z.string().optional(),
+    campaignTitle: z.string().optional(),
   audioUrl: z.string().optional(),
   enable_tts: z.boolean().optional(),
   isSmokeTest: z.boolean().optional(),
@@ -179,12 +180,16 @@ export const generateVideoFlow = ai.defineFlow({
   await updateJob(jobId, { progress: 80, stage: 'Subiendo video a Google Drive...' });
 
   const safeBaseName = (marketingName || 'EvoAssetV2').replace(/[^a-zA-Z0-9]/g, '_');
+  const safeCampaignName = (input.campaignTitle || 'Campañas').replace(/[\\/:*?"<>|]/g, '_');
   let resultPayload: Record<string, any> = {};
   if (googleToken) {
-    const rootFolderId = await getOrCreateFolder(googleToken, 'Aplicacion EVO V2');
-    const campaignFolderId = await getOrCreateFolder(googleToken, `Pack_${safeBaseName}`, rootFolderId);
-    const mainFile = await uploadToDrive(finalVideoPath, googleToken, `${safeBaseName}_omni_${Date.now()}.mp4`, 'video/mp4', campaignFolderId);
-    resultPayload = { webViewLink: mainFile.webViewLink, driveId: mainFile.id, downloadUrl: mainFile.webContentLink };
+    const rootFolderId = await getOrCreateFolder(googleToken, 'fastoria');
+    const staticCampanasFolderId = await getOrCreateFolder(googleToken, 'Campañas', rootFolderId);
+    const campaignFolderId = await getOrCreateFolder(googleToken, safeCampaignName, staticCampanasFolderId);
+    const pieceFolderId = await getOrCreateFolder(googleToken, safeBaseName, campaignFolderId);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const mainFile = await uploadToDrive(finalVideoPath, googleToken, `${safeBaseName}_omni_${timestamp}.mp4`, 'video/mp4', pieceFolderId);
+    resultPayload = { webViewLink: mainFile.webViewLink, driveId: mainFile.id, downloadUrl: mainFile.webContentLink, folderId: pieceFolderId, campaignFolderId };
   } else {
     resultPayload = { videoPath: finalVideoPath };
   }
@@ -192,3 +197,4 @@ export const generateVideoFlow = ai.defineFlow({
   await updateJob(jobId, { status: 'completed', progress: 100, stage: 'Completado', result: resultPayload });
   return { success: true, jobId, result: resultPayload };
 });
+

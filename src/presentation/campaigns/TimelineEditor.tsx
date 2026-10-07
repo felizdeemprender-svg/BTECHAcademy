@@ -7,7 +7,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Smartphone, Clapperboard, Images, Clock, FileVideo } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import {
   removeEventAt,
   toggleEventChannel,
   updateEventAt,
+  updateSocialPost,
 } from './timeline-helpers';
 
 const DEFAULT_CHANNELS: readonly Channel[] = ['Email', 'Social', 'Ads'];
@@ -43,6 +44,7 @@ export interface TimelineEditorProps {
   readonly channels?: readonly Channel[];
   readonly variantLabels?: readonly [string, string, string];
   readonly allowAdd?: boolean;
+  readonly allowDelete?: boolean;
   /** Solo lectura: muestra valores como texto (visor del plan activo). */
   readonly readOnly?: boolean;
   /** Contenido extra bajo cada hito (ej. programación social del evento). */
@@ -55,6 +57,7 @@ export function TimelineEditor({
   channels = DEFAULT_CHANNELS,
   variantLabels = DEFAULT_VARIANT_LABELS,
   allowAdd = true,
+  allowDelete = true,
   readOnly = false,
   renderEventExtra,
 }: TimelineEditorProps) {
@@ -104,7 +107,7 @@ export function TimelineEditor({
             </div>
 
             <Card className="flex-1 p-6 rounded-lg border-2 border-muted shadow-sm bg-white relative overflow-hidden">
-              {!readOnly && (
+              {!readOnly && allowDelete && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -201,6 +204,67 @@ export function TimelineEditor({
                   </div>
                 </div>
               </div>
+              
+              {/* ITINERARIO SOCIAL */}
+              {event.channels.includes('Social') && event.socialSchedule && Object.keys(event.socialSchedule).length > 0 && (
+                <div className="mt-6 pt-6 border-t border-border">
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Itinerario Social</h5>
+                  </div>
+                  <div className="space-y-3">
+                    {Object.entries(event.socialSchedule).map(([platform, posts]) => {
+                      const postArray = Array.isArray(posts) ? posts : [posts];
+                      return postArray.map((post, postIndex) => (
+                        <div key={`${platform}-${postIndex}`} className="flex flex-wrap items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border/50">
+                           <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4 items-center">
+                              {/* Hora */}
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-3.5 w-3.5 text-muted-foreground"/>
+                                {readOnly ? (
+                                  <span className="text-xs font-bold">{post.time}</span>
+                                ) : (
+                                  <input type="time" value={post.time} onChange={(e) => onChange(updateSocialPost(events, i, platform, postIndex, { time: e.target.value }))} className="bg-transparent border-none text-xs font-bold outline-none w-20"/>
+                                )}
+                              </div>
+                              
+                              {/* Plataforma y Formato */}
+                              <div className="flex items-center gap-2">
+                                <Badge variant="secondary" className="text-[9px] uppercase font-black bg-primary/10 text-primary border-none">{platform}</Badge>
+                                {readOnly ? (
+                                   <span className="text-xs font-semibold capitalize flex items-center gap-1">
+                                     {post.format === 'story' ? <Smartphone className="h-3 w-3"/> : post.format === 'carousel' ? <Images className="h-3 w-3"/> : <Clapperboard className="h-3 w-3"/>}
+                                     {post.format}
+                                   </span>
+                                ) : (
+                                   <Select value={post.format} onValueChange={(v) => onChange(updateSocialPost(events, i, platform, postIndex, { format: v }))}>
+                                     <SelectTrigger className="h-7 text-xs border-none bg-transparent shadow-none px-0 gap-1 min-w-[80px]">
+                                       <SelectValue />
+                                     </SelectTrigger>
+                                     <SelectContent>
+                                       <SelectItem value="reel"><div className="flex items-center gap-2"><Clapperboard className="h-3 w-3"/> Reel</div></SelectItem>
+                                       <SelectItem value="story"><div className="flex items-center gap-2"><Smartphone className="h-3 w-3"/> Story</div></SelectItem>
+                                       <SelectItem value="carousel"><div className="flex items-center gap-2"><Images className="h-3 w-3"/> Carousel</div></SelectItem>
+                                     </SelectContent>
+                                   </Select>
+                                )}
+                              </div>
+
+                              {/* Video Assigned */}
+                              <div className="flex items-center gap-2">
+                                <FileVideo className="h-3.5 w-3.5 text-muted-foreground"/>
+                                {readOnly ? (
+                                   <span className="text-xs text-muted-foreground font-medium truncate">{post.videoName}</span>
+                                ) : (
+                                   <input value={post.videoName} onChange={(e) => onChange(updateSocialPost(events, i, platform, postIndex, { videoName: e.target.value }))} className="bg-transparent border-none text-xs font-medium outline-none w-full placeholder:text-muted-foreground" placeholder="Variante..."/>
+                                )}
+                              </div>
+                           </div>
+                        </div>
+                      ));
+                    })}
+                  </div>
+                </div>
+              )}
             </Card>
           </div>
         ))}

@@ -5,17 +5,22 @@
  */
 import { z } from 'zod';
 
-export const ChannelSchema = z.enum(['Email', 'Social', 'Ads']);
+export const ChannelSchema = z.enum(['Social', 'Email']);
 export type Channel = z.infer<typeof ChannelSchema>;
 
 export const VariantIndexSchema = z.number().int().min(0).max(2);
 export type VariantIndex = z.infer<typeof VariantIndexSchema>;
 
+export const ContentFormatSchema = z.enum(['reel', 'story', 'carousel', 'post']);
+export type ContentFormat = z.infer<typeof ContentFormatSchema>;
+
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export const SocialPlatformScheduleSchema = z.object({
+  format: ContentFormatSchema.default('reel'),
   videoName: z.string().min(1, 'video vacío'),
   time: z.string().regex(TIME_PATTERN, 'hora HH:MM inválida'),
+  assetId: z.string().optional(), // Puente fuerte: Referencia al ID del borrador (asset) generado
 });
 export type SocialPlatformSchedule = z.infer<typeof SocialPlatformScheduleSchema>;
 
@@ -25,7 +30,11 @@ export const TimelineEventSchema = z.object({
   variantIndex: VariantIndexSchema,
   action: z.string().min(1, 'acción vacía'),
   channels: z.array(ChannelSchema).min(1, 'sin canales'),
-  socialSchedule: z.record(z.string(), SocialPlatformScheduleSchema).optional(),
+  socialSchedule: z.record(
+    z.string(),
+    z.union([SocialPlatformScheduleSchema, z.array(SocialPlatformScheduleSchema)])
+      .transform(val => Array.isArray(val) ? val : [val])
+  ).optional(),
 });
 export type TimelineEvent = z.infer<typeof TimelineEventSchema>;
 

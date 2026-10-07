@@ -6,7 +6,7 @@
  */
 import { z } from 'zod';
 
-export const SalesPageTypeSchema = z.enum(['campaign_pack', 'landing_only']);
+export const SalesPageTypeSchema = z.enum(['campaign_pack', 'landing_only', 'landing_page', 'funnel', 'campaign_videos']);
 export type SalesPageType = z.infer<typeof SalesPageTypeSchema>;
 
 /**
@@ -55,6 +55,7 @@ export const SalesPageSchema = z.object({
   stats: z.unknown().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
+  description: z.string().optional(),
   bundleItems: z.array(z.object({
     productId: z.string(),
     salesPageId: z.string().nullish(),

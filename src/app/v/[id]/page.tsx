@@ -413,6 +413,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         extraTokens?: { navbarHeight?: string };
       };
     };
+    [key: string]: any;
   };
 
   // Selección dinámica de la variante o V2

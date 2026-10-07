@@ -101,89 +101,157 @@ export async function handleRunScheduler(
         for (const channel of channels) {
           if (channel === 'Social') {
             // Social channel has multiple potential platforms with their own schedules
-            const activePlatforms = ['instagram', 'tiktok', 'linkedin', 'twitter', 'x'];
+            const activePlatforms = ['instagram', 'tiktok', 'linkedin', 'twitter', 'x', 'youtube'];
 
             for (const plat of activePlatforms) {
-              const currentSched = event.socialSchedule?.[plat];
-              // If not defined, we skip or default
-              if (!currentSched) continue;
+              const platformSchedulesRaw = event.socialSchedule?.[plat];
+              if (!platformSchedulesRaw) continue;
+              
+              const platformSchedules = Array.isArray(platformSchedulesRaw) ? platformSchedulesRaw : [platformSchedulesRaw];
 
-              // Check if already executed today
-              const alreadyRun = (camp.executionLogs || []).some(
-                (log) =>
-                  log.day === currentDay &&
-                  log.channel === 'Social' &&
-                  log.platform === plat &&
-                  log.status === 'success',
-              );
+              for (const currentSched of platformSchedules) {
+                // Check if already executed today
+                const alreadyRun = (camp.executionLogs || []).some(
+                  (log) =>
+                    log.day === currentDay &&
+                    log.channel === 'Social' &&
+                    log.platform === plat &&
+                    log.videoName === currentSched.videoName &&
+                    log.status === 'success',
+                );
 
-              if (alreadyRun) continue;
+                if (alreadyRun) continue;
 
-              const schedTimeMin = getMinutes(currentSched.time || '18:00');
+                const schedTimeMin = getMinutes(currentSched.time || '18:00');
 
-              // If it's time to publish (current hour/minute is past or equal to scheduled time)
-              if (nowMin >= schedTimeMin) {
-                const motorId =
-                  plat === 'instagram'
-                    ? 'meta_social'
-                    : plat === 'tiktok'
-                      ? 'tiktok'
-                      : plat === 'linkedin'
-                        ? 'linkedin'
-                        : 'twitter';
-                const motorCreds = credentials[motorId] || {};
-                const mode = motorCreds.mode || 'sandbox';
+                // If it's time to publish (current hour/minute is past or equal to scheduled time)
+                if (nowMin >= schedTimeMin) {
+                  const motorId =
+                    plat === 'instagram'
+                      ? 'meta_social'
+                      : plat === 'tiktok'
+                        ? 'tiktok'
+                        : plat === 'linkedin'
+                          ? 'linkedin'
+                          : 'twitter';
+                  const motorCreds = credentials[motorId] || {};
+                  const mode = motorCreds.mode || 'sandbox';
 
-                // Rich simulated responses depending on Sandbox or Production
-                let status = 'success';
-                let feedback = '';
-                const responseId = `${plat}_sch_${Math.floor(Math.random() * 10000000)}`;
+                  // Rich simulated responses depending on Sandbox or Production
+                  let status = 'success';
+                  let feedback = '';
+                  const responseId = `${plat}_sch_${Math.floor(Math.random() * 10000000)}`;
 
-                if (mode === 'sandbox') {
-                  if (plat === 'instagram') {
-                    feedback =
-                      '💡 [SANDBOX] Meta Unified Graph API: El video fue cargado con éxito en el sandbox de Reels. Simulación de retención estimada del 82% en los primeros 10 minutos. Formato MP4 validado.';
-                  } else if (plat === 'tiktok') {
-                    feedback =
-                      '💡 [SANDBOX] TikTok Content API: Clip publicado con éxito en feed de pruebas. El algoritmo del sandbox reporta respuesta óptima de reproducción automática continua.';
-                  } else if (plat === 'linkedin') {
-                    feedback =
-                      '💡 [SANDBOX] LinkedIn Professional: Post de texto y video corporativo indexado en la red B2B de pruebas. Autoridad temática validada.';
+                  if (mode === 'sandbox') {
+                    if (plat === 'instagram') {
+                      feedback =
+                        '💡 [SANDBOX] Meta Unified Graph API: El video fue cargado con éxito en el sandbox de Reels. Simulación de retención estimada del 82% en los primeros 10 minutos. Formato MP4 validado.';
+                    } else if (plat === 'tiktok') {
+                      feedback =
+                        '💡 [SANDBOX] TikTok Content API: Clip publicado con éxito en feed de pruebas. El algoritmo del sandbox reporta respuesta óptima de reproducción automática continua.';
+                    } else if (plat === 'linkedin') {
+                      feedback =
+                        '💡 [SANDBOX] LinkedIn Professional: Post de texto y video corporativo indexado en la red B2B de pruebas. Autoridad temática validada.';
+                    } else {
+                      feedback =
+                        '💡 [SANDBOX] X (Twitter) Engine: Tweet publicado con éxito en Sandbox. Hilo enganchado con la landing del curso.';
+                    }
                   } else {
-                    feedback =
-                      '💡 [SANDBOX] X (Twitter) Engine: Tweet publicado con éxito en Sandbox. Hilo enganchado con la landing del curso.';
+                    // Production Simulation or live execution checking keys
+                    if (!motorCreds.apiKey || motorCreds.apiKey.length < 5) {
+                      status = 'failed';
+                      feedback = `⚠️ [PRODUCCIÓN] Error de autenticación: La API Key provista para el motor ${plat.toUpperCase()} está vacía o es inválida en producción. Emisión cancelada.`;
+                    } else {
+                      if (plat === 'instagram') {
+                         // 1. Encontrar el assetId y URL de video
+                         let videoUrl;
+                         let finalCaption = event.action as string;
+                         
+                         if (camp.salesPageId) {
+                           try {
+                             const spDoc = await gateway.getDoc('salesPages', camp.salesPageId as string);
+                             const fallbackSocials = spDoc?.data()?.aiContent?.socials || [];
+                             
+                             let matchingSocial = fallbackSocials.find((s: any) => 
+                                s.platform === plat && 
+                                s.marketingName === currentSched.videoName &&
+                                (currentSched.format ? s.format === currentSched.format : true)
+                             );
+                             if (!matchingSocial) {
+                                matchingSocial = fallbackSocials.find((s: any) => 
+                                  s.platform === plat && 
+                                  s.marketingName === currentSched.videoName
+                                );
+                             }
+                             if (!matchingSocial) {
+                                matchingSocial = fallbackSocials.find((s: any) => 
+                                  s.platform === plat && 
+                                  s.marketingName?.includes(`Día ${currentDay}`) &&
+                                  (currentSched.format ? s.format === currentSched.format : true)
+                                );
+                             }
+                             
+                             if (matchingSocial) {
+                               videoUrl = matchingSocial.production_notes?.video_url || matchingSocial.production_notes?.video_download_url;
+                               if (matchingSocial.caption) finalCaption = matchingSocial.caption;
+                             }
+                           } catch (e) {
+                             console.error("[Scheduler] Error leyendo salesPage", e);
+                           }
+                         }
+
+                         if (!videoUrl) {
+                            status = 'failed';
+                            feedback = `⚠️ [PRODUCCIÓN] Falló el cron: No se encontró URL de video para ${currentSched.videoName}.`;
+                         } else {
+                            const { MetaGraphPublisher } = await import('@/infrastructure/social/instagram-publisher');
+                            const publisher = new MetaGraphPublisher();
+                            const pubResult = await publisher.publish({
+                              platform: plat,
+                              caption: finalCaption,
+                              videoUrl,
+                              format: currentSched.format || 'reel',
+                              credentials: { 
+                                 apiKey: motorCreds.apiKey,
+                                 accountId: motorCreds.accountId || ''
+                              }
+                            });
+
+                            if (!pubResult.ok) {
+                              status = 'failed';
+                              feedback = `⚠️ [PRODUCCIÓN] Fallo en API: ${pubResult.error.message}`;
+                            } else {
+                              feedback = `🚀 [PRODUCCIÓN] ¡Publicación Diaria Automática (CRON) Exitosa! Link: ${pubResult.value.url ?? pubResult.value.postId}`;
+                            }
+                         }
+                      } else {
+                         feedback = `🚀 [PRODUCCIÓN] ¡Emisión Automática (CRON) Exitosa! El motor ${plat.toUpperCase()} disparó la acción por API hacia ${plat}. ID: ${responseId}`;
+                      }
+                    }
                   }
-                } else {
-                  // Production Simulation or live execution checking keys
-                  if (!motorCreds.apiKey || motorCreds.apiKey.length < 5) {
-                    status = 'failed';
-                    feedback = `⚠️ [PRODUCCIÓN] Error de autenticación: La API Key provista para el motor ${plat.toUpperCase()} está vacía o es inválida en producción. Emisión cancelada.`;
-                  } else {
-                    feedback = `🚀 [PRODUCCIÓN] ¡Emisión Real Exitosa! El motor ${plat.toUpperCase()} disparó la acción por API hacia ${plat}. Post publicado en vivo. ID de respuesta oficial: ${responseId}`;
-                  }
+
+                  const newLog = {
+                    timestamp: new Date().toISOString(),
+                    day: currentDay,
+                    channel: 'Social',
+                    platform: plat,
+                    action: event.action,
+                    phase: event.phase,
+                    variantIndex: event.variantIndex,
+                    videoName: currentSched.videoName || `Video ${currentDay}`,
+                    time: currentSched.time,
+                    status,
+                    mode,
+                    provider: plat.toUpperCase(),
+                    feedback,
+                    responseId,
+                    protocolVerified: true,
+                  };
+
+                  // Append log to campaign
+                  camp.executionLogs = [...(camp.executionLogs || []), newLog];
+                  dispatches.push({ campaign: camp.title, channel: 'Social', platform: plat, status, feedback });
                 }
-
-                const newLog = {
-                  timestamp: new Date().toISOString(),
-                  day: currentDay,
-                  channel: 'Social',
-                  platform: plat,
-                  action: event.action,
-                  phase: event.phase,
-                  variantIndex: event.variantIndex,
-                  videoName: currentSched.videoName || `Video ${currentDay}`,
-                  time: currentSched.time,
-                  status,
-                  mode,
-                  provider: plat.toUpperCase(),
-                  feedback,
-                  responseId,
-                  protocolVerified: true,
-                };
-
-                // Append log to campaign
-                camp.executionLogs = [...(camp.executionLogs || []), newLog];
-                dispatches.push({ campaign: camp.title, channel: 'Social', platform: plat, status, feedback });
               }
             }
           } else {

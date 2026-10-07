@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { useAuth } from '@/components/auth-context';
@@ -91,7 +91,9 @@ export function DashboardLayout({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-white truncate">{profile?.displayName}</p>
-                  <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-0.5 line-clamp-1">{profile?.roles[0]}</p>
+                  <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-0.5 line-clamp-1">
+                    {profile?.roles?.filter((r: string) => r !== 'alumno' || profile.roles.length === 1).join(', ') || 'alumno'}
+                  </p>
                 </div>
               </div>
               <Button 

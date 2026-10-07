@@ -11,6 +11,7 @@ describe('UpdateSalesPageUseCase', () => {
       getById: vi.fn(),
       update: vi.fn(),
       create: vi.fn(),
+      listByMentor: vi.fn().mockResolvedValue([]),
     } as any;
     useCase = new UpdateSalesPageUseCase(mockRepo);
   });
@@ -108,5 +109,74 @@ describe('UpdateSalesPageUseCase', () => {
     });
 
     expect(mockRepo.update).toHaveBeenCalledWith('page_1', { mentorId: 'mentor_B' });
+  });
+  it('debe actualizar campaignStatus a ready_to_publish si todas las piezas están selladas (isLocked = true)', async () => {
+    vi.mocked(mockRepo.getById).mockResolvedValue({
+      id: 'page_1',
+      mentorId: 'mentor_A',
+      aiContent: {
+        socials: [{ marketingName: 'Video 1', platform: 'instagram' }]
+      }
+    } as any);
+
+    await useCase.execute({
+      uid: 'mentor_A',
+      isAdmin: false,
+      pageId: 'page_1',
+      data: {
+        aiContent: {
+          socials: [
+            { 
+              marketingName: 'Video 1', 
+              platform: 'instagram',
+              production_notes: { isLocked: true }
+            }
+          ]
+        }
+      } as any,
+    });
+
+    expect(mockRepo.update).toHaveBeenCalledWith('page_1', expect.objectContaining({
+      campaignStatus: 'ready_to_publish'
+    }));
+  });
+
+  it('debe actualizar campaignStatus a drafts_ready si no todas las piezas están selladas', async () => {
+    vi.mocked(mockRepo.getById).mockResolvedValue({
+      id: 'page_1',
+      mentorId: 'mentor_A',
+      aiContent: {
+        socials: [
+          { marketingName: 'Video 1', platform: 'instagram' },
+          { marketingName: 'Video 2', platform: 'tiktok' }
+        ]
+      }
+    } as any);
+
+    await useCase.execute({
+      uid: 'mentor_A',
+      isAdmin: false,
+      pageId: 'page_1',
+      data: {
+        aiContent: {
+          socials: [
+            { 
+              marketingName: 'Video 1', 
+              platform: 'instagram',
+              production_notes: { isLocked: true }
+            },
+            { 
+              marketingName: 'Video 2', 
+              platform: 'tiktok',
+              production_notes: { isLocked: false }
+            }
+          ]
+        }
+      } as any,
+    });
+
+    expect(mockRepo.update).toHaveBeenCalledWith('page_1', expect.objectContaining({
+      campaignStatus: 'drafts_ready'
+    }));
   });
 });

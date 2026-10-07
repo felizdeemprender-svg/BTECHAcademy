@@ -62,3 +62,26 @@ export function toggleEventChannel(
 export function sortEventsByDay(events: readonly TimelineEvent[]): TimelineEvent[] {
   return [...events].sort((a, b) => a.day - b.day);
 }
+
+// --- Social Schedule Helpers ---
+
+export function updateSocialPost(
+  events: readonly TimelineEvent[],
+  eventIndex: number,
+  platform: string,
+  postIndex: number,
+  updates: Partial<any>
+): TimelineEvent[] {
+  return events.map((e, i) => {
+    if (i !== eventIndex) return e;
+    if (!e.socialSchedule?.[platform]) return e;
+    
+    const schedule = { ...e.socialSchedule };
+    const posts = Array.isArray(schedule[platform]) ? [...schedule[platform]] : [];
+    posts[postIndex] = { ...posts[postIndex], ...updates };
+    schedule[platform] = posts;
+    
+    return { ...e, socialSchedule: schedule };
+  });
+}
+

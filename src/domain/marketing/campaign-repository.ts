@@ -7,7 +7,7 @@
 import { z } from 'zod';
 
 import type { Campaign } from './campaign';
-import { CampaignStatusSchema } from './campaign';
+import { CampaignStatusSchema, CampaignProductionStatusSchema } from './campaign';
 import { CoordinationOutputSchema } from './coordination-plan';
 import type { ExecutionLog } from './execution-log';
 
@@ -17,6 +17,12 @@ export const CampaignPatchSchema = z.object({
   autoPilot: z.boolean().optional(),
   isActive: z.boolean().optional(),
   status: CampaignStatusSchema.optional(),
+  productionStatus: CampaignProductionStatusSchema.optional(),
+  progress: z.object({
+    sealed: z.number(),
+    total: z.number()
+  }).optional(),
+  startDate: z.string().optional(),
 });
 export type CampaignPatch = z.infer<typeof CampaignPatchSchema>;
 

@@ -34,7 +34,9 @@ const nextConfig: NextConfig = {
     '@genkit-ai/ai',
     '@opentelemetry/api',
     '@opentelemetry/sdk-node',
-    'pdf-parse'
+    'pdf-parse',
+    '@google-cloud/tasks',
+    'google-gax'
   ],
   async headers() {
     return [

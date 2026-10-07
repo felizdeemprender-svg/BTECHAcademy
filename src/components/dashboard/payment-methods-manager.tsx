@@ -22,8 +22,10 @@ import {
   Eye,
   EyeOff,
   Info,
-  KeyRound
+  KeyRound,
+  ExternalLink
 } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { 
   Select, 
@@ -416,12 +418,28 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-primary/15">
-                  <Info className="h-4 w-4 text-primary shrink-0" />
-                  <p className="text-[10px] text-foreground leading-relaxed font-medium">
-                    Consigue estas credenciales en el <a href="https://www.mercadopago.com.ar/developers/panel/credentials" target="_blank" className="font-bold underline">Panel de Desarrolladores</a> de Mercado Pago.
-                  </p>
-                </div>
+                <Accordion type="single" collapsible className="w-full bg-white/50 rounded-xl px-4 border border-primary/15 mt-4">
+                  <AccordionItem value="1" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline font-bold text-primary text-xs">1. Panel de Desarrolladores</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground space-y-2 text-xs">
+                      <p>Crea una Aplicación en el <a href="https://www.mercadopago.com.ar/developers/panel/credentials" target="_blank" className="text-primary font-bold inline-flex items-center gap-1 hover:underline">Panel de Desarrolladores de MP <ExternalLink className="h-3 w-3" /></a> y asegúrate de activar las credenciales de Producción.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="2" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline font-bold text-primary text-xs">2. Configuración de Webhooks</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground space-y-2 text-xs">
+                      <p>Para que tu plataforma sepa cuándo un alumno pagó, debes ir a <strong>Notificaciones → Webhooks</strong> en tu App de MP y registrar la siguiente URL:</p>
+                      <code className="block bg-white p-2 rounded border text-[10px]">https://tudominio.com/api/webhooks/mercadopago</code>
+                      <p>Asegúrate de suscribirte a los eventos <code>payment</code> y <code>subscription_preapproval</code>.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="3" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline font-bold text-primary text-xs">3. Tasas y Plazos</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground space-y-2 text-xs">
+                      <p>Recuerda ajustar en tu cuenta principal de MP los plazos de liberación de dinero (Ej: "En el momento" vs "14 días") para gestionar las comisiones de procesamiento a tu gusto.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
             ) : formData.type === 'getnet' ? (
               <div className="p-8 bg-danger/10/50 rounded-lg border border-danger/15 space-y-6">
@@ -472,12 +490,22 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-danger/15">
-                  <Info className="h-4 w-4 text-danger shrink-0" />
-                  <p className="text-[10px] text-danger leading-relaxed font-medium">
-                    Encuentra estas credenciales en el <a href="https://developers.globalgetnet.com/" target="_blank" className="font-bold underline">Developer Portal</a> de Getnet.
-                  </p>
-                </div>
+                <Accordion type="single" collapsible className="w-full bg-white/50 rounded-xl px-4 border border-danger/15 mt-4">
+                  <AccordionItem value="1" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline font-bold text-danger text-xs">1. Portal de Integración</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground space-y-2 text-xs">
+                      <p>Regístrate en el <a href="https://developers.globalgetnet.com/" target="_blank" className="text-danger font-bold inline-flex items-center gap-1 hover:underline">Developer Portal de Getnet <ExternalLink className="h-3 w-3" /></a> para solicitar acceso a las credenciales de la API.</p>
+                      <p>Tu <strong>Seller ID</strong> te lo asignará tu ejecutivo comercial.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="2" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline font-bold text-danger text-xs">2. Callbacks y Webhooks</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground space-y-2 text-xs">
+                      <p>Debes informar al soporte técnico de Getnet que apunten los callbacks de aprobación asíncrona hacia:</p>
+                      <code className="block bg-white p-2 rounded border text-[10px]">https://tudominio.com/api/webhooks/getnet</code>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
             ) : formData.type === 'stripe' ? (
               <div className="p-8 bg-indigo-500/10 rounded-lg border border-indigo-500/15 space-y-6">
@@ -540,12 +568,28 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   </Select>
                 </div>
                 
-                <div className="flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-indigo-500/15">
-                  <Info className="h-4 w-4 text-indigo-500 shrink-0" />
-                  <p className="text-[10px] text-indigo-500 leading-relaxed font-medium">
-                    Consigue tu API Key en el <a href="https://dashboard.stripe.com/apikeys" target="_blank" className="font-bold underline">Dashboard de Stripe</a>. Recuerda configurar el Webhook hacia <code className="bg-white px-1 py-0.5 rounded">/api/webhooks/stripe</code>.
-                  </p>
-                </div>
+                <Accordion type="single" collapsible className="w-full bg-white/50 rounded-xl px-4 border border-indigo-500/15 mt-4">
+                  <AccordionItem value="1" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline font-bold text-indigo-500 text-xs">1. Claves Live vs Test</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground space-y-2 text-xs">
+                      <p>Ve a <a href="https://dashboard.stripe.com/apikeys" target="_blank" className="text-indigo-500 font-bold inline-flex items-center gap-1 hover:underline">Stripe Dashboard <ExternalLink className="h-3 w-3" /></a>. Si quieres hacer cobros reales, apaga el interruptor "Test mode" antes de copiar tu clave (que empezará con <code>sk_live_</code>).</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="2" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline font-bold text-indigo-500 text-xs">2. Configurar Webhooks de Stripe</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground space-y-2 text-xs">
+                      <p>En el panel de Stripe, ve a <strong>Developers → Webhooks</strong> y agrega este endpoint:</p>
+                      <code className="block bg-white p-2 rounded border text-[10px]">https://tudominio.com/api/webhooks/stripe</code>
+                      <p>Selecciona los eventos <code>checkout.session.completed</code> e <code>invoice.paid</code>. Al guardar, se te dará un <strong>Signing Secret</strong> (<code>whsec_...</code>) que debes pegar en el campo "Webhook Secret" arriba para garantizar la seguridad.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="3" className="border-b-0">
+                    <AccordionTrigger className="hover:no-underline font-bold text-indigo-500 text-xs">3. Experiencia de Compra</AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground space-y-2 text-xs">
+                      <p>Esta pasarela redireccionará a tus alumnos a una página segura alojada por Stripe (Stripe Checkout) que se adaptará automáticamente a su idioma y divisa local.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
             ) : (
               <div className="p-8 bg-success/10/50 rounded-lg border border-success/15 space-y-6">
@@ -585,15 +629,30 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                    size="xl" />
                 </div>
 
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Alias de la Cuenta</Label>
-                  <Input 
-                    value={formData.config.alias} 
-                    onChange={e => setFormData({...formData, config: { ...formData.config, alias: e.target.value }})} 
-                    placeholder="MI.ALIAS.PAGO" 
-                    className="bg-white border-none px-6 font-bold shadow-sm"
-                   size="xl" />
-                </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Alias de la Cuenta</Label>
+                    <Input 
+                      value={formData.config.alias} 
+                      onChange={e => setFormData({...formData, config: { ...formData.config, alias: e.target.value }})} 
+                      placeholder="MI.ALIAS.PAGO" 
+                      className="bg-white border-none px-6 font-bold shadow-sm"
+                     size="xl" />
+                  </div>
+                  
+                  <Accordion type="single" collapsible className="w-full bg-white/50 rounded-xl px-4 border border-success/15 mt-6">
+                    <AccordionItem value="1" className="border-b-0">
+                      <AccordionTrigger className="hover:no-underline font-bold text-success text-xs">Información sobre validación manual</AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground space-y-2 text-xs">
+                        <p>A diferencia de las pasarelas automáticas (Mercado Pago, Stripe), las transferencias no son instantáneas ni automatizadas. El proceso será el siguiente:</p>
+                        <ol className="list-decimal list-inside space-y-1 ml-1 text-[11px]">
+                          <li>El alumno verá estos datos bancarios al finalizar su pedido.</li>
+                          <li>Tendrá que hacer la transferencia desde su banco.</li>
+                          <li>Deberás verificar la recepción de los fondos en tu cuenta bancaria y aprobar el pedido manualmente dentro de esta plataforma.</li>
+                        </ol>
+                        <p className="text-success/80 mt-2 font-medium">⚠️ No olvides revisar periódicamente la pestaña de pedidos pendientes.</p>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
               </div>
             )}
 

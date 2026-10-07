@@ -210,7 +210,7 @@ export function updateProgramTaskProgress(
 export function patchCampaign(
   id: string,
   token: string,
-  patch: { strategy?: unknown; autoPilot?: boolean },
+  patch: { strategy?: unknown; autoPilot?: boolean; startDate?: string; title?: string; status?: string; productionStatus?: string },
 ): Promise<void> {
   return apiSend<void>('PATCH', `/api/campaigns/${encodeURIComponent(id)}`, token, patch);
 }
@@ -236,6 +236,7 @@ export interface PlanRequest {
   readonly strategyType: 'flash_sale' | 'classic_launch' | 'evergreen_warmup';
   readonly durationDays: number;
   readonly targetAudience?: string;
+  readonly activePlatforms?: string[];
 }
 
 export function requestCoordinationPlan(
@@ -261,10 +262,11 @@ export function publishCampaign(
   return apiSend<ApiCreateCampaignResult>('POST', '/api/campaigns/create', token, input);
 }
 
-export function executeCampaign(id: string, token: string): Promise<ExecuteResult> {
+export function executeCampaign(id: string, token: string, day?: number): Promise<ExecuteResult> {
+  const query = day !== undefined ? `?day=${day}` : '';
   return apiSend<ExecuteResult>(
     'POST',
-    `/api/campaigns/${encodeURIComponent(id)}/execute`,
+    `/api/campaigns/${encodeURIComponent(id)}/execute${query}`,
     token,
   );
 }

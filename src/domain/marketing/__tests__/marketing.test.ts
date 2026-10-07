@@ -82,7 +82,7 @@ describe('timeline', () => {
       ...baseEvent,
       socialSchedule: { instagram: { videoName: 'V1', time: '18:00' } },
     });
-    expect(e.socialSchedule?.instagram.time).toBe('18:00');
+    expect(e.socialSchedule?.instagram[0].time).toBe('18:00');
   });
 
   it('usesChannel detecta canales', () => {

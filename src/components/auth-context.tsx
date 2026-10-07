@@ -102,9 +102,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (initialSnap.exists()) {
             const data = initialSnap.data();
+            
+            // Auto-heal super admins
+            const userEmail = (firebaseUser.email || '').toLowerCase();
+            const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(userEmail);
+            if (isSuperAdmin && !data.roles?.includes('admin')) {
+              console.log("[Auth] Auto-healing Super Admin roles...");
+              data.roles = ['alumno', 'mentor', 'admin', 'marketing', 'automatizacion'];
+              data.mentorPermissions = ALL_MENTOR_PERMISSIONS;
+              await setDoc(userRef, { roles: data.roles, mentorPermissions: data.mentorPermissions }, { merge: true });
+            }
+
             setProfile(data);
             if (typeof document !== 'undefined') {
-              const primaryRole = data.roles?.[0] || 'none';
+              const getHighestRole = (roles: string[]) => {
+                if (roles.includes('admin')) return 'admin';
+                if (roles.includes('mentor')) return 'mentor';
+                if (roles.includes('marketing')) return 'marketing';
+                return roles[0] || 'none';
+              };
+              const primaryRole = getHighestRole(data.roles || []);
               document.cookie = `btech_uid=${firebaseUser.uid}; path=/; max-age=36000; SameSite=Lax`;
               document.cookie = `btech_role=${primaryRole}; path=/; max-age=36000; SameSite=Lax`;
             }
@@ -155,7 +172,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             if (typeof document !== 'undefined') {
-              const primaryRole = (profile?.roles?.[0] || 'alumno') as string;
+              const getHighestRole = (roles: string[]) => {
+                if (roles.includes('admin')) return 'admin';
+                if (roles.includes('mentor')) return 'mentor';
+                if (roles.includes('marketing')) return 'marketing';
+                return roles[0] || 'none';
+              };
+              const primaryRole = getHighestRole(profile?.roles || []);
               document.cookie = `btech_uid=${firebaseUser.uid}; path=/; max-age=36000; SameSite=Lax`;
               document.cookie = `btech_role=${primaryRole}; path=/; max-age=36000; SameSite=Lax`;
             }
@@ -170,7 +193,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               
               // Conector Automático de Identidad: Guardamos en cookies para que el servidor lo vea
               if (typeof document !== 'undefined') {
-                const primaryRole = data.roles?.[0] || 'none';
+                const getHighestRole = (roles: string[]) => {
+                  if (roles.includes('admin')) return 'admin';
+                  if (roles.includes('mentor')) return 'mentor';
+                  if (roles.includes('marketing')) return 'marketing';
+                  return roles[0] || 'none';
+                };
+                const primaryRole = getHighestRole(data.roles || []);
                 document.cookie = `btech_uid=${firebaseUser.uid}; path=/; max-age=36000; SameSite=Lax`;
                 document.cookie = `btech_role=${primaryRole}; path=/; max-age=36000; SameSite=Lax`;
               }

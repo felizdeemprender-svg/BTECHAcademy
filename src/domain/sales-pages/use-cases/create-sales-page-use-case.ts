@@ -28,6 +28,24 @@ export class CreateSalesPageUseCase {
       throw new Error('Conflict: A SalesPage with this ID already exists');
     }
 
+    // Asegurar que el nombre de campaña (title) no esté repetido
+    if (request.data.title) {
+      const mentorId = request.data.mentorId || request.uid;
+      const existingPages = await this.repo.listByMentor(mentorId);
+      const titles = existingPages.map(p => p.title);
+      
+      if (titles.includes(request.data.title)) {
+        let suffix = 1;
+        while (titles.includes(`${request.data.title} _${suffix}`)) {
+          suffix++;
+        }
+        request.data.title = `${request.data.title} _${suffix}`;
+        if (request.data.slug) {
+          request.data.slug = `${request.data.slug}-${suffix}`;
+        }
+      }
+    }
+
     await this.repo.create(request.pageId, request.data);
   }
 }
