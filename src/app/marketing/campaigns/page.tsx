@@ -99,7 +99,13 @@ export default function CampaignsCommandCenter() {
                 const vTime = sch.time || '12:00';
                 const format = sch.format || 'post';
                 
-                const log = executionLogs.find((l: any) => l.day === event.day && (l.videoName === sch.videoName || l.action === sch.videoName || l.videoName === vName) && (l.platform === plat || !l.platform));
+                const log = executionLogs.find((l: any) => 
+                  l.day === event.day && 
+                  (l.videoName === sch.videoName || l.action === sch.videoName || l.videoName === vName) && 
+                  (l.platform === plat || !l.platform) &&
+                  (!sch.format || l.format === sch.format) &&
+                  (!sch.time || l.time === sch.time)
+                );
                 
                 let status = 'pending';
                 let errorMessage = undefined;
