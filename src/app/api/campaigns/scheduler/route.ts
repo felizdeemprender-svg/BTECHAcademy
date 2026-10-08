@@ -8,6 +8,8 @@ import { handleRunScheduler } from '@/lib/api/scheduler-handler';
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
   const cronSecretHeader = request.headers.get('x-cron-secret');
+  
+  // Validamos contra el CRON_SECRET de entorno para evitar invocaciones externas no autorizadas
   const isValidCronSecret = 
     cronSecretHeader === process.env.CRON_SECRET || 
     authHeader === `Bearer ${process.env.CRON_SECRET}`;
