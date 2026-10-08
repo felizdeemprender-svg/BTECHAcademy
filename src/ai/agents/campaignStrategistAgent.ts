@@ -77,6 +77,8 @@ Reglas Estratégicas:
     if (input.activePlatforms && input.activePlatforms.length > 0) {
       const normalizedPlatforms = input.activePlatforms.map(p => p.toLowerCase().trim());
       output.timeline.forEach((event: any, idx: number) => {
+        // Forzar estrictamente a Social como pidió el usuario para evitar errores
+        event.channels = ['Social'];
         if (event.socialSchedule) {
           // Normalizar las claves a minúscula porque el LLM a veces las capitaliza (ej. "Instagram")
           const normalizedSchedule: any = {};
