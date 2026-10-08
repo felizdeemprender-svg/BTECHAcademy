@@ -34,7 +34,8 @@ export function getAdminApp() {
   }
   
   return initializeApp({
-    projectId: projectId
+    projectId: projectId,
+    storageBucket: process.env.FB_ADMIN_STORAGE_BUCKET || firebaseConfig.storageBucket
   });
 }
 

@@ -21,8 +21,6 @@ async function run() {
         data.executionLogs.forEach((log: any, idx: number) => {
           console.log(`\n  Log #${idx + 1}:`);
           console.log(`  - Status: ${log.status}`);
-          console.log(`  - Platform: ${log.platform}`);
-          console.log(`  - Video Name: ${log.videoName}`);
           console.log(`  - Time: ${log.time}`);
           console.log(`  - Feedback: ${log.feedback}`);
         });
