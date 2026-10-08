@@ -8,9 +8,13 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { runCampaignStrategist } from '../agents/campaignStrategistAgent';
 
+const ContentFormatSchema = z.enum(['reel', 'story', 'carousel', 'post']);
+
 const SocialPlatformScheduleSchema = z.object({
+  format: ContentFormatSchema.optional().describe('Formato sugerido (reel, story, carousel, post).'),
   videoName: z.string().describe('Nombre de la variante sugerida para esta red social (ej: Variante 1, Variante 2).'),
-  time: z.string().describe('Hora recomendada de publicación en formato HH:MM (Instagram 18:00, TikTok 19:30, LinkedIn 08:30, Twitter/X 13:00, etc.).')
+  time: z.string().describe('Hora recomendada de publicación en formato HH:MM (Instagram 18:00, TikTok 19:30, LinkedIn 08:30, Twitter/X 13:00, etc.).'),
+  assetId: z.string().optional(),
 });
 
 const TimelineEventSchema = z.object({
@@ -18,8 +22,8 @@ const TimelineEventSchema = z.object({
   phase: z.string().describe('Fase: Expectativa, Venta, Cierre, etc.'),
   variantIndex: z.number().min(0).max(2).describe('Índice de la variante a usar (0, 1 o 2).'),
   action: z.string().describe('Descripción de la acción coordinada.'),
-  channels: z.array(z.string()).describe('Canales activos en este hito.'),
-  socialSchedule: z.record(SocialPlatformScheduleSchema).optional().describe('Mapa de programación por plataforma social activa (ej: {"instagram": {"videoName": "Variante 1", "time": "18:00"}})'),
+  channels: z.array(z.enum(['Social', 'Email', 'Ads'])).describe('Canales activos en este hito.'),
+  socialSchedule: z.record(z.array(SocialPlatformScheduleSchema)).optional().describe('Mapa de programación por plataforma social activa (ej: {"instagram": [{"videoName": "Variante 1", "time": "18:00"}]})'),
 });
 
 const CoordinationInputSchema = z.object({

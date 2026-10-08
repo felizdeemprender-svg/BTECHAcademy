@@ -67,6 +67,9 @@ import {
 } from "@/components/ui/dialog";
 
 interface TemplateEditorProps {
+  campaignTitle?: string;
+  targetAudience?: string;
+  coordinationPlan?: any;
   generatedAssets: any;
   blueprintData: any;
   activeEmailIdx: number;

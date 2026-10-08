@@ -29,6 +29,7 @@ function campaign(): Campaign {
     startDate: '2026-01-01',
     autoPilot: true,
     status: 'active',
+    progress: { sealed: 0, total: 3 },
     productionStatus: 'ready_to_publish',
     isActive: true,
     executionLogs: [],

@@ -237,6 +237,7 @@ export interface PlanRequest {
   readonly durationDays: number;
   readonly targetAudience?: string;
   readonly activePlatforms?: string[];
+  readonly availableVideos?: string[];
 }
 
 export function requestCoordinationPlan(

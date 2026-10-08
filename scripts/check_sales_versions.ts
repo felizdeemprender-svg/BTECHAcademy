@@ -16,8 +16,8 @@ async function main() {
   console.log(`Encontradas ${v1Pages.length} landings en V1:`);
   
   for (const page of v1Pages) {
-    const title = page.courseTitle || page.title || 'Sin Título';
-    const mentorId = page.mentorId;
+    const title = (page as any).courseTitle || (page as any).title || 'Sin Título';
+    const mentorId = (page as any).mentorId;
     let mentorName = 'Desconocido';
     
     if (mentorId) {

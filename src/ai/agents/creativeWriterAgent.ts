@@ -35,7 +35,7 @@ export const runCreativeWriter = ai.defineFlow(
     outputSchema: CreativeWriterOutput,
     description: 'Redacta el guion y copy de un video contextualizado a la fase del embudo y plataforma.',
   },
-  async (input) => {
+  async (input: z.infer<typeof CreativeWriterInput>) => {
     const prompt = `
 Actúa como un Copywriter y Director Creativo Senior. 
 Se te ha asignado crear el guion y copy de un video (o carrusel) para la red social: ${input.platform.toUpperCase()}.
