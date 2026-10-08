@@ -186,7 +186,7 @@ describe('handleRunScheduler', () => {
     const now = new Date('2026-06-15T12:00:00.000Z');
     const old = new Date('2026-01-01T12:00:00.000Z');
     const already = {
-      day: 1, channel: 'Social', platform: 'instagram', status: 'success', videoName: 'Video 1'
+      day: 1, channel: 'Social', platform: 'instagram', status: 'success', videoName: 'Video 1', time: '00:01'
     };
     const gateway = new FakeGateway({
       campaigns: {
@@ -199,6 +199,24 @@ describe('handleRunScheduler', () => {
     const body = (await res.json()) as { dispatchesExecuted: number; details: unknown[] };
     expect(body.dispatchesExecuted).toBe(0);
     expect(body.details).toEqual([]);
+  });
+
+  it('omite eventos del día actual si la hora programada es en el futuro', async () => {
+    // 08:00 AM server time
+    const now = new Date('2026-06-15T08:00:00.000Z');
+    // Event scheduled for 18:00
+    const futureEvent = {
+      day: 1, phase: 'Lanzamiento', variantIndex: 0, action: 'Reel', channels: ['Social'],
+      socialSchedule: { instagram: { time: '18:00', videoName: 'Video 1' } },
+    };
+    const gateway = new FakeGateway({
+      campaigns: { c1: campaignDoc({ startDate: todayLocalNoon(now), strategy: { timeline: [futureEvent] } }) },
+      users: { m1: { marketingCredentials: {} } },
+    });
+    const res = await handleRunScheduler(gateway, now);
+    const body = (await res.json()) as { dispatchesExecuted: number; debugStats: string };
+    expect(body.dispatchesExecuted).toBe(0);
+    expect(body.debugStats).toContain('hora futura): 1');
   });
 
   it('producción sin apiKey marca failed con el feedback legacy', async () => {
