@@ -20,7 +20,8 @@ export async function verifyAdmin(req: Request): Promise<string | null> {
     const decoded = await getAdminAuth().verifyIdToken(token);
 
     const SUPER_ADMIN_EMAILS = [
-      'felizdeemprender@gmail.com'
+      'felizdeemprender@gmail.com',
+      'supervisor.felizdeemprender@gmail.com'
     ];
 
     const isSuperAdmin = decoded.email && SUPER_ADMIN_EMAILS.includes(decoded.email);
