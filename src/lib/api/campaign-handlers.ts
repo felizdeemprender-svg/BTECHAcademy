@@ -34,9 +34,17 @@ export async function handleListCampaigns(
   mentorId: string,
 ): Promise<NextResponse> {
   if (!caller) return unauthorized();
-  if (!mentorId || !canAccessMentorData(caller, mentorId)) return forbidden();
+  
+  let targetMentor = mentorId;
+  if (caller.email === 'supervisor.felizdeemprender@gmail.com' || caller.role === 'admin') {
+    // El supervisor siempre ve todo
+    targetMentor = 'all';
+  } else {
+    if (!targetMentor || !canAccessMentorData(caller, targetMentor)) return forbidden();
+  }
+
   const repo = new FirestoreCampaignRepository(gateway);
-  return toApiResponse(await getMentorCampaigns(repo, { mentorId }));
+  return toApiResponse(await getMentorCampaigns(repo, { mentorId: targetMentor }));
 }
 
 export async function handleGetCampaign(
