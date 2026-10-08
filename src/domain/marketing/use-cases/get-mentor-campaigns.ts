@@ -71,7 +71,7 @@ function summarize(campaign: Campaign, now: Date): CampaignSummary {
     campaign,
     currentDay,
     today: todayActions(timeline, currentDay),
-    progressPercent: campaignProgressPercent(timeline, currentDay),
+    progressPercent: campaignProgressPercent(timeline, campaign.executionLogs),
     executable: isExecutableCampaign(campaign),
     productionStatus: campaign.productionStatus,
   };

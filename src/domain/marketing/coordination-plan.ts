@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { differenceInDays } from 'date-fns';
 
 import { TimelineEventSchema, type TimelineEvent } from './timeline';
+import type { ExecutionLog } from './execution-log';
 
 export const StrategyTypeSchema = z.enum(['flash_sale', 'classic_launch', 'evergreen_warmup']);
 export type StrategyType = z.infer<typeof StrategyTypeSchema>;
@@ -75,11 +76,32 @@ export function pastActions(
   return timeline.filter((e) => e.day < currentDay);
 }
 
-/** Progreso 0-100 según hitos pasados (tope 100). */
+/** Progreso 0-100 según piezas reales publicadas vs planificadas (tope 100). */
 export function campaignProgressPercent(
   timeline: readonly TimelineEvent[],
-  currentDay: number,
+  executionLogs: readonly ExecutionLog[] = [],
 ): number {
   if (timeline.length === 0) return 0;
-  return Math.min(100, Math.round((pastActions(timeline, currentDay).length / timeline.length) * 100));
+  
+  let totalPieces = 0;
+  for (const event of timeline) {
+    if (event.socialSchedule) {
+      for (const platform of Object.values(event.socialSchedule)) {
+        if (Array.isArray(platform)) {
+          totalPieces += platform.length;
+        } else if (platform) {
+          totalPieces += 1;
+        }
+      }
+    } else if (event.channels && event.channels.length > 0) {
+      totalPieces += event.channels.length;
+    } else {
+      totalPieces += 1;
+    }
+  }
+
+  if (totalPieces === 0) return 0;
+
+  const successfulLogs = executionLogs.filter((log) => log.status === 'success');
+  return Math.min(100, Math.round((successfulLogs.length / totalPieces) * 100));
 }

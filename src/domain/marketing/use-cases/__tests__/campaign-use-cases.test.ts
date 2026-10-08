@@ -57,7 +57,7 @@ const NOW = new Date(2026, 0, 2, 12, 0);
 
 describe('getMentorCampaigns', () => {
   it('enriquece con día actual, hoy, progreso y ejecutable', async () => {
-    const repo = new FakeRepo([campaign({ id: 'c1' })]);
+    const repo = new FakeRepo([campaign({ id: 'c1', executionLogs: [{ status: 'success' } as any] })]);
     const result = await getMentorCampaigns(repo, { mentorId: 'm1', now: NOW });
     expect(isOk(result)).toBe(true);
     if (!isOk(result)) return;
