@@ -31,7 +31,7 @@ import {
   updateSocialPost,
 } from './timeline-helpers';
 
-const DEFAULT_CHANNELS: readonly Channel[] = ['Email', 'Social', 'Ads'];
+const DEFAULT_CHANNELS: readonly Channel[] = ['Email', 'Social'];
 const DEFAULT_VARIANT_LABELS: readonly [string, string, string] = [
   'Var 1 (Mínima)',
   'Var 2 (Equilibrada)',

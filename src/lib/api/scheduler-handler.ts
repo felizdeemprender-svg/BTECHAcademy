@@ -288,18 +288,20 @@ export async function handleRunScheduler(
               }
             }
           } else {
-            // General Channels: Email & Ads
+            // General Channels: Email only (Ads is removed)
+            if (channel !== 'Email') continue;
+
             const alreadyRun = (camp.executionLogs || []).some(
               (log) => log.day === event.day && log.channel === channel && log.status === 'success',
             );
 
             if (alreadyRun) continue;
 
-            const defaultTime = channel === 'Email' ? '09:00' : '08:00';
+            const defaultTime = '09:00';
             const schedTimeMin = getMinutes(defaultTime);
 
             if (event.day < currentDay || nowMin >= schedTimeMin) {
-              const motorId = channel === 'Email' ? 'sendgrid' : 'meta_ads';
+              const motorId = 'sendgrid';
               const motorCreds = credentials[motorId] || {};
               const mode = motorCreds.mode || 'sandbox';
 
@@ -308,19 +310,14 @@ export async function handleRunScheduler(
               const responseId = `${channel.toLowerCase()}_sch_${Math.floor(Math.random() * 10000000)}`;
 
               if (mode === 'sandbox') {
-                if (channel === 'Email') {
-                  feedback =
-                    '💡 [SANDBOX] SendGrid Engine: Plantilla de correo del pack multimedia enviada exitosamente a la lista de pruebas de mentoría. Tasa de entregabilidad simulada del 99.7%.';
-                } else {
-                  feedback =
-                    '💡 [SANDBOX] Meta Ads Manager: Campaña publicitaria estructurada y simulada con éxito. Variante creativa enlazada al conjunto de anuncios de prueba.';
-                }
+                feedback =
+                  '💡 [SANDBOX] SendGrid Engine: Plantilla de correo del pack multimedia enviada exitosamente a la lista de pruebas de mentoría. Tasa de entregabilidad simulada del 99.7%.';
               } else {
                 if (!motorCreds.apiKey || motorCreds.apiKey.length < 5) {
                   status = 'failed';
-                  feedback = `⚠️ [PRODUCCIÓN] Error de credenciales: API Key de ${channel === 'Email' ? 'SendGrid' : 'Meta Ads'} no configurada o inválida. Emisión cancelada.`;
+                  feedback = `⚠️ [PRODUCCIÓN] Error de credenciales: API Key de SendGrid no configurada o inválida. Emisión cancelada.`;
                 } else {
-                  feedback = `🚀 [PRODUCCIÓN] Emisión Real Exitosa. Conector de ${channel === 'Email' ? 'SendGrid' : 'Meta Ads'} disparó las peticiones automáticas de la campaña. ID: ${responseId}`;
+                  feedback = `🚀 [PRODUCCIÓN] Emisión Real Exitosa. Conector de SendGrid disparó las peticiones automáticas de la campaña. ID: ${responseId}`;
                 }
               }
 
@@ -334,7 +331,7 @@ export async function handleRunScheduler(
                 time: defaultTime,
                 status,
                 mode,
-                provider: channel === 'Email' ? 'SendGrid' : 'Meta Ads',
+                provider: 'SendGrid',
                 feedback,
                 responseId,
                 protocolVerified: true,

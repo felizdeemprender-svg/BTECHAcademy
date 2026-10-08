@@ -22,7 +22,7 @@ const timeline = [
     action: 'Teaser',
     channels: ['Social', 'Email'],
   },
-  { day: 2, phase: 'Venta', variantIndex: 1, action: 'Oferta', channels: ['Ads'] },
+  { day: 2, phase: 'Venta', variantIndex: 1, action: 'Oferta', channels: ['Email'] },
 ];
 
 function campaign(): Campaign {

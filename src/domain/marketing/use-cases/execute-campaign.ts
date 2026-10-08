@@ -50,8 +50,7 @@ const SOCIAL_PLATFORMS = ['instagram', 'tiktok', 'linkedin', 'twitter', 'x', 'yo
 
 function motorIdFor(channel: string): string {
   if (channel === 'Email') return 'sendgrid';
-  if (channel === 'Social') return 'meta_social';
-  return 'meta_ads';
+  return 'meta_social';
 }
 
 function modeFor(credentials: CredentialsMap, motorId: string): ExecutionMode {
@@ -87,11 +86,9 @@ function socialFeedback(platform: string, mode: ExecutionMode): string {
 
 function channelFeedback(channel: string, mode: ExecutionMode): string {
   if (mode === 'sandbox') {
-    return channel === 'Email'
-      ? '💡 [MANUAL SANDBOX] SendGrid SMTP: Correo manual simulado enviado exitosamente a la lista de pruebas.'
-      : '💡 [MANUAL SANDBOX] Meta Ads Manager: Campaña publicitaria manual simulada con éxito.';
+    return '💡 [MANUAL SANDBOX] SendGrid SMTP: Correo manual simulado enviado exitosamente a la lista de pruebas.';
   }
-  return `🚀 [MANUAL PRODUCCIÓN] Emisión Real manual disparada en ${channel === 'Email' ? 'SendGrid' : 'Meta Ads'}!`;
+  return `🚀 [MANUAL PRODUCCIÓN] Emisión Real manual disparada en SendGrid!`;
 }
 
 /** Expansión pura de acciones de hoy → logs (sin IO). Testeable aislada. */
@@ -141,7 +138,7 @@ export function buildDispatchLogs(
             logs.push(parsed);
           });
         });
-      } else {
+      } else if (channel === 'Email') {
         const parsed = ExecutionLogSchema.parse({
           timestamp: timestampIso,
           day: currentDay,
@@ -149,10 +146,10 @@ export function buildDispatchLogs(
           action: action.action,
           phase: action.phase,
           variantIndex: action.variantIndex,
-          time: channel === 'Email' ? '09:00' : '08:00',
+          time: '09:00',
           status: 'success',
           mode,
-          provider: channel === 'Email' ? 'SendGrid' : 'Meta Ads',
+          provider: 'SendGrid',
           feedback: channelFeedback(channel, mode),
           responseId: `${channel.toLowerCase()}_${currentDay}_${actionIdx}`,
           protocolVerified: true,
