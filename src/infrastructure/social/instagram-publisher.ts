@@ -93,8 +93,8 @@ export class MetaGraphPublisher implements SocialPublisher {
               finalUrl = `https://storage.googleapis.com/${bucket.name}/${encodeURI(fileName)}`;
               tempFileRefs.push(tempFileRef);
               console.log(`[MetaGraph] Gateway exitoso. Tamaño: ${(buffer.length / 1024 / 1024).toFixed(2)} MB. Nueva URL:`, finalUrl);
-            } catch (err: any) {
-               return err(unavailable(`Fallo el Gateway de Drive: ${err.message}`));
+            } catch (e: any) {
+               return err(unavailable(`Fallo el Gateway de Drive: ${e.message}`));
             }
           }
         }

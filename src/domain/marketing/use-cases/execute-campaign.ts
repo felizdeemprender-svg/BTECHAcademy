@@ -127,7 +127,7 @@ export function buildDispatchLogs(
               time: sched.time,
               videoName: sched.videoName,
               format: sched.format,
-              narrativeStage: sched.narrativeStage,
+              narrativeStage: (sched as any).narrativeStage,
               status: 'success',
               mode,
               provider: platform.toUpperCase(),
@@ -245,7 +245,7 @@ export async function executeCampaignStep(
             format: log.format,
             credentials: { 
                apiKey: input.credentials[motorIdFor('Social')]?.apiKey ?? '',
-               accountId: input.credentials[motorIdFor('Social')]?.accountId ?? ''
+               accountId: (input.credentials[motorIdFor('Social')] as any)?.accountId ?? ''
             }
           });
 
