@@ -7,7 +7,10 @@ import { handleRunScheduler } from '@/lib/api/scheduler-handler';
 // para llamadas de Google Cloud Scheduler en background.
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
-  const isValidCronSecret = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  const cronSecretHeader = request.headers.get('x-cron-secret');
+  const isValidCronSecret = 
+    cronSecretHeader === process.env.CRON_SECRET || 
+    authHeader === `Bearer ${process.env.CRON_SECRET}`;
   
   let adminUid: string | null = null;
   let verifyError = '';
