@@ -12,7 +12,10 @@ export async function GET(request: Request) {
   const adminUid = await verifyAdmin(request);
   
   if (!adminUid && !isValidCronSecret) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    return NextResponse.json({ 
+      error: 'No autorizado',
+      debug_info: `adminUid was null, isValidCronSecret was false. Did you send the correct Bearer token?`
+    }, { status: 401 });
   }
   return handleRunScheduler(await resolveGateway());
 }

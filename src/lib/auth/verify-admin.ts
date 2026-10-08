@@ -26,11 +26,13 @@ export async function verifyAdmin(req: Request): Promise<string | null> {
     const isSuperAdmin = decoded.email && SUPER_ADMIN_EMAILS.includes(decoded.email);
 
     if (!decoded.admin && !isSuperAdmin && process.env.NODE_ENV !== 'development') {
+      console.warn(`[verifyAdmin] Bloqueado: email=${decoded.email}, admin=${decoded.admin}, isSuperAdmin=${isSuperAdmin}`);
       return null;
     }
 
     return decoded.uid;
-  } catch {
+  } catch (err) {
+    console.error('[verifyAdmin] Error:', err);
     return null;
   }
 }
