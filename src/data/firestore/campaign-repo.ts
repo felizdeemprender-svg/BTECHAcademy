@@ -29,7 +29,12 @@ export class FirestoreCampaignRepository implements CampaignRepository {
   }
 
   async listByMentor(mentorId: string, limit?: number): Promise<Campaign[]> {
-    const snap = await this.gateway.queryByField(COLLECTION, 'mentorId', mentorId, limit);
+    let snap;
+    if (mentorId === 'all') {
+      snap = await this.gateway.queryByField(COLLECTION, 'isActive', true, limit);
+    } else {
+      snap = await this.gateway.queryByField(COLLECTION, 'mentorId', mentorId, limit);
+    }
     const out: Campaign[] = [];
     for (const d of snap.docs) {
       const raw = d.data();

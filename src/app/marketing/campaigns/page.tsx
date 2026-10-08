@@ -35,7 +35,11 @@ const getNetworkColorClasses = (network: string) => {
 
 export default function CampaignsCommandCenter() {
   const { user, profile } = useAuth();
-  const { data: dbData, isLoading } = useMentorCampaigns(profile?.uid);
+  
+  const isSuperAdmin = profile?.email === 'felizdeemprender@gmail.com' || profile?.email === 'supervisor.felizdeemprender@gmail.com';
+  const queryMentorId = isSuperAdmin ? 'all' : profile?.uid;
+  
+  const { data: dbData, isLoading } = useMentorCampaigns(queryMentorId);
   const { toast } = useToast();
   const [isSyncing, setIsSyncing] = useState(false);
 
