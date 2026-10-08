@@ -36,7 +36,7 @@ export async function handleListCampaigns(
   if (!caller) return unauthorized();
   
   let targetMentor = mentorId;
-  if (caller.email === 'supervisor.felizdeemprender@gmail.com' || caller.role === 'admin') {
+  if (caller.isSuperAdmin) {
     // El supervisor siempre ve todo
     targetMentor = 'all';
   } else {
