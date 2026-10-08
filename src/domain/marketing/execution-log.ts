@@ -7,7 +7,7 @@ import { z } from 'zod';
 export const ExecutionModeSchema = z.enum(['sandbox', 'production']);
 export type ExecutionMode = z.infer<typeof ExecutionModeSchema>;
 
-export const ExecutionStatusSchema = z.enum(['success', 'error']);
+export const ExecutionStatusSchema = z.enum(['success', 'error', 'failed']);
 export type ExecutionStatus = z.infer<typeof ExecutionStatusSchema>;
 
 export const ExecutionLogSchema = z.object({

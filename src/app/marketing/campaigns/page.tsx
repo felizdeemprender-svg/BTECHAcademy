@@ -36,7 +36,7 @@ const getNetworkColorClasses = (network: string) => {
 export default function CampaignsCommandCenter() {
   const { user, profile } = useAuth();
   
-  const isSuperAdmin = profile?.email === 'felizdeemprender@gmail.com' || profile?.email === 'supervisor.felizdeemprender@gmail.com';
+  const isSuperAdmin = user?.email === 'felizdeemprender@gmail.com' || user?.email === 'supervisor.felizdeemprender@gmail.com';
   const queryMentorId = isSuperAdmin ? 'all' : profile?.uid;
   
   const { data: dbData, isLoading } = useMentorCampaigns(queryMentorId);
