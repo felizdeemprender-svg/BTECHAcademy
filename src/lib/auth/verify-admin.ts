@@ -22,6 +22,9 @@ export async function verifyAdmin(req: Request): Promise<string | null> {
     const SUPER_ADMIN_EMAILS = [
       'felizdeemprender@gmail.com',
       'btouchacademy@gmail.com',
+      'btechacademy@gmail.com',
+      'bprocessmailing@gmail.com',
+      'concienciadeabundancia8@gmail.com'
     ];
 
     const isSuperAdmin = decoded.email && SUPER_ADMIN_EMAILS.includes(decoded.email);
