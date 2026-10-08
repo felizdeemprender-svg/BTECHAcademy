@@ -101,7 +101,7 @@ export function campaignProgressPercent(
   }
 
   if (totalPieces === 0) return 0;
-
-  const successfulLogs = executionLogs.filter((log) => log.status === 'success');
+  
+  const successfulLogs = (executionLogs || []).filter((log) => log.status === 'success');
   return Math.min(100, Math.round((successfulLogs.length / totalPieces) * 100));
 }

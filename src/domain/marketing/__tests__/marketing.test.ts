@@ -140,9 +140,9 @@ describe('coordination-plan', () => {
 
   it('campaignProgressPercent con tope 100', () => {
     const timeline = [{ ...baseEvent, day: 1 }];
-    expect(campaignProgressPercent(timeline, 1)).toBe(0);
-    expect(campaignProgressPercent(timeline, 2)).toBe(100);
-    expect(campaignProgressPercent([], 5)).toBe(0);
+    expect(campaignProgressPercent(timeline, [])).toBe(0);
+    expect(campaignProgressPercent(timeline, [{ status: 'success' } as any])).toBe(50);
+    expect(campaignProgressPercent([], [])).toBe(0);
   });
 });
 

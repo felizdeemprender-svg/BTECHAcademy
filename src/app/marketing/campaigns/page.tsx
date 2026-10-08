@@ -110,8 +110,8 @@ export default function CampaignsCommandCenter() {
                 let status = 'pending';
                 let errorMessage = undefined;
                 if (log) {
-                  status = log.status === 'success' ? 'success' : 'error';
-                  if (status === 'error') errorMessage = log.feedback || log.errorMessage;
+                  status = log.status; // Preserve the actual log status (success, error, failed, pending, processing)
+                  if (status === 'error' || status === 'failed') errorMessage = log.feedback || log.errorMessage;
                 }
 
                 events.push({
@@ -129,8 +129,8 @@ export default function CampaignsCommandCenter() {
                 let status = 'pending';
                 let errorMessage = undefined;
                 if (log) {
-                  status = log.status === 'success' ? 'success' : 'error';
-                  if (status === 'error') errorMessage = log.feedback || log.errorMessage;
+                  status = log.status; // Preserve actual status
+                  if (status === 'error' || status === 'failed') errorMessage = log.feedback || log.errorMessage;
                 }
                 events.push({
                    network: ch,
@@ -313,8 +313,12 @@ export default function CampaignsCommandCenter() {
                             )}
                             
                             {/* Notificador visual de error en la pastilla base */}
-                            {eventsForNetwork.some((e: any) => e.status === 'error') && (
+                            {eventsForNetwork.some((e: any) => e.status === 'error' || e.status === 'failed') && (
                               <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-danger rounded-full border border-background animate-pulse" />
+                            )}
+                            {/* Notificador visual de procesando en la pastilla base */}
+                            {eventsForNetwork.some((e: any) => e.status === 'processing' || e.status === 'pending') && !eventsForNetwork.some((e: any) => e.status === 'error' || e.status === 'failed') && (
+                              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-warning rounded-full border border-background animate-pulse" />
                             )}
                             
                             {/* Tooltip Oculto (Se muestra al hacer hover) */}
@@ -335,7 +339,7 @@ export default function CampaignsCommandCenter() {
                                   <tbody className="divide-y divide-border/20">
                                     {eventsForNetwork.map((evt: any, i: number) => (
                                       <React.Fragment key={i}>
-                                        <tr className={evt.status === 'error' ? 'bg-danger/5' : ''}>
+                                        <tr className={(evt.status === 'error' || evt.status === 'failed') ? 'bg-danger/5' : ''}>
                                           <td className="py-2 font-medium text-foreground">{evt.time}</td>
                                           <td className="py-2 capitalize text-foreground">{evt.format}</td>
                                           <td className="py-2">
@@ -344,9 +348,14 @@ export default function CampaignsCommandCenter() {
                                                 <div className="w-1.5 h-1.5 rounded-full bg-success" /> Éxito
                                               </span>
                                             )}
-                                            {evt.status === 'error' && (
+                                            {(evt.status === 'error' || evt.status === 'failed') && (
                                               <span className="text-danger font-bold flex items-center gap-1">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-danger" /> Falló
+                                              </span>
+                                            )}
+                                            {evt.status === 'processing' && (
+                                              <span className="text-warning font-bold flex items-center gap-1">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" /> Procesando...
                                               </span>
                                             )}
                                             {(evt.status === 'pending' || !evt.status) && (
@@ -356,7 +365,7 @@ export default function CampaignsCommandCenter() {
                                             )}
                                           </td>
                                         </tr>
-                                        {evt.status === 'error' && evt.errorMessage && (
+                                        {(evt.status === 'error' || evt.status === 'failed') && evt.errorMessage && (
                                           <tr className="bg-danger/5">
                                             <td colSpan={3} className="pb-2 pt-0 px-2">
                                               <div className="bg-danger/10 text-danger border border-danger/20 rounded p-1.5 text-[10px] font-mono leading-tight">

@@ -210,7 +210,28 @@ export async function handleRunScheduler(
                          if (!videoUrl) {
                             status = 'failed';
                             feedback = `⚠️ [PRODUCCIÓN] Falló el cron: No se encontró URL de video para ${currentSched.videoName}.`;
-                         } else {
+                          } else {
+                            const processingLog = {
+                              timestamp: new Date().toISOString(),
+                              day: event.day,
+                              channel: 'Social',
+                              platform: plat,
+                              action: event.action,
+                              phase: event.phase,
+                              variantIndex: event.variantIndex,
+                              videoName: currentSched.videoName || `Video ${event.day}`,
+                              format: currentSched.format,
+                              time: currentSched.time,
+                              status: 'processing',
+                              mode,
+                              provider: plat.toUpperCase(),
+                              feedback: '⏱️ [PRODUCCIÓN] Mandamos a publicar. Procesando en Meta...',
+                              responseId,
+                              protocolVerified: true,
+                            };
+                            camp.executionLogs = [...(camp.executionLogs || []), processingLog];
+                            await gateway.updateDoc('campaigns', camp.id, { executionLogs: camp.executionLogs });
+
                             const { MetaGraphPublisher } = await import('@/infrastructure/social/instagram-publisher');
                             const publisher = new MetaGraphPublisher();
                             const pubResult = await publisher.publish({
@@ -223,6 +244,8 @@ export async function handleRunScheduler(
                                  accountId: (motorCreds as any).accountId || ''
                               }
                             });
+
+                            camp.executionLogs = camp.executionLogs.filter((l) => l !== processingLog);
 
                             if (!pubResult.ok) {
                               status = 'failed';

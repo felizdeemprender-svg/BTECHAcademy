@@ -9,12 +9,14 @@ export async function verifyAdmin(req: Request): Promise<string | null> {
   try {
     const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      throw new Error('No Bearer token found in Authorization header');
+      console.warn('[verifyAdmin] No Bearer token found in Authorization header');
+      return null;
     }
 
     const token = authHeader.split('Bearer ')[1];
     if (!token) {
-      throw new Error('Bearer token is empty');
+      console.warn('[verifyAdmin] Bearer token is empty');
+      return null;
     }
 
     const decoded = await getAdminAuth().verifyIdToken(token);
@@ -27,12 +29,13 @@ export async function verifyAdmin(req: Request): Promise<string | null> {
     const isSuperAdmin = decoded.email && SUPER_ADMIN_EMAILS.includes(decoded.email);
 
     if (!decoded.admin && !isSuperAdmin && process.env.NODE_ENV !== 'development') {
-      throw new Error(`User ${decoded.email} blocked: admin=${decoded.admin}, isSuperAdmin=${isSuperAdmin}`);
+      console.warn(`[verifyAdmin] User ${decoded.email} blocked: admin=${decoded.admin}, isSuperAdmin=${isSuperAdmin}`);
+      return null;
     }
 
     return decoded.uid;
   } catch (err: any) {
-    console.error('[verifyAdmin] Error:', err);
-    throw new Error(`VerifyAdmin failed: ${err.message}`);
+    console.warn(`[verifyAdmin] VerifyAdmin failed: ${err.message}`);
+    return null;
   }
 }
