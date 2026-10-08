@@ -68,3 +68,16 @@ Archivos a mantener sincronizados con el código:
 - Landings v1: el render monolítico en `v/[id]/page.tsx` está **congelado**, no tocar literales hardcodeados; los tutores reharán con v2. La v2 tiene infra DTCG ✅ (builder `v2-build`, renderer `atomic-renderer.tsx`, editor `v2-edit`) y restyling estético a editorial-plano ✅ (31 Jul 2026).
 - Shell del dashboard: **editorial-plano** decidido (31 Jul 2026) — `--card-radius: 0.75rem`, `--card-shadow: none`, `--card-border: 1px solid var(--border)`; sin `rounded-[2rem+]`, sin `shadow-3xl/2xl/xl`, sin `border-none` en Cards. No reintroducir estética redondeada.
 - Shape canónico de `branding`: `{ primaryColor, logoUrl }`.
+
+---
+
+## Procedimiento Estricto de Git y Branching (Workflow)
+
+Para evitar romper el despliegue en producción (Firebase App Hosting / Vercel), los agentes deben adherirse **estrictamente** al siguiente procedimiento:
+
+1. **Nunca hacer commits ni pushes directos a `main`.**
+2. **Ciclo de Validación (Obligatorio antes de empaquetar un branch):**
+   - Ejecutar `npm run typecheck` (tsc --noEmit) para comprobar el baseline (actualmente 0 errores). **No se debe avanzar si hay errores nuevos.**
+   - Ejecutar `npm run test` para asegurar que el refactor no rompa la lógica del dominio.
+3. **Creación de Branch:** Una vez validado el código, y **solo cuando el usuario lo solicite explícitamente**, empaquetar los cambios en una nueva rama usando `git checkout -b <nombre-del-branch>`.
+4. **Handoff:** Dejar que el usuario realice el `git push` manualmente, y esperar su confirmación de que la plataforma de CI/CD procesó los cambios correctamente antes de considerar la tarea como finalizada.
