@@ -18,6 +18,7 @@ const CreativeWriterInput = z.object({
   funnelPhase: z.string(), // ej. "Expectativa", "Venta", "Cierre"
   platform: z.string(), // ej. "instagram", "tiktok", "linkedin"
   marketingImprint: z.string().optional(), // Impronta del equipo de marketing
+  format: z.string().optional(), // ej. "story", "reel", "carousel"
 });
 
 export const CreativeWriterOutput = z.object({
@@ -46,7 +47,8 @@ Contexto del Producto:
 - Audiencia: ${input.targetAudience || 'General'}
 
 Fase del Embudo para este video: ${input.funnelPhase.toUpperCase()}
-(Debes adaptar el tono y el CTA a esta fase. Ej: si es Expectativa, genera intriga; si es Venta, da valor; si es Cierre, haz un CTA directo de compra).
+Formato solicitado: ${input.format?.toUpperCase() || 'VIDEO CORTO'}
+(Debes adaptar el tono y el CTA a esta fase y formato. Ej: si es Expectativa, genera intriga; si es Venta, da valor; si es Cierre, haz un CTA directo de compra).
 
 Impronta del Equipo de Marketing (Directivas de Marca):
 "${input.marketingImprint || 'Tono profesional, persuasivo, directo al grano y enfocado en resultados tangibles.'}"
@@ -59,7 +61,8 @@ Reglas Técnicas:
    - Para cada escena, el 'text' (pantalla) debe ser ultra-corto.
    - El 'voiceover' (locución) debe ser fluido.
    - El 'media_hint' describe qué se debe ver de fondo (sin género específico).
-5. Devuelve un JSON válido que cumpla con el esquema requerido.
+5. LÍMITE DE DURACIÓN (CRÍTICO): Si el formato solicitado es "story" o "historias", la suma total de los campos 'duration' de todas las escenas NO PUEDE exceder los 60 segundos bajo ningún concepto (ideal 45-50s).
+6. Devuelve un JSON válido que cumpla con el esquema requerido.
 `;
 
     const { output } = await ai.generate({

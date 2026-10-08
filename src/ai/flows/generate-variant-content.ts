@@ -152,7 +152,8 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
 - Las Stories son efímeras y altamente interactivas.
 - El 'text' en pantalla debe ser ENORME pero ultra corto (máximo 20 caracteres).
 - Sugiere la ubicación de un STICKER interactivo (Encuesta, Link, Pregunta) en el campo 'production_notes'.
-- La 'voiceover' debe ser muy cercana, estilo "hablando a la cámara selfie", máximo 15 segundos hablados.`;
+- La 'voiceover' debe ser muy cercana, estilo "hablando a la cámara selfie", máximo 15 segundos hablados.
+- LÍMITE DE TIEMPO (CRÍTICO): La suma de la propiedad 'duration' de todas las escenas generadas NO DEBE EXCEDER LOS 60 SEGUNDOS en total. Ajusta la duración de cada escena para cumplir esto.`;
   } else {
     dualNarrativeInstruction = `REGLA DE NARRATIVA DUAL (VIDEO VERTICAL/CUADRADO - REELS):
 - La VOZ (voiceover) lleva la carga emocional y técnica detallada. Es un guion hablado (lo que dice el presentador).
