@@ -246,8 +246,13 @@ export class MetaGraphPublisher implements SocialPublisher {
           console.log(`[MetaGraph] Detalle del Error de Publicación:`, JSON.stringify(publishData.error, null, 2));
         }
 
-        if (publishData.error && (publishData.error.message.includes('Fatal') || publishData.error.error_subcode === 2207085)) {
-          console.log(`[MetaGraph] Error Fatal transitorio en intento ${pubAttempts + 1}. Reintentando en 15s...`);
+        if (publishData.error && (
+          publishData.error.message.includes('Fatal') || 
+          publishData.error.message.includes('Media ID is not available') ||
+          publishData.error.error_subcode === 2207085 ||
+          publishData.error.error_subcode === 2207027
+        )) {
+          console.log(`[MetaGraph] Error transitorio en intento ${pubAttempts + 1} (${publishData.error.error_subcode || 'N/A'}). Reintentando en 15s...`);
           await new Promise(r => setTimeout(r, 15000));
           pubAttempts++;
         } else if (publishData.error) {
