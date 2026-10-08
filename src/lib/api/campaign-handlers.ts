@@ -35,16 +35,10 @@ export async function handleListCampaigns(
 ): Promise<NextResponse> {
   if (!caller) return unauthorized();
   
-  let targetMentor = mentorId;
-  if (caller.isSuperAdmin) {
-    // El supervisor siempre ve todo
-    targetMentor = 'all';
-  } else {
-    if (!targetMentor || !canAccessMentorData(caller, targetMentor)) return forbidden();
-  }
+  if (!mentorId || !canAccessMentorData(caller, mentorId)) return forbidden();
 
   const repo = new FirestoreCampaignRepository(gateway);
-  return toApiResponse(await getMentorCampaigns(repo, { mentorId: targetMentor }));
+  return toApiResponse(await getMentorCampaigns(repo, { mentorId }));
 }
 
 export async function handleGetCampaign(
