@@ -5,7 +5,7 @@
  */
 import { z } from 'zod';
 
-export const ChannelSchema = z.enum(['Social', 'Email']);
+export const ChannelSchema = z.enum(['Social', 'Email', 'Ads']);
 export type Channel = z.infer<typeof ChannelSchema>;
 
 export const VariantIndexSchema = z.number().int().min(0).max(2);
