@@ -59,14 +59,15 @@ export async function handleRunScheduler(
         executionLogs?: Record<string, unknown>[];
       };
 
-      // Calculate relative campaign day (1-indexed)
-      const start = camp.startDate
-        ? new Date(camp.startDate as string)
-        : camp.createdAt?.toDate
-          ? camp.createdAt.toDate()
-          : new Date();
-      // Strip hours to compare calendar days cleanly
-      const startClean = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      // Calculate relative campaign day (1-indexed) safely avoiding timezone drift
+      const startDateStr = camp.startDate 
+        ? (typeof camp.startDate === 'string' ? camp.startDate : (camp.startDate as any).toISOString())
+        : (camp.createdAt?.toDate ? camp.createdAt.toDate().toISOString() : today.toISOString());
+      
+      const datePart = startDateStr.split('T')[0];
+      const [sYear, sMonth, sDay] = datePart.split('-').map(Number);
+      
+      const startClean = new Date(sYear, sMonth - 1, sDay);
       const todayClean = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
       const diffTime = todayClean.getTime() - startClean.getTime();
@@ -83,9 +84,9 @@ export async function handleRunScheduler(
         continue;
       }
 
-      // Fetch today's expected events in timeline
-      const todayEvents = timeline.filter((e) => e.day === currentDay);
-      if (todayEvents.length === 0) continue;
+      // Fetch expected events in timeline (catch-up logic: day <= currentDay)
+      const expectedEvents = timeline.filter((e) => e.day <= currentDay);
+      if (expectedEvents.length === 0) continue;
 
       // Fetch mentor's marketing credentials to identify sandbox/production modes and keys
       const mentorSnap = await gateway.getDoc('users', camp.mentorId);
@@ -94,8 +95,8 @@ export async function handleRunScheduler(
         { mode?: string; apiKey?: string } | undefined
       >);
 
-      // 3. Process each event scheduled for today
-      for (const event of todayEvents) {
+      // 3. Process each expected event
+      for (const event of expectedEvents) {
         const channels = (event.channels as string[]) || [];
 
         for (const channel of channels) {
@@ -110,13 +111,15 @@ export async function handleRunScheduler(
               const platformSchedules = Array.isArray(platformSchedulesRaw) ? platformSchedulesRaw : [platformSchedulesRaw];
 
               for (const currentSched of platformSchedules) {
-                // Check if already executed today
+                // Check if already executed
                 const alreadyRun = (camp.executionLogs || []).some(
                   (log) =>
-                    log.day === currentDay &&
+                    log.day === event.day &&
                     log.channel === 'Social' &&
                     log.platform === plat &&
                     log.videoName === currentSched.videoName &&
+                    log.time === currentSched.time &&
+                    log.format === currentSched.format &&
                     log.status === 'success',
                 );
 
@@ -124,8 +127,8 @@ export async function handleRunScheduler(
 
                 const schedTimeMin = getMinutes(currentSched.time || '18:00');
 
-                // If it's time to publish (current hour/minute is past or equal to scheduled time)
-                if (nowMin >= schedTimeMin) {
+                // If it's time to publish (past days run immediately; current day checks hour/minute)
+                if (event.day < currentDay || nowMin >= schedTimeMin) {
                   const motorId =
                     plat === 'instagram'
                       ? 'meta_social'
@@ -170,7 +173,7 @@ export async function handleRunScheduler(
                          if (camp.salesPageId) {
                            try {
                              const spDoc = await gateway.getDoc('salesPages', camp.salesPageId as string);
-                             const fallbackSocials = spDoc?.data()?.aiContent?.socials || [];
+                             const fallbackSocials = (spDoc?.data()?.aiContent as any)?.socials || [];
                              
                              let matchingSocial = fallbackSocials.find((s: any) => 
                                 s.platform === plat && 
@@ -186,7 +189,7 @@ export async function handleRunScheduler(
                              if (!matchingSocial) {
                                 matchingSocial = fallbackSocials.find((s: any) => 
                                   s.platform === plat && 
-                                  s.marketingName?.includes(`Día ${currentDay}`) &&
+                                  s.marketingName?.includes(`Día ${event.day}`) &&
                                   (currentSched.format ? s.format === currentSched.format : true)
                                 );
                              }
@@ -213,7 +216,7 @@ export async function handleRunScheduler(
                               format: currentSched.format || 'reel',
                               credentials: { 
                                  apiKey: motorCreds.apiKey,
-                                 accountId: motorCreds.accountId || ''
+                                 accountId: (motorCreds as any).accountId || ''
                               }
                             });
 
@@ -232,13 +235,14 @@ export async function handleRunScheduler(
 
                   const newLog = {
                     timestamp: new Date().toISOString(),
-                    day: currentDay,
+                    day: event.day,
                     channel: 'Social',
                     platform: plat,
                     action: event.action,
                     phase: event.phase,
                     variantIndex: event.variantIndex,
-                    videoName: currentSched.videoName || `Video ${currentDay}`,
+                    videoName: currentSched.videoName || `Video ${event.day}`,
+                    format: currentSched.format,
                     time: currentSched.time,
                     status,
                     mode,
@@ -257,7 +261,7 @@ export async function handleRunScheduler(
           } else {
             // General Channels: Email & Ads
             const alreadyRun = (camp.executionLogs || []).some(
-              (log) => log.day === currentDay && log.channel === channel && log.status === 'success',
+              (log) => log.day === event.day && log.channel === channel && log.status === 'success',
             );
 
             if (alreadyRun) continue;
@@ -265,7 +269,7 @@ export async function handleRunScheduler(
             const defaultTime = channel === 'Email' ? '09:00' : '08:00';
             const schedTimeMin = getMinutes(defaultTime);
 
-            if (nowMin >= schedTimeMin) {
+            if (event.day < currentDay || nowMin >= schedTimeMin) {
               const motorId = channel === 'Email' ? 'sendgrid' : 'meta_ads';
               const motorCreds = credentials[motorId] || {};
               const mode = motorCreds.mode || 'sandbox';
@@ -293,7 +297,7 @@ export async function handleRunScheduler(
 
               const newLog = {
                 timestamp: new Date().toISOString(),
-                day: currentDay,
+                day: event.day,
                 channel,
                 action: event.action,
                 phase: event.phase,

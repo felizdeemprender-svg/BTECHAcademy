@@ -5,6 +5,7 @@ import { Play, Pause, Instagram, Linkedin, Twitter, Mail, Calendar, Clock, Activ
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useMentorCampaigns } from '@/hooks/mentoring/use-mentor-campaigns';
+import { useToast } from '@/hooks/use-toast';
 
 const NetworkIcon = ({ network, className = "w-3 h-3" }: { network: string, className?: string }) => {
   switch (network.toLowerCase()) {
@@ -33,8 +34,47 @@ const getNetworkColorClasses = (network: string) => {
 };
 
 export default function CampaignsCommandCenter() {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const { data: dbData, isLoading } = useMentorCampaigns(profile?.uid);
+  const { toast } = useToast();
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleForceSync = async () => {
+    if (!user) return;
+    try {
+      setIsSyncing(true);
+      const token = await user.getIdToken();
+      const res = await fetch('/api/campaigns/scheduler', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        toast({
+          title: "Sincronización Completada",
+          description: `Se procesaron ${data.dispatchesExecuted || 0} acciones atrasadas o pendientes.`,
+        });
+        // We could mutate/reload campaigns here if we used SWR/React Query mutate, 
+        // but `useMentorCampaigns` might auto-refresh via Firestore onSnapshot
+      } else {
+        toast({
+          title: "Error de sincronización",
+          description: data.error || data.details || "Falló la comunicación con el orquestador",
+          variant: "destructive"
+        });
+      }
+    } catch (e: any) {
+      toast({
+        title: "Error inesperado",
+        description: e.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const activeCampaigns = useMemo(() => {
     if (!dbData) return [];
@@ -44,6 +84,8 @@ export default function CampaignsCommandCenter() {
         const c = s.campaign;
         const timelineRaw = c.strategy?.timeline ?? [];
         const executionLogs = c.executionLogs ?? [];
+        const isActive = c.isActive ?? false;
+        const autoPilot = c.autoPilot ?? false;
 
         const mappedTimeline = timelineRaw.map((event: any) => {
           const events: any[] = [];
@@ -155,9 +197,13 @@ export default function CampaignsCommandCenter() {
             <Calendar className="w-4 h-4" />
             Octubre 2026
           </button>
-          <button className="btn-prof px-4 py-2 bg-primary text-primary-foreground flex items-center gap-2 hover:opacity-90">
-            <Play className="w-4 h-4" />
-            Forzar Sincronización
+          <button 
+            onClick={handleForceSync}
+            disabled={isSyncing}
+            className="btn-prof px-4 py-2 bg-primary text-primary-foreground flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
+          >
+            {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {isSyncing ? "Sincronizando..." : "Forzar Sincronización"}
           </button>
         </div>
       </div>
@@ -203,10 +249,17 @@ export default function CampaignsCommandCenter() {
               <div className="p-6 border-r border-border/50 flex flex-col justify-center">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-bold text-base line-clamp-1" title={camp.title}>{camp.title}</h3>
-                  <span className="flex items-center gap-1 text-xs font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">
-                    <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                    Activa
-                  </span>
+                  {camp.isActive ? (
+                    <span className="flex items-center gap-1 text-xs font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">
+                      <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                      Activa
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+                      <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+                      Pausada
+                    </span>
+                  )}
                 </div>
                 <div className="w-full bg-border-soft rounded-full h-1.5 mb-2">
                   <div className="bg-primary h-1.5 rounded-full" style={{ width: `${camp.progress}%` }} />

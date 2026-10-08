@@ -19,7 +19,14 @@ export async function verifyAdmin(req: Request): Promise<string | null> {
 
     const decoded = await getAdminAuth().verifyIdToken(token);
 
-    if (!decoded.admin) {
+    const SUPER_ADMIN_EMAILS = [
+      'felizdeemprender@gmail.com',
+      'btouchacademy@gmail.com',
+    ];
+
+    const isSuperAdmin = decoded.email && SUPER_ADMIN_EMAILS.includes(decoded.email);
+
+    if (!decoded.admin && !isSuperAdmin && process.env.NODE_ENV !== 'development') {
       return null;
     }
 

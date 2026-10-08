@@ -158,7 +158,7 @@ export async function handleExecuteCampaign(
   let fallbackSocials: any[] = [];
   if (existing.salesPageId) {
     const spDoc = await gateway.getDoc('salesPages', existing.salesPageId);
-    fallbackSocials = spDoc?.data()?.aiContent?.socials || [];
+    fallbackSocials = (spDoc?.data()?.aiContent as any)?.socials || [];
   }
 
   const userSnap = await gateway.getDoc('users', caller.uid);
