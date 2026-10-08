@@ -44,6 +44,7 @@ export async function handleRunScheduler(
     }
 
     const dispatches: unknown[] = [];
+    const debugStats = { skippedFutureTime: 0, skippedAlreadyRun: 0, processedEvents: 0 };
 
     // 2. Loop through campaigns
     for (const d of docs) {
@@ -123,12 +124,15 @@ export async function handleRunScheduler(
                     log.status === 'success',
                 );
 
-                if (alreadyRun) continue;
+                if (alreadyRun) {
+                  debugStats.skippedAlreadyRun++;
+                  continue;
+                }
 
                 const schedTimeMin = getMinutes(currentSched.time || '18:00');
 
-                // If it's time to publish (past days run immediately; current day checks hour/minute)
                 if (event.day < currentDay || nowMin >= schedTimeMin) {
+                  debugStats.processedEvents++;
                   const motorId =
                     plat === 'instagram'
                       ? 'meta_social'
@@ -255,6 +259,8 @@ export async function handleRunScheduler(
                   // Append log to campaign
                   camp.executionLogs = [...(camp.executionLogs || []), newLog];
                   dispatches.push({ campaign: camp.title, channel: 'Social', platform: plat, status, feedback });
+                } else {
+                  debugStats.skippedFutureTime++;
                 }
               }
             }
@@ -329,6 +335,7 @@ export async function handleRunScheduler(
       status: 'completed',
       processedAt: today.toISOString(),
       dispatchesExecuted: dispatches.length,
+      debugStats: `Analizados: ${debugStats.processedEvents}. Ignorados (ya publicados): ${debugStats.skippedAlreadyRun}. Ignorados (hora futura): ${debugStats.skippedFutureTime}.`,
       details: dispatches,
     });
   } catch (error: unknown) {

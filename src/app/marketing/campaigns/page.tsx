@@ -54,7 +54,7 @@ export default function CampaignsCommandCenter() {
       if (res.ok) {
         toast({
           title: "Sincronización Completada",
-          description: `Se procesaron ${data.dispatchesExecuted || 0} acciones atrasadas o pendientes.`,
+          description: `Se procesaron ${data.dispatchesExecuted || 0} acciones. ${data.debugStats || ''}`,
         });
         // We could mutate/reload campaigns here if we used SWR/React Query mutate, 
         // but `useMentorCampaigns` might auto-refresh via Firestore onSnapshot
