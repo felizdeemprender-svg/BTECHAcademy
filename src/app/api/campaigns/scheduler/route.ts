@@ -6,15 +6,21 @@ import { handleRunScheduler } from '@/lib/api/scheduler-handler';
 // F1.2 — Autorización Dual: verifyAdmin para el Dashboard, y CRON_SECRET
 // para llamadas de Google Cloud Scheduler en background.
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
+  const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
   const isValidCronSecret = authHeader === `Bearer ${process.env.CRON_SECRET}`;
   
-  const adminUid = await verifyAdmin(request);
+  let adminUid: string | null = null;
+  let verifyError = '';
+
+  try {
+    adminUid = await verifyAdmin(request);
+  } catch (err: any) {
+    verifyError = err.message;
+  }
   
   if (!adminUid && !isValidCronSecret) {
     return NextResponse.json({ 
-      error: 'No autorizado',
-      debug_info: `adminUid was null, isValidCronSecret was false. Did you send the correct Bearer token?`
+      error: `No autorizado: ${verifyError || 'Invalid Cron Secret'}`
     }, { status: 401 });
   }
   return handleRunScheduler(await resolveGateway());

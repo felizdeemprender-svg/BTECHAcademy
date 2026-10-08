@@ -7,14 +7,14 @@ import { getAdminAuth } from '@/firebase/admin';
  */
 export async function verifyAdmin(req: Request): Promise<string | null> {
   try {
-    const authHeader = req.headers.get('Authorization');
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return null;
+      throw new Error('No Bearer token found in Authorization header');
     }
 
     const token = authHeader.split('Bearer ')[1];
     if (!token) {
-      return null;
+      throw new Error('Bearer token is empty');
     }
 
     const decoded = await getAdminAuth().verifyIdToken(token);
@@ -26,13 +26,12 @@ export async function verifyAdmin(req: Request): Promise<string | null> {
     const isSuperAdmin = decoded.email && SUPER_ADMIN_EMAILS.includes(decoded.email);
 
     if (!decoded.admin && !isSuperAdmin && process.env.NODE_ENV !== 'development') {
-      console.warn(`[verifyAdmin] Bloqueado: email=${decoded.email}, admin=${decoded.admin}, isSuperAdmin=${isSuperAdmin}`);
-      return null;
+      throw new Error(`User ${decoded.email} blocked: admin=${decoded.admin}, isSuperAdmin=${isSuperAdmin}`);
     }
 
     return decoded.uid;
-  } catch (err) {
+  } catch (err: any) {
     console.error('[verifyAdmin] Error:', err);
-    return null;
+    throw new Error(`VerifyAdmin failed: ${err.message}`);
   }
 }
