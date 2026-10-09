@@ -234,7 +234,7 @@ export default function CampaignsDashboardPage() {
     if (!approvingCampaign) return;
     setIsApproving(true);
     try {
-      await patchCampaign(approvingCampaign.id, await getToken(), { status: 'deploying', productionStatus: 'sealed' });
+      await patchCampaign(approvingCampaign.id, await getToken(), { status: 'deploying', productionStatus: 'sealed', isActive: true });
       toast({ title: 'Campaña Aprobada', description: 'La campaña está en cola en el Centro de Mando.' });
       await newApi.refetch();
       setApprovingCampaign(null);
@@ -257,7 +257,7 @@ export default function CampaignsDashboardPage() {
     }
     setTogglingPauseId(campaignId);
     try {
-      await patchCampaign(campaignId, await getToken(), { status: newStatus });
+      await patchCampaign(campaignId, await getToken(), { status: newStatus, isActive: isPaused });
       toast({ title: `Campaña ${isPaused ? 'Reanudada' : 'Pausada'}`, description: `El Centro de Mando ha sido notificado.` });
       await newApi.refetch();
     } catch (e) {
