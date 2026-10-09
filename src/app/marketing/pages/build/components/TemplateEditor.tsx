@@ -1647,8 +1647,7 @@ export function TemplateEditor({
                                                 </Button>
                                               </DialogClose>
                                               <Button
-                                                // disabled={getPlatformLabels(s.type).isDocument && s.platform === 'linkedin' ? !s.production_notes?.pdf_url : !(s.production_notes?.video_url || renderedVideos[globalIdx])}
-                                                disabled={false} // Temporalmente desactivado para permitir forzar el sellado
+                                                disabled={getPlatformLabels(s.type).isDocument && s.platform === 'linkedin' ? !s.production_notes?.pdf_url : !(s.production_notes?.video_url || renderedVideos[globalIdx])}
                                                 onClick={async () => {
                                                   const confirmLock = window.confirm('Al sellar la pieza se marcará como lista para publicación. Los archivos temporales se purgarán de la base de datos para ahorrar espacio. ¿Confirmar?');
                                                   if (confirmLock) {

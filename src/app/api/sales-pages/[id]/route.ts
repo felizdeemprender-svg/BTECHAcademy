@@ -21,6 +21,21 @@ export async function GET(
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
 
+    // SI es un pack de campaña, buscar el contenido de IA real alojado en su orquestador (colección campaigns)
+    if (page.type === 'campaign_pack' || (page.type as any) === 'campaign_videos' || (page.type as any) === 'multimedia_pack') {
+      const { adminDb } = await import('@/firebase/admin');
+      const campSnap = await adminDb.collection('campaigns')
+        .where('salesPageId', '==', page.id)
+        .limit(1)
+        .get();
+      if (!campSnap.empty) {
+        const campData = campSnap.docs[0].data();
+        if (campData.aiContent?.socials) {
+          page.aiContent = { ...page.aiContent, socials: campData.aiContent.socials };
+        }
+      }
+    }
+
     // Check permissions
     if (!caller.isAdmin && page.mentorId !== caller.uid) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

@@ -262,7 +262,13 @@ function OrchestratorContent() {
             else if (assetType === 'square') aspectFraming = '1:1';
             else if (assetType === 'carousel' || assetType === 'portrait_post') aspectFraming = '4:5';
 
+            const aspectFramingFinal = aspectFraming;
             const nameSuffix = posts.length > 1 ? ` #${postIndex + 1}` : '';
+            
+            // Variar el ADN automáticamente para que no todos los videos usen 01_CINEMA
+            const availableAdns = ['01_CINEMA', '02_LUXURYGO', '03_CORPORAT', '05_MINIMALD', '06_FASTCUT'];
+            const selectedAdn = availableAdns[postIndex % availableAdns.length];
+
             return {
               platform: platform,
               type: assetType,
@@ -283,7 +289,7 @@ function OrchestratorContent() {
                 text: '#0a0a0a'
               },
               production_notes: {
-                adnId: '01_CINEMA',
+                adnId: selectedAdn,
                 isLocked: false,
                 enable_tts: true,
                 voice_id: 'mateo',

@@ -10,12 +10,12 @@ import path from 'path';
 import fs from 'fs/promises';
 
 const SceneContentSchema = z.object({
-  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: Usa la etapa narrativa correcta. El primer slide suele ser GANCHO, el medio VALOR, el final CIERRE y CTA.'),
+  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: ES OBLIGATORIO RESPETAR EL ORDEN EXACTO DE LOS SEGMENTOS INDICADO EN EL PROMPT (ej: si dice 1. GANCHO, 2. VALOR, 3. CIERRE, DEBES devolver esos segment_label exactamente). ¡NUNCA repitas VALOR para todas las escenas!'),
   text: z.string().describe('Texto de impacto visual ultra-corto (2-4 palabras).'),
   subtitle: z.string().describe('Texto secundario o de apoyo (6-8 palabras). Obligatorio generar.'),
   watermark: z.string().describe('El @usuario (handle) de la red social.'),
   voiceover: z.string().describe('Guion narrativo. ¡CRÍTICO!: Escribe un guion fluido y continuo que dure por lo menos 10 SEGUNDOS de lectura hablada (aprox 25-35 palabras).'),
-  media_hint: z.string().describe('Keywords precisas para buscar el fondo visual (ej: "minimalist luxury office", "dark cyber technology abstract").'),
+  media_hint: z.string().describe('Keywords precisas para buscar el fondo visual (ej: "minimalist dark luxury office"). AÑADE SIEMPRE directivas de contraste (ej: "dark background", "dim lighting", "dark gradient") para asegurar que el texto superpuesto sea legible y no se funda con el fondo.'),
   duration: z.number().describe('Duración exacta en segundos (MÍNIMO 10s, ej: 10-15s).'),
   production_notes: z.string().optional().describe('Notas sobre el estilo de animación o tono específico para esta escena.'),
   subject_action: z.string().optional().describe('Para IA: Acción detallada del sujeto. Ej: "Mentor sonriendo", "Usuario escribiendo".'),
@@ -25,12 +25,12 @@ const SceneContentSchema = z.object({
 });
 
 const SocialSlideSchema = z.object({
-  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: Usa la etapa narrativa correcta.'),
+  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: ES OBLIGATORIO RESPETAR EL ORDEN EXACTO DE LOS SEGMENTOS INDICADO EN EL PROMPT (ej: si dice 1. GANCHO, 2. VALOR, 3. CIERRE, DEBES devolver esos segment_label exactamente). ¡NUNCA repitas VALOR para todas las escenas!'),
   text: z.string().describe('Texto visual para la placa.'),
   subtitle: z.string().describe('Subtítulo de apoyo. Obligatorio generar.'),
   watermark: z.string().describe('El @usuario (handle) de la red social.'),
   voiceover: z.string().describe('Guion de voz. ¡CRÍTICO!: Escribe un texto lo suficientemente largo para cubrir 10 SEGUNDOS mínimos de lectura.'),
-  media_hint: z.string().describe('Keywords para el fondo de la placa.'),
+  media_hint: z.string().describe('Keywords para el fondo de la placa. AÑADE SIEMPRE directivas de contraste (ej: "dark background", "dim lighting", "dark gradient") para asegurar que el texto superpuesto sea legible.'),
   duration: z.number().describe('Duración en segundos (MÍNIMO 10s).'),
   subject_action: z.string().optional().describe('Para IA: Acción detallada del sujeto. Ej: "Mentor sonriendo", "Usuario escribiendo".'),
   camera_movement: z.string().optional().describe('Para IA: Movimiento de cámara. Ej: "slow push-in", "steady pan", "static".'),
