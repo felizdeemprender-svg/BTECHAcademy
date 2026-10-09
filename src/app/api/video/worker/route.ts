@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       const processFullCampaign = async () => {
         try {
           // 3. Actualizar la estructura con los ADNs, colores y el Timeline
-          await adminDb.collection('salesPages').doc(campaignId).update({
+          await adminDb.collection('campaigns').doc(campaignId).update({
             'aiContent.socials': socials,
             ...(campaignStrategy ? { campaignStrategy } : {}),
             updatedAt: new Date().toISOString()
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
 
             // --- CHECKPOINTING ---
             // Revisamos en DB si la pieza ya fue procesada en una ejecución previa que hizo timeout
-            const latestDoc = await adminDb.collection('salesPages').doc(campaignId).get();
+            const latestDoc = await adminDb.collection('campaigns').doc(campaignId).get();
             const latestSocials = latestDoc.data()?.aiContent?.socials || [];
             const alreadyGenerated = latestSocials.find((s: any) => s.marketingName === social.marketingName && s.isGenerated === true);
             if (alreadyGenerated) {
@@ -235,7 +235,7 @@ export async function POST(req: NextRequest) {
               };
               
               // Actualizar Firestore progresivamente para que la UI lo vea en tiempo real
-              await adminDb.collection('salesPages').doc(campaignId).update({
+              await adminDb.collection('campaigns').doc(campaignId).update({
                 'aiContent.socials': socials,
                 updatedAt: new Date().toISOString()
               });
@@ -273,7 +273,7 @@ export async function POST(req: NextRequest) {
           
           console.log(`✅ [VideoWorker] Generación de campaña completada.`);
           // Actualizar el estado de la campaña para que desaparezca "Creando Auto-Campaña..." en la UI
-          await adminDb.collection('salesPages').doc(campaignId).update({
+          await adminDb.collection('campaigns').doc(campaignId).update({
             campaignStatus: 'ready_to_publish',
             updatedAt: new Date().toISOString()
           });
@@ -298,7 +298,7 @@ export async function POST(req: NextRequest) {
           const { adminDb } = await import('@/firebase/admin');
           
           // 0. Recolectar datos
-          const spDoc = await adminDb.collection('salesPages').doc(campaignId).get();
+          const spDoc = await adminDb.collection('campaigns').doc(campaignId).get();
           let courseTitle = 'Curso/Producto';
           let productData = { price: 0, productType: 'course' };
           let courseId = '';
@@ -325,7 +325,7 @@ export async function POST(req: NextRequest) {
              });
           }
 
-          await adminDb.collection('salesPages').doc(campaignId).update({
+          await adminDb.collection('campaigns').doc(campaignId).update({
             'aiContent.socials': socials,
             ...(campaignStrategy ? { campaignStrategy } : {}),
             updatedAt: new Date().toISOString()
@@ -430,7 +430,7 @@ export async function POST(req: NextRequest) {
                  }
               };
               
-              await adminDb.collection('salesPages').doc(campaignId).update({
+              await adminDb.collection('campaigns').doc(campaignId).update({
                 'aiContent.socials': socials,
                 updatedAt: new Date().toISOString()
               });
@@ -441,7 +441,7 @@ export async function POST(req: NextRequest) {
           }
           
           console.log(`✅ [VideoWorker] Redacción de borradores completada.`);
-          await adminDb.collection('salesPages').doc(campaignId).update({
+          await adminDb.collection('campaigns').doc(campaignId).update({
             campaignStatus: 'drafts_ready',
             updatedAt: new Date().toISOString()
           });

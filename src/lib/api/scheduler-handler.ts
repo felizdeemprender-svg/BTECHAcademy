@@ -176,8 +176,8 @@ export async function handleRunScheduler(
                          
                          if (camp.salesPageId) {
                            try {
-                             const spDoc = await gateway.getDoc('salesPages', camp.salesPageId as string);
-                             const fallbackSocials = (spDoc?.data()?.aiContent as any)?.socials || [];
+                             // Leemos las piezas generadas directamente desde el documento de la Campaña
+                             const fallbackSocials = (camp as any).aiContent?.socials || [];
                              
                              let matchingSocial = fallbackSocials.find((s: any) => 
                                 s.platform === plat && 
