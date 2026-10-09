@@ -361,7 +361,7 @@ function OrchestratorContent() {
       }
 
       toast({ title: '🚀 Producción Iniciada', description: 'Los guiones están en producción y podrás revisar los borradores en breve.' });
-      router.push('/marketing/execution');
+      router.push('/marketing/campaigns');
     } catch (e) {
       toast({ variant: 'destructive', title: 'Error al iniciar producción', description: e instanceof Error ? e.message : undefined });
     } finally {
@@ -731,8 +731,9 @@ function OrchestratorContent() {
                         <div>
                           <p className="text-xs font-bold text-amber-800">Flujo "Estrategia Primero"</p>
                           <p className="text-[11px] text-amber-700 mt-1">
-                            Al avanzar, se crearán <strong>{coordinationPlan.timeline.length} videos</strong> — cada uno contextualizado con la fase del embudo
-                            (ej: un video del Día 1 tendrá tono de "Concientización", uno del Día {Math.max(...coordinationPlan.timeline.map(e => e.day))} será de "Urgencia/Cierre").
+                            Al avanzar, se redactarán <strong>los guiones y textos para cada pieza</strong> del itinerario. 
+                            Cada una estará contextualizada con la fase del embudo 
+                            (ej: el Día 1 tendrá tono de "Concientización", el Día {Math.max(...coordinationPlan.timeline.map(e => e.day))} será de "Urgencia/Cierre").
                           </p>
                         </div>
                       </div>
