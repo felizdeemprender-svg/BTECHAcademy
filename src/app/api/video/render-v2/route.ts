@@ -413,10 +413,19 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
     const salesPageId = (body as any).salesPageId;
     if (salesPageId && (resultPayload.downloadUrl || resultPayload.webViewLink || resultPayload.videoPath)) {
       try {
-        const spDoc = await adminDb.collection('salesPages').doc(salesPageId).get();
-        if (spDoc.exists) {
-           const d = spDoc.data();
-           const socials = d?.aiContent?.socials || [];
+        let docRef = adminDb.collection('campaigns').doc(salesPageId);
+        let docSnap = await docRef.get();
+        let isCampaign = true;
+
+        if (!docSnap.exists) {
+           docRef = adminDb.collection('salesPages').doc(salesPageId);
+           docSnap = await docRef.get();
+           isCampaign = false;
+        }
+
+        if (docSnap.exists) {
+           const d = docSnap.data();
+           const socials = isCampaign ? (d?.videoSkeletons || []) : (d?.aiContent?.socials || []);
            let updated = false;
            for (let s of socials) {
               if (s.marketingName === body.marketingName) {
@@ -429,13 +438,13 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
               }
            }
            if (updated) {
-              await adminDb.collection('salesPages').doc(salesPageId).update({
-                 'aiContent.socials': socials
-              });
-              console.log(`[JobQueue] Updated salesPage ${salesPageId} with video URL for ${body.marketingName}`);
+              await docRef.update(
+                 isCampaign ? { 'videoSkeletons': socials } : { 'aiContent.socials': socials }
+              );
+              console.log(`[JobQueue] Updated ${isCampaign ? 'campaign' : 'salesPage'} ${salesPageId} with video URL for ${body.marketingName}`);
            }
         }
-      } catch(e) { console.error("Error updating salesPage:", e); }
+      } catch(e) { console.error("Error updating campaign/salesPage:", e); }
     }
 
     console.log(`✅ [JobQueue] Job ${jobId} completado.`);

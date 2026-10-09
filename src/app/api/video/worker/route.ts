@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       const { enqueueVideoTask } = await import('@/lib/cloud-tasks');
       
       // 0. El "Agente Investigador": Recolectar datos del producto
-      const spDoc = await adminDb.collection('salesPages').doc(campaignId).get();
+      const spDoc = await adminDb.collection('campaigns').doc(campaignId).get();
       let courseTitle = 'Curso/Producto';
       let productData = { price: 0, productType: 'course' };
       let courseId = '';
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
         try {
           // 3. Actualizar la estructura con los ADNs, colores y el Timeline
           await adminDb.collection('campaigns').doc(campaignId).update({
-            'aiContent.socials': socials,
+            'videoSkeletons': socials,
             ...(campaignStrategy ? { campaignStrategy } : {}),
             updatedAt: new Date().toISOString()
           });
@@ -326,7 +326,7 @@ export async function POST(req: NextRequest) {
           }
 
           await adminDb.collection('campaigns').doc(campaignId).update({
-            'aiContent.socials': socials,
+            'videoSkeletons': socials,
             ...(campaignStrategy ? { campaignStrategy } : {}),
             updatedAt: new Date().toISOString()
           });

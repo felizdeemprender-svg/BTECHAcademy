@@ -155,6 +155,7 @@ export default function CampaignsCommandCenter() {
           progress: s.progressPercent || 0,
           currentDay: s.currentDay,
           startDate: c.startDate || new Date().toISOString().split('T')[0],
+          isActive,
           timeline: mappedTimeline
         };
       });

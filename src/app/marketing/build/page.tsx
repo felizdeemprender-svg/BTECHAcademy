@@ -300,50 +300,17 @@ function OrchestratorContent() {
         });
       });
 
-      const pageId = Math.random().toString(36).substring(2, 15);
-      setCreatedSalesPageId(pageId);
-      
-      const pageData = {
-        title: campaignTitle + " (Videos)",
-        mentorId: profile.uid,
-        courseId: selectedCourseId,
-        productId: selectedCourseId,
-        campaignStatus: 'processing',
-        targetAudience,
-        type: 'campaign_videos',
-        aiContent: {
-          socials: videoSkeletons,
-        },
-        engineMeta: {
-          generationEngine: 'StrategyFirst-Orchestrator',
-          mission: campaignMission,
-          strategyType: strategy,
-        },
-        isActive: true,
-      };
-
-      const createRes = await fetch('/api/sales-pages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ pageId, data: pageData })
-      });
-
-      if (!createRes.ok) throw new Error('Error al crear el pack de videos');
-
-      // Guardar también la estrategia en la colección de campañas (publishCampaign)
+      // Guardar la estrategia en la colección de campañas (publishCampaign)
       const publishRes = await publishCampaign({
         mentorId: profile.uid,
         title: campaignTitle,
-        salesPageId: pageId,
+        salesPageId: selectedCourseId, // Ahora la campaña referencia a la Landing real directamente
         courseId: selectedCourseId,
         strategy: coordinationPlan,
         startDate: startDate,
       }, await getToken());
 
-      const realCampaignId = publishRes.id; // ¡Este es el ID correcto de la campaña!
+      const realCampaignId = publishRes.id;
 
       // Lanzar generación de borradores inmediatamente
       const autoRes = await fetch('/api/campaign/draft-videos', {

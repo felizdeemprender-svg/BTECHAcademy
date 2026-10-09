@@ -37,6 +37,7 @@ function campaign(): Campaign {
     productionStatus: 'ready_to_publish',
     isActive: true,
     executionLogs: [],
+    videoSkeletons: [],
     strategy: { strategyName: 'S', logic: 'L', timeline: timeline as Campaign['strategy']['timeline'] },
   };
 }

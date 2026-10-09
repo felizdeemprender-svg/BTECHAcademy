@@ -33,6 +33,7 @@ function campaign(): Campaign {
     productionStatus: 'ready_to_publish',
     isActive: true,
     executionLogs: [],
+    videoSkeletons: [],
     strategy: strategy as Campaign['strategy'],
   };
 }

@@ -23,6 +23,7 @@ export const CampaignPatchSchema = z.object({
     total: z.number()
   }).optional(),
   startDate: z.string().optional(),
+  videoSkeletons: z.array(z.unknown()).optional(),
 });
 export type CampaignPatch = z.infer<typeof CampaignPatchSchema>;
 

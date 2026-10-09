@@ -260,6 +260,9 @@ export default function SalesLandingsDashboardPage() {
     if (!rawPages) return null;
 
     const filtered = rawPages.filter((p: any) => {
+      // Ocultar Packs Multimedia ya que no son landings reales sino contenedores de contenido
+      if (p.type === 'campaign_videos' || p.type === 'campaign_pack') return false;
+
       if (!searchTerm) return true;
       const term = searchTerm.toLowerCase();
       return (

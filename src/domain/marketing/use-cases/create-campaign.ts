@@ -63,6 +63,7 @@ export async function createCampaign(
         startDate: parsed.data.startDate,
         autoPilot: true,
         status: 'draft',
+        videoSkeletons: [],
         productionStatus: 'producing',
         isActive: false,
         progress: { sealed: 0, total: totalPieces || parsed.data.strategy.timeline.length },

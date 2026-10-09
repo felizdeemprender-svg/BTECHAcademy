@@ -33,6 +33,7 @@ export const CampaignSchema = z.object({
   }).default({ sealed: 0, total: 0 }),
   executionLogs: z.array(ExecutionLogSchema).default([]),
   generatedAssets: z.record(z.string()).optional(),
+  videoSkeletons: z.array(z.unknown()).default([]),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
 });
