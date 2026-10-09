@@ -210,7 +210,7 @@ export function updateProgramTaskProgress(
 export function patchCampaign(
   id: string,
   token: string,
-  patch: { strategy?: unknown; autoPilot?: boolean; startDate?: string; title?: string; status?: string; productionStatus?: string },
+  patch: { strategy?: unknown; autoPilot?: boolean; startDate?: string; title?: string; status?: string; productionStatus?: string; isActive?: boolean },
 ): Promise<void> {
   return apiSend<void>('PATCH', `/api/campaigns/${encodeURIComponent(id)}`, token, patch);
 }

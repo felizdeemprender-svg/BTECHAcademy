@@ -4,7 +4,7 @@ import { getRootDomain, getSubdomain } from '@/lib/utils';
 const RESERVED_PATHS = [
   'admin', 'api', 'auth', 'courses', 'dashboard', 'mentoria', 
   'my-courses', 'settings', 'v', 
-  'about', 'services', 'privacy', 'terms', 'favicon.ico', 
+  'about', 'services', 'privacy', 'terms', 'privacidad', 'terminos', 'favicon.ico', 
   'globals.css', 'tutor-access-denied', 'upgrade-required', 'ai-assistant', 'alumnos',
   'tutor', 'planes', 'evo', 'styles-demo', 'preview-style', 'marketing', 'automations', 'referidos' // Rutas reservadas oficiales
 ];
