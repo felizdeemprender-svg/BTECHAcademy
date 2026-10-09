@@ -328,7 +328,7 @@ function OrchestratorContent() {
       if (!createRes.ok) throw new Error('Error al crear el pack de videos');
 
       // Guardar también la estrategia en la colección de campañas (publishCampaign)
-      await publishCampaign({
+      const publishRes = await publishCampaign({
         mentorId: profile.uid,
         title: campaignTitle,
         salesPageId: pageId,
@@ -336,6 +336,8 @@ function OrchestratorContent() {
         strategy: coordinationPlan,
         startDate: startDate,
       }, await getToken());
+
+      const realCampaignId = publishRes.id; // ¡Este es el ID correcto de la campaña!
 
       // Lanzar generación de borradores inmediatamente
       const autoRes = await fetch('/api/campaign/draft-videos', {
@@ -345,7 +347,7 @@ function OrchestratorContent() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          campaignId: pageId,
+          campaignId: realCampaignId, // Enviamos el ID correcto de la campaña
           assets: { socials: videoSkeletons },
           videosPerPlatform,
           targetAudience,
