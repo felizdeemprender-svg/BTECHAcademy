@@ -516,29 +516,29 @@ export default function CampaignsDashboardPage() {
                     <div key={i} className={cn(
                       "w-full p-5 rounded-2xl border-2 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all",
                       isToday ? "bg-success/10 border-success shadow-md" : 
-                      isPast ? "bg-muted border-border opacity-60" : "bg-white border-muted hover:border-primary/30"
+                      isPast ? "bg-muted/40 border-border text-muted-foreground" : "bg-card border-border hover:border-primary/30 shadow-sm"
                     )}>
                       <div className="flex items-center gap-6 flex-1">
                         <div className="flex flex-col items-center justify-center shrink-0 w-20">
-                          <Badge className={cn("px-3 py-1 text-[11px] font-black tracking-widest", isToday ? "bg-success" : "bg-border")}>
+                          <Badge className={cn("px-3 py-1 text-[11px] font-black tracking-widest", isToday ? "bg-success text-white" : "bg-border text-muted-foreground")}>
                             DÍA {step.day}
                           </Badge>
-                          <span className="text-[10px] font-black uppercase text-muted-foreground mt-2">VAR {step.variantIndex + 1}</span>
+                          <span className="text-[10px] font-black uppercase mt-2 opacity-70">VAR {step.variantIndex + 1}</span>
                           {isToday && <div className="mt-2 w-2 h-2 rounded-full bg-success animate-ping" />}
                         </div>
                         
                         <div className="flex-1 border-l pl-6 py-2 border-border/50">
-                          <p className="font-bold text-lg text-foreground leading-snug mb-3">{step.action}</p>
+                          <p className="font-bold text-lg leading-snug mb-3">{step.action}</p>
                           {step.socialSchedule && Object.keys(step.socialSchedule).length > 0 && (
                             <div className="flex flex-col gap-2 mt-2">
                               {Object.entries(step.socialSchedule).map(([plat, posts]: [string, any]) => {
                                 const postArray = Array.isArray(posts) ? posts : [posts];
                                 return postArray.map((p, idx) => (
-                                  <div key={`${plat}-${idx}`} className="flex items-center gap-3 text-xs text-muted-foreground bg-muted/30 w-fit px-3 py-1.5 rounded-md border border-border/50">
-                                    <span className="font-mono font-bold text-foreground">{p.time}</span>
+                                  <div key={`${plat}-${idx}`} className="flex items-center gap-3 text-xs text-foreground bg-background shadow-sm w-fit px-3 py-1.5 rounded-lg border border-border/60">
+                                    <span className="font-mono font-bold">{p.time}</span>
                                     <span className="capitalize font-bold text-primary">{plat}</span>
-                                    <span className="capitalize">{p.format || 'Feed'}</span>
-                                    <span className="font-medium bg-background px-1.5 py-0.5 rounded shadow-sm border border-border/50">{p.videoName || 'Video'}</span>
+                                    <span className="capitalize text-muted-foreground font-medium">{p.format || 'Feed'}</span>
+                                    <span className="font-medium bg-muted/50 px-2 py-0.5 rounded text-xs border border-border/30">{p.videoName || 'Video'}</span>
                                   </div>
                                 ));
                               })}
