@@ -528,7 +528,22 @@ export default function CampaignsDashboardPage() {
                         </div>
                         
                         <div className="flex-1 border-l pl-6 py-2 border-border/50">
-                          <p className="font-bold text-lg text-foreground leading-snug">{step.action}</p>
+                          <p className="font-bold text-lg text-foreground leading-snug mb-3">{step.action}</p>
+                          {step.socialSchedule && Object.keys(step.socialSchedule).length > 0 && (
+                            <div className="flex flex-col gap-2 mt-2">
+                              {Object.entries(step.socialSchedule).map(([plat, posts]: [string, any]) => {
+                                const postArray = Array.isArray(posts) ? posts : [posts];
+                                return postArray.map((p, idx) => (
+                                  <div key={`${plat}-${idx}`} className="flex items-center gap-3 text-xs text-muted-foreground bg-muted/30 w-fit px-3 py-1.5 rounded-md border border-border/50">
+                                    <span className="font-mono font-bold text-foreground">{p.time}</span>
+                                    <span className="capitalize font-bold text-primary">{plat}</span>
+                                    <span className="capitalize">{p.format || 'Feed'}</span>
+                                    <span className="font-medium bg-background px-1.5 py-0.5 rounded shadow-sm border border-border/50">{p.videoName || 'Video'}</span>
+                                  </div>
+                                ));
+                              })}
+                            </div>
+                          )}
                         </div>
                       </div>
                       
