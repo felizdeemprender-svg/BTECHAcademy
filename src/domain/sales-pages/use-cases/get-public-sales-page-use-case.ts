@@ -36,6 +36,20 @@ export class GetPublicSalesPageUseCase {
       return null;
     }
 
+    // SI es un pack de campaña, buscar el contenido de IA real alojado en su orquestador (colección campaigns)
+    if (page.type === 'campaign_videos' || page.type === 'multimedia_pack') {
+      const campSnap = await adminDb.collection('campaigns')
+        .where('salesPageId', '==', page.id)
+        .limit(1)
+        .get();
+      if (!campSnap.empty) {
+        const campData = campSnap.docs[0].data();
+        if (campData.aiContent?.socials) {
+          page.aiContent = { ...page.aiContent, socials: campData.aiContent.socials };
+        }
+      }
+    }
+
     let course = null;
     let modules: any[] = [];
 
