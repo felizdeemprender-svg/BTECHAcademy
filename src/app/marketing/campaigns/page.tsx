@@ -99,7 +99,7 @@ export default function CampaignsCommandCenter() {
                 const vTime = sch.time || '12:00';
                 const format = sch.format || 'post';
                 
-                const log = executionLogs.find((l: any) => 
+                const log = [...(executionLogs || [])].reverse().find((l: any) => 
                   l.day === event.day && 
                   (l.videoName === sch.videoName || l.action === sch.videoName || l.videoName === vName) && 
                   (l.platform === plat || !l.platform) &&
@@ -125,7 +125,7 @@ export default function CampaignsCommandCenter() {
             });
           } else if (event.channels) {
              event.channels.forEach((ch: string) => {
-                const log = executionLogs.find((l: any) => l.day === event.day && l.action === event.action && (!l.platform || l.platform === ch));
+                const log = [...(executionLogs || [])].reverse().find((l: any) => l.day === event.day && l.action === event.action && (!l.platform || l.platform === ch));
                 let status = 'pending';
                 let errorMessage = undefined;
                 if (log) {
