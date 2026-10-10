@@ -787,7 +787,7 @@ function BuilderContent() {
 
       const packs = generateExportPacks(
         [],
-        validatedSocials.social || [],
+        validatedSocials.socials || validatedSocials.social || [],
         [],
         exportOptions
       );
@@ -818,7 +818,7 @@ function BuilderContent() {
         courseId: selectedCourseId || null, 
         productId: selectedCourseId || null,
         productType: course?.productType || 'manual_pack',
-        campaignStatus: validatedSocials.social?.every((s: any) => s.isGenerated && !s.isDraft) ? 'ready_to_publish' : 'drafts_ready',
+        campaignStatus: (validatedSocials.socials || validatedSocials.social || [])?.every((s: any) => s.isGenerated && !s.isDraft) ? 'ready_to_publish' : 'drafts_ready',
         courseKeywords: courseTags?.slice(0, 5).join(',') || 'manual,pack',
         engineMeta: {
           generationEngine: 'Manual-Builder',
@@ -831,7 +831,7 @@ function BuilderContent() {
         templateDirectives: templateDirectives || '',
         templateCollectionId: selectedCollectionId || 'manual',
         aiContent: {
-          socials: validatedSocials.social || []
+          socials: validatedSocials.socials || validatedSocials.social || []
         },
         exportUrls: exportUrls,
         slug: (pageTitle || course?.title || 'pack-manual').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''),
@@ -898,7 +898,11 @@ function BuilderContent() {
 
       if (!silentAutoSave) {
         toast({ title: 'Pack Multimedia Guardado', description: 'Tus 3 rutas de lanzamiento están activas.' });
-        router.push('/marketing/pages');
+        if (blueprintData?.type === 'campaign_pack') {
+          router.push('/marketing');
+        } else {
+          router.push('/marketing/pages');
+        }
       } else {
         console.log('✅ Auto-guardado silencioso completado.');
       }
@@ -917,6 +921,14 @@ function BuilderContent() {
     }
   };
 
+  const handleGoBack = () => {
+    if (blueprintData?.type === 'campaign_pack') {
+      router.push('/marketing');
+    } else {
+      router.push('/marketing/pages');
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-10 pb-20">
@@ -926,7 +938,7 @@ function BuilderContent() {
         {step === 3 && (
           <header className="flex flex-col md:flex-row md:items-center gap-6 justify-between bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-primary/10 shadow-sm">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => router.push('/marketing/pages')} className="rounded-full bg-white hover:bg-muted border border-border/50">
+              <Button variant="ghost" size="icon" onClick={handleGoBack} className="rounded-full bg-white hover:bg-muted border border-border/50">
                 <ArrowLeft className="h-6 w-6" />
               </Button>
               <div>

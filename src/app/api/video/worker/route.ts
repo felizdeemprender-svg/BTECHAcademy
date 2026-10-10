@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
             // --- CHECKPOINTING ---
             // Revisamos en DB si la pieza ya fue procesada en una ejecución previa que hizo timeout
             const latestDoc = await adminDb.collection('campaigns').doc(campaignId).get();
-            const latestSocials = latestDoc.data()?.aiContent?.socials || [];
+            const latestSocials = latestDoc.data()?.videoSkeletons || [];
             const alreadyGenerated = latestSocials.find((s: any) => s.marketingName === social.marketingName && s.isGenerated === true);
             if (alreadyGenerated) {
                console.log(`[VideoWorker] Saltando pieza ya generada: ${social.marketingName}`);
@@ -236,7 +236,7 @@ export async function POST(req: NextRequest) {
               
               // Actualizar Firestore progresivamente para que la UI lo vea en tiempo real
               await adminDb.collection('campaigns').doc(campaignId).update({
-                'aiContent.socials': socials,
+                'videoSkeletons': socials,
                 updatedAt: new Date().toISOString()
               });
               

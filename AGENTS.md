@@ -73,11 +73,11 @@ Archivos a mantener sincronizados con el código:
 
 ## Procedimiento Estricto de Git y Branching (Workflow)
 
-Para evitar romper el despliegue en producción (Firebase App Hosting / Vercel), los agentes deben adherirse **estrictamente** al siguiente procedimiento:
+Para evitar romper el despliegue en producción y respetar la autoridad del usuario sobre el control de versiones, los agentes deben adherirse **estrictamente** al siguiente procedimiento:
 
-1. **Nunca hacer commits ni pushes directos a `main`.**
-2. **Ciclo de Validación (Obligatorio antes de empaquetar un branch):**
+1. **CERO OPERACIONES DE GIT POR DEFECTO:** Está **ESTRICTAMENTE PROHIBIDO** ejecutar comandos de git (`git add`, `git commit`, `git checkout -b`, `git push`) bajo cualquier circunstancia a menos que el usuario lo solicite de manera explícita (ej: "hacé el commit", "creá la rama", "subí a git").
+2. **Nunca tocar `main`:** Si el usuario pide un commit, nunca se debe hacer sobre `main`.
+3. **Ciclo de Validación (Obligatorio antes de empaquetar):**
    - Ejecutar `npm run typecheck` (tsc --noEmit) para comprobar el baseline (actualmente 0 errores). **No se debe avanzar si hay errores nuevos.**
    - Ejecutar `npm run test` para asegurar que el refactor no rompa la lógica del dominio.
-3. **Creación de Branch:** Una vez validado el código, y **solo cuando el usuario lo solicite explícitamente**, empaquetar los cambios en una nueva rama usando `git checkout -b <nombre-del-branch>`.
-4. **Handoff:** Dejar que el usuario realice el `git push` manualmente, y esperar su confirmación de que la plataforma de CI/CD procesó los cambios correctamente antes de considerar la tarea como finalizada.
+4. **Handoff:** El usuario siempre tiene la última palabra para realizar el `git push` o el merge manualmente. No asumas el control del repositorio.

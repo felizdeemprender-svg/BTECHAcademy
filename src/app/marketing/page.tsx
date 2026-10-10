@@ -33,7 +33,8 @@ import {
   MoreVertical,
   CheckCircle2,
   Pause,
-  Play
+  Play,
+  PenTool
 } from 'lucide-react';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -426,6 +427,17 @@ export default function CampaignsDashboardPage() {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
+
+                            <Link href={`/marketing/pages/build?id=${camp.id}`}>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary"
+                                title="Fábrica de Contenidos (Editar ADNs y Videos)"
+                              >
+                                <PenTool className="h-4 w-4" />
+                              </Button>
+                            </Link>
 
                             <Button 
                               variant="ghost" 

@@ -16,7 +16,25 @@ export async function GET(
 
     const { id } = await params;
 
-    const page = await repo.getById(id);
+    let page = await repo.getById(id);
+    
+    if (!page) {
+      // Mock Virtual Campaign Pack
+      const { adminDb } = await import('@/firebase/admin');
+      const campRef = await adminDb.collection('campaigns').doc(id).get();
+      if (campRef.exists) {
+        const camp = campRef.data() as any;
+        page = {
+          id: camp.id || id,
+          mentorId: camp.mentorId,
+          type: 'campaign_pack',
+          title: camp.name || camp.title || 'Pack Multimedia (Virtual)',
+          aiContent: { socials: camp.videoSkeletons || [] },
+          campaignStatus: camp.productionStatus,
+        } as any;
+      }
+    }
+
     if (!page) {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }

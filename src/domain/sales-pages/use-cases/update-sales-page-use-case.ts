@@ -12,25 +12,41 @@ export class UpdateSalesPageUseCase {
   constructor(private readonly repo: AdminSalesPageRepository) {}
 
   async execute(request: UpdateSalesPageRequest): Promise<void> {
-    const page = await this.repo.getById(request.pageId);
+    let page = await this.repo.getById(request.pageId);
+    let isVirtualCampaign = false;
     
     if (!page) {
-      throw new Error('SalesPage not found');
+      // Intentar cargar la campaña para emular el Pack Multimedia virtual
+      const { adminDb } = await import('@/firebase/admin');
+      const campRef = await adminDb.collection('campaigns').doc(request.pageId).get();
+      if (!campRef.exists) {
+        throw new Error('SalesPage not found');
+      }
+      isVirtualCampaign = true;
+      const camp = campRef.data() as any;
+      page = {
+        id: camp.id || request.pageId,
+        mentorId: camp.mentorId,
+        type: 'campaign_pack',
+        title: camp.name || camp.title || 'Pack Multimedia (Virtual)',
+        aiContent: { socials: camp.videoSkeletons || [] },
+        campaignStatus: camp.productionStatus,
+      } as any;
     }
 
     // Validación de seguridad (ownership)
-    if (!request.isAdmin && page.mentorId !== request.uid) {
+    if (!request.isAdmin && page!.mentorId !== request.uid) {
       throw new Error('Unauthorized: You do not own this SalesPage');
     }
 
     // No permitir cambiar de dueño a menos que sea Admin (opcional, pero buena práctica)
-    if (request.data.mentorId && request.data.mentorId !== page.mentorId && !request.isAdmin) {
+    if (request.data.mentorId && request.data.mentorId !== page!.mentorId && !request.isAdmin) {
       throw new Error('Unauthorized: Cannot change the mentorId of this SalesPage');
     }
 
     // Asegurar que el nombre de campaña (title) no esté repetido
-    if (request.data.title && request.data.title !== page.title) {
-      const existingPages = await this.repo.listByMentor(page.mentorId);
+    if (request.data.title && request.data.title !== page!.title) {
+      const existingPages = await this.repo.listByMentor(page!.mentorId);
       const titles = existingPages.filter(p => p.id !== request.pageId).map(p => p.title);
       
       if (titles.includes(request.data.title)) {
@@ -46,8 +62,8 @@ export class UpdateSalesPageUseCase {
     }
 
     // MERGE production_notes para evitar sobreescribir los links de video generados en background
-    if (request.data.aiContent?.socials && page.aiContent?.socials) {
-      const existingSocials = page.aiContent.socials as any[];
+    if (request.data.aiContent?.socials && page!.aiContent?.socials) {
+      const existingSocials = page!.aiContent.socials as any[];
       const incomingSocials = request.data.aiContent.socials as any[];
       
       request.data.aiContent.socials = incomingSocials.map(inc => {
@@ -89,17 +105,27 @@ export class UpdateSalesPageUseCase {
       }
     }
 
-    await this.repo.update(request.pageId, request.data);
+    if (!isVirtualCampaign) {
+      await this.repo.update(request.pageId, request.data);
+    }
 
     // Sync with Campaign in Firestore to update progress and state machine
     try {
       const { adminDb } = await import('@/firebase/admin');
-      const campaignsSnap = await adminDb.collection('campaigns')
-        .where('salesPageId', '==', request.pageId)
-        .get();
+      
+      let campaignsSnap;
+      if (isVirtualCampaign) {
+        // La request.pageId ES la campaña
+        const doc = await adminDb.collection('campaigns').doc(request.pageId).get();
+        campaignsSnap = { empty: !doc.exists, docs: doc.exists ? [doc] : [] };
+      } else {
+        campaignsSnap = await adminDb.collection('campaigns')
+          .where('salesPageId', '==', request.pageId)
+          .get();
+      }
       
       if (!campaignsSnap.empty) {
-        const socialsForSync = request.data.aiContent?.socials || page.aiContent?.socials || [];
+        const socialsForSync = request.data.aiContent?.socials || page!.aiContent?.socials || [];
         const total = socialsForSync.length;
         const sealed = socialsForSync.filter((s: any) => s.production_notes?.isLocked).length;
         
@@ -107,21 +133,27 @@ export class UpdateSalesPageUseCase {
         
         const batch = adminDb.batch();
         campaignsSnap.docs.forEach(doc => {
+          const docData = doc.data() || {};
           const updates: any = { 
             progress: { sealed, total },
             updatedAt: new Date() 
           };
+
+          if (isVirtualCampaign && request.data.aiContent?.socials) {
+            updates.videoSkeletons = request.data.aiContent.socials;
+            updates.productionStatus = isAllSealed ? 'sealed' : 'producing';
+          }
           
           if (isAllSealed) {
             updates.productionStatus = 'sealed';
             // Only upgrade to ready_for_distribution if it hasn't progressed further
-            if (doc.data().status === 'draft') {
+            if (docData.status === 'draft') {
               updates.status = 'ready_for_distribution';
             }
           } else {
             // Revert back if unsealed
             updates.productionStatus = 'producing';
-            if (doc.data().status === 'ready_for_distribution') {
+            if (docData.status === 'ready_for_distribution') {
               updates.status = 'draft';
             }
           }

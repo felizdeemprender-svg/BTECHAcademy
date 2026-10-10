@@ -174,10 +174,9 @@ export async function handleRunScheduler(
                          let videoUrl;
                          let finalCaption = event.action as string;
                          
-                         if (camp.salesPageId) {
                            try {
-                             // Leemos las piezas generadas directamente desde el documento de la Campaña
-                             const fallbackSocials = (camp as any).aiContent?.socials || [];
+                             // Leemos las piezas generadas directamente desde el documento de la Campaña (Opción B)
+                             const fallbackSocials = (camp as any).videoSkeletons || [];
                              
                              let matchingSocial = fallbackSocials.find((s: any) => 
                                 s.platform === plat && 
@@ -203,9 +202,8 @@ export async function handleRunScheduler(
                                if (matchingSocial.caption) finalCaption = matchingSocial.caption;
                              }
                            } catch (e) {
-                             console.error("[Scheduler] Error leyendo salesPage", e);
+                             console.error("[Scheduler] Error leyendo videoSkeletons", e);
                            }
-                         }
 
                          if (!videoUrl) {
                             status = 'failed';
