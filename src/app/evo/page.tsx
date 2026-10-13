@@ -1,11 +1,5 @@
-import { EvoAssistant } from '@/components/evo/evo-assistant';
+import { redirect } from 'next/navigation';
 
-export default function EvoPage() {
-  return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl p-4 lg:p-8">
-        <EvoAssistant />
-      </div>
-    </main>
-  );
+export default function LegacyEvoPage() {
+  redirect('/settings/evo');
 }

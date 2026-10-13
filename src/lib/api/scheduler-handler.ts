@@ -17,6 +17,52 @@ const getMinutes = (t: string) => {
   return (h || 0) * 60 + (m || 0);
 };
 
+/**
+ * Deduplicación robusta de piezas sociales ya emitidas con éxito.
+ * Si en el día hay 1 sola pieza para la plataforma, cualquier éxito previo en ese día/red alcanza.
+ * Si hay múltiples piezas, compara horario efectivo (HH:MM), formato y video.
+ */
+export function isPieceAlreadyExecuted(
+  executionLogs: Record<string, unknown>[] | undefined,
+  event: { day: number; action?: unknown },
+  plat: string,
+  currentSched: { time?: string; videoName?: string; format?: string; marketingName?: string; assetName?: string },
+  totalSchedulesForPlatform: number = 1,
+): boolean {
+  if (!executionLogs || executionLogs.length === 0) return false;
+
+  const targetTime = currentSched.time || '18:00';
+  const targetVideoName = currentSched.videoName || currentSched.marketingName || currentSched.assetName || `Video ${event.day}`;
+  const targetFormat = currentSched.format || 'reel';
+
+  return executionLogs.some((log: any) => {
+    if (log.day !== event.day || log.channel !== 'Social') return false;
+    if (log.platform && log.platform !== plat) return false;
+    if (log.status !== 'success') return false;
+
+    if (totalSchedulesForPlatform <= 1) {
+      return true;
+    }
+
+    const logTime = log.time || '18:00';
+    const logFormat = log.format || 'reel';
+    const logVideoName = log.videoName || log.action;
+
+    const timeMatches = logTime === targetTime;
+    const formatMatches = logFormat === targetFormat;
+    const videoMatches =
+      logVideoName === targetVideoName ||
+      (currentSched.videoName && logVideoName === currentSched.videoName) ||
+      (currentSched.marketingName && logVideoName === currentSched.marketingName);
+
+    if (timeMatches && formatMatches) return true;
+    if (videoMatches && (timeMatches || formatMatches)) return true;
+    if (timeMatches) return true;
+
+    return false;
+  });
+}
+
 /** GET /api/campaigns/scheduler. Respuestas legacy exactas. */
 export async function handleRunScheduler(
   gateway: FirestoreGateway,
@@ -113,15 +159,12 @@ export async function handleRunScheduler(
 
               for (const currentSched of platformSchedules) {
                 // Check if already executed
-                const alreadyRun = (camp.executionLogs || []).some(
-                  (log) =>
-                    log.day === event.day &&
-                    log.channel === 'Social' &&
-                    log.platform === plat &&
-                    log.videoName === currentSched.videoName &&
-                    log.time === currentSched.time &&
-                    log.format === currentSched.format &&
-                    log.status === 'success',
+                const alreadyRun = isPieceAlreadyExecuted(
+                  camp.executionLogs,
+                  event,
+                  plat,
+                  currentSched,
+                  platformSchedules.length,
                 );
 
                 if (alreadyRun) {
@@ -129,7 +172,10 @@ export async function handleRunScheduler(
                   continue;
                 }
 
-                const schedTimeMin = getMinutes(currentSched.time || '18:00');
+                const targetVideoName = currentSched.videoName || (currentSched as any).marketingName || (currentSched as any).assetName || `Video ${event.day}`;
+                const targetTime = currentSched.time || '18:00';
+                const targetFormat = currentSched.format || 'reel';
+                const schedTimeMin = getMinutes(targetTime);
 
                 if (event.day < currentDay || nowMin >= schedTimeMin) {
                   debugStats.processedEvents++;
@@ -200,6 +246,10 @@ export async function handleRunScheduler(
                              if (matchingSocial) {
                                videoUrl = matchingSocial.production_notes?.video_url || matchingSocial.production_notes?.video_download_url;
                                if (matchingSocial.caption) finalCaption = matchingSocial.caption;
+                               console.log(`[Scheduler] Encontrado matchingSocial para ${currentSched.videoName}: ${videoUrl}`);
+                             } else {
+                               console.log(`[Scheduler] NO se encontró matchingSocial para ${currentSched.videoName} (format: ${currentSched.format}, day: ${event.day})`);
+                               console.log(`[Scheduler] FallbackSocials disponibles: ${fallbackSocials.map((s:any) => s.marketingName).join(', ')}`);
                              }
                            } catch (e) {
                              console.error("[Scheduler] Error leyendo videoSkeletons", e);
@@ -217,9 +267,9 @@ export async function handleRunScheduler(
                               action: event.action,
                               phase: event.phase,
                               variantIndex: event.variantIndex,
-                              videoName: currentSched.videoName || `Video ${event.day}`,
-                              format: currentSched.format,
-                              time: currentSched.time,
+                              videoName: targetVideoName,
+                              format: targetFormat,
+                              time: targetTime,
                               status: 'processing',
                               mode,
                               provider: plat.toUpperCase(),
@@ -230,26 +280,31 @@ export async function handleRunScheduler(
                             camp.executionLogs = [...(camp.executionLogs || []), processingLog];
                             await gateway.updateDoc('campaigns', camp.id, { executionLogs: camp.executionLogs });
 
-                            const { MetaGraphPublisher } = await import('@/infrastructure/social/instagram-publisher');
-                            const publisher = new MetaGraphPublisher();
-                            const pubResult = await publisher.publish({
-                              platform: plat,
-                              caption: finalCaption,
-                              videoUrl,
-                              format: currentSched.format || 'reel',
-                              credentials: { 
-                                 apiKey: motorCreds.apiKey,
-                                 accountId: (motorCreds as any).accountId || ''
+                            try {
+                              const { MetaGraphPublisher } = await import('@/infrastructure/social/instagram-publisher');
+                              const publisher = new MetaGraphPublisher();
+                              const pubResult = await publisher.publish({
+                                platform: plat,
+                                caption: finalCaption,
+                                videoUrl,
+                                format: targetFormat,
+                                credentials: { 
+                                   apiKey: motorCreds.apiKey,
+                                   accountId: (motorCreds as any).accountId || ''
+                                }
+                              });
+
+                              if (!pubResult.ok) {
+                                status = 'failed';
+                                feedback = `⚠️ [PRODUCCIÓN] Fallo en API: ${pubResult.error.message}`;
+                              } else {
+                                feedback = `🚀 [PRODUCCIÓN] ¡Publicación Diaria Automática (CRON) Exitosa! Link: ${pubResult.value.url ?? pubResult.value.postId}`;
                               }
-                            });
-
-                            camp.executionLogs = camp.executionLogs.filter((l) => l !== processingLog);
-
-                            if (!pubResult.ok) {
+                            } catch (pubErr: any) {
                               status = 'failed';
-                              feedback = `⚠️ [PRODUCCIÓN] Fallo en API: ${pubResult.error.message}`;
-                            } else {
-                              feedback = `🚀 [PRODUCCIÓN] ¡Publicación Diaria Automática (CRON) Exitosa! Link: ${pubResult.value.url ?? pubResult.value.postId}`;
+                              feedback = `⚠️ [PRODUCCIÓN] Error durante publicación: ${pubErr?.message || String(pubErr)}`;
+                            } finally {
+                              camp.executionLogs = (camp.executionLogs || []).filter((l) => l !== processingLog);
                             }
                          }
                       } else {
@@ -266,9 +321,9 @@ export async function handleRunScheduler(
                     action: event.action,
                     phase: event.phase,
                     variantIndex: event.variantIndex,
-                    videoName: currentSched.videoName || `Video ${event.day}`,
-                    format: currentSched.format,
-                    time: currentSched.time,
+                    videoName: targetVideoName,
+                    format: targetFormat,
+                    time: targetTime,
                     status,
                     mode,
                     provider: plat.toUpperCase(),

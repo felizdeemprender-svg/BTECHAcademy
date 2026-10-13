@@ -90,4 +90,72 @@ describe('Scheduler Handler Deduplication & Timezone Logic', () => {
     // Assert that it correctly prevents duplication
     expect(alreadyRun).toBe(true);
   });
+
+  it('isPieceAlreadyExecuted: marca como ya ejecutada una pieza única de día 1 aunque format o videoName sean undefined en el schedule', async () => {
+    const { isPieceAlreadyExecuted } = await import('./scheduler-handler');
+
+    const executionLogs = [
+      {
+        day: 1,
+        channel: 'Social',
+        platform: 'instagram',
+        videoName: 'Video 1',
+        time: '18:00',
+        format: 'reel',
+        status: 'success',
+      },
+    ];
+
+    // En el schedule, format y videoName podrían venir omitidos/undefined
+    const currentSched = {
+      time: '18:00',
+    };
+
+    const alreadyRun = isPieceAlreadyExecuted(
+      executionLogs,
+      { day: 1, action: 'Acción' },
+      'instagram',
+      currentSched,
+      1, // 1 sola pieza programada para instagram ese día
+    );
+
+    expect(alreadyRun).toBe(true);
+  });
+
+  it('isPieceAlreadyExecuted: en el día 2 NO re-ejecuta una pieza del día 1 que ya fue exitosa', async () => {
+    const { isPieceAlreadyExecuted } = await import('./scheduler-handler');
+
+    const executionLogs = [
+      {
+        day: 1,
+        channel: 'Social',
+        platform: 'instagram',
+        videoName: 'Variante 1',
+        time: '18:00',
+        format: 'reel',
+        status: 'success',
+      },
+    ];
+
+    // Chequeo del día 1 ejecutado en catch-up del día 2
+    const alreadyRunDay1 = isPieceAlreadyExecuted(
+      executionLogs,
+      { day: 1 },
+      'instagram',
+      { videoName: 'Variante 1', time: '18:00' },
+      1,
+    );
+    expect(alreadyRunDay1).toBe(true);
+
+    // En cambio, la pieza del día 2 (aún no corrida) da false
+    const alreadyRunDay2 = isPieceAlreadyExecuted(
+      executionLogs,
+      { day: 2 },
+      'instagram',
+      { videoName: 'Variante 2', time: '18:00' },
+      1,
+    );
+    expect(alreadyRunDay2).toBe(false);
+  });
 });
+

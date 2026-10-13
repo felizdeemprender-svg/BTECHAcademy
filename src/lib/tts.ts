@@ -36,13 +36,35 @@ const EDGE_VOICE_MAPPING: Record<string, string> = {
   'salome': 'es-CO-SalomeNeural'
 };
 
-// 🎙️ Mapeo de Voces para Google (Legacy)
+// 🎙️ Mapeo de Voces para Google (Legacy & High-Reliability Fallback)
 const GOOGLE_VOICE_MAPPING: Record<string, { code: string; name: string; gender: string }> = {
   'sofia': { code: 'es-ES', name: 'es-ES-Neural2-A', gender: 'FEMALE' },
   'mateo': { code: 'es-ES', name: 'es-ES-Neural2-B', gender: 'MALE' },
   'ximena': { code: 'es-US', name: 'es-US-Neural2-A', gender: 'FEMALE' },
   'diego': { code: 'es-US', name: 'es-US-Neural2-B', gender: 'MALE' },
+  'tomas': { code: 'es-US', name: 'es-US-Neural2-B', gender: 'MALE' },
+  'elena': { code: 'es-US', name: 'es-US-Neural2-A', gender: 'FEMALE' },
+  'jorge': { code: 'es-US', name: 'es-US-Neural2-C', gender: 'MALE' },
+  'dalia': { code: 'es-US', name: 'es-US-Neural2-A', gender: 'FEMALE' },
+  'gonzalo': { code: 'es-ES', name: 'es-ES-Neural2-F', gender: 'MALE' },
+  'salome': { code: 'es-ES', name: 'es-ES-Neural2-E', gender: 'FEMALE' },
+  'alvaro': { code: 'es-ES', name: 'es-ES-Neural2-B', gender: 'MALE' },
+  'elvira': { code: 'es-ES', name: 'es-ES-Neural2-A', gender: 'FEMALE' },
+  'alonso': { code: 'es-US', name: 'es-US-Neural2-B', gender: 'MALE' },
+  'paloma': { code: 'es-US', name: 'es-US-Neural2-A', gender: 'FEMALE' },
+  'guy': { code: 'en-US', name: 'en-US-Neural2-D', gender: 'MALE' },
+  'jenny': { code: 'en-US', name: 'en-US-Neural2-F', gender: 'FEMALE' },
+  'antonio': { code: 'pt-BR', name: 'pt-BR-Neural2-B', gender: 'MALE' },
+  'francisca': { code: 'pt-BR', name: 'pt-BR-Neural2-A', gender: 'FEMALE' },
 };
+
+function resolveVoiceKey(voiceId: string): string {
+  const lower = voiceId.toLowerCase();
+  for (const key of Object.keys(GOOGLE_VOICE_MAPPING)) {
+    if (lower.includes(key)) return key;
+  }
+  return 'mateo';
+}
 
 /**
  * Genera un hash único basado en el texto y la voz para el sistema de caché
@@ -52,34 +74,54 @@ function getCacheHash(text: string, voiceId: string): string {
 }
 
 /**
- * [V2] Generador de Voz Pro (Microsoft Edge + Caché)
+ * [V2] Generador de Voz Pro (Google Cloud Neural + Microsoft Edge + Caché)
  * @returns Path del archivo generado o recuperado de caché
  */
 export async function generateSpeechV2(text: string, voiceId: string, isSmokeTest: boolean = false): Promise<string> {
   const hash = getCacheHash(text, voiceId);
   const cachePath = path.join(CACHE_DIR, `${hash}.mp3`);
 
-  // 1. Verificar Caché
+  // 1. Verificar Caché en Disco
   if (existsSync(cachePath)) {
     console.log(`🎯 [TTS:Cache] Hit! Reusing audio for: "${text.substring(0, 20)}..."`);
     return cachePath;
   }
 
-  // 2. Generación Real (Microsoft Edge)
+  // 2. Google Cloud TTS (Rápido, alta disponibilidad en servidor)
+  const googleApiKey = process.env.GOOGLE_TTS_API_KEY;
+  if (googleApiKey) {
+    try {
+      return await generateSpeechMP3(text, voiceId, googleApiKey, cachePath);
+    } catch (gErr: any) {
+      console.warn('⚠️ [TTS:Google Warning]', gErr?.message);
+    }
+  }
+
+  // 3. Fallback Microsoft Edge (con timeout seguro para evitar bloqueos)
   console.log(`🌐 [TTS:Edge] Generating new audio for: "${text.substring(0, 20)}..."`);
   
   try {
-    const edgeVoice = EDGE_VOICE_MAPPING[voiceId.toLowerCase()] || EDGE_VOICE_MAPPING['mateo'];
+    const edgeVoice = voiceId.includes('Neural') || voiceId.includes('-')
+      ? voiceId
+      : (EDGE_VOICE_MAPPING[voiceId.toLowerCase()] || EDGE_VOICE_MAPPING['mateo']);
     const communicate = new Communicate(text, { voice: edgeVoice });
     const chunks: Buffer[] = [];
     
-    for await (const chunk of communicate.stream()) {
-      if (chunk.type === 'audio' && chunk.data) {
-        chunks.push(chunk.data);
+    // Timeout de 6 segundos para no congelar la petición
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Edge TTS timeout')), 6000)
+    );
+
+    const streamPromise = (async () => {
+      for await (const chunk of communicate.stream()) {
+        if (chunk.type === 'audio' && chunk.data) {
+          chunks.push(chunk.data);
+        }
       }
-    }
-    
-    const finalBuffer = Buffer.concat(chunks);
+      return Buffer.concat(chunks);
+    })();
+
+    const finalBuffer = await Promise.race([streamPromise, timeoutPromise]);
     await fsPromises.writeFile(cachePath, finalBuffer);
     
     return cachePath;
@@ -93,8 +135,9 @@ export async function generateSpeechV2(text: string, voiceId: string, isSmokeTes
  * [Legacy] Generador de Voz de Google (Mantenido por compatibilidad)
  */
 export async function generateSpeechMP3(text: string, voiceId: string, apiKey: string, outputPath: string) {
-  console.log(`📜 [TTS:Legacy] Using Google Cloud for: "${text.substring(0, 20)}..."`);
-  const voice = GOOGLE_VOICE_MAPPING[voiceId.toLowerCase()] || GOOGLE_VOICE_MAPPING['mateo'];
+  console.log(`📜 [TTS:Google] Using Google Cloud for: "${text.substring(0, 20)}..."`);
+  const voiceKey = resolveVoiceKey(voiceId);
+  const voice = GOOGLE_VOICE_MAPPING[voiceKey] || GOOGLE_VOICE_MAPPING['mateo'];
 
   let response;
   try {

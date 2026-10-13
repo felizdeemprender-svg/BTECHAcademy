@@ -468,7 +468,41 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
 // ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    const body: RenderRequest = await req.json();
+    let rawText = '';
+    try {
+      rawText = await req.text();
+    } catch (readErr: any) {
+      console.error('🔥 [Render V2] Error al leer el cuerpo del request:', readErr.message);
+      return NextResponse.json(
+        { success: false, error: 'No se pudo leer el cuerpo de la petición HTTP.' },
+        { status: 400 }
+      );
+    }
+
+    if (!rawText || !rawText.trim()) {
+      console.warn('⚠️ [Render V2] Request POST recibido con body vacío. Headers:', {
+        contentType: req.headers.get('content-type'),
+        contentLength: req.headers.get('content-length'),
+        referer: req.headers.get('referer'),
+        origin: req.headers.get('origin'),
+        userAgent: req.headers.get('user-agent'),
+      });
+      return NextResponse.json(
+        { success: false, error: 'El cuerpo de la petición está vacío. Se requiere un objeto JSON con "scenes".' },
+        { status: 400 }
+      );
+    }
+
+    let body: RenderRequest;
+    try {
+      body = JSON.parse(rawText);
+    } catch (jsonErr: any) {
+      console.error('🔥 [Render V2] Error de sintaxis JSON al parsear body:', jsonErr.message, 'Raw recibido (120 chars):', rawText.slice(0, 120));
+      return NextResponse.json(
+        { success: false, error: `JSON malformado o incompleto: ${jsonErr.message}` },
+        { status: 400 }
+      );
+    }
 
     // Extraer UID del usuario desde las cookies para facturación/tracking
     const { cookies } = await import('next/headers');

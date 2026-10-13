@@ -26,13 +26,14 @@ import {
   Wallet,
   Sparkles,
   ArrowLeftRight,
-  MessageSquare
+  MessageSquare,
+  Bot
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-context';
 import { canAccessMarketingTools } from '@/lib/subscription-permissions';
 
-interface NavItem {
+export interface NavItem {
   name: string;
   href: string;
   roles: string[];
@@ -41,35 +42,24 @@ interface NavItem {
   group?: string;
 }
 
-interface NavSection {
+export interface NavSection {
   label: string;
   items: NavItem[];
 }
 
-export function SidebarNav() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { profile } = useAuth();
-  const [openSections, setOpenSections] = useState<string[]>([]);
-
+export function getNavigationSections(profile?: any): NavSection[] {
   // Filtrar items de marketing basados en permisos
   const filterMarketingItems = (items: NavItem[]) => {
     if (profile &&
-      !profile?.roles.includes('admin') &&
-      !profile?.roles.includes('marketing') &&
+      !profile?.roles?.includes('admin') &&
+      !profile?.roles?.includes('marketing') &&
       !canAccessMarketingTools(profile?.mentorPermissions || [])) {
       return items.filter(item => !item.href.startsWith('/marketing'));
     }
     return items;
   };
 
-  // Navegación optimizada para evitar recargas del menú
-  const handleNavigation = (href: string) => {
-    if (href === pathname) return; // No navegar si ya estamos en la misma página
-    router.push(href);
-  };
-
-  const sections: NavSection[] = [
+  return [
     {
       label: 'Cursos',
       items: [
@@ -133,15 +123,31 @@ export function SidebarNav() {
     {
       label: 'Gestión de Cuenta',
       items: [
-        { name: 'Evo', href: '/evo', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Sparkles },
-        { name: 'Mi Perfil', href: '/settings', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Settings },
-        { name: 'Mi Plan y Facturación', href: '/dashboard/plan', roles: ['mentor', 'admin'], icon: CreditCard },
-        { name: 'Métodos de Cobro', href: '/dashboard/payment-methods', roles: ['mentor', 'admin'], icon: Wallet },
-        { name: 'Transferencias', href: '/dashboard/transfers', roles: ['mentor', 'admin'], icon: ArrowLeftRight },
-        { name: 'Motores de Publicación', href: '/dashboard/publishing-engines', roles: ['mentor', 'admin'], icon: Cpu },
+        { name: 'Evo', href: '/settings/evo', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Sparkles },
+        { name: 'Mi Perfil', href: '/settings/profile', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Settings },
+        { name: 'Avatares de Marca', href: '/settings/avatars', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Bot },
+        { name: 'Mi Plan y Facturación', href: '/settings/plan', roles: ['mentor', 'admin'], icon: CreditCard },
+        { name: 'Métodos de Cobro', href: '/settings/payment-methods', roles: ['mentor', 'admin'], icon: Wallet },
+        { name: 'Transferencias', href: '/settings/transfers', roles: ['mentor', 'admin'], icon: ArrowLeftRight },
+        { name: 'Motores de Publicación', href: '/settings/publishing-engines', roles: ['mentor', 'admin'], icon: Cpu },
       ]
     }
   ];
+}
+
+export function SidebarNav() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { profile } = useAuth();
+  const [openSections, setOpenSections] = useState<string[]>([]);
+
+  // Navegación optimizada para evitar recargas del menú
+  const handleNavigation = (href: string) => {
+    if (href === pathname) return; // No navegar si ya estamos en la misma página
+    router.push(href);
+  };
+
+  const sections = getNavigationSections(profile);
 
   const toggleSection = (label: string) => {
     // Toggle: si ya está abierto lo cierra, si está cerrado abre solo ese
@@ -153,8 +159,11 @@ export function SidebarNav() {
   // Abrir automáticamente SOLO la sección activa al cambiar de ruta
   useEffect(() => {
     const activeSection = sections.find(section =>
-      section.items.some(item => pathname.startsWith(item.href) && item.href !== '/dashboard')
-      || section.items.some(item => item.href === pathname)
+      section.items.some(item =>
+        item.href === pathname ||
+        (item.href === '/settings/profile' && pathname === '/settings') ||
+        (item.href !== '/dashboard' && pathname.startsWith(item.href))
+      )
     );
     if (activeSection) {
       setOpenSections([activeSection.label]);
@@ -227,21 +236,26 @@ export function SidebarNav() {
                           </span>
                         </div>
                       )}
-                      <button
-                        onClick={() => handleNavigation(item.href)}
-                        className={cn(
-                          "group flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ml-1 w-full text-left",
-                          pathname === item.href
-                            ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
-                            : "text-[hsl(var(--sidebar-foreground)/0.6)] hover:bg-white/5 hover:text-white"
-                        )}
-                      >
-                        <item.icon className={cn("h-4 w-4 shrink-0 transition-colors", pathname === item.href ? "text-accent" : "opacity-40 group-hover:opacity-100")} />
-                        <span className="flex-1 truncate">{item.name}</span>
-                        {pathname === item.href && (
-                          <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent),0.8)]" />
-                        )}
-                      </button>
+                      {(() => {
+                        const isItemActive = pathname === item.href || (item.href === '/settings/profile' && pathname === '/settings');
+                        return (
+                          <button
+                            onClick={() => handleNavigation(item.href)}
+                            className={cn(
+                              "group flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ml-1 w-full text-left",
+                              isItemActive
+                                ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
+                                : "text-[hsl(var(--sidebar-foreground)/0.6)] hover:bg-white/5 hover:text-white"
+                            )}
+                          >
+                            <item.icon className={cn("h-4 w-4 shrink-0 transition-colors", isItemActive ? "text-accent" : "opacity-40 group-hover:opacity-100")} />
+                            <span className="flex-1 truncate">{item.name}</span>
+                            {isItemActive && (
+                              <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent),0.8)]" />
+                            )}
+                          </button>
+                        );
+                      })()}
                     </div>
                   );
                 })}

@@ -185,7 +185,7 @@ export class GenerateVideoUseCase {
 
     console.log(`[GenerateVideoUseCase] Encolando FFmpeg. googleToken presente?`, !!body.googleToken);
 
-    const origin = process.env.APP_URL || `http://127.0.0.1:9002`;
+    const origin = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || `http://127.0.0.1:9002`;
     const res = await fetch(`${origin}/api/video/render-v2`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

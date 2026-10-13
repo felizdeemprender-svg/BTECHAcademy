@@ -95,23 +95,36 @@ export default function CampaignsCommandCenter() {
             Object.keys(event.socialSchedule).forEach(plat => {
               const arr = Array.isArray(event.socialSchedule[plat]) ? event.socialSchedule[plat] : [event.socialSchedule[plat]];
               arr.forEach((sch: any) => {
-                const vName = sch.videoName || sch.marketingName || sch.assetName || sch.name || 'Contenido';
-                const vTime = sch.time || '12:00';
-                const format = sch.format || 'post';
+                const vName = sch.videoName || sch.marketingName || sch.assetName || sch.name || `Video ${event.day}`;
+                const vTime = sch.time || '18:00';
+                const format = sch.format || 'reel';
                 
-                const log = [...(executionLogs || [])].reverse().find((l: any) => 
-                  l.day === event.day && 
-                  (l.videoName === sch.videoName || l.action === sch.videoName || l.videoName === vName) && 
-                  (l.platform === plat || !l.platform) &&
-                  (!sch.format || l.format === sch.format) &&
-                  (!sch.time || l.time === sch.time)
-                );
+                const matchingLogs = (executionLogs || []).filter((l: any) => {
+                  if (l.day !== event.day) return false;
+                  if (l.platform && l.platform !== plat) return false;
+                  if (arr.length <= 1) return true;
+
+                  const logTime = l.time || '18:00';
+                  const logFormat = l.format || 'reel';
+                  const logVName = l.videoName || l.action;
+
+                  const timeMatches = logTime === vTime;
+                  const formatMatches = logFormat === format;
+                  const nameMatches = logVName === vName || logVName === sch.videoName || logVName === sch.marketingName;
+
+                  return (timeMatches && formatMatches) || (nameMatches && (timeMatches || formatMatches)) || timeMatches;
+                });
+
+                // Si en algún momento la publicación fue exitosa, se preserva 'success'
+                const successLog = matchingLogs.find((l: any) => l.status === 'success');
+                const latestLog = matchingLogs[matchingLogs.length - 1];
+                const resolvedLog = successLog || latestLog;
                 
                 let status = 'pending';
                 let errorMessage = undefined;
-                if (log) {
-                  status = log.status; // Preserve the actual log status (success, error, failed, pending, processing)
-                  if (status === 'error' || status === 'failed') errorMessage = log.feedback || log.errorMessage;
+                if (resolvedLog) {
+                  status = resolvedLog.status; // Preserve the actual log status (success, error, failed, pending, processing)
+                  if (status === 'error' || status === 'failed') errorMessage = resolvedLog.feedback || resolvedLog.errorMessage;
                 }
 
                 events.push({
@@ -125,12 +138,18 @@ export default function CampaignsCommandCenter() {
             });
           } else if (event.channels) {
              event.channels.forEach((ch: string) => {
-                const log = [...(executionLogs || [])].reverse().find((l: any) => l.day === event.day && l.action === event.action && (!l.platform || l.platform === ch));
+                const matchingLogs = (executionLogs || []).filter((l: any) => 
+                  l.day === event.day && (l.action === event.action || l.channel === ch) && (!l.platform || l.platform === ch)
+                );
+                const successLog = matchingLogs.find((l: any) => l.status === 'success');
+                const latestLog = matchingLogs[matchingLogs.length - 1];
+                const resolvedLog = successLog || latestLog;
+
                 let status = 'pending';
                 let errorMessage = undefined;
-                if (log) {
-                  status = log.status; // Preserve actual status
-                  if (status === 'error' || status === 'failed') errorMessage = log.feedback || log.errorMessage;
+                if (resolvedLog) {
+                  status = resolvedLog.status; // Preserve actual status
+                  if (status === 'error' || status === 'failed') errorMessage = resolvedLog.feedback || resolvedLog.errorMessage;
                 }
                 events.push({
                    network: ch,

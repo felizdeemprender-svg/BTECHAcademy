@@ -58,6 +58,7 @@ service-account.json
 # local artifacts
 *.mp4
 *.jpg
+!public/avatars/*.jpg
 *.txt
 !README.md
 # adns/ (Removed to allow public/adns and src/app/api/adns)
