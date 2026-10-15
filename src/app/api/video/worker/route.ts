@@ -237,6 +237,7 @@ export async function POST(req: NextRequest) {
               // Actualizar Firestore progresivamente para que la UI lo vea en tiempo real
               await adminDb.collection('campaigns').doc(campaignId).update({
                 'videoSkeletons': socials,
+                'aiContent.socials': socials,
                 updatedAt: new Date().toISOString()
               });
               
@@ -432,6 +433,7 @@ export async function POST(req: NextRequest) {
               
               await adminDb.collection('campaigns').doc(campaignId).update({
                 'aiContent.socials': socials,
+                'videoSkeletons': socials,
                 updatedAt: new Date().toISOString()
               });
               

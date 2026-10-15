@@ -222,7 +222,7 @@ export async function handleRunScheduler(
                          
                            try {
                              // Leemos las piezas generadas directamente desde el documento de la Campaña (Opción B)
-                             const fallbackSocials = (camp as any).videoSkeletons || [];
+                             const fallbackSocials = (camp as any).aiContent?.socials || (camp as any).videoSkeletons || [];
                              
                              let matchingSocial = fallbackSocials.find((s: any) => 
                                 s.platform === plat && 

@@ -24,13 +24,16 @@ export class UpdateSalesPageUseCase {
       }
       isVirtualCampaign = true;
       const camp = campRef.data() as any;
+      const socials = (camp.aiContent?.socials && camp.aiContent.socials.length > 0)
+        ? camp.aiContent.socials
+        : (camp.videoSkeletons || []);
       page = {
         id: camp.id || request.pageId,
         mentorId: camp.mentorId,
         type: 'campaign_pack',
         title: camp.name || camp.title || 'Pack Multimedia (Virtual)',
-        aiContent: { socials: camp.videoSkeletons || [] },
-        campaignStatus: camp.productionStatus,
+        aiContent: { socials },
+        campaignStatus: camp.campaignStatus || camp.productionStatus,
       } as any;
     }
 
@@ -139,9 +142,12 @@ export class UpdateSalesPageUseCase {
             updatedAt: new Date() 
           };
 
-          if (isVirtualCampaign && request.data.aiContent?.socials) {
+          if (request.data.aiContent?.socials) {
             updates.videoSkeletons = request.data.aiContent.socials;
-            updates.productionStatus = isAllSealed ? 'sealed' : 'producing';
+            updates['aiContent.socials'] = request.data.aiContent.socials;
+            if (isVirtualCampaign) {
+              updates.productionStatus = isAllSealed ? 'sealed' : 'producing';
+            }
           }
           
           if (isAllSealed) {

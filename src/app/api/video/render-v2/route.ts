@@ -425,7 +425,9 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
 
         if (docSnap.exists) {
            const d = docSnap.data();
-           const socials = isCampaign ? (d?.videoSkeletons || []) : (d?.aiContent?.socials || []);
+           const socials = isCampaign
+              ? ((d?.aiContent?.socials && d.aiContent.socials.length > 0) ? d.aiContent.socials : (d?.videoSkeletons || []))
+              : (d?.aiContent?.socials || []);
            let updated = false;
            for (let s of socials) {
               if (s.marketingName === body.marketingName) {
@@ -439,7 +441,7 @@ async function runRenderJob(jobId: string, body: RenderRequest) {
            }
            if (updated) {
               await docRef.update(
-                 isCampaign ? { 'videoSkeletons': socials } : { 'aiContent.socials': socials }
+                 isCampaign ? { 'videoSkeletons': socials, 'aiContent.socials': socials } : { 'aiContent.socials': socials }
               );
               console.log(`[JobQueue] Updated ${isCampaign ? 'campaign' : 'salesPage'} ${salesPageId} with video URL for ${body.marketingName}`);
            }

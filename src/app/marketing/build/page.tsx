@@ -155,7 +155,7 @@ function OrchestratorContent() {
     // Mostrar SOLAMENTE las Landings V2 puras ('landing_page' y 'funnel')
     // Excluir 'campaign_pack' (V1 legacy) y 'campaign_videos' (videos generados)
     return [...rawPages]
-      .filter((p: any) => p.type === 'landing_page' || p.type === 'funnel')
+      .filter((p: any) => (p.type === 'landing_page' || p.type === 'funnel') && !p.referidoId)
       .sort((a: any, b: any) => (a.title || '').localeCompare(b.title || ''));
   }, [rawPages]);
 
