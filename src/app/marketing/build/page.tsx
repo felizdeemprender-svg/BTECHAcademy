@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Sparkles,
@@ -139,6 +140,7 @@ function OrchestratorContent() {
   /* ── State: Step 3 — Production ── */
   const [videosPerPlatform, setVideosPerPlatform] = useState<Record<string, number>>({ instagram: 3, tiktok: 2, linkedin: 0, youtube: 1, twitter: 0 });
   const [isProducing, setIsProducing] = useState(false);
+  const [autoGenerateImages, setAutoGenerateImages] = useState(true);
 
   /* ── State: Step 4 — Launch ── */
   const [isPublishing, setIsPublishing] = useState(false);
@@ -326,6 +328,7 @@ function OrchestratorContent() {
           targetAudience,
           campaignMission,
           coordinationPlan: coordinationPlan,
+          autoGenerateImages: autoGenerateImages,
         })
       });
 
@@ -754,9 +757,28 @@ function OrchestratorContent() {
                 />
 
                 <div className="pt-10 border-t flex flex-col gap-6">
+                  <div className="flex items-center justify-between p-5 bg-muted/40 rounded-xl border border-border">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <Label htmlFor="auto-images-toggle" className="text-sm font-bold text-foreground cursor-pointer">
+                          Generación automática de imágenes con IA
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Genera con IA las imágenes de fondo para cada escena y placa de tu campaña en Google Cloud Storage.
+                      </p>
+                    </div>
+                    <Switch
+                      id="auto-images-toggle"
+                      checked={autoGenerateImages}
+                      onCheckedChange={setAutoGenerateImages}
+                    />
+                  </div>
+
                   <Button onClick={handleFinalPublish} disabled={isProducing} className="w-full h-20 rounded-lg text-2xl font-bold bg-primary">
                     {isProducing ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <Rocket className="mr-3 h-8 w-8 text-accent" />}
-                    Confirmar y Activar Lanzamiento (Generar Guiones)
+                    Confirmar y Activar Lanzamiento
                   </Button>
                 </div>
               </CardContent>

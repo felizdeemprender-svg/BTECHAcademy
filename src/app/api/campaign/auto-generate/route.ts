@@ -18,20 +18,15 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { campaignId, assets, targetAudience, campaignMission, googleToken, coordinationPlan } = body;
+    const { campaignId, assets, targetAudience, campaignMission, googleToken, coordinationPlan, autoGenerateImages } = body;
 
     if (!campaignId || !assets) {
       return NextResponse.json({ success: false, error: 'Faltan parámetros' }, { status: 400 });
     }
 
-    console.log(`[AutoCampaign] Orquestando generación automática para campaña: ${campaignId}`);
+    console.log(`[AutoCampaign] Orquestando generación para campaña: ${campaignId} (Auto-imágenes: ${autoGenerateImages !== false})`);
     console.log(`[AutoCampaign] Estrategia: ${campaignMission}, Audiencia: ${targetAudience}`);
     console.log(`[AutoCampaign] Google Token recibido desde UI:`, !!googleToken);
-
-    // Si hay videos sociales para renderizar, los encolamos.
-    // Iteramos sobre todos los socials y creamos una tarea por cada uno,
-    // o enviamos toda la campaña para que el Worker la procese entera.
-    // Aquí delegamos TODO el trabajo al worker con una acción maestra.
     
     await enqueueVideoTask({
       action: 'generate-full-campaign',
@@ -42,11 +37,13 @@ export async function POST(req: NextRequest) {
       role: decoded.role || 'mentor',
       data: {
         ...assets,
-        googleToken // Pasa el token para el guardado en Drive
+        googleToken,
+        autoGenerateImages: autoGenerateImages !== false
       },
       targetAudience,
       campaignMission,
-      coordinationPlan
+      coordinationPlan,
+      autoGenerateImages: autoGenerateImages !== false
     });
 
     return NextResponse.json({ success: true, message: 'Campaña encolada en Cloud Tasks' });
