@@ -53,6 +53,7 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingIncludes: {
     '/api/video/render': ['./node_modules/ffmpeg-static/**/*', './node_modules/custom-ffmpeg-build/**/*'],
+    '/api/**/*': ['./node_modules/@google-cloud/tasks/**/*', './node_modules/@google-cloud/tasks/build/esm/src/v2/*.json'],
   },
 };
 
