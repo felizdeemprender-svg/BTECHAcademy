@@ -177,12 +177,10 @@ export async function POST(req: NextRequest) {
                           });
                           
                           const base64Data = base64Str.split(',')[1] || base64Str;
-                          const { adminStorage } = await import('@/firebase/admin');
+                          const { adminStorage, saveBufferAndGetPublicUrl } = await import('@/firebase/admin');
                           const bucket = adminStorage.bucket();
                           const fileName = `campaigns/${campaignId}/ai_images/${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-                          const file = bucket.file(fileName);
-                          await file.save(Buffer.from(base64Data, 'base64'), { metadata: { contentType: 'image/png' } });
-                          const [imageUrl] = await file.getSignedUrl({ action: 'read', expires: '01-01-2050' });
+                          const imageUrl = await saveBufferAndGetPublicUrl(bucket, fileName, Buffer.from(base64Data, 'base64'), 'image/png');
                           
                           scene.imageUrl = imageUrl;
                        } catch(imgErr) {
@@ -209,12 +207,10 @@ export async function POST(req: NextRequest) {
                           });
                           
                           const base64Data = base64Str.split(',')[1] || base64Str;
-                          const { adminStorage } = await import('@/firebase/admin');
+                          const { adminStorage, saveBufferAndGetPublicUrl } = await import('@/firebase/admin');
                           const bucket = adminStorage.bucket();
                           const fileName = `campaigns/${campaignId}/ai_images/${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-                          const file = bucket.file(fileName);
-                          await file.save(Buffer.from(base64Data, 'base64'), { metadata: { contentType: 'image/png' } });
-                          const [imageUrl] = await file.getSignedUrl({ action: 'read', expires: '01-01-2050' });
+                          const imageUrl = await saveBufferAndGetPublicUrl(bucket, fileName, Buffer.from(base64Data, 'base64'), 'image/png');
                           
                           slide.imageUrl = imageUrl;
                        } catch(imgErr) {
@@ -224,9 +220,12 @@ export async function POST(req: NextRequest) {
                  }
               }
 
+              const rawScenes = (aiContent.scenes && aiContent.scenes.length > 0) ? aiContent.scenes : (aiContent.slides || []);
               socials[i] = {  
                  ...social, 
                  ...aiContent, 
+                 scenes: rawScenes,
+                 slides: rawScenes,
                  isGenerated: true,
                  production_notes: {
                    ...(aiContent.production_notes || {}),
@@ -283,8 +282,8 @@ export async function POST(req: NextRequest) {
         }
       };
 
-      // Disparar background task y responder inmediatamente
-      processFullCampaign();
+      // Esperar a que el procesamiento en background concluya para que Cloud Run no congele la CPU
+      await processFullCampaign();
       return NextResponse.json({ success: true, message: 'Campaña generada y encolada' });
     }
 
@@ -353,75 +352,30 @@ export async function POST(req: NextRequest) {
                 role
               );
 
-              // 3) Generar imágenes para cada escena en borradores
-              const { generateImage } = await import('@/lib/ai/generate-image');
-              if (aiContent.scenes) {
-                 for (let scene of aiContent.scenes) {
-                    if (scene.media_hint && !scene.imageUrl) {
-                       try {
-                          const aspectRatio = (social.platform === 'instagram' || social.platform === 'tiktok') ? '9:16' : (social.platform === 'youtube' ? '16:9' : '1:1');
-                          const base64Str = await generateImage({
-                             prompt: scene.media_hint,
-                             keywords: scene.media_hint,
-                             courseTitle: courseTitle,
-                             contextHint: `Escena de tipo ${scene.segment_label}. Voz: ${scene.voiceover}`,
-                             channel: 'video',
-                             uid: uid,
-                             role: role,
-                             aspectRatio: aspectRatio
-                          });
-                          
-                          const base64Data = base64Str.split(',')[1] || base64Str;
-                          const { adminStorage } = await import('@/firebase/admin');
-                          const bucket = adminStorage.bucket();
-                          const fileName = `campaigns/${campaignId}/ai_images/${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-                          const file = bucket.file(fileName);
-                          await file.save(Buffer.from(base64Data, 'base64'), { metadata: { contentType: 'image/png' } });
-                          const [imageUrl] = await file.getSignedUrl({ action: 'read', expires: '01-01-2050' });
-                          
-                          scene.imageUrl = imageUrl;
-                       } catch(imgErr) {
-                          console.warn(`[VideoWorker] Falló auto-generación de imagen en borrador:`, imgErr);
-                       }
-                    }
-                 }
-              }
-
-              if (aiContent.slides) {
-                 for (let slide of aiContent.slides) {
-                    if (slide.media_hint && !slide.imageUrl) {
-                       try {
-                          const aspectRatio = (social.platform === 'instagram' || social.platform === 'tiktok') ? '9:16' : (social.platform === 'youtube' ? '16:9' : '1:1');
-                          const base64Str = await generateImage({
-                             prompt: slide.media_hint,
-                             keywords: slide.media_hint,
-                             courseTitle: courseTitle,
-                             contextHint: `Escena. Voz: ${slide.voiceover}`,
-                             channel: 'video',
-                             uid: uid,
-                             role: role,
-                             aspectRatio: aspectRatio
-                          });
-                          
-                          const base64Data = base64Str.split(',')[1] || base64Str;
-                          const { adminStorage } = await import('@/firebase/admin');
-                          const bucket = adminStorage.bucket();
-                          const fileName = `campaigns/${campaignId}/ai_images/${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-                          const file = bucket.file(fileName);
-                          await file.save(Buffer.from(base64Data, 'base64'), { metadata: { contentType: 'image/png' } });
-                          const [imageUrl] = await file.getSignedUrl({ action: 'read', expires: '01-01-2050' });
-                          
-                          slide.imageUrl = imageUrl;
-                       } catch(imgErr) {
-                          console.warn(`[VideoWorker] Falló auto-generación de imagen en borrador slide:`, imgErr);
-                       }
-                    }
-                 }
-              }
+              const rawScenes = (aiContent.scenes && aiContent.scenes.length > 0) ? aiContent.scenes : (aiContent.slides || []);
+              const mappedScenes = rawScenes.map((sc: any) => ({
+                segment: sc.segment_label || sc.segment || 'VALOR',
+                segment_label: sc.segment_label || sc.segment || 'VALOR',
+                title: sc.title || '',
+                text: sc.text || '',
+                subtitle: sc.subtitle || '',
+                watermark: sc.watermark || '',
+                voiceover: sc.voiceover || '',
+                duration: Math.max(Number(sc.duration) || 10, 10),
+                imageUrl: sc.imageUrl || '',
+                media_hint: sc.media_hint || '',
+                production_notes: sc.production_notes || '',
+                subject_action: sc.subject_action || '',
+                camera_movement: sc.camera_movement || '',
+                framing: sc.framing || '',
+                lighting: sc.lighting || ''
+              }));
 
               socials[i] = {  
                  ...social, 
                  ...aiContent, 
+                 scenes: mappedScenes,
+                 slides: mappedScenes,
                  isGenerated: true,
                  isDraft: true, // Marcador de borrador
                  status: 'draft', // Estado de borrador
@@ -452,8 +406,8 @@ export async function POST(req: NextRequest) {
         }
       };
 
-      // Disparar background task y responder inmediatamente
-      processCampaign();
+      // Esperar a que el procesamiento en background concluya para que Cloud Run no congele la CPU
+      await processCampaign();
       return NextResponse.json({ success: true, message: 'Borradores generados' });
     }
 

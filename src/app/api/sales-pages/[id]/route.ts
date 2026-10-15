@@ -64,10 +64,18 @@ export async function GET(
       const campDoc = await adminDb.collection('campaigns').doc(page.id).get();
       if (campDoc.exists) {
         const campData = campDoc.data() as any;
-        const socials = (campData.aiContent?.socials && campData.aiContent.socials.length > 0)
+        const rawSocials = (campData.aiContent?.socials && campData.aiContent.socials.length > 0)
           ? campData.aiContent.socials
           : (campData.videoSkeletons || []);
-        if (socials.length > 0) {
+        if (rawSocials.length > 0) {
+          const socials = rawSocials.map((s: any) => {
+            const plates = (s.slides && s.slides.length > 0) ? s.slides : (s.scenes || []);
+            return {
+              ...s,
+              slides: plates,
+              scenes: plates
+            };
+          });
           page.aiContent = { ...page.aiContent, socials };
         }
       } else {
@@ -77,10 +85,18 @@ export async function GET(
           .get();
         if (!campSnap.empty) {
           const campData = campSnap.docs[0].data();
-          const socials = (campData.aiContent?.socials && campData.aiContent.socials.length > 0)
+          const rawSocials = (campData.aiContent?.socials && campData.aiContent.socials.length > 0)
             ? campData.aiContent.socials
             : (campData.videoSkeletons || []);
-          if (socials.length > 0) {
+          if (rawSocials.length > 0) {
+            const socials = rawSocials.map((s: any) => {
+              const plates = (s.slides && s.slides.length > 0) ? s.slides : (s.scenes || []);
+              return {
+                ...s,
+                slides: plates,
+                scenes: plates
+              };
+            });
             page.aiContent = { ...page.aiContent, socials };
           }
         }

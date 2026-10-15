@@ -82,3 +82,69 @@ export function getAdminAuth() {
   const app = getAdminApp();
   return getAuth(app);
 }
+
+/**
+ * Guarda un buffer en Storage y retorna una URL pública y resiliente.
+ * En entornos Cloud Run donde la Service Account carece del rol iam.serviceAccountTokenCreator
+ * (SigningError: Permission 'iam.serviceAccounts.signBlob' denied), utiliza automáticamente
+ * el token de descarga nativo de Firebase Storage con acceso público permanente.
+ */
+export async function saveBufferAndGetPublicUrl(
+  bucket: any,
+  destination: string,
+  buffer: Buffer,
+  contentType: string = 'image/png'
+): Promise<string> {
+  const crypto = await import('crypto');
+  const downloadToken = crypto.randomUUID();
+  const file = bucket.file(destination);
+
+  await file.save(buffer, {
+    metadata: {
+      contentType,
+      metadata: {
+        firebaseStorageDownloadTokens: downloadToken
+      }
+    }
+  });
+
+  try {
+    const [signedUrl] = await file.getSignedUrl({ action: 'read', expires: '01-01-2050' });
+    return signedUrl;
+  } catch (err: any) {
+    console.warn(`[Storage] Fallback por SigningError en Cloud Run (${err.message}). Usando token de descarga de Firebase.`);
+    return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(destination)}?alt=media&token=${downloadToken}`;
+  }
+}
+
+/**
+ * Sube un archivo local a Storage y retorna una URL pública y resiliente.
+ */
+export async function uploadFileAndGetPublicUrl(
+  bucket: any,
+  filePath: string,
+  destination: string,
+  contentType: string = 'video/mp4'
+): Promise<string> {
+  const crypto = await import('crypto');
+  const downloadToken = crypto.randomUUID();
+  const file = bucket.file(destination);
+
+  await bucket.upload(filePath, {
+    destination,
+    metadata: {
+      contentType,
+      metadata: {
+        firebaseStorageDownloadTokens: downloadToken
+      }
+    }
+  });
+
+  try {
+    const [signedUrl] = await file.getSignedUrl({ action: 'read', expires: '01-01-2050' });
+    return signedUrl;
+  } catch (err: any) {
+    console.warn(`[Storage] Fallback por SigningError en Cloud Run (${err.message}). Usando token de descarga de Firebase.`);
+    return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(destination)}?alt=media&token=${downloadToken}`;
+  }
+}

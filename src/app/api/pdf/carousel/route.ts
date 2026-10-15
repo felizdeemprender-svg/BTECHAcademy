@@ -188,14 +188,12 @@ export async function POST(req: NextRequest) {
 
     // Guardar y Retornar
     const pdfBytes = await pdfDoc.save();
-    const { getAdminStorage } = await import('@/firebase/admin');
+    const { getAdminStorage, saveBufferAndGetPublicUrl } = await import('@/firebase/admin');
     const storage = getAdminStorage();
     const bucket = storage.bucket();
     const fileName = `campaigns/exports/pdf/${Date.now()}_document.pdf`;
-    const file = bucket.file(fileName);
 
-    await file.save(Buffer.from(pdfBytes), { metadata: { contentType: 'application/pdf' } });
-    const [pdfUrl] = await file.getSignedUrl({ action: 'read', expires: '01-01-2050' });
+    const pdfUrl = await saveBufferAndGetPublicUrl(bucket, fileName, Buffer.from(pdfBytes), 'application/pdf');
 
     return NextResponse.json({ success: true, pdfUrl, filename: `${marketingName || 'Documento'}.pdf` });
 

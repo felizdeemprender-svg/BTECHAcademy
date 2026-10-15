@@ -76,17 +76,9 @@ async function updateJob(jobId: string, data: Record<string, any>) {
 }
 
 async function uploadToFirebaseStorage(filePath: string, destination: string): Promise<string> {
-  const bucket = adminDb.collection('fake').firestore.constructor.name === 'Firestore' // hack to check we are initialized, but let's just use the imported adminStorage
-    ? (await import('@/firebase/admin')).adminStorage.bucket()
-    : (await import('@/firebase/admin')).adminStorage.bucket();
-  
-  const file = bucket.file(destination);
-  await bucket.upload(filePath, {
-    destination: destination,
-    metadata: { contentType: 'video/mp4' }
-  });
-  const [url] = await file.getSignedUrl({ action: 'read', expires: '01-01-2050' });
-  return url;
+  const { adminStorage, uploadFileAndGetPublicUrl } = await import('@/firebase/admin');
+  const bucket = adminStorage.bucket();
+  return uploadFileAndGetPublicUrl(bucket, filePath, destination, 'video/mp4');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
