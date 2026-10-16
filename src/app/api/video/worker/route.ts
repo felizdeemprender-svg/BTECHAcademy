@@ -284,8 +284,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'render-v2') {
-      console.log('[VideoWorker] Ejecutando motor render-v2 (Marcador para futura integracion)');
-      return NextResponse.json({ success: true, message: 'Simulado' });
+      const jobId = data?.jobId || payload?.jobId;
+      const renderRequest = data?.renderRequest || payload?.renderRequest || data;
+      console.log(`[VideoWorker] Ejecutando render-v2 con FFmpeg para jobId: ${jobId}`);
+      const { runRenderJob } = await import('@/lib/video/render-job');
+      await runRenderJob(jobId, renderRequest);
+      console.log(`[VideoWorker] Render-v2 finalizado con exito para jobId: ${jobId}`);
+      return NextResponse.json({ success: true, jobId });
     }
 
     return NextResponse.json({ success: false, error: `Accion desconocida: ${action}` }, { status: 400 });

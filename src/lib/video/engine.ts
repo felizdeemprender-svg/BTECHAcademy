@@ -29,6 +29,7 @@ export interface EngineRequest {
   workDir: string;
   slices: EngineSlice[];
   backgroundMusicUrl?: string;
+  onSliceProgress?: (sliceIndex: number, totalSlices: number) => Promise<void>;
 }
 
 function getFormatDimensions(adn: any, format: string, isV2: boolean): { width: number, height: number } {
@@ -204,6 +205,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     // We generate a dynamic fonts.conf that points to our absolute fonts directory.
     const fontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/');
     const fontsConfPath = path.join(workDir, 'fonts.conf');
+    const winFontsDir = process.platform === 'win32' ? '  <dir>C:/Windows/Fonts</dir>' : '';
     const fontsConfContent = `<?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
 <fontconfig>
@@ -211,7 +213,8 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
   <cachedir>${path.join(workDir, 'fontscache').replace(/\\/g, '/')}</cachedir>
   <config></config>
   <dir>/usr/share/fonts</dir>
-  <dir>C:/Windows/Fonts</dir>
+  <dir>/usr/local/share/fonts</dir>
+${winFontsDir}
 </fontconfig>`;
     fs.writeFileSync(fontsConfPath, fontsConfContent);
 
@@ -234,6 +237,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
 
     const totalFrames = Math.max(Math.round(duration * 30), 1);
     const ffmpegArgs = [
+      '-nostdin',
       '-loop', '1',
       '-framerate', '30',
       '-i', absImgPath,
@@ -257,6 +261,14 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     // Borrar archivo previo si existe para asegurar que se genera uno nuevo
     if (fs.existsSync(platePath)) {
       try { fs.unlinkSync(platePath); } catch (e) { }
+    }
+
+    if (req.onSliceProgress) {
+      try {
+        await req.onSliceProgress(i, slices.length);
+      } catch (pErr) {
+        console.warn(`[Engine V2] Error reporting slice progress:`, pErr);
+      }
     }
 
     console.log(`🎬 [Engine V2] Rendering Slice ${i} (${totalFrames} frames) | FX: ${postFX.substring(0, 30)}... | Zoom: ${zoomFilter}`);
@@ -441,7 +453,17 @@ function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
       resolvedFfmpeg = staticBin;
     }
 
-    const proc = spawn(resolvedFfmpeg!, args, { env: { ...process.env, ...envOverrides } });
+    const safeArgs = args.includes('-nostdin') ? args : ['-nostdin', ...args];
+    const proc = spawn(resolvedFfmpeg!, safeArgs, {
+      env: { ...process.env, ...envOverrides },
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+
+    proc.on('error', (err) => {
+      console.error('[FFmpeg Process Error]', err);
+      reject(err);
+    });
+
     let lastLog = Date.now();
 
     proc.stderr.on('data', (data: any) => {
@@ -454,10 +476,11 @@ function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
           lastLog = Date.now();
         }
       } else {
-        if (line.toLowerCase().includes('error')) {
+        const isBenign = line.includes('Error opening memory font') || line.includes('Fontconfig warning');
+        if (line.toLowerCase().includes('error') && !isBenign) {
           console.log(`\n❌ [FFmpeg Error] ${line.trim()}`);
         }
-        if (line.includes('fontselect') || line.toLowerCase().includes('subtitle')) {
+        if (line.includes('fontselect') || line.toLowerCase().includes('subtitle') || isBenign) {
           console.log(`\n🔍 [FFmpeg FontLog] ${line.trim()}`);
         }
       }

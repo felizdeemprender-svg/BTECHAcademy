@@ -1,7 +1,10 @@
-interface VideoTaskPayload {
-  campaignId: string;
-  courseId: string;
-  assets: any; 
+export interface VideoTaskPayload {
+  campaignId?: string;
+  courseId?: string;
+  assets?: any; 
+  action?: string;
+  jobId?: string;
+  renderRequest?: any;
   [key: string]: any;
 }
 
@@ -69,7 +72,7 @@ export async function enqueueVideoTask(payload: VideoTaskPayload) {
           },
         };
 
-        console.log(`[CloudTasks] Encolando tarea para campaña: ${payload.campaignId} en cola GCP ${gcpQueue}`);
+        console.log(`[CloudTasks] Encolando tarea para: ${payload.campaignId || payload.jobId || 'tarea'} en cola GCP ${gcpQueue}`);
         const [response] = await client.createTask({ parent, task });
         console.log(`[CloudTasks] Tarea encolada con éxito en GCP. ID: ${response.name}`);
         return { success: true, taskName: response.name };
