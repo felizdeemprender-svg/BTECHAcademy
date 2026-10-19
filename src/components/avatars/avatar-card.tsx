@@ -4,13 +4,14 @@ import * as React from "react";
 import { Avatar, findVoiceById } from "@/domain/avatars";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bot, Edit, Mic, Play, Square, Trash2, Volume2 } from "lucide-react";
+import { Bot, CheckCircle2, Edit, Mic, Play, Square, Trash2, Volume2 } from "lucide-react";
 
 export interface AvatarCardProps {
   avatar: Avatar;
   onEdit?: (avatar: Avatar) => void;
   onDelete?: (avatar: Avatar) => void;
   onSelect?: (avatar: Avatar) => void;
+  onSetDefault?: (avatar: Avatar) => void;
   isSelected?: boolean;
 }
 
@@ -19,6 +20,7 @@ export function AvatarCard({
   onEdit,
   onDelete,
   onSelect,
+  onSetDefault,
   isSelected,
 }: AvatarCardProps) {
   const [isPlaying, setIsPlaying] = React.useState(false);
@@ -143,41 +145,62 @@ export function AvatarCard({
       </div>
 
       {/* Acciones */}
-      {(onEdit || onDelete) && (
-        <div className="flex items-center justify-end gap-1 mt-3 pt-2.5 border-t border-border">
-          {onEdit && (
+      {(onEdit || onDelete || onSetDefault) && (
+        <div className="flex items-center justify-between gap-1 mt-3 pt-2.5 border-t border-border">
+          {!avatar.isDefault && onSetDefault ? (
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                onEdit(avatar);
+                onSetDefault(avatar);
               }}
-              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground mr-auto"
             >
-              <Edit className="h-3.5 w-3.5 mr-1" />
-              Editar
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+              Fijar principal
             </Button>
+          ) : (
+            <div />
           )}
 
-          {onDelete && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(avatar);
-              }}
-              className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1" />
-              Eliminar
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {onEdit && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(avatar);
+                }}
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Edit className="h-3.5 w-3.5 mr-1" />
+                Editar
+              </Button>
+            )}
+
+            {onDelete && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(avatar);
+                }}
+                className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                Eliminar
+              </Button>
+            )}
+          </div>
         </div>
       )}
+
     </div>
   );
 }

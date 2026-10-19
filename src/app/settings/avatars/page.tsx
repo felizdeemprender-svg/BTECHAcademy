@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarGender, findVoiceById } from '@/domain/avatars';
+import { Avatar, INITIAL_DEFAULT_AVATARS } from '@/domain/avatars';
 import { AvatarCard, AvatarFormDialog } from '@/components/avatars';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,170 +12,153 @@ import { Badge } from '@/components/ui/badge';
 import {
   Bot,
   Plus,
-  Sparkles,
   Search,
   Volume2,
   Users,
   ShieldCheck,
-  CheckCircle2,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 
-// Avatares predeterminados iniciales si la cuenta aún no tiene creados (Con fondo verde para croma FFmpeg)
-const INITIAL_DEFAULT_AVATARS: Avatar[] = [
-  {
-    id: 'avatar-tomas-ar',
-    name: 'Tomás — Presentador Tech',
-    role: 'Instructor y Anuncios de Marketing',
-    gender: 'male',
-    language: 'es',
-    accent: 'AR',
-    voiceProvider: 'edge-tts',
-    voiceId: 'es-AR-TomasNeural',
-    imageUrl: '/avatars/avatar_chroma_male.jpg',
-    imageSource: 'ai-generated',
-    isDefault: true,
-  },
-  {
-    id: 'avatar-elena-ar',
-    name: 'Elena — Educadora',
-    role: 'Clases Teóricas y Bienvenidas',
-    gender: 'female',
-    language: 'es',
-    accent: 'AR',
-    voiceProvider: 'edge-tts',
-    voiceId: 'es-AR-ElenaNeural',
-    imageUrl: '/avatars/avatar_chroma_female.jpg',
-    imageSource: 'ai-generated',
-    isDefault: false,
-  },
-  {
-    id: 'avatar-jorge-mx',
-    name: 'Jorge — Comercial',
-    role: 'Campañas de Prospección y Ventas',
-    gender: 'male',
-    language: 'es',
-    accent: 'MX',
-    voiceProvider: 'edge-tts',
-    voiceId: 'es-MX-JorgeNeural',
-    imageUrl: '/avatars/avatar_chroma_latin.jpg',
-    imageSource: 'ai-generated',
-    isDefault: false,
-  },
-];
-
 export default function AvatarsDashboardPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const [avatars, setAvatars] = useState<Avatar[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>('all');
 
-  // Carga inicial (LocalStorage con fallback a INITIAL_DEFAULT_AVATARS)
-  useEffect(() => {
+  // Cargar avatares desde Firestore API
+  const fetchAvatars = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
     try {
-      const storageKey = user?.uid ? `fastoria_avatars_${user.uid}` : 'fastoria_avatars_guest';
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAvatars(parsed);
-          return;
-        }
+      const token = await user.getIdToken();
+      const res = await fetch('/api/avatars', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Error ${res.status}: ${await res.text()}`);
       }
-      setAvatars(INITIAL_DEFAULT_AVATARS);
-    } catch {
+
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setAvatars(json.data);
+      } else {
+        setAvatars(INITIAL_DEFAULT_AVATARS);
+      }
+    } catch (err: any) {
+      console.warn('Error sincronizando avatares con Firestore:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Error de sincronización',
+        description: 'No se pudieron recuperar los avatares desde Firestore. Mostrando presets locales.',
+      });
+      setAvatars((prev) => (prev.length > 0 ? prev : INITIAL_DEFAULT_AVATARS));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, toast]);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      fetchAvatars();
+    } else if (!authLoading && !user) {
+      setIsLoading(false);
       setAvatars(INITIAL_DEFAULT_AVATARS);
     }
-  }, [user?.uid]);
+  }, [user, authLoading, fetchAvatars]);
 
-  // Guardar en almacenamiento local
-  const persistAvatars = (nextList: Avatar[]) => {
-    setAvatars(nextList);
+  // Guardar (crear o actualizar) en Firestore
+  const handleSaveAvatar = async (data: Partial<Avatar>) => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Sesión requerida',
+        description: 'Debes iniciar sesión para persistir los avatares.',
+      });
+      return;
+    }
+
     try {
-      const storageKey = user?.uid ? `fastoria_avatars_${user.uid}` : 'fastoria_avatars_guest';
-      localStorage.setItem(storageKey, JSON.stringify(nextList));
-    } catch (err) {
-      console.warn('No se pudo persistir en localStorage:', err);
+      const token = await user.getIdToken();
+      const method = data.id ? 'PUT' : 'POST';
+      const res = await fetch('/api/avatars', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'No se pudo guardar el avatar');
+      }
+
+      toast({
+        title: data.id ? 'Avatar actualizado' : 'Avatar creado con éxito',
+        description: `"${json.data?.name || data.name}" quedó guardado en Firestore.`,
+      });
+
+      await fetchAvatars();
+      setSelectedAvatar(null);
+    } catch (err: any) {
+      console.error('Error guardando avatar:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Error al guardar',
+        description: err.message || 'Ocurrió un error inesperado al guardar.',
+      });
     }
   };
 
-  // Crear o actualizar avatar
-  const handleSaveAvatar = async (data: Partial<Avatar>) => {
-    let nextList: Avatar[] = [];
-
-    if (data.id) {
-      // Actualizar existente
-      nextList = avatars.map((item) => {
-        if (item.id === data.id) {
-          const updated: Avatar = {
-            ...item,
-            ...data,
-            name: data.name || item.name,
-            role: data.role || item.role,
-            gender: data.gender || item.gender,
-            language: data.language || item.language,
-            accent: data.accent || item.accent,
-            voiceProvider: data.voiceProvider || item.voiceProvider,
-            voiceId: data.voiceId || item.voiceId,
-            imageUrl: data.imageUrl || item.imageUrl,
-            imageSource: data.imageSource || item.imageSource,
-            isDefault: data.isDefault ?? item.isDefault,
-            updatedAt: new Date(),
-          };
-          return updated;
-        }
-        // Si este nuevo se marca como default, desmarcar los otros
-        if (data.isDefault) {
-          return { ...item, isDefault: false };
-        }
-        return item;
+  // Fijar avatar como predeterminado
+  const handleSetDefault = async (target: Avatar) => {
+    if (!user) return;
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/avatars', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...target,
+          isDefault: true,
+        }),
       });
-      toast({
-        title: 'Avatar actualizado',
-        description: `Los cambios para "${data.name}" se guardaron correctamente.`,
-      });
-    } else {
-      // Crear nuevo
-      const newAvatar: Avatar = {
-        id: `avatar_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        userId: user?.uid,
-        name: data.name || 'Nuevo Avatar',
-        role: data.role || 'Mentor / Presentador',
-        gender: data.gender || 'male',
-        language: data.language || 'es',
-        accent: data.accent || 'AR',
-        voiceProvider: data.voiceProvider || 'edge-tts',
-        voiceId: data.voiceId || 'es-AR-TomasNeural',
-        customVoiceUrl: data.customVoiceUrl,
-        imageUrl: data.imageUrl || '',
-        imageSource: data.imageSource || 'upload',
-        isDefault: Boolean(data.isDefault || avatars.length === 0),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
 
-      if (newAvatar.isDefault) {
-        nextList = avatars.map((a) => ({ ...a, isDefault: false }));
-        nextList.unshift(newAvatar);
-      } else {
-        nextList = [newAvatar, ...avatars];
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'No se pudo actualizar el avatar principal');
       }
 
       toast({
-        title: 'Avatar creado con éxito',
-        description: `"${newAvatar.name}" ya está disponible para tus clases y campañas.`,
+        title: 'Avatar principal actualizado',
+        description: `"${target.name}" ahora es el avatar predeterminado de tu marca.`,
+      });
+
+      await fetchAvatars();
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: err.message || 'No se pudo actualizar el avatar principal.',
       });
     }
-
-    persistAvatars(nextList);
-    setSelectedAvatar(null);
   };
 
   // Eliminar avatar
-  const handleDeleteAvatar = (target: Avatar) => {
+  const handleDeleteAvatar = async (target: Avatar) => {
     if (avatars.length <= 1) {
       toast({
         variant: 'destructive',
@@ -185,26 +168,43 @@ export default function AvatarsDashboardPage() {
       return;
     }
 
-    const nextList = avatars.filter((a) => a.id !== target.id);
-    // Si borró el default, asignar el primero como default
-    if (target.isDefault && nextList.length > 0) {
-      nextList[0].isDefault = true;
-    }
+    if (!user) return;
 
-    persistAvatars(nextList);
-    toast({
-      title: 'Avatar eliminado',
-      description: `"${target.name}" ha sido eliminado.`,
-    });
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/avatars?id=${encodeURIComponent(target.id)}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'No se pudo eliminar el avatar');
+      }
+
+      toast({
+        title: 'Avatar eliminado',
+        description: `"${target.name}" ha sido eliminado de Firestore.`,
+      });
+
+      await fetchAvatars();
+    } catch (err: any) {
+      console.error('Error eliminando avatar:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Error al eliminar',
+        description: err.message || 'No se pudo eliminar el avatar.',
+      });
+    }
   };
 
-  // Abrir modal de edición
   const handleEditAvatar = (target: Avatar) => {
     setSelectedAvatar(target);
     setIsDialogOpen(true);
   };
 
-  // Abrir modal de creación
   const handleCreateNew = () => {
     setSelectedAvatar(null);
     setIsDialogOpen(true);
@@ -242,13 +242,26 @@ export default function AvatarsDashboardPage() {
             </p>
           </div>
 
-          <Button
-            onClick={handleCreateNew}
-            className="h-10 px-4 font-semibold gap-2 shadow-none"
-          >
-            <Plus className="h-4 w-4" />
-            Nuevo Avatar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchAvatars}
+              disabled={isLoading}
+              className="h-10 px-3 text-xs gap-1.5"
+              title="Recargar desde Firestore"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+              Sincronizar
+            </Button>
+            <Button
+              onClick={handleCreateNew}
+              className="h-10 px-4 font-semibold gap-2 shadow-none"
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo Avatar
+            </Button>
+          </div>
         </div>
 
         {/* Métricas / Resumen Superior */}
@@ -259,7 +272,7 @@ export default function AvatarsDashboardPage() {
               <Users className="h-4 w-4 text-primary" />
             </div>
             <p className="text-2xl font-bold text-foreground mt-2">{avatars.length}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Disponibles en tu cuenta</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Sincronizados en Firestore</p>
           </div>
 
           <div className="rounded-lg border border-border bg-card p-4">
@@ -271,7 +284,7 @@ export default function AvatarsDashboardPage() {
               {defaultAvatar?.name || 'Ninguno'}
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Usado por defecto en campañas
+              Usado por defecto en videos y campañas
             </p>
           </div>
 
@@ -331,7 +344,13 @@ export default function AvatarsDashboardPage() {
         </div>
 
         {/* Grid de Avatares */}
-        {filteredAvatars.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center rounded-lg border border-border bg-card/40">
+            <Loader2 className="h-8 w-8 text-primary animate-spin mb-3" />
+            <p className="text-sm font-medium text-foreground">Sincronizando avatares con Firestore...</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Cargando identidades y voces de tu cuenta</p>
+          </div>
+        ) : filteredAvatars.length === 0 ? (
           <div className="text-center py-16 rounded-lg border border-dashed border-border bg-card/50">
             <Bot className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
             <h3 className="font-semibold text-foreground text-sm">No se encontraron avatares</h3>
@@ -358,6 +377,7 @@ export default function AvatarsDashboardPage() {
                 avatar={item}
                 onEdit={handleEditAvatar}
                 onDelete={handleDeleteAvatar}
+                onSetDefault={handleSetDefault}
               />
             ))}
           </div>

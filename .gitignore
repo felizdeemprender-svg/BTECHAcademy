@@ -72,6 +72,7 @@ public/adns/debug-adn-*
 public/adns/test-adn/
 
 public/tts_cache/
+public/renders/
 scripts/check-tutor.ts
 scripts/delete-ghost.ts
 test_tts_v2.mp3
