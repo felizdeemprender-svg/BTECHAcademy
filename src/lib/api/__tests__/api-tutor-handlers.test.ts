@@ -121,6 +121,25 @@ function baseStore(): Store {
         subscription: { status: 'past_due' },
         profile: {},
       },
+      'tutor-corp': {
+        username: 'mentor_corp',
+        displayName: 'Mentor Corporativo',
+        email: 'mentor@empresa.com',
+        roles: ['mentor'],
+        companyId: 'comp-1',
+        companyRole: 'tutor',
+        profile: {
+          bio: 'Bio del mentor corporativo',
+          websiteConfig: { headline: 'Especialista en Liderazgo' },
+        },
+      },
+    },
+    companies: {
+      'comp-1': {
+        name: 'Empresa Test',
+        slug: 'empresa-test',
+        branding: { primaryColor: '#2563EB', slogan: 'Slogan Empresa' },
+      },
     },
     courses: {
       c1: { mentorId: 'tutor-1', isActive: true, status: 'published', publicListing: true },
@@ -159,6 +178,22 @@ describe('handleGetTutorStatus', () => {
       available: false,
       reason: 'subscription_inactive',
     });
+  });
+
+  it('200 para mentor corporativo con afiliación a empresa y sin cursos propios requeridos', async () => {
+    const res = await handleGetTutorStatus(new FakeGateway(baseStore()), 'mentor_corp');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.available).toBe(true);
+    const tutor = body.tutor as Record<string, unknown>;
+    expect(tutor.id).toBe('tutor-corp');
+    expect(tutor.isEnterprise).toBe(false);
+    expect(tutor.isCompanyTutor).toBe(true);
+    const comp = tutor.company as Record<string, unknown>;
+    expect(comp).toBeDefined();
+    expect(comp.id).toBe('comp-1');
+    expect(comp.name).toBe('Empresa Test');
+    expect(comp.slug).toBe('empresa-test');
   });
 
   it('rama local omite suscripción y usa stats.totalCourses', async () => {

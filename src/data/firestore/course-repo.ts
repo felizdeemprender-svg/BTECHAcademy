@@ -59,6 +59,8 @@ export class FirestoreCourseRepository implements CourseRepository {
         : undefined;
     return {
       isAdmin: roles.includes('admin'),
+      companyId: typeof raw.companyId === 'string' ? raw.companyId : undefined,
+      companyRole: typeof raw.companyRole === 'string' ? raw.companyRole : undefined,
       subscription: subscription
         ? {
             status: subscription.status,

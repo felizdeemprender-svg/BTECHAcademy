@@ -248,6 +248,7 @@ describe('listPublicPlans', () => {
       price: 50,
       aiQuotas: { totalCredits: 0 },
       limits: { maxCourses: 5, maxStudents: 100 },
+      targetAudience: 'tutor',
     });
     expect(result.value.plans[1]).toMatchObject({
       id: 'k1',
@@ -255,6 +256,31 @@ describe('listPublicPlans', () => {
       name: 'Plan sin nombre',
       price: 0,
       isActive: true,
+      targetAudience: 'tutor',
     });
+  });
+
+  it('valida maxTutors obligatorio para planes de empresa al crear', async () => {
+    const { dir } = stubDirectory();
+    const entPlanWithoutTutors = {
+      ...validPlan,
+      name: 'Enterprise Basic',
+      targetAudience: 'enterprise',
+      limits: { maxCourses: 10, maxStudents: 100 },
+    };
+    const resFail = await createSubscriptionPlan(dir, entPlanWithoutTutors);
+    expect(resFail.ok).toBe(false);
+    if (!resFail.ok) {
+      expect(resFail.error.message).toBe('El límite de tutores es requerido para planes de empresa');
+    }
+
+    const entPlanWithTutors = {
+      ...validPlan,
+      name: 'Enterprise Basic',
+      targetAudience: 'enterprise',
+      limits: { maxCourses: 10, maxStudents: 100, maxTutors: 10 },
+    };
+    const resOk = await createSubscriptionPlan(dir, entPlanWithTutors);
+    expect(resOk.ok).toBe(true);
   });
 });

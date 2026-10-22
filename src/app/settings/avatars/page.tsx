@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useToast } from '@/hooks/use-toast';
+import { isCompanyTutorProfile } from '@/domain/company';
+import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
 import { Avatar, INITIAL_DEFAULT_AVATARS } from '@/domain/avatars';
 import { AvatarCard, AvatarFormDialog } from '@/components/avatars';
 import { Button } from '@/components/ui/button';
@@ -21,8 +23,10 @@ import {
 } from 'lucide-react';
 
 export default function AvatarsDashboardPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+
+  const isCorporateTutor = isCompanyTutorProfile(profile);
 
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -224,6 +228,17 @@ export default function AvatarsDashboardPage() {
   });
 
   const defaultAvatar = avatars.find((a) => a.isDefault) || avatars[0];
+
+  if (isCorporateTutor) {
+    return (
+      <DashboardLayout>
+        <CorporateRestrictionNotice
+          feature="Avatares de Marca"
+          description="Los avatares hiperrealistas y la identidad sintética son configurados y administrados centralmente por la empresa titular a la que perteneces."
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

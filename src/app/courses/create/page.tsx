@@ -150,6 +150,11 @@ export default function CreateCoursePage() {
     primaryColor: resolveProfileBrand(profile?.profile)?.palette?.primary || profile?.profile?.branding?.primaryColor || '#3B2D86'
   }));
 
+  const isCompanyTutor = Boolean(
+    profile?.companyRole === 'tutor' ||
+    (profile?.companyId && profile?.companyRole !== 'owner' && !profile?.roles?.includes('empresa') && !profile?.isEnterprise)
+  );
+
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiFlowStep, setAiFlowStep] = useState(1);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -203,7 +208,7 @@ export default function CreateCoursePage() {
     setLoading(true);
     try {
       const newCourseRef = doc(collection(db, 'courses'));
-      await setDoc(newCourseRef, {
+      const coursePayload: Record<string, any> = {
         ...courseData,
         mentorId: user.uid,
         status: 'creating',
@@ -211,7 +216,11 @@ export default function CreateCoursePage() {
         updatedAt: serverTimestamp(),
         modulesCount: 0,
         studentsCount: 0
-      });
+      };
+      if (profile?.companyId || profile?.roles?.includes('empresa') || profile?.isEnterprise) {
+        coursePayload.companyId = profile?.companyId || user.uid;
+      }
+      await setDoc(newCourseRef, coursePayload);
       setCourseId(newCourseRef.id);
       setStep(2);
     } catch (error) {
@@ -376,10 +385,16 @@ export default function CreateCoursePage() {
     setLoading(true);
     try {
       const courseRef = doc(db, 'courses', courseId);
-      await updateDoc(courseRef, { branding: brandingData });
+      const dataToSave = isCompanyTutor
+        ? {
+            'branding.bio': brandingData.bio,
+            'branding.socials': brandingData.socials,
+          }
+        : { branding: brandingData };
+      await updateDoc(courseRef, dataToSave);
       setStep(4);
     } catch (error) {
-      toast({ title: 'Error al guardar branding', variant: 'destructive' });
+      toast({ title: 'Error al guardar información', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -909,7 +924,9 @@ export default function CreateCoursePage() {
                   <TabsList className="bg-secondary/20 p-1 rounded-none border-b h-16 w-full flex-wrap gap-2 px-4">
                     <TabsTrigger value="perfil" className="rounded-xl gap-2 font-bold px-6 h-11"><User className="h-4 w-4" /> Perfil</TabsTrigger>
                     <TabsTrigger value="contacto" className="rounded-xl gap-2 font-bold px-6 h-11"><Globe className="h-4 w-4" /> Contacto</TabsTrigger>
-                    <TabsTrigger value="marca" className="rounded-xl gap-2 font-bold px-6 h-11"><Palette className="h-4 w-4" /> Marca</TabsTrigger>
+                    {!isCompanyTutor && (
+                      <TabsTrigger value="marca" className="rounded-xl gap-2 font-bold px-6 h-11"><Palette className="h-4 w-4" /> Marca</TabsTrigger>
+                    )}
                   </TabsList>
 
                   <TabsContent value="perfil" className="p-10 space-y-6">
@@ -949,55 +966,57 @@ export default function CreateCoursePage() {
                     ))}
                   </TabsContent>
 
-                  <TabsContent value="marca" className="p-10 space-y-12">
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logo Institucional del Curso</Label>
-                      <div className="flex items-center gap-8">
-                        <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white">
-                          {brandingData.logoUrl ? (
-                            <Image src={brandingData.logoUrl} alt="Logo" fill className="object-contain p-4" unoptimized />
-                          ) : (
-                            <ImageIcon className="h-10 w-10 text-muted-foreground/20" />
-                          )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <Button variant="outline" className="rounded-2xl font-bold h-14 px-8 border-2" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
-                            {uploadingLogo ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2 h-5 w-5" />} Subir Logo
-                          </Button>
-                          {brandingData.logoUrl && (
-                            <Button variant="ghost" className="rounded-2xl font-bold h-12 px-8 text-destructive hover:bg-destructive/10" onClick={() => setBrandingData({ ...brandingData, logoUrl: '' })}>
-                              <Trash2 className="mr-2 h-5 w-5" /> Eliminar Logo
+                  {!isCompanyTutor && (
+                    <TabsContent value="marca" className="p-10 space-y-12">
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logo Institucional del Curso</Label>
+                        <div className="flex items-center gap-8">
+                          <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white">
+                            {brandingData.logoUrl ? (
+                              <Image src={brandingData.logoUrl} alt="Logo" fill className="object-contain p-4" unoptimized />
+                            ) : (
+                              <ImageIcon className="h-10 w-10 text-muted-foreground/20" />
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button variant="outline" className="rounded-2xl font-bold h-14 px-8 border-2" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
+                              {uploadingLogo ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2 h-5 w-5" />} Subir Logo
                             </Button>
-                          )}
+                            {brandingData.logoUrl && (
+                              <Button variant="ghost" className="rounded-2xl font-bold h-12 px-8 text-destructive hover:bg-destructive/10" onClick={() => setBrandingData({ ...brandingData, logoUrl: '' })}>
+                                <Trash2 className="mr-2 h-5 w-5" /> Eliminar Logo
+                              </Button>
+                            )}
+                          </div>
+                          <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={handleUploadLogo} />
                         </div>
-                        <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={handleUploadLogo} />
                       </div>
-                    </div>
 
-                    <div className="space-y-6">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color Primario Académico</Label>
-                      <div className="flex flex-col sm:flex-row items-center gap-8 bg-secondary/10 p-6 rounded-3xl">
-                        <div className="relative">
-                          <input
-                            type="color"
-                            value={brandingData.primaryColor}
-                            onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
-                            className="w-24 h-24 rounded-3xl p-0 border-none cursor-pointer overflow-hidden ring-4 ring-white"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <Maximize className="h-6 w-6 text-white mix-blend-difference opacity-50" />
+                      <div className="space-y-6">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color Primario Académico</Label>
+                        <div className="flex flex-col sm:flex-row items-center gap-8 bg-secondary/10 p-6 rounded-3xl">
+                          <div className="relative">
+                            <input
+                              type="color"
+                              value={brandingData.primaryColor}
+                              onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
+                              className="w-24 h-24 rounded-3xl p-0 border-none cursor-pointer overflow-hidden ring-4 ring-white"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <Maximize className="h-6 w-6 text-white mix-blend-difference opacity-50" />
+                            </div>
+                          </div>
+                          <div className="flex-1 space-y-4">
+                            <Input
+                              value={brandingData.primaryColor}
+                              onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
+                              className="text-2xl font-mono font-bold text-center bg-white border-none shadow-sm"
+                             size="xl" />
                           </div>
                         </div>
-                        <div className="flex-1 space-y-4">
-                          <Input
-                            value={brandingData.primaryColor}
-                            onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
-                            className="text-2xl font-mono font-bold text-center bg-white border-none shadow-sm"
-                           size="xl" />
-                        </div>
                       </div>
-                    </div>
-                  </TabsContent>
+                    </TabsContent>
+                  )}
                 </Tabs>
                 <div className="p-10 pt-0">
                   <Button onClick={handleSaveBranding} className="w-full h-16 rounded-[1.5rem] text-lg font-bold bg-primary" disabled={loading}>

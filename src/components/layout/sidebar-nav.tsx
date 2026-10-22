@@ -32,6 +32,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-context';
 import { canAccessMarketingTools } from '@/lib/subscription-permissions';
+import { isCompanyTutorProfile, CORPORATE_MANAGED_SETTINGS_HREFS } from '@/domain/company';
 
 export interface NavItem {
   name: string;
@@ -48,13 +49,41 @@ export interface NavSection {
 }
 
 export function getNavigationSections(profile?: any): NavSection[] {
+  const isCorporateTutor = isCompanyTutorProfile(profile);
+
   // Filtrar items de marketing basados en permisos
   const filterMarketingItems = (items: NavItem[]) => {
-    if (profile &&
-      !profile?.roles?.includes('admin') &&
-      !profile?.roles?.includes('marketing') &&
-      !canAccessMarketingTools(profile?.mentorPermissions || [])) {
+    if (!profile) return [];
+    if (profile?.roles?.includes('admin')) return items;
+    if (profile?.roles?.includes('empresa') || profile?.companyRole === 'owner') return items;
+
+    // Si es tutor corporativo dependiente, Landings y Campañas requieren rol 'marketing' o permisos delegados
+    if (isCorporateTutor) {
+      const hasMarketingRole = profile?.roles?.includes('marketing');
+      const hasMarketingPerm = profile?.mentorPermissions?.includes('marketing_access') || profile?.mentorPermissions?.includes('landing_access');
+      if (!hasMarketingRole && !hasMarketingPerm) {
+        return [];
+      }
+    }
+
+    if (!profile?.roles?.includes('marketing') && !canAccessMarketingTools(profile?.mentorPermissions || [])) {
       return items.filter(item => !item.href.startsWith('/marketing'));
+    }
+    return items;
+  };
+
+  // Filtrar items de automatizaciones: los tutores de empresa NUNCA tienen acceso (exclusivo empresa)
+  const filterAutomationItems = (items: NavItem[]) => {
+    if (isCorporateTutor) {
+      return [];
+    }
+    return items;
+  };
+
+  // Filtrar opciones de Gestión de Cuenta administradas exclusivamente por la empresa
+  const filterAccountItems = (items: NavItem[]) => {
+    if (isCorporateTutor) {
+      return items.filter(item => !CORPORATE_MANAGED_SETTINGS_HREFS.includes(item.href as any));
     }
     return items;
   };
@@ -63,45 +92,52 @@ export function getNavigationSections(profile?: any): NavSection[] {
     {
       label: 'Cursos',
       items: [
-        { name: 'Inicio', href: '/dashboard', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: LayoutDashboard },
-        { name: 'Catálogo', href: '/courses', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: BookOpen },
+        { name: 'Inicio', href: '/dashboard', roles: ['alumno', 'mentor', 'admin', 'marketing', 'empresa'], icon: LayoutDashboard },
+        { name: 'Catálogo', href: '/courses', roles: ['alumno', 'mentor', 'admin', 'marketing', 'empresa'], icon: BookOpen },
         { name: 'Control de Tutores', href: '/courses/embajadores', roles: ['alumno'], icon: Users },
         { name: 'Mis Cursos', href: '/my-courses', roles: ['alumno'], icon: Library },
         { name: 'Mis Desafíos', href: '/mentoria/tasks', roles: ['alumno'], icon: Zap },
-        { name: 'Mentorías', href: '/mentoria/seguimientos', roles: ['alumno', 'mentor', 'admin'], subPermission: 'followups_management', icon: ClipboardList },
+        { name: 'Mentorías', href: '/mentoria/seguimientos', roles: ['alumno', 'mentor', 'admin', 'empresa'], subPermission: 'followups_management', icon: ClipboardList },
+      ]
+    },
+    {
+      label: 'Empresa',
+      items: [
+        { name: 'Tutores de Empresa', href: '/company/tutors', roles: ['empresa', 'admin'], icon: Users },
+        { name: 'Abono & Capacidad', href: '/settings/plan', roles: ['empresa'], icon: CreditCard },
       ]
     },
     {
       label: 'Admin de Cursos',
       items: [
-        { name: 'Gestión Académica', href: '/courses/manage', roles: ['mentor', 'admin'], subPermission: 'academic_management', icon: GraduationCap },
-        { name: 'Desafíos (Mentor)', href: '/mentoria/desafios', roles: ['mentor', 'admin'], subPermission: 'mentor_challenges', icon: Target },
-        { name: 'Alumnos', href: '/mentoria/alumnos', roles: ['mentor', 'admin'], subPermission: 'students_view', icon: Users },
+        { name: 'Gestión Académica', href: '/courses/manage', roles: ['mentor', 'admin', 'empresa'], subPermission: 'academic_management', icon: GraduationCap },
+        { name: 'Desafíos (Mentor)', href: '/mentoria/desafios', roles: ['mentor', 'admin', 'empresa'], subPermission: 'mentor_challenges', icon: Target },
+        { name: 'Alumnos', href: '/mentoria/alumnos', roles: ['mentor', 'admin', 'empresa'], subPermission: 'students_view', icon: Users },
       ]
     },
     {
       label: 'Landings',
-      items: [
-        { name: 'Landings de Venta', href: '/marketing/landings', roles: ['admin', 'marketing', 'mentor'], subPermission: 'landing_access', icon: LayoutIcon },
-        { name: 'Control de Embajadores', href: '/marketing/influencers', roles: ['mentor', 'admin'], subPermission: 'landing_access', icon: Users },
-      ]
+      items: filterMarketingItems([
+        { name: 'Landings de Venta', href: '/marketing/landings', roles: ['admin', 'marketing', 'mentor', 'empresa'], subPermission: 'landing_access', icon: LayoutIcon },
+        { name: 'Control de Embajadores', href: '/marketing/influencers', roles: ['mentor', 'admin', 'empresa'], subPermission: 'landing_access', icon: Users },
+      ])
     },
     {
       label: 'Campañas',
       items: filterMarketingItems([
-        { name: 'Mis Campañas', href: '/marketing', roles: ['admin', 'marketing', 'mentor'], icon: Rocket },
-        { name: 'Centro de Mando', href: '/marketing/campaigns', roles: ['admin', 'marketing', 'mentor'], icon: Cpu },
-        { name: 'Track de Campañas', href: '/marketing/track', roles: ['admin', 'marketing', 'mentor'], icon: Activity },
+        { name: 'Mis Campañas', href: '/marketing', roles: ['admin', 'marketing', 'mentor', 'empresa'], icon: Rocket },
+        { name: 'Centro de Mando', href: '/marketing/campaigns', roles: ['admin', 'marketing', 'mentor', 'empresa'], icon: Cpu },
+        { name: 'Track de Campañas', href: '/marketing/track', roles: ['admin', 'marketing', 'mentor', 'empresa'], icon: Activity },
       ])
     },
     {
       label: 'Automatizaciones & Canales',
-      items: [
+      items: filterAutomationItems([
         { name: 'Bot de WhatsApp', href: '/automations/whatsapp', roles: ['admin'], icon: MessageSquare },
         { name: 'Monitor', href: '/automations/monitor', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Activity },
         { name: 'Configurador Global', href: '/automations/builder', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Cpu },
         { name: 'Servicios', href: '/automations/services', roles: ['mentor', 'admin'], subPermission: 'automations_access', icon: Settings },
-      ]
+      ])
     },
     {
       label: 'Administración',
@@ -122,15 +158,15 @@ export function getNavigationSections(profile?: any): NavSection[] {
     },
     {
       label: 'Gestión de Cuenta',
-      items: [
-        { name: 'Evo', href: '/settings/evo', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Sparkles },
-        { name: 'Mi Perfil', href: '/settings/profile', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Settings },
-        { name: 'Avatares de Marca', href: '/settings/avatars', roles: ['alumno', 'mentor', 'admin', 'marketing'], icon: Bot },
-        { name: 'Mi Plan y Facturación', href: '/settings/plan', roles: ['mentor', 'admin'], icon: CreditCard },
-        { name: 'Métodos de Cobro', href: '/settings/payment-methods', roles: ['mentor', 'admin'], icon: Wallet },
-        { name: 'Transferencias', href: '/settings/transfers', roles: ['mentor', 'admin'], icon: ArrowLeftRight },
-        { name: 'Motores de Publicación', href: '/settings/publishing-engines', roles: ['mentor', 'admin'], icon: Cpu },
-      ]
+      items: filterAccountItems([
+        { name: 'Evo', href: '/settings/evo', roles: ['alumno', 'mentor', 'admin', 'marketing', 'empresa'], icon: Sparkles },
+        { name: 'Mi Perfil', href: '/settings/profile', roles: ['alumno', 'mentor', 'admin', 'marketing', 'empresa'], icon: Settings },
+        { name: 'Avatares de Marca', href: '/settings/avatars', roles: ['alumno', 'mentor', 'admin', 'marketing', 'empresa'], icon: Bot },
+        { name: 'Mi Plan y Facturación', href: '/settings/plan', roles: ['mentor', 'admin', 'empresa'], icon: CreditCard },
+        { name: 'Métodos de Cobro', href: '/settings/payment-methods', roles: ['mentor', 'admin', 'empresa'], icon: Wallet },
+        { name: 'Transferencias', href: '/settings/transfers', roles: ['mentor', 'admin', 'empresa'], icon: ArrowLeftRight },
+        { name: 'Motores de Publicación', href: '/settings/publishing-engines', roles: ['mentor', 'admin', 'empresa'], icon: Cpu },
+      ])
     }
   ];
 }
@@ -170,10 +206,31 @@ export function SidebarNav() {
     }
   }, [pathname]);
 
+  const isCorporateTutor = isCompanyTutorProfile(profile);
+
   const filteredSections = sections.map(section => ({
     ...section,
     items: section.items.filter(item => {
       if (!profile) return false;
+
+      // Opciones administradas por la empresa: los tutores dependientes no tienen acceso a estas opciones
+      if (isCorporateTutor && CORPORATE_MANAGED_SETTINGS_HREFS.includes(item.href as any)) {
+        return false;
+      }
+
+      // Automatizaciones son potestad exclusiva de la empresa titular
+      if (isCorporateTutor && (item.href.startsWith('/automations') || section.label === 'Automatizaciones & Canales')) {
+        return false;
+      }
+
+      // Landings y Campañas para tutores corporativos requieren explícitamente rol marketing o permisos delegados
+      if (isCorporateTutor && item.href.startsWith('/marketing')) {
+        const hasMarketingRole = profile.roles?.includes('marketing');
+        const hasMarketingPerm = profile.mentorPermissions?.includes('marketing_access') || profile.mentorPermissions?.includes('landing_access');
+        if (!hasMarketingRole && !hasMarketingPerm) {
+          return false;
+        }
+      }
 
       if (item.href === '/courses/embajadores') {
         const hasEmbajadorAccess = profile.roles.includes('referido') && (profile.associatedMentors || []).length > 0;
@@ -187,14 +244,15 @@ export function SidebarNav() {
 
       // Check sub-permission if exists (only for non-students)
       if (item.subPermission && !profile.roles.includes('alumno')) {
-        // Allow admins to bypass subPermissions
-        return isSuperAdmin || profile.roles.includes('admin') || profile.mentorPermissions?.includes(item.subPermission);
+        // Allow admins and empresa to bypass subPermissions
+        return isSuperAdmin || profile.roles.includes('admin') || profile.roles.includes('empresa') || profile.mentorPermissions?.includes(item.subPermission);
       }
 
       // Check marketing access (excluding landings which is covered by subPermission)
       if (item.href.startsWith('/marketing') && item.href !== '/marketing/landings') {
         return isSuperAdmin ||
           profile.roles.includes('admin') ||
+          profile.roles.includes('empresa') ||
           profile.roles.includes('marketing') ||
           canAccessMarketingTools(profile.mentorPermissions || []);
       }

@@ -109,6 +109,7 @@ interface SubscriptionPlan {
     limits: {
       maxCourses: number;
       maxStudents: number;
+      maxTutors?: number;
       hasCustomBranding: boolean;
       hasAnalytics: boolean;
       hasPrioritySupport: boolean;
@@ -225,8 +226,10 @@ export default function AdminSubscriptionsPage() {
 
     try {
       const isEnterprise = formData.targetAudience === 'enterprise';
+      const maxTutorsVal = (formData.entitlements?.limits as any)?.maxTutors ?? (isEnterprise ? 5 : undefined);
       const planToSave = {
         ...formData,
+        targetAudience: isEnterprise ? 'enterprise' : 'tutor',
         type: isEnterprise ? 'fixed' : formData.type,
         pricing: {
           ...formData.pricing,
@@ -234,6 +237,12 @@ export default function AdminSubscriptionsPage() {
         },
         entitlements: {
           ...formData.entitlements,
+          limits: {
+            ...formData.entitlements?.limits,
+            maxCourses: Number(formData.entitlements?.limits?.maxCourses ?? 10),
+            maxStudents: Number(formData.entitlements?.limits?.maxStudents ?? (isEnterprise ? 500 : 200)),
+            ...(isEnterprise ? { maxTutors: Number(maxTutorsVal) } : {}),
+          },
           aiQuotas: {
             ...formData.entitlements?.aiQuotas,
             totalCredits: Number(formData.entitlements?.aiQuotas?.totalCredits || 0),
@@ -242,6 +251,11 @@ export default function AdminSubscriptionsPage() {
               credits: Number(opt.credits || 0)
             }))
           }
+        },
+        limits: {
+          maxCourses: Number(formData.entitlements?.limits?.maxCourses ?? 10),
+          maxStudents: Number(formData.entitlements?.limits?.maxStudents ?? (isEnterprise ? 500 : 200)),
+          ...(isEnterprise ? { maxTutors: Number(maxTutorsVal) } : {}),
         },
         updatedAt: serverTimestamp(),
       };
@@ -387,6 +401,11 @@ export default function AdminSubscriptionsPage() {
                   hideOnMobile: true,
                   cell: (plan) => (
                     <div className="flex flex-col items-center gap-1">
+                      {plan.targetAudience === 'enterprise' && (
+                        <Badge variant="outline" className="border-primary/40 text-primary bg-primary/10 text-[10px] font-bold">
+                          {(plan.entitlements?.limits as any)?.maxTutors === -1 || (plan as any).limits?.maxTutors === -1 ? '∞' : ((plan.entitlements?.limits as any)?.maxTutors ?? (plan as any).limits?.maxTutors ?? 5)} tutores
+                        </Badge>
+                      )}
                       <span className="text-xs font-bold text-foreground">{plan.entitlements?.limits?.maxCourses === -1 ? '∞' : (plan.entitlements?.limits?.maxCourses ?? '?')} cursos</span>
                       <span className="text-[10px] text-muted-foreground font-semibold">{plan.entitlements?.limits?.maxStudents === -1 ? '∞' : (plan.entitlements?.limits?.maxStudents ?? '?')} alumnos</span>
                     </div>
@@ -525,6 +544,83 @@ export default function AdminSubscriptionsPage() {
                   </div>
 
                   <TabsContent value="comercial" className="p-8 space-y-8 max-w-3xl mx-auto m-0">
+                    {/* Tipo de Suscripción - En la cabecera porque de acá se desprende toda la arquitectura y límites */}
+                    <div className="space-y-3 pb-6 border-b border-border">
+                      <div>
+                        <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
+                          Tipo de Suscripción
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Selecciona si este plan está destinado a un Tutor/Mentor independiente o a una Empresa.
+                        </p>
+                      </div>
+
+                      <RadioGroup
+                        value={formData.targetAudience || 'tutor'}
+                        onValueChange={(v) => {
+                          const isEnt = v === 'enterprise';
+                          setFormData({
+                            ...formData,
+                            targetAudience: isEnt ? 'enterprise' : 'tutor',
+                            type: isEnt && formData.type === 'free' ? 'fixed' : formData.type,
+                          });
+                        }}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                      >
+                        <label
+                          htmlFor="sub-type-tutor"
+                          className={cn(
+                            "cursor-pointer p-4 rounded-lg border transition-all flex items-center gap-3 select-none",
+                            (formData.targetAudience || 'tutor') === 'tutor'
+                              ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary shadow-sm"
+                              : "border-border bg-card text-muted-foreground hover:bg-muted/40"
+                          )}
+                        >
+                          <RadioGroupItem value="tutor" id="sub-type-tutor" className="sr-only" />
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-md flex items-center justify-center shrink-0 font-bold",
+                              (formData.targetAudience || 'tutor') === 'tutor'
+                                ? "bg-primary text-white"
+                                : "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            <GraduationCap className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-foreground">Tutor / Mentor</p>
+                            <p className="text-xs text-muted-foreground">Para profesionales y docentes independientes</p>
+                          </div>
+                        </label>
+
+                        <label
+                          htmlFor="sub-type-enterprise"
+                          className={cn(
+                            "cursor-pointer p-4 rounded-lg border transition-all flex items-center gap-3 select-none",
+                            formData.targetAudience === 'enterprise'
+                              ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary shadow-sm"
+                              : "border-border bg-card text-muted-foreground hover:bg-muted/40"
+                          )}
+                        >
+                          <RadioGroupItem value="enterprise" id="sub-type-enterprise" className="sr-only" />
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-md flex items-center justify-center shrink-0 font-bold",
+                              formData.targetAudience === 'enterprise'
+                                ? "bg-primary text-white"
+                                : "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            <Users className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-foreground">Empresa</p>
+                            <p className="text-xs text-muted-foreground">Para organizaciones con múltiples tutores y alumnos</p>
+                          </div>
+                        </label>
+                      </RadioGroup>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
                         <Label htmlFor="planName" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Nombre del Nivel</Label>
@@ -668,31 +764,6 @@ export default function AdminSubscriptionsPage() {
                       <Label htmlFor="planFeatures" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Propuesta de Valor (1 línea = 1 viñeta)</Label>
                       <Textarea id="planFeatures" name="planFeatures" rows={4} value={formData.features?.join('\n') || ''} onChange={(e) => setFormData({ ...formData, features: e.target.value.split('\n') })} placeholder="Perfil premium&#10;Analytics avanzadas&#10;API" className="border-border" required />
                     </div>
-
-                    <div className="flex flex-col gap-2 p-4 bg-muted rounded-xl border border-border">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Tipo de Perfil</Label>
-                      <RadioGroup
-                        value={formData.targetAudience}
-                        onValueChange={(v) => {
-                          const isEnt = v === 'enterprise';
-                          setFormData({
-                            ...formData,
-                            targetAudience: isEnt ? 'enterprise' : 'tutor',
-                            type: isEnt ? 'fixed' : formData.type
-                          });
-                        }}
-                        className="flex gap-6"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="tutor" id="plan-type-tutor" />
-                          <Label htmlFor="plan-type-tutor" className="font-bold text-xs uppercase cursor-pointer">Tutor/Mentor</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="enterprise" id="plan-type-enterprise" />
-                          <Label htmlFor="plan-type-enterprise" className="font-bold text-xs uppercase cursor-pointer text-primary">Empresa</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
                   </TabsContent>
 
                   <TabsContent value="regalias" className="p-8 space-y-8 max-w-3xl mx-auto m-0">
@@ -765,18 +836,48 @@ export default function AdminSubscriptionsPage() {
 
                   <TabsContent value="permisos" className="p-8 space-y-8 max-w-3xl mx-auto m-0">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      {formData.targetAudience === 'enterprise' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="planMaxTutors" className="text-xs font-bold uppercase tracking-widest text-primary">Tope de Tutores (maxTutors)</Label>
+                          <Input
+                            id="planMaxTutors"
+                            name="planMaxTutors"
+                            type="number"
+                            min="1"
+                            value={(formData.entitlements?.limits as any)?.maxTutors ?? 5}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              setFormData({
+                                ...formData,
+                                entitlements: {
+                                  ...(formData.entitlements || {}),
+                                  limits: {
+                                    ...(formData.entitlements?.limits || {}),
+                                    maxTutors: isNaN(val) ? 1 : val,
+                                  } as any,
+                                } as any,
+                              });
+                            }}
+                            placeholder="5 (-1 = ∞)"
+                            className="border-primary/40 bg-primary/5 font-bold"
+                            size="lg"
+                          />
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <Label htmlFor="planMaxCourses" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tope de Cursos Publicados</Label>
                         <Input id="planMaxCourses" name="planMaxCourses" type="number" min="-1" value={formData.entitlements?.limits?.maxCourses ?? 10} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), limits: { ...(formData.entitlements?.limits || {}), maxCourses: isNaN(val) ? 0 : val } as any } as any }); }} placeholder="10 (-1 = ∞)" className="border-border" size="lg" />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tope de Alumnos (Base)</Label>
-                        <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.entitlements?.limits?.maxStudents ?? 200} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), limits: { ...(formData.entitlements?.limits || {}), maxStudents: isNaN(val) ? 0 : val } as any } as any }); }} placeholder="200 (-1 = ∞)" className="border-border" size="lg" />
+                        <Label htmlFor="planMaxStudents" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{formData.targetAudience === 'enterprise' ? 'Tope de Alumnos Corporativos' : 'Tope de Alumnos (Base)'}</Label>
+                        <Input id="planMaxStudents" name="planMaxStudents" type="number" min="-1" value={formData.entitlements?.limits?.maxStudents ?? (formData.targetAudience === 'enterprise' ? 500 : 200)} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), limits: { ...(formData.entitlements?.limits || {}), maxStudents: isNaN(val) ? 0 : val } as any } as any }); }} placeholder="200 (-1 = ∞)" className="border-border" size="lg" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="planInvitationsPerCourse" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Alumnos Invitados por Curso</Label>
-                        <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.entitlements?.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), invitationsPerCourse: isNaN(val) ? 0 : val } as any }); }} placeholder="5" className="border-border" size="lg" />
-                      </div>
+                      {formData.targetAudience !== 'enterprise' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="planInvitationsPerCourse" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Alumnos Invitados por Curso</Label>
+                          <Input id="planInvitationsPerCourse" name="planInvitationsPerCourse" type="number" min="0" value={formData.entitlements?.invitationsPerCourse ?? 5} onChange={(e) => { const val = parseInt(e.target.value); setFormData({ ...formData, entitlements: { ...(formData.entitlements || {}), invitationsPerCourse: isNaN(val) ? 0 : val } as any }); }} placeholder="5" className="border-border" size="lg" />
+                        </div>
+                      )}
                     </div>
 
                     <div className="p-6 bg-background rounded-xl border border-border shadow-sm space-y-6">

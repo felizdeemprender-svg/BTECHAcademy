@@ -3,6 +3,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
+import { isCompanyTutorProfile } from '@/domain/company';
+import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { 
@@ -187,6 +189,17 @@ const ChallengeTable = ({ list, setSelectedGroup, handleDeleteGroup }: { list: a
 
 export default function MentorChallengesPage() {
   const { profile } = useAuth();
+
+  if (isCompanyTutorProfile(profile) && !profile?.mentorPermissions?.includes('mentor_challenges')) {
+    return (
+      <DashboardLayout>
+        <CorporateRestrictionNotice
+          feature="Desafíos de Mentoría"
+          description="Tu empresa no ha activado la potestad de creación o estructuración de programas y desafíos para tu cuenta."
+        />
+      </DashboardLayout>
+    );
+  }
   const db = useFirestore();
   const { toast } = useToast();
 

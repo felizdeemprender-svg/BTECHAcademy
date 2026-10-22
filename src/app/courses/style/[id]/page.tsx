@@ -82,6 +82,12 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
     : activeBrand;
   const primaryColor = selectedBrand?.palette?.primary || formData.primaryColor;
 
+  const isCompanyTutor = Boolean(
+    mentorProfile?.companyRole === 'tutor' ||
+    (mentorProfile?.companyId && mentorProfile?.companyRole !== 'owner' && !mentorProfile?.roles?.includes('empresa') && !mentorProfile?.isEnterprise) ||
+    (course?.companyId && mentorProfile?.companyRole === 'tutor')
+  );
+
   useEffect(() => {
     if (course && mentorProfile) {
       const override = course.brandingOverride || {};
@@ -114,8 +120,17 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
     if (!id) return;
     setLoading(true);
     const ref = doc(db, 'courses', id);
-    const updateData = { brandingOverride: { ...formData, primaryColor }, updatedAt: serverTimestamp() };
-    updateDoc(ref, updateData).then(() => toast({ title: 'Identidad Visual Actualizada' }))
+    const updateData = isCompanyTutor
+      ? {
+          'brandingOverride.bio': formData.bio,
+          'brandingOverride.socials': formData.socials,
+          updatedAt: serverTimestamp(),
+        }
+      : {
+          brandingOverride: { ...formData, primaryColor },
+          updatedAt: serverTimestamp(),
+        };
+    updateDoc(ref, updateData).then(() => toast({ title: isCompanyTutor ? 'Perfil en el Curso Actualizado' : 'Identidad Visual Actualizada' }))
       .catch(e => errorEmitter.emit('permission-error', new FirestorePermissionError({ path: ref.path, operation: 'update', requestResourceData: updateData })))
       .finally(() => setLoading(false));
   };
@@ -149,7 +164,12 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
       <div className="max-w-6xl mx-auto space-y-8 pb-24">
         <header className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.push('/courses/manage')} className="rounded-full h-12 w-12 hover:bg-secondary"><ArrowLeft className="h-6 w-6" /></Button>
-          <div><h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Diseñador de Marca del Curso</h1><p className="text-muted-foreground text-lg font-medium">{course?.title}</p></div>
+          <div>
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">
+              {isCompanyTutor ? 'Perfil y Redes del Tutor en el Curso' : 'Diseñador de Marca del Curso'}
+            </h1>
+            <p className="text-muted-foreground text-lg font-medium">{course?.title}</p>
+          </div>
         </header>
 
         <div className="space-y-10">
@@ -157,7 +177,9 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
             <TabsList className="bg-white/50 p-1.5 rounded-[1.5rem] mb-10 shadow-sm border w-full justify-start h-16 gap-2">
               <TabsTrigger value="perfil" className="rounded-xl font-bold px-8 h-13 text-base"><User className="h-4 w-4 mr-2" /> Perfil</TabsTrigger>
               <TabsTrigger value="contacto" className="rounded-xl font-bold px-8 h-13 text-base"><Globe className="h-4 w-4 mr-2" /> Contacto</TabsTrigger>
-              <TabsTrigger value="marca" className="rounded-xl font-bold px-8 h-13 text-base"><Palette className="h-4 w-4 mr-2" /> Marca</TabsTrigger>
+              {!isCompanyTutor && (
+                <TabsTrigger value="marca" className="rounded-xl font-bold px-8 h-13 text-base"><Palette className="h-4 w-4 mr-2" /> Marca</TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="perfil">
@@ -193,9 +215,10 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
               </Card>
             </TabsContent>
 
-            <TabsContent value="marca">
-              <Card>
-                <CardHeader className="bg-primary/5 p-10"><CardTitle className="text-2xl font-bold text-primary">Identidad Visual del Curso</CardTitle></CardHeader>
+            {!isCompanyTutor && (
+              <TabsContent value="marca">
+                <Card>
+                  <CardHeader className="bg-primary/5 p-10"><CardTitle className="text-2xl font-bold text-primary">Identidad Visual del Curso</CardTitle></CardHeader>
                 <CardContent className="p-10 space-y-12">
                   <div className="space-y-4">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logo del Programa</Label>
@@ -314,6 +337,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                 </CardContent>
               </Card>
             </TabsContent>
+            )}
           </Tabs>
 
           <Button onClick={handleSaveStyle} className="w-full h-20 rounded-lg text-2xl font-bold bg-primary" disabled={loading}>

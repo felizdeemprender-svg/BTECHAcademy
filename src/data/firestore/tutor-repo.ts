@@ -23,8 +23,22 @@ export class FirestoreTutorRepository implements TutorRepository {
   async findTutorByUsername(username: string): Promise<TutorSnapshot | null> {
     const snap = await this.gateway.queryByField(USERS, 'username', username, 1);
     const first = snap.docs[0];
-    if (!first) return null;
-    return { id: first.id, data: (first.data() ?? {}) as Record<string, unknown> };
+    if (first) return { id: first.id, data: (first.data() ?? {}) as Record<string, unknown> };
+
+    const directDoc = await this.gateway.getDoc(USERS, username);
+    if (directDoc) return { id: directDoc.id, data: (directDoc.data() ?? {}) as Record<string, unknown> };
+
+    const companySnap = await this.gateway.queryByField('companies', 'slug', username, 1);
+    const companyFirst = companySnap.docs[0];
+    if (companyFirst) {
+      const ownerId = (companyFirst.data() ?? {}).ownerId as string;
+      if (ownerId) {
+        const ownerDoc = await this.gateway.getDoc(USERS, ownerId);
+        if (ownerDoc) return { id: ownerDoc.id, data: (ownerDoc.data() ?? {}) as Record<string, unknown> };
+      }
+    }
+
+    return null;
   }
 
   async findTutorById(id: string): Promise<TutorSnapshot | null> {

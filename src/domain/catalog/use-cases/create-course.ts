@@ -58,7 +58,10 @@ export async function createCourse(
     if (!author) {
       return err(notFound('User not found'));
     }
-    if (!author.isAdmin) {
+    const isCompanyTutor = Boolean(author.companyId);
+    const resolvedCompanyId = author.companyId || (author.isAdmin ? (courseData as any)?.companyId : undefined);
+
+    if (!author.isAdmin && !isCompanyTutor) {
       const subscription = author.subscription;
       // Igual que el legacy: `new Date(endDate) < new Date()`.
       // Sin endDate el Date inválido nunca es < now (pasa); con null es
@@ -74,7 +77,19 @@ export async function createCourse(
         );
       }
     }
-    await deps.writer.createCourse({ id, mentorId, data: { ...courseData } });
+
+    const finalData = {
+      ...courseData,
+      ...(resolvedCompanyId
+        ? {
+            companyId: resolvedCompanyId,
+            ownerId: resolvedCompanyId,
+            status: 'draft', // Cursos de tutores de empresa inician forzosamente en borrador
+          }
+        : {}),
+    };
+
+    await deps.writer.createCourse({ id, mentorId, data: finalData });
     return ok({ id });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

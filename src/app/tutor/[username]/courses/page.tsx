@@ -323,12 +323,12 @@ export default function TutorCoursesPage({ params }: { params: Promise<{ usernam
                   {/* Image */}
                   <div className="relative lg:w-2/5 aspect-video lg:aspect-square overflow-hidden">
                     <Image 
-                      src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'} 
+                      src={course.thumbnail || '/assets/presets/01-academy-auth.png'} 
                       alt={course.title} 
                       fill
                       sizes="(max-width: 768px) 100vw, 40vw"
                       className="object-cover group-hover:scale-110 transition-transform duration-700" 
-                      unoptimized={!!course.thumbnail} 
+                      unoptimized 
                     />
                     <div className="absolute top-4 right-4">
                       <Badge className={course.price === 0 ? "bg-success text-white" : "bg-blue-500 text-white"}>

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, getDocs, query, where, collection } from 'firebase/firestore';
+import { doc, updateDoc, getDocs, query, where, collection, serverTimestamp } from 'firebase/firestore';
 import { LandingStyle, StyleBrand, resolveStyleBrand } from '@/lib/landing-styles';
 import { parseBrandFile, brandsToDTCG, DEFAULT_BRAND_TOKENS } from '@/lib/landing-styles/dtcg';
 import { getRootDomain } from '@/lib/utils';
@@ -53,6 +53,7 @@ import {
   ShieldCheck,
   KeyRound,
   Wallet,
+  Building2,
   Info
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -64,12 +65,19 @@ import Image from 'next/image';
 import { differenceInDays, format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { isCompanyTutorProfile } from '@/domain/company';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
   </svg>
 );
+
+const DEFAULT_PILLAR_IMAGES = [
+  '/assets/presets/01-academy-auth.png',
+  '/assets/presets/02-glass-premium.png',
+  '/assets/presets/03-kinetic-flow.png'
+];
 
 export default function SettingsPage() {
   const { profile, user } = useAuth();
@@ -79,8 +87,11 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingPillarIdx, setUploadingPillarIdx] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const pillarFileInputRef = useRef<HTMLInputElement>(null);
+  const activePillarIdxRef = useRef<number>(0);
 
   const [formData, setFormData] = useState({
     displayName: '',
@@ -104,11 +115,12 @@ export default function SettingsPage() {
       headline: '',
       subheadline: '',
       mission: '',
+      aboutUs: '',
       pilares: [
-        { titulo: '', descripcion: '' },
-        { titulo: '', descripcion: '' },
-        { titulo: '', descripcion: '' }
-      ] as { titulo: string; descripcion: string }[],
+        { titulo: '', descripcion: '', imageUrl: DEFAULT_PILLAR_IMAGES[0] },
+        { titulo: '', descripcion: '', imageUrl: DEFAULT_PILLAR_IMAGES[1] },
+        { titulo: '', descripcion: '', imageUrl: DEFAULT_PILLAR_IMAGES[2] }
+      ] as { titulo: string; descripcion: string; imageUrl?: string }[],
       badges: [] as { label: string; description: string }[],
       showStats: true,
       theme: 'professional-light',
@@ -162,13 +174,15 @@ export default function SettingsPage() {
           headline: config?.headline || '',
           subheadline: config?.subheadline || '',
           mission: config?.mission || '',
-          pilares: (config?.pilares || []).map((p: any) => ({
+          aboutUs: config?.aboutUs || '',
+          pilares: (config?.pilares || []).map((p: any, idx: number) => ({
             titulo: p.titulo || '',
-            descripcion: p.descripcion || ''
+            descripcion: p.descripcion || '',
+            imageUrl: p.imageUrl || DEFAULT_PILLAR_IMAGES[idx] || ''
           })).concat([
-            { titulo: '', descripcion: '' },
-            { titulo: '', descripcion: '' },
-            { titulo: '', descripcion: '' }
+            { titulo: '', descripcion: '', imageUrl: DEFAULT_PILLAR_IMAGES[0] },
+            { titulo: '', descripcion: '', imageUrl: DEFAULT_PILLAR_IMAGES[1] },
+            { titulo: '', descripcion: '', imageUrl: DEFAULT_PILLAR_IMAGES[2] }
           ]).slice(0, 3),
           badges: (config?.badges || []).map((b: any) => ({
             label: b.label || '',
@@ -186,6 +200,17 @@ export default function SettingsPage() {
     }
   }, [profile]);
   
+  const isEnterprise = Boolean(
+    profile?.isEnterprise ||
+    profile?.roles?.includes('empresa') ||
+    profile?.companyRole === 'owner' ||
+    profile?.subscription?.isEnterprise ||
+    profile?.subscription?.planName === 'Empresas' ||
+    profile?.subscription?.name === 'Empresas'
+  ) && profile?.companyRole !== 'tutor';
+
+  const isCompanyTutor = isCompanyTutorProfile(profile);
+
   const [isGeneratingWeb, setIsGeneratingWeb] = useState(false);
 
   const handleGenerateWeb = async () => {
@@ -197,7 +222,9 @@ export default function SettingsPage() {
       toast({ 
         variant: 'destructive', 
         title: 'Falta información', 
-        description: 'Escribe un poco más sobre ti o añade tu LinkedIn/Sitio Web en la pestaña Contacto para que la IA tenga material de análisis.' 
+        description: isEnterprise
+          ? 'Escribe una descripción corporativa o añade tu LinkedIn/Sitio Web en la pestaña Contacto para que la IA tenga material de análisis institucional.'
+          : 'Escribe un poco más sobre ti o añade tu LinkedIn/Sitio Web en la pestaña Contacto para que la IA tenga material de análisis.' 
       });
       return;
     }
@@ -214,40 +241,67 @@ export default function SettingsPage() {
             linkedin: formData.linkedin,
             website: formData.website,
             instagram: formData.instagram
-          }
+          },
+          isEnterprise: isEnterprise
         })
       });
 
       if (!res.ok) throw new Error('Error al generar la propuesta');
       const data = await res.json();
 
+      const newWebsiteConfig = {
+        ...formData.websiteConfig,
+        headline: data.headline || '',
+        subheadline: data.subheadline || '',
+        mission: data.mission || '',
+        aboutUs: data.aboutUs || formData.websiteConfig.aboutUs || '',
+        pilares: (data.pilares || []).map((p: any, idx: number) => ({
+          titulo: p.titulo || '',
+          descripcion: p.descripcion || '',
+          imageUrl: p.imageUrl || formData.websiteConfig.pilares?.[idx]?.imageUrl || DEFAULT_PILLAR_IMAGES[idx] || ''
+        })).concat([
+          { titulo: '', descripcion: '', imageUrl: DEFAULT_PILLAR_IMAGES[0] },
+          { titulo: '', descripcion: '', imageUrl: DEFAULT_PILLAR_IMAGES[1] },
+          { titulo: '', descripcion: '', imageUrl: DEFAULT_PILLAR_IMAGES[2] }
+        ]).slice(0, 3),
+        badges: (data.badges || []).map((b: any) => ({
+          label: b.label || '',
+          description: b.description || ''
+        })),
+        showStats: data.showStats ?? true,
+        theme: data.suggested_theme || formData.websiteConfig.theme
+      };
+
       setFormData(prev => ({
         ...prev,
-        websiteConfig: {
-          ...prev.websiteConfig,
-          headline: data.headline || '',
-          subheadline: data.subheadline || '',
-          mission: data.mission || '',
-          pilares: (data.pilares || []).map((p: any) => ({
-            titulo: p.titulo || '',
-            descripcion: p.descripcion || ''
-          })).concat([
-            { titulo: '', descripcion: '' },
-            { titulo: '', descripcion: '' },
-            { titulo: '', descripcion: '' }
-          ]).slice(0, 3),
-          badges: (data.badges || []).map((b: any) => ({
-            label: b.label || '',
-            description: b.description || ''
-          })),
-          showStats: data.showStats ?? true,
-          theme: data.suggested_theme || prev.websiteConfig.theme
-        }
+        websiteConfig: newWebsiteConfig
       }));
 
+      // Auto-guardado de la propuesta generada en Firestore
+      if (user) {
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+          'profile.websiteConfig': newWebsiteConfig,
+          updatedAt: serverTimestamp()
+        }).catch(err => console.warn('Error auto-guardando websiteConfig en user:', err));
+
+        if (isEnterprise) {
+          const companyId = profile?.companyId || user.uid;
+          const companyRef = doc(db, 'companies', companyId);
+          await updateDoc(companyRef, {
+            websiteConfig: newWebsiteConfig,
+            updatedAt: new Date()
+          }).catch(err => console.warn('Error auto-guardando websiteConfig en company:', err));
+        }
+      }
+
       toast({ 
-        title: 'Propuesta Generada ✨', 
-        description: 'He analizado tu biografía y creado una estructura de marca personal premium. ¡Revísala en la pestaña Web Personal!' 
+        title: isEnterprise ? 'Propuesta Empresarial Generada' : isCompanyTutor ? 'Página de Presentación Generada' : 'Propuesta Generada', 
+        description: isEnterprise 
+          ? 'He analizado el perfil corporativo y guardado la estructura web institucional. Revísala en la pestaña Web Empresarial.'
+          : isCompanyTutor
+          ? 'He analizado tu trayectoria docente y guardado tu propuesta de presentación. Revísala en la pestaña Página de Presentación.'
+          : 'He analizado tu biografía y guardado tu propuesta de marca personal. Revísala en la pestaña Web Personal.' 
       });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error de IA', description: error.message });
@@ -302,13 +356,15 @@ export default function SettingsPage() {
           tiktok: formData.tiktok,
           calendly: formData.calendly,
         },
-        branding: {
+        branding: isCompanyTutor ? (profile?.profile?.branding || {}) : {
           primaryColor: activeBrand?.palette?.primary || formData.primaryColor,
           logoUrl: formData.logoUrl,
           layoutMode: activeBrand?.tokens?.themeMode === 'dark' || activeBrand?.tokens?.themeMode === 'glass' ? 'dark' : formData.layoutMode,
         },
-        brands: formData.myBrands,
-        activeBrandName: formData.activeBrandName,
+        ...(isCompanyTutor ? {} : {
+          brands: formData.myBrands,
+          activeBrandName: formData.activeBrandName,
+        }),
         publicProfile: {
           enabled: formData.publicProfileEnabled
         },
@@ -319,6 +375,27 @@ export default function SettingsPage() {
 
     updateDoc(userRef, updateData)
       .then(() => {
+        if (isEnterprise) {
+          const companyId = profile?.companyId || user.uid;
+          const companyRef = doc(db, 'companies', companyId);
+          updateDoc(companyRef, {
+            branding: {
+              primaryColor: activeBrand?.palette?.primary || formData.primaryColor,
+              logoUrl: formData.logoUrl,
+            },
+            websiteConfig: formData.websiteConfig,
+            updatedAt: new Date()
+          }).catch(() => { /* non-critical */ });
+        } else if (isCompanyTutor && profile?.companyId) {
+          const tutorDocRef = doc(db, 'companies', profile.companyId, 'tutors', user.uid);
+          updateDoc(tutorDocRef, {
+            displayName: formData.displayName,
+            photo: formData.photoURL || '',
+            bio: formData.bio || '',
+            username: formData.username || '',
+            updatedAt: new Date()
+          }).catch(() => { /* non-critical */ });
+        }
         toast({ title: 'Configuración guardada' });
         hasLoadedProfile.current = false;
       })
@@ -357,6 +434,32 @@ export default function SettingsPage() {
   const handleDeleteAsset = (type: 'avatar' | 'logo') => {
     setFormData(prev => ({ ...prev, [type === 'avatar' ? 'photoURL' : 'logoUrl']: '' }));
     toast({ title: `${type === 'avatar' ? 'Foto de perfil' : 'Logo'} marcado para eliminación` });
+  };
+
+  const handlePillarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    const targetIdx = activePillarIdxRef.current;
+    setUploadingPillarIdx(targetIdx);
+    try {
+      const storageRef = ref(storage, `users/${user.uid}/pillar_${targetIdx}_${Date.now()}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      setFormData(prev => {
+        const newPilares = [...prev.websiteConfig.pilares];
+        newPilares[targetIdx] = { ...newPilares[targetIdx], imageUrl: url };
+        return {
+          ...prev,
+          websiteConfig: { ...prev.websiteConfig, pilares: newPilares }
+        };
+      });
+      toast({ title: `Imagen del Pilar ${targetIdx + 1} actualizada` });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Error al subir imagen', description: err.message });
+    } finally {
+      setUploadingPillarIdx(null);
+      e.target.value = '';
+    }
   };
 
   const brandFileInputRef = useRef<HTMLInputElement>(null);
@@ -533,6 +636,8 @@ export default function SettingsPage() {
   const daysLeft = endD ? differenceInDays(endD, new Date()) : 0;
   
   const isMentorOrAdmin = profile?.roles?.some((role: string) => role === 'mentor' || role === 'admin');
+  const hasAccessToWeb = isMentorOrAdmin || isEnterprise || isCompanyTutor;
+  const canAccessBrandTab = (isMentorOrAdmin || isEnterprise) && !isCompanyTutor;
   const previewUsername = formData.username || profile?.username;
 
   const stylesQuery = useMemoFirebase(() => db ? query(collection(db, 'landingStyles')) : null, [db]);
@@ -619,11 +724,17 @@ export default function SettingsPage() {
           <Tabs defaultValue="perfil" className="w-full">
             <TabsList className="bg-secondary/10 p-1.5 rounded-none border-b h-16 w-full justify-start gap-2 px-10">
               <TabsTrigger value="perfil" className="rounded-xl gap-2 font-bold px-6 h-11"><User className="h-4 w-4" /> Perfil</TabsTrigger>
-              {isMentorOrAdmin && (
-                <TabsTrigger value="web" className="rounded-xl gap-2 font-bold px-6 h-11 text-warn bg-warn/10/50 border-warn/15"><Sparkles className="h-4 w-4" /> Web Personal</TabsTrigger>
+              {hasAccessToWeb && (
+                <TabsTrigger 
+                  value="web" 
+                  className="rounded-xl gap-2 font-bold px-6 h-11 text-warn bg-warn/10/50 border-warn/15"
+                >
+                  {isEnterprise ? <Building2 className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                  {isEnterprise ? 'Web Empresarial' : isCompanyTutor ? 'Página de Presentación' : 'Web Personal'}
+                </TabsTrigger>
               )}
               <TabsTrigger value="contacto" className="rounded-xl gap-2 font-bold px-6 h-11"><Globe className="h-4 w-4" /> Contacto</TabsTrigger>
-              {isMentorOrAdmin && (
+              {canAccessBrandTab && (
                 <TabsTrigger value="marca" className="rounded-xl gap-2 font-bold px-6 h-11"><Palette className="h-4 w-4" /> Marca</TabsTrigger>
               )}
             </TabsList>
@@ -642,7 +753,9 @@ export default function SettingsPage() {
                      size="xl" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="settings-bio" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Biografía</Label>
+                    <Label htmlFor="settings-bio" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
+                      {isEnterprise ? 'Descripción Institucional / Quiénes Somos' : 'Biografía'}
+                    </Label>
                     <Textarea 
                       id="settings-bio"
                       name="bio"
@@ -651,6 +764,24 @@ export default function SettingsPage() {
                       className="min-h-[200px] rounded-lg bg-secondary/10 border-none p-8 text-base leading-relaxed" 
                     />
                   </div>
+
+                  {isCompanyTutor ? (
+                    <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+                      <div className="flex items-center gap-2.5">
+                        <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-wider gap-1.5 px-2.5 py-1">
+                          <Building2 className="h-3.5 w-3.5" />
+                          Cuenta Corporativa Vinculada
+                        </Badge>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-bold text-foreground text-base">Página de Presentación Docente Habilitada</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Perteneces a una entidad empresarial. Cuentas con una <strong>Página de Presentación individual</strong> en <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">/tutor/[username]</code> para mostrar tu biografía, pilares de formación y canales de contacto con respaldo de la empresa. En tu página no se listarán cursos directos, y la empresa podrá invocar tu presentación desde su portal institucional.
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="flex items-center justify-between p-6 bg-secondary/5 rounded-3xl border border-primary/5 shadow-sm">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-2xl bg-success/15 text-success flex items-center justify-center">
@@ -658,7 +789,9 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <p className="font-black text-foreground">Visibilidad del Perfil</p>
-                        <p className="text-xs text-muted-foreground font-medium">Habilita o deshabilita tu página pública</p>
+                        <p className="text-xs text-muted-foreground font-medium">
+                          {isEnterprise ? 'Habilita o deshabilita tu portal institucional' : isCompanyTutor ? 'Habilita o deshabilita tu página de presentación pública' : 'Habilita o deshabilita tu página pública'}
+                        </p>
                       </div>
                     </div>
                     <Switch 
@@ -668,16 +801,18 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="settings-username" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nombre de usuario (URL Pública)</Label>
+                    <Label htmlFor="settings-username" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">
+                      {isEnterprise ? 'Identificador Empresarial (URL Pública)' : 'Nombre de usuario (URL Pública)'}
+                    </Label>
                     <div className="relative">
                       <Input 
                         id="settings-username"
                         name="username"
                         value={formData.username || ''} 
                         onChange={e => setFormData({...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} 
-                        placeholder="tu-nombre-de-usuario"
+                        placeholder={isEnterprise ? "tu-empresa" : "tu-nombre-de-usuario"}
                         className="bg-secondary/10 border-none font-mono text-sm px-6" 
-                       size="xl" />
+                        size="xl" />
                       <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground opacity-50">
                         /tutor/{formData.username || '...'}
                       </div>
@@ -685,36 +820,41 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="pt-6 border-t border-primary/5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-3">Tu Puerta al Mundo</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-3">
+                      {isEnterprise ? 'Portal Institucional de la Empresa' : isCompanyTutor ? 'Página de Presentación del Mentor' : 'Tu Puerta al Mundo'}
+                    </p>
                     {formData.username ? (
                       <div className="p-6 bg-white rounded-3xl border border-primary/10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-2xl bg-success/10 text-success flex items-center justify-center">
-                            <Globe className="h-6 w-6" />
+                            {isEnterprise ? <Building2 className="h-6 w-6" /> : isCompanyTutor ? <Users className="h-6 w-6" /> : <Globe className="h-6 w-6" />}
                           </div>
                           <div>
-                            <p className="font-black text-foreground text-lg">Página Pública</p>
-                            <p className="text-xs text-muted-foreground font-medium">Link para compartir con tus alumnos</p>
+                            <p className="font-black text-foreground text-lg">
+                              {isEnterprise ? 'Portal Institucional' : isCompanyTutor ? 'Página de Presentación del Mentor' : 'Página Pública'}
+                            </p>
+                            <p className="text-xs text-muted-foreground font-medium">
+                              {isEnterprise ? 'Link institucional para compartir con clientes, tutores y alumnos' : isCompanyTutor ? 'Link público de presentación y autoridad docente respaldado por la empresa' : 'Link para compartir con tus alumnos'}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
                           <Input 
                             readOnly 
-                            value={tutorProfileUrl || ''} 
-                             className="bg-muted border-muted font-mono text-[10px] w-full"
-                           size="lg" />
+                            value={tutorProfileUrl || (typeof window !== 'undefined' ? `${window.location.origin}/tutor/${formData.username}` : `/tutor/${formData.username}`)} 
+                            className="bg-muted border-muted font-mono text-[10px] w-full sm:w-64"
+                            size="lg" />
                           <Button 
                             onClick={() => {
-                              if (tutorProfileUrl) {
-                                navigator.clipboard.writeText(tutorProfileUrl);
-                                toast({ title: 'Copiado', description: 'Enlace copiado al portapapeles' });
-                              }
+                              const targetUrl = tutorProfileUrl || `${window.location.origin}/tutor/${formData.username}`;
+                              navigator.clipboard.writeText(targetUrl);
+                              toast({ title: 'Copiado', description: 'Enlace copiado al portapapeles' });
                             }}
                             className="rounded-xl h-12 font-bold bg-primary text-white px-6 shadow-lg shadow-primary/20"
                           >
                             Copiar
                           </Button>
-                          <a href={tutorProfileUrl || '#'} target="_blank" rel="noopener noreferrer">
+                          <a href={tutorProfileUrl || `/tutor/${formData.username}`} target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" className="rounded-xl h-12 font-bold px-6 border-2">Visitar</Button>
                           </a>
                         </div>
@@ -722,7 +862,12 @@ export default function SettingsPage() {
                     ) : (
                       <div className="p-8 bg-warn/10 rounded-3xl border border-warn/15 flex items-center gap-4 text-warn">
                         <Info className="h-5 w-5" />
-                        <p className="text-sm font-medium">Define un <strong>Nombre de Usuario</strong> arriba para habilitar tu página pública.</p>
+                        <p className="text-sm font-medium">
+                          {isEnterprise 
+                            ? <>Define un <strong>Identificador Empresarial</strong> arriba para habilitar el portal institucional.</>
+                            : <>Define un <strong>Nombre de Usuario</strong> arriba para habilitar tu página pública de presentación.</>
+                          }
+                        </p>
                       </div>
                     )}
                   </div>
@@ -735,10 +880,16 @@ export default function SettingsPage() {
                   <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="space-y-2 text-center md:text-left">
                       <h3 className="text-2xl font-black flex items-center justify-center md:justify-start gap-2">
-                        <Sparkles className="h-6 w-6 text-warn/30" /> Tu Vitrina de Marca Personal
+                        {isEnterprise ? <Building2 className="h-6 w-6 text-warn/30" /> : <Sparkles className="h-6 w-6 text-warn/30" />}
+                        {isEnterprise ? 'Tu Portal Web Empresarial & Institucional' : isCompanyTutor ? 'Tu Página de Presentación Docente' : 'Tu Vitrina de Marca Personal'}
                       </h3>
                       <p className="text-sm text-primary/15 max-w-md">
-                        Convierte tu biografía en una web premium de autoridad. La IA analizará tu perfil y creará una estructura persuasiva automáticamente.
+                        {isEnterprise 
+                          ? 'Convierte el perfil de tu empresa en un portal institucional de alta autoridad. La IA estructurará tu propuesta de valor, pilares académicos y sellos de calidad automáticamente (el equipo docente se gestiona dinámicamente).'
+                          : isCompanyTutor
+                          ? 'Estructura tu propuesta de valor, pilares pedagógicos y credenciales como mentor acreditado de la empresa. Esta vitrina presentará tu trayectoria sin exponer cursos directos y podrá ser invocada desde el portal de la empresa.'
+                          : 'Convierte tu biografía en una web premium de autoridad. La IA analizará tu perfil y creará una estructura persuasiva automáticamente.'
+                        }
                       </p>
                     </div>
                     <Button 
@@ -751,7 +902,10 @@ export default function SettingsPage() {
                       ) : (
                         <Zap className="mr-2 h-6 w-6 fill-warn text-warn group-hover:animate-pulse" />
                       )}
-                      {formData.websiteConfig.headline ? 'Regenerar con IA' : 'Magia IA: Crear mi Web'}
+                      {formData.websiteConfig.headline 
+                        ? 'Regenerar con IA' 
+                        : (isEnterprise ? 'Magia IA: Crear Web Empresarial' : isCompanyTutor ? 'Magia IA: Crear Presentación' : 'Magia IA: Crear mi Web')
+                      }
                     </Button>
                   </div>
                   {/* Decoración visual */}
@@ -768,13 +922,19 @@ export default function SettingsPage() {
                           <Layout className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="font-black text-foreground uppercase tracking-tighter">Sección Principal (Hero)</h4>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Lo primero que verán tus alumnos</p>
+                          <h4 className="font-black text-foreground uppercase tracking-tighter">
+                            {isEnterprise ? 'Sección Principal Institucional (Hero)' : 'Sección Principal (Hero)'}
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                            {isEnterprise ? 'Lo primero que verán tus clientes, tutores y alumnos' : 'Lo primero que verán tus alumnos'}
+                          </p>
                         </div>
                       </div>
                       <div className="grid gap-4 bg-muted/50 p-6 rounded-3xl border border-muted">
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Titular de Impacto</Label>
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
+                            {isEnterprise ? 'Titular Institucional de Alto Impacto' : 'Titular de Impacto'}
+                          </Label>
                           <Input 
                             value={formData.websiteConfig.headline || ''}
                             onChange={e => setFormData({
@@ -782,17 +942,51 @@ export default function SettingsPage() {
                               websiteConfig: { ...formData.websiteConfig, headline: e.target.value }
                             })}
                             className="bg-white border-none shadow-sm font-bold text-foreground"
-                           size="lg" />
+                            size="lg" 
+                          />
                         </div>
+
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Propuesta de Valor (Bajada)</Label>
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
+                            {isEnterprise ? 'Propuesta de Valor (Bajada Principal)' : 'Propuesta de Valor (Bajada)'}
+                          </Label>
                           <Textarea 
                             value={formData.websiteConfig.subheadline || ''}
                             onChange={e => setFormData({
                               ...formData, 
                               websiteConfig: { ...formData.websiteConfig, subheadline: e.target.value }
                             })}
-                            className="min-h-[80px] rounded-xl bg-white border-none shadow-sm py-3"
+                            className="min-h-[70px] rounded-xl bg-white border-none shadow-sm py-3 text-sm"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
+                            {isEnterprise ? 'Misión Corporativa Institucional' : 'Misión / Propósito'}
+                          </Label>
+                          <Textarea 
+                            value={formData.websiteConfig.mission || ''}
+                            onChange={e => setFormData({
+                              ...formData, 
+                              websiteConfig: { ...formData.websiteConfig, mission: e.target.value }
+                            })}
+                            placeholder="Misión corporativa que sintetiza el propósito de la organización..."
+                            className="min-h-[70px] rounded-xl bg-white border-none shadow-sm py-3 text-sm"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
+                            {isEnterprise ? 'Presentación Institucional / Quiénes Somos (Web Pública)' : 'Sobre Nosotros (Web)'}
+                          </Label>
+                          <Textarea 
+                            value={formData.websiteConfig.aboutUs || ''}
+                            onChange={e => setFormData({
+                              ...formData, 
+                              websiteConfig: { ...formData.websiteConfig, aboutUs: e.target.value }
+                            })}
+                            placeholder="Breve reseña institucional de 1 o 2 párrafos para la presentación en el portal..."
+                            className="min-h-[90px] rounded-xl bg-white border-none shadow-sm py-3 text-sm leading-relaxed"
                           />
                         </div>
                       </div>
@@ -800,42 +994,118 @@ export default function SettingsPage() {
 
                     {/* Pillars Edit */}
                     <div className="space-y-6">
+                      <input 
+                        type="file" 
+                        ref={pillarFileInputRef} 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handlePillarUpload} 
+                      />
+
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-warn/10 flex items-center justify-center text-warn">
                           <Layers className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="font-black text-foreground uppercase tracking-tighter">Tus 3 Pilares Metodológicos</h4>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Tu propuesta diferencial de enseñanza</p>
+                          <h4 className="font-black text-foreground uppercase tracking-tighter">
+                            {isEnterprise ? 'Tus 3 Pilares Institucionales con Imágenes' : 'Tus 3 Pilares Metodológicos'}
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                            {isEnterprise ? 'Ejes estratégicos con fotografía representativa de alta calidad' : 'Tu propuesta diferencial de enseñanza'}
+                          </p>
                         </div>
                       </div>
+
                       <div className="grid md:grid-cols-3 gap-6">
                         {formData.websiteConfig.pilares.map((pilar, idx) => (
-                          <div key={idx} className="bg-white p-6 rounded-lg border border-muted shadow-sm space-y-4">
-                            <div className="w-8 h-8 rounded-full bg-foreground text-white flex items-center justify-center font-black text-xs">
-                              {idx + 1}
-                            </div>
-                            <div className="space-y-2">
-                              <Input 
-                                value={pilar.titulo || ''}
-                                onChange={e => {
-                                  const newPilares = [...formData.websiteConfig.pilares];
-                                  newPilares[idx] = { ...newPilares[idx], titulo: e.target.value };
-                                  setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
-                                }}
-                                className="font-bold border-none bg-muted rounded-xl h-10"
-                                placeholder="Título del Pilar"
-                              />
-                              <Textarea 
-                                value={pilar.descripcion || ''}
-                                onChange={e => {
-                                  const newPilares = [...formData.websiteConfig.pilares];
-                                  newPilares[idx] = { ...newPilares[idx], descripcion: e.target.value };
-                                  setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
-                                }}
-                                className="text-xs border-none bg-muted rounded-xl min-h-[100px]"
-                                placeholder="Descripción corta..."
-                              />
+                          <div key={idx} className="bg-white p-6 rounded-xl border border-muted shadow-sm space-y-4 flex flex-col justify-between">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <div className="w-8 h-8 rounded-full bg-foreground text-white flex items-center justify-center font-black text-xs">
+                                  0{idx + 1}
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-[11px] h-7 px-2 text-muted-foreground hover:text-foreground"
+                                  onClick={() => {
+                                    const newPilares = [...formData.websiteConfig.pilares];
+                                    newPilares[idx] = { ...newPilares[idx], imageUrl: DEFAULT_PILLAR_IMAGES[idx] };
+                                    setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
+                                  }}
+                                >
+                                  Restaurar Imagen
+                                </Button>
+                              </div>
+
+                              {/* Pillar Image Preview & Upload */}
+                              <div className="relative w-full h-36 rounded-lg overflow-hidden bg-slate-100 border border-border group">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img 
+                                  src={pilar.imageUrl || DEFAULT_PILLAR_IMAGES[idx]} 
+                                  alt={pilar.titulo || `Pilar ${idx + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="secondary"
+                                    className="h-8 px-3 text-xs font-bold"
+                                    disabled={uploadingPillarIdx === idx}
+                                    onClick={() => {
+                                      activePillarIdxRef.current = idx;
+                                      pillarFileInputRef.current?.click();
+                                    }}
+                                  >
+                                    {uploadingPillarIdx === idx ? <Loader2 className="animate-spin h-3.5 w-3.5 mr-1" /> : <Upload className="h-3.5 w-3.5 mr-1" />}
+                                    Subir Imagen
+                                  </Button>
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Título del Pilar</Label>
+                                <Input 
+                                  value={pilar.titulo || ''}
+                                  onChange={e => {
+                                    const newPilares = [...formData.websiteConfig.pilares];
+                                    newPilares[idx] = { ...newPilares[idx], titulo: e.target.value };
+                                    setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
+                                  }}
+                                  className="font-bold border-none bg-muted rounded-xl h-10 text-sm"
+                                  placeholder={isEnterprise ? "Título del Pilar Institucional" : "Título del Pilar"}
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Descripción</Label>
+                                <Textarea 
+                                  value={pilar.descripcion || ''}
+                                  onChange={e => {
+                                    const newPilares = [...formData.websiteConfig.pilares];
+                                    newPilares[idx] = { ...newPilares[idx], descripcion: e.target.value };
+                                    setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
+                                  }}
+                                  className="text-xs border-none bg-muted rounded-xl min-h-[90px]"
+                                  placeholder={isEnterprise ? "Descripción del pilar corporativo..." : "Descripción corta..."}
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <Label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">URL de Imagen</Label>
+                                <Input 
+                                  value={pilar.imageUrl || ''}
+                                  onChange={e => {
+                                    const newPilares = [...formData.websiteConfig.pilares];
+                                    newPilares[idx] = { ...newPilares[idx], imageUrl: e.target.value };
+                                    setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, pilares: newPilares } });
+                                  }}
+                                  className="text-[11px] border-none bg-muted/60 rounded-lg h-8 font-mono"
+                                  placeholder="https://..."
+                                />
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -849,14 +1119,25 @@ export default function SettingsPage() {
                           <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="font-black text-foreground uppercase tracking-tighter">Medallas de Autoridad</h4>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Lo que garantiza tu excelencia</p>
+                          <h4 className="font-black text-foreground uppercase tracking-tighter">
+                            {isEnterprise ? 'Acreditaciones & Sellos de Calidad' : 'Medallas de Autoridad'}
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                            {isEnterprise ? 'Certificaciones, estándares y garantías de tu academia' : 'Lo que garantiza tu excelencia'}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-4 p-6 bg-muted rounded-3xl border border-muted">
                         <div>
-                          <h4 className="font-bold text-foreground">Mostrar Estadísticas</h4>
-                          <p className="text-xs text-muted-foreground">Si eres un tutor nuevo o prefieres un perfil exclusivo, puedes ocultar los números de alumnos y horas.</p>
+                          <h4 className="font-bold text-foreground">
+                            {isEnterprise ? 'Mostrar Métricas Institucionales' : 'Mostrar Estadísticas'}
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            {isEnterprise 
+                              ? 'Muestra u oculta los contadores de alumnos formados, tutores activos y programas impartidos.'
+                              : 'Si eres un tutor nuevo o prefieres un perfil exclusivo, puedes ocultar los números de alumnos y horas.'
+                            }
+                          </p>
                         </div>
                         <Button 
                           variant={formData.websiteConfig.showStats ? "default" : "outline"}
@@ -876,7 +1157,9 @@ export default function SettingsPage() {
                             <div className="flex gap-4">
                               <div className="flex-1 space-y-3">
                                 <div className="space-y-1">
-                                  <Label className="text-[9px] font-black uppercase text-muted-foreground">Título de la Medalla</Label>
+                                  <Label className="text-[9px] font-black uppercase text-muted-foreground">
+                                    {isEnterprise ? 'Nombre del Sello o Acreditación' : 'Título de la Medalla'}
+                                  </Label>
                                   <Input 
                                     value={badge.label || ''}
                                     onChange={e => {
@@ -888,7 +1171,9 @@ export default function SettingsPage() {
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <Label className="text-[9px] font-black uppercase text-muted-foreground">Argumento de Respaldo</Label>
+                                  <Label className="text-[9px] font-black uppercase text-muted-foreground">
+                                    {isEnterprise ? 'Respaldo Institucional o Alcance de la Certificación' : 'Argumento de Respaldo'}
+                                  </Label>
                                   <Textarea 
                                     value={badge.description || ''}
                                     onChange={e => {
@@ -897,7 +1182,7 @@ export default function SettingsPage() {
                                       setFormData({ ...formData, websiteConfig: { ...formData.websiteConfig, badges: newBadges } });
                                     }}
                                     className="text-xs bg-muted border-none rounded-xl min-h-[60px]"
-                                    placeholder="Explica por qué esto te da autoridad..."
+                                    placeholder={isEnterprise ? "Explica el alcance o valor de esta certificación institucional..." : "Explica por qué esto te da autoridad..."}
                                   />
                                 </div>
                               </div>
@@ -922,12 +1207,15 @@ export default function SettingsPage() {
                               ...formData, 
                               websiteConfig: { 
                                 ...formData.websiteConfig, 
-                                badges: [...formData.websiteConfig.badges, { label: 'Nuevo Valor', description: 'Justifica este valor aquí...' }] 
+                                badges: [...formData.websiteConfig.badges, { 
+                                  label: isEnterprise ? 'Nueva Certificación' : 'Nuevo Valor', 
+                                  description: isEnterprise ? 'Detalla el respaldo de esta acreditación...' : 'Justifica este valor aquí...' 
+                                }] 
                               } 
                             });
                           }}
                         >
-                          + Añadir Argumento de Autoridad
+                          {isEnterprise ? '+ Añadir Acreditación o Sello' : '+ Añadir Argumento de Autoridad'}
                         </Button>
                       </div>
                     </div>
@@ -937,12 +1225,17 @@ export default function SettingsPage() {
                 {!formData.websiteConfig.headline && (
                   <div className="py-20 text-center space-y-6">
                     <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center mx-auto text-border">
-                      <LayoutDashboard className="h-12 w-12" />
+                      {isEnterprise ? <Building2 className="h-12 w-12" /> : <LayoutDashboard className="h-12 w-12" />}
                     </div>
                     <div className="space-y-2">
-                      <h4 className="text-xl font-bold text-muted-foreground">Tu web personal está en blanco</h4>
+                      <h4 className="text-xl font-bold text-muted-foreground">
+                        {isEnterprise ? 'El portal institucional de tu empresa está en blanco' : 'Tu web personal está en blanco'}
+                      </h4>
                       <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                        Usa el botón de Magia IA de arriba para generar tu propuesta de marca personal basada en tu biografía actual.
+                        {isEnterprise
+                          ? 'Usa el botón de Magia IA de arriba para generar la estructura institucional y pilares de excelencia basados en el perfil de tu empresa.'
+                          : 'Usa el botón de Magia IA de arriba para generar tu propuesta de marca personal basada en tu biografía actual.'
+                        }
                       </p>
                     </div>
                   </div>
@@ -977,7 +1270,7 @@ export default function SettingsPage() {
                 ))}
               </TabsContent>
 
-              {isMentorOrAdmin && (
+              {canAccessBrandTab && (
                 <>
                   <TabsContent value="marca" className="m-0 space-y-12">
                     <div className="space-y-4">
@@ -1012,7 +1305,9 @@ export default function SettingsPage() {
 
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Mis brands (web personal)</Label>
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                          {isEnterprise ? 'Mis brands (web empresarial)' : 'Mis brands (web personal)'}
+                        </Label>
                         <div className="flex flex-wrap justify-end gap-2 mt-2 md:mt-0">
                           <Button variant="default" size="sm" className="rounded-full font-bold shadow-md" onClick={() => handleOpenBrandEditor()}>
                             <Plus className="h-4 w-4 mr-1.5" /> Crear Brand
@@ -1027,7 +1322,10 @@ export default function SettingsPage() {
                         <input type="file" ref={brandFileInputRef} className="hidden" accept=".json,application/json" onChange={handleBrandFile} />
                       </div>
                       <p className="text-xs text-muted-foreground -mt-3">
-                        Tus brands son privados y solo se usan en tu página personal. Formato DTCG/W3C o el formato del sistema.
+                        {isEnterprise 
+                          ? 'Tus brands son privados y solo se usan en tu portal institucional. Formato DTCG/W3C o el formato del sistema.'
+                          : 'Tus brands son privados y solo se usan en tu página personal. Formato DTCG/W3C o el formato del sistema.'
+                        }
                       </p>
                       {formData.myBrands.length > 0 ? (
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1147,7 +1445,9 @@ export default function SettingsPage() {
                         >
                           <Upload className="h-8 w-8 text-border mx-auto mb-2" />
                           <p className="font-bold text-muted-foreground">No tenés brands cargados</p>
-                          <p className="text-xs text-muted-foreground mt-1">Cargá un archivo .json (DTCG/W3C) para tu web personal.</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {isEnterprise ? 'Cargá un archivo .json (DTCG/W3C) para tu web empresarial.' : 'Cargá un archivo .json (DTCG/W3C) para tu web personal.'}
+                          </p>
                         </button>
                       )}
                     </div>

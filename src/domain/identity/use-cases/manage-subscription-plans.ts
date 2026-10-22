@@ -85,9 +85,15 @@ function checkCreateValidations(planData: Record<string, unknown>): string | nul
   if (!planData.durationMonths || (planData.durationMonths as number) <= 0) {
     return 'La duración en meses es requerida';
   }
-  const limits = planData.limits as { maxCourses?: unknown; maxStudents?: unknown } | undefined;
+  const limits = planData.limits as { maxCourses?: unknown; maxStudents?: unknown; maxTutors?: unknown } | undefined;
   if (!limits || limits.maxCourses === undefined || limits.maxStudents === undefined) {
     return 'Los límites de cursos y estudiantes son requeridos';
+  }
+  if (
+    (planData.targetAudience === 'enterprise' || planData.isEnterprise === true) &&
+    (limits.maxTutors === undefined || (limits.maxTutors as number) <= 0)
+  ) {
+    return 'El límite de tutores es requerido para planes de empresa';
   }
   const permissions = planData.permissions as Record<string, boolean> | undefined;
   if (!permissions || Object.values(permissions).every((p) => p === false)) {
@@ -192,6 +198,7 @@ function normalizePublicPlan(
     isActive: (data.isActive as boolean) ?? true,
     aiQuotas: data.aiQuotas || { totalCredits: 0 },
     limits: data.limits || { maxCourses: 5, maxStudents: 100 },
+    targetAudience: data.targetAudience || (data.isEnterprise ? 'enterprise' : 'tutor'),
   };
 }
 

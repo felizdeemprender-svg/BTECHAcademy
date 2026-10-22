@@ -101,6 +101,70 @@ describe('Catalog Course Management Use Cases', () => {
       expect(result.ok).toBe(true);
       expect(updater.updateCourse).toHaveBeenCalledWith('course-1', { status: 'published' });
     });
+
+    it('debe bloquear a un tutor de empresa cuando intenta publicar directamente', async () => {
+      const companyCourse = {
+        ...mockCourse,
+        companyId: 'company-123',
+        ownerId: 'company-123',
+        mentorId: 'tutor-1',
+      } as unknown as Course;
+
+      const updater = createMockUpdater();
+      const result = await publishCourse(
+        { reader: createMockReader(companyCourse), updater },
+        { id: 'course-1', mentorId: 'tutor-1', status: 'public' }
+      );
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('FORBIDDEN');
+        expect(result.error.message).toBe('Solo la empresa titular tiene potestad para publicar este curso');
+      }
+      expect(updater.updateCourse).not.toHaveBeenCalled();
+    });
+
+    it('debe permitir a un tutor de empresa cambiar a borrador', async () => {
+      const companyCourse = {
+        ...mockCourse,
+        companyId: 'company-123',
+        ownerId: 'company-123',
+        mentorId: 'tutor-1',
+      } as unknown as Course;
+
+      const updater = createMockUpdater();
+      const result = await publishCourse(
+        { reader: createMockReader(companyCourse), updater },
+        { id: 'course-1', mentorId: 'tutor-1', status: 'draft' }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(updater.updateCourse).toHaveBeenCalledWith('course-1', { status: 'draft' });
+    });
+
+    it('debe permitir a la empresa titular publicar el curso con rol empresa', async () => {
+      const companyCourse = {
+        ...mockCourse,
+        companyId: 'company-123',
+        ownerId: 'company-123',
+        mentorId: 'tutor-1',
+      } as unknown as Course;
+
+      const updater = createMockUpdater();
+      const result = await publishCourse(
+        { reader: createMockReader(companyCourse), updater },
+        {
+          id: 'course-1',
+          mentorId: 'owner-user',
+          status: 'public',
+          callerRole: 'empresa',
+          companyId: 'company-123',
+        }
+      );
+
+      expect(result.ok).toBe(true);
+      expect(updater.updateCourse).toHaveBeenCalledWith('course-1', { status: 'published' });
+    });
   });
 
   describe('deleteCourse', () => {

@@ -54,6 +54,8 @@ import { collection, query, where, getCountFromServer, getDocs, orderBy } from '
 import { differenceInDays, format } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { isCompanyTutorProfile } from '@/domain/company';
+import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
 export default function MyPlanPage() {
   return (
     <Suspense fallback={
@@ -78,6 +80,16 @@ function PlanContentInner() {
   // Stats
   const [courseCount, setCourseCount] = useState(0);
   const [studentCount, setStudentCount] = useState(0);
+
+  // Audiencia de Planes
+  const isEmpresaUser = profile?.roles?.includes('empresa') || profile?.companyRole === 'owner';
+  const [planAudienceTab, setPlanAudienceTab] = useState<'tutor' | 'enterprise'>('tutor');
+
+  useEffect(() => {
+    if (isEmpresaUser) {
+      setPlanAudienceTab('enterprise');
+    }
+  }, [isEmpresaUser]);
   
   // Checkout State
   const [showCheckout, setShowCheckout] = useState(false);
@@ -408,6 +420,17 @@ function PlanContentInner() {
   };
 
   const tutorProfileUrl = getSubdomainUrl();
+
+  if (isCompanyTutorProfile(profile)) {
+    return (
+      <DashboardLayout>
+        <CorporateRestrictionNotice
+          feature="Mi Plan y Facturación"
+          description="Tu suscripción, cupos de alumnos y facturación son administrados centralmente por la empresa a la que estás vinculado. Tu cuenta opera bajo los cupos y licencias corporativas asignadas."
+        />
+      </DashboardLayout>
+    );
+  }
 
   if (loading) {
     return (
@@ -987,17 +1010,51 @@ function PlanContentInner() {
 
           {/* 2. Planes de Suscripción */}
           <section className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-                  <Rocket className="h-6 w-6 text-primary" /> Mejorar tu Plan
+                  <Rocket className="h-6 w-6 text-primary" /> {planAudienceTab === 'enterprise' ? 'Abonos Corporativos de Capacidad' : 'Mejorar tu Plan de Tutor'}
                 </h2>
-                <p className="text-muted-foreground font-medium">Escala tus límites y desbloquea herramientas de IA avanzada.</p>
+                <p className="text-muted-foreground font-medium">
+                  {planAudienceTab === 'enterprise' 
+                    ? 'Contrata capacidad institucional de tutores, alumnos e IA para tu empresa.' 
+                    : 'Escala tus límites docentes y desbloquea herramientas de IA avanzada.'}
+                </p>
+              </div>
+
+              {/* Selector de Audiencia de Plan */}
+              <div className="flex items-center gap-1.5 bg-muted p-1 rounded-xl border border-border shrink-0">
+                <Button
+                  type="button"
+                  variant={planAudienceTab === 'tutor' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setPlanAudienceTab('tutor')}
+                  className="text-xs font-bold gap-1.5 h-8"
+                >
+                  <User className="h-3.5 w-3.5" />
+                  Tutores
+                </Button>
+                <Button
+                  type="button"
+                  variant={planAudienceTab === 'enterprise' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setPlanAudienceTab('enterprise')}
+                  className="text-xs font-bold gap-1.5 h-8"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  Empresas
+                </Button>
               </div>
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8">
-              {plans.filter(p => p.isActive !== false).map((plan) => {
+              {plans
+                .filter(p => p.isActive !== false)
+                .filter(p => {
+                  const isEnt = p.targetAudience === 'enterprise' || p.isEnterprise === true;
+                  return planAudienceTab === 'enterprise' ? isEnt : !isEnt;
+                })
+                .map((plan) => {
                 const isCurrent = sub?.planId === plan.id;
                 const isUpgrade = currentPlan && plan.price > currentPlan.price;
                 const isDowngrade = currentPlan && plan.price < currentPlan.price && plan.type !== 'free';
@@ -1007,7 +1064,7 @@ function PlanContentInner() {
                     key={plan.id}
                     className={cn(
                       "relative flex flex-col h-full border-none rounded-lg transition-all duration-500 hover:-translate-y-2 overflow-hidden",
-                      plan.isEnterprise ? "bg-foreground text-white" : "bg-white",
+                      plan.isEnterprise || plan.targetAudience === 'enterprise' ? "bg-foreground text-white" : "bg-white",
                       isCurrent && "ring-4 ring-success/30"
                     )}
                   >
@@ -1022,12 +1079,12 @@ function PlanContentInner() {
 
                       <div className={cn(
                         "p-6 rounded-lg mb-8 flex items-center justify-between",
-                        plan.isEnterprise ? "bg-white/5 border border-white/10" : "bg-muted border border-muted"
+                        plan.isEnterprise || plan.targetAudience === 'enterprise' ? "bg-white/5 border border-white/10" : "bg-muted border border-muted"
                       )}>
                         <div className="flex items-center gap-3">
-                          <Zap className={cn("h-6 w-6", plan.isEnterprise ? "text-primary" : "text-warn")} />
+                          <Zap className={cn("h-6 w-6", plan.isEnterprise || plan.targetAudience === 'enterprise' ? "text-primary" : "text-warn")} />
                           <div>
-                            <p className={cn("text-lg font-black", plan.isEnterprise ? "text-white" : "text-foreground")}>
+                            <p className={cn("text-lg font-black", plan.isEnterprise || plan.targetAudience === 'enterprise' ? "text-white" : "text-foreground")}>
                               {plan.aiQuotas?.totalCredits || 0}
                             </p>
                             <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Créditos IA</p>
@@ -1036,6 +1093,16 @@ function PlanContentInner() {
                       </div>
 
                       <ul className="space-y-4 mb-10 flex-1">
+                        {plan.targetAudience === 'enterprise' && (
+                          <li className="flex items-start gap-3">
+                            <Users className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                            <span className="text-sm font-bold text-primary">
+                              {(plan.limits?.maxTutors === -1 || plan.entitlements?.limits?.maxTutors === -1)
+                                ? 'Tutores Ilimitados'
+                                : `Hasta ${plan.limits?.maxTutors || plan.entitlements?.limits?.maxTutors || 5} Tutores de Empresa`}
+                            </span>
+                          </li>
+                        )}
                         <li className="flex items-start gap-3">
                           <Check className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                           <span className="text-sm font-bold opacity-80">

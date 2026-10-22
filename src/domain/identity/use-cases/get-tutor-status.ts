@@ -15,6 +15,7 @@ import { err, ok, type Result } from '@/domain/shared/result';
 import { forbidden, type DomainError } from '@/domain/shared/errors';
 import type { CourseRepository } from '../../catalog/course-repository';
 import { SubscriptionStatus } from '@/types/subscription';
+import { isCompanyTutorProfile } from '@/domain/company/permissions';
 
 import type { TutorRepository, TutorSnapshot } from '../tutor-repository';
 import { resolveTutorByUsername } from './resolve-tutor-by-username';
@@ -70,7 +71,8 @@ export async function getTutorStatus(
   const data = tutor.data;
 
   const isAdmin = rolesOf(data).includes('admin');
-  if (adminPath && !isAdmin) {
+  const isCorporateTutor = isCompanyTutorProfile(data as never);
+  if (adminPath && !isAdmin && !isCorporateTutor) {
     const status = subscriptionOf(data).status;
     if (status !== SubscriptionStatus.ACTIVE && status !== 'active') {
       return err(

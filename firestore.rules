@@ -9,8 +9,7 @@ service cloud.firestore {
       allow write: if request.auth != null && (
         request.auth.token.email == 'felizdeemprender@gmail.com' ||
         request.auth.token.email == 'btouchacademy@gmail.com' ||
-        request.auth.token.email == 'btechacademy.ai@gmail.com' ||
-        request.auth.token.email == 'tutor.felizdeemprender@gmail.com'
+        request.auth.token.email == 'btechacademy.ai@gmail.com'
       );
     }
 
@@ -29,8 +28,7 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.token.email == 'felizdeemprender@gmail.com' ||
         request.auth.token.email == 'btouchacademy@gmail.com' ||
-        request.auth.token.email == 'btechacademy.ai@gmail.com' ||
-        request.auth.token.email == 'tutor.felizdeemprender@gmail.com'
+        request.auth.token.email == 'btechacademy.ai@gmail.com'
       );
     }
 
@@ -86,9 +84,19 @@ service cloud.firestore {
 
     match /courses/{courseId} {
       allow read: if true;
-      allow create: if isAdmin() || isMentor();
-      allow update: if isAdmin() || (isMentor() && resource.data.mentorId == request.auth.uid);
-      allow delete: if isAdmin() || (isMentor() && resource.data.mentorId == request.auth.uid);
+      allow create: if isAdmin() || isMentor() || ('empresa' in getUserRoles());
+      allow update: if isAdmin() ||
+        (isSignedIn() && "companyId" in resource.data && resource.data.companyId != null && 
+         exists(/databases/$(database)/documents/companies/$(resource.data.companyId)) && 
+         get(/databases/$(database)/documents/companies/$(resource.data.companyId)).data.ownerId == request.auth.uid) ||
+        (isMentor() && resource.data.mentorId == request.auth.uid && 
+         (!("companyId" in resource.data) || resource.data.companyId == null || 
+          request.resource.data.status != 'published' || resource.data.status == 'published'));
+      allow delete: if isAdmin() ||
+        (isMentor() && resource.data.mentorId == request.auth.uid && (!("companyId" in resource.data) || resource.data.companyId == null)) ||
+        (isSignedIn() && "companyId" in resource.data && resource.data.companyId != null && 
+         exists(/databases/$(database)/documents/companies/$(resource.data.companyId)) && 
+         get(/databases/$(database)/documents/companies/$(resource.data.companyId)).data.ownerId == request.auth.uid);
 
       match /lessons/{lessonId} {
         allow read: if true;
@@ -274,6 +282,25 @@ service cloud.firestore {
       );
       // Solo el backend (Admin SDK) puede crear/actualizar — el cliente no escribe directamente.
       allow write: if false;
+    }
+
+    // Empresas (Multi-Tenant B2B)
+    match /companies/{companyId} {
+      allow read: if true; // Información de branding y perfil corporativo accesible para catálogo público
+      allow create: if isSignedIn() && (request.resource.data.ownerId == request.auth.uid || isAdmin());
+      allow update, delete: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+
+      match /tutors/{tutorId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/companies/$(companyId)).data.ownerId == request.auth.uid ||
+          request.auth.uid == tutorId ||
+          isAdmin()
+        );
+        allow write: if isSignedIn() && (
+          get(/databases/$(database)/documents/companies/$(companyId)).data.ownerId == request.auth.uid ||
+          isAdmin()
+        );
+      }
     }
   }
 }

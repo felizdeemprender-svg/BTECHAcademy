@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ResponsiveTable, ResponsiveColumn } from '@/components/ui/responsive-table';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, query, setDoc, serverTimestamp, deleteDoc, where, getDocs, getDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, query, setDoc, serverTimestamp, deleteDoc, where, getDocs, getDoc, or } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { getAuth } from 'firebase/auth';
 import { 
@@ -198,17 +198,29 @@ export default function ManageCoursesClient() {
   const termsConfigRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
   const { data: termsConfig } = useDoc(termsConfigRef);
 
-  // Calcular isAdmin y isMentor antes del return
+  // Calcular roles
   const isAdmin = profile?.roles.includes('admin');
   const isMentor = profile?.roles.includes('mentor');
-  const hasPermission = isAdmin || isMentor;
+  const isEmpresa = profile?.roles.includes('empresa') || profile?.companyRole === 'owner';
+  const isCompanyTutor = Boolean(profile?.companyId && profile?.companyRole === 'tutor');
+  const hasPermission = isAdmin || isMentor || isEmpresa;
 
   const coursesQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
     const coursesRef = collection(db, 'courses');
     if (isAdmin) return query(coursesRef);
+    if (isEmpresa) {
+      const companyId = profile.companyId || profile.uid;
+      return query(
+        coursesRef,
+        or(
+          where('mentorId', '==', profile.uid),
+          where('companyId', '==', companyId)
+        )
+      );
+    }
     return query(coursesRef, where('mentorId', '==', profile.uid));
-  }, [db, profile?.uid, isAdmin]);
+  }, [db, profile?.uid, isAdmin, isEmpresa, profile?.companyId]);
 
   // Consulta a Firestore restaurada para mostrar cursos
   const { data: courses, isLoading } = useCollection(coursesQuery);
@@ -290,7 +302,7 @@ export default function ManageCoursesClient() {
   const activeCount = courses?.filter((c: any) => c.isActive === true).length || 0;
 
   const handleNewCourse = () => {
-    if (isAdmin) {
+    if (isAdmin || isEmpresa || isCompanyTutor) {
       router.push('/courses/create');
       return;
     }
@@ -527,6 +539,14 @@ export default function ManageCoursesClient() {
 
   const confirmPublication = async () => {
     if (!selectedCourse) return;
+    if (isCompanyTutor) {
+      toast({
+        variant: 'destructive',
+        title: 'Acción no permitida',
+        description: 'Solo la empresa titular tiene potestad para publicar este curso.',
+      });
+      return;
+    }
     setIsPublishDialogOpen(false);
     toast({ title: 'Iniciando Auditoría IA', description: 'Validando contenido antes de publicar...' });
     await handleManualAudit(selectedCourse, selectedTags);
@@ -845,15 +865,22 @@ export default function ManageCoursesClient() {
             <Pencil className="h-3.5 w-3.5" /> Editar Contenido
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => router.push(`/courses/style/${course.id}`)} className="cursor-pointer gap-2 py-2">
-            <Palette className="h-3.5 w-3.5 text-primary" /> Identidad Visual (Marca)
+            <Palette className="h-3.5 w-3.5 text-primary" /> {isCompanyTutor ? 'Presentación del Tutor (Perfil y Redes)' : 'Identidad Visual (Marca)'}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => openAssociatedDialog(course)} className="cursor-pointer gap-2 py-2">
             <Link2 className="h-3.5 w-3.5 text-blue-500" /> Cursos Asociados (Ruta)
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => openPublishDialog(course)} disabled={isAuditing === course.id} className="cursor-pointer gap-2 py-2">
-            {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : course.isActive ? <PowerOff className="h-3.5 w-3.5 text-orange-500" /> : <Power className="h-3.5 w-3.5 text-success" />}
-            {course.isActive ? 'Ocultar Catálogo' : 'Publicar Catálogo'}
-          </DropdownMenuItem>
+          {isCompanyTutor ? (
+            <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed gap-2 py-2" title="Solo la empresa titular puede publicar cursos">
+              <Power className="h-3.5 w-3.5 text-muted-foreground" />
+              Publicación Reservada a Empresa
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onSelect={() => openPublishDialog(course)} disabled={isAuditing === course.id} className="cursor-pointer gap-2 py-2">
+              {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : course.isActive ? <PowerOff className="h-3.5 w-3.5 text-orange-500" /> : <Power className="h-3.5 w-3.5 text-success" />}
+              {course.isActive ? 'Ocultar Catálogo' : 'Publicar Catálogo'}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => openEnrollments(course)} className="cursor-pointer gap-2 py-2"><Users className="h-3.5 w-3.5 text-accent" /> Gestionar Alumnos</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={async (e) => { 

@@ -82,11 +82,17 @@ export async function handlePublishCourse(
   body: unknown,
 ): Promise<NextResponse> {
   const payload = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
-  const { mentorId, status } = payload;
+  const { mentorId, status, callerRole, companyId } = payload;
   const repo = new FirestoreCourseRepository(gateway);
   const result = await publishCourse(
     { reader: repo, updater: repo },
-    { mentorId: mentorId as string, id, status: status as 'public' | 'draft' },
+    {
+      mentorId: mentorId as string,
+      id,
+      status: status as 'public' | 'draft',
+      callerRole: callerRole as string | undefined,
+      companyId: companyId as string | undefined,
+    },
   );
   if (result.ok) {
     return NextResponse.json({ success: true, id: result.value.id });

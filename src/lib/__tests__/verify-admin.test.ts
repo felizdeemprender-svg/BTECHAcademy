@@ -78,5 +78,33 @@ describe('verifyAdmin', () => {
       const result = await verifyAdmin(req);
       expect(result).toBe('admin-uid-123');
     });
+
+    it('permite acceso al único Super Admin (felizdeemprender@gmail.com) aun sin claim admin explícito', async () => {
+      vi.mocked(getAdminAuth).mockReturnValue({
+        verifyIdToken: vi.fn().mockResolvedValue({ 
+          uid: 'super-admin-uid', 
+          email: 'felizdeemprender@gmail.com',
+          admin: false 
+        }),
+      } as any);
+
+      const req = createMockRequest({ headers: { Authorization: 'Bearer token-super-admin' } });
+      const result = await verifyAdmin(req);
+      expect(result).toBe('super-admin-uid');
+    });
+
+    it('bloquea a supervisor.felizdeemprender@gmail.com si no tiene claim admin explícito (no es super admin)', async () => {
+      vi.mocked(getAdminAuth).mockReturnValue({
+        verifyIdToken: vi.fn().mockResolvedValue({ 
+          uid: 'supervisor-uid', 
+          email: 'supervisor.felizdeemprender@gmail.com',
+          admin: false 
+        }),
+      } as any);
+
+      const req = createMockRequest({ headers: { Authorization: 'Bearer token-supervisor' } });
+      const result = await verifyAdmin(req);
+      expect(result).toBeNull();
+    });
   });
 });

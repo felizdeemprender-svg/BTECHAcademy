@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { SubscriptionAlert } from '@/components/dashboard/subscription-alert';
 import { Logo } from '@/components/logo';
 import { EvoChatWidget } from "@/components/evo/evo-chat-widget";
+import { isCompanyTutorProfile } from '@/domain/company';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -65,6 +66,8 @@ export function DashboardLayout({
     );
   }
 
+  const isCorporateTutor = isCompanyTutorProfile(profile);
+
   return (
     <SidebarProvider defaultOpen={defaultSidebarOpen}>
       <div className="flex h-dvh bg-background overflow-hidden font-body w-full">
@@ -103,7 +106,7 @@ export function DashboardLayout({
                 onClick={handleLogout}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Cerrar sesi�n
+                Cerrar sesión
               </Button>
             </div>
           </SidebarFooter>
@@ -115,7 +118,7 @@ export function DashboardLayout({
             <div className="h-4 w-px bg-border mx-2" />
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 truncate">
-                Panel Institucional � FastoriaAcademy
+                Panel Institucional — FastoriaAcademy
               </p>
             </div>
           </header>
@@ -134,7 +137,7 @@ export function DashboardLayout({
             </div>
           </main>
         </SidebarInset>
-        <EvoChatWidget />
+        {!isCorporateTutor && <EvoChatWidget />}
       </div>
     </SidebarProvider>
   );

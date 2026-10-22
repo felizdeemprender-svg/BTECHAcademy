@@ -46,9 +46,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const SUPER_ADMIN_EMAILS = [
-  'felizdeemprender@gmail.com',
-  'btouchacademy@gmail.com',
-  'FastoriaAcademy.ai@gmail.com'
+  'felizdeemprender@gmail.com'
 ];
 
 const ALL_MENTOR_PERMISSIONS = ['academic', 'challenges', 'students', 'followups', 'marketing', 'automations_access'];
@@ -113,6 +111,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               await setDoc(userRef, { roles: data.roles, mentorPermissions: data.mentorPermissions }, { merge: true });
             }
 
+            // Auto-heal company affiliation if missing in user doc but exists in pre-registered doc
+            if (!data.companyId && userEmail) {
+              try {
+                const qPre = query(collection(db, 'users'), where('email', '==', userEmail));
+                const preSnap = await getDocs(qPre);
+                for (const d of preSnap.docs) {
+                  if (d.id !== firebaseUser.uid && d.data().companyId) {
+                    const cId = d.data().companyId;
+                    const cRole = d.data().companyRole || 'tutor';
+                    data.companyId = cId;
+                    data.companyRole = cRole;
+                    await setDoc(userRef, { companyId: cId, companyRole: cRole }, { merge: true });
+                    break;
+                  }
+                }
+              } catch (healErr) {
+                console.warn('[Auth] Error auto-healing companyId:', healErr);
+              }
+            }
+
             setProfile(data);
             if (typeof document !== 'undefined') {
               const getHighestRole = (roles: string[]) => {
@@ -138,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const preDoc = querySnap.docs[0];
               const preProfile = preDoc.data();
               
-              const finalProfile = {
+              const finalProfile: Record<string, any> = {
                 uid: firebaseUser.uid,
                 email: userEmail,
                 displayName: firebaseUser.displayName || preProfile.displayName || userEmail.split('@')[0],
@@ -146,6 +164,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 roles: isSuperAdmin ? ['alumno', 'mentor', 'admin', 'marketing', 'automatizacion'] : (preProfile.roles || ['alumno']),
                 mentorPermissions: isSuperAdmin ? ALL_MENTOR_PERMISSIONS : (preProfile.mentorPermissions || []),
                 isActive: true,
+                ...(preProfile.companyId ? { companyId: preProfile.companyId } : {}),
+                ...(preProfile.companyRole ? { companyRole: preProfile.companyRole } : {}),
+                ...(preProfile.isEnterprise ? { isEnterprise: preProfile.isEnterprise } : {}),
                 subscription: preProfile.subscription || null,
                 aiQuotas: preProfile.aiQuotas || null,
                 updatedAt: serverTimestamp(),

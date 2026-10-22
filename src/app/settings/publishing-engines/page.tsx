@@ -40,6 +40,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
+import { isCompanyTutorProfile } from '@/domain/company';
+import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -541,6 +543,17 @@ export default function PublishingEnginesPage() {
       </Badge>
     );
   };
+
+  if (isCompanyTutorProfile(profile)) {
+    return (
+      <DashboardLayout>
+        <CorporateRestrictionNotice
+          feature="Motores de Publicación"
+          description="Los motores de email, redes sociales y campañas publicitarias son administrados de forma centralizada por la empresa titular a la que perteneces."
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

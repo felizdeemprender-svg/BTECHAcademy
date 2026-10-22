@@ -66,10 +66,16 @@ export async function handleGetTutorStatus(
     const { tutorId, tutor, coursesCount } = result.value;
     return NextResponse.json({
       available: true,
-      tutor: await buildTutorResponse(tutorId, tutor.data, coursesCount, async (styleId) => {
-        const style = await tutors.findLandingStyleById(styleId);
-        return style ? style.data : null;
-      }),
+      tutor: await buildTutorResponse(
+        tutorId,
+        tutor.data,
+        coursesCount,
+        async (styleId) => {
+          const style = await tutors.findLandingStyleById(styleId);
+          return style ? style.data : null;
+        },
+        gateway,
+      ),
     });
   } catch (error: unknown) {
     if (!adminPath) {
@@ -161,7 +167,15 @@ export async function handleGetTutorById(gateway: FirestoreGateway, id: string):
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function buildTutorResponse(tutorId: string, tutor: any, coursesCount: number, fetchStyle: (styleId: string) => Promise<any | null>) {
+async function buildTutorResponse(
+  tutorId: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tutor: any,
+  coursesCount: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fetchStyle: (styleId: string) => Promise<any | null>,
+  gateway?: FirestoreGateway,
+) {
   const websiteConfig = tutor.profile?.websiteConfig || null;
   const styleId = websiteConfig?.styleId || 'classic';
   const brandName = websiteConfig?.brandName || null;
@@ -188,15 +202,115 @@ async function buildTutorResponse(tutorId: string, tutor: any, coursesCount: num
     ? 'dark'
     : (tutor.profile?.branding?.layoutMode || 'light');
 
+  // Multi-Tenant / Empresa Detection
+  const isEnterprise = Boolean(
+    (tutor.isEnterprise === true ||
+      (Array.isArray(tutor.roles) && tutor.roles.includes('empresa')) ||
+      tutor.companyRole === 'owner' ||
+      tutor.subscription?.isEnterprise === true ||
+      tutor.subscription?.planName === 'Empresas' ||
+      tutor.subscription?.name === 'Empresas') &&
+    tutor.companyRole !== 'tutor'
+  );
+
+  const isCompanyTutor = Boolean(
+    !isEnterprise &&
+    (tutor.companyRole === 'tutor' || (Boolean(tutor.companyId) && !tutor.roles?.includes('empresa')))
+  );
+
+  let companyData: {
+    id: string;
+    name: string;
+    slug: string;
+    slogan?: string;
+    logoUrl?: string;
+    website?: string;
+    primaryColor?: string;
+  } | null = null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const companyTutors: any[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let companyDoc: any = null;
+
+  if ((isEnterprise || isCompanyTutor) && gateway) {
+    try {
+      // 1. Resolver documento de empresa
+      companyDoc = tutor.companyId ? await gateway.getDoc('companies', tutor.companyId) : null;
+      if (!companyDoc && isEnterprise) {
+        const snap = await gateway.queryByField('companies', 'ownerId', tutorId, 1);
+        companyDoc = snap.docs[0] || null;
+      }
+
+      if (companyDoc) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cData = (companyDoc.data() || {}) as Record<string, any>;
+        companyData = {
+          id: companyDoc.id,
+          name: cData.name || (isEnterprise ? tutor.displayName : 'Academia Institucional') || 'Academia Institucional',
+          slug: cData.slug || (isEnterprise ? tutor.username : companyDoc.id) || companyDoc.id,
+          slogan: cData.branding?.slogan || 'Organización Educativa Multi-Tenant & Centro de Formación Especializada',
+          logoUrl: cData.branding?.logoUrl || (isEnterprise ? tutor.photoURL : '') || '',
+          website: cData.branding?.website || '',
+          primaryColor: activeOwnBrand?.palette?.primary
+            || (cData.branding?.primaryColor && cData.branding.primaryColor !== '#00FF00' ? cData.branding.primaryColor : null)
+            || brand?.palette?.primary 
+            || '#1E40AF',
+        };
+
+        // 2. Si es Enterprise, leer tutores vinculados en /companies/{companyId}/tutors
+        if (isEnterprise) {
+          const tutorsSnap = await gateway.listSubDocs('companies', companyDoc.id, 'tutors');
+          if (tutorsSnap && tutorsSnap.docs.length > 0) {
+            for (const tDoc of tutorsSnap.docs) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const binding = (tDoc.data() || {}) as Record<string, any>;
+            if (binding.status && binding.status !== 'active') continue;
+            const bindingTutorId = (binding.tutorId as string) || tDoc.id;
+
+            let tutorUserDoc = null;
+            try {
+              tutorUserDoc = await gateway.getDoc('users', bindingTutorId);
+            } catch { /* no-critical */ }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const userData = (tutorUserDoc?.data() || {}) as Record<string, any>;
+            companyTutors.push({
+              id: bindingTutorId,
+              username: userData.username || bindingTutorId,
+              displayName: userData.displayName || binding.displayName || userData.email?.split('@')[0] || 'Tutor Docente',
+              email: binding.email || userData.email || '',
+              photo: userData.photoURL || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userData.username || bindingTutorId}`,
+              bio: userData.profile?.bio || userData.bio || 'Docente especializado y miembro del equipo académico.',
+              expertise: Array.isArray(userData.expertise) && userData.expertise.length > 0
+                ? userData.expertise
+                : ['Educación', 'Mentoría'],
+              assignedStudentsCount: binding.assignedStudentsCount || 0,
+              status: binding.status || 'active',
+              permissions: binding.permissions || {},
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[buildTutorResponse] Error resolviendo info de empresa:', err);
+  }
+}
+
   return {
     id: tutorId,
     username: tutor.username,
     displayName: tutor.displayName || tutor.email?.split('@')[0],
     photo: tutor.photoURL || `https://loremflickr.com/200/200/person,professional?lock=${tutorId}`,
-    bio: tutor.profile?.bio || '',
-    expertise: tutor.expertise || [],
-    location: tutor.location || '',
+    bio: tutor.profile?.bio || tutor.bio || '',
+    expertise: tutor.expertise || tutor.profile?.expertise || [],
+    location: tutor.location || tutor.profile?.location || '',
     email: tutor.email || '',
+    isEnterprise,
+    isCompanyTutor,
+    company: companyData,
+    companyTutors,
     socialLinks: {
       website: tutor.profile?.socials?.website || '',
       linkedin: tutor.profile?.socials?.linkedin || '',
@@ -222,14 +336,20 @@ async function buildTutorResponse(tutorId: string, tutor: any, coursesCount: num
       allowPublicCourses: true
     },
     branding: {
-      primaryColor: brand?.palette?.primary || tutor.profile?.branding?.primaryColor || '#3B2D86',
-      logoUrl: tutor.profile?.branding?.logoUrl || '',
+      primaryColor: activeOwnBrand?.palette?.primary 
+        || (companyData?.primaryColor && companyData.primaryColor !== '#00FF00' ? companyData.primaryColor : null)
+        || brand?.palette?.primary 
+        || tutor.profile?.branding?.primaryColor 
+        || '#1E40AF',
+      logoUrl: (isEnterprise ? companyData?.logoUrl : tutor.profile?.branding?.logoUrl) || companyData?.logoUrl || '',
       layoutMode
     },
     brand: brand || null,
     ownBrands,
     activeBrandName: tutor.profile?.activeBrandName || (ownBrands[0]?.name || ''),
     styleId,
-    websiteConfig: websiteConfig
+    websiteConfig: (websiteConfig && websiteConfig.headline ? websiteConfig : null)
+      || (isEnterprise && companyDoc ? (companyDoc.data() as any)?.websiteConfig : null)
+      || websiteConfig
   };
 }

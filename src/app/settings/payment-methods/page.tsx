@@ -7,23 +7,28 @@ import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp, collection, query } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { isCompanyTutorProfile } from '@/domain/company';
+import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
 
 export default function TutorPaymentMethodsPage() {
   const { user, profile } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   const [isMigrating, setIsMigrating] = useState(false);
-  
+
+  const isCorporateTutor = isCompanyTutorProfile(profile);
+
   const methodsQuery = useMemoFirebase(() => {
-    if (!user?.uid) return null;
+    if (!user?.uid || isCorporateTutor) return null;
     return query(collection(db, 'users', user.uid, 'paymentMethods'));
-  }, [db, user?.uid]);
+  }, [db, user?.uid, isCorporateTutor]);
 
   // Checking existing methods just for migration logic
   const { data: methods, isLoading: methodsLoading } = useCollection(methodsQuery);
 
   // Migración automática de datos antiguos del perfil
   useEffect(() => {
+    if (isCorporateTutor) return;
     const migrateOldData = async () => {
       if (!user?.uid || methodsLoading || (methods && methods.length > 0) || isMigrating) return;
       
@@ -56,9 +61,20 @@ export default function TutorPaymentMethodsPage() {
     };
 
     migrateOldData();
-  }, [user?.uid, methods, methodsLoading, profile, db, toast]);
+  }, [user?.uid, methods, methodsLoading, profile, db, toast, isCorporateTutor, isMigrating]);
 
   if (!user?.uid) return null;
+
+  if (isCorporateTutor) {
+    return (
+      <DashboardLayout>
+        <CorporateRestrictionNotice
+          feature="Métodos de Cobro"
+          description="Las pasarelas de pago y métodos de cobro son centralizados y administrados directamente por la empresa. Las cobranzas e inscripciones operan bajo las cuentas corporativas configuradas."
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

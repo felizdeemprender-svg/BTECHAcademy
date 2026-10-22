@@ -14,6 +14,8 @@ export interface CourseAuthorSubscription {
 
 export interface CourseAuthor {
   readonly isAdmin: boolean;
+  readonly companyId?: string;
+  readonly companyRole?: string;
   readonly subscription?: CourseAuthorSubscription;
 }
 

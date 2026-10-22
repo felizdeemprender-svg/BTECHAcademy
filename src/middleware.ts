@@ -6,7 +6,8 @@ const RESERVED_PATHS = [
   'my-courses', 'settings', 'v', 
   'about', 'services', 'privacy', 'terms', 'privacidad', 'terminos', 'favicon.ico', 
   'globals.css', 'tutor-access-denied', 'upgrade-required', 'ai-assistant', 'alumnos',
-  'tutor', 'planes', 'evo', 'styles-demo', 'preview-style', 'marketing', 'automations', 'referidos' // Rutas reservadas oficiales
+  'tutor', 'planes', 'evo', 'styles-demo', 'preview-style', 'marketing', 'automations', 'referidos',
+  'company', 'empresa' // Rutas reservadas corporativas / multi-tenant
 ];
 
 export async function middleware(request: NextRequest) {
@@ -17,7 +18,6 @@ export async function middleware(request: NextRequest) {
 
   const segments = pathname.split('/').filter(Boolean);
 
-  const hostParts = hostname.split('.');
   // Detectar cualquier dominio gestionado por Firebase o Google Cloud
   const isFirebaseDefault = hostname.endsWith('.hosted.app') || 
                             hostname.endsWith('.web.app') || 
@@ -37,13 +37,23 @@ export async function middleware(request: NextRequest) {
     subdomain = getSubdomain(hostname);
   }
 
+  // 1. Recuperación automática de subdominio reservado accidental (ej: company.localhost:9002/tutors -> localhost:9002/company/tutors)
+  if (subdomain && RESERVED_PATHS.includes(subdomain.toLowerCase())) {
+    const url = request.nextUrl.clone();
+    const mainHost = getRootDomain(hostname);
+    url.host = mainHost;
+    url.pathname = `/${subdomain.toLowerCase()}${pathname === '/' ? '' : pathname}`;
+    return NextResponse.redirect(url);
+  }
+
   // 2. Redirección de Rutas Internas: /tutor/[username] en localhost -> subdominio
   // En producción (Firebase Hosting) NO redirigimos: la ruta /tutor/[username] funciona directamente.
   if (hostname.includes('localhost') && !subdomain && pathname.startsWith('/tutor/')) {
     const username = segments[1]?.toLowerCase();
-    if (username) {
+    if (username && !RESERVED_PATHS.includes(username)) {
       const url = request.nextUrl.clone();
-      url.host = `${username}.localhost:9002`;
+      const mainHost = getRootDomain(hostname);
+      url.host = `${username}.${mainHost}`;
       url.pathname = segments.length > 2 ? `/${segments.slice(2).join('/')}` : '/';
       return NextResponse.redirect(url);
     }
@@ -54,14 +64,14 @@ export async function middleware(request: NextRequest) {
     pathname.includes('.') || 
     pathname.startsWith('/api') || 
     pathname.startsWith('/_next') ||
-    RESERVED_PATHS.includes(segments[0])
+    (segments.length > 0 && RESERVED_PATHS.includes(segments[0].toLowerCase()))
   ) {
     return NextResponse.next();
   }
 
-  // 3. Lógica de Enmascaramiento por Subdominio
+  // 4. Lógica de Enmascaramiento por Subdominio
   // Nota: Permitimos 'tutor' y 'admin' como subdominios aunque estén en RESERVED_PATHS como ruta
-  if (subdomain && (subdomain === 'tutor' || subdomain === 'admin' || !RESERVED_PATHS.includes(subdomain))) {
+  if (subdomain && (subdomain === 'tutor' || subdomain === 'admin' || !RESERVED_PATHS.includes(subdomain.toLowerCase()))) {
     const url = request.nextUrl.clone();
     
     // juan.dominio.com/ -> /tutor/juan (Perfil)
@@ -79,12 +89,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 4. Lógica de Enmascaramiento por Ruta: Redirigir a Subdominio (Forzar Limpieza)
+  // 5. Lógica de Enmascaramiento por Ruta: Redirigir a Subdominio (Forzar Limpieza)
   // /juan -> juan.dominio.com
-  // 4. Lógica de Enmascaramiento por Ruta: Redirigir a Subdominio (Forzar Limpieza)
-  // /juan -> juan.dominio.com
-  // SOLO si soporta subdominios.
-  if (supportsSubdomains && segments.length === 1) {
+  // SOLO si soporta subdominios y NO es una ruta reservada.
+  if (supportsSubdomains && segments.length === 1 && !RESERVED_PATHS.includes(segments[0].toLowerCase())) {
     const url = request.nextUrl.clone();
     const username = segments[0].toLowerCase();
     
@@ -97,7 +105,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // /juan/oferta -> juan.dominio.com/oferta
-  if (supportsSubdomains && segments.length === 2) {
+  if (supportsSubdomains && segments.length === 2 && !RESERVED_PATHS.includes(segments[0].toLowerCase())) {
     const url = request.nextUrl.clone();
     const username = segments[0].toLowerCase();
     

@@ -91,4 +91,4 @@ export interface User {
   associatedMentors?: string[];
 }
 
-export type RoleType = 'alumno' | 'mentor' | 'marketing' | 'admin';
+export type RoleType = 'alumno' | 'mentor' | 'marketing' | 'admin' | 'empresa';

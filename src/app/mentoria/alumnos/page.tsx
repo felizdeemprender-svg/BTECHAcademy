@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, or } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
+import { isCompanyTutorProfile } from '@/domain/company';
+import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
 
 export default function AlumnosPage() {
   const { profile } = useAuth();
@@ -27,9 +29,11 @@ export default function AlumnosPage() {
 
   const isAdmin = profile?.roles.includes('admin');
   const isMentor = profile?.roles.includes('mentor');
+  const isEmpresa = profile?.roles.includes('empresa') || profile?.companyRole === 'owner';
+  const hasAccess = isAdmin || isMentor || isEmpresa;
 
   useEffect(() => {
-    if (!profile?.uid || (!isMentor && !isAdmin)) return;
+    if (!profile?.uid || !hasAccess) return;
 
     const fetchStudents = async () => {
       setLoading(true);
@@ -39,6 +43,26 @@ export default function AlumnosPage() {
         if (isAdmin) {
           const snap = await getDocs(collection(db, 'enrollments'));
           enrollments = snap.docs.map(d => d.data());
+        } else if (isEmpresa) {
+          const companyId = profile.companyId || profile.uid;
+          const coursesSnap = await getDocs(
+            query(
+              collection(db, 'courses'),
+              or(
+                where('mentorId', '==', profile.uid),
+                where('companyId', '==', companyId)
+              )
+            )
+          );
+          const courseIds = coursesSnap.docs.map(d => d.id);
+          
+          if (courseIds.length > 0) {
+            for (let i = 0; i < courseIds.length; i += 30) {
+              const chunk = courseIds.slice(i, i + 30);
+              const snap = await getDocs(query(collection(db, 'enrollments'), where('courseId', 'in', chunk)));
+              enrollments = [...enrollments, ...snap.docs.map(d => d.data())];
+            }
+          }
         } else {
           const coursesSnap = await getDocs(query(collection(db, 'courses'), where('mentorId', '==', profile.uid)));
           const courseIds = coursesSnap.docs.map(d => d.id);
@@ -126,6 +150,17 @@ export default function AlumnosPage() {
     s.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     s.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isCompanyTutorProfile(profile) && !profile?.mentorPermissions?.includes('students_view')) {
+    return (
+      <DashboardLayout>
+        <CorporateRestrictionNotice
+          feature="Gestión de Alumnos"
+          description="Tu empresa no ha activado la potestad de gestión o visualización de expedientes de alumnos para tu cuenta."
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

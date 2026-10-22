@@ -29,6 +29,8 @@ export const CourseSchema = z.object({
   thumbnail: z.string().optional(),
   duration: z.string().optional(),
   brandingOverride: CourseBrandingOverrideSchema.optional(),
+  companyId: z.string().optional(),
+  ownerId: z.string().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
 });

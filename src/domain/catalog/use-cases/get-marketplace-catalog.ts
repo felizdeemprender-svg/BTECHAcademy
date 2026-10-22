@@ -82,6 +82,7 @@ export async function getMarketplaceCatalog(
 
     const coursesMap = new Map<string, CatalogDoc>();
     for (const course of coursesData) {
+      if (course.data.companyId) continue;
       if (course.data.status === 'published' || course.data.status === 'approved') {
         coursesMap.set(course.id, course);
       }
@@ -127,6 +128,15 @@ export async function getMarketplaceCatalog(
             },
           } satisfies CatalogDoc);
         const mentorData = mentor.data;
+        const isCompanyMentor = Boolean(
+          (mentorData.subscription as any)?.isEnterprise === true ||
+          mentorData.companyId ||
+          (mentorData as any).companyRole ||
+          (mentorData as any).role === 'empresa' ||
+          (mentorData as any).roles?.includes('empresa')
+        );
+        if (isCompanyMentor) return null;
+
         const mentorDisplayName = str(mentorData.displayName);
         const mentorEmail = str(mentorData.email);
         const price = (sp.price as number | undefined) ?? (courseData.price as number | undefined) ?? 0;

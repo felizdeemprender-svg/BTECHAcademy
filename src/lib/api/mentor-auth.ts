@@ -20,8 +20,7 @@ export async function authenticateCaller(req: Request): Promise<Caller | null> {
     if (!token) return null;
     const decoded = await getAdminAuth().verifyIdToken(token);
     const SUPER_ADMIN_EMAILS = [
-      'felizdeemprender@gmail.com',
-      'supervisor.felizdeemprender@gmail.com'
+      'felizdeemprender@gmail.com'
     ];
     const isSuperAdmin = !!decoded.email && SUPER_ADMIN_EMAILS.includes(decoded.email);
 
