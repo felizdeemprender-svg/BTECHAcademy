@@ -24,19 +24,31 @@ export const searchKnowledgeBaseTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ query }: any) => {
-    const context = ai.currentContext();
-    const uid = context?.uid;
-    if (!uid) throw new Error('No autorizado');
+  async ({ query }: any, ctx?: any) => {
+    let uid = ctx?.context?.uid || ai.currentContext()?.uid;
+    if (!uid) {
+      try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        uid = cookieStore.get('btech_uid')?.value;
+      } catch {}
+    }
+
+    if (!uid) {
+      return { success: false, message: 'No se pudo verificar la identidad del mentor para consultar la base de conocimiento.' };
+    }
 
     try {
       console.log(`[RAG] Generando embedding para: "${query}"`);
       
       const embedResult = await ai.embed({
-        embedder: 'googleai/text-embedding-004',
+        embedder: 'googleai/gemini-embedding-001',
         content: query,
       });
-      const queryVector = embedResult[0].embedding;
+      const queryVector = embedResult?.[0]?.embedding;
+      if (!queryVector) {
+        return { success: false, message: 'No se pudo generar el vector semántico de la consulta.' };
+      }
 
       const snapshot = await adminDb.collection('knowledgeBase').where('mentorId', '==', uid).get();
       
@@ -70,7 +82,7 @@ export const searchKnowledgeBaseTool = ai.defineTool(
         matches: topMatches.map(m => ({ pregunta_relacionada: m.question, respuesta_oficial: m.answer }))
       };
     } catch (error: any) {
-      console.error('[RAG Error]', error);
+      console.error('[RAG Error]', error?.message || error);
       return { success: false, error: 'Fallo al consultar la base de conocimiento.' };
     }
   }

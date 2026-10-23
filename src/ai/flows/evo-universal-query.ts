@@ -23,12 +23,21 @@ export const universalFirestoreQueryTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ collection, isCollectionGroup, filters, aggregation, aggregationField, orderByField, orderByDirection, limit }: any) => {
-    const context = ai.currentContext();
-    const uid = context?.uid;
-    const role = context?.role;
+  async ({ collection, isCollectionGroup, filters, aggregation, aggregationField, orderByField, orderByDirection, limit }: any, ctx?: any) => {
+    let uid = ctx?.context?.uid || ai.currentContext()?.uid;
+    let role = ctx?.context?.role || ai.currentContext()?.role || '';
+    if (!uid) {
+      try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        uid = cookieStore.get('btech_uid')?.value;
+        if (!role) {
+          role = cookieStore.get('btech_role')?.value || '';
+        }
+      } catch {}
+    }
 
-    if (!uid) throw new Error('No autorizado.');
+    if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit ni cookies.');
 
     try {
       let queryRef: admin.firestore.Query = isCollectionGroup 

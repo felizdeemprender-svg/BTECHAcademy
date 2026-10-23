@@ -1,6 +1,12 @@
 import { genkit } from 'genkit';
+import { runWithContext } from '@genkit-ai/core';
+import { initNodeFeatures } from '@genkit-ai/core/node';
 import { googleAI } from '@genkit-ai/google-genai';
 import { checkSufficientCredits, calculateGeminiCost, calculateEmbeddingCost, deductCredits } from '@/lib/payments/credits';
+
+try {
+  initNodeFeatures();
+} catch {}
 
 /**
  * Motor Genkit Original con Sensor de Identidad BTECH
@@ -135,7 +141,18 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
     role
   };
 
-  const response = await getGenkitInstance().generate(generateOptions);
+  let response: any;
+  try {
+    response = await runWithContext(generateOptions.context, () =>
+      getGenkitInstance().generate(generateOptions)
+    );
+  } catch (err: any) {
+    if (err?.message?.includes('Async context is not initialized')) {
+      response = await getGenkitInstance().generate(generateOptions);
+    } else {
+      throw err;
+    }
+  }
 
   // 3. Auditoría Silenciosa (No bloquea la IA si falla)
   if (targetUidToCheck && response.usage) {
@@ -196,7 +213,25 @@ export async function embedWithAuditing(options: any, actionName: string = 'ia_e
     }
   }
 
-  const response = await getGenkitInstance().embed(options);
+  const embedOptions = { ...options };
+  embedOptions.context = {
+    ...(embedOptions.context || {}),
+    uid,
+    role
+  };
+
+  let response: any;
+  try {
+    response = await runWithContext(embedOptions.context, () =>
+      getGenkitInstance().embed(embedOptions)
+    );
+  } catch (err: any) {
+    if (err?.message?.includes('Async context is not initialized')) {
+      response = await getGenkitInstance().embed(embedOptions);
+    } else {
+      throw err;
+    }
+  }
 
   if (targetUidToCheck) {
     try {

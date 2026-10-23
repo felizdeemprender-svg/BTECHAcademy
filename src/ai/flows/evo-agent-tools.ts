@@ -19,9 +19,15 @@ export const enrollStudentTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ studentEmail, courseId }: any) => {
-    const context = ai.currentContext();
-    const uid = context?.uid;
+  async ({ studentEmail, courseId }: any, ctx?: any) => {
+    let uid = ctx?.context?.uid || ai.currentContext()?.uid;
+    if (!uid) {
+      try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        uid = cookieStore.get('btech_uid')?.value;
+      } catch {}
+    }
     if (!uid) throw new Error('No autorizado.');
 
     try {
@@ -71,9 +77,15 @@ export const formatCrmNotesTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ studentNameOrEmail, noteContent }: any) => {
-    const context = ai.currentContext();
-    const uid = context?.uid;
+  async ({ studentNameOrEmail, noteContent }: any, ctx?: any) => {
+    let uid = ctx?.context?.uid || ai.currentContext()?.uid;
+    if (!uid) {
+      try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        uid = cookieStore.get('btech_uid')?.value;
+      } catch {}
+    }
     if (!uid) throw new Error('No autorizado.');
 
     try {
