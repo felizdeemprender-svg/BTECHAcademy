@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       result: null,
-      error: null
+      error: null,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // TTL 7 días
     });
 
     // ── Encolar proceso hacia el Worker (o Cloud Tasks) ──────────────────────

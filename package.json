@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "next dev -p 9002",
+    "dev:prod": "node scripts/dev-prod.js",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build && node scripts/copy-ffmpeg-to-standalone.js",

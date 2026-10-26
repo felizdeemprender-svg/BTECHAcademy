@@ -139,6 +139,18 @@ export async function DELETE(req: NextRequest) {
       pageId
     });
 
+    // Cascade delete de assets en Storage (carpeta canónica y legacy)
+    try {
+      const { adminStorage } = await import('@/firebase/admin');
+      const bucket = adminStorage.bucket();
+      await Promise.allSettled([
+        bucket.deleteFiles({ prefix: `landings/${pageId}/` }),
+        bucket.deleteFiles({ prefix: `campaigns/${pageId}/` }),
+      ]);
+    } catch (storageErr: any) {
+      console.warn(`[CascadeDelete:Storage] Error al limpiar Storage para landing ${pageId}:`, storageErr?.message);
+    }
+
     return NextResponse.json({ success: true, pageId });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: error.message.includes('Unauthorized') ? 403 : 500 });

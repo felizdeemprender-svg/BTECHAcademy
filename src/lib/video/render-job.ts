@@ -66,10 +66,15 @@ export async function runGarbageCollector(basePath: string) {
 // ─────────────────────────────────────────────────────────────────────────────
 export async function updateJob(jobId: string, data: Record<string, any>) {
   try {
-    await adminDb.collection('video_jobs').doc(jobId).update({
+    const isFinished = data.status === 'completed' || data.status === 'failed';
+    const patch: Record<string, any> = {
       ...data,
       updatedAt: new Date().toISOString()
-    });
+    };
+    if (isFinished && !data.expiresAt) {
+      patch.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    }
+    await adminDb.collection('video_jobs').doc(jobId).update(patch);
   } catch (e) {
     console.error('[JobQueue] Error actualizando job en Firestore:', e);
   }

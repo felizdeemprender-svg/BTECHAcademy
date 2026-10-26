@@ -8,15 +8,24 @@ import * as path from 'path';
 export function getAdminApp() {
   if (getApps().length > 0) return getApp();
 
-  const serviceAccountPath = path.join(process.cwd(), 'service-account.json');
+  const explicitPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  let serviceAccountPath = explicitPath ? path.resolve(process.cwd(), explicitPath) : path.join(process.cwd(), 'service-account.json');
+
+  const currentProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || firebaseConfig.projectId;
+  if (!explicitPath && currentProjectId === 'feliz-de-emprender') {
+    const testPath = path.join(process.cwd(), 'service-account-test.json');
+    if (fs.existsSync(testPath)) {
+      serviceAccountPath = testPath;
+    }
+  }
   
   // 1. Desarrollo Local con archivo de cuenta de servicio
   if (fs.existsSync(serviceAccountPath)) {
-    console.log('[Firebase Admin] Usando archivo service-account.json');
+    console.log(`[Firebase Admin] Usando archivo ${path.basename(serviceAccountPath)}`);
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     return initializeApp({
       credential: cert(serviceAccount),
-      storageBucket: process.env.FB_ADMIN_STORAGE_BUCKET || firebaseConfig.storageBucket
+      storageBucket: process.env.FB_ADMIN_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || firebaseConfig.storageBucket
     });
   }
 
@@ -40,6 +49,16 @@ export function getAdminApp() {
 }
 
 export function hasAdminCredentials(): boolean {
+  const explicitPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  if (explicitPath && fs.existsSync(path.resolve(process.cwd(), explicitPath))) {
+    return true;
+  }
+
+  const currentProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || firebaseConfig.projectId;
+  if (currentProjectId === 'feliz-de-emprender' && fs.existsSync(path.join(process.cwd(), 'service-account-test.json'))) {
+    return true;
+  }
+
   const serviceAccountPath = path.join(process.cwd(), 'service-account.json');
 
   // En local, solo consideramos Admin válido si hay un service-account explícito.

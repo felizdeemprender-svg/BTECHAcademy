@@ -312,7 +312,8 @@ export default function V2LandingEditorPage() {
           continue;
         }
 
-        const storagePath = `campaigns/${landingData.courseId}/landing/ai_${sec.id}_${Date.now()}.jpg`;
+        const landingId = id || landingData.id || landingData.courseId;
+        const storagePath = `landings/${landingId}/assets/ai_${sec.id}_${Date.now()}.jpg`;
         const sRef = ref(storage, storagePath);
         await uploadString(sRef, data.imageDataUrl, 'data_url');
         const downloadUrl = await getDownloadURL(sRef);

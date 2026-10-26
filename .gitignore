@@ -53,7 +53,7 @@ ts_errors.txt
 deploy_*.txt
 
 # credentials
-service-account.json
+service-account*.json
 
 # local artifacts
 *.mp4

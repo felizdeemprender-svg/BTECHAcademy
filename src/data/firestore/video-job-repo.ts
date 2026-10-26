@@ -18,11 +18,16 @@ export interface VideoJobRecord {
   updatedAt: string;
   result?: Record<string, any> | null;
   error?: string | null;
+  expiresAt?: Date | string;
 }
 
 export class FirestoreVideoJobRepository {
   async createJob(job: VideoJobRecord): Promise<void> {
-    await adminDb.collection('video_jobs').doc(job.jobId).set(job, { merge: true });
+    const expiresAt = job.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 días TTL
+    await adminDb.collection('video_jobs').doc(job.jobId).set({
+      ...job,
+      expiresAt
+    }, { merge: true });
   }
 
   async updateJob(jobId: string, data: Partial<VideoJobRecord>): Promise<void> {

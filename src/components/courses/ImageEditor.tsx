@@ -60,7 +60,7 @@ export function ImageEditor({
     if (!file) return;
     setUploading(true);
     try {
-      const storagePath = `campaigns/${courseId}/${channel}/${Date.now()}_${file.name}`;
+      const storagePath = `courses/${courseId}/${channel}/${Date.now()}_${file.name}`;
       const sRef = ref(storage, storagePath);
       const snapshot = await uploadBytes(sRef, file);
       const downloadUrl = await getDownloadURL(snapshot.ref);
@@ -105,7 +105,7 @@ export function ImageEditor({
 
       // Subir a Firebase Storage para no exceder el límite de 1MB de Firestore (Data URI)
       toast({ title: 'Subiendo a la nube...', description: 'Optimizando la imagen generada...' });
-      const storagePath = `campaigns/${courseId}/${channel}/ai_${Date.now()}.jpg`;
+      const storagePath = `courses/${courseId}/${channel}/ai_${Date.now()}.jpg`;
       const sRef = ref(storage, storagePath);
       await uploadString(sRef, data.imageDataUrl, 'data_url');
       const downloadUrl = await getDownloadURL(sRef);

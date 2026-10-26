@@ -406,7 +406,7 @@ export function TemplateEditor({
         let imageUrl = sl.imageUrl || '';
         if (imageUrl.startsWith('data:')) {
           const blob = await fetch(imageUrl).then(r => r.blob());
-          const snap = await uploadBytes(ref(storage, `campaigns/${selectedCourseId}/assets/slide_${sIdx}_${i}_${Date.now()}.jpg`), blob);
+          const snap = await uploadBytes(ref(storage, `courses/${selectedCourseId}/assets/slide_${sIdx}_${i}_${Date.now()}.jpg`), blob);
           imageUrl = await getDownloadURL(snap.ref);
         }
         return {

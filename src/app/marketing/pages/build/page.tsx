@@ -797,7 +797,7 @@ function BuilderContent() {
       if (storage) {
         try {
           for (const pack of packs) {
-            const sRef = ref(storage, `campaigns/${pageId}/exports/${pack.name}_pack.txt`);
+            const sRef = ref(storage, `landings/${pageId}/exports/${pack.name}_pack.txt`);
             await uploadBytes(sRef, new Blob([pack.content], { type: 'text/plain' }));
             exportUrls[`${pack.name}ExportUrl`] = await getDownloadURL(sRef);
           }
@@ -847,7 +847,7 @@ function BuilderContent() {
       console.log('☁️ Ejecutando Lazy Upload de imágenes seleccionadas en pack multimedia...');
       let finalData = pageData;
       if (storage) {
-        finalData = await uploadPendingImagesInObject(pageData, storage, `campaigns/${pageId}/assets`);
+        finalData = await uploadPendingImagesInObject(pageData, storage, `landings/${pageId}/assets`);
       } else {
         console.warn("Storage no disponible. Las imágenes base64 no se subirán.");
       }

@@ -5,7 +5,6 @@
  * El borrado NO toca Drive (la limpieza sigue en la página, sin cambios).
  */
 import { err, ok, type Result } from '@/domain/shared/result';
-import { getStorage } from 'firebase-admin/storage';
 import {
   notFound,
   unavailable,
@@ -76,15 +75,16 @@ export async function removeCampaign(
     
     // Hard Delete: Limpieza de assets en Firebase Storage
     try {
-      const bucket = getStorage().bucket();
+      const { adminStorage } = await import('@/firebase/admin');
+      const bucket = adminStorage.bucket();
       const prefix = `campaigns/${id}/`;
       const [files] = await bucket.getFiles({ prefix });
       if (files.length > 0) {
         console.log(`[CascadeDelete] Borrando ${files.length} archivos de Storage para campaña ${id}`);
-        await Promise.all(files.map(f => f.delete()));
+        await Promise.all(files.map((f: any) => f.delete()));
       }
     } catch (storageError: any) {
-      console.warn(`[CascadeDelete] Falló limpieza de storage para campaña ${id}`, storageError.message);
+      console.warn(`[CascadeDelete] Falló limpieza de storage para campaña ${id}:`, storageError?.message || storageError);
     }
 
     await repo.remove(id);

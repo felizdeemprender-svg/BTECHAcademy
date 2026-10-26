@@ -127,6 +127,16 @@ export async function handleDeleteCampaign(
       if (page && page.type === 'campaign_pack') {
         console.log(`[CascadeDelete] Borrando pack multimedia ${page.id} asociado a la campaña ${id}`);
         await gateway.deleteDoc('salesPages', existing.salesPageId);
+        try {
+          const { adminStorage } = await import('@/firebase/admin');
+          const bucket = adminStorage.bucket();
+          await Promise.allSettled([
+            bucket.deleteFiles({ prefix: `landings/${existing.salesPageId}/` }),
+            bucket.deleteFiles({ prefix: `campaigns/${existing.salesPageId}/` }),
+          ]);
+        } catch (storageErr: any) {
+          console.warn(`[CascadeDelete:Storage] Error al limpiar Storage del pack ${existing.salesPageId}:`, storageErr?.message);
+        }
       }
     } catch (e) {
       console.error(`[CascadeDelete] Falló al borrar pack asociado ${existing.salesPageId}`, e);
