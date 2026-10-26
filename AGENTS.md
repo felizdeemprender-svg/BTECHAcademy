@@ -76,8 +76,51 @@ Archivos a mantener sincronizados con el código:
 Para evitar romper el despliegue en producción y respetar la autoridad del usuario sobre el control de versiones, los agentes deben adherirse **estrictamente** al siguiente procedimiento:
 
 1. **CERO OPERACIONES DE GIT POR DEFECTO:** Está **ESTRICTAMENTE PROHIBIDO** ejecutar comandos de git (`git add`, `git commit`, `git checkout -b`, `git push`) bajo cualquier circunstancia a menos que el usuario lo solicite de manera explícita (ej: "hacé el commit", "creá la rama", "subí a git").
-2. **Nunca tocar `main`:** Si el usuario pide un commit, nunca se debe hacer sobre `main`.
+2. **Nunca tocar `main` directamente:** Si el usuario pide un commit, nunca se debe hacer sobre `main`. Siempre se debe empaquetar en ramas de feature o fix (`feat/*`, `fix/*`).
 3. **Ciclo de Validación (Obligatorio antes de empaquetar):**
    - Ejecutar `npm run typecheck` (tsc --noEmit) para comprobar el baseline (actualmente 0 errores). **No se debe avanzar si hay errores nuevos.**
    - Ejecutar `npm run test` para asegurar que el refactor no rompa la lógica del dominio.
 4. **Handoff:** El usuario siempre tiene la última palabra para realizar el `git push` o el merge manualmente. No asumas el control del repositorio.
+5. **Despliegues Exclusivos vía Git (GitOps):** Queda terminantemente prohibido realizar despliegues manuales o directos de la aplicación web por CLI (como `firebase deploy --only hosting`). Todos los despliegues de la aplicación, tanto en **Testing** como en **Producción**, deben realizarse **exclusivamente a través de Git** mediante push/merge a sus ramas designadas vinculadas a App Hosting / CI-CD. Solo se permite el uso de Firebase CLI para despliegue de reglas e índices de infraestructura (`firestore`, `storage`).
+
+---
+
+## Directiva Mandatoria: Ciclo de Promoción de 3 Etapas (Desarrollo -> Testing -> Producción)
+
+Queda establecido como protocolo inquebrantable el ciclo de promoción escalonado en 3 ambientes aislados, gobernado por Git:
+
+```
+[ Rama Feature / Local ] ──(Validación Técnica)──> [ Entorno de Testing ] ──(Confirmación de Usuario)──> [ Producción ]
+     (.env.local)                                    (feliz-de-emprender)                                  (btechacademy-8b329)
+                                                      Deploy vía Git (Rama test)                            Deploy vía Git (Rama main)
+```
+
+### Reglas del Ciclo de Vida:
+
+1. **Etapa 1: Cierre de Desarrollo Local**
+   - Todo nuevo desarrollo, refactorización o corrección se realiza en una rama aislada (`feat/*`, `fix/*`).
+   - El entorno local (`.env.local` y `npm run dev`) apunta por defecto al proyecto de Testing (`feliz-de-emprender`), protegiendo la base y el Storage de producción de escrituras de desarrollo.
+   - Antes de cerrar el desarrollo, es obligatorio superar el ciclo de validación (`npm run typecheck` con 0 errores y `npm run test` con 100% de suites aprobadas).
+
+2. **Etapa 2: Pasaje Obligatorio y Despliegue en Testing vía Git**
+   - Una vez cerrado y validado el desarrollo local, el cambio se promueve a Testing **exclusivamente mediante Git** (push o PR/merge hacia la rama de testing, ej: `test` o `develop`).
+   - El despliegue de la aplicación en la nube es automatizado por el pipeline de Git.
+   - Si hubo cambios en esquemas de Firestore, índices o reglas de Storage, desplegarlos previamente a Testing: `firebase deploy --only firestore,storage --project feliz-de-emprender`.
+   - Se realizan las pruebas funcionales, subidas multimedia o verificaciones en el entorno de Testing.
+   - **Garantía de Aislamiento:** Las URLs de almacenamiento deben apuntar exclusivamente a `feliz-de-emprender.firebasestorage.app`.
+   - **Bloqueo a Producción:** Ningún código o cambio estructural puede promoverse a Producción sin haber sido probado y **confirmado explícitamente por el usuario** en Testing.
+
+3. **Etapa 3: Pasaje y Despliegue a Producción vía Git (Cierre Definitivo)**
+   - Solo tras la **confirmación expresa del usuario** de que todo funciona de forma impecable en Testing, se autoriza la promoción a Producción (`btechacademy-8b329`).
+   - El despliegue a producción se realiza **estrictamente vía Git** mediante merge/push hacia la rama principal (`main` / `production`), disparando el build automático en App Hosting (`btechacademy-pro`).
+   - Si hubo ajustes en índices con TTL, desplegarlos a producción: `firebase deploy --only firestore:indexes --project btechacademy-8b329`.
+   - Queda bloqueado cualquier despliegue manual a producción que eluda el historial de Git.
+
+### Herramientas del Sistema de 3 Entornos:
+- `npm run dev`: Servidor local conectado al entorno de Testing (`feliz-de-emprender`).
+- `npm run dev:prod`: Servidor local conectado a Producción (solo para diagnósticos de emergencia).
+- `.env.local`: Variables de Testing activas en la máquina local.
+- `.env.production`: Plantilla resguardada con las credenciales de producción.
+- `service-account-test.json`: Clave de servicio para Testing (ignorada en Git).
+- `service-account.json`: Clave de servicio para Producción (ignorada en Git).
+
