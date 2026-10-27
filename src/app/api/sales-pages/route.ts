@@ -128,6 +128,8 @@ export async function DELETE(req: NextRequest) {
     }
     const searchParams = req.nextUrl.searchParams;
     const pageId = searchParams.get('pageId');
+    const companyId = searchParams.get('companyId') || undefined;
+    const callerRole = searchParams.get('callerRole') || (caller.isAdmin || caller.isSuperAdmin ? 'admin' : undefined);
 
     if (!pageId) {
       return NextResponse.json({ error: 'Missing pageId' }, { status: 400 });
@@ -135,8 +137,10 @@ export async function DELETE(req: NextRequest) {
 
     await deleteUseCase.execute({
       uid: caller.uid,
-      isAdmin: caller.isAdmin,
-      pageId
+      isAdmin: caller.isAdmin || caller.isSuperAdmin === true,
+      pageId,
+      companyId,
+      callerRole
     });
 
     // Cascade delete de assets en Storage (carpeta canónica y legacy)

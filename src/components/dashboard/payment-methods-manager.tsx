@@ -494,8 +494,9 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                   <AccordionItem value="1" className="border-b-0">
                     <AccordionTrigger className="hover:no-underline font-bold text-danger text-xs">1. Portal de Integración</AccordionTrigger>
                     <AccordionContent className="text-muted-foreground space-y-2 text-xs">
-                      <p>Regístrate en el <a href="https://developers.globalgetnet.com/" target="_blank" className="text-danger font-bold inline-flex items-center gap-1 hover:underline">Developer Portal de Getnet <ExternalLink className="h-3 w-3" /></a> para solicitar acceso a las credenciales de la API.</p>
-                      <p>Tu <strong>Seller ID</strong> te lo asignará tu ejecutivo comercial.</p>
+                      <p>Consulta la documentación oficial en <a href="https://docs.globalgetnet.com/" target="_blank" className="text-danger font-bold inline-flex items-center gap-1 hover:underline">Getnet Docs <ExternalLink className="h-3 w-3" /></a>.</p>
+                      <p>Accede al panel de clientes en <a href="https://portal.globalgetnet.com/" target="_blank" className="text-danger font-bold inline-flex items-center gap-1 hover:underline">Getnet Portal <ExternalLink className="h-3 w-3" /></a>.</p>
+                      <p>Tu <strong>Seller ID</strong> es tu número de Afiliación comercial. Las credenciales de API (Client ID y Client Secret) se solicitan al soporte técnico de e-commerce (consultasecommerce@getnet.com.ar).</p>
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="2" className="border-b-0">

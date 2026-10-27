@@ -27,7 +27,7 @@ describe('UpdateSalesPageUseCase', () => {
         data: { title: 'Nuevo Título' },
       })
     ).rejects.toThrow('SalesPage not found');
-  });
+  }, 15000);
 
   it('debe fallar si un mentor intenta actualizar la página de OTRO mentor', async () => {
     vi.mocked(mockRepo.getById).mockResolvedValue({

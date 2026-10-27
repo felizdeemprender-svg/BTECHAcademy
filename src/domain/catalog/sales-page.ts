@@ -32,6 +32,7 @@ export const SalesPageSchema = z.object({
   mentorId: z.string().min(1, 'mentorId vacío'),
   title: z.string().min(1, 'título vacío'),
   courseId: z.string().nullish(),
+  companyId: z.string().nullish(),
   productId: z.string().nullish(),
   productType: z.string().nullish(),
   type: SalesPageTypeSchema.default('campaign_pack'),

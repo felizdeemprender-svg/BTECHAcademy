@@ -168,7 +168,46 @@ describe('Catalog Course Management Use Cases', () => {
   });
 
   describe('deleteCourse', () => {
-    it('debe borrar lógicamente si es el dueño', async () => {
+    it('debe fallar con VALIDATION si faltan campos obligatorios', async () => {
+      const deleter = createMockDeleter();
+      const result = await deleteCourse(
+        { reader: createMockReader(), deleter },
+        { id: '' }
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('VALIDATION');
+      }
+      expect(deleter.deleteCourse).not.toHaveBeenCalled();
+    });
+
+    it('debe fallar con NOT_FOUND si el curso no existe', async () => {
+      const deleter = createMockDeleter();
+      const result = await deleteCourse(
+        { reader: createMockReader(null), deleter },
+        { id: 'non-existent', mentorId: 'tutor-1' }
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('NOT_FOUND');
+      }
+      expect(deleter.deleteCourse).not.toHaveBeenCalled();
+    });
+
+    it('debe fallar con FORBIDDEN si un usuario ajeno intenta borrar el curso', async () => {
+      const deleter = createMockDeleter();
+      const result = await deleteCourse(
+        { reader: createMockReader(), deleter },
+        { id: 'course-1', mentorId: 'hacker-user' }
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('FORBIDDEN');
+      }
+      expect(deleter.deleteCourse).not.toHaveBeenCalled();
+    });
+
+    it('debe borrar si es el dueño directo del curso', async () => {
       const deleter = createMockDeleter();
       const result = await deleteCourse(
         { reader: createMockReader(), deleter },
@@ -176,6 +215,61 @@ describe('Catalog Course Management Use Cases', () => {
       );
       expect(result.ok).toBe(true);
       expect(deleter.deleteCourse).toHaveBeenCalledWith('course-1');
+    });
+
+    it('debe permitir a un ADMIN borrar cualquier curso', async () => {
+      const deleter = createMockDeleter();
+      const result = await deleteCourse(
+        { reader: createMockReader(), deleter },
+        { id: 'course-1', mentorId: 'admin-user', callerRole: 'admin' }
+      );
+      expect(result.ok).toBe(true);
+      expect(deleter.deleteCourse).toHaveBeenCalledWith('course-1');
+    });
+
+    it('debe permitir a la EMPRESA titular borrar un curso creado por su tutor', async () => {
+      const companyCourse = {
+        ...mockCourse,
+        mentorId: 'tutor-subordinate',
+        companyId: 'company-fastoria',
+      } as unknown as Course;
+
+      const deleter = createMockDeleter();
+      const result = await deleteCourse(
+        { reader: createMockReader(companyCourse), deleter },
+        {
+          id: 'course-1',
+          mentorId: 'supervisor-uid',
+          callerRole: 'empresa',
+          companyId: 'company-fastoria',
+        }
+      );
+      expect(result.ok).toBe(true);
+      expect(deleter.deleteCourse).toHaveBeenCalledWith('course-1');
+    });
+
+    it('debe denegar el borrado a un rol empresa ajeno a la organización del curso', async () => {
+      const companyCourse = {
+        ...mockCourse,
+        mentorId: 'tutor-1',
+        companyId: 'company-A',
+      } as unknown as Course;
+
+      const deleter = createMockDeleter();
+      const result = await deleteCourse(
+        { reader: createMockReader(companyCourse), deleter },
+        {
+          id: 'course-1',
+          mentorId: 'supervisor-b',
+          callerRole: 'empresa',
+          companyId: 'company-B',
+        }
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('FORBIDDEN');
+      }
+      expect(deleter.deleteCourse).not.toHaveBeenCalled();
     });
   });
 });

@@ -9,15 +9,11 @@ export function getAdminApp() {
   if (getApps().length > 0) return getApp();
 
   const explicitPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-  let serviceAccountPath = explicitPath ? path.resolve(process.cwd(), explicitPath) : path.join(process.cwd(), 'service-account.json');
-
-  const currentProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || firebaseConfig.projectId;
-  if (!explicitPath && currentProjectId === 'feliz-de-emprender') {
-    const testPath = path.join(process.cwd(), 'service-account-test.json');
-    if (fs.existsSync(testPath)) {
-      serviceAccountPath = testPath;
-    }
-  }
+  let serviceAccountPath = explicitPath 
+    ? path.resolve(process.cwd(), explicitPath) 
+    : (fs.existsSync(path.join(process.cwd(), 'service-account-test.json'))
+        ? path.join(process.cwd(), 'service-account-test.json')
+        : path.join(process.cwd(), 'service-account.json'));
   
   // 1. Desarrollo Local con archivo de cuenta de servicio
   if (fs.existsSync(serviceAccountPath)) {

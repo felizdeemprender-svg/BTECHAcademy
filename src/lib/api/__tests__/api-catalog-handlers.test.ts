@@ -13,6 +13,7 @@ import type {
 } from '@/data/firestore/gateway';
 import {
   handleCreateCourse,
+  handleDeleteCourse,
   handleFreeEnrollment,
   handleGetMarketplace,
   handleGetMarketplaceCatalog,
@@ -146,6 +147,11 @@ class FakeGateway implements FirestoreGateway {
   }
 
   async updateDoc(): Promise<void> {}
+
+  async mergeDoc(collectionPath: string, id: string, data: Record<string, unknown>): Promise<void> {
+    if (!this.store[collectionPath]) this.store[collectionPath] = {};
+    this.store[collectionPath][id] = { ...this.store[collectionPath][id], ...data };
+  }
 
   async deleteDoc(): Promise<void> {
     throw new Error('no usado');
@@ -364,5 +370,81 @@ describe('handleFreeEnrollment (público, sin auth)', () => {
     expect(res.status).toBe(500);
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe('Error interno del servidor');
+  });
+});
+
+describe('handleDeleteCourse', () => {
+  function setup() {
+    return new FakeGateway({
+      courses: {
+        c1: {
+          mentorId: 'm1',
+          title: 'Curso 1',
+          categoryId: 'cat-1',
+          status: 'draft',
+          isActive: true,
+        },
+        c_corp: {
+          mentorId: 'tutor_sub',
+          companyId: 'comp_fastoria',
+          title: 'Curso Corp',
+          categoryId: 'cat-1',
+          status: 'draft',
+          isActive: true,
+        },
+      },
+    });
+  }
+
+  it('400 si falta mentorId', async () => {
+    const gateway = setup();
+    const res = await handleDeleteCourse(gateway, 'c1', {});
+    expect(res.status).toBe(400);
+  });
+
+  it('404 si el curso no existe', async () => {
+    const gateway = setup();
+    const res = await handleDeleteCourse(gateway, 'missing_course', { mentorId: 'm1' });
+    expect(res.status).toBe(404);
+  });
+
+  it('403 si un usuario ajeno intenta borrar el curso', async () => {
+    const gateway = setup();
+    const res = await handleDeleteCourse(gateway, 'c1', { mentorId: 'hacker' });
+    expect(res.status).toBe(403);
+  });
+
+  it('200 si el mentor dueño borra su propio curso', async () => {
+    const gateway = setup();
+    const res = await handleDeleteCourse(gateway, 'c1', { mentorId: 'm1' });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.id).toBe('c1');
+    expect(gateway.store.courses.c1.isActive).toBe(false);
+  });
+
+  it('200 si la empresa titular borra el curso creado por su tutor', async () => {
+    const gateway = setup();
+    const res = await handleDeleteCourse(gateway, 'c_corp', {
+      mentorId: 'supervisor_uid',
+      callerRole: 'empresa',
+      companyId: 'comp_fastoria',
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.id).toBe('c_corp');
+    expect(gateway.store.courses.c_corp.isActive).toBe(false);
+  });
+
+  it('403 si una empresa ajena intenta borrar el curso', async () => {
+    const gateway = setup();
+    const res = await handleDeleteCourse(gateway, 'c_corp', {
+      mentorId: 'other_supervisor',
+      callerRole: 'empresa',
+      companyId: 'other_company',
+    });
+    expect(res.status).toBe(403);
   });
 });

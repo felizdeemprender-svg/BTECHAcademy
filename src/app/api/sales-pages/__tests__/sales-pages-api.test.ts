@@ -19,10 +19,15 @@ vi.mock('@/domain/sales-pages/use-cases/update-sales-page-use-case', () => {
     }
   };
 });
+const { mockExecuteDelete, mockDeleteFiles } = vi.hoisted(() => ({
+  mockExecuteDelete: vi.fn().mockResolvedValue(undefined),
+  mockDeleteFiles: vi.fn().mockResolvedValue([{}]),
+}));
+
 vi.mock('@/domain/sales-pages/use-cases/delete-sales-page-use-case', () => {
   return {
     DeleteSalesPageUseCase: class {
-      execute = vi.fn().mockResolvedValue(undefined);
+      execute = mockExecuteDelete;
     }
   };
 });
@@ -44,6 +49,15 @@ vi.mock('@/data/firestore/admin-sales-page-repo', () => {
     }
   };
 });
+
+// Mock Admin Storage para pruebas de Cascade Delete
+vi.mock('@/firebase/admin', () => ({
+  adminStorage: {
+    bucket: () => ({
+      deleteFiles: mockDeleteFiles
+    })
+  }
+}));
 
 describe('Sales Pages API Handlers', () => {
   const mockAuthenticateCaller = authenticateCaller as import('vitest').Mock;
@@ -145,7 +159,7 @@ describe('Sales Pages API Handlers', () => {
       expect(res.status).toBe(400);
     });
 
-    it('debe borrar una landing correctamente', async () => {
+    it('debe borrar una landing correctamente y disparar cascade delete en Storage', async () => {
       mockAuthenticateCaller.mockResolvedValue({ uid: 'mentor-1', isAdmin: false });
       const req = new NextRequest('http://localhost/api/sales-pages?pageId=del-1');
       
@@ -154,6 +168,43 @@ describe('Sales Pages API Handlers', () => {
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.pageId).toBe('del-1');
+
+      expect(mockExecuteDelete).toHaveBeenCalledWith(
+        expect.objectContaining({
+          uid: 'mentor-1',
+          isAdmin: false,
+          pageId: 'del-1'
+        })
+      );
+      expect(mockDeleteFiles).toHaveBeenCalledWith({ prefix: 'landings/del-1/' });
+      expect(mockDeleteFiles).toHaveBeenCalledWith({ prefix: 'campaigns/del-1/' });
+    });
+
+    it('debe propagar callerRole y companyId al caso de uso para soporte B2B', async () => {
+      mockAuthenticateCaller.mockResolvedValue({ uid: 'supervisor-1', isAdmin: false });
+      const req = new NextRequest('http://localhost/api/sales-pages?pageId=del-corp&companyId=comp-123&callerRole=empresa');
+      
+      const res = await DELETE(req);
+      expect(res.status).toBe(200);
+      expect(mockExecuteDelete).toHaveBeenCalledWith({
+        uid: 'supervisor-1',
+        isAdmin: false,
+        pageId: 'del-corp',
+        companyId: 'comp-123',
+        callerRole: 'empresa'
+      });
+    });
+
+    it('debe responder 200 aunque la limpieza física en Storage falle (resiliencia no bloqueante)', async () => {
+      mockAuthenticateCaller.mockResolvedValue({ uid: 'mentor-1', isAdmin: false });
+      mockDeleteFiles.mockRejectedValueOnce(new Error('Storage bucket unreachable'));
+      const req = new NextRequest('http://localhost/api/sales-pages?pageId=del-resilient');
+      
+      const res = await DELETE(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.pageId).toBe('del-resilient');
     });
   });
 });

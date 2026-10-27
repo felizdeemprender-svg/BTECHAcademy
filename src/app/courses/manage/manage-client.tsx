@@ -199,9 +199,14 @@ export default function ManageCoursesClient() {
   const { data: termsConfig } = useDoc(termsConfigRef);
 
   // Calcular roles
-  const isAdmin = profile?.roles.includes('admin');
-  const isMentor = profile?.roles.includes('mentor');
-  const isEmpresa = profile?.roles.includes('empresa') || profile?.companyRole === 'owner';
+  const isAdmin = Boolean(profile?.roles?.includes('admin'));
+  const isMentor = Boolean(profile?.roles?.includes('mentor') || profile?.isMentor);
+  const isEmpresa = Boolean(
+    profile?.roles?.includes('empresa') || 
+    profile?.companyRole === 'owner' || 
+    profile?.role === 'supervisor' || 
+    profile?.isEnterprise
+  );
   const isCompanyTutor = Boolean(profile?.companyId && profile?.companyRole === 'tutor');
   const hasPermission = isAdmin || isMentor || isEmpresa;
 
@@ -384,17 +389,43 @@ export default function ManageCoursesClient() {
     if (!selectedId) return;
     setIsDeleting(true);
     try {
-      // Eliminar landings asociadas primero
+      // 1. Eliminar landings asociadas primero usando el query param canónico pageId
+      const companyId = profile?.companyId || profile?.uid;
+      const callerRole = isAdmin ? 'admin' : (isEmpresa ? 'empresa' : 'mentor');
       for (const landing of associatedLandings) {
-        await fetch(`/api/sales-pages?id=${landing.id}`, { method: 'DELETE' });
+        await fetch(`/api/sales-pages?pageId=${landing.id}&companyId=${companyId || ''}&callerRole=${callerRole}`, { 
+          method: 'DELETE' 
+        });
       }
-      // Eliminar curso
+
+      // 2. Eliminar curso a través del endpoint transaccional del backend
+      const res = await fetch(`/api/courses/${selectedId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mentorId: profile?.uid,
+          callerRole,
+          companyId,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'No se pudo eliminar el curso.');
+      }
+
+      // 3. Eliminar documento local para sincronización reactiva inmediata
       const docRef = doc(db, 'courses', selectedId);
-      await deleteDoc(docRef);
+      await deleteDoc(docRef).catch(() => {});
       
       toast({ title: associatedLandings.length > 0 ? 'Curso y landings eliminados' : 'Curso eliminado' });
       setIsDeleteDialogOpen(false);
     } catch(error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al eliminar',
+        description: error.message || 'No tienes permisos suficientes para eliminar este curso.'
+      });
       const docRef = doc(db, 'courses', selectedId);
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'delete' }));
     } finally {
@@ -832,7 +863,15 @@ export default function ManageCoursesClient() {
 
   const filteredCourses = courses?.filter(c => c.title?.toLowerCase().includes(searchTerm.toLowerCase()));
   
-  const otherCourses = courses?.filter(c => c.id !== selectedId && (isAdmin || c.mentorId === profile?.uid));
+  const canManageCourse = useCallback((course: any) => {
+    if (!profile) return false;
+    if (isAdmin) return true;
+    if (course.mentorId === profile.uid) return true;
+    if (isEmpresa && course.companyId && (course.companyId === profile.companyId || course.companyId === profile.uid)) return true;
+    return false;
+  }, [profile, isAdmin, isEmpresa]);
+
+  const otherCourses = courses?.filter(c => c.id !== selectedId && canManageCourse(c));
   const filteredOtherCourses = otherCourses?.filter(c => c.title?.toLowerCase().includes(associatedSearchTerm.toLowerCase()));
 
   const renderCourseActionsMenu = (course: any, isOwner: boolean) => (
@@ -984,7 +1023,7 @@ export default function ManageCoursesClient() {
       align: 'right',
       className: 'px-6',
       cell: (course) => {
-        const isOwner = course.mentorId === profile?.uid;
+        const isOwner = canManageCourse(course);
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
@@ -1056,7 +1095,7 @@ export default function ManageCoursesClient() {
                 </div>
               )}
               mobileCardFooter={(course: any) => {
-                const isOwner = course.mentorId === profile?.uid;
+                const isOwner = canManageCourse(course);
                 return (
                   <div className="flex justify-end">
                     <DropdownMenu>
