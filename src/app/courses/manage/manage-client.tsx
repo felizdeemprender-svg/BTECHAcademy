@@ -435,6 +435,10 @@ export default function ManageCoursesClient() {
         ownerUid: course.mentorId
       });
 
+      if (!modResult || typeof modResult.isSensitive !== 'boolean') {
+        throw new Error('La auditoría de IA no devolvió una evaluación válida.');
+      }
+
       const logRef = doc(collection(db, 'moderation-logs'));
       const logData = {
         id: logRef.id,

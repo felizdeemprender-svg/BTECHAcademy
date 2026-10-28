@@ -9,10 +9,8 @@ try {
 } catch {}
 
 /**
- * Motor Genkit Original con Sensor de Identidad BTECH
- */
-/**
  * Motor Genkit Original (Instancia interna)
+ * Se inicializa perezosamente para capturar variables de entorno en runtime.
  */
 let _genkitInstance: any = null;
 let _cachedApiKey: string | undefined = undefined;
@@ -136,7 +134,8 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
     }
   }
 
-  // 2. Ejecutar la IA (Usando la instancia interna para evitar recursión infinita)
+  // 2. Ejecutar la IA (Instanciamos fuera del contexto asíncrono para evitar "Cannot define new actions at runtime")
+  const instance = getGenkitInstance();
   const generateOptions = { ...options };
   generateOptions.context = {
     ...(generateOptions.context || {}),
@@ -147,11 +146,11 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
   let response: any;
   try {
     response = await runWithContext(generateOptions.context, () =>
-      getGenkitInstance().generate(generateOptions)
+      instance.generate(generateOptions)
     );
   } catch (err: any) {
     if (err?.message?.includes('Async context is not initialized')) {
-      response = await getGenkitInstance().generate(generateOptions);
+      response = await instance.generate(generateOptions);
     } else {
       throw err;
     }
@@ -216,6 +215,7 @@ export async function embedWithAuditing(options: any, actionName: string = 'ia_e
     }
   }
 
+  const instance = getGenkitInstance();
   const embedOptions = { ...options };
   embedOptions.context = {
     ...(embedOptions.context || {}),
@@ -226,11 +226,11 @@ export async function embedWithAuditing(options: any, actionName: string = 'ia_e
   let response: any;
   try {
     response = await runWithContext(embedOptions.context, () =>
-      getGenkitInstance().embed(embedOptions)
+      instance.embed(embedOptions)
     );
   } catch (err: any) {
     if (err?.message?.includes('Async context is not initialized')) {
-      response = await getGenkitInstance().embed(embedOptions);
+      response = await instance.embed(embedOptions);
     } else {
       throw err;
     }
