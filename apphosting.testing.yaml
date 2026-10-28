@@ -31,15 +31,15 @@ env:
     value: G-8ZV72M87ZC
     availability: [BUILD, RUNTIME]
 
-  # Google GenAI / Gemini
+  # Google GenAI / Gemini (Cloud Secret Manager)
   - variable: GOOGLE_GENAI_API_KEY
-    value: AIzaSyBd6cFESP0MZ5P2FQ7BZiN_EC97cu93Huw
+    secret: GEMINI_API_KEY
     availability: [BUILD, RUNTIME]
   - variable: GEMINI_API_KEY
-    value: AIzaSyBd6cFESP0MZ5P2FQ7BZiN_EC97cu93Huw
+    secret: GEMINI_API_KEY
     availability: [BUILD, RUNTIME]
   - variable: GOOGLE_API_KEY
-    value: AIzaSyBd6cFESP0MZ5P2FQ7BZiN_EC97cu93Huw
+    secret: GEMINI_API_KEY
     availability: [BUILD, RUNTIME]
   - variable: GOOGLE_TTS_API_KEY
     value: AIzaSyC8hI8TG6b2r4BQk7lmL_HUMxQPRs96jo4

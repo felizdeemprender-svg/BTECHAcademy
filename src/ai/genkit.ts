@@ -15,13 +15,16 @@ try {
  * Motor Genkit Original (Instancia interna)
  */
 let _genkitInstance: any = null;
+let _cachedApiKey: string | undefined = undefined;
 
 function getGenkitInstance() {
-  if (!_genkitInstance) {
+  const currentKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || 'DUMMY_KEY_FOR_BUILD';
+  if (!_genkitInstance || _cachedApiKey !== currentKey) {
+    _cachedApiKey = currentKey;
     _genkitInstance = genkit({
       plugins: [
         googleAI({
-          apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || 'DUMMY_KEY_FOR_BUILD'
+          apiKey: currentKey
         }),
       ],
       model: 'googleai/gemini-2.5-flash',
