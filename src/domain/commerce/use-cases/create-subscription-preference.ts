@@ -24,6 +24,9 @@ export const CreateSubscriptionPreferenceInputSchema = z.object({
   paymentMethodId: z.string().nullish(),
   isUpgrade: z.boolean().optional(),
   upgradePrice: z.number().optional(),
+  countryCode: z.string().optional(),
+  currency: z.string().optional(),
+  exchangeRate: z.number().optional(),
   appUrl: z.string().default('https://FastoriaAcademy.ai'),
 });
 export type CreateSubscriptionPreferenceInput = z.infer<
@@ -55,7 +58,7 @@ export async function createSubscriptionPreference(
   if (!parsed.success) {
     return err(validationError('Plan ID y Email son obligatorios'));
   }
-  const { planId, userId, email, firstName, lastName, paymentMethodId, isUpgrade, upgradePrice, appUrl } =
+  const { planId, userId, email, firstName, lastName, paymentMethodId, isUpgrade, upgradePrice, exchangeRate, appUrl } =
     parsed.data;
 
   if (!planId || !email) {
@@ -134,10 +137,13 @@ export async function createSubscriptionPreference(
   });
 
   const planName = typeof plan.name === 'string' ? plan.name : 'Plan';
+  // Mercado Pago opera en ARS: si viene exchangeRate convertimos el valor USD
+  const unitPriceInArs = exchangeRate && exchangeRate > 0 ? Math.round(finalPrice * exchangeRate) : finalPrice;
+
   const result = await deps.provider.createSubscriptionPreference(accessToken, {
     planId,
     title: isUpgrade ? `Upgrade FastoriaAcademy: ${planName}` : `Suscripción FastoriaAcademy: ${planName}`,
-    unitPrice: finalPrice,
+    unitPrice: unitPriceInArs,
     payer: { email, name: firstName ?? undefined, surname: lastName ?? undefined },
     externalReference,
     successUrl: `${appUrl}/dashboard?payment=success`,

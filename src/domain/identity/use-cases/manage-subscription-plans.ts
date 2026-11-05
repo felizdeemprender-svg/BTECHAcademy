@@ -189,16 +189,26 @@ function normalizePublicPlan(
   source: 'camelCase' | 'kebab-case',
 ): PublicPlanView {
   const data = plan.data;
+  const pricing = data.pricing as Record<string, unknown> | undefined;
+  const entitlements = data.entitlements as Record<string, unknown> | undefined;
+
+  const price = Number((data.price as number) ?? pricing?.amount ?? 0);
+  const limits = data.limits || entitlements?.limits || { maxCourses: 5, maxStudents: 100 };
+  const aiQuotas = data.aiQuotas || entitlements?.aiQuotas || { totalCredits: 0 };
+  const targetAudience = data.targetAudience || (data.isEnterprise ? 'enterprise' : 'tutor');
+  const durationMonths = Number((data.durationMonths as number) ?? pricing?.minimumCommitmentMonths ?? 12);
+
   return {
     ...data,
     id: plan.id,
     _source: source,
     name: (data.name as string) || 'Plan sin nombre',
-    price: Number((data.price as number) || 0),
+    price,
     isActive: (data.isActive as boolean) ?? true,
-    aiQuotas: data.aiQuotas || { totalCredits: 0 },
-    limits: data.limits || { maxCourses: 5, maxStudents: 100 },
-    targetAudience: data.targetAudience || (data.isEnterprise ? 'enterprise' : 'tutor'),
+    aiQuotas,
+    limits,
+    targetAudience,
+    durationMonths,
   };
 }
 

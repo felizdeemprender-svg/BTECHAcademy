@@ -278,6 +278,15 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                           <Badge variant="outline" className="text-[9px] uppercase font-black text-muted-foreground border-border">
                             {method.type === 'mercadopago' ? 'Mercado Pago' : method.type === 'getnet' ? 'Getnet' : method.type === 'stripe' ? 'Stripe' : 'Transferencia'}
                           </Badge>
+                          {method.type === 'stripe' ? (
+                            <Badge variant="outline" className="text-[9px] uppercase font-black text-violet-600 border-violet-200 bg-violet-50">
+                              Internacional (LATAM / Global)
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[9px] uppercase font-black text-sky-600 border-sky-200 bg-sky-50">
+                              Nacional (Argentina / ARS)
+                            </Badge>
+                          )}
                           {method.capabilities?.directPayment && (
                             <Badge variant="outline" className="text-[9px] uppercase font-black text-primary border-primary/20 bg-primary/5">
                               Único
@@ -372,14 +381,31 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                     <SelectValue placeholder="Seleccionar plataforma" />
                   </SelectTrigger>
                   <SelectContent className="border-none">
-                    <SelectItem value="mercadopago" className="font-bold py-3">Mercado Pago</SelectItem>
-                    <SelectItem value="getnet" className="font-bold py-3">Getnet (Santander)</SelectItem>
-                    <SelectItem value="transfer" className="font-bold py-3">Transferencia Bancaria</SelectItem>
-                    <SelectItem value="stripe" className="font-bold py-3">Stripe (Global)</SelectItem>
+                    <SelectItem value="mercadopago" className="font-bold py-3">Mercado Pago (Argentina - ARS)</SelectItem>
+                    <SelectItem value="getnet" className="font-bold py-3">Getnet Santander (Argentina - ARS)</SelectItem>
+                    <SelectItem value="transfer" className="font-bold py-3">Transferencia CBU/CVU (Argentina - ARS)</SelectItem>
+                    <SelectItem value="stripe" className="font-bold py-3">Stripe (Internacional - México, Colombia, Chile, Perú, Global)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+
+            {/* Banner explicativo de ámbito territorial */}
+            {formData.type === 'stripe' ? (
+              <div className="p-4 bg-violet-50 border border-violet-200 rounded-2xl text-xs text-violet-900 flex items-start gap-3">
+                <Info className="w-4 h-4 text-violet-600 shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
+                  <strong>Cobros Internacionales:</strong> Stripe te permite recibir pagos con tarjeta de crédito y débito de alumnos en México, Colombia, Chile, Perú, EE.UU. y todo el mundo, cobrando en USD. Si no configuras Stripe, los visitantes internacionales verán tu curso pero el checkout les indicará que coordinen directamente contigo por WhatsApp.
+                </p>
+              </div>
+            ) : (
+              <div className="p-4 bg-sky-50 border border-sky-200 rounded-2xl text-xs text-sky-900 flex items-start gap-3">
+                <Info className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
+                  <strong>Cobros Domésticos en Argentina:</strong> Esta pasarela opera exclusivamente en pesos argentinos (ARS) para alumnos dentro de Argentina, liquidando directamente en tu cuenta bancaria local sin retenciones de comercio exterior.
+                </p>
+              </div>
+            )}
 
             {formData.type === 'mercadopago' ? (
               <div className="p-8 bg-primary/10/50 rounded-lg border border-primary/15 space-y-6">
@@ -513,6 +539,17 @@ export function PaymentMethodsManager({ title, description, collectionPath, info
                 <div className="flex items-center gap-3 mb-2">
                   <ShieldCheck className="h-5 w-5 text-indigo-500" />
                   <span className="text-xs font-black uppercase tracking-widest text-indigo-500">Credenciales Stripe (Global)</span>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">Publishable Key (pk_live_... o pk_test_...)</Label>
+                  <Input 
+                    value={formData.config.publicKey} 
+                    onChange={e => setFormData({...formData, config: { ...formData.config, publicKey: e.target.value }})} 
+                    placeholder="pk_live_..." 
+                    className="bg-white border-none px-6 font-mono text-xs shadow-sm"
+                    size="xl" 
+                  />
                 </div>
                 
                 <div className="space-y-3 relative">

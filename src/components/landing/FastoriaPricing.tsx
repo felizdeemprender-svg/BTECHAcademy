@@ -11,6 +11,14 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-context';
 import { useToast } from '@/hooks/use-toast';
+import { CountryCurrencySelector } from '@/components/commerce/country-currency-selector';
+import {
+  SUPPORTED_COUNTRIES,
+  FALLBACK_RATES,
+  type CountryInfo,
+  type SupportedCurrency,
+} from '@/lib/currency/types';
+import { convertUsdAmount, formatCurrencyAmount } from '@/lib/currency/rates-service';
 
 // ─── Checkout Dialog ──────────────────────────────────────────────────────────
 function CheckoutDialog({
@@ -25,6 +33,9 @@ function CheckoutDialog({
   isProcessing,
   onSubmit,
   upgradeInfo,
+  selectedCountry,
+  onSelectCountry,
+  rates,
 }: {
   open: boolean;
   onClose: () => void;
@@ -37,7 +48,22 @@ function CheckoutDialog({
   isProcessing: boolean;
   onSubmit: (e: React.FormEvent) => void;
   upgradeInfo: any;
+  selectedCountry: CountryInfo;
+  onSelectCountry: (c: CountryInfo) => void;
+  rates: Record<SupportedCurrency, number>;
 }) {
+  const availablePaymentMethods = useMemo(() => {
+    return paymentMethods.filter((method) => {
+      return selectedCountry.allowedGateways.includes(method.type as any);
+    });
+  }, [paymentMethods, selectedCountry]);
+
+  useEffect(() => {
+    if (availablePaymentMethods.length > 0 && !availablePaymentMethods.some((m) => m.id === selectedMethodId)) {
+      setSelectedMethodId(availablePaymentMethods[0].id);
+    }
+  }, [availablePaymentMethods, selectedMethodId, setSelectedMethodId]);
+
   if (!open || !selectedPlan) return null;
 
   return (
@@ -165,18 +191,26 @@ function CheckoutDialog({
                 </div>
               </div>
 
+              {/* Selector de país y moneda referencial */}
+              <CountryCurrencySelector
+                selectedCountryCode={selectedCountry.code}
+                onSelectCountry={onSelectCountry}
+                usdAmount={selectedPlan.price}
+                rates={rates}
+              />
+
               {/* Payment methods */}
-              {selectedPlan?.price > 0 && paymentMethods.length > 0 && (
+              {selectedPlan?.price > 0 && availablePaymentMethods.length > 0 && (
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 mb-3">Método de Pago</p>
                   <div className="space-y-2">
-                    {paymentMethods.map((method) => (
+                    {availablePaymentMethods.map((method) => (
                       <button
                         key={method.id}
                         type="button"
                         onClick={() => setSelectedMethodId(method.id)}
                         className={cn(
-                          "w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all text-left",
+                          "w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all text-left cursor-pointer",
                           selectedMethodId === method.id
                             ? "border-[#1CB899] bg-[#1CB899]/5"
                             : "border-slate-200 hover:border-slate-300 bg-slate-50"
@@ -200,20 +234,47 @@ function CheckoutDialog({
                 </div>
               )}
 
+              {/* Aviso si no hay medios de pago para ese país */}
+              {selectedPlan?.price > 0 && availablePaymentMethods.length === 0 && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs space-y-2">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Suscripción para {selectedCountry.name}</span>
+                  </div>
+                  <p className="text-amber-700 leading-relaxed">
+                    {selectedCountry.isDomesticArgentina
+                      ? 'No se registran medios de cobro automáticos activos en este momento.'
+                      : 'Para suscriptores en este país la activación se realiza mediante asistencia directa.'}
+                  </p>
+                  <a
+                    href={`https://wa.me/5491176411666?text=Hola,%20quiero%20suscribirme%20al%20plan%20${encodeURIComponent(selectedPlan.name)}%20desde%20${encodeURIComponent(selectedCountry.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 font-bold text-[#138d74] underline hover:text-[#0f6f5b]"
+                  >
+                    Contactar por WhatsApp para activar plan <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              )}
+
               {/* Submit */}
               <motion.button
                 type="submit"
-                disabled={isProcessing}
-                whileHover={isProcessing ? {} : { scale: 1.02 }}
-                whileTap={isProcessing ? {} : { scale: 0.98 }}
-                className="w-full py-3.5 rounded-2xl bg-[#1CB899] hover:bg-[#18a287] text-[#0F172A] font-black text-sm shadow-lg shadow-[#1CB899]/25 transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={isProcessing || (selectedPlan?.price > 0 && availablePaymentMethods.length === 0)}
+                whileHover={isProcessing || (selectedPlan?.price > 0 && availablePaymentMethods.length === 0) ? {} : { scale: 1.02 }}
+                whileTap={isProcessing || (selectedPlan?.price > 0 && availablePaymentMethods.length === 0) ? {} : { scale: 0.98 }}
+                className="w-full py-3.5 rounded-2xl bg-[#1CB899] hover:bg-[#18a287] text-[#0F172A] font-black text-sm shadow-lg shadow-[#1CB899]/25 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
                   <Loader2 className="animate-spin w-5 h-5" />
                 ) : upgradeInfo ? (
                   <>Pagar Diferencial ${upgradeInfo.totalUpgradePrice.toFixed(2)} <ArrowRight className="w-4 h-4" /></>
                 ) : selectedPlan?.price > 0 ? (
-                  <>Pagar ${selectedPlan.price} y Comenzar <ArrowRight className="w-4 h-4" /></>
+                  selectedCountry.isDomesticArgentina ? (
+                    <>Pagar ARS ${convertUsdAmount(selectedPlan.price, 'ARS', rates).toLocaleString('es-AR')} y Comenzar <ArrowRight className="w-4 h-4" /></>
+                  ) : (
+                    <>Pagar USD ${selectedPlan.price} y Comenzar <ArrowRight className="w-4 h-4" /></>
+                  )
                 ) : (
                   <>Activar Plan Gratuito <ArrowRight className="w-4 h-4" /></>
                 )}
@@ -237,9 +298,30 @@ function FastoriaPricingContent() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [apiPlans, setApiPlans] = useState<any[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
+
+  // Country and currency state
+  const [selectedCountry, setSelectedCountry] = useState<CountryInfo>(SUPPORTED_COUNTRIES[0]);
+  const [rates, setRates] = useState<Record<SupportedCurrency, number>>(FALLBACK_RATES);
+
+  // Sync country with localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('fastoria_country_code');
+      if (saved) {
+        const found = SUPPORTED_COUNTRIES.find((c) => c.code === saved);
+        if (found) setSelectedCountry(found);
+      }
+    } catch {}
+  }, []);
+
+  const handleCountryChange = (country: CountryInfo) => {
+    setSelectedCountry(country);
+    try {
+      localStorage.setItem('fastoria_country_code', country.code);
+    } catch {}
+  };
 
   // Checkout state
   const [showCheckout, setShowCheckout] = useState(false);
@@ -249,9 +331,21 @@ function FastoriaPricingContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutData, setCheckoutData] = useState({ firstName: '', lastName: '', email: '' });
 
-  // Fetch plans + payment methods
+  // Fetch plans + payment methods + currency rates
   useEffect(() => {
     const fetchData = async () => {
+      try {
+        const ratesRes = await fetch('/api/currency/rates');
+        if (ratesRes.ok) {
+          const ratesData = await ratesRes.json();
+          if (ratesData?.rates) {
+            setRates(ratesData.rates);
+          }
+        }
+      } catch (err) {
+        console.warn('[Pricing] Error loading currency rates:', err);
+      }
+
       try {
         const plansRes = await fetch('/api/plans');
         const plansData = await plansRes.json();
@@ -344,7 +438,7 @@ function FastoriaPricingContent() {
   }, [currentPlan, selectedPlan, profile]);
 
   const getPlanPricing = (plan: any) => {
-    const base = Number(plan.price) || 0;
+    const base = Number(plan.price ?? plan.pricing?.amount) || 0;
     const activePromo = plan.promotions?.periods?.find((pr: any) => {
       if (!pr.isActive) return false;
       const now = Date.now();
@@ -366,14 +460,10 @@ function FastoriaPricingContent() {
       }
     }
 
-    if (billingPeriod === 'annual') {
-      effectiveMonthly = Math.round(effectiveMonthly * (10 / 12) * 100) / 100;
-    }
-
     return {
       priceStr: effectiveMonthly === 0 ? '0' : effectiveMonthly.toFixed(2),
       originalPriceStr: activePromo ? base.toFixed(2) : null,
-      promoLabel: promoLabel || (billingPeriod === 'annual' ? '2 meses bonificados' : ''),
+      promoLabel: promoLabel || '',
     };
   };
 
@@ -394,6 +484,16 @@ function FastoriaPricingContent() {
       return;
     }
 
+    // Si el plan es gratuito ($0) y no hay usuario autenticado, derivar a registro para activar cuenta en campus
+    if (selectedPlan?.price === 0 && !user) {
+      toast({
+        title: 'Crea tu acceso',
+        description: 'Para activar tu plan gratuito, completa tu registro con contraseña en el campus.',
+      });
+      window.location.href = `/auth?plan=${selectedPlan.id}&email=${encodeURIComponent(checkoutData.email)}&name=${encodeURIComponent(checkoutData.firstName)}`;
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const res = await fetch('/api/payments/subscribe', {
@@ -408,6 +508,9 @@ function FastoriaPricingContent() {
           paymentMethodId: selectedMethodId,
           isUpgrade: !!upgradeInfo,
           upgradePrice: upgradeInfo?.totalUpgradePrice,
+          countryCode: selectedCountry.code,
+          currency: selectedCountry.currency,
+          exchangeRate: rates[selectedCountry.currency] || 1,
         }),
       });
       const data = await res.json();
@@ -435,7 +538,7 @@ function FastoriaPricingContent() {
     <>
       <section id="pricing" className="py-24 px-6 bg-[#F8FAFC] relative z-10 border-t border-slate-100">
         <div className="max-w-6xl mx-auto">
-          <Reveal className="text-center max-w-3xl mx-auto mb-12">
+          <Reveal className="text-center max-w-3xl mx-auto mb-10">
             <span className="text-[#1CB899] font-black text-xs uppercase tracking-[0.25em] mb-3 block">
               Planes y Precios
             </span>
@@ -446,43 +549,16 @@ function FastoriaPricingContent() {
               Empezá donde estás. Crecé cuando lo necesites.
             </p>
 
-            {/* Toggle Mensual / Anual */}
-            <div className="mt-8 inline-flex items-center p-1.5 bg-slate-200/80 rounded-full">
-              <button
-                onClick={() => setBillingPeriod('monthly')}
-                className={`relative px-5 py-2 rounded-full text-xs font-bold transition-colors ${
-                  billingPeriod === 'monthly' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {billingPeriod === 'monthly' && (
-                  <motion.span
-                    layoutId="billing-pill"
-                    className="absolute inset-0 bg-white rounded-full shadow-sm"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">Facturación Mensual</span>
-              </button>
-              <button
-                onClick={() => setBillingPeriod('annual')}
-                className={`relative px-5 py-2 rounded-full text-xs font-bold transition-colors ${
-                  billingPeriod === 'annual' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {billingPeriod === 'annual' && (
-                  <motion.span
-                    layoutId="billing-pill"
-                    className="absolute inset-0 bg-white rounded-full shadow-sm"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center gap-1.5">
-                  <span>Facturación Anual</span>
-                  <span className="px-2 py-0.5 rounded-full bg-[#1CB899] text-white text-[10px] font-black">
-                    2 meses bonificados
-                  </span>
-                </span>
-              </button>
+            {/* Selector de País y Moneda Visible en Portada */}
+            <div className="mt-8 max-w-lg mx-auto text-left">
+              <CountryCurrencySelector
+                selectedCountryCode={selectedCountry.code}
+                onSelectCountry={handleCountryChange}
+                rates={rates}
+                showConvertedAmount={false}
+                showDisclaimer={true}
+                className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-sm"
+              />
             </div>
           </Reveal>
 
@@ -521,6 +597,17 @@ function FastoriaPricingContent() {
                 const isCurrent = currentPlan?.id === plan.id;
                 const isUpgrade = !!(currentPlan && plan.price > currentPlan.price);
                 const isDowngrade = !!(currentPlan && plan.price < currentPlan.price && plan.type !== 'free');
+
+                const baseUsdPrice = Number(pricing.priceStr) || 0;
+                const isFree = baseUsdPrice === 0;
+                const isLocalCurrency = selectedCountry.currency !== 'USD';
+                const localPriceNumber = isLocalCurrency && !isFree
+                  ? convertUsdAmount(baseUsdPrice, selectedCountry.currency, rates)
+                  : baseUsdPrice;
+                const formattedNumberOnly = new Intl.NumberFormat('es-AR', {
+                  minimumFractionDigits: isLocalCurrency && !['ARS', 'CLP', 'COP'].includes(selectedCountry.currency) ? 2 : 0,
+                  maximumFractionDigits: isLocalCurrency && !['ARS', 'CLP', 'COP'].includes(selectedCountry.currency) ? 2 : 0,
+                }).format(localPriceNumber);
 
                 return (
                   <Tilt key={plan.id || idx} max={7} className="h-full">
@@ -578,27 +665,57 @@ function FastoriaPricingContent() {
                           )}
                         </p>
 
-                        {/* Price */}
+                        {/* Price: Valor grande en moneda del país elegido, chico en dólares */}
                         <div className={cn("mb-6 pb-6 border-b", isFeatured ? "border-slate-800" : "border-slate-100")}>
                           <div className="flex items-baseline gap-1.5 overflow-hidden">
-                            <span className={cn("text-xs font-black uppercase", isFeatured ? "text-[#1CB899]" : "text-slate-400")}>USD</span>
+                            {!isFree && (
+                              <span className={cn("text-xs font-black uppercase", isFeatured ? "text-[#1CB899]" : "text-slate-400")}>
+                                {selectedCountry.currency}
+                              </span>
+                            )}
                             <AnimatePresence mode="popLayout" initial={false}>
                               <motion.span
-                                key={`price-${plan.id}-${billingPeriod}`}
+                                key={`price-${plan.id}-${selectedCountry.currency}`}
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -16 }}
                                 transition={{ duration: 0.25, ease: EASE }}
                                 className={cn("text-4xl font-black", isFeatured ? "text-white" : "text-slate-900")}
                               >
-                                ${pricing.priceStr}
+                                {isFree ? '$0' : `$${formattedNumberOnly}`}
                               </motion.span>
                             </AnimatePresence>
                             <span className="text-xs font-bold text-slate-400">/ mes</span>
                           </div>
+
+                          {/* Valor Chico: Correspondiente en Dólares */}
+                          {!isFree && isLocalCurrency && (
+                            <div className="mt-2.5 flex items-center gap-1.5">
+                              <span
+                                className={cn(
+                                  "text-xs font-bold px-2.5 py-0.5 rounded-lg",
+                                  isFeatured
+                                    ? "bg-slate-800 text-slate-300 border border-slate-700"
+                                    : "bg-slate-100 text-slate-600 border border-slate-200"
+                                )}
+                              >
+                                Ref: USD ${pricing.priceStr} / mes
+                              </span>
+                              <span className={cn("text-[10px] font-medium", isFeatured ? "text-slate-400" : "text-slate-500")}>
+                                ({selectedCountry.name})
+                              </span>
+                            </div>
+                          )}
+
+                          {!isFree && !isLocalCurrency && (
+                            <div className="mt-2 text-[11px] font-semibold text-slate-400">
+                              Cobro internacional en USD
+                            </div>
+                          )}
+
                           {pricing.originalPriceStr && (
-                            <span className="text-xs line-through text-slate-400 font-bold block mt-1">
-                              Antes: USD ${pricing.originalPriceStr}
+                            <span className="text-xs line-through text-slate-400 font-bold block mt-2">
+                              Antes: {isLocalCurrency ? `${formatCurrencyAmount(convertUsdAmount(Number(pricing.originalPriceStr), selectedCountry.currency, rates), selectedCountry.currency)} · ` : ''}USD ${pricing.originalPriceStr}
                             </span>
                           )}
                           {pricing.promoLabel && (
@@ -610,15 +727,23 @@ function FastoriaPricingContent() {
 
                         {/* Features */}
                         <ul className={cn("space-y-3 text-sm font-bold mb-8", isFeatured ? "text-slate-200" : "text-slate-700")}>
+                          {Boolean((plan.limits?.maxTutors && plan.limits.maxTutors > 0) || plan.targetAudience === 'enterprise') && (
+                            <li className="flex items-center gap-2.5">
+                              <Check className="w-4 h-4 text-[#1CB899] shrink-0" />
+                              <span>
+                                {plan.limits?.maxTutors === -1 ? 'Tutores ilimitados' : `Hasta ${plan.limits?.maxTutors || 5} tutores`}
+                              </span>
+                            </li>
+                          )}
                           <li className="flex items-center gap-2.5">
                             <Check className="w-4 h-4 text-[#1CB899] shrink-0" />
-                            {plan.limits?.maxCourses === -1 || plan.limits?.maxCourses >= 100
+                            {plan.limits?.maxCourses === -1 || plan.limits?.maxCourses >= 9999
                               ? 'Cursos ilimitados'
                               : `Hasta ${plan.limits?.maxCourses || 5} cursos`}
                           </li>
                           <li className="flex items-center gap-2.5">
                             <Check className="w-4 h-4 text-[#1CB899] shrink-0" />
-                            {plan.limits?.maxStudents === -1 || plan.limits?.maxStudents >= 5000
+                            {plan.limits?.maxStudents === -1 || plan.limits?.maxStudents >= 99999
                               ? 'Alumnos ilimitados'
                               : `Hasta ${plan.limits?.maxStudents || 100} alumnos`}
                           </li>
@@ -686,9 +811,16 @@ function FastoriaPricingContent() {
             )}
           </div>
 
-          <p className="text-center text-xs text-slate-400 mt-8 font-medium">
-            * Los precios están expresados en USD. Facturación anual bonifica 2 meses equivalentes. Cancelás cuando querés.
-          </p>
+          <div className="max-w-2xl mx-auto mt-10 p-4 bg-slate-50 border border-slate-200/90 rounded-2xl text-center space-y-1.5 shadow-xs">
+            <p className="text-xs text-slate-700 font-bold">
+              * El valor puede cambiar según la cotización del momento de realizar la transacción.
+            </p>
+            <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+              {selectedCountry.isDomesticArgentina
+                ? 'Para Argentina los cobros se realizan en pesos argentinos (ARS) mediante Mercado Pago, Getnet o Transferencia bancaria. Cancelás cuando querés.'
+                : `Para compras fuera de Argentina (${selectedCountry.name}) el pago se procesa exclusivamente con tarjeta internacional en USD mediante Stripe (Mercado Pago y Transferencia bancaria quedan excluidos). Cancelás cuando querés.`}
+            </p>
+          </div>
         </div>
       </section>
 
@@ -705,6 +837,9 @@ function FastoriaPricingContent() {
         isProcessing={isProcessing}
         onSubmit={handleFinalCheckout}
         upgradeInfo={upgradeInfo}
+        selectedCountry={selectedCountry}
+        onSelectCountry={handleCountryChange}
+        rates={rates}
       />
     </>
   );

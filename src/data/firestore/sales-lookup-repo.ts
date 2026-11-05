@@ -16,6 +16,6 @@ export class FirestoreSalesPageLookup implements SalesPageLookup {
     const snap = await this.gateway.getDoc(COLLECTION, pageId);
     if (!snap) return null;
     const raw = snap.data() ?? {};
-    return { id: snap.id, mentorId: raw.mentorId, price: raw.price, title: raw.title };
+    return { id: snap.id, mentorId: raw.mentorId, price: raw.price, title: raw.title, currency: raw.currency };
   }
 }

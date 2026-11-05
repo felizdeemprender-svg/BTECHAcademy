@@ -227,13 +227,18 @@ export default function AdminSubscriptionsPage() {
     try {
       const isEnterprise = formData.targetAudience === 'enterprise';
       const maxTutorsVal = (formData.entitlements?.limits as any)?.maxTutors ?? (isEnterprise ? 5 : undefined);
+      const calculatedPrice = (isEnterprise || formData.type === 'fixed') ? Number(formData.pricing?.amount || 0) : 0;
+      const calculatedDurationMonths = Number(formData.pricing?.minimumCommitmentMonths || 12);
+
       const planToSave = {
         ...formData,
+        price: calculatedPrice,
+        durationMonths: calculatedDurationMonths,
         targetAudience: isEnterprise ? 'enterprise' : 'tutor',
         type: isEnterprise ? 'fixed' : formData.type,
         pricing: {
           ...formData.pricing,
-          amount: (isEnterprise || formData.type === 'fixed') ? (formData.pricing?.amount || 0) : 0,
+          amount: calculatedPrice,
         },
         entitlements: {
           ...formData.entitlements,

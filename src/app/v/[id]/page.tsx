@@ -26,7 +26,8 @@ import {
   Youtube,
   Phone,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  CreditCard
 } from 'lucide-react';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
@@ -43,6 +44,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AtomicRenderer } from './components/atomic-renderer';
+import { CountryCurrencySelector } from '@/components/commerce/country-currency-selector';
+import {
+  SUPPORTED_COUNTRIES,
+  FALLBACK_RATES,
+  type CountryInfo,
+  type SupportedCurrency,
+} from '@/lib/currency/types';
+import { convertAmount, convertUsdAmount } from '@/lib/currency/rates-service';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -98,11 +107,55 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [studentEmail, setStudentEmail] = useState('');
   const [studentName, setStudentName] = useState('');
-  const [selectedPaymentType, setSelectedPaymentType] = useState<'mercadopago' | 'transfer' | null>(null);
+  const [selectedPaymentType, setSelectedPaymentType] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<CountryInfo>(SUPPORTED_COUNTRIES[0]);
+  const [rates, setRates] = useState<Record<SupportedCurrency, number>>(FALLBACK_RATES);
   const [paymentInitPoint, setPaymentInitPoint] = useState<string | null>(null);
   const [transferResult, setTransferResult] = useState<{ referenceCode: string; bankDetails: any; amount: number } | null>(null);
   const [isExpired, setIsExpired] = useState(false);
   const [activeReferidoId, setActiveReferidoId] = useState<string | null>(null);
+
+  // Consulta de cotizaciones automáticas y sincronización de país
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('fastoria_country_code');
+      if (saved) {
+        const found = SUPPORTED_COUNTRIES.find((c) => c.code === saved);
+        if (found) setSelectedCountry(found);
+      }
+    } catch {}
+
+    fetch('/api/currency/rates')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.rates) setRates(data.rates);
+      })
+      .catch((err) => console.warn('[Landing] Error loading currency rates:', err));
+  }, []);
+
+  const handleCountryChange = (country: CountryInfo) => {
+    setSelectedCountry(country);
+    try {
+      localStorage.setItem('fastoria_country_code', country.code);
+    } catch {}
+  };
+
+  // Filtrar métodos de cobro según el país seleccionado
+  const filteredPaymentMethods = useMemo(() => {
+    return mentorPaymentMethods.filter((method: any) => {
+      return selectedCountry.allowedGateways.includes(method.type);
+    });
+  }, [mentorPaymentMethods, selectedCountry]);
+
+  useEffect(() => {
+    if (filteredPaymentMethods.length === 1) {
+      setSelectedPaymentType(filteredPaymentMethods[0].type);
+    } else if (filteredPaymentMethods.length > 1 && !filteredPaymentMethods.some((m) => m.type === selectedPaymentType)) {
+      setSelectedPaymentType(filteredPaymentMethods[0].type);
+    } else if (filteredPaymentMethods.length === 0) {
+      setSelectedPaymentType(null);
+    }
+  }, [filteredPaymentMethods, selectedPaymentType]);
 
   // Auto-completar datos si el usuario está logueado
   useEffect(() => {
@@ -358,7 +411,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         return;
       }
 
-      // 2b. Pago por MercadoPago
+      // 2b. Pago por Pasarela (MercadoPago, Getnet, Stripe)
+      const gateway = selectedPaymentType || (filteredPaymentMethods[0]?.type ?? 'mercadopago');
       const response = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -367,11 +421,13 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
           studentEmail: studentEmail,
           studentName: studentName,
           referidoId: leadReferidoId || null,
-          gateway: 'mercadopago' // Por defecto usamos MP, luego se podrá elegir en la UI
+          gateway: gateway,
+          countryCode: selectedCountry.code,
+          exchangeRate: rates[selectedCountry.currency] || 1,
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || data.error || 'Error al conectar con MercadoPago');
+      if (!response.ok) throw new Error(data.message || data.error || 'Error al conectar con la pasarela de pago');
 
       try {
         await fetch(`/api/sales-pages/${id}/track-conversion`, {
@@ -381,7 +437,12 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
         });
       } catch (e) {}
 
-      setPaymentInitPoint(data.redirectUrl || data.init_point);
+      const checkoutUrl = data.redirectUrl || data.init_point || data.url;
+      if (gateway === 'stripe' && checkoutUrl) {
+        window.location.href = checkoutUrl;
+        return;
+      }
+      setPaymentInitPoint(checkoutUrl);
       toast({ title: '¡Preferencia generada!', description: 'Escanea el QR o usá el botón para pagar.' });
 
     } catch (e: any) {
@@ -421,6 +482,8 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
   const landings = page.aiContent?.landings || [];
   const content = (isV2 ? page.content : (landings[variantIdx] || page.aiContent?.landing)) as ContentShape;
   const price = typeof page.price === 'number' ? page.price : 49990;
+  const baseCurrency: SupportedCurrency = (page.currency || course?.currency || (price > 1000 ? 'ARS' : 'USD')) as SupportedCurrency;
+  const baseUsdPrice = baseCurrency === 'USD' ? price : (price / (rates.ARS || FALLBACK_RATES.ARS));
 
   if (!content) return <div className="flex h-screen items-center justify-center"><p className="font-bold text-muted-foreground">Contenido en proceso de generación...</p></div>;
 
@@ -831,7 +894,7 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
       </div>
       {/* Purchase Dialog */}
       <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto pr-2">
           <DialogHeader className="space-y-4">
             <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center mb-2 mx-auto sm:mx-0">
               <ShoppingCart className="h-8 w-8 text-primary" />
@@ -869,18 +932,29 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                   <p className="text-[10px] text-muted-foreground italic px-1">⚠️ Esta plataforma funciona exclusivamente con Google. Debes usar tu correo @gmail.com.</p>
                 </div>
 
-                {/* Selector de método de pago (solo si hay >1 método o hay transferencia disponible) */}
-                {price > 0 && mentorPaymentMethods.length > 1 && (
+                {/* Selector de país y moneda referencial */}
+                {price > 0 && (
+                  <CountryCurrencySelector
+                    selectedCountryCode={selectedCountry.code}
+                    onSelectCountry={handleCountryChange}
+                    baseAmount={price}
+                    baseCurrency={baseCurrency}
+                    rates={rates}
+                  />
+                )}
+
+                {/* Selector de método de pago (solo si hay métodos disponibles para el país) */}
+                {price > 0 && filteredPaymentMethods.length > 0 && (
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Forma de Pago</Label>
                     <div className="grid grid-cols-2 gap-3">
-                      {mentorPaymentMethods.map((method: any) => (
+                      {filteredPaymentMethods.map((method: any) => (
                         <button
                           key={method.id}
                           type="button"
                           onClick={() => setSelectedPaymentType(method.type)}
                           className={cn(
-                            'flex flex-col items-center gap-2 p-4 rounded-2xl border-2 font-bold text-sm transition-all',
+                            'flex flex-col items-center gap-2 p-4 rounded-2xl border-2 font-bold text-sm transition-all cursor-pointer',
                             selectedPaymentType === method.type
                               ? 'border-primary bg-primary/10 text-primary'
                               : 'border-border bg-muted text-muted-foreground hover:border-border'
@@ -888,18 +962,86 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                         >
                           {method.type === 'mercadopago' ? (
                             <>
-                              <span className="text-2xl">💳</span>
+                              <CreditCard className="w-6 h-6 text-blue-600" />
                               <span>Mercado Pago</span>
+                            </>
+                          ) : method.type === 'getnet' ? (
+                            <>
+                              <CreditCard className="w-6 h-6 text-rose-600" />
+                              <span>Getnet</span>
+                            </>
+                          ) : method.type === 'stripe' ? (
+                            <>
+                              <CreditCard className="w-6 h-6 text-violet-600" />
+                              <span>Tarjeta (Stripe)</span>
                             </>
                           ) : (
                             <>
-                              <span className="text-2xl">🏦</span>
+                              <Globe className="w-6 h-6 text-emerald-600" />
                               <span>Transferencia</span>
                             </>
                           )}
                         </button>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Aviso si el tutor no tiene configurado ningún método de pago */}
+                {price > 0 && mentorPaymentMethods.length === 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center space-y-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mx-auto text-amber-700">
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <h4 className="font-bold text-amber-900 text-sm">
+                      Medios de pago en configuración
+                    </h4>
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      Este programa no cuenta actualmente con pasarelas de cobro online activas. Si deseas inscribirte, podés contactar directamente al mentor para coordinar alternativas de pago.
+                    </p>
+                    <a
+                      href={
+                        (mentorProfile?.socials?.whatsapp || mentorProfile?.phone)
+                          ? `https://wa.me/${String(mentorProfile?.socials?.whatsapp || mentorProfile?.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, quiero inscribirme a ${course?.title || page?.title || 'tu curso'}`)}`
+                          : `https://wa.me/5491176411666?text=${encodeURIComponent(`Hola, quiero inscribirme a ${course?.title || page?.title || 'este curso'}`)}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#25D366] text-white font-bold text-xs shadow-md hover:bg-[#20bd5a] transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Contactar al Mentor por WhatsApp
+                    </a>
+                  </div>
+                )}
+
+                {/* Aviso si el tutor tiene métodos pero ninguno aplica para el país seleccionado */}
+                {price > 0 && mentorPaymentMethods.length > 0 && filteredPaymentMethods.length === 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center space-y-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mx-auto text-amber-700">
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <h4 className="font-bold text-amber-900 text-sm">
+                      Inscripción online no disponible para {selectedCountry.name}
+                    </h4>
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      {selectedCountry.isDomesticArgentina
+                        ? 'Este mentor no tiene pasarelas habilitadas para Argentina actualmente. Podés coordinar directamente por WhatsApp.'
+                        : `Este programa cuenta con medios de pago habilitados exclusivamente para Argentina. Si estás interesado en inscribirte desde ${selectedCountry.name}, podés contactar directamente al mentor para coordinar alternativas.`}
+                    </p>
+                    <a
+                      href={
+                        (mentorProfile?.socials?.whatsapp || mentorProfile?.phone)
+                          ? `https://wa.me/${String(mentorProfile?.socials?.whatsapp || mentorProfile?.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, quiero inscribirme a ${course?.title || page?.title || 'tu curso'} desde ${selectedCountry.name}`)}`
+                          : `https://wa.me/5491176411666?text=${encodeURIComponent(`Hola, quiero inscribirme a ${course?.title || page?.title || 'este curso'} desde ${selectedCountry.name}`)}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#25D366] text-white font-bold text-xs shadow-md hover:bg-[#20bd5a] transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Contactar al Mentor por WhatsApp
+                    </a>
                   </div>
                 )}
               </>
@@ -985,7 +1127,12 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
             {!paymentInitPoint && !transferResult && (
               <Button
                 onClick={executePurchase}
-                disabled={loading || !studentEmail || (price > 0 && mentorPaymentMethods.length > 1 && !selectedPaymentType)}
+                disabled={
+                  loading ||
+                  !studentEmail ||
+                  (price > 0 && filteredPaymentMethods.length === 0) ||
+                  (price > 0 && filteredPaymentMethods.length > 1 && !selectedPaymentType)
+                }
                 className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all hover:scale-[1.02]"
                 style={{ backgroundColor: primaryColor }}
               >
@@ -995,8 +1142,10 @@ export default function PublicSalesPage({ params }: { params: Promise<{ id: stri
                   'Acceder Gratis'
                 ) : selectedPaymentType === 'transfer' ? (
                   'Confirmar Transferencia'
+                ) : selectedCountry.isDomesticArgentina ? (
+                  `Pagar ARS $${(baseCurrency === 'ARS' ? price : convertUsdAmount(price, 'ARS', rates)).toLocaleString('es-AR')}`
                 ) : (
-                  `Pagar $${price.toLocaleString('es-AR')}`
+                  `Pagar USD $${(baseCurrency === 'USD' ? price : Math.round(baseUsdPrice * 100) / 100).toLocaleString('es-AR')}`
                 )}
               </Button>
             )}

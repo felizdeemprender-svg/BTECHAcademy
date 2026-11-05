@@ -37,6 +37,12 @@ function sanitizeConfig(type: unknown, config: Record<string, unknown> | undefin
   if (type === 'mercadopago') {
     return { publicKey: str(cfg.publicKey) };
   }
+  if (type === 'stripe') {
+    return { publishableKey: str(cfg.publishableKey || cfg.publicKey) };
+  }
+  if (type === 'getnet') {
+    return { sellerId: str(cfg.sellerId) };
+  }
   if (type === 'transfer') {
     return {
       alias: str(cfg.alias),

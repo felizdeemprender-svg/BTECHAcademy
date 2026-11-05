@@ -223,7 +223,7 @@ export default function AlumnosPage() {
                     </TableCell>
                     <TableCell className="px-10 text-right">
                       <Button 
-                        onClick={() => router.push(`/alumnos/${student.id}`)}
+                        onClick={() => router.push(`/mentoria/alumnos/${student.id}`)}
                         variant="ghost" 
                         className="rounded-xl font-bold text-primary gap-2 hover:bg-primary/10"
                       >

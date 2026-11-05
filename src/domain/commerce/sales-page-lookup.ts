@@ -11,6 +11,7 @@ export interface SalesPageSnapshot {
   readonly mentorId?: unknown;
   readonly price?: unknown;
   readonly title?: unknown;
+  readonly currency?: unknown;
 }
 
 export interface SalesPageLookup {

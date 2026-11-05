@@ -77,7 +77,12 @@ export function normalizeAiContent(raw: unknown): {
 
 export function mapSalesPageDoc(id: string, raw: RawDoc): SalesPage {
   const { aiContent, ...rest } = raw;
-  return parseSalesPage(withDateFields({ ...rest, id, aiContent: normalizeAiContent(aiContent) }));
+  // Fallback: documentos legacy/demo sin title usan el id del doc
+  // para evitar ZodError y mantener el doc funcional en listados.
+  const title = typeof rest.title === 'string' && rest.title.trim().length > 0
+    ? rest.title
+    : id;
+  return parseSalesPage(withDateFields({ ...rest, id, title, aiContent: normalizeAiContent(aiContent) }));
 }
 
 export function mapSessionDoc(id: string, raw: RawDoc): MentoringSession {

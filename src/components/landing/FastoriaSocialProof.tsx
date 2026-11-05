@@ -28,7 +28,7 @@ export function FastoriaSocialProof() {
               {
                 quote: "Pasé de gestionar mis alumnos en tres herramientas y planillas a hacerlo todo desde Fastoria en una sola vista.",
                 name: "Federico D´Odorico",
-                role: "Consultora de Negocios",
+                role: "Consultor de Negocios",
                 metric: "Ahorró 8 hs semanales",
               },
               {

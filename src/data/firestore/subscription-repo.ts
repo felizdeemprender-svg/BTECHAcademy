@@ -54,21 +54,24 @@ export class FirestoreSubscriptionRepository implements SubscriptionRepository {
     const snap = await this.gateway.getDoc(PLANS, planId);
     if (!snap) return null;
     const raw = snap.data() ?? {};
+    const pricing = raw.pricing as Record<string, unknown> | undefined;
+    const entitlements = raw.entitlements as Record<string, unknown> | undefined;
+
     return {
       id: snap.id,
       name: raw.name,
-      price: raw.price,
+      price: raw.price !== undefined ? raw.price : pricing?.amount,
       type: raw.type,
       requiresPaymentMethod: raw.requiresPaymentMethod,
       trialDays: raw.trialDays,
       trialReminderDays: raw.trialReminderDays,
       gracePeriodDays: raw.gracePeriodDays,
-      billingCycleMonths: raw.billingCycleMonths,
-      limits: raw.limits,
-      permissions: raw.permissions,
-      invitationsPerCourse: raw.invitationsPerCourse,
-      aiQuotas: raw.aiQuotas,
-      hasPremiumAI: raw.hasPremiumAI,
+      billingCycleMonths: raw.billingCycleMonths ?? pricing?.billingCycleMonths,
+      limits: raw.limits ?? entitlements?.limits,
+      permissions: raw.permissions ?? entitlements?.permissions,
+      invitationsPerCourse: raw.invitationsPerCourse ?? entitlements?.invitationsPerCourse,
+      aiQuotas: raw.aiQuotas ?? entitlements?.aiQuotas,
+      hasPremiumAI: raw.hasPremiumAI ?? (entitlements?.aiQuotas as Record<string, unknown> | undefined)?.hasPremiumAI,
     };
   }
 

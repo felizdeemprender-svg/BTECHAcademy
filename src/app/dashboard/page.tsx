@@ -616,7 +616,7 @@ const DashboardContent = ({
                               <p className="text-[7px] font-bold uppercase text-muted-foreground mt-1">Cumplimiento</p>
                             </div>
                           </div>
-                          <Link href={isMassive ? "/mentoria/desafios" : `/alumnos/${group.tasks[0]?.studentId}`}>
+                          <Link href={isMassive ? "/mentoria/desafios" : `/mentoria/alumnos/${group.tasks[0]?.studentId}`}>
                             <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10"><ChevronRight className="h-5 w-5" /></Button>
                           </Link>
                         </div>

@@ -21,6 +21,8 @@ export const CheckoutPageInputSchema = z.object({
   referidoId: z.string().nullish(),
   gateway: z.string().default('mercadopago'),
   baseUrl: z.string().min(1),
+  countryCode: z.string().optional(),
+  exchangeRate: z.number().optional(),
 });
 export type CheckoutPageInput = z.infer<typeof CheckoutPageInputSchema>;
 
@@ -38,7 +40,7 @@ export async function checkoutPage(
   if (!parsed.success) {
     return err(validationError('Faltan parámetros requeridos'));
   }
-  const { pageId, studentEmail, studentName, referidoId, gateway, baseUrl } = parsed.data;
+  const { pageId, studentEmail, studentName, referidoId, gateway, baseUrl, exchangeRate } = parsed.data;
 
   if (!pageId || !studentEmail) {
     return err(validationError('Faltan parámetros requeridos'));
@@ -76,10 +78,24 @@ export async function checkoutPage(
     );
   }
 
+  // Conversión monetaria inteligente:
+  // - Si la pasarela opera en pesos argentinos (mercadopago/getnet) y el curso está expresamente en USD, convertimos a ARS.
+  // - Si el curso está en ARS o sin definir (pesos por defecto para tutores argentinos), NO multiplicamos por tipo de cambio.
+  // - Si la pasarela es internacional (Stripe) y el curso está en ARS, convertimos a USD.
+  let finalChargePrice = price;
+  const isCourseUsd = page.currency === 'USD';
+  if ((gateway === 'mercadopago' || gateway === 'getnet') && isCourseUsd) {
+    const rate = exchangeRate && exchangeRate > 0 ? exchangeRate : 1540;
+    finalChargePrice = Math.round(price * rate);
+  } else if (gateway === 'stripe' && !isCourseUsd) {
+    const rate = exchangeRate && exchangeRate > 0 ? exchangeRate : 1540;
+    finalChargePrice = Math.round((price / rate) * 100) / 100;
+  }
+
   const result = await deps.sessions.createSession(gateway, paymentConfig, {
     pageId,
     title,
-    price,
+    price: finalChargePrice,
     studentEmail,
     studentName: studentName ?? '',
     mentorId,

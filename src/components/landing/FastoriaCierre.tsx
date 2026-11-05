@@ -44,17 +44,20 @@ export function FastoriaCierre() {
           </motion.div>
 
           <Reveal delay={0.2}>
-            <Link href="/auth">
-              <motion.button
-                whileHover={{ scale: 1.04, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+            <motion.div
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              className="inline-block"
+            >
+              <Link
+                href="/auth"
                 className="animate-glow-pulse px-10 py-5 rounded-2xl bg-[#1CB899] hover:bg-[#18a287] text-[#0F172A] font-black text-base shadow-2xl shadow-[#1CB899]/30 inline-flex items-center gap-2 group transition-colors"
               >
                 Empezar con Fastoria
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </motion.button>
-            </Link>
+              </Link>
+            </motion.div>
           </Reveal>
         </div>
       </section>
