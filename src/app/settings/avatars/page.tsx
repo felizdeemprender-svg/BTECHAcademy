@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useToast } from '@/hooks/use-toast';
@@ -25,8 +26,16 @@ import {
 export default function AvatarsDashboardPage() {
   const { user, profile, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   const isCorporateTutor = isCompanyTutorProfile(profile);
+  const canAccessAvatars = Boolean(
+    profile?.roles?.includes('admin') ||
+    profile?.roles?.includes('mentor') ||
+    profile?.roles?.includes('empresa') ||
+    profile?.companyRole === 'owner' ||
+    profile?.isEnterprise
+  );
 
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,13 +80,17 @@ export default function AvatarsDashboardPage() {
   }, [user, toast]);
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && profile && !canAccessAvatars) {
+      router.replace('/dashboard');
+      return;
+    }
+    if (!authLoading && user && canAccessAvatars) {
       fetchAvatars();
     } else if (!authLoading && !user) {
       setIsLoading(false);
       setAvatars(INITIAL_DEFAULT_AVATARS);
     }
-  }, [user, authLoading, fetchAvatars]);
+  }, [user, profile, authLoading, canAccessAvatars, fetchAvatars, router]);
 
   // Guardar (crear o actualizar) en Firestore
   const handleSaveAvatar = async (data: Partial<Avatar>) => {
@@ -228,6 +241,10 @@ export default function AvatarsDashboardPage() {
   });
 
   const defaultAvatar = avatars.find((a) => a.isDefault) || avatars[0];
+
+  if (!authLoading && profile && !canAccessAvatars) {
+    return null;
+  }
 
   if (isCorporateTutor) {
     return (

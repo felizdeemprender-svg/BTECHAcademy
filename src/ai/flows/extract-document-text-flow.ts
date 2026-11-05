@@ -116,36 +116,6 @@ const extractDocumentTextFlow = ai.defineFlow(
       }
     }
 
-    // 3. Manejo de PDF (.pdf)
-    if (currentDataUri.includes('application/pdf') || input.documentName.toLowerCase().endsWith('.pdf')) {
-      try {
-        const base64Part = currentDataUri.split(',')[1];
-        if (!base64Part) throw new Error("Archivo PDF vacío.");
-        const buffer = Buffer.from(base64Part, 'base64');
-        
-        // Extraemos texto localmente con pdf-parse
-        const { PDFParse } = await import('pdf-parse');
-        const parser = new PDFParse({ data: buffer });
-        const pdfData = await parser.getText();
-        await parser.destroy();
-        const fullText = pdfData.text;
-
-        if (!fullText || fullText.trim().length < 10) {
-          throw new Error('No se pudo extraer texto seleccionable del PDF. ¿Es una imagen escaneada?');
-        }
-
-        // Enviamos el texto a Gemini para limpieza (igual que hacemos con Word)
-        const { text } = await ai.generate({
-          prompt: `Actúa como un transcriptor experto. Limpia este texto extraído de un PDF, corrige saltos de línea rotos, mantén la jerarquía educativa y omite elementos de encabezado/pie de página repetitivos o ruido:\n\n${fullText.substring(0, 50000)}`,
-          config: { temperature: 0.1 },
-        });
-
-        return { extractedText: text || fullText.trim() };
-      } catch (error: any) {
-        return { error: `Gemini falló al procesar el PDF: ${error.message}` };
-      }
-    }
-
-    return { error: 'Formato no soportado. Usa PDF (.pdf), Word (.docx) o Texto (.txt).' };
+    return { error: 'Formato no soportado para Archivo Maestro. Usa únicamente Word (.docx) o Texto (.txt).' };
   }
 );

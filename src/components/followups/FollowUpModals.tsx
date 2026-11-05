@@ -77,6 +77,19 @@ export function FollowUpModals({
   onDelete,
   selectedFollowUp
 }: FollowUpModalsProps) {
+  const isMasterCompatible = (file: File | null | undefined) => {
+    if (!file) return false;
+    const name = file.name.toLowerCase();
+    return (
+      name.endsWith('.docx') ||
+      name.endsWith('.doc') ||
+      name.endsWith('.txt') ||
+      file.type === 'text/plain' ||
+      file.type.includes('wordprocessingml.document') ||
+      file.type.includes('msword')
+    );
+  };
+
   return (
     <>
       {/* Dialog: Create */}
@@ -168,17 +181,22 @@ export function FollowUpModals({
                    if (!files.length) return;
                    if (!guideFile) {
                      setGuideFile(files[0]);
-                     if (files[1] && setMasterFile && formData.type === 'group') setMasterFile(files[1]);
-                   } else if (!masterFile && setMasterFile && formData.type === 'group') {
+                     if (files[1] && setMasterFile && formData.type === 'group' && isMasterCompatible(files[1])) setMasterFile(files[1]);
+                   } else if (!masterFile && setMasterFile && formData.type === 'group' && isMasterCompatible(files[0])) {
                      setMasterFile(files[0]);
                    } else {
                      setGuideFile(files[0]);
                    }
                 }}
                 title="Cargar Materiales"
-                description="Máx. 2 archivos (Guía y Maestro). PDF, DOCX o TXT."
+                description="Máx. 2 archivos: Guía alumno (PDF, DOCX o TXT) y Archivo Maestro IA (solo DOCX o TXT)."
                 className="p-6 rounded-2xl mb-4 bg-muted/5 border-dashed border-2 hover:bg-muted/10 transition-colors"
               />
+              {formData.type === 'group' && (
+                <p className="text-[11px] text-muted-foreground bg-primary/5 border border-primary/20 rounded-xl p-3">
+                  <strong>Condiciones Archivo Maestro:</strong> Solo se admiten archivos <strong>Word (.docx)</strong> o <strong>Texto (.txt)</strong> con texto legible (los PDF quedan excluidos como Maestro y solo sirven como Guía para el alumno).
+                </p>
+              )}
               <div className="space-y-2 mt-4">
                 {masterFile && (
                   <div className="flex items-center justify-between p-3 rounded-xl border bg-primary/5 border-primary shadow-sm">
@@ -204,10 +222,13 @@ export function FollowUpModals({
                       </div>
                       <div className="flex items-center gap-2 min-w-0">
                         <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{guideFile.name}</p>
+                        {formData.type === 'group' && !isMasterCompatible(guideFile) && (
+                          <span className="text-[10px] text-muted-foreground hidden sm:inline">Solo Guía (No apto Maestro)</span>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      {formData.type === 'group' && setMasterFile && (
+                      {formData.type === 'group' && setMasterFile && isMasterCompatible(guideFile) && (
                         <Button variant="ghost" size="sm" onClick={() => {
                           const temp = masterFile;
                           setMasterFile(guideFile);
@@ -279,17 +300,22 @@ export function FollowUpModals({
                    if (!files.length) return;
                    if (!guideFile && !selectedFollowUp?.planGuideUrl) {
                      setGuideFile(files[0]);
-                     if (files[1] && setMasterFile && formData.type === 'group') setMasterFile(files[1]);
-                   } else if (!masterFile && (!selectedFollowUp?.masterFileUrl) && setMasterFile && formData.type === 'group') {
+                     if (files[1] && setMasterFile && formData.type === 'group' && isMasterCompatible(files[1])) setMasterFile(files[1]);
+                   } else if (!masterFile && (!selectedFollowUp?.masterFileUrl) && setMasterFile && formData.type === 'group' && isMasterCompatible(files[0])) {
                      setMasterFile(files[0]);
                    } else {
                      setGuideFile(files[0]);
                    }
                 }}
                 title="Cargar Materiales"
-                description="Máx. 2 archivos (Guía y Maestro). PDF, DOCX o TXT."
+                description="Máx. 2 archivos: Guía alumno (PDF, DOCX o TXT) y Archivo Maestro IA (solo DOCX o TXT)."
                 className="p-6 rounded-2xl mb-4 bg-muted/5 border-dashed border-2 hover:bg-muted/10 transition-colors"
               />
+              {formData.type === 'group' && (
+                <p className="text-[11px] text-muted-foreground bg-primary/5 border border-primary/20 rounded-xl p-3">
+                  <strong>Condiciones Archivo Maestro:</strong> Solo se admiten archivos <strong>Word (.docx)</strong> o <strong>Texto (.txt)</strong> con texto legible (los PDF quedan excluidos como Maestro y solo sirven como Guía para el alumno).
+                </p>
+              )}
               <div className="space-y-2 mt-4">
                 {(masterFile || selectedFollowUp?.masterFileUrl) && (
                   <div className="flex items-center justify-between p-3 rounded-xl border bg-primary/5 border-primary shadow-sm">
@@ -323,7 +349,7 @@ export function FollowUpModals({
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      {formData.type === 'group' && setMasterFile && (
+                      {formData.type === 'group' && setMasterFile && isMasterCompatible(guideFile) && (
                         <Button variant="ghost" size="sm" onClick={() => {
                           if (guideFile) {
                             const temp = masterFile;

@@ -3,25 +3,37 @@ import { generateImagePromptFlow } from '@/ai/flows/generate-image-prompt';
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, keywords, courseTitle, contextHint, engine, channel, uid, role } = await req.json();
+    const { prompt, keywords, courseTitle, contextHint, engine, channel, uid, role, mode } = await req.json();
 
-    const finalKeywords = keywords || 'education, online course, professional';
-    let finalPrompt = prompt || 'professional corporate training photo';
+    const finalKeywords = keywords || courseTitle || 'education, learning';
+    const hasCustomPrompt = typeof prompt === 'string' && prompt.trim().length > 0;
+    let finalPrompt = hasCustomPrompt ? prompt.trim() : '';
 
-    // Si nos envían contexto rico (desde ImageEditor), usamos Gemini para diseñar un prompt experto
-    if (keywords || contextHint || courseTitle) {
+    // Si no viene un prompt manual (o si el modo es 'prompt_only'), diseñamos el prompt experto con Gemini
+    if (!hasCustomPrompt || mode === 'prompt_only') {
       try {
         console.log('[generate-image] Solicitando prompt mejorado a Gemini...');
         finalPrompt = await generateImagePromptFlow({
           keywords: finalKeywords,
           contextHint: contextHint || '',
-          courseTitle: courseTitle || '',
-          channel: channel || 'video'
+          courseTitle: courseTitle || keywords || '',
+          channel: channel || 'video',
+          uid,
+          role,
         });
         console.log('[generate-image] Prompt mejorado generado:', finalPrompt);
       } catch (e) {
         console.warn('[generate-image] Falló Gemini al generar el prompt. Se usará fallback', e);
+        if (!finalPrompt) {
+          finalPrompt = `Editorial photography representing "${courseTitle || finalKeywords}", natural cinematic lighting, shallow depth of field`;
+        }
       }
+    }
+
+    if (mode === 'prompt_only') {
+      return NextResponse.json({
+        generatedPrompt: finalPrompt,
+      });
     }
 
     // ==== FLUJO PRO (Google Imagen) — único motor activo ====
@@ -30,16 +42,15 @@ export async function POST(req: NextRequest) {
     if (engine !== 'premium') {
       console.warn(`[generate-image] engine="${engine || 'undefined'}" — flujo gratis deprecado. Forzando a Google Imagen Pro.`);
     }
-    console.log('[generate-image] 🔥 Ejecutando modelo Premium: Imagen');
+    console.log('[generate-image] Ejecutando modelo Premium: Imagen');
     const apiKey = process.env.GOOGLE_GENAI_API_KEY;
     if (!apiKey) throw new Error('No se ha configurado la API Key de Google para Imagen.');
 
-    const promptPremium = `${finalPrompt.trim()}. Professional photography, cinematic lighting, no text, no words.`;
+    const aspectRatio = channel === 'landing' || channel === 'thumbnails' ? '16:9' : '9:16';
+    const promptPremium = `${finalPrompt.trim()}. High-end photography, cinematic lighting, no text, no words, no letters. Aspect Ratio: ${aspectRatio}.`;
 
     // Endpoint para Imagen en Google AI Studio (Beta)
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;
-
-    const aspectRatio = channel === 'landing' ? "16:9" : "9:16";
 
     const reqBody = {
       contents: [{
@@ -96,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       imageDataUrl: `data:image/jpeg;base64,${base64Img}`, 
-      generatedPrompt: promptPremium 
+      generatedPrompt: finalPrompt 
     });
   } catch (e: any) {
     console.error('[generate-image API]', e);

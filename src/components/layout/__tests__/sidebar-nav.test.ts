@@ -18,8 +18,8 @@ describe('SidebarNav Menu Structure', () => {
     expect(avatarItem?.href).toBe('/settings/avatars');
     expect(avatarItem?.roles).toContain('mentor');
     expect(avatarItem?.roles).toContain('admin');
-    expect(avatarItem?.roles).toContain('marketing');
-    expect(avatarItem?.roles).toContain('alumno');
+    expect(avatarItem?.roles).toContain('empresa');
+    expect(avatarItem?.roles).not.toContain('alumno');
     expect(avatarItem?.icon).toBeDefined();
   });
 

@@ -6,8 +6,9 @@ import { adminDb } from '@/firebase/admin';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const body = await request.json().catch(() => ({}));
   const caller = await authenticateCaller(request);
   let effectiveMentorId = body.mentorId;
@@ -27,7 +28,7 @@ export async function POST(
     }
   }
 
-  return handlePublishCourse(await resolveGateway(), params.id, {
+  return handlePublishCourse(await resolveGateway(), id, {
     ...body,
     mentorId: effectiveMentorId,
     callerRole,

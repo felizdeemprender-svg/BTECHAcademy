@@ -162,7 +162,9 @@
     --modal-border: 1px solid oklch(30% 0.01 70);
     color: oklch(98% 0 0);
   }
+}
 
+@layer utilities {
   /* Modal width utilities (theme-responsive) */
   .mw-sm { max-width: var(--modal-w-sm); }
   .mw-md { max-width: var(--modal-w-md); }
