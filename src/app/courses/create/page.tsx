@@ -68,7 +68,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { extractDocumentText } from '@/ai/flows/extract-document-text-flow';
 import { generateQuizQuestions } from '@/ai/flows/generate-quiz-questions';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -233,9 +233,9 @@ export default function CreateCoursePage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !courseId) return;
-    
+
     setCurrentModule({ ...currentModule, isProcessing: true });
-    
+
     try {
       const newMaterials: any[] = [];
       for (const file of files) {
@@ -245,17 +245,17 @@ export default function CreateCoursePage() {
         const newMaterial = { id: Date.now().toString() + Math.random(), name: file.name, url, isMaster: false, fileBlob: file };
         newMaterials.push(newMaterial);
       }
-      
-      setCurrentModule(prev => ({ 
-        ...prev, 
-        supportMaterials: [...prev.supportMaterials, ...newMaterials], 
-        isProcessing: false 
+
+      setCurrentModule(prev => ({
+        ...prev,
+        supportMaterials: [...prev.supportMaterials, ...newMaterials],
+        isProcessing: false
       }));
     } catch (error) {
       toast({ title: 'Error al subir archivo(s)', variant: 'destructive' });
       setCurrentModule(prev => ({ ...prev, isProcessing: false }));
     }
-    
+
     e.target.value = '';
   };
 
@@ -264,11 +264,10 @@ export default function CreateCoursePage() {
     const name = fileName.toLowerCase();
     const type = file?.type || '';
     return (
-      name.endsWith('.docx') || 
-      name.endsWith('.doc') || 
-      name.endsWith('.txt') || 
-      name.endsWith('.pdf') ||
-      type === 'application/pdf' ||
+      name.endsWith('.docx') ||
+      name.endsWith('.doc') ||
+      name.endsWith('.txt') ||
+      type === 'text/plain' ||
       type.includes('wordprocessingml.document') ||
       type.includes('msword')
     );
@@ -299,20 +298,20 @@ export default function CreateCoursePage() {
 
   const handleSaveModule = async () => {
     if (!currentModule.title.trim()) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Faltan datos', 
-        description: 'Por favor, introduce un nombre para la clase antes de continuar.' 
+      toast({
+        variant: 'destructive',
+        title: 'Faltan datos',
+        description: 'Por favor, introduce un nombre para la clase antes de continuar.'
       });
       classNameInputRef.current?.focus();
       return;
     }
 
     if (currentModule.contentType === 'video' && !currentModule.videoUrl.trim()) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Falta el video', 
-        description: 'Has seleccionado tipo Video pero no has proporcionado una URL válida.' 
+      toast({
+        variant: 'destructive',
+        title: 'Falta el video',
+        description: 'Has seleccionado tipo Video pero no has proporcionado una URL válida.'
       });
       return;
     }
@@ -343,21 +342,21 @@ export default function CreateCoursePage() {
 
       const moduleRef = doc(collection(db, 'courses', courseId, 'modules'));
       await setDoc(moduleRef, moduleData);
-      
+
       const courseRef = doc(db, 'courses', courseId);
-      await updateDoc(courseRef, { 
+      await updateDoc(courseRef, {
         modulesCount: moduleOrder,
-        updatedAt: serverTimestamp() 
+        updatedAt: serverTimestamp()
       });
-      
+
       toast({ title: 'Clase guardada correctamente' });
       setShowNextModuleDialog(true);
     } catch (error: any) {
       console.error("Critical Save Error:", error);
-      toast({ 
-        title: 'Error al guardar clase', 
+      toast({
+        title: 'Error al guardar clase',
         description: error.message || 'Error de comunicación con la base de datos.',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
@@ -387,9 +386,9 @@ export default function CreateCoursePage() {
       const courseRef = doc(db, 'courses', courseId);
       const dataToSave = isCompanyTutor
         ? {
-            'branding.bio': brandingData.bio,
-            'branding.socials': brandingData.socials,
-          }
+          'branding.bio': brandingData.bio,
+          'branding.socials': brandingData.socials,
+        }
         : { branding: brandingData };
       await updateDoc(courseRef, dataToSave);
       setStep(4);
@@ -457,23 +456,23 @@ export default function CreateCoursePage() {
 
     setIsExtracting(true);
     try {
-      const extraction = await extractDocumentText({ 
-        documentUrl: master.url, 
-        documentName: master.name 
+      const extraction = await extractDocumentText({
+        documentUrl: master.url,
+        documentName: master.name
       });
-      
+
       if (extraction.error) throw new Error(extraction.error);
-      
+
       if (extraction.extractedText) {
         setExtractedContent(extraction.extractedText);
         setAiFlowStep(2);
         toast({ title: 'Lectura Finalizada' });
       }
     } catch (e: any) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Error de Lectura', 
-        description: e.message || "Ocurrió un error al contactar con el motor de extracción." 
+      toast({
+        variant: 'destructive',
+        title: 'Error de Lectura',
+        description: e.message || "Ocurrió un error al contactar con el motor de extracción."
       });
     } finally {
       setIsExtracting(false);
@@ -492,7 +491,7 @@ export default function CreateCoursePage() {
         role: aiPrefs.role,
         expectations: aiPrefs.expectations
       });
-      
+
       if (result && 'error' in result) throw new Error(result.error);
 
       const questionsWithIds = result.map((q: any) => ({
@@ -500,13 +499,13 @@ export default function CreateCoursePage() {
         id: generateId(),
         options: q.options || (q.type === 'multiple_choice' ? ['', '', '', ''] : null)
       }));
-      
+
       if (aiTargetType === 'main') {
         setCurrentModule(prev => ({ ...prev, questions: [...prev.questions, ...questionsWithIds] }));
       } else {
         setCurrentModule(prev => ({ ...prev, supportQuestions: [...prev.supportQuestions, ...questionsWithIds] }));
       }
-      
+
       setIsAiModalOpen(false);
       setExtractedContent('');
       setAiFlowStep(1);
@@ -523,22 +522,22 @@ export default function CreateCoursePage() {
       <CardHeader className="py-4 px-6 bg-secondary/5 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="font-bold">Pregunta {idx + 1}</Badge>
-<div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {['multiple_choice', 'true_false', 'free_response'].map(type => (
-              <button 
-                key={type} 
+              <button
+                key={type}
                 type="button"
                 onClick={() => {
                   const key = isSupport ? 'supportQuestions' : 'questions';
                   const newQs = [...currentModule[key]];
-                  newQs[idx] = { 
-                    ...newQs[idx], 
-                    type: type as any, 
-                    options: type === 'multiple_choice' ? ['', '', '', ''] : undefined, 
-                    correctAnswer: type === 'true_false' ? true : 0 
+                  newQs[idx] = {
+                    ...newQs[idx],
+                    type: type as any,
+                    options: type === 'multiple_choice' ? ['', '', '', ''] : undefined,
+                    correctAnswer: type === 'true_false' ? true : 0
                   };
                   setCurrentModule(prev => ({ ...prev, [key]: newQs }));
-                }} 
+                }}
                 className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase transition-all ${q.type === type ? 'bg-primary text-white' : 'bg-white border text-muted-foreground'}`}
               >
                 {type === 'multiple_choice' ? 'Opción Múltiple' : type === 'true_false' ? 'V/F' : 'Abierta'}
@@ -562,7 +561,7 @@ export default function CreateCoursePage() {
             newQs[idx].text = e.target.value;
             newQs[idx].question = e.target.value;
             setCurrentModule(prev => ({ ...prev, [isSupport ? 'supportQuestions' : 'questions']: newQs }));
-          }} placeholder="¿Cuál es la pregunta?" className="font-medium"  size="lg" />
+          }} placeholder="¿Cuál es la pregunta?" className="font-medium" size="lg" />
         </div>
 
         {q.type === 'multiple_choice' && q.options && (
@@ -571,13 +570,12 @@ export default function CreateCoursePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {q.options.map((opt: string, optIdx: number) => (
                 <div key={optIdx} className="flex gap-3 items-center bg-white p-2 rounded-xl border shadow-sm">
-                  <button 
-                    type="button" 
-                    className={`w-8 h-8 rounded-lg font-bold shrink-0 transition-colors ${
-                      (q.correctAnswer === optIdx || q.correctAnswer === opt) 
-                        ? 'bg-primary text-white' 
+                  <button
+                    type="button"
+                    className={`w-8 h-8 rounded-lg font-bold shrink-0 transition-colors ${(q.correctAnswer === optIdx || q.correctAnswer === opt)
+                        ? 'bg-primary text-white'
                         : 'bg-muted hover:bg-muted/80'
-                    }`} 
+                      }`}
                     onClick={() => {
                       const key = isSupport ? 'supportQuestions' : 'questions';
                       const newQs = [...currentModule[key]];
@@ -587,21 +585,21 @@ export default function CreateCoursePage() {
                   >
                     {String.fromCharCode(65 + optIdx)}
                   </button>
-                  <input 
-                    value={opt} 
+                  <input
+                    value={opt}
                     onChange={e => {
                       const key = isSupport ? 'supportQuestions' : 'questions';
                       const newQs = [...currentModule[key]];
                       newQs[idx].options[optIdx] = e.target.value;
                       setCurrentModule(prev => ({ ...prev, [key]: newQs }));
-                    }} 
-                    className="flex-1 border-none outline-none text-xs bg-transparent" 
-                    placeholder={`Opción ${String.fromCharCode(65 + optIdx)}`} 
+                    }}
+                    className="flex-1 border-none outline-none text-xs bg-transparent"
+                    placeholder={`Opción ${String.fromCharCode(65 + optIdx)}`}
                   />
                   {q.options.length > 2 && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
                       onClick={() => {
                         const key = isSupport ? 'supportQuestions' : 'questions';
@@ -621,10 +619,10 @@ export default function CreateCoursePage() {
             </div>
             {q.options.length < 6 && (
               <div className="flex justify-end pt-1">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
                   className="rounded-xl text-[10px] font-bold h-8"
                   onClick={() => {
                     const key = isSupport ? 'supportQuestions' : 'questions';
@@ -644,10 +642,10 @@ export default function CreateCoursePage() {
           <div className="space-y-3 pt-2">
             <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Respuesta Correcta</Label>
             <div className="flex flex-wrap gap-4">
-              <Button 
+              <Button
                 type="button"
-                variant={q.correctAnswer === true ? 'default' : 'outline'} 
-                className="flex-1 h-12 rounded-xl font-bold transition-all" 
+                variant={q.correctAnswer === true ? 'default' : 'outline'}
+                className="flex-1 h-12 rounded-xl font-bold transition-all"
                 onClick={() => {
                   const key = isSupport ? 'supportQuestions' : 'questions';
                   const newQs = [...currentModule[key]];
@@ -657,10 +655,10 @@ export default function CreateCoursePage() {
               >
                 Verdadero
               </Button>
-              <Button 
+              <Button
                 type="button"
-                variant={q.correctAnswer === false ? 'default' : 'outline'} 
-                className="flex-1 h-12 rounded-xl font-bold transition-all" 
+                variant={q.correctAnswer === false ? 'default' : 'outline'}
+                className="flex-1 h-12 rounded-xl font-bold transition-all"
                 onClick={() => {
                   const key = isSupport ? 'supportQuestions' : 'questions';
                   const newQs = [...currentModule[key]];
@@ -677,7 +675,7 @@ export default function CreateCoursePage() {
         {q.type === 'free_response' && (
           <div className="space-y-3 pt-2">
             <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Respuesta Esperada / Puntos Clave</Label>
-            <Textarea 
+            <Textarea
               value={typeof q.correctAnswer === 'string' ? q.correctAnswer : ''}
               onChange={e => {
                 const key = isSupport ? 'supportQuestions' : 'questions';
@@ -726,18 +724,18 @@ export default function CreateCoursePage() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="course-title" className="text-sm font-bold ml-1">Título del Programa</Label>
-                      <Input 
+                      <Input
                         id="course-title"
                         name="title"
-                        placeholder="Ej: Master en ADN Modeling" 
+                        placeholder="Ej: Master en ADN Modeling"
                         value={courseData.title}
                         onChange={e => setCourseData({ ...courseData, title: e.target.value })}
                         className="bg-secondary/5 border-none px-4 font-bold"
-                       size="lg" />
+                        size="lg" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="course-description" className="text-sm font-bold ml-1">Descripción Breve</Label>
-                      <Textarea 
+                      <Textarea
                         id="course-description"
                         name="description"
                         placeholder="Explica de qué trata este programa..."
@@ -779,8 +777,8 @@ export default function CreateCoursePage() {
                       </div>
                     </div>
 
-                    <Button 
-                      onClick={handleStartCourse} 
+                    <Button
+                      onClick={handleStartCourse}
                       disabled={!courseData.title || !courseData.categoryId || loading}
                       className="w-full h-14 rounded-2xl text-lg font-bold bg-primary hover:scale-[1.01] transition-transform"
                     >
@@ -798,27 +796,37 @@ export default function CreateCoursePage() {
             <Card>
               <CardHeader className="bg-accent/10 p-8 flex flex-row justify-between items-center"><div><Badge className="bg-accent text-white h-6 mb-2">Clase #{moduleOrder}</Badge><CardTitle className="text-2xl font-bold">Contenido Académico</CardTitle></div></CardHeader>
               <CardContent className="p-8 space-y-8">
-                <Input 
+                <Input
                   ref={classNameInputRef}
-                  placeholder="Nombre de la Clase" 
-                  value={currentModule.title} 
-                  onChange={e => setCurrentModule({ ...currentModule, title: e.target.value })} 
-                  className="font-bold text-xl border-none bg-muted/40" 
-                 size="xl" />
+                  placeholder="Nombre de la Clase"
+                  value={currentModule.title}
+                  onChange={e => setCurrentModule({ ...currentModule, title: e.target.value })}
+                  className="font-bold text-xl border-none bg-muted/40"
+                  size="xl" />
                 <Tabs value={currentModule.contentType} onValueChange={v => setCurrentModule({ ...currentModule, contentType: v as any })}>
                   <TabsList className="bg-muted p-1.5 mb-6 rounded-2xl w-full grid-cols-2 max-md h-14"><TabsTrigger value="text" className="flex-1 rounded-xl gap-2 font-bold h-11"><BookOpen className="h-4 w-4" /> Bibliografía</TabsTrigger><TabsTrigger value="video" className="flex-1 rounded-xl gap-2 font-bold h-11"><Video className="h-4 w-4" /> Video</TabsTrigger></TabsList>
                   <TabsContent value="text" className="space-y-6">
-                    <FileUploadArea 
-                      multiple={true} 
+                    <FileUploadArea
+                      multiple={true}
                       onChange={handleFileUpload}
                       isProcessing={currentModule.isProcessing}
                       title="Cargar Materiales"
-                      description="PDF, Word o TXT."
+                      description="Para alumnos: cualquier formato (PDF, Word, etc.). Para Archivo Maestro IA: solo Word (.docx) o Texto (.txt)."
                       className="p-6"
                     />
+                    <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-1.5 text-xs text-muted-foreground">
+                      <p className="font-bold text-foreground uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                        <BrainCircuit className="h-3.5 w-3.5 text-primary shrink-0" /> Condiciones para ser Archivo Maestro (Entrenamiento IA)
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-[11px] leading-relaxed">
+                        <li><strong>Formatos admitidos:</strong> Únicamente documentos <strong>Word (.docx)</strong> o <strong>Texto plano (.txt)</strong>. Los archivos PDF no pueden ser Archivo Maestro (solo material descargable para el alumno).</li>
+                        <li><strong>Contenido requerido:</strong> Texto estructurado y legible (hasta 50.000 caracteres por clase) para que la IA genere evaluaciones y valide el contenido.</li>
+                        <li><strong>Visibilidad:</strong> El archivo marcado como <strong>Maestro</strong> es privado para la IA y permanece oculto a los alumnos.</li>
+                      </ul>
+                    </div>
                     <div className="space-y-2 mt-4">
                       {currentModule.supportMaterials.map((mat) => {
-                        const compatible = isCompatibleWithAI(mat.fileBlob);
+                        const compatible = isCompatibleWithAI(mat.fileBlob || mat);
                         return (
                           <div key={mat.id} className={cn("flex items-center justify-between p-3 rounded-xl border", mat.isMaster ? "bg-primary/5 border-primary shadow-sm" : "bg-white border-border")}>
                             <div className="flex items-center gap-3 min-w-0">
@@ -827,7 +835,13 @@ export default function CreateCoursePage() {
                               </div>
                               <div className="flex items-center gap-2 min-w-0">
                                 <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-[300px]">{mat.name}</p>
-                                {mat.isMaster && <Badge className="bg-primary text-[10px] h-5 px-2">Maestro</Badge>}
+                                {mat.isMaster ? (
+                                  <Badge className="bg-primary text-[10px] h-5 px-2">Maestro</Badge>
+                                ) : compatible ? (
+                                  <span className="text-[10px] text-muted-foreground hidden sm:inline">Apto Maestro (.docx / .txt)</span>
+                                ) : (
+                                  <span className="text-[10px] text-muted-foreground hidden sm:inline">Solo alumno (No apto Maestro)</span>
+                                )}
                               </div>
                             </div>
                             <div className="flex gap-2 shrink-0">
@@ -847,7 +861,7 @@ export default function CreateCoursePage() {
                         value={currentModule.videoUrl}
                         onChange={e => setCurrentModule({ ...currentModule, videoUrl: e.target.value })}
                         className="bg-secondary/10 border-none px-6 font-medium"
-                       size="xl" />
+                        size="xl" />
                       <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-2xl flex items-start gap-4 mt-2">
                         <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                         <div className="text-[11px] text-blue-700 space-y-2">
@@ -875,7 +889,7 @@ export default function CreateCoursePage() {
                           setCurrentModule({ ...currentModule, minPassingScore: isNaN(val) ? 0 : val });
                         }}
                         className="bg-white border-none font-bold"
-                       size="lg" />
+                        size="lg" />
                       <div className="flex items-start gap-2 mt-2 px-1">
                         <Info className="h-3 w-3 text-accent mt-0.5" />
                         <p className="text-[10px] text-accent/80 leading-tight">
@@ -961,7 +975,7 @@ export default function CreateCoursePage() {
                           onChange={e => setBrandingData({ ...brandingData, socials: { ...brandingData.socials, [social.id]: e.target.value } })}
                           className="bg-secondary/10 border-none font-medium"
                           placeholder={`Enlace a ${social.label}`}
-                         size="xl" />
+                          size="xl" />
                       </div>
                     ))}
                   </TabsContent>
@@ -1011,7 +1025,7 @@ export default function CreateCoursePage() {
                               value={brandingData.primaryColor}
                               onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
                               className="text-2xl font-mono font-bold text-center bg-white border-none shadow-sm"
-                             size="xl" />
+                              size="xl" />
                           </div>
                         </div>
                       </div>
@@ -1052,7 +1066,7 @@ export default function CreateCoursePage() {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <Input placeholder="alumno@institucion.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} className="border-2"  size="xl" />
+                    <Input placeholder="alumno@institucion.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} className="border-2" size="xl" />
                     <Button onClick={handleInviteStudent} disabled={!inviteEmail || addingStudent} className="h-14 px-8 rounded-2xl font-bold">
                       {addingStudent ? <Loader2 className="animate-spin" /> : <UserPlus className="mr-2" />} Inscribir
                     </Button>
@@ -1192,7 +1206,7 @@ export default function CreateCoursePage() {
                       <span className="text-sm font-bold truncate max-w-[200px]">{currentModule.supportMaterials.find(m => m.isMaster)?.name}</span>
                     </div>
                   ) : (
-                    <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.pdf/.docx/.txt)</Badge>
+                    <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.docx / .txt)</Badge>
                   )}
                 </div>
 
@@ -1212,11 +1226,11 @@ export default function CreateCoursePage() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Cantidad</Label>
-                    <Input type="number" className="bg-secondary/30 border-none font-bold" value={aiPrefs.numQuestions} onChange={e => setAiPrefs({ ...aiPrefs, numQuestions: parseInt(e.target.value) || 0 })}  size="lg" />
+                    <Input type="number" className="bg-secondary/30 border-none font-bold" value={aiPrefs.numQuestions} onChange={e => setAiPrefs({ ...aiPrefs, numQuestions: parseInt(e.target.value) || 0 })} size="lg" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Rol</Label>
-                    <Input className="bg-secondary/30 border-none" value={aiPrefs.role} onChange={e => setAiPrefs({ ...aiPrefs, role: e.target.value })}  size="lg" />
+                    <Input className="bg-secondary/30 border-none" value={aiPrefs.role} onChange={e => setAiPrefs({ ...aiPrefs, role: e.target.value })} size="lg" />
                   </div>
                 </div>
 
@@ -1270,10 +1284,10 @@ export default function CreateCoursePage() {
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-3 pt-6">
             <AlertDialogCancel onClick={() => { setStep(3); clearUILocks(); }} className="flex-1 h-12 rounded-xl font-bold border-2">Siguiente Paso: Identidad</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { 
-              setCurrentModule(initialModule); 
-              setModuleOrder(prev => prev + 1); 
-              setShowNextModuleDialog(false); 
+            <AlertDialogAction onClick={() => {
+              setCurrentModule(initialModule);
+              setModuleOrder(prev => prev + 1);
+              setShowNextModuleDialog(false);
               clearUILocks();
               window.scrollTo({ top: 0, behavior: 'smooth' });
               setTimeout(() => classNameInputRef.current?.focus(), 500);

@@ -161,7 +161,7 @@ export function getNavigationSections(profile?: any): NavSection[] {
       items: filterAccountItems([
         { name: 'Evo', href: '/settings/evo', roles: ['alumno', 'mentor', 'admin', 'marketing', 'empresa'], icon: Sparkles },
         { name: 'Mi Perfil', href: '/settings/profile', roles: ['alumno', 'mentor', 'admin', 'marketing', 'empresa'], icon: Settings },
-        { name: 'Avatares de Marca', href: '/settings/avatars', roles: ['alumno', 'mentor', 'admin', 'marketing', 'empresa'], icon: Bot },
+        { name: 'Avatares de Marca', href: '/settings/avatars', roles: ['mentor', 'admin', 'empresa'], icon: Bot },
         { name: 'Mi Plan y Facturación', href: '/settings/plan', roles: ['mentor', 'admin', 'empresa'], icon: CreditCard },
         { name: 'Métodos de Cobro', href: '/settings/payment-methods', roles: ['mentor', 'admin', 'empresa'], icon: Wallet },
         { name: 'Transferencias', href: '/settings/transfers', roles: ['mentor', 'admin', 'empresa'], icon: ArrowLeftRight },

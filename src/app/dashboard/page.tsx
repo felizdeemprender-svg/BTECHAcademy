@@ -27,7 +27,7 @@ import {
   Building2
 } from 'lucide-react';
 import Link from 'next/link';
-import { collection, query, where, limit, getDocs, or } from 'firebase/firestore';
+import { collection, collectionGroup, query, where, limit, getDocs, or } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { TermsUsageModal } from '@/components/terms-usage-modal';
 import { cn } from '@/lib/utils';
@@ -100,7 +100,7 @@ function DashboardInner() {
   const mentorCoursesQuery = useMemoFirebase(() => {
     if (!profile?.uid || isAuthLoading || (!isMentor && !isAdmin && !isEmpresa)) return null;
     const coursesRef = collection(db, 'courses');
-    if (isAdmin) return query(coursesRef, limit(10));
+    if (isAdmin) return coursesRef;
     if (isEmpresa) {
       const companyId = profile.companyId || profile.uid;
       return query(
@@ -108,22 +108,27 @@ function DashboardInner() {
         or(
           where('mentorId', '==', profile.uid),
           where('companyId', '==', companyId)
-        ),
-        limit(10)
+        )
       );
     }
-    if (isMentor) return query(coursesRef, where('mentorId', '==', profile.uid), limit(10));
+    if (isMentor) return query(coursesRef, where('mentorId', '==', profile.uid));
     return null;
   }, [profile?.uid, profile?.companyId, db, isMentor, isAdmin, isEmpresa, isAuthLoading]);
   const { data: mentorCoursesRaw } = useCollection(mentorCoursesQuery);
 
   const mentorCourses = useMemoFirebase(() => {
     if (!mentorCoursesRaw) return [];
+    const toMillis = (val: any): number => {
+      if (!val) return 0;
+      if (typeof val.toDate === 'function') return val.toDate().getTime();
+      if (typeof val._seconds === 'number') return val._seconds * 1000;
+      if (typeof val.seconds === 'number') return val.seconds * 1000;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? 0 : d.getTime();
+    };
     return [...mentorCoursesRaw].sort((a: any, b: any) => {
-      const dateA = a.createdAt?.toDate?.()?.getTime() || 0;
-      const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
-      return dateB - dateA;
-    }).slice(0, 5);
+      return toMillis(b.createdAt) - toMillis(a.createdAt);
+    });
   }, [mentorCoursesRaw]);
 
   // Query de Automatizaciones Activas (Para Resumen Dashboard)
@@ -231,12 +236,19 @@ const DashboardContent = ({
   const { tasks: sortedTasks, pendingTasks, completedTasks, isLoading: loadingTasks } = useStudentTasks(20);
   const { followUps: recentFollowUps, sessionStats: followUpSessionStats, isLoading: loadingFollowUps } = useStudentFollowUps();
 
-  // 2. Query de Inscripciones de Mentor / Empresa
+  // 2. Query de Inscripciones de Mentor / Empresa / Admin
   const [mentorInscriptions, setMentorInscriptions] = useState<any[]>([]);
   useEffect(() => {
     const fetchInscriptions = async () => {
-      if ((isMentor || isEmpresa) && mentorCourses && mentorCourses.length > 0) {
+      if ((isMentor || isEmpresa || isAdmin) && mentorCourses && mentorCourses.length > 0) {
         try {
+          if (isAdmin) {
+            const snap = await getDocs(collection(db, 'enrollments'));
+            const allEnrollments: any[] = [];
+            snap.forEach(doc => allEnrollments.push({ ...doc.data(), id: doc.id }));
+            setMentorInscriptions(allEnrollments);
+            return;
+          }
           const courseIds = mentorCourses.map((c: any) => c.id);
           const allEnrollments: any[] = [];
           for (let i = 0; i < courseIds.length; i += 30) {
@@ -252,7 +264,33 @@ const DashboardContent = ({
       }
     };
     fetchInscriptions();
-  }, [isMentor, isEmpresa, mentorCourses, db]);
+  }, [isMentor, isEmpresa, isAdmin, mentorCourses, db]);
+
+  // Cursos destacados (top 5): prioriza programas con matrícula activa y publicados
+  const displayedCourses = useMemo(() => {
+    if (!mentorCourses || mentorCourses.length === 0) return [];
+    const countsByCourse: Record<string, number> = {};
+    mentorInscriptions.forEach((e: any) => {
+      if (e.courseId) countsByCourse[e.courseId] = (countsByCourse[e.courseId] || 0) + 1;
+    });
+    const toMillis = (val: any): number => {
+      if (!val) return 0;
+      if (typeof val.toDate === 'function') return val.toDate().getTime();
+      if (typeof val._seconds === 'number') return val._seconds * 1000;
+      if (typeof val.seconds === 'number') return val.seconds * 1000;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? 0 : d.getTime();
+    };
+    return [...mentorCourses]
+      .sort((a: any, b: any) => {
+        const enrDiff = (countsByCourse[b.id] || 0) - (countsByCourse[a.id] || 0);
+        if (enrDiff !== 0) return enrDiff;
+        const activeDiff = (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0);
+        if (activeDiff !== 0) return activeDiff;
+        return toMillis(b.createdAt) - toMillis(a.createdAt);
+      })
+      .slice(0, 5);
+  }, [mentorCourses, mentorInscriptions]);
 
   // Carga de datos corporativos si es Empresa
   const [companyInfo, setCompanyInfo] = useState<any>(null);
@@ -291,12 +329,36 @@ const DashboardContent = ({
     return () => { isMounted = false; };
   }, [isEmpresa, user]);
 
-  // 3. Procesamiento de datos (Challenges agrupados)
+  // 3. Procesamiento de datos (Challenges agrupados para Mentor / Admin / Empresa)
+  const [mentorAssignedTasks, setMentorAssignedTasks] = useState<any[]>([]);
+  useEffect(() => {
+    if (!profile?.uid || (!isMentor && !isAdmin && !isEmpresa)) return;
+    let isMounted = true;
+    const fetchAssignedTasks = async () => {
+      try {
+        const q = isAdmin
+          ? query(collectionGroup(db, 'individualTasks'))
+          : query(collectionGroup(db, 'individualTasks'), where('mentorId', '==', profile.uid));
+        const snap = await getDocs(q);
+        if (!isMounted) return;
+        const list = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        setMentorAssignedTasks(list);
+      } catch (e) {
+        console.warn('[Dashboard] Error fetching assigned tasks:', e);
+      }
+    };
+    fetchAssignedTasks();
+    return () => { isMounted = false; };
+  }, [db, profile?.uid, isAdmin, isMentor, isEmpresa]);
+
   const groupedDashboardChallenges = useMemo(() => {
-    if (!sortedTasks || (!isMentor && !isAdmin && !isEmpresa)) return [];
+    const sourceTasks = (isAdmin || isMentor || isEmpresa) && mentorAssignedTasks.length > 0
+      ? mentorAssignedTasks
+      : sortedTasks;
+    if (!sourceTasks || (!isMentor && !isAdmin && !isEmpresa)) return [];
     const groups: Record<string, any> = {};
-    sortedTasks.forEach(task => {
-      const key = task.title + task.description;
+    sourceTasks.forEach(task => {
+      const key = (task.title || '') + (task.description || '');
       if (!groups[key]) {
         groups[key] = { id: task.id, title: task.title, description: task.description, createdAt: task.createdAt, total: 0, completed: 0, tasks: [] as any[] };
       }
@@ -305,7 +367,7 @@ const DashboardContent = ({
       groups[key].tasks.push(task);
     });
     return Object.values(groups).slice(0, 5);
-  }, [sortedTasks, isMentor, isAdmin, isEmpresa]);
+  }, [mentorAssignedTasks, sortedTasks, isMentor, isAdmin, isEmpresa]);
 
   const isLoading = loadingEnrollments || loadingTasks || loadingFollowUps;
   return (
@@ -505,16 +567,16 @@ const DashboardContent = ({
             
             <div className="grid gap-4 md:gap-6">
               {(isMentor || isAdmin || isEmpresa) ? (
-                mentorCourses?.length === 0 ? (
+                displayedCourses?.length === 0 ? (
                   <p className="text-center py-10 text-muted-foreground italic">No se han registrado programas recientemente.</p>
-                ) : mentorCourses?.map((course: any) => {
+                ) : displayedCourses?.map((course: any) => {
                   const courseInscriptions = mentorInscriptions.filter((e: any) => e.courseId === course.id);
                   return (
                     <Card key={course.id} className="border-none shadow-lg overflow-hidden rounded-2xl md:rounded-3xl bg-white group transition-all duration-500">
                       <div className="flex flex-col lg:flex-row items-stretch">
                         <div className="relative w-full lg:w-32 h-24 lg:h-auto bg-muted overflow-hidden shrink-0">
                           <Image 
-                            src={course.thumbnail || `https://loremflickr.com/600/400/education,course?lock=${course.id}`} 
+                            src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop'} 
                             alt={course.title} 
                             fill 
                             className="object-cover transition-transform duration-700 group-hover:scale-110" 

@@ -35,7 +35,7 @@ export function StudentCourseCard({
 }: CourseCardProps) {
   const isFinished = progressPercent >= 100;
   const isActive = status === 'active' && isApproved;
-  const defaultImage = `https://loremflickr.com/600/400/education,course?lock=${courseId}`;
+  const defaultImage = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop';
 
   if (variant === 'list') {
     return (

@@ -805,15 +805,15 @@ export default function MentorChallengesPage() {
 
         {/* Dialog: Create Global Challenge */}
         <Dialog open={isCreateOpen} onOpenChange={(open) => { setIsCreateOpen(open); if(!open) resetForm(); }}>
-          <DialogContent className="mw-4xl h-[90vh] flex flex-col">
-            <div className="relative shrink-0 px-8 pt-8">
+          <DialogContent className="mw-4xl h-[90vh] p-0 overflow-hidden flex flex-col">
+            <div className="relative shrink-0 px-6 md:px-8 pt-6 md:pt-8">
               <Target className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
               <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Target className="h-6 w-6 text-accent" /> Asignar Desafío Global</DialogTitle>
               <DialogDescription className="text-muted-foreground mt-1">Crea una consigna y selecciona a los destinatarios por curso o perfil.</DialogDescription>
             </div>
 
-            <div className="flex-1 overflow-hidden flex flex-col">
-              <ScrollArea className="flex-1 px-8">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              <ScrollArea className="flex-1 h-full px-6 md:px-8">
                 <div className="space-y-10 pb-8">
                   {/* Step 1: Consigna */}
                   <section className="space-y-6">
@@ -1019,17 +1019,17 @@ export default function MentorChallengesPage() {
               </ScrollArea>
             </div>
 
-            <DialogFooter className="p-8 bg-muted border-t shrink-0">
-              <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
+            <DialogFooter className="p-6 bg-muted border-t shrink-0">
+              <div className="w-full flex flex-col sm:flex-row flex-wrap justify-between items-center gap-4">
                 <div className="text-sm font-medium text-muted-foreground">
                   <span className="font-bold text-primary">{selectedStudentIds.length}</span> alumnos seleccionados para envío.
                 </div>
-                <div className="flex gap-3 w-full md:w-auto">
-                  <Button variant="ghost" onClick={() => setIsCreateOpen(false)} className="rounded-xl font-bold h-12 px-8">Cancelar</Button>
+                <div className="flex flex-wrap gap-3 w-full sm:w-auto justify-end">
+                  <Button variant="ghost" onClick={() => setIsCreateOpen(false)} className="rounded-xl font-bold h-11 px-6">Cancelar</Button>
                   <Button 
                     onClick={handleCreateChallenges} 
                     disabled={loading || selectedStudentIds.length === 0 || !taskData.title}
-                    className="flex-1 md:flex-none h-12 px-10 rounded-xl font-bold bg-primary gap-2"
+                    className="flex-1 sm:flex-none h-11 px-6 rounded-xl font-bold bg-primary gap-2"
                   >
                     {loading ? <Loader2 className="animate-spin" /> : <Send className="h-4 w-4" />} Asignar Desafío Masivo
                   </Button>

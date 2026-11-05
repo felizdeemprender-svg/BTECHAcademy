@@ -256,7 +256,7 @@ function V2LandingBuilderContent() {
     toast({ title: 'Analizando Documento Maestro...', description: 'Extrayendo contenido del syllabus.' });
     const extractRes = await extractDocumentText({
       documentUrl,
-      documentName: 'master.pdf'
+      documentName: masterFile?.name || 'master.docx'
     });
     const text = extractRes.extractedText || '';
     setExtractedMasterText(text);
@@ -525,8 +525,8 @@ function V2LandingBuilderContent() {
                 {selectedCourse?.productType === 'mentoria_individual' && (
                   <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
                     <Label className="text-xs font-bold text-muted-foreground mb-1 block">Documento Maestro (Opcional)</Label>
-                    <Input type="file" onChange={(e) => setMasterFile(e.target.files?.[0] || null)} className="text-xs h-9 bg-white" />
-                    <p className="text-[10px] text-muted-foreground mt-1">Sube el PDF de tu mentoría para extraer el syllabus y usarlo de base en la landing.</p>
+                    <Input type="file" accept=".docx,.doc,.txt" onChange={(e) => setMasterFile(e.target.files?.[0] || null)} className="text-xs h-9 bg-white" />
+                    <p className="text-[10px] text-muted-foreground mt-1">Condiciones: solo Word (.docx) o Texto (.txt) con texto estructurado (no se admiten archivos PDF como Documento Maestro).</p>
                   </div>
                 )}
               </div>

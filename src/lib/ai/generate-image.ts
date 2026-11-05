@@ -12,15 +12,18 @@ export async function generateImage(params: {
   aspectRatio?: '1:1' | '9:16' | '16:9';
 }): Promise<string> {
   const { prompt, keywords, courseTitle, contextHint, engine, channel, uid, role, aspectRatio } = params;
-  const finalKeywords = keywords || 'education, online course, professional';
-  let finalPrompt = prompt || 'professional corporate training photo';
+  const finalKeywords = keywords || courseTitle || 'education, learning';
+  const hasCustomPrompt = typeof prompt === 'string' && prompt.trim().length > 0;
+  let finalPrompt = hasCustomPrompt
+    ? prompt.trim()
+    : `Editorial photography representing "${courseTitle || finalKeywords}", natural cinematic lighting, shallow depth of field`;
 
-  if (keywords || contextHint || courseTitle) {
+  if (!hasCustomPrompt && (keywords || contextHint || courseTitle)) {
     try {
       finalPrompt = await generateImagePromptFlow({
         keywords: finalKeywords,
         contextHint: contextHint || '',
-        courseTitle: courseTitle || '',
+        courseTitle: courseTitle || keywords || '',
         channel: channel || 'video',
         uid: uid,
         role: role

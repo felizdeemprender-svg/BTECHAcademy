@@ -6,6 +6,7 @@ import { ref, uploadBytes, getDownloadURL, uploadString } from 'firebase/storage
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Loader2, 
@@ -14,7 +15,8 @@ import {
   Trash2, 
   RefreshCw,
   Image as ImageIcon,
-  Download
+  Download,
+  Wand2
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth-context';
@@ -30,6 +32,9 @@ interface ImageEditorProps {
   description?: string;
   aiPromptHint?: string;
   courseTitle?: string;
+  allowPromptEdit?: boolean;
+  promptValue?: string;
+  onPromptChange?: (prompt: string) => void;
 }
 
 export function ImageEditor({ 
@@ -41,19 +46,26 @@ export function ImageEditor({
   keywords,
   description,
   aiPromptHint,
-  courseTitle
+  courseTitle,
+  allowPromptEdit = false,
+  promptValue,
+  onPromptChange
 }: ImageEditorProps) {
   const { profile } = useAuth();
   const { storage } = useFirebase();
   const [uploading, setUploading] = useState(false);
   const [generatingAi, setGeneratingAi] = useState(false);
+  const [suggestingPrompt, setSuggestingPrompt] = useState(false);
+  const [showPromptEditor, setShowPromptEditor] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState(promptValue || '');
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const [filters, setFilters] = useState('');
 
   useEffect(() => {
-    // legacy cleanup ignored
-  }, [url, keywords]);
+    if (promptValue !== undefined && promptValue !== customPrompt) {
+      setCustomPrompt(promptValue);
+    }
+  }, [promptValue]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,16 +87,50 @@ export function ImageEditor({
 
 
 
-  const handleGenerateAi = async (engine: 'free' | 'premium' = 'free') => {
+  const handleSuggestPrompt = async () => {
+    setSuggestingPrompt(true);
+    try {
+      const baseContext = aiPromptHint || (description ? `Descripción: ${description}. ` : '') + (label || '');
+      const userDraftHint = customPrompt.trim() ? ` Idea base del autor: ${customPrompt.trim()}.` : '';
+      const res = await fetch('/api/ai/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'prompt_only',
+          keywords: keywords || '',
+          courseTitle: courseTitle || keywords || '',
+          contextHint: `${baseContext}${userDraftHint}`.trim(),
+          channel,
+          uid: profile?.uid,
+          role: profile?.role,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.generatedPrompt) {
+        throw new Error(data?.error || 'No se pudo sugerir el prompt.');
+      }
+      setCustomPrompt(data.generatedPrompt);
+      onPromptChange?.(data.generatedPrompt);
+      setShowPromptEditor(true);
+      toast({ title: 'Prompt sugerido listo', description: 'Podés revisarlo o editarlo antes de generar la imagen.' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Error al sugerir prompt', description: err.message });
+    } finally {
+      setSuggestingPrompt(false);
+    }
+  };
+
+  const handleGenerateAi = async (engine: 'free' | 'premium' = 'free', useCustomPrompt: boolean = false) => {
     setGeneratingAi(true);
     try {
+      const promptToSend = useCustomPrompt && customPrompt.trim().length > 0 ? customPrompt.trim() : '';
       const res = await fetch('/api/ai/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          prompt: '',
+          prompt: promptToSend,
           keywords: keywords || '',
-          courseTitle: courseTitle || '',
+          courseTitle: courseTitle || keywords || '',
           contextHint: aiPromptHint || (description ? `Descripción: ${description}. ` : '') + (label || ''),
           engine,
           channel,
@@ -98,9 +144,9 @@ export function ImageEditor({
         throw new Error(data?.error || 'No se recibió imagen de la IA o formato inválido.');
       }
 
-      // DEBUG: Mostrar el prompt generado por Gemini para verificar
       if (data.generatedPrompt) {
-        toast({ title: 'Prompt Generado (Debug)', description: data.generatedPrompt, duration: 8000 });
+        setCustomPrompt(data.generatedPrompt);
+        onPromptChange?.(data.generatedPrompt);
       }
 
       // Subir a Firebase Storage para no exceder el límite de 1MB de Firestore (Data URI)
@@ -121,7 +167,7 @@ export function ImageEditor({
     }
   };
 
-  const isBusy = uploading || generatingAi;
+  const isBusy = uploading || generatingAi || suggestingPrompt;
 
   return (
     <div className="space-y-3">
@@ -150,12 +196,32 @@ export function ImageEditor({
             </Button>
           )}
         </div>
+        {/* Botón adicional opcional: Ver / Editar Prompt de IA */}
+        {allowPromptEdit && (
+          <Button
+            variant={showPromptEditor ? 'default' : 'outline'}
+            size="sm"
+            className={cn(
+              'h-10 px-3 shrink-0 gap-1.5 font-bold text-xs',
+              showPromptEditor
+                ? 'bg-primary text-primary-foreground'
+                : 'border-primary/30 text-primary hover:bg-primary/10'
+            )}
+            onClick={() => setShowPromptEditor(prev => !prev)}
+            disabled={isBusy}
+            title="Configurar y editar el prompt visual de IA"
+            type="button"
+          >
+            <Wand2 className="h-3.5 w-3.5" />
+            Prompt IA
+          </Button>
+        )}
         {/* Botón Free IA — siempre visible */}
         <Button 
           variant="outline" 
           size="icon" 
           className="h-10 w-10 shrink-0 border-border text-primary hover:bg-primary/10" 
-          onClick={() => handleGenerateAi('free')}
+          onClick={() => handleGenerateAi('free', Boolean(customPrompt.trim()))}
           disabled={isBusy}
           title="Regenerar con IA Free (Gemini)"
           type="button"
@@ -167,7 +233,7 @@ export function ImageEditor({
           variant="outline" 
           size="icon" 
           className="h-10 w-10 shrink-0 border-primary/30 text-primary hover:bg-primary/15" 
-          onClick={() => handleGenerateAi('premium')}
+          onClick={() => handleGenerateAi('premium', Boolean(customPrompt.trim()))}
           disabled={isBusy}
           title="Generar con IA Premium"
           type="button"
@@ -198,6 +264,51 @@ export function ImageEditor({
         </Button>
         <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleUpload} />
       </div>
+
+      {allowPromptEdit && showPromptEditor && (
+        <div className="p-4 rounded-xl border border-border bg-secondary/20 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-bold text-foreground">Dirección Visual (Prompt de Portada)</p>
+              <p className="text-[11px] text-muted-foreground">
+                Pedile a la IA una propuesta basada en tu curso o escribí tu propia escena antes de renderizar.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs font-bold gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+              onClick={handleSuggestPrompt}
+              disabled={isBusy}
+            >
+              {suggestingPrompt ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+              Sugerir Prompt con IA
+            </Button>
+          </div>
+          <Textarea
+            value={customPrompt}
+            onChange={(e) => {
+              setCustomPrompt(e.target.value);
+              onPromptChange?.(e.target.value);
+            }}
+            placeholder="Describí la escena, atmósfera, objetos e iluminación que querés en la portada (o tocá 'Sugerir Prompt con IA')..."
+            className="min-h-[88px] bg-white text-xs font-medium"
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              size="sm"
+              className="h-9 px-4 text-xs font-bold gap-1.5 bg-primary hover:bg-primary/90 text-white"
+              onClick={() => handleGenerateAi('premium', true)}
+              disabled={isBusy || !customPrompt.trim()}
+            >
+              {generatingAi ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              Generar Portada con este Prompt
+            </Button>
+          </div>
+        </div>
+      )}
       {generatingAi && (
         <div className="flex items-center gap-2 text-[10px] font-bold text-primary animate-pulse px-1">
           <Sparkles className="h-3 w-3" />

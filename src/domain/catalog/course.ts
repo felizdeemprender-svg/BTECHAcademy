@@ -27,6 +27,7 @@ export const CourseSchema = z.object({
   modulesCount: z.number().int().min(0).default(0),
   studentsCount: z.number().int().min(0).default(0),
   thumbnail: z.string().optional(),
+  thumbnailPrompt: z.string().optional(),
   duration: z.string().optional(),
   brandingOverride: CourseBrandingOverrideSchema.optional(),
   companyId: z.string().optional(),
