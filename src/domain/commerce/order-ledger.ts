@@ -83,7 +83,7 @@ export function createOrderLedgerEntry(params: CreateOrderLedgerParams): OrderLe
     netInTutorCurrency = Math.round(amountInUSD * exchangeRate * 100) / 100;
   }
 
-  const createdAt = (params.createdAt instanceof Date && !Number.isNaN(params.createdAt.getTime()))
+  const validCreatedAt = (params.createdAt instanceof Date && !Number.isNaN(params.createdAt.getTime()))
     ? params.createdAt
     : new Date();
 
@@ -108,8 +108,7 @@ export function createOrderLedgerEntry(params: CreateOrderLedgerParams): OrderLe
     landingId: params.landingId,
     referidoId: params.referidoId,
     metadata: params.metadata,
-    createdAt,
+    createdAt: validCreatedAt,
     updatedAt: new Date(),
   });
 }
-
