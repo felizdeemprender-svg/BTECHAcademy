@@ -5,8 +5,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
 
   try {
-    const body = await req.json();
-    const { channel = 'direct', source = 'direct' } = body;
+    const body = await req.json().catch(() => ({}));
+    const { channel = 'direct', source = 'direct' } = body || {};
 
     const useCase = new TrackSalesPageViewUseCase();
     await useCase.execute(id, channel, source);
