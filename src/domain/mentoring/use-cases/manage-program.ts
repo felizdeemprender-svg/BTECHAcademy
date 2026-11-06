@@ -77,8 +77,8 @@ export async function createMentoringProgram(
       status: 'active',
       startDate: input.startDate,
       endDate: input.endDate,
-      planGuideUrl: input.planGuideUrl ?? undefined,
-      masterFileUrl: isGroup ? (input.masterFileUrl ?? undefined) : undefined,
+      planGuideUrl: input.planGuideUrl ?? null,
+      masterFileUrl: isGroup ? (input.masterFileUrl ?? null) : null,
     });
     await sessions.createMany(
       id,
@@ -117,7 +117,9 @@ export async function updateMentoringProgram(
     const existing = await programs.findById(parsed.data.id);
     if (!existing) return err(notFound(`Mentoría ${parsed.data.id} no encontrada`));
     const { id, ...rest } = parsed.data;
-    const patch: MentoringProgramPatch = { ...rest };
+    const patch: MentoringProgramPatch = Object.fromEntries(
+      Object.entries(rest).filter(([, v]) => v !== undefined),
+    );
     if (existing.type !== 'group') delete patch.masterFileUrl;
     await programs.update(id, patch);
     return ok(undefined);

@@ -173,7 +173,7 @@ export default function FollowUpsPage() {
         });
         setStudents(Array.from(studentMap.values()));
       } catch (e) {
-        console.error("Error fetching students:", e);
+        console.warn("Error fetching students:", e);
       }
     };
     fetchStudents();
@@ -245,7 +245,7 @@ export default function FollowUpsPage() {
         // Opcional: Crear registro de usuario fantasma si no existe
       } else {
         const student = students.find(s => s.id === formData.studentId);
-        finalStudentId = student?.id;
+        finalStudentId = student?.id || '';
         finalStudentName = student?.displayName || 'Alumno';
         finalStudentEmail = student?.email || '';
       }
@@ -310,9 +310,9 @@ export default function FollowUpsPage() {
           goal: formData.goal,
           startDate: formData.startDate,
           endDate: formData.endDate,
-          planGuideUrl: guideFile ? uploaded.planGuideUrl : selectedFollowUp.planGuideUrl,
+          planGuideUrl: guideFile ? uploaded.planGuideUrl : (selectedFollowUp.planGuideUrl ?? null),
           ...(formData.type === 'group'
-            ? { masterFileUrl: masterFile ? uploaded.masterFileUrl : selectedFollowUp.masterFileUrl }
+            ? { masterFileUrl: masterFile ? uploaded.masterFileUrl : (selectedFollowUp.masterFileUrl ?? null) }
             : {}),
         });
         toast({ title: 'Mentoría Actualizada' });
@@ -327,10 +327,10 @@ export default function FollowUpsPage() {
     }
     try {
       const uploaded = await uploadGuideFiles();
-      const planGuideUrl = guideFile ? uploaded.planGuideUrl : selectedFollowUp.planGuideUrl;
+      const planGuideUrl = guideFile ? uploaded.planGuideUrl : (selectedFollowUp.planGuideUrl ?? null);
       const masterFileUrl = (masterFile && formData.type === 'group')
         ? uploaded.masterFileUrl
-        : selectedFollowUp.masterFileUrl;
+        : (selectedFollowUp.masterFileUrl ?? null);
 
       const updateData: any = {
         title: formData.title,

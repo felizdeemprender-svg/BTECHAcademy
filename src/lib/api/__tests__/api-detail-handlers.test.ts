@@ -11,6 +11,7 @@ import {
   handleAssignTask,
   handleDeleteTask,
   handleGetProgram,
+  handleListProgramEnrollments,
   handleListSessions,
   handleListTasks,
   handleSaveSession,
@@ -40,7 +41,9 @@ describe('acceso alumno', () => {
   it('grupal inscripto lee; ajeno recibe 403', async () => {
     const gateway = setup();
     expect((await handleGetProgram(gateway, studentGroup, 'fGroup')).status).toBe(200);
+    expect((await handleListProgramEnrollments(gateway, studentGroup, 'fGroup')).status).toBe(200);
     expect((await handleGetProgram(gateway, stranger, 'fGroup')).status).toBe(403);
+    expect((await handleListProgramEnrollments(gateway, stranger, 'fGroup')).status).toBe(403);
     expect((await handleListTasks(gateway, stranger, 'f1')).status).toBe(403);
   });
 });

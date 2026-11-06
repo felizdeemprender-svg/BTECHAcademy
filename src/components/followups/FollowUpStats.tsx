@@ -4,6 +4,9 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import { useAuth } from '@/components/auth-context';
+import { isNewMentoringApiEnabled } from '@/lib/feature-flags';
+import { fetchProgramSessions, fetchProgramTasks } from '@/lib/api/mentoring-client';
 import { TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Zap, CheckCircle2 } from 'lucide-react';
@@ -16,18 +19,38 @@ interface FollowUpStatsProps {
 
 export function FollowUpStats({ followUpId, totalPlanned }: FollowUpStatsProps) {
   const db = useFirestore();
+  const { user } = useAuth();
   const [stats, setStats] = useState({ completedSessions: 0, pendingTasks: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!followUpId?.trim()) {
+      setLoading(false);
+      return;
+    }
     let isMounted = true;
     const fetchStats = async () => {
       try {
+        if (isNewMentoringApiEnabled() && user) {
+          const token = await user.getIdToken();
+          const [sessions, tasks] = await Promise.all([
+            fetchProgramSessions(followUpId, token),
+            fetchProgramTasks(followUpId, token),
+          ]);
+          if (isMounted) {
+            setStats({
+              completedSessions: sessions.filter((s) => s.isCompleted).length,
+              pendingTasks: tasks.filter((t) => t.status !== 'completed').length,
+            });
+          }
+          return;
+        }
+
         const [sessionsSnap, tasksSnap] = await Promise.all([
           getDocs(query(collection(db, 'followups', followUpId, 'sessions'), where('isCompleted', '==', true))),
           getDocs(query(collection(db, 'followups', followUpId, 'tasks'), where('status', '!=', 'completed')))
         ]);
-        
+
         if (isMounted) {
           setStats({
             completedSessions: sessionsSnap.size,
@@ -35,7 +58,7 @@ export function FollowUpStats({ followUpId, totalPlanned }: FollowUpStatsProps) 
           });
         }
       } catch (e) {
-        console.error("Error fetching follow-up stats:", e);
+        console.warn("Error fetching follow-up stats:", e);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -43,7 +66,7 @@ export function FollowUpStats({ followUpId, totalPlanned }: FollowUpStatsProps) 
 
     fetchStats();
     return () => { isMounted = false; };
-  }, [db, followUpId]);
+  }, [db, followUpId, user]);
 
   return (
     <>

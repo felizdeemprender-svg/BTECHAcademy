@@ -88,7 +88,10 @@ export default function StudentRecordPage({ params }: { params: Promise<{ id: st
   const [selectedNote, setSelectedNote] = useState<any>(null);
 
 
-  const studentRef = useMemoFirebase(() => doc(db, 'users', studentId), [db, studentId]);
+  const studentRef = useMemoFirebase(
+    () => (studentId?.trim() ? doc(db, 'users', studentId.trim()) : null),
+    [db, studentId],
+  );
   const { data: studentData, isLoading: studentLoading } = useDoc(studentRef);
 
   const notesQuery = useMemoFirebase(() => {

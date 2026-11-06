@@ -129,6 +129,13 @@ export function fetchProgramTasks(programId: string, token: string): Promise<Api
   return apiGet<ApiTask[]>(`${detailBase(programId)}?action=tasks`, token);
 }
 
+export function fetchProgramEnrollments(
+  programId: string,
+  token: string,
+): Promise<Record<string, unknown>[]> {
+  return apiGet<Record<string, unknown>[]>(`${detailBase(programId)}?action=enrollments`, token);
+}
+
 export function addProgramSession(
   programId: string,
   token: string,
