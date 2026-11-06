@@ -14,6 +14,7 @@ import {
   type AiCreditsExpense,
 } from '@/domain/commerce/use-cases/build-tutor-financial-statement';
 import { createOrderLedgerEntry, type OrderLedger } from '@/domain/commerce/order-ledger';
+import { toDomainDate } from '@/domain/shared/firestore-mapping';
 
 export interface BillingStatementQueryParams {
   readonly tutorId: string;
@@ -63,7 +64,7 @@ export async function handleGetBillingStatement(
       if (ledgerSnap && ledgerSnap.docs.length > 0) {
         for (const doc of ledgerSnap.docs) {
           const raw = doc.data() || {};
-          const created = raw.createdAt instanceof Date ? raw.createdAt : (raw.createdAt ? new Date(String(raw.createdAt)) : new Date());
+          const created = toDomainDate(raw.createdAt as any) || new Date();
           orders.push(createOrderLedgerEntry({
             id: doc.id,
             courseId: (raw.courseId as string) || 'desconocido',
@@ -96,9 +97,7 @@ export async function handleGetBillingStatement(
             const raw = doc.data() || {};
             if (raw.status !== 'active' && raw.status !== 'completed') continue;
 
-            const created = raw.enrolledAt instanceof Date
-              ? raw.enrolledAt
-              : (raw.createdAt instanceof Date ? raw.createdAt : new Date());
+            const created = toDomainDate(raw.enrolledAt as any) || toDomainDate(raw.createdAt as any) || new Date();
 
             const amount = Number(raw.price || raw.amount || raw.chargedAmount || 0);
             const currency = (raw.currency as string) || (raw.chargedCurrency as string) || homeCurrency;
@@ -153,7 +152,7 @@ export async function handleGetBillingStatement(
     const aiCredits: AiCreditsExpense[] = [];
     const creditsPurchases = (userData.creditsPurchases as Array<Record<string, unknown>>) || [];
     for (const p of creditsPurchases) {
-      const pDate = p.createdAt instanceof Date ? p.createdAt : (p.createdAt ? new Date(String(p.createdAt)) : new Date());
+      const pDate = toDomainDate(p.createdAt as any) || new Date();
       aiCredits.push({
         id: (p.id as string) || `cred-${Math.random().toString(36).substring(7)}`,
         creditsAmount: Number(p.credits) || 500,
