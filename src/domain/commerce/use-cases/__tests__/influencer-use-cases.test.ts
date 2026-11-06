@@ -209,4 +209,60 @@ describe('listPaymentOptions', () => {
     if (result.ok) return;
     expect(legacyBody(result)).toEqual({ status: 400, body: { error: 'mentorId requerido' } });
   });
+
+  it('TC-GEO-01 & TC-GEO-02: filtra según país del comprador frente al país del tutor', async () => {
+    const payments = stubPayments([
+      { id: 'm1', name: 'MP', type: 'mercadopago', isActive: true, config: { publicKey: 'pk' } },
+      { id: 'm2', name: 'Stripe', type: 'stripe', isActive: true, config: { publishableKey: 'pk_live' } },
+      { id: 'm3', name: 'Transf', type: 'transfer', isActive: true, config: { alias: 'A' } },
+    ]);
+
+    // Comprador local (AR == AR) → devuelve locales y globales
+    const localRes = await listPaymentOptions(payments, { mentorId: 'tutor-1', buyerCountry: 'AR', tutorCountry: 'AR' });
+    expect(localRes.ok).toBe(true);
+    if (!localRes.ok) return;
+    expect(localRes.value.methods.map((m) => m.type)).toEqual(['mercadopago', 'stripe', 'transfer']);
+
+    // Comprador internacional (CL != AR) → excluye MP y Transferencia, conserva solo Stripe
+    const intlRes = await listPaymentOptions(payments, { mentorId: 'tutor-1', buyerCountry: 'CL', tutorCountry: 'AR' });
+    expect(intlRes.ok).toBe(true);
+    if (!intlRes.ok) return;
+    expect(intlRes.value.methods.map((m) => m.type)).toEqual(['stripe']);
+    expect(intlRes.value.methods[0].scope).toBe('GLOBAL');
+    expect(intlRes.value.methods[0].defaultCurrency).toBe('USD');
+  });
+
+  it('resuelve automáticamente el país del tutor desde getMentorProfile si no se envía tutorCountry', async () => {
+    const methods: TutorPaymentMethodSnapshot[] = [
+      { id: 'm1', name: 'MP', type: 'mercadopago', isActive: true, config: { publicKey: 'pk' } },
+      { id: 'm2', name: 'Stripe', type: 'stripe', isActive: true, config: { publishableKey: 'pk_live' } },
+    ];
+    const payments = {
+      listActiveTutorMethods: async () => methods,
+      getMentorProfile: async () => ({
+        uid: 'tutor-es',
+        homeCountry: 'ES',
+        homeCurrency: 'EUR',
+      }),
+    };
+
+    // Alumno en España (ES == ES) para tutor en España
+    const resSpain = await listPaymentOptions(payments, { mentorId: 'tutor-es', buyerCountry: 'ES' });
+    expect(resSpain.ok).toBe(true);
+    if (!resSpain.ok) return;
+    // MP es solo para AR, por lo que para tutor en ES con alumno en ES, MP no aplica, Stripe global sí
+    expect(resSpain.value.methods.map((m) => m.type)).toEqual(['stripe']);
+  });
+
+  it('TC-GEO-03: comprador internacional sin pasarelas compatibles retorna methods vacío', async () => {
+    const payments = stubPayments([
+      { id: 'm1', name: 'MP', type: 'mercadopago', isActive: true, config: { publicKey: 'pk' } },
+      { id: 'm3', name: 'Transf', type: 'transfer', isActive: true, config: { alias: 'A' } },
+    ]);
+
+    const intlRes = await listPaymentOptions(payments, { mentorId: 'tutor-1', buyerCountry: 'US', tutorCountry: 'AR' });
+    expect(intlRes.ok).toBe(true);
+    if (!intlRes.ok) return;
+    expect(intlRes.value.methods).toEqual([]);
+  });
 });

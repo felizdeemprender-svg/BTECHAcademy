@@ -104,6 +104,8 @@ export class FirestorePaymentMethodRepository implements PaymentMethodRepository
       email: raw.email,
       displayName: raw.displayName,
       mercadopagoConfig: (profile.mercadopago as Record<string, unknown> | undefined) ?? undefined,
+      homeCountry: raw.homeCountry || profile.homeCountry || 'AR',
+      homeCurrency: raw.homeCurrency || profile.homeCurrency || 'ARS',
     };
   }
 

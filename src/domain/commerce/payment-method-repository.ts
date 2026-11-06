@@ -34,6 +34,8 @@ export interface MentorPaymentProfile {
   readonly displayName?: unknown;
   /** Fallback legacy: `users.profile.mercadopago` (p. ej. `{ accessToken }`). */
   readonly mercadopagoConfig?: Record<string, unknown>;
+  readonly homeCountry?: unknown;
+  readonly homeCurrency?: unknown;
 }
 
 export interface PaymentMethodRepository {

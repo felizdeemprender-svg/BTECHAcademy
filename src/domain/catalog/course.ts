@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { MentorIdSchema } from '../shared/ids';
 import { CourseStatusSchema, isCoursePublishedLike } from './course-status';
+import { UnifiedPricingSchema } from '../commerce/pricing-model';
 
 export const CourseBrandingOverrideSchema = z
   .object({
@@ -29,6 +30,7 @@ export const CourseSchema = z.object({
   thumbnail: z.string().optional(),
   thumbnailPrompt: z.string().optional(),
   duration: z.string().optional(),
+  pricing: UnifiedPricingSchema.optional(),
   brandingOverride: CourseBrandingOverrideSchema.optional(),
   companyId: z.string().optional(),
   ownerId: z.string().optional(),

@@ -83,6 +83,8 @@ function V2LandingBuilderContent() {
   const [anchorPrice, setAnchorPrice] = useState<number>(0);
   const [priceMercadoPago, setPriceMercadoPago] = useState<number>(49900);
   const [priceTransfer, setPriceTransfer] = useState<number>(49900);
+  const [priceGetnet, setPriceGetnet] = useState<number>(49900);
+  const [priceStripeUSD, setPriceStripeUSD] = useState<number>(35);
   const [title, setTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [templateDirectives, setTemplateDirectives] = useState('');
@@ -109,6 +111,8 @@ function V2LandingBuilderContent() {
 
   const isMercadoPagoActive = !!profile?.profile?.mercadopago?.accessToken || !!profile?.mercadopago?.accessToken || (rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'mercadopago' && pm.isActive !== false));
   const isTransferActive = !!profile?.profile?.bankDetails?.cbu || !!profile?.profile?.bankDetails?.alias || !!profile?.bankDetails?.cbu || !!profile?.bankDetails?.alias || (rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'transfer' && pm.isActive !== false));
+  const isGetnetActive = !!(rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'getnet' && pm.isActive !== false));
+  const isStripeActive = !!(rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'stripe' && pm.isActive !== false));
 
   const cleanUndefined = (obj: any): any => {
     if (Array.isArray(obj)) return obj.map(v => v === undefined ? null : cleanUndefined(v));
@@ -408,6 +412,17 @@ function V2LandingBuilderContent() {
         oldPrice: anchorPrice > 0 ? anchorPrice : null,
         priceMercadoPago: isMercadoPagoActive ? priceMercadoPago : null,
         priceTransfer: isTransferActive ? priceTransfer : null,
+        priceGetnet: isGetnetActive ? priceGetnet : null,
+        priceStripe: isStripeActive ? priceStripeUSD : null,
+        pricing: {
+          basePriceUSD: priceStripeUSD > 0 ? priceStripeUSD : undefined,
+          pricesByGateway: {
+            ...(isMercadoPagoActive && allowedPaymentMethods.includes('mercadopago') && priceMercadoPago > 0 ? { mercadopago: { gatewayId: 'mercadopago', amount: priceMercadoPago, currency: 'ARS', isActive: true } } : {}),
+            ...(isTransferActive && allowedPaymentMethods.includes('transfer') && priceTransfer > 0 ? { transfer: { gatewayId: 'transfer', amount: priceTransfer, currency: 'ARS', isActive: true } } : {}),
+            ...(isGetnetActive && allowedPaymentMethods.includes('getnet') && priceGetnet > 0 ? { getnet: { gatewayId: 'getnet', amount: priceGetnet, currency: 'ARS', isActive: true } } : {}),
+            ...(isStripeActive && allowedPaymentMethods.includes('stripe') && priceStripeUSD > 0 ? { stripe: { gatewayId: 'stripe', amount: priceStripeUSD, currency: 'USD', isActive: true } } : {}),
+          }
+        },
         allowedPaymentMethods,
         targetAudience,
         activeFrom: activeFrom || null,
@@ -799,9 +814,73 @@ function V2LandingBuilderContent() {
                       )}
                     </div>
                   )}
+
+                  {isGetnetActive && (
+                    <div className={cn("p-4 rounded-2xl border-2 transition-all", allowedPaymentMethods.includes('getnet') ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white border-border')}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => setAllowedPaymentMethods(prev => prev.includes('getnet') ? prev.filter(m => m !== 'getnet') : [...prev, 'getnet'])}
+                          className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors", allowedPaymentMethods.includes('getnet') ? 'bg-primary text-white hover:bg-primary' : 'bg-muted text-muted-foreground hover:bg-border')}
+                        >
+                          🏦
+                        </button>
+                        <div>
+                          <p className={cn("font-black text-sm", allowedPaymentMethods.includes('getnet') ? 'text-foreground' : 'text-muted-foreground')}>Getnet Santander</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">Tarjetas bancarias (ARS)</p>
+                        </div>
+                      </div>
+
+                      {allowedPaymentMethods.includes('getnet') && (
+                        <div className="space-y-1">
+                          <Label className="text-[9px] font-bold text-primary uppercase">Precio Getnet</Label>
+                          <div className="relative">
+                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                            <Input 
+                              type="number" 
+                              value={priceGetnet} 
+                              onChange={e => setPriceGetnet(Number(e.target.value))} 
+                              className="h-10 rounded-xl bg-white border-primary/20 pl-9 font-bold text-foreground focus-visible:ring-primary" 
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {isStripeActive && (
+                    <div className={cn("p-4 rounded-2xl border-2 transition-all", allowedPaymentMethods.includes('stripe') ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white border-border')}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => setAllowedPaymentMethods(prev => prev.includes('stripe') ? prev.filter(m => m !== 'stripe') : [...prev, 'stripe'])}
+                          className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors", allowedPaymentMethods.includes('stripe') ? 'bg-primary text-white hover:bg-primary' : 'bg-muted text-muted-foreground hover:bg-border')}
+                        >
+                          🌐
+                        </button>
+                        <div>
+                          <p className={cn("font-black text-sm", allowedPaymentMethods.includes('stripe') ? 'text-foreground' : 'text-muted-foreground')}>Stripe Internacional</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">Alumnos en el exterior (USD)</p>
+                        </div>
+                      </div>
+
+                      {allowedPaymentMethods.includes('stripe') && (
+                        <div className="space-y-1">
+                          <Label className="text-[9px] font-bold text-primary uppercase">Precio Internacional (USD $)</Label>
+                          <div className="relative">
+                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                            <Input 
+                              type="number" 
+                              value={priceStripeUSD} 
+                              onChange={e => setPriceStripeUSD(Number(e.target.value))} 
+                              className="h-10 rounded-xl bg-white border-primary/20 pl-9 font-bold text-foreground focus-visible:ring-primary" 
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-                {(!isMercadoPagoActive && !isTransferActive) && (
+                {(!isMercadoPagoActive && !isTransferActive && !isGetnetActive && !isStripeActive) && (
                   <p className="text-xs text-danger font-bold mt-2 flex items-center gap-1">
                     <AlertTriangle className="h-4 w-4" /> No tienes métodos de cobro configurados. Configúralos en tu Perfil de Mentor.
                   </p>

@@ -5,6 +5,7 @@
  * futuro normaliza esos alias a las claves canónicas de `AiContent`.
  */
 import { z } from 'zod';
+import { UnifiedPricingSchema } from '../commerce/pricing-model';
 
 export const SalesPageTypeSchema = z.enum(['campaign_pack', 'landing_only', 'landing_page', 'funnel', 'campaign_videos']);
 export type SalesPageType = z.infer<typeof SalesPageTypeSchema>;
@@ -45,6 +46,7 @@ export const SalesPageSchema = z.object({
   slug: z.string().optional(),
   branding: SalesPageBrandingSchema.optional(),
   price: z.number().min(0).optional(),
+  pricing: UnifiedPricingSchema.optional(),
   campaignStatus: z.string().optional(),
   landingType: z.string().optional(),
   isActive: z.boolean().optional(),

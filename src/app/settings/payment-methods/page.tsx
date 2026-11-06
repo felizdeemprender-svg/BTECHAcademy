@@ -5,10 +5,136 @@ import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { PaymentMethodsManager } from '@/components/dashboard/payment-methods-manager';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, serverTimestamp, collection, query } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, serverTimestamp, collection, query } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { isCompanyTutorProfile } from '@/domain/company';
 import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Globe, Save, Loader2 } from 'lucide-react';
+
+function TutorOriginCountryCard({ user, profile }: { user: any; profile: any }) {
+  const db = useFirestore();
+  const { toast } = useToast();
+  const initialCountry = profile?.homeCountry || profile?.profile?.homeCountry || 'AR';
+  const initialCurrency = profile?.homeCurrency || profile?.profile?.homeCurrency || 'ARS';
+
+  const [country, setCountry] = useState<string>(initialCountry);
+  const [currency, setCurrency] = useState<string>(initialCurrency);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      const c = profile.homeCountry || profile.profile?.homeCountry;
+      const curr = profile.homeCurrency || profile.profile?.homeCurrency;
+      if (c) setCountry(c);
+      if (curr) setCurrency(curr);
+    }
+  }, [profile]);
+
+  const countryCurrencyMap: Record<string, { name: string; currency: string; label: string }> = {
+    AR: { name: 'Argentina', currency: 'ARS', label: 'Pesos Argentinos (ARS)' },
+    ES: { name: 'España / Europa', currency: 'EUR', label: 'Euros (EUR)' },
+    US: { name: 'Estados Unidos', currency: 'USD', label: 'Dólares (USD)' },
+    MX: { name: 'México', currency: 'MXN', label: 'Pesos Mexicanos (MXN)' },
+    CO: { name: 'Colombia', currency: 'COP', label: 'Pesos Colombianos (COP)' },
+    CL: { name: 'Chile', currency: 'CLP', label: 'Pesos Chilenos (CLP)' },
+    PE: { name: 'Perú', currency: 'PEN', label: 'Soles (PEN)' },
+    UY: { name: 'Uruguay', currency: 'UYU', label: 'Pesos Uruguayos (UYU)' },
+    GLOBAL: { name: 'Internacional / Global', currency: 'USD', label: 'Dólares (USD)' },
+  };
+
+  const handleCountrySelect = (code: string) => {
+    setCountry(code);
+    const matched = countryCurrencyMap[code];
+    if (matched) {
+      setCurrency(matched.currency);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user?.uid) return;
+    setIsSaving(true);
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        homeCountry: country,
+        homeCurrency: currency,
+        'profile.homeCountry': country,
+        'profile.homeCurrency': currency,
+        updatedAt: serverTimestamp(),
+      });
+      toast({
+        title: 'País y Moneda Base Actualizados',
+        description: `Tu país de origen ha sido configurado como ${countryCurrencyMap[country]?.name || country} (${currency}).`,
+      });
+    } catch (err) {
+      console.error('Error guardando país de origen:', err);
+      toast({
+        title: 'Error al guardar',
+        description: 'No se pudo guardar la configuración de país.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <Card className="mb-6 border border-border shadow-none">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <Globe className="w-5 h-5 text-primary" />
+          <CardTitle className="text-base font-bold">País de Origen y Moneda Contable</CardTitle>
+        </div>
+        <CardDescription className="text-xs text-muted-foreground">
+          Define la moneda base en la que se consolidan tus ingresos y contabilidad. Los alumnos de tu mismo país accederán a tus pasarelas locales; los alumnos de otros países operarán con pasarelas internacionales (USD).
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">País de Residencia Fiscal</Label>
+            <Select value={country} onValueChange={handleCountrySelect}>
+              <SelectTrigger className="h-10 text-xs">
+                <SelectValue placeholder="Selecciona tu país" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(countryCurrencyMap).map(([code, item]) => (
+                  <SelectItem key={code} value={code} className="text-xs">
+                    {item.name} ({code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Moneda Contable Base</Label>
+            <Input
+              value={countryCurrencyMap[country]?.label || currency}
+              disabled
+              className="h-10 text-xs bg-muted/40 cursor-not-allowed font-medium"
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="text-xs font-semibold"
+          >
+            {isSaving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+            Guardar País y Moneda Base
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function TutorPaymentMethodsPage() {
   const { user, profile } = useAuth();
@@ -78,6 +204,7 @@ export default function TutorPaymentMethodsPage() {
 
   return (
     <DashboardLayout>
+      <TutorOriginCountryCard user={user} profile={profile} />
       <PaymentMethodsManager 
         title="Métodos de Cobro"
         description="Configura cómo deseas recibir los pagos de tus alumnos."

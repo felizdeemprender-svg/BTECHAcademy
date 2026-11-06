@@ -78,18 +78,25 @@ export async function checkoutPage(
     );
   }
 
-  // Conversión monetaria inteligente:
-  // - Si la pasarela opera en pesos argentinos (mercadopago/getnet) y el curso está expresamente en USD, convertimos a ARS.
-  // - Si el curso está en ARS o sin definir (pesos por defecto para tutores argentinos), NO multiplicamos por tipo de cambio.
-  // - Si la pasarela es internacional (Stripe) y el curso está en ARS, convertimos a USD.
+  // Precios por pasarela (nuevo modelo multimoneda guiado por pasarela)
+  // Si la landing tiene configurado el precio específico para esta pasarela, se usa directamente sin conversiones automáticas.
   let finalChargePrice = price;
-  const isCourseUsd = page.currency === 'USD';
-  if ((gateway === 'mercadopago' || gateway === 'getnet') && isCourseUsd) {
-    const rate = exchangeRate && exchangeRate > 0 ? exchangeRate : 1540;
-    finalChargePrice = Math.round(price * rate);
-  } else if (gateway === 'stripe' && !isCourseUsd) {
-    const rate = exchangeRate && exchangeRate > 0 ? exchangeRate : 1540;
-    finalChargePrice = Math.round((price / rate) * 100) / 100;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pricingConfig = page.pricing as any;
+  const gatewayPriceItem = pricingConfig?.pricesByGateway?.[gateway];
+
+  if (gatewayPriceItem && typeof gatewayPriceItem.amount === 'number' && gatewayPriceItem.amount >= 0) {
+    finalChargePrice = gatewayPriceItem.amount;
+  } else {
+    // Fallback legacy para landings antiguas sin precios por pasarela
+    const isCourseUsd = page.currency === 'USD';
+    if ((gateway === 'mercadopago' || gateway === 'getnet') && isCourseUsd) {
+      const rate = exchangeRate && exchangeRate > 0 ? exchangeRate : 1540;
+      finalChargePrice = Math.round(price * rate);
+    } else if (gateway === 'stripe' && !isCourseUsd) {
+      const rate = exchangeRate && exchangeRate > 0 ? exchangeRate : 1540;
+      finalChargePrice = Math.round((price / rate) * 100) / 100;
+    }
   }
 
   const result = await deps.sessions.createSession(gateway, paymentConfig, {

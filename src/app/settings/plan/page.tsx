@@ -2,6 +2,7 @@
 
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { 
@@ -56,6 +57,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { isCompanyTutorProfile } from '@/domain/company';
 import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
+import { BillingCycleFinancialReport } from '@/components/finance/billing-cycle-financial-report';
+import type { TutorFinancialStatement } from '@/domain/commerce/use-cases/build-tutor-financial-statement';
 export default function MyPlanPage() {
   return (
     <Suspense fallback={
@@ -72,6 +75,14 @@ function PlanContentInner() {
   const { user, profile } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get('tab') || 'capacidad';
+  const [activeTab, setActiveTab] = useState(requestedTab);
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t) setActiveTab(t);
+  }, [searchParams]);
   
   const [plans, setPlans] = useState<any[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
@@ -111,6 +122,102 @@ function PlanContentInner() {
   const [liveEnrollments, setLiveEnrollments] = useState<any[]>([]);
   const [liveCoursesMap, setLiveCoursesMap] = useState<Record<string, string>>({});
   
+  // Financial Statement Report States
+  const [statement, setStatement] = useState<TutorFinancialStatement | null>(null);
+  const [loadingStatement, setLoadingStatement] = useState(false);
+  const [selectedStatementCycleId, setSelectedStatementCycleId] = useState<string>('current');
+
+  const cyclesList = useMemo(() => {
+    const list: any[] = [];
+    const billing = profile?.billingCycle;
+
+    // Ciclo actual
+    let cStart = new Date();
+    cStart.setDate(1);
+    let cEnd = new Date(cStart.getFullYear(), cStart.getMonth() + 1, 0);
+
+    if (billing?.currentCycleStart) {
+      if (billing.currentCycleStart.toDate) cStart = billing.currentCycleStart.toDate();
+      else if (billing.currentCycleStart.seconds) cStart = new Date(billing.currentCycleStart.seconds * 1000);
+      else cStart = new Date(billing.currentCycleStart);
+    }
+    if (billing?.currentCycleEnd) {
+      if (billing.currentCycleEnd.toDate) cEnd = billing.currentCycleEnd.toDate();
+      else if (billing.currentCycleEnd.seconds) cEnd = new Date(billing.currentCycleEnd.seconds * 1000);
+      else cEnd = new Date(billing.currentCycleEnd);
+    }
+
+    list.push({
+      id: 'current',
+      label: `Ciclo en Curso (${format(cStart, 'dd/MM/yy')} al ${format(cEnd, 'dd/MM/yy')})`,
+      from: cStart.toISOString(),
+      to: cEnd.toISOString(),
+      isCurrent: true,
+    });
+
+    // Invoices archivadas
+    for (const inv of invoices) {
+      if (inv.cycleStart && inv.cycleEnd) {
+        const s = inv.cycleStart.toDate ? inv.cycleStart.toDate() : new Date(inv.cycleStart.seconds ? inv.cycleStart.seconds * 1000 : inv.cycleStart);
+        const e = inv.cycleEnd.toDate ? inv.cycleEnd.toDate() : new Date(inv.cycleEnd.seconds ? inv.cycleEnd.seconds * 1000 : inv.cycleEnd);
+        list.push({
+          id: inv.id,
+          label: `Factura ${inv.id.substring(0, 8)} (${format(s, 'dd/MM/yy')} al ${format(e, 'dd/MM/yy')})`,
+          from: s.toISOString(),
+          to: e.toISOString(),
+        });
+      }
+    }
+
+    // Meses recientes si no hay facturas suficientes
+    if (list.length <= 1) {
+      for (let i = 1; i <= 3; i++) {
+        const mStart = new Date(cStart.getFullYear(), cStart.getMonth() - i, 1);
+        const mEnd = new Date(cStart.getFullYear(), cStart.getMonth() - i + 1, 0);
+        list.push({
+          id: `month-${i}`,
+          label: format(mStart, 'MMMM yyyy'),
+          from: mStart.toISOString(),
+          to: mEnd.toISOString(),
+        });
+      }
+    }
+
+    return list;
+  }, [profile?.billingCycle, invoices]);
+
+  const fetchFinancialStatement = async (from?: string, to?: string) => {
+    if (!user) return;
+    setLoadingStatement(true);
+    try {
+      const token = await user.getIdToken();
+      let url = `/api/tutors/billing-statement?tutorId=${user.uid}`;
+      if (from) url += `&from=${encodeURIComponent(from)}`;
+      if (to) url += `&to=${encodeURIComponent(to)}`;
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (data.ok && data.statement) {
+        setStatement(data.statement);
+      }
+    } catch (e) {
+      console.error('Error fetching financial statement:', e);
+    } finally {
+      setLoadingStatement(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && cyclesList.length > 0) {
+      const current = cyclesList.find((c) => c.id === 'current') || cyclesList[0];
+      fetchFinancialStatement(current?.from, current?.to);
+    }
+  }, [user, cyclesList]);
+
   // Daily AI Usage
   const [dailyUsage, setDailyUsage] = useState<any[]>([]);
   const [loadingDailyUsage, setLoadingDailyUsage] = useState(false);
@@ -453,10 +560,11 @@ function PlanContentInner() {
             <p className="text-muted-foreground font-medium">Gestiona los límites, recursos y facturación de tu academia.</p>
           </div>
 
-          <Tabs defaultValue="capacidad" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="bg-secondary/10 p-1.5 rounded-none border-b h-16 w-full justify-start gap-2 px-6 mb-8">
               <TabsTrigger value="capacidad" className="rounded-xl gap-2 font-bold px-6 h-11"><Layers className="h-4 w-4" /> Capacidad</TabsTrigger>
               <TabsTrigger value="facturacion" className="rounded-xl gap-2 font-bold px-6 h-11 text-warn bg-warn/10/50 border-warn/15"><CreditCard className="h-4 w-4" /> Facturación</TabsTrigger>
+              <TabsTrigger value="reporte" className="rounded-xl gap-2 font-bold px-6 h-11"><Receipt className="h-4 w-4" /> Reporte Financiero (Ciclos)</TabsTrigger>
             </TabsList>
 
             <TabsContent value="capacidad" className="m-0 space-y-12">
@@ -954,6 +1062,27 @@ function PlanContentInner() {
                 </>
               );
             })()}
+          </TabsContent>
+
+          <TabsContent value="reporte" className="m-0 space-y-6">
+            <BillingCycleFinancialReport
+              statement={statement}
+              isLoading={loadingStatement}
+              cyclesList={cyclesList}
+              selectedCycleId={selectedStatementCycleId}
+              onSelectCycle={(cycle) => {
+                setSelectedStatementCycleId(cycle.id);
+                fetchFinancialStatement(cycle.from, cycle.to);
+              }}
+              onCustomDateChange={(f, t) => {
+                setSelectedStatementCycleId('custom');
+                fetchFinancialStatement(f, t);
+              }}
+              onRefresh={() => {
+                const found = cyclesList.find((c) => c.id === selectedStatementCycleId);
+                fetchFinancialStatement(found?.from, found?.to);
+              }}
+            />
           </TabsContent>
           </Tabs>
         </section>

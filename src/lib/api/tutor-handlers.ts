@@ -100,13 +100,18 @@ export async function handleGetTutorStatus(
 export async function handleGetPaymentOptions(
   gateway: FirestoreGateway,
   mentorId: string,
+  options?: { buyerCountry?: string; tutorCountry?: string },
 ): Promise<NextResponse> {
   if (!mentorId) {
     return NextResponse.json({ error: 'mentorId requerido' }, { status: 400 });
   }
   try {
     const payments = new FirestorePaymentMethodRepository(gateway);
-    const result = await listPaymentOptions(payments, { mentorId });
+    const result = await listPaymentOptions(payments, {
+      mentorId,
+      buyerCountry: options?.buyerCountry,
+      tutorCountry: options?.tutorCountry,
+    });
     if (!result.ok) {
       const details = legacyDetails(result.error);
       if (details) return NextResponse.json(details.body, { status: details.status });

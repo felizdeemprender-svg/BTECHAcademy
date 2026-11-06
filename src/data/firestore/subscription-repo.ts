@@ -49,7 +49,7 @@ const COURSES = 'courses';
 const INVOICES = 'invoices';
 
 export class FirestoreSubscriptionRepository implements SubscriptionRepository {
-  constructor(private readonly gateway: FirestoreGateway) {}
+  constructor(private readonly gateway: FirestoreGateway) { }
   async getPlan(planId: string): Promise<PlanSnapshot | null> {
     const snap = await this.gateway.getDoc(PLANS, planId);
     if (!snap) return null;
@@ -348,6 +348,7 @@ export class FirestoreSubscriptionRepository implements SubscriptionRepository {
  * `lastLogin` → `null`, `subscription` → `null`).
  */
 function mapMentorRow(id: string, raw: Record<string, unknown>): MentorDirectoryRow {
+  const profile = (raw.profile as Record<string, unknown> | undefined) ?? {};
   return {
     id,
     displayName: (raw.displayName as string | undefined) ?? '',
@@ -357,5 +358,7 @@ function mapMentorRow(id: string, raw: Record<string, unknown>): MentorDirectory
     subscription: (raw.subscription as Record<string, unknown> | undefined) ?? null,
     createdAt: toDomainDate(raw.createdAt as never) ?? new Date(),
     lastLogin: toDomainDate(raw.lastLogin as never) ?? null,
+    homeCountry: (raw.homeCountry as string | undefined) ?? (profile.homeCountry as string | undefined) ?? 'AR',
+    homeCurrency: (raw.homeCurrency as string | undefined) ?? (profile.homeCurrency as string | undefined) ?? 'ARS',
   };
 }

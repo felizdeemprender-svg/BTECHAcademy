@@ -35,8 +35,14 @@ const TYPE_CONFIG = {
   free: { label: 'Gratuito', color: 'bg-muted text-muted-foreground border-border', dot: 'bg-muted-foreground' },
 };
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(amount);
+function formatCurrency(amount: number, currency = 'ARS') {
+  const zeroDecimalCurrencies = ['ARS', 'CLP', 'COP'];
+  const hasDecimals = !zeroDecimalCurrencies.includes(currency);
+  const formatted = new Intl.NumberFormat('es-AR', {
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: hasDecimals ? 2 : 0,
+  }).format(amount);
+  return `${currency} $${formatted}`;
 }
 
 function KpiCard({
@@ -372,7 +378,12 @@ export default function BillingPage() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-bold text-foreground leading-tight">{tutor.displayName}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-foreground leading-tight">{tutor.displayName}</p>
+                          <Badge variant="outline" className="text-[10px] py-0 px-1 font-semibold text-muted-foreground border-border">
+                            {tutor.homeCountry || 'AR'} ({tutor.homeCurrency || 'ARS'})
+                          </Badge>
+                        </div>
                         <p className="text-xs text-muted-foreground">{tutor.email}</p>
                       </div>
                     </div>
@@ -389,7 +400,7 @@ export default function BillingPage() {
                       </Badge>
                       <p className="text-[10px] text-muted-foreground font-medium leading-tight">
                         {tutor.planName}
-                        {tutor.subscriptionType === 'fixed' && tutor.fixedAmount > 0 && ` · ${formatCurrency(tutor.fixedAmount)}/mes`}
+                        {tutor.subscriptionType === 'fixed' && tutor.fixedAmount > 0 && ` · ${formatCurrency(tutor.fixedAmount, tutor.homeCurrency)}/mes`}
                         {tutor.subscriptionType === 'percentage' && tutor.percentageRate > 0 && ` · ${tutor.percentageRate}%`}
                       </p>
                     </div>
@@ -421,7 +432,7 @@ export default function BillingPage() {
                   cardLabel: 'Ingresos Generados',
                   cell: (tutor) => (
                     <span className={cn('font-bold', tutor.totalSalesRevenue > 0 ? 'text-success' : 'text-muted-foreground')}>
-                      {formatCurrency(tutor.totalSalesRevenue)}
+                      {formatCurrency(tutor.totalSalesRevenue, tutor.homeCurrency)}
                     </span>
                   ),
                 },
@@ -432,7 +443,7 @@ export default function BillingPage() {
                   cardLabel: 'A Facturar',
                   cell: (tutor) => (
                     <span className={cn('font-bold text-lg', tutor.billedAmount > 0 ? 'text-primary' : 'text-muted-foreground')}>
-                      {formatCurrency(tutor.billedAmount)}
+                      {formatCurrency(tutor.billedAmount, tutor.homeCurrency)}
                     </span>
                   ),
                 },
@@ -440,7 +451,6 @@ export default function BillingPage() {
                   key: 'status',
                   header: 'Estado',
                   hideOnMobile: true,
-                  className: 'pr-8',
                   cell: (tutor) => (
                     <Badge
                       className={cn(
@@ -450,6 +460,23 @@ export default function BillingPage() {
                     >
                       {tutor.subscriptionStatus === 'active' ? 'Activo' : tutor.subscriptionStatus}
                     </Badge>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  header: 'Reporte',
+                  align: 'center',
+                  className: 'pr-6',
+                  cell: (tutor) => (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2.5 text-xs font-semibold gap-1"
+                      onClick={() => window.open(`/settings/plan?tab=reporte&tutorId=${tutor.id}`, '_blank')}
+                    >
+                      <ReceiptText className="h-3.5 w-3.5 text-primary" />
+                      Auditar Ciclo
+                    </Button>
                   ),
                 },
               ]}
