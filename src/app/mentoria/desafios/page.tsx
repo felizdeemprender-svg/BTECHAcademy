@@ -378,16 +378,20 @@ export default function MentorChallengesPage() {
 
     if (assignmentMode === 'course' && filterCourseId) {
       // Base: enrollments for this course
-      list = courseEnrollments.map(e => {
-        const user = allStudentsData.find(u => u.id === e.studentId);
-        return {
-          id: e.studentId,
-          displayName: user?.displayName || e.studentName || 'Alumno',
-          email: user?.email || e.inviteEmail || '',
-          enrollment: e,
-          user: user
-        };
-      });
+      list = courseEnrollments
+        .map(e => {
+          const user = allStudentsData.find(u => u.id === e.studentId);
+          const fallbackInviteId = (e.inviteEmail || '').toLowerCase().trim().replace(/[^a-zA-Z0-9]/g, '_');
+          const resolvedId = (e.studentId || '').trim() || fallbackInviteId || e.id;
+          return {
+            id: resolvedId,
+            displayName: user?.displayName || e.studentName || 'Alumno',
+            email: user?.email || e.inviteEmail || '',
+            enrollment: e,
+            user: user
+          };
+        })
+        .filter(item => !!item.id);
     } else if (assignmentMode === 'global') {
       // Base: all global students
       list = allStudentsData.map(u => ({
@@ -491,8 +495,9 @@ export default function MentorChallengesPage() {
       const batch = writeBatch(db);
       
       for (const studentId of selectedStudentIds) {
+        if (!studentId?.trim()) continue;
         const student = allStudentsData.find(s => s.id === studentId);
-        const taskRef = doc(collection(db, 'users', studentId, 'individualTasks'));
+        const taskRef = doc(collection(db, 'users', studentId.trim(), 'individualTasks'));
         
         const finalTask = {
           id: taskRef.id,
@@ -571,7 +576,8 @@ export default function MentorChallengesPage() {
       let count = 0;
       
       for (const task of allTasks) {
-        const taskRef = doc(db, 'users', task.studentId, 'individualTasks', task.id);
+        if (!task.studentId?.trim() || !task.id) continue;
+        const taskRef = doc(db, 'users', task.studentId.trim(), 'individualTasks', task.id);
         batch.delete(taskRef);
         count++;
         if (count >= 450) break; 

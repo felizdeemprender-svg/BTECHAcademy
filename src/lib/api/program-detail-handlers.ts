@@ -154,6 +154,26 @@ export async function handleListTasks(
   return NextResponse.json({ data: await tasks.listByProgram(programId) });
 }
 
+export async function handleListProgramEnrollments(
+  gateway: FirestoreGateway,
+  caller: Caller | null,
+  programId: string,
+): Promise<NextResponse> {
+  if (!caller) return unauthorized();
+  const access = await requireReadOrSubmit(gateway, caller, programId);
+  if (!access.ok) return access.response;
+  const [snap1, snap2] = await Promise.all([
+    gateway.queryByField('enrollments', 'productId', programId),
+    gateway.queryByField('enrollments', 'courseId', programId),
+  ]);
+  const map = new Map<string, Record<string, unknown>>();
+  for (const d of [...snap1.docs, ...snap2.docs]) {
+    const raw = d.data();
+    if (raw) map.set(d.id, { id: d.id, ...raw });
+  }
+  return NextResponse.json({ data: Array.from(map.values()) });
+}
+
 export async function handleAssignTask(
   gateway: FirestoreGateway,
   caller: Caller | null,

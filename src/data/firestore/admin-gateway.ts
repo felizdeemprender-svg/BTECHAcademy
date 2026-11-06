@@ -7,12 +7,18 @@
 import type { Firestore as AdminFirestore, Query as AdminQuery } from 'firebase-admin/firestore';
 import { FieldPath, FieldValue } from 'firebase-admin/firestore';
 
-import type { BatchUpdateOp, FirestoreGateway, QueryFilterClause } from './gateway';
+import {
+  stripUndefined,
+  type BatchUpdateOp,
+  type FirestoreGateway,
+  type QueryFilterClause,
+} from './gateway';
 
 export class AdminFirestoreGateway implements FirestoreGateway {
   constructor(private readonly db: AdminFirestore) {}
 
   async getDoc(collectionPath: string, id: string) {
+    if (!id || !id.trim()) return null;
     const snap = await this.db.collection(collectionPath).doc(id).get();
     if (!snap.exists) return null;
     const data = (snap.data() ?? {}) as Record<string, unknown>;
@@ -51,12 +57,12 @@ export class AdminFirestoreGateway implements FirestoreGateway {
     id: string,
     data: Record<string, unknown>,
   ): Promise<void> {
-    await this.db.collection(collectionPath).doc(id).set(data);
+    await this.db.collection(collectionPath).doc(id).set(stripUndefined(data));
   }
 
   async createDocAutoId(collectionPath: string, data: Record<string, unknown>): Promise<string> {
     const ref = this.db.collection(collectionPath).doc();
-    await ref.set(data);
+    await ref.set(stripUndefined(data));
     return ref.id;
   }
 
@@ -65,7 +71,7 @@ export class AdminFirestoreGateway implements FirestoreGateway {
     id: string,
     patch: Record<string, unknown>,
   ): Promise<void> {
-    await this.db.collection(collectionPath).doc(id).update(patch);
+    await this.db.collection(collectionPath).doc(id).update(stripUndefined(patch));
   }
 
   async deleteDoc(collectionPath: string, id: string): Promise<void> {
@@ -93,7 +99,7 @@ export class AdminFirestoreGateway implements FirestoreGateway {
   async batchWrite(ops: BatchUpdateOp[]): Promise<void> {
     const batch = this.db.batch();
     for (const op of ops) {
-      batch.update(this.db.collection(op.collectionPath).doc(op.id), op.patch);
+      batch.update(this.db.collection(op.collectionPath).doc(op.id), stripUndefined(op.patch));
     }
     await batch.commit();
   }
@@ -150,7 +156,7 @@ export class AdminFirestoreGateway implements FirestoreGateway {
     id: string,
     data: Record<string, unknown>,
   ): Promise<void> {
-    await this.db.collection(collectionPath).doc(id).set(data, { merge: true });
+    await this.db.collection(collectionPath).doc(id).set(stripUndefined(data), { merge: true });
   }
 
   async mergeSubDoc(
@@ -165,7 +171,7 @@ export class AdminFirestoreGateway implements FirestoreGateway {
       .doc(parentId)
       .collection(subCollection)
       .doc(id)
-      .set(data, { merge: true });
+      .set(stripUndefined(data), { merge: true });
   }
 
   increment(n: number): unknown {
@@ -211,7 +217,12 @@ export class AdminFirestoreGateway implements FirestoreGateway {
     id: string,
     data: Record<string, unknown>,
   ): Promise<void> {
-    await this.db.collection(parentCollection).doc(parentId).collection(subCollection).doc(id).set(data);
+    await this.db
+      .collection(parentCollection)
+      .doc(parentId)
+      .collection(subCollection)
+      .doc(id)
+      .set(stripUndefined(data));
   }
 
   async updateSubDoc(
@@ -221,7 +232,12 @@ export class AdminFirestoreGateway implements FirestoreGateway {
     id: string,
     patch: Record<string, unknown>,
   ): Promise<void> {
-    await this.db.collection(parentCollection).doc(parentId).collection(subCollection).doc(id).update(patch);
+    await this.db
+      .collection(parentCollection)
+      .doc(parentId)
+      .collection(subCollection)
+      .doc(id)
+      .update(stripUndefined(patch));
   }
 
   async deleteSubDoc(

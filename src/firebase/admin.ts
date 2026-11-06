@@ -55,14 +55,19 @@ export function hasAdminCredentials(): boolean {
   return false;
 }
 
+let isFirestoreConfigured = false;
+
 export function getAdminFirestore() {
   const app = getAdminApp();
   const db = getFirestore(app);
-  
-  // Soporte para Emulador en servidor
-  if (process.env.NODE_ENV === 'development' && !process.env.FIREBASE_FIRESTORE_EMULATOR_HOST) {
-    // Si no está la variable de entorno pero estamos en dev, intentamos conectar al puerto por defecto
-    // Nota: Esto es opcional si ya tienes la variable de entorno configurada en tu terminal
+
+  if (!isFirestoreConfigured) {
+    try {
+      db.settings({ ignoreUndefinedProperties: true });
+    } catch {
+      // Ya fue inicializado previamente en este proceso
+    }
+    isFirestoreConfigured = true;
   }
 
   return db;
