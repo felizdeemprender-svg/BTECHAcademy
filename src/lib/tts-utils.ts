@@ -31,41 +31,14 @@ export async function getAudioDuration(filePath: string): Promise<number> {
   });
 }
 
-export async function generateSpeechMP3(text: string, voiceId: string, apiKey: string, outputPath: string): Promise<void> {
-  console.log(`[TTS-Utils] Generando voz real para: ${voiceId}`);
-  
-  const VOICE_MAP: Record<string, { name: string, languageCode: string }> = {
-    mateo: { name: 'es-US-Neural2-B', languageCode: 'es-US' },
-    diego: { name: 'es-ES-Neural2-B', languageCode: 'es-ES' },
-    sofia: { name: 'es-US-Neural2-A', languageCode: 'es-US' },
-    ximena: { name: 'es-MX-Neural2-A', languageCode: 'es-MX' }
-  };
-
-  const selectedVoice = VOICE_MAP[voiceId] || VOICE_MAP['mateo'];
-
-  const requestBody = {
-    input: { text },
-    voice: { languageCode: selectedVoice.languageCode, name: selectedVoice.name },
-    audioConfig: { audioEncoding: 'MP3' }
-  };
-
+export async function generateSpeechMP3(text: string, voiceId: string, _apiKey: string, outputPath: string): Promise<void> {
+  console.log(`[TTS-Utils] Generando voz Edge Neural para: ${voiceId}`);
   try {
-    const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!response.ok) {
-      const err = await response.text();
-      console.error(`[TTS-Utils] Error de API Google TTS:`, err);
-      throw new Error(`Google TTS API Error: ${response.status}`);
+    const { generateSpeechV2 } = await import('@/lib/tts');
+    const cachedPath = await generateSpeechV2(text, voiceId);
+    if (cachedPath !== outputPath) {
+      fs.copyFileSync(cachedPath, outputPath);
     }
-
-    const data = await response.json();
-    const audioContent = data.audioContent;
-    const buffer = Buffer.from(audioContent, 'base64');
-    fs.writeFileSync(outputPath, buffer);
     console.log(`[TTS-Utils] Audio guardado exitosamente en: ${outputPath}`);
   } catch (error) {
     console.error(`[TTS-Utils] Falló la generación de TTS, creando silencio como fallback:`, error);
