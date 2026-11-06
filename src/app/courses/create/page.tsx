@@ -57,6 +57,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-context';
 import { FileUploadArea } from '@/components/ui/file-upload-area';
 import { resolveProfileBrand } from '@/lib/landing-styles';
+import type { StyleBrand } from '@/lib/landing-styles';
 import { useFirebase, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, serverTimestamp, setDoc, query, where, updateDoc, getDocs, getDoc, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -145,10 +146,32 @@ export default function CreateCoursePage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [brandingData, setBrandingData] = useState(() => ({
     bio: '',
+    brandName: '',
     socials: {} as Record<string, string>,
     logoUrl: '',
     primaryColor: resolveProfileBrand(profile?.profile)?.palette?.primary || profile?.profile?.branding?.primaryColor || '#3B2D86'
   }));
+
+  const ownBrands: StyleBrand[] = Array.isArray(profile?.profile?.brands) ? profile.profile.brands : [];
+  const activeBrand = resolveProfileBrand(profile?.profile);
+  const selectedBrand = brandingData.brandName
+    ? ownBrands.find(b => b.name === brandingData.brandName) || null
+    : activeBrand;
+  const currentPrimaryColor = selectedBrand?.palette?.primary || brandingData.primaryColor;
+
+  useEffect(() => {
+    if (profile?.profile) {
+      const active = resolveProfileBrand(profile.profile);
+      const brandPrimary = active?.palette?.primary || profile.profile.branding?.primaryColor || '#3B2D86';
+      setBrandingData(prev => ({
+        ...prev,
+        bio: prev.bio || profile.profile?.bio || '',
+        logoUrl: prev.logoUrl || profile.profile?.branding?.logoUrl || '',
+        primaryColor: prev.primaryColor || brandPrimary,
+        socials: Object.keys(prev.socials).length > 0 ? prev.socials : (profile.profile?.socials || {})
+      }));
+    }
+  }, [profile]);
 
   const isCompanyTutor = Boolean(
     profile?.companyRole === 'tutor' ||
@@ -388,8 +411,13 @@ export default function CreateCoursePage() {
         ? {
           'branding.bio': brandingData.bio,
           'branding.socials': brandingData.socials,
+          'brandingOverride.bio': brandingData.bio,
+          'brandingOverride.socials': brandingData.socials,
         }
-        : { branding: brandingData };
+        : {
+          branding: { ...brandingData, primaryColor: currentPrimaryColor },
+          brandingOverride: { ...brandingData, primaryColor: currentPrimaryColor }
+        };
       await updateDoc(courseRef, dataToSave);
       setStep(4);
     } catch (error) {
@@ -1007,25 +1035,95 @@ export default function CreateCoursePage() {
                       </div>
 
                       <div className="space-y-6">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color Primario Académico</Label>
-                        <div className="flex flex-col sm:flex-row items-center gap-8 bg-secondary/10 p-6 rounded-3xl">
-                          <div className="relative">
-                            <input
-                              type="color"
-                              value={brandingData.primaryColor}
-                              onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
-                              className="w-24 h-24 rounded-3xl p-0 border-none cursor-pointer overflow-hidden ring-4 ring-white"
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <Maximize className="h-6 w-6 text-white mix-blend-difference opacity-50" />
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Brand visual del programa (hereda el DTCG de tu marca)</Label>
+                        <div className="bg-secondary/10 p-6 rounded-3xl space-y-4">
+                          {ownBrands.length === 0 ? (
+                            <div className="flex flex-col gap-4">
+                              <div className="space-y-1">
+                                <p className="font-bold text-primary">Usa tu brand activo</p>
+                                <p className="text-sm text-muted-foreground">
+                                  El curso hereda automáticamente el color de tu marca activa ({activeBrand?.palette?.primary || profile?.profile?.branding?.primaryColor || '#3B2D86'}).
+                                  Puedes crear o importar brands DTCG en <span className="font-bold">Ajustes → Mis brands</span>.
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-3">
+                                {(activeBrand?.palette?.primary || profile?.profile?.branding?.primaryColor) && (
+                                  <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow" style={{ backgroundColor: activeBrand?.palette?.primary || profile?.profile?.branding?.primaryColor }} />
+                                )}
+                                <span className="text-xs text-muted-foreground font-bold">{activeBrand?.name || 'Brand activo'}</span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex-1 space-y-4">
-                            <Input
-                              value={brandingData.primaryColor}
-                              onChange={e => setBrandingData({ ...brandingData, primaryColor: e.target.value })}
-                              className="text-2xl font-mono font-bold text-center bg-white border-none shadow-sm"
-                              size="xl" />
+                          ) : (
+                            <>
+                              <div className="flex flex-col gap-1">
+                                <p className="font-bold text-primary">Selecciona un brand DTCG</p>
+                                <p className="text-sm text-muted-foreground">El color, tipografía y tokens se heredan automáticamente de tu marca.</p>
+                              </div>
+                              <div className="grid sm:grid-cols-2 gap-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setBrandingData({ ...brandingData, brandName: '', primaryColor: activeBrand?.palette?.primary || currentPrimaryColor })}
+                                  className={cn(
+                                    'flex items-center gap-4 rounded-2xl border-2 bg-white p-4 text-left transition-colors',
+                                    brandingData.brandName === '' ? 'border-success ring-2 ring-success/20' : 'border-transparent hover:border-primary/40'
+                                  )}
+                                >
+                                  <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow shrink-0" style={{ backgroundColor: activeBrand?.palette?.primary || '#3B2D86' }} />
+                                  <div className="min-w-0">
+                                    <p className="font-bold truncate">{activeBrand?.name || 'Brand activo'}</p>
+                                    <p className="text-xs text-muted-foreground">{brandingData.brandName === '' ? 'Usando este brand' : 'Heredar brand activo'}</p>
+                                  </div>
+                                  {brandingData.brandName === '' && <Check className="h-5 w-5 text-success ml-auto shrink-0" />}
+                                </button>
+                                {ownBrands.map((brand) => {
+                                  const isSelected = brandingData.brandName === brand.name;
+                                  const isActive = activeBrand?.name === brand.name;
+                                  return (
+                                    <button
+                                      key={brand.name}
+                                      type="button"
+                                      onClick={() => setBrandingData({ ...brandingData, brandName: brand.name, primaryColor: brand.palette?.primary || currentPrimaryColor })}
+                                      className={cn(
+                                        'flex items-center gap-4 rounded-2xl border-2 bg-white p-4 text-left transition-colors',
+                                        isSelected ? 'border-success ring-2 ring-success/20' : 'border-transparent hover:border-primary/40'
+                                      )}
+                                    >
+                                      <div className="flex flex-col gap-1 shrink-0">
+                                        <div className="h-6 w-6 rounded-lg ring-2 ring-white shadow" style={{ backgroundColor: brand.palette?.primary || '#3B2D86' }} />
+                                        <div className="h-6 w-6 rounded-lg ring-2 ring-white shadow" style={{ backgroundColor: brand.palette?.secondary || brand.palette?.primary || '#3B2D86' }} />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="font-bold truncate">{brand.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {isActive ? 'Brand activo en tu web' : brand.tokens?.themeMode || 'light'}
+                                        </p>
+                                      </div>
+                                      {isSelected && <Check className="h-5 w-5 text-success ml-auto shrink-0" />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color Primario Académico</Label>
+                          <div className="flex items-center gap-4 bg-white rounded-2xl border p-4">
+                            <div className="relative">
+                              <input
+                                type="color"
+                                value={currentPrimaryColor}
+                                onChange={e => setBrandingData({ ...brandingData, brandName: '', primaryColor: e.target.value })}
+                                className="w-12 h-12 rounded-xl p-0 border-none cursor-pointer overflow-hidden ring-4 ring-white shadow"
+                              />
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <p className="text-lg font-mono font-bold">{currentPrimaryColor}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {selectedBrand ? `Color asignado por el brand "${selectedBrand.name}".` : 'Color primario personalizado o heredado de tu perfil.'}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
