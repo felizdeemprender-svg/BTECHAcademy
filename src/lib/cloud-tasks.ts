@@ -31,21 +31,24 @@ export async function enqueueVideoTask(payload: VideoTaskPayload) {
   const authHeader = `Bearer ${workerSecret}`;
 
   // Determinar URL de destino del worker
-  const isCloudRun = !!process.env.K_SERVICE || !!process.env.PORT;
+  // IMPORTANTE: En Cloud Run / App Hosting, una llamada a 127.0.0.1 NO pasa por el
+  // Google Front End (Ingress), por lo que Cloud Run considera que no hay requests
+  // externos activos y aplica CPU Throttling (~1% CPU) o apaga la instancia a mitad de FFmpeg.
+  // Siempre priorizar la URL pública HTTPS (origin del request o NEXT_PUBLIC_APP_URL).
   const localPort = process.env.PORT || '9002';
 
   let workerUrl = process.env.WORKER_URL;
   if (!workerUrl) {
-    if (isCloudRun && process.env.PORT) {
-      workerUrl = `http://127.0.0.1:${process.env.PORT}/api/video/worker`;
+    if (payload.origin && payload.origin.startsWith('https://')) {
+      workerUrl = `${payload.origin.replace(/\/$/, '')}/api/video/worker`;
     } else if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')) {
-      workerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/video/worker`;
+      workerUrl = `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')}/api/video/worker`;
     } else if (process.env.VERCEL_URL) {
       workerUrl = `https://${process.env.VERCEL_URL}/api/video/worker`;
     } else if (process.env.NODE_ENV === 'production') {
       workerUrl = 'https://fastoria.com.ar/api/video/worker';
     } else {
-      workerUrl = `http://localhost:${localPort}/api/video/worker`;
+      workerUrl = `http://127.0.0.1:${localPort}/api/video/worker`;
     }
   }
 
@@ -83,11 +86,12 @@ export async function enqueueVideoTask(payload: VideoTaskPayload) {
   }
 
   // Fallback directo asíncrono (Fire-and-Forget) hacia el Worker:
-  // El endpoint /api/video/worker arranca la tarea y responde HTTP 200 de inmediato.
+  // Aguardamos brevemente (~300ms) para garantizar que el handshake TLS y el body HTTP
+  // salgan hacia el Ingress de Cloud Run antes de que el endpoint llamador cierre su request.
   try {
     console.log(`[CloudTasks] Ejecutando worker vía fetch directo (Fire-and-Forget): ${workerUrl}`);
     
-    fetch(workerUrl, {
+    const workerFetch = fetch(workerUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -95,11 +99,23 @@ export async function enqueueVideoTask(payload: VideoTaskPayload) {
       },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(3600000)
-    }).catch(e => {
+    }).then(res => {
+      if (!res.ok) {
+        throw new Error(`Worker HTTP ${res.status}`);
+      }
+      return res;
+    });
+
+    workerFetch.catch(e => {
       if (e?.cause?.code !== 'UND_ERR_HEADERS_TIMEOUT') {
         console.error('[CloudTasks Direct] Error de conexión con worker:', e?.message || e);
       }
     });
+
+    await Promise.race([
+      workerFetch,
+      new Promise(resolve => setTimeout(resolve, 350))
+    ]);
 
     return { success: true, taskName: `direct-task-${Date.now()}` };
   } catch (error: any) {

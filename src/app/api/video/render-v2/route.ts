@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/firebase/admin';
 import { RenderRequest, runRenderJob } from '@/lib/video/render-job';
 
+export const maxDuration = 300;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // ENDPOINT POST: Recibe la solicitud y encola el trabajo
 // ─────────────────────────────────────────────────────────────────────────────
@@ -75,12 +77,17 @@ export async function POST(req: NextRequest) {
 
     // ── Encolar proceso hacia el Worker (o Cloud Tasks) ──────────────────────
     // Para evitar CPU Throttling en Cloud Run, delegamos la ejecución pesada
-    // al endpoint /api/video/worker, el cual mantiene la conexión HTTP abierta
-    // asegurando el 100% de CPU durante todo el renderizado de FFmpeg.
+    // al endpoint /api/video/worker a través del origen público HTTPS, manteniendo
+    // la conexión de Ingress abierta con 100% de CPU durante todo el renderizado.
+    const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
+    const forwardedProto = req.headers.get('x-forwarded-proto') || (forwardedHost.includes('localhost') ? 'http' : 'https');
+    const requestOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : req.nextUrl.origin;
+
     const { enqueueVideoTask } = await import('@/lib/cloud-tasks');
-    enqueueVideoTask({
+    await enqueueVideoTask({
       action: 'render-v2',
       jobId,
+      origin: requestOrigin,
       renderRequest: { ...body, uid, role }
     }).catch(taskErr => {
       console.warn(`[Render V2] Falló despacho hacia worker vía Cloud Tasks / HTTP (${taskErr?.message}). Ejecutando fallback local...`);
