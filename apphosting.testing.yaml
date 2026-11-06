@@ -41,9 +41,6 @@ env:
   - variable: GOOGLE_API_KEY
     secret: GEMINI_API_KEY
     availability: [RUNTIME]
-  - variable: GOOGLE_TTS_API_KEY
-    value: AIzaSyC8hI8TG6b2r4BQk7lmL_HUMxQPRs96jo4
-    availability: [BUILD, RUNTIME]
 
   # Evolution API & Cron
   - variable: EVOLUTION_API_URL
