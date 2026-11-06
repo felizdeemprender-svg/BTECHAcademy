@@ -115,3 +115,4 @@ describe('API Routes /api/courses/[id] & /publish (Next.js 15 async params)', ()
     );
   });
 });
+

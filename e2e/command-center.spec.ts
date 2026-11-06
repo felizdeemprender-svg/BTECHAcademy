@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 
+const TOKEN = process.env.E2E_ID_TOKEN;
+
 test.describe('Centro de Mando (Marketing Campaigns)', () => {
+  test.skip(!TOKEN, 'Requiere sesión autenticada (E2E_ID_TOKEN)');
+
   test('debe renderizar el título y elementos principales', async ({ page }) => {
     // Si la app usa auth de Firebase en E2E, tal vez haya que loguear,
     // pero intentamos navegar directo.

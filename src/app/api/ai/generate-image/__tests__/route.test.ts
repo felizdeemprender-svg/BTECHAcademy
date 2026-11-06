@@ -115,3 +115,4 @@ describe('API Route /api/ai/generate-image', () => {
     expect(json.generatedPrompt.toLowerCase()).not.toContain('office');
   });
 });
+

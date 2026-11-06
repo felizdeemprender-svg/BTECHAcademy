@@ -5,6 +5,14 @@ test.describe('Landing Pages (Sales Pages V2) E2E', () => {
   const MOCK_API_URL = `**/api/sales-pages/${MOCK_LANDING_ID}/public*`;
 
   test('Renderiza landing V2 correctamente con datos mockeados', async ({ page }) => {
+    await page.route(`**/api/sales-pages/${MOCK_LANDING_ID}/track*`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+    });
+
     // Interceptar la llamada a la API y devolver un mock de la landing
     await page.route(MOCK_API_URL, async (route) => {
       await route.fulfill({
@@ -19,26 +27,23 @@ test.describe('Landing Pages (Sales Pages V2) E2E', () => {
             content: {
               sections: [
                 {
-                  id: 'hero-1',
-                  type: 'hero',
-                  props: {
-                    title: 'Curso de Prueba E2E',
-                    subtitle: 'Aprende a programar bots',
-                    ctaText: 'Comprar ahora'
-                  }
-                }
-              ]
+                  id: 'heroVideo_1',
+                  title: 'Curso de Prueba E2E',
+                  subtitle: 'Aprende a programar bots',
+                  ctaText: 'Comprar ahora',
+                },
+              ],
             },
             branding: {
-              primaryColor: '#ff0000'
+              primaryColor: '#ff0000',
             },
-            mentorId: 'mentor-e2e'
+            mentorId: 'mentor-e2e',
           },
           course: {
-            title: 'Bot Master'
+            title: 'Bot Master',
           },
-          modules: []
-        })
+          modules: [],
+        }),
       });
     });
 

@@ -13,11 +13,11 @@ const GET_ROUTES = [
   '/api/mentoring/programs/f1/detail?action=sessions',
   '/api/mentoring/programs/f1/detail?action=tasks',
   // F2.2 whatsapp-bot: todas las acciones GET exigen admin (401 sin token)
-  '/api/admin/whatsapp-bot?action=status',
-  '/api/admin/whatsapp-bot?action=settings',
-  '/api/admin/whatsapp-bot?action=conversations',
-  '/api/admin/whatsapp-bot?action=messages&phone=54911',
-  '/api/admin/whatsapp-bot?action=knowledge',
+  '/api/automations/whatsapp/whatsapp-bot?action=status',
+  '/api/automations/whatsapp/whatsapp-bot?action=settings',
+  '/api/automations/whatsapp/whatsapp-bot?action=conversations',
+  '/api/automations/whatsapp/whatsapp-bot?action=messages&phone=54911',
+  '/api/automations/whatsapp/whatsapp-bot?action=knowledge',
 ];
 
 for (const route of GET_ROUTES) {
@@ -34,15 +34,15 @@ const POST_ROUTES: { route: string; body: unknown }[] = [
   { route: '/api/mentoring/programs/create', body: {} },
   { route: '/api/mentoring/programs/f1/detail?action=assign-task', body: {} },
   // F2.2 whatsapp-bot: POSTs admin (401 sin token)
-  { route: '/api/admin/whatsapp-bot?action=settings', body: { tone: 'x' } },
-  { route: '/api/admin/whatsapp-bot?action=connect', body: {} },
-  { route: '/api/admin/whatsapp-bot?action=logout', body: {} },
-  { route: '/api/admin/whatsapp-bot?action=knowledge', body: { title: 'x' } },
-  { route: '/api/admin/whatsapp-bot?action=sync-plans', body: {} },
-  { route: '/api/admin/whatsapp-bot?action=send-message', body: { phone: 'x', text: 'y' } },
-  { route: '/api/admin/whatsapp-bot?action=toggle-mode', body: { phone: 'x' } },
-  { route: '/api/admin/whatsapp-bot?action=resume-bot', body: { phone: 'x' } },
-  { route: '/api/admin/whatsapp-bot?action=transfer', body: { phone: 'x' } },
+  { route: '/api/automations/whatsapp/whatsapp-bot?action=settings', body: { tone: 'x' } },
+  { route: '/api/automations/whatsapp/whatsapp-bot?action=connect', body: {} },
+  { route: '/api/automations/whatsapp/whatsapp-bot?action=logout', body: {} },
+  { route: '/api/automations/whatsapp/whatsapp-bot?action=knowledge', body: { title: 'x' } },
+  { route: '/api/automations/whatsapp/whatsapp-bot?action=sync-plans', body: {} },
+  { route: '/api/automations/whatsapp/whatsapp-bot?action=send-message', body: { phone: 'x', text: 'y' } },
+  { route: '/api/automations/whatsapp/whatsapp-bot?action=toggle-mode', body: { phone: 'x' } },
+  { route: '/api/automations/whatsapp/whatsapp-bot?action=resume-bot', body: { phone: 'x' } },
+  { route: '/api/automations/whatsapp/whatsapp-bot?action=transfer', body: { phone: 'x' } },
 ];
 
 for (const { route, body } of POST_ROUTES) {
@@ -61,7 +61,7 @@ test('PATCH y DELETE sin token → 401', async ({ request }) => {
 
 test('whatsapp-bot PUT/DELETE sin token → 401', async ({ request }) => {
   expect(
-    (await request.put('/api/admin/whatsapp-bot?action=update-conversation&phone=54911', { data: {} })).status(),
+    (await request.put('/api/automations/whatsapp/whatsapp-bot?action=update-conversation&phone=54911', { data: {} })).status(),
   ).toBe(401);
-  expect((await request.delete('/api/admin/whatsapp-bot?action=knowledge&id=k1')).status()).toBe(401);
+  expect((await request.delete('/api/automations/whatsapp/whatsapp-bot?action=knowledge&id=k1')).status()).toBe(401);
 });
