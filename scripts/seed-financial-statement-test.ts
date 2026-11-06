@@ -39,11 +39,20 @@ async function seedFinancialData(targetTutorId?: string) {
   const subBilledDate = new Date(now.getFullYear(), now.getMonth(), 1, 10, 0, 0);
   const aiCreditBilledDate = new Date(now.getFullYear(), now.getMonth(), 5, 15, 30, 0);
 
-  // 1. Configurar país, moneda base y compras de créditos IA en el perfil del tutor
+  // 1. Configurar país, moneda base, ciclo de facturación actual (mes corriente) y compras de créditos IA en el perfil del tutor
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+  const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
   await userRef.set(
     {
       homeCountry: 'AR',
       homeCurrency: 'ARS',
+      billingCycle: {
+        currentCycleStart: currentMonthStart,
+        currentCycleEnd: currentMonthEnd,
+        monthlySalesAmount: 95000,
+        promotionalCycleIndex: 1,
+      },
       subscription: {
         ...(userSnap.data()?.subscription || {}),
         planName: 'Plan Pro Tutor',
@@ -66,7 +75,7 @@ async function seedFinancialData(targetTutorId?: string) {
     { merge: true },
   );
 
-  console.log('[Seed Testing] Perfil de tutor actualizado con moneda ARS y egresos de plataforma.');
+  console.log('[Seed Testing] Perfil de tutor actualizado con ciclo Noviembre 2026, moneda ARS y egresos de plataforma.');
 
   // 2. Insertar órdenes en el libro mayor (orderLedger)
   const sampleOrders = [
@@ -176,3 +185,4 @@ seedFinancialData(argTutorId).catch((err) => {
   console.error('[Seed Testing Error]:', err);
   process.exit(1);
 });
+

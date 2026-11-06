@@ -131,23 +131,38 @@ function PlanContentInner() {
     const list: any[] = [];
     const billing = profile?.billingCycle;
 
-    // Ciclo actual
-    let cStart = new Date();
-    cStart.setDate(1);
-    let cEnd = new Date(cStart.getFullYear(), cStart.getMonth() + 1, 0);
+    // Ciclo actual (por defecto: mes corriente en curso)
+    const now = new Date();
+    let cStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+    let cEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-    if (billing?.currentCycleStart) {
-      if (billing.currentCycleStart.toDate) cStart = billing.currentCycleStart.toDate();
-      else if (billing.currentCycleStart.seconds) cStart = new Date(billing.currentCycleStart.seconds * 1000);
-      else cStart = new Date(billing.currentCycleStart);
-    }
-    if (billing?.currentCycleEnd) {
-      if (billing.currentCycleEnd.toDate) cEnd = billing.currentCycleEnd.toDate();
-      else if (billing.currentCycleEnd.seconds) cEnd = new Date(billing.currentCycleEnd.seconds * 1000);
-      else cEnd = new Date(billing.currentCycleEnd);
+    if (billing?.currentCycleStart && billing?.currentCycleEnd) {
+      let bStart: Date;
+      let bEnd: Date;
+      if (billing.currentCycleStart.toDate) bStart = billing.currentCycleStart.toDate();
+      else if (billing.currentCycleStart.seconds) bStart = new Date(billing.currentCycleStart.seconds * 1000);
+      else bStart = new Date(billing.currentCycleStart);
+
+      if (billing.currentCycleEnd.toDate) bEnd = billing.currentCycleEnd.toDate();
+      else if (billing.currentCycleEnd.seconds) bEnd = new Date(billing.currentCycleEnd.seconds * 1000);
+      else bEnd = new Date(billing.currentCycleEnd);
+
+      // Si el ciclo almacenado en base de datos sigue vigente para el mes corriente
+      if (bEnd.getTime() >= cStart.getTime()) {
+        cStart = bStart;
+        cEnd = bEnd;
+      } else {
+        // El ciclo almacenado ya expiró en meses anteriores; se archiva en la lista histórica
+        list.push({
+          id: `past-cycle-${bStart.toISOString()}`,
+          label: `Ciclo Cerrado (${format(bStart, 'dd/MM/yy')} al ${format(bEnd, 'dd/MM/yy')})`,
+          from: bStart.toISOString(),
+          to: bEnd.toISOString(),
+        });
+      }
     }
 
-    list.push({
+    list.unshift({
       id: 'current',
       label: `Ciclo en Curso (${format(cStart, 'dd/MM/yy')} al ${format(cEnd, 'dd/MM/yy')})`,
       from: cStart.toISOString(),
@@ -845,18 +860,25 @@ function PlanContentInner() {
               const discountedFixedAmount = fixedAmount * (1 - (discountPercent / 100));
               const estimatedTotal = discountedFixedAmount + royaltiesAmount;
 
-              let cStart = new Date();
-              if (billing?.currentCycleStart) {
-                if (billing.currentCycleStart.toDate) cStart = billing.currentCycleStart.toDate();
-                else if (billing.currentCycleStart.seconds) cStart = new Date(billing.currentCycleStart.seconds * 1000);
-                else cStart = new Date(billing.currentCycleStart);
-              }
-              
-              let cEnd = new Date();
-              if (billing?.currentCycleEnd) {
-                if (billing.currentCycleEnd.toDate) cEnd = billing.currentCycleEnd.toDate();
-                else if (billing.currentCycleEnd.seconds) cEnd = new Date(billing.currentCycleEnd.seconds * 1000);
-                else cEnd = new Date(billing.currentCycleEnd);
+              const now = new Date();
+              let cStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+              let cEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+              if (billing?.currentCycleStart && billing?.currentCycleEnd) {
+                let bStart: Date;
+                let bEnd: Date;
+                if (billing.currentCycleStart.toDate) bStart = billing.currentCycleStart.toDate();
+                else if (billing.currentCycleStart.seconds) bStart = new Date(billing.currentCycleStart.seconds * 1000);
+                else bStart = new Date(billing.currentCycleStart);
+
+                if (billing.currentCycleEnd.toDate) bEnd = billing.currentCycleEnd.toDate();
+                else if (billing.currentCycleEnd.seconds) bEnd = new Date(billing.currentCycleEnd.seconds * 1000);
+                else bEnd = new Date(billing.currentCycleEnd);
+
+                if (bEnd.getTime() >= cStart.getTime()) {
+                  cStart = bStart;
+                  cEnd = bEnd;
+                }
               }
 
               return (
