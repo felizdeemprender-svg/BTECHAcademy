@@ -237,11 +237,14 @@ export async function runRenderJob(jobId: string, body: RenderRequest) {
       slices: engineSlices,
       backgroundMusicUrl,
       onSliceProgress: async (sliceIdx: number, total: number) => {
-        const p = 55 + Math.round((sliceIdx / Math.max(total, 1)) * 20); // 55% -> 75%
+        const p = 55 + Math.round((sliceIdx / Math.max(total, 1)) * 18); // 55% -> 73%
         await updateJob(jobId, {
           progress: p,
           stage: `Renderizando escena ${sliceIdx + 1} de ${total} con FFmpeg...`
         });
+      },
+      onStageProgress: async (progress: number, stage: string) => {
+        await updateJob(jobId, { progress, stage });
       }
     };
 

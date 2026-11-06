@@ -25,9 +25,13 @@ export async function POST(req: NextRequest) {
     }
 
     console.log(`[DraftCampaign] Orquestando campaña: ${campaignId} (Auto-imágenes: ${autoGenerateImages !== false})`);
-    
+    const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
+    const forwardedProto = req.headers.get('x-forwarded-proto') || (forwardedHost.includes('localhost') ? 'http' : 'https');
+    const requestOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : req.nextUrl.origin;
+
     await enqueueVideoTask({
       action: 'draft-full-campaign',
+      origin: requestOrigin,
       campaignId,
       courseId: campaignId,
       assets,

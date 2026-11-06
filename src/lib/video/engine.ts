@@ -30,6 +30,7 @@ export interface EngineRequest {
   slices: EngineSlice[];
   backgroundMusicUrl?: string;
   onSliceProgress?: (sliceIndex: number, totalSlices: number) => Promise<void>;
+  onStageProgress?: (progress: number, stage: string) => Promise<void>;
 }
 
 function getFormatDimensions(adn: any, format: string, isV2: boolean): { width: number, height: number } {
@@ -324,10 +325,13 @@ ${winFontsDir}
   }
 
   // 2. Concatenate Video Clips with XFADE Transitions
+  if (req.onStageProgress) {
+    try { await req.onStageProgress(74, 'Uniendo escenas y transiciones con FFmpeg...'); } catch {}
+  }
   const videoOnlyPath = path.join(workDir, 'video_only.mp4');
 
   if (sceneClips.length === 1) {
-    await runFfmpeg(['-i', sceneClips[0], '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-y', videoOnlyPath]);
+    await runFfmpeg(['-i', sceneClips[0], '-c:v', 'libx264', '-preset', 'ultrafast', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-threads', '0', '-y', videoOnlyPath]);
   } else {
     console.log(`[Engine V2] Orchestrating ${sceneClips.length} clips with xfade transitions...`);
     // Prepare inputs with consistent timebase and PTS for xfade
@@ -363,11 +367,19 @@ ${winFontsDir}
       ...inputArgs,
       '-filter_complex', filterComplex,
       '-map', `[${lastLabel}]`,
-      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-y', videoOnlyPath
+      '-c:v', 'libx264', '-preset', 'ultrafast', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-threads', '0', '-y', videoOnlyPath
     ]);
   }
 
+  // Liberar RAM en Cloud Run (/tmp es tmpfs en memoria): borrar plates intermedios ya concatenados
+  for (const clipPath of sceneClips) {
+    try { if (fs.existsSync(clipPath)) fs.unlinkSync(clipPath); } catch {}
+  }
+
   // 3. Concatenate Audio Clips with ACROSSFADE
+  if (req.onStageProgress) {
+    try { await req.onStageProgress(77, 'Sincronizando locución y música...'); } catch {}
+  }
   const voiceOnlyPath = path.join(workDir, 'voice_only.mp3');
 
   if (voiceClips.length === 1) {
@@ -397,6 +409,9 @@ ${winFontsDir}
   }
 
   // 4. Final Mix with Soundtrack and Ducking
+  if (req.onStageProgress) {
+    try { await req.onStageProgress(79, 'Masterizando audio y empaquetando MP4...'); } catch {}
+  }
   const finalPath = path.join(workDir, 'final_render.mp4');
 
   if (fs.existsSync(finalPath)) {
@@ -430,7 +445,7 @@ ${winFontsDir}
     '-filter_complex',
     `[1:a]${musicFx},afade=t=in:st=0:d=0.5[music]; [2:a]${voiceFx},adelay=200|200,aresample=44100,asplit=2[v_trigger][v_final]; [music][v_trigger]sidechaincompress=threshold=${sChain.threshold}:ratio=${sChain.ratio}:attack=${sChain.attack}:release=${sChain.release}[bg_ducked]; [bg_ducked][v_final]amix=inputs=2:duration=first,loudnorm=I=-16:TP=-1.5:LRA=11[aout]`,
     '-map', '0:v:0', '-map', '[aout]',
-    '-c:v', 'libx264', '-preset', 'fast', '-profile:v', 'high', '-movflags', 'faststart', '-threads', '0', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-ar', '44100', '-y', finalPath
+    '-c:v', 'copy', '-movflags', '+faststart', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-ar', '44100', '-y', finalPath
   ];
   console.log(`[FFmpeg:FinalCommand] ${finalMixArgs.join(' ')}`);
   await runFfmpeg(finalMixArgs);
