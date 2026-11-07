@@ -56,6 +56,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-context';
 import { FileUploadArea } from '@/components/ui/file-upload-area';
+import { CourseBrandTabContent } from '@/components/brands/course-brand-tab-content';
 import { resolveProfileBrand } from '@/lib/landing-styles';
 import type { StyleBrand } from '@/lib/landing-styles';
 import { useFirebase, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -1009,117 +1010,29 @@ export default function CreateCoursePage() {
                   </TabsContent>
 
                   {!isCompanyTutor && (
-                    <TabsContent value="marca" className="p-10 space-y-12">
-                      <div className="space-y-4">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logo Institucional del Curso</Label>
-                        <div className="flex items-center gap-8">
-                          <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white">
-                            {brandingData.logoUrl ? (
-                              <Image src={brandingData.logoUrl} alt="Logo" fill className="object-contain p-4" unoptimized />
-                            ) : (
-                              <ImageIcon className="h-10 w-10 text-muted-foreground/20" />
-                            )}
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            <Button variant="outline" className="rounded-2xl font-bold h-14 px-8 border-2" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
-                              {uploadingLogo ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2 h-5 w-5" />} Subir Logo
-                            </Button>
-                            {brandingData.logoUrl && (
-                              <Button variant="ghost" className="rounded-2xl font-bold h-12 px-8 text-destructive hover:bg-destructive/10" onClick={() => setBrandingData({ ...brandingData, logoUrl: '' })}>
-                                <Trash2 className="mr-2 h-5 w-5" /> Eliminar Logo
-                              </Button>
-                            )}
-                          </div>
-                          <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={handleUploadLogo} />
-                        </div>
-                      </div>
-
-                      <div className="space-y-6">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Identidad de Marca (Brands)</Label>
-                        <div className="space-y-4">
-                          {ownBrands.length === 0 ? (
-                            <div className="bg-secondary/10 p-6 rounded-2xl flex flex-col gap-4">
-                              <div className="space-y-1">
-                                <p className="font-bold text-primary">Marca activa del perfil</p>
-                                <p className="text-sm text-muted-foreground">
-                                  El curso utiliza automáticamente el color y estilo de tu marca activa ({activeBrand?.palette?.primary || profile?.profile?.branding?.primaryColor || '#3B2D86'}).
-                                  Puedes crear marcas personalizadas en <span className="font-bold">Ajustes → Mis brands</span>.
-                                </p>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-3">
-                                {(activeBrand?.palette?.primary || profile?.profile?.branding?.primaryColor) && (
-                                  <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow" style={{ backgroundColor: activeBrand?.palette?.primary || profile?.profile?.branding?.primaryColor }} />
-                                )}
-                                <span className="text-xs text-muted-foreground font-bold">{activeBrand?.name || 'Marca activa'}</span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                              {ownBrands.map((brand) => {
-                                const isSelected = brandingData.brandName === brand.name || (!brandingData.brandName && activeBrand?.name === brand.name);
-                                const isActive = activeBrand?.name === brand.name;
-                                return (
-                                  <div
-                                    key={brand.name}
-                                    onClick={() => setBrandingData({ ...brandingData, brandName: brand.name, primaryColor: brand.palette?.primary || currentPrimaryColor })}
-                                    className={cn(
-                                      "border-2 rounded-xl p-4 transition-all flex flex-col justify-between cursor-pointer",
-                                      isSelected ? "border-success bg-success/5 shadow-sm" : "border-border bg-white hover:border-primary/50"
-                                    )}
-                                  >
-                                    <div>
-                                      <div className="flex items-start justify-between gap-2">
-                                        <div className="flex -space-x-1.5">
-                                          <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-30" style={{ backgroundColor: brand.palette?.primary || '#3B2D86' }} />
-                                          <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-20" style={{ backgroundColor: brand.palette?.secondary || '#8B5CF6' }} />
-                                          <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-10" style={{ backgroundColor: brand.palette?.accent || '#D8B4FE' }} />
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                          <span
-                                            className={cn(
-                                              "text-[10px] font-black uppercase tracking-widest rounded-full px-2.5 py-1 transition-colors",
-                                              isSelected
-                                                ? "bg-success text-white"
-                                                : "bg-muted text-muted-foreground"
-                                            )}
-                                          >
-                                            {isSelected ? (isActive ? 'Activo en curso' : 'Seleccionado') : 'Elegir'}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <p className="font-bold text-sm text-foreground mt-3">{brand.name}</p>
-                                      <p className="text-[10px] text-muted-foreground mt-0.5">{brand.description || (isActive ? 'Tu marca principal activa' : 'Marca disponible')}</p>
-                                      <p className="text-[10px] font-mono text-muted-foreground mt-2 truncate">
-                                        {brand.typography?.headingFont || 'Inter'} · {brand.palette?.primary || '#3B2D86'}
-                                      </p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color Primario Académico</Label>
-                          <div className="flex items-center gap-4 bg-white rounded-xl border p-4">
-                            <div className="relative">
-                              <input
-                                type="color"
-                                value={currentPrimaryColor}
-                                onChange={e => setBrandingData({ ...brandingData, brandName: '', primaryColor: e.target.value })}
-                                className="w-10 h-10 rounded-xl p-0 border-none cursor-pointer overflow-hidden ring-4 ring-white shadow"
-                              />
-                            </div>
-                            <div className="flex-1 space-y-1">
-                              <p className="text-base font-mono font-bold">{currentPrimaryColor}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {selectedBrand ? `Color asignado por el brand "${selectedBrand.name}".` : 'Color primario personalizado o heredado de tu perfil.'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    <TabsContent value="marca" className="p-10">
+                      <CourseBrandTabContent
+                        logoUrl={brandingData.logoUrl}
+                        onLogoChange={(newUrl) => setBrandingData(prev => ({ ...prev, logoUrl: newUrl }))}
+                        onLogoUpload={handleUploadLogo}
+                        uploadingLogo={uploadingLogo}
+                        selectedBrandName={brandingData.brandName}
+                        onSelectBrand={(brand) => {
+                          setBrandingData(prev => ({
+                            ...prev,
+                            brandName: brand.name,
+                            primaryColor: brand.palette?.primary || prev.primaryColor
+                          }));
+                        }}
+                        primaryColor={currentPrimaryColor}
+                        onPrimaryColorChange={(newColor) => {
+                          setBrandingData(prev => ({
+                            ...prev,
+                            brandName: '',
+                            primaryColor: newColor
+                          }));
+                        }}
+                      />
                     </TabsContent>
                   )}
                 </Tabs>
