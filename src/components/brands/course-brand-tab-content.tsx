@@ -2,23 +2,30 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { 
-  Palette, 
-  Upload, 
-  Trash2, 
-  Plus, 
-  Download, 
-  Edit2, 
-  Save, 
-  Check, 
-  Loader2, 
-  Image as ImageIcon 
+import {
+  Palette,
+  Upload,
+  Trash2,
+  Plus,
+  Download,
+  Edit2,
+  Save,
+  Check,
+  Loader2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-context';
@@ -26,6 +33,7 @@ import { useFirestore } from '@/firebase';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { parseBrandFile, brandsToDTCG, DEFAULT_BRAND_TOKENS } from '@/lib/landing-styles/dtcg';
 import { resolveProfileBrand } from '@/lib/landing-styles';
+import { ALLOWED_WEB_FONTS } from '@/lib/landing-styles/fonts';
 import type { StyleBrand } from '@/lib/landing-styles';
 
 interface CourseBrandTabContentProps {
@@ -34,7 +42,7 @@ interface CourseBrandTabContentProps {
   onLogoChange?: (newUrl: string) => void;
   onLogoUpload?: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void> | void;
   uploadingLogo?: boolean;
-  
+
   /** Nombre del brand actualmente seleccionado en el curso */
   selectedBrandName?: string;
   /** Callback al elegir un brand */
@@ -153,7 +161,7 @@ export function CourseBrandTabContent({
     }
 
     if (
-      brandForm.name !== brandForm.originalName && 
+      brandForm.name !== brandForm.originalName &&
       brands.some(b => b.name.toLowerCase() === brandForm.name.trim().toLowerCase())
     ) {
       toast({ variant: 'destructive', title: 'Ya existe una marca con ese nombre' });
@@ -295,9 +303,9 @@ export function CourseBrandTabContent({
   };
 
   // Determinar marca seleccionada actual
-  const currentBrand = brands.find(b => b.name === selectedBrandName) || 
-    brands.find(b => b.name === activeProfileBrandName) || 
-    brands[0] || 
+  const currentBrand = brands.find(b => b.name === selectedBrandName) ||
+    brands.find(b => b.name === activeProfileBrandName) ||
+    brands[0] ||
     null;
 
   const currentPrimaryColor = primaryColor || currentBrand?.palette?.primary || profile?.profile?.branding?.primaryColor || '#3B2D86';
@@ -310,13 +318,13 @@ export function CourseBrandTabContent({
         <div className="flex items-center gap-8">
           <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white shadow-sm">
             {logoUrl && typeof logoUrl === 'string' ? (
-              <Image 
-                src={logoUrl} 
-                alt="Logo del programa" 
-                fill 
-                sizes="128px" 
-                className="object-contain p-4" 
-                unoptimized 
+              <Image
+                src={logoUrl}
+                alt="Logo del programa"
+                fill
+                sizes="128px"
+                className="object-contain p-4"
+                unoptimized
                 data-ai-hint="course logo"
               />
             ) : (
@@ -324,19 +332,19 @@ export function CourseBrandTabContent({
             )}
           </div>
           <div className="flex flex-col gap-3">
-            <Button 
-              variant="outline" 
-              className="rounded-2xl font-bold h-12 px-8 border-2" 
-              onClick={() => logoInputRef.current?.click()} 
+            <Button
+              variant="outline"
+              className="rounded-2xl font-bold h-12 px-8 border-2"
+              onClick={() => logoInputRef.current?.click()}
               disabled={uploadingLogo}
             >
               {uploadingLogo ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Upload className="mr-2 h-4 w-4" />}
               {logoUrl ? 'Cambiar Logo' : 'Subir Logo'}
             </Button>
             {logoUrl && onLogoChange && (
-              <Button 
-                variant="ghost" 
-                className="rounded-2xl font-bold h-12 px-8 text-destructive hover:bg-destructive/10" 
+              <Button
+                variant="ghost"
+                className="rounded-2xl font-bold h-12 px-8 text-destructive hover:bg-destructive/10"
                 onClick={() => onLogoChange('')}
               >
                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar Logo
@@ -361,39 +369,39 @@ export function CourseBrandTabContent({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button 
-              variant="default" 
-              size="sm" 
-              className="rounded-full font-bold shadow-md h-9 px-4" 
+            <Button
+              variant="default"
+              size="sm"
+              className="rounded-full font-bold shadow-md h-9 px-4"
               onClick={() => handleOpenBrandEditor()}
             >
               <Plus className="h-4 w-4 mr-1.5" /> Crear Brand
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="rounded-full font-bold h-9 px-3" 
-              onClick={handleDownloadTemplate} 
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full font-bold h-9 px-3"
+              onClick={handleDownloadTemplate}
               title="Descargar plantilla base"
             >
               <Download className="h-4 w-4" />
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="rounded-full font-bold h-9 px-3" 
-              onClick={() => brandFileInputRef.current?.click()} 
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full font-bold h-9 px-3"
+              onClick={() => brandFileInputRef.current?.click()}
               title="Importar archivo JSON"
             >
               <Upload className="h-4 w-4" />
             </Button>
           </div>
-          <input 
-            type="file" 
-            ref={brandFileInputRef} 
-            className="hidden" 
-            accept=".json,application/json" 
-            onChange={handleBrandFile} 
+          <input
+            type="file"
+            ref={brandFileInputRef}
+            className="hidden"
+            accept=".json,application/json"
+            onChange={handleBrandFile}
           />
         </div>
 
@@ -420,8 +428,8 @@ export function CourseBrandTabContent({
                   key={brand.name}
                   className={cn(
                     "border-2 rounded-xl p-4 transition-all flex flex-col justify-between cursor-pointer",
-                    isSelected 
-                      ? "border-success bg-success/5 shadow-sm ring-2 ring-success/20" 
+                    isSelected
+                      ? "border-success bg-success/5 shadow-sm ring-2 ring-success/20"
                       : "border-border bg-white hover:border-primary/50"
                   )}
                   onClick={() => onSelectBrand(brand)}
@@ -550,10 +558,10 @@ export function CourseBrandTabContent({
           <div className="space-y-6 my-4">
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Nombre del Brand</Label>
-              <Input 
-                value={brandForm.name} 
-                onChange={e => setBrandForm({...brandForm, name: e.target.value})} 
-                className="bg-muted/50 h-12 rounded-xl border-border" 
+              <Input
+                value={brandForm.name}
+                onChange={e => setBrandForm({ ...brandForm, name: e.target.value })}
+                className="bg-muted/50 h-12 rounded-xl border-border"
                 placeholder="Ej. Mi Marca Premium"
               />
             </div>
@@ -562,15 +570,15 @@ export function CourseBrandTabContent({
               <div className="space-y-2">
                 <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Primary</Label>
                 <div className="flex flex-col gap-2">
-                  <Input 
-                    type="color" 
-                    value={brandForm.primary} 
-                    onChange={e => setBrandForm({...brandForm, primary: e.target.value})}
+                  <Input
+                    type="color"
+                    value={brandForm.primary}
+                    onChange={e => setBrandForm({ ...brandForm, primary: e.target.value })}
                     className="h-10 w-full p-1 rounded-lg border-2 cursor-pointer"
                   />
-                  <Input 
-                    value={brandForm.primary} 
-                    onChange={e => setBrandForm({...brandForm, primary: e.target.value})}
+                  <Input
+                    value={brandForm.primary}
+                    onChange={e => setBrandForm({ ...brandForm, primary: e.target.value })}
                     className="h-8 text-xs font-mono px-2"
                   />
                 </div>
@@ -578,15 +586,15 @@ export function CourseBrandTabContent({
               <div className="space-y-2">
                 <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Secondary</Label>
                 <div className="flex flex-col gap-2">
-                  <Input 
-                    type="color" 
-                    value={brandForm.secondary} 
-                    onChange={e => setBrandForm({...brandForm, secondary: e.target.value})}
+                  <Input
+                    type="color"
+                    value={brandForm.secondary}
+                    onChange={e => setBrandForm({ ...brandForm, secondary: e.target.value })}
                     className="h-10 w-full p-1 rounded-lg border-2 cursor-pointer"
                   />
-                  <Input 
-                    value={brandForm.secondary} 
-                    onChange={e => setBrandForm({...brandForm, secondary: e.target.value})}
+                  <Input
+                    value={brandForm.secondary}
+                    onChange={e => setBrandForm({ ...brandForm, secondary: e.target.value })}
                     className="h-8 text-xs font-mono px-2"
                   />
                 </div>
@@ -594,15 +602,15 @@ export function CourseBrandTabContent({
               <div className="space-y-2">
                 <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Accent</Label>
                 <div className="flex flex-col gap-2">
-                  <Input 
-                    type="color" 
-                    value={brandForm.accent} 
-                    onChange={e => setBrandForm({...brandForm, accent: e.target.value})}
+                  <Input
+                    type="color"
+                    value={brandForm.accent}
+                    onChange={e => setBrandForm({ ...brandForm, accent: e.target.value })}
                     className="h-10 w-full p-1 rounded-lg border-2 cursor-pointer"
                   />
-                  <Input 
-                    value={brandForm.accent} 
-                    onChange={e => setBrandForm({...brandForm, accent: e.target.value})}
+                  <Input
+                    value={brandForm.accent}
+                    onChange={e => setBrandForm({ ...brandForm, accent: e.target.value })}
                     className="h-8 text-xs font-mono px-2"
                   />
                 </div>
@@ -612,36 +620,54 @@ export function CourseBrandTabContent({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Tipografía Títulos</Label>
-                <Input 
-                  value={brandForm.headingFont} 
-                  onChange={e => setBrandForm({...brandForm, headingFont: e.target.value})}
-                  className="bg-muted/50 h-10 rounded-xl"
-                  placeholder="Ej. Inter"
-                />
+                <Select
+                  value={brandForm.headingFont}
+                  onValueChange={val => setBrandForm({ ...brandForm, headingFont: val })}
+                >
+                  <SelectTrigger className="h-10 rounded-xl bg-muted/50 border-border">
+                    <SelectValue placeholder="Selecciona una fuente" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {ALLOWED_WEB_FONTS.map(f => (
+                      <SelectItem key={f.name} value={f.name}>
+                        <span style={{ fontFamily: f.name }}>{f.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Tipografía Cuerpo</Label>
-                <Input 
-                  value={brandForm.bodyFont} 
-                  onChange={e => setBrandForm({...brandForm, bodyFont: e.target.value})}
-                  className="bg-muted/50 h-10 rounded-xl"
-                  placeholder="Ej. Inter"
-                />
+                <Select
+                  value={brandForm.bodyFont}
+                  onValueChange={val => setBrandForm({ ...brandForm, bodyFont: val })}
+                >
+                  <SelectTrigger className="h-10 rounded-xl bg-muted/50 border-border">
+                    <SelectValue placeholder="Selecciona una fuente" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {ALLOWED_WEB_FONTS.map(f => (
+                      <SelectItem key={f.name} value={f.name}>
+                        <span style={{ fontFamily: f.name }}>{f.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              className="rounded-xl font-bold h-12 px-6" 
+            <Button
+              variant="outline"
+              className="rounded-xl font-bold h-12 px-6"
               onClick={() => setBrandEditorOpen(false)}
               disabled={savingBrand}
             >
               Cancelar
             </Button>
-            <Button 
-              className="rounded-xl font-bold h-12 px-8" 
+            <Button
+              className="rounded-xl font-bold h-12 px-8"
               onClick={handleSaveBrandEditor}
               disabled={savingBrand}
             >
@@ -654,3 +680,4 @@ export function CourseBrandTabContent({
     </div>
   );
 }
+

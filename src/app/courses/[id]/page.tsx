@@ -17,7 +17,7 @@ import { EvaluationData, StudentAchievement } from '@/types/student';
 
 // Hooks
 import { useCourseProgressV3 } from '@/hooks/student/useCourseProgressV3';
-import { resolveCoursePrimaryColor } from '@/lib/landing-styles';
+import { resolveCoursePrimaryColor, resolveCourseBrand } from '@/lib/landing-styles';
 
 // Components
 import { VideoPlayer } from '@/components/courses/VideoPlayer';
@@ -313,11 +313,12 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
   if (isLoading) return <DashboardLayout><div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary h-12 w-12" /></div></DashboardLayout>;
   if (!course || !enrollment) return <DashboardLayout><div className="p-20 text-center"><p className="text-muted-foreground font-bold">No tienes acceso a este curso.</p></div></DashboardLayout>;
 
-  const primaryColor = resolveCoursePrimaryColor(course?.brandingOverride, mentorProfile?.profile);
+  const courseBrand = resolveCourseBrand(course?.brandingOverride, mentorProfile?.profile);
+  const primaryColor = courseBrand.primary;
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-8 pb-20">
+      <div className="max-w-7xl mx-auto space-y-8 pb-20" style={{ fontFamily: courseBrand.bodyFont }}>
         {/* Top Navigation Bar */}
         <div className="flex items-center justify-between gap-4">
             <Link href="/my-courses" className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors">
@@ -341,7 +342,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                     courseId={course.id}
                 />
                 <div className="flex justify-between items-center px-4">
-                    <h1 className="text-2xl md:text-3xl font-black text-primary leading-tight">{activeModule?.title}</h1>
+                    <h1 className="text-2xl md:text-3xl font-black leading-tight" style={{ fontFamily: courseBrand.headingFont, color: primaryColor }}>{activeModule?.title}</h1>
                     <Badge className="bg-secondary/20 text-muted-foreground border-none font-bold">Módulo {activeModuleIndex + 1}</Badge>
                 </div>
             </div>

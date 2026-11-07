@@ -43,7 +43,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { CourseBrandTabContent } from '@/components/brands/course-brand-tab-content';
-import { resolveProfileBrand } from '@/lib/landing-styles';
+import { resolveProfileBrand, resolveCourseBrand } from '@/lib/landing-styles';
 import type { StyleBrand } from '@/lib/landing-styles';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -78,10 +78,22 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
 
   const ownBrands: StyleBrand[] = Array.isArray(mentorProfile?.profile?.brands) ? mentorProfile.profile.brands : [];
   const activeBrand = resolveProfileBrand(mentorProfile?.profile);
-  const selectedBrand = formData.brandName
-    ? ownBrands.find(b => b.name === formData.brandName) || null
-    : activeBrand;
-  const primaryColor = selectedBrand?.palette?.primary || formData.primaryColor;
+
+  // Preponderancia del brand elegido para el curso
+  const resolvedBrand = resolveCourseBrand(
+    {
+      brandName: formData.brandName,
+      primaryColor: formData.primaryColor,
+    },
+    mentorProfile?.profile
+  );
+
+  const primaryColor = resolvedBrand.primary;
+  const secondaryColor = resolvedBrand.secondary;
+  const accentColor = resolvedBrand.accent;
+  const headingFont = resolvedBrand.headingFont;
+  const bodyFont = resolvedBrand.bodyFont;
+  const selectedBrand = resolvedBrand.brand;
 
   const isCompanyTutor = Boolean(
     mentorProfile?.companyRole === 'tutor' ||
@@ -93,14 +105,12 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
     if (course && mentorProfile) {
       const override = course.brandingOverride || {};
       const mentorSocials = mentorProfile.profile?.socials || {};
-      const overrideBrandName = override.brandName || '';
-      const brandPrimary = overrideBrandName
-        ? (ownBrands.find(b => b.name === overrideBrandName)?.palette?.primary)
-        : activeBrand?.palette?.primary;
+      const courseBrandInitial = resolveCourseBrand(override, mentorProfile.profile);
+
       setFormData({
         bio: override.bio || mentorProfile.profile?.bio || '',
-        brandName: overrideBrandName,
-        primaryColor: override.primaryColor || brandPrimary || mentorProfile.profile?.branding?.primaryColor || '#3B2D86',
+        brandName: override.brandName || courseBrandInitial.name || '',
+        primaryColor: courseBrandInitial.primary,
         logoUrl: override.logoUrl || mentorProfile.profile?.branding?.logoUrl || '',
         socials: {
           linkedin: override.socials?.linkedin || mentorSocials.linkedin || '',
@@ -128,7 +138,16 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
           updatedAt: serverTimestamp(),
         }
       : {
-          brandingOverride: { ...formData, primaryColor },
+          brandingOverride: {
+            ...formData,
+            brandName: resolvedBrand.name,
+            primaryColor: resolvedBrand.primary,
+            secondaryColor: resolvedBrand.secondary,
+            accentColor: resolvedBrand.accent,
+            headingFont: resolvedBrand.headingFont,
+            bodyFont: resolvedBrand.bodyFont,
+            brand: resolvedBrand.brand || null,
+          },
           updatedAt: serverTimestamp(),
         };
     updateDoc(ref, updateData).then(() => toast({ title: isCompanyTutor ? 'Perfil en el Curso Actualizado' : 'Identidad Visual Actualizada' }))
@@ -257,9 +276,11 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
           </Button>
 
           <div className="pt-10 space-y-6">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Simulador de Experiencia del Alumno</h2>
-            <Card className="rounded-lg overflow-hidden border-none bg-muted p-12">
-              <header className="flex items-end justify-between bg-white p-8 rounded-lg border-4 border-white mb-10">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Sparkles className="h-5 w-5" style={{ color: primaryColor }} /> Simulador de Experiencia del Alumno
+            </h2>
+            <Card className="rounded-lg overflow-hidden border-none bg-muted p-12" style={{ fontFamily: bodyFont }}>
+              <header className="flex items-end justify-between bg-white p-8 rounded-lg border-4 border-white mb-10 shadow-sm">
                 <div className="flex items-end gap-4">
                   {Object.entries(formData.socials).map(([key, val]) => val && (
                     <div key={key} className="w-10 h-10 rounded-xl bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors cursor-pointer">
@@ -276,7 +297,10 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
                 <div className="flex items-end gap-6 text-right">
-                  <div><h3 className="font-bold text-2xl" style={{ color: primaryColor }}>{course?.title}</h3><p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.3em]">Módulo Actual: Introducción</p></div>
+                  <div>
+                    <h3 className="font-bold text-2xl" style={{ color: primaryColor, fontFamily: headingFont }}>{course?.title}</h3>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.3em]">Módulo Actual: Introducción</p>
+                  </div>
                   <div className="w-16 h-16 relative bg-secondary/10 rounded-2xl overflow-hidden flex items-center justify-center">
                     {(formData.logoUrl && typeof formData.logoUrl === 'string') ? (
                       <Image 
@@ -296,7 +320,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                 <div className="lg:col-span-2 space-y-8">
                   <div className="aspect-video rounded-lg bg-black flex items-center justify-center border-8 border-white"><Play className="h-20 w-20 text-white/20" /></div>
                   <div className="space-y-4">
-                    <h1 className="text-4xl font-bold" style={{ color: primaryColor }}>1. Bienvenido al Programa</h1>
+                    <h1 className="text-4xl font-bold" style={{ color: primaryColor, fontFamily: headingFont }}>1. Bienvenido al Programa</h1>
                     <p className="text-muted-foreground leading-relaxed text-lg">{formData.bio || 'Tu biografía aparecerá aquí...'}</p>
                   </div>
 
@@ -305,33 +329,52 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                     
                     <Card className="p-8 rounded-lg border-none shadow-md bg-white">
                       <div className="flex items-center gap-3 mb-6">
-                        <Badge variant="secondary" className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest">Opción Múltiple</Badge>
+                        <Badge 
+                          variant="secondary" 
+                          className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest"
+                          style={{ backgroundColor: `${accentColor}25`, color: primaryColor, borderColor: `${accentColor}40` }}
+                        >
+                          Opción Múltiple
+                        </Badge>
                       </div>
-                      <p className="font-bold text-lg mb-8 leading-tight">¿Cuál es el objetivo principal de este primer módulo introductorio?</p>
+                      <p className="font-bold text-lg mb-8 leading-tight" style={{ fontFamily: headingFont }}>¿Cuál es el objetivo principal de este primer módulo introductorio?</p>
                       <div className="grid gap-4">
                         <Button 
                           className="justify-start h-auto py-4 px-6 rounded-xl text-left border-2 whitespace-normal font-bold shadow-lg" 
-                          style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
+                          style={{ backgroundColor: primaryColor, borderColor: primaryColor, fontFamily: headingFont }}
                         >
                           Definir las bases teóricas del programa
                         </Button>
-                        <Button variant="outline" className="justify-start h-auto py-4 px-6 rounded-xl text-left border-2 whitespace-normal">
+                        <Button 
+                          variant="outline" 
+                          className="justify-start h-auto py-4 px-6 rounded-xl text-left border-2 whitespace-normal font-medium"
+                          style={{ borderColor: `${secondaryColor}60`, color: primaryColor }}
+                        >
                           Explorar herramientas avanzadas de diseño
                         </Button>
                       </div>
                     </Card>
 
-                    <div className="bg-success/10 border-2 border-success/20 p-6 rounded-lg flex items-center gap-4 animate-pulse">
-                      <Zap className="h-8 w-8 text-success" />
+                    <div 
+                      className="border-2 p-6 rounded-lg flex items-center gap-4 animate-pulse"
+                      style={{ backgroundColor: `${secondaryColor}15`, borderColor: `${secondaryColor}40` }}
+                    >
+                      <Zap className="h-8 w-8" style={{ color: secondaryColor }} />
                       <div>
-                        <p className="font-bold text-success text-lg">Modo Refuerzo Activado</p>
-                        <p className="text-sm text-success">Se han habilitado preguntas adicionales para validar tu conocimiento.</p>
+                        <p className="font-bold text-lg" style={{ color: secondaryColor, fontFamily: headingFont }}>Modo Refuerzo Activado</p>
+                        <p className="text-sm text-foreground/80">Se han habilitado preguntas adicionales para validar tu conocimiento.</p>
                       </div>
                     </div>
 
                     <Card className="p-8 rounded-lg border-none shadow-md bg-white opacity-80 grayscale-[0.5]">
                       <div className="flex items-center gap-3 mb-6">
-                        <Badge variant="secondary" className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest bg-success/15 text-success border-none">Pregunta de Soporte</Badge>
+                        <Badge 
+                          variant="secondary" 
+                          className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest border-none"
+                          style={{ backgroundColor: `${accentColor}25`, color: primaryColor }}
+                        >
+                          Pregunta de Soporte
+                        </Badge>
                       </div>
                       <p className="font-bold text-lg mb-8 leading-tight">Redacta una breve síntesis de lo aprendido hasta el momento:</p>
                       <div className="h-32 bg-secondary/10 rounded-2xl border-2 border-dashed border-muted-foreground/20" />
@@ -339,10 +382,10 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
                 <div className="space-y-8">
-                  <Card className="p-10 rounded-lg text-white border-none" style={{ backgroundColor: primaryColor }}>
+                  <Card className="p-10 rounded-lg text-white border-none shadow-md" style={{ backgroundColor: primaryColor }}>
                     <Trophy className="h-12 w-12 mb-6 opacity-50" />
                     <p className="text-[10px] uppercase font-bold tracking-widest opacity-70 mb-2">Tu Progreso</p>
-                    <p className="text-5xl font-bold">0%</p>
+                    <p className="text-5xl font-bold" style={{ fontFamily: headingFont }}>0%</p>
                     <Progress value={10} className="mt-6 bg-white/20 h-2" />
                   </Card>
                   <Card className="p-10 rounded-lg bg-white border-none space-y-6">

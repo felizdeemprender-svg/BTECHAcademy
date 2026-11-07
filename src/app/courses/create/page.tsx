@@ -57,7 +57,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-context';
 import { FileUploadArea } from '@/components/ui/file-upload-area';
 import { CourseBrandTabContent } from '@/components/brands/course-brand-tab-content';
-import { resolveProfileBrand } from '@/lib/landing-styles';
+import { resolveProfileBrand, resolveCourseBrand } from '@/lib/landing-styles';
 import type { StyleBrand } from '@/lib/landing-styles';
 import { useFirebase, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, serverTimestamp, setDoc, query, where, updateDoc, getDocs, getDoc, orderBy } from 'firebase/firestore';
@@ -155,10 +155,11 @@ export default function CreateCoursePage() {
 
   const ownBrands: StyleBrand[] = Array.isArray(profile?.profile?.brands) ? profile.profile.brands : [];
   const activeBrand = resolveProfileBrand(profile?.profile);
-  const selectedBrand = brandingData.brandName
-    ? ownBrands.find(b => b.name === brandingData.brandName) || null
-    : activeBrand;
-  const currentPrimaryColor = selectedBrand?.palette?.primary || brandingData.primaryColor;
+  const resolvedBrand = resolveCourseBrand(
+    { brandName: brandingData.brandName, primaryColor: brandingData.primaryColor },
+    profile?.profile
+  );
+  const currentPrimaryColor = resolvedBrand.primary;
 
   useEffect(() => {
     if (profile?.profile) {
@@ -417,7 +418,16 @@ export default function CreateCoursePage() {
         }
         : {
           branding: { ...brandingData, primaryColor: currentPrimaryColor },
-          brandingOverride: { ...brandingData, primaryColor: currentPrimaryColor }
+          brandingOverride: {
+            ...brandingData,
+            brandName: resolvedBrand.name,
+            primaryColor: resolvedBrand.primary,
+            secondaryColor: resolvedBrand.secondary,
+            accentColor: resolvedBrand.accent,
+            headingFont: resolvedBrand.headingFont,
+            bodyFont: resolvedBrand.bodyFont,
+            brand: resolvedBrand.brand || null,
+          }
         };
       await updateDoc(courseRef, dataToSave);
       setStep(4);

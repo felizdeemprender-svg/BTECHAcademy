@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth-context';
 import { useFirestore, useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, getDocs, query, where, collection, serverTimestamp } from 'firebase/firestore';
 import { LandingStyle, StyleBrand, resolveStyleBrand } from '@/lib/landing-styles';
+import { ALLOWED_WEB_FONTS } from '@/lib/landing-styles/fonts';
 import { parseBrandFile, brandsToDTCG, DEFAULT_BRAND_TOKENS } from '@/lib/landing-styles/dtcg';
 import { getRootDomain } from '@/lib/utils';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -17,6 +18,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   User, 
   Users,
@@ -1336,7 +1344,7 @@ export default function SettingsPage() {
                                 key={brand.name}
                                 className={cn(
                                   "border-2 rounded-xl p-4 transition-all flex flex-col justify-between",
-                                  isActive ? "border-success bg-success/5 md:col-span-2 lg:col-span-3" : "border-border bg-white hover:border-primary/50"
+                                  isActive ? "border-success bg-white md:col-span-2 lg:col-span-3 shadow-sm ring-1 ring-success/30" : "border-border bg-white hover:border-primary/50"
                                 )}
                               >
                                 <div>
@@ -1347,19 +1355,17 @@ export default function SettingsPage() {
                                       <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-10" style={{ backgroundColor: brand.palette.accent }} />
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleActivateBrand(brand.name)}
-                                        disabled={isActive}
+                                      <span
                                         className={cn(
-                                          "text-[10px] font-black uppercase tracking-widest rounded-full px-2.5 py-1 transition-colors mr-1",
+                                          "text-[10px] font-black uppercase tracking-widest rounded-full px-3 py-1 transition-colors mr-1",
                                           isActive
-                                            ? "bg-success text-white cursor-default"
-                                            : "bg-muted text-muted-foreground hover:bg-success/15 hover:text-success"
+                                            ? "bg-emerald-600 text-white shadow-xs"
+                                            : "bg-muted text-foreground hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer"
                                         )}
+                                        onClick={!isActive ? () => handleActivateBrand(brand.name) : undefined}
                                       >
                                         {isActive ? 'Activo' : 'Activar'}
-                                      </button>
+                                      </span>
                                       <button
                                         type="button"
                                         onClick={() => handleOpenBrandEditor(brand)}
@@ -1397,37 +1403,37 @@ export default function SettingsPage() {
                                 </div>
                                 
                                 {isActive && (
-                                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 p-4 bg-white rounded-xl border border-success/20 shadow-sm">
+                                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 p-4 bg-secondary/15 rounded-xl border border-border shadow-xs">
                                     <div className="space-y-1.5">
                                       <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Primary</p>
-                                      <div className="flex items-center gap-2 text-xs font-mono font-medium">
-                                        <div className="w-5 h-5 rounded-full border shadow-sm" style={{ backgroundColor: brand.palette.primary }} />
-                                        {brand.palette.primary}
+                                      <div className="flex items-center gap-2 text-xs font-mono font-bold text-foreground">
+                                        <div className="w-5 h-5 rounded-full border border-black/10 shadow-sm shrink-0" style={{ backgroundColor: brand.palette.primary }} />
+                                        <span className="text-foreground">{brand.palette.primary}</span>
                                       </div>
                                     </div>
                                     <div className="space-y-1.5">
                                       <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Secondary</p>
-                                      <div className="flex items-center gap-2 text-xs font-mono font-medium">
-                                        <div className="w-5 h-5 rounded-full border shadow-sm" style={{ backgroundColor: brand.palette.secondary }} />
-                                        {brand.palette.secondary}
+                                      <div className="flex items-center gap-2 text-xs font-mono font-bold text-foreground">
+                                        <div className="w-5 h-5 rounded-full border border-black/10 shadow-sm shrink-0" style={{ backgroundColor: brand.palette.secondary }} />
+                                        <span className="text-foreground">{brand.palette.secondary}</span>
                                       </div>
                                     </div>
                                     <div className="space-y-1.5">
                                       <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Accent</p>
-                                      <div className="flex items-center gap-2 text-xs font-mono font-medium">
-                                        <div className="w-5 h-5 rounded-full border shadow-sm" style={{ backgroundColor: brand.palette.accent }} />
-                                        {brand.palette.accent}
+                                      <div className="flex items-center gap-2 text-xs font-mono font-bold text-foreground">
+                                        <div className="w-5 h-5 rounded-full border border-black/10 shadow-sm shrink-0" style={{ backgroundColor: brand.palette.accent }} />
+                                        <span className="text-foreground">{brand.palette.accent}</span>
                                       </div>
                                     </div>
                                     <div className="space-y-1.5">
                                       <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Títulos</p>
-                                      <p className="text-xs font-mono font-medium truncate" style={{ fontFamily: brand.typography?.headingFont }}>
+                                      <p className="text-xs font-medium text-foreground truncate" style={{ fontFamily: brand.typography?.headingFont }}>
                                         {brand.typography?.headingFont}
                                       </p>
                                     </div>
                                     <div className="space-y-1.5">
                                       <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Cuerpo</p>
-                                      <p className="text-xs font-mono font-medium truncate" style={{ fontFamily: brand.typography?.bodyFont }}>
+                                      <p className="text-xs font-medium text-foreground truncate" style={{ fontFamily: brand.typography?.bodyFont }}>
                                         {brand.typography?.bodyFont}
                                       </p>
                                     </div>
@@ -1575,21 +1581,39 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Tipografía Títulos</Label>
-                <Input 
+                <Select 
                   value={brandForm.headingFont} 
-                  onChange={e => setBrandForm({...brandForm, headingFont: e.target.value})}
-                  className="bg-muted/50 h-10 rounded-xl"
-                  placeholder="Ej. Inter"
-                />
+                  onValueChange={val => setBrandForm({ ...brandForm, headingFont: val })}
+                >
+                  <SelectTrigger className="h-10 rounded-xl bg-muted/50 border-border">
+                    <SelectValue placeholder="Selecciona una fuente" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {ALLOWED_WEB_FONTS.map(f => (
+                      <SelectItem key={f.name} value={f.name}>
+                        <span style={{ fontFamily: f.name }}>{f.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Tipografía Cuerpo</Label>
-                <Input 
+                <Select 
                   value={brandForm.bodyFont} 
-                  onChange={e => setBrandForm({...brandForm, bodyFont: e.target.value})}
-                  className="bg-muted/50 h-10 rounded-xl"
-                  placeholder="Ej. Inter"
-                />
+                  onValueChange={val => setBrandForm({ ...brandForm, bodyFont: val })}
+                >
+                  <SelectTrigger className="h-10 rounded-xl bg-muted/50 border-border">
+                    <SelectValue placeholder="Selecciona una fuente" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {ALLOWED_WEB_FONTS.map(f => (
+                      <SelectItem key={f.name} value={f.name}>
+                        <span style={{ fontFamily: f.name }}>{f.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
