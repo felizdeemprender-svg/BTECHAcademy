@@ -42,6 +42,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { CourseBrandTabContent } from '@/components/brands/course-brand-tab-content';
 import { resolveProfileBrand } from '@/lib/landing-styles';
 import type { StyleBrand } from '@/lib/landing-styles';
 import { Progress } from '@/components/ui/progress';
@@ -218,118 +219,36 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
             {!isCompanyTutor && (
               <TabsContent value="marca">
                 <Card>
-                  <CardHeader className="bg-primary/5 p-10"><CardTitle className="text-2xl font-bold text-primary">Identidad Visual del Curso</CardTitle></CardHeader>
-                <CardContent className="p-10 space-y-12">
-                  <div className="space-y-4">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logo del Programa</Label>
-                    <div className="flex items-center gap-8">
-                      <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white">
-                        {(formData.logoUrl && typeof formData.logoUrl === 'string') ? (
-                          <Image 
-                            src={formData.logoUrl} 
-                            alt="Logo" 
-                            fill 
-                            sizes="128px"
-                            className="object-contain p-4" 
-                            unoptimized 
-                            data-ai-hint="course logo"
-                          />
-                        ) : <ImageIcon className="h-10 w-10 text-muted-foreground/20" />}
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        <Button variant="outline" className="rounded-2xl font-bold h-14 px-8 border-2" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
-                          {uploadingLogo ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2 h-5 w-5" />} Cambiar Logo
-                        </Button>
-                        {formData.logoUrl && (
-                          <Button variant="ghost" className="rounded-2xl font-bold h-12 px-8 text-destructive hover:bg-destructive/10" onClick={handleDeleteLogo}>
-                            <Trash2 className="mr-2 h-5 w-5" /> Eliminar Logo
-                          </Button>
-                        )}
-                      </div>
-                      <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={handleUploadLogo} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Identidad de Marca (Brands)</Label>
-                    <div className="space-y-4">
-                      {ownBrands.length === 0 ? (
-                        <div className="bg-secondary/10 p-6 rounded-2xl flex flex-col gap-4">
-                          <div className="space-y-1">
-                            <p className="font-bold text-primary">Marca activa del perfil</p>
-                            <p className="text-sm text-muted-foreground">
-                              El curso utiliza automáticamente el color y estilo de tu marca activa ({activeBrand?.palette?.primary || mentorProfile?.profile?.branding?.primaryColor || '#3B2D86'}).
-                              Puedes crear marcas personalizadas en <span className="font-bold">Ajustes → Mis brands</span>.
-                            </p>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3">
-                            {(activeBrand?.palette?.primary || mentorProfile?.profile?.branding?.primaryColor) && (
-                              <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow" style={{ backgroundColor: activeBrand?.palette?.primary || mentorProfile?.profile?.branding?.primaryColor }} />
-                            )}
-                            <span className="text-xs text-muted-foreground font-bold">{activeBrand?.name || 'Marca activa'}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {ownBrands.map((brand) => {
-                            const isSelected = formData.brandName === brand.name || (!formData.brandName && activeBrand?.name === brand.name);
-                            const isActive = activeBrand?.name === brand.name;
-                            return (
-                              <div
-                                key={brand.name}
-                                onClick={() => setFormData({ ...formData, brandName: brand.name, primaryColor: brand.palette?.primary || formData.primaryColor })}
-                                className={cn(
-                                  "border-2 rounded-xl p-4 transition-all flex flex-col justify-between cursor-pointer",
-                                  isSelected ? "border-success bg-success/5 shadow-sm" : "border-border bg-white hover:border-primary/50"
-                                )}
-                              >
-                                <div>
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div className="flex -space-x-1.5">
-                                      <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-30" style={{ backgroundColor: brand.palette?.primary || '#3B2D86' }} />
-                                      <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-20" style={{ backgroundColor: brand.palette?.secondary || '#8B5CF6' }} />
-                                      <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm z-10" style={{ backgroundColor: brand.palette?.accent || '#D8B4FE' }} />
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <span
-                                        className={cn(
-                                          "text-[10px] font-black uppercase tracking-widest rounded-full px-2.5 py-1 transition-colors",
-                                          isSelected
-                                            ? "bg-success text-white"
-                                            : "bg-muted text-muted-foreground"
-                                        )}
-                                      >
-                                        {isSelected ? (isActive ? 'Activo en curso' : 'Seleccionado') : 'Elegir'}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <p className="font-bold text-sm text-foreground mt-3">{brand.name}</p>
-                                  <p className="text-[10px] text-muted-foreground mt-0.5">{brand.description || (isActive ? 'Tu marca principal activa' : 'Marca disponible')}</p>
-                                  <p className="text-[10px] font-mono text-muted-foreground mt-2 truncate">
-                                    {brand.typography?.headingFont || 'Inter'} · {brand.palette?.primary || '#3B2D86'}
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color primario del curso</Label>
-                      <div className="flex items-center gap-4 bg-white rounded-xl border p-4">
-                        <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow shrink-0" style={{ backgroundColor: primaryColor }} />
-                        <div className="flex-1 space-y-1">
-                          <p className="text-base font-mono font-bold">{primaryColor}</p>
-                          <p className="text-xs text-muted-foreground">Color aplicado para botones, headers y acentos del curso.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  <CardHeader className="bg-primary/5 p-10">
+                    <CardTitle className="text-2xl font-bold text-primary">Identidad Visual del Curso</CardTitle>
+                    <CardDescription>Personaliza el logo, la marca y la paleta de colores para este programa.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-10">
+                    <CourseBrandTabContent
+                      logoUrl={formData.logoUrl}
+                      onLogoChange={(newUrl) => setFormData(prev => ({ ...prev, logoUrl: newUrl }))}
+                      onLogoUpload={handleUploadLogo}
+                      uploadingLogo={uploadingLogo}
+                      selectedBrandName={formData.brandName}
+                      onSelectBrand={(brand) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          brandName: brand.name,
+                          primaryColor: brand.palette?.primary || prev.primaryColor
+                        }));
+                      }}
+                      primaryColor={primaryColor}
+                      onPrimaryColorChange={(newColor) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          brandName: '',
+                          primaryColor: newColor
+                        }));
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
             )}
           </Tabs>
 
