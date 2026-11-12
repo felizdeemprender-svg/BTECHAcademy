@@ -445,7 +445,7 @@ const DashboardContent = ({
                     </div>
                   ))}
                 </div>
-                <Link href="/marketing/execution" className="w-full md:w-auto">
+                <Link href="/marketing/campaigns" className="w-full md:w-auto">
                   <Button className="w-full h-12 md:h-14 px-8 rounded-xl md:rounded-2xl font-bold bg-accent hover:bg-accent/90 gap-2">
                     Ir al Centro de Mando <ArrowRight className="h-5 w-5" />
                   </Button>
@@ -638,7 +638,7 @@ const DashboardContent = ({
                   {isEmpresa ? "Supervisión de consignas y entregas en cursos de la organización." : isMentor || isAdmin ? "Cumplimiento de consignas por grupo." : "Tareas individuales y proyectos evaluados por IA."}
                 </p>
               </div>
-              <Link href={isMentor || isAdmin || isEmpresa ? "/mentoria/desafios" : "/tasks"} className="w-full sm:w-auto">
+              <Link href={isMentor || isAdmin || isEmpresa ? "/mentoria/desafios" : "/mentoria/tasks"} className="w-full sm:w-auto">
                 <Button variant="outline" className="w-full sm:w-auto rounded-xl font-bold border-2 h-10 md:h-11 px-6 shadow-sm">
                   Ver Tablero <Zap className="ml-2 h-4 w-4" />
                 </Button>
@@ -713,7 +713,7 @@ const DashboardContent = ({
                   {isEmpresa ? "Supervisión de sesiones de mentoría y seguimiento corporativo." : "Acompañamiento personalizado y sesiones de mentoría."}
                 </p>
               </div>
-              <Link href="/seguimientos" className="w-full sm:w-auto">
+              <Link href="/mentoria/seguimientos" className="w-full sm:w-auto">
                 <Button variant="outline" className="w-full sm:w-auto rounded-xl font-bold border-2 h-10 md:h-11 px-6 shadow-sm">
                   Calendario <Calendar className="ml-2 h-4 w-4" />
                 </Button>

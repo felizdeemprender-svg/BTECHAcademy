@@ -4,30 +4,31 @@ import { SignJWT, jwtVerify } from 'jose';
 import { rateLimitConfigs } from '@/lib/rate-limit';
 import { sanitizeError } from '@/lib/error-sanitizer';
 
-const SECRET_KEY = process.env.VIDEO_TOKEN_SECRET || '';
 const encoder = new TextEncoder();
 
-if (!SECRET_KEY || SECRET_KEY.length < 32) {
-  console.error('[Video Token] VIDEO_TOKEN_SECRET no configurada o muy corta (mín 32 chars)');
+function getSecretKey(): string {
+  return process.env.VIDEO_TOKEN_SECRET || '';
 }
 
-async function generateToken(payload: Record<string, any>): Promise<string> {
-  if (!SECRET_KEY || SECRET_KEY.length < 32) {
-    throw new Error('VIDEO_TOKEN_SECRET no configurada');
+async function generateToken(payload: Record<string, any>): Promise<string | null> {
+  const secretKey = getSecretKey();
+  if (!secretKey || secretKey.length < 32) {
+    return null;
   }
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('2h')
-    .sign(encoder.encode(SECRET_KEY));
+    .sign(encoder.encode(secretKey));
 }
 
 async function verifyToken(token: string): Promise<Record<string, any> | null> {
-  if (!SECRET_KEY || SECRET_KEY.length < 32) {
+  const secretKey = getSecretKey();
+  if (!secretKey || secretKey.length < 32) {
     return null;
   }
   try {
-    const { payload } = await jwtVerify(token, encoder.encode(SECRET_KEY));
+    const { payload } = await jwtVerify(token, encoder.encode(secretKey));
     return payload as Record<string, any>;
   } catch {
     return null;
@@ -130,6 +131,14 @@ export async function POST(request: NextRequest) {
     };
 
     const token = await generateToken(tokenPayload);
+    if (!token) {
+      return NextResponse.json({
+        success: false,
+        token: null,
+        videoId,
+        reason: 'secret_not_configured',
+      });
+    }
 
     return NextResponse.json(
       { success: true, token, videoId, expiresAt: Math.floor(Date.now() / 1000) + 7200 },

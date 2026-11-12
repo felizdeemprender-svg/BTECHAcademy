@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { hexToHsl, toHslChannels } from '@/lib/theme/color-tokens';
 
 interface ThemeConfig {
   primaryColor: string;
@@ -90,38 +91,16 @@ const ORIGINAL_TOKENS = {
   }
 };
 
-function hexToHsl(hex: string): string {
-  let r = 0, g = 0, b = 0;
-  if (hex.length === 4) {
-    r = parseInt(hex[1] + hex[1], 16);
-    g = parseInt(hex[2] + hex[2], 16);
-    b = parseInt(hex[3] + hex[3], 16);
-  } else if (hex.length === 7) {
-    r = parseInt(hex.substring(1, 3), 16);
-    g = parseInt(hex.substring(3, 5), 16);
-    b = parseInt(hex.substring(5, 7), 16);
-  }
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s, l = (max + min) / 2;
-  if (max === min) {
-    h = s = 0;
-  } else {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h /= 6;
-  }
-  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-}
-
 function setCSS(key: string, value: string | undefined) {
   if (value !== undefined && value !== null) {
     document.documentElement.style.setProperty(key, value);
+  }
+}
+
+function setHslCSS(key: string, value: string | undefined) {
+  const hsl = toHslChannels(value);
+  if (hsl) {
+    document.documentElement.style.setProperty(key, hsl);
   }
 }
 
@@ -134,41 +113,44 @@ function applyBrandTokens(tokens: any) {
   if (!t) return;
 
   const c = t.color || {};
+  const h = t['shadcn-hsl'] || {};
+
+  // Non-Tailwind direct color tokens (accept oklch, hex, hsl, etc.)
   setCSS('--bg', c.bg?.$value);
   setCSS('--surface', c.surface?.$value);
   setCSS('--fg', c.fg?.$value);
   setCSS('--fg-2', c['fg-2']?.$value);
-  setCSS('--muted', c.muted?.$value);
-  setCSS('--border', c.border?.$value);
   setCSS('--border-soft', c['border-soft']?.$value);
-  setCSS('--accent', c.accent?.$value);
   setCSS('--accent-muted', c['accent-muted']?.$value);
   setCSS('--accent-light', c['accent-light']?.$value);
   setCSS('--accent-on', c['accent-on']?.$value);
-  setCSS('--success', c.success?.$value);
-  setCSS('--warn', c.warn?.$value);
-  setCSS('--danger', c.danger?.$value);
 
-  const h = t['shadcn-hsl'] || {};
-  setCSS('--background', h.background?.$value);
-  setCSS('--foreground', h.foreground?.$value);
-  setCSS('--card', h.card?.$value);
-  setCSS('--card-foreground', h['card-foreground']?.$value);
-  setCSS('--popover', h.popover?.$value);
-  setCSS('--popover-foreground', h['popover-foreground']?.$value);
-  setCSS('--primary', h.primary?.$value);
-  setCSS('--primary-foreground', h['primary-foreground']?.$value);
-  setCSS('--secondary', h.secondary?.$value);
-  setCSS('--secondary-foreground', h['secondary-foreground']?.$value);
-  setCSS('--muted', h.muted?.$value);
-  setCSS('--muted-foreground', h['muted-foreground']?.$value);
-  setCSS('--accent', h.accent?.$value);
-  setCSS('--accent-foreground', h['accent-foreground']?.$value);
-  setCSS('--destructive', h.destructive?.$value);
-  setCSS('--destructive-foreground', h['destructive-foreground']?.$value);
-  setCSS('--border', h.border?.$value);
-  setCSS('--input', h.input?.$value);
-  setCSS('--ring', h.ring?.$value);
+  // Tailwind `hsl(var(--...))` tokens MUST stay space-separated HSL channels
+  setHslCSS('--background', h.background?.$value ?? c.bg?.$value);
+  setHslCSS('--foreground', h.foreground?.$value ?? c.fg?.$value);
+  setHslCSS('--card', h.card?.$value ?? c.surface?.$value);
+  setHslCSS('--card-foreground', h['card-foreground']?.$value ?? c.fg?.$value);
+  setHslCSS('--popover', h.popover?.$value ?? c.surface?.$value);
+  setHslCSS('--popover-foreground', h['popover-foreground']?.$value ?? c.fg?.$value);
+  setHslCSS('--primary', h.primary?.$value);
+  setHslCSS('--primary-foreground', h['primary-foreground']?.$value);
+  setHslCSS('--secondary', h.secondary?.$value);
+  setHslCSS('--secondary-foreground', h['secondary-foreground']?.$value);
+  setHslCSS('--muted', h.muted?.$value ?? c.muted?.$value);
+  setHslCSS('--muted-foreground', h['muted-foreground']?.$value);
+  setHslCSS('--accent', h.accent?.$value ?? c.accent?.$value);
+  setHslCSS('--accent-foreground', h['accent-foreground']?.$value);
+  setHslCSS('--destructive', h.destructive?.$value ?? c.danger?.$value);
+  setHslCSS('--destructive-foreground', h['destructive-foreground']?.$value);
+  setHslCSS('--success', h.success?.$value ?? c.success?.$value);
+  setHslCSS('--success-foreground', h['success-foreground']?.$value);
+  setHslCSS('--warn', h.warn?.$value ?? c.warn?.$value);
+  setHslCSS('--warn-foreground', h['warn-foreground']?.$value);
+  setHslCSS('--danger', h.danger?.$value ?? c.danger?.$value);
+  setHslCSS('--danger-foreground', h['danger-foreground']?.$value);
+  setHslCSS('--border', h.border?.$value ?? c.border?.$value);
+  setHslCSS('--input', h.input?.$value);
+  setHslCSS('--ring', h.ring?.$value);
   setCSS('--radius', h.radius?.$value);
 
   const e = t.radius || {};
@@ -196,14 +178,14 @@ function applyBrandTokens(tokens: any) {
   }
 
   const b = t.sidebar || {};
-  setCSS('--sidebar-background', b.background?.$value);
-  setCSS('--sidebar-foreground', b.foreground?.$value);
-  setCSS('--sidebar-border', b.border?.$value);
-  setCSS('--sidebar-accent', b.accent?.$value);
-  setCSS('--sidebar-accent-foreground', b['accent-foreground']?.$value);
-  setCSS('--sidebar-ring', b.ring?.$value);
-  setCSS('--sidebar-primary', b.primary?.$value);
-  setCSS('--sidebar-primary-foreground', b['primary-foreground']?.$value);
+  setHslCSS('--sidebar-background', b.background?.$value);
+  setHslCSS('--sidebar-foreground', b.foreground?.$value);
+  setHslCSS('--sidebar-border', b.border?.$value);
+  setHslCSS('--sidebar-accent', b.accent?.$value);
+  setHslCSS('--sidebar-accent-foreground', b['accent-foreground']?.$value);
+  setHslCSS('--sidebar-ring', b.ring?.$value);
+  setHslCSS('--sidebar-primary', b.primary?.$value);
+  setHslCSS('--sidebar-primary-foreground', b['primary-foreground']?.$value);
 
   setCSS('--card-bg', '#ffffff');
   setCSS('--card-border', 'none');

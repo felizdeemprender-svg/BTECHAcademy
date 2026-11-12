@@ -19,6 +19,13 @@ export interface GetMentorProgramsInput {
   readonly mentorId: string;
 }
 
+export function toProgramSummaries(programs: MentoringProgram[]): ProgramSummary[] {
+  return sortByCreatedAtDesc(programs).map((program) => ({
+    program,
+    active: isProgramActive(program),
+  }));
+}
+
 export async function getMentorPrograms(
   repo: MentoringProgramRepository,
   input: GetMentorProgramsInput,
@@ -27,7 +34,7 @@ export async function getMentorPrograms(
     return err(validationError('mentorId vacío'));
   }
   const programs = await repo.listByMentor(input.mentorId);
-  return ok(toSummaries(programs));
+  return ok(toProgramSummaries(programs));
 }
 
 /** Todos los programas (solo admin). */
@@ -36,12 +43,5 @@ export async function listAllPrograms(
   limit?: number,
 ): Promise<Result<ProgramSummary[], DomainError>> {
   const programs = await repo.listAll(limit);
-  return ok(toSummaries(programs));
-}
-
-function toSummaries(programs: MentoringProgram[]): ProgramSummary[] {
-  return sortByCreatedAtDesc(programs).map((program) => ({
-    program,
-    active: isProgramActive(program),
-  }));
+  return ok(toProgramSummaries(programs));
 }

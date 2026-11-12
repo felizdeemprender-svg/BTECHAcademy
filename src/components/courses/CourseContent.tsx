@@ -190,7 +190,7 @@ export function CourseContent({
                 onClick={() => window.location.href = '/my-courses'}
                 className={cn(
                   "h-14 md:h-16 w-full md:w-auto md:px-12 rounded-2xl text-white font-black text-base md:text-lg transition-all hover:scale-105 active:scale-95",
-                  isCompleted ? "bg-success hover:bg-success shadow-success/20" : "bg-foreground hover:bg-foreground shadow-border"
+                  isCompleted ? "bg-success hover:bg-success/90 shadow-success/20" : "bg-foreground hover:bg-foreground/90 shadow-border"
                 )}
               >
                 Volver al Dashboard
@@ -199,7 +199,7 @@ export function CourseContent({
           ) : isCompleted ? (
             <Button 
               onClick={onContinue}
-              className="w-full h-14 rounded-2xl text-lg font-bold bg-success hover:bg-success shadow-lg text-white"
+              className="w-full h-14 rounded-2xl text-lg font-bold bg-success hover:bg-success/90 shadow-lg text-white"
             >
               Siguiente Módulo <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -207,7 +207,9 @@ export function CourseContent({
             <div className="space-y-6">
               <div className="text-center space-y-2">
                 <p className="text-sm text-warn font-black uppercase tracking-wider">
-                  {allowRetries ? 'Debes alcanzar al menos un 70% para continuar' : (isSupportNext ? 'Refuerzo académico requerido' : 'No se permiten reintentos en este módulo')}
+                  {allowRetries
+                    ? `Debes alcanzar al menos un ${activeModule?.minPassingScore ?? 70}% para continuar`
+                    : (isSupportNext ? 'Refuerzo académico requerido' : 'No se permiten reintentos en este módulo')}
                 </p>
                 {(!allowRetries || isSupportNext) && (
                   <p className="text-xs text-warn font-medium max-w-xs mx-auto leading-relaxed">
@@ -219,14 +221,14 @@ export function CourseContent({
               {(allowRetries || isSupportNext) ? (
                 <Button 
                   onClick={onStartQuiz}
-                  className="w-full h-14 rounded-2xl text-lg font-bold bg-warn hover:bg-warn shadow-lg text-white"
+                  className="w-full h-14 rounded-2xl text-lg font-bold bg-warn hover:bg-warn/90 shadow-lg text-white"
                 >
                   {isSupportNext ? 'Contestar Preguntas de Refuerzo' : 'Reintentar Desafío'} <BrainCircuit className="ml-2 h-5 w-5" />
                 </Button>
               ) : (
                 <Button 
                   onClick={onContinue}
-                  className="w-full h-14 rounded-2xl text-lg font-bold bg-foreground hover:bg-foreground shadow-lg text-white"
+                  className="w-full h-14 rounded-2xl text-lg font-bold bg-foreground hover:bg-foreground/90 shadow-lg text-white"
                 >
                   Continuar al Siguiente Módulo <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
