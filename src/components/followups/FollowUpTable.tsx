@@ -138,7 +138,7 @@ export function FollowUpTable({
                       variant="ghost" 
                       className="rounded-xl h-9 px-4 font-bold text-primary hover:bg-primary/10 transition-colors"
                     >
-                      Gestionar <ChevronRight className="h-4 w-4 ml-1" />
+                      {(isMentor || isAdmin) ? 'Gestionar' : 'Ver Detalle'} <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                     {(isMentor || isAdmin) && (
                       <DropdownMenu>
@@ -227,7 +227,7 @@ export function FollowUpTable({
                 onClick={() => router.push(`/mentoria/seguimientos/${f.id}`)}
                 className="w-full rounded-xl font-bold h-12 flex items-center justify-center gap-2"
               >
-                Gestionar Mentoría <ChevronRight className="h-4 w-4" />
+                {(isMentor || isAdmin) ? 'Gestionar Mentoría' : 'Ver Mentoría'} <ChevronRight className="h-4 w-4" />
               </Button>
               {(isMentor || isAdmin) && (
                 <DropdownMenu>

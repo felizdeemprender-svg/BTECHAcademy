@@ -29,7 +29,11 @@ import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
 
 // Hooks & Components
 import { useFollowUps } from '@/hooks/useFollowUps';
-import { useAllPrograms, useMentorPrograms } from '@/hooks/mentoring/use-mentor-programs';
+import {
+  useAllPrograms,
+  useMentorPrograms,
+  useStudentPrograms,
+} from '@/hooks/mentoring/use-mentor-programs';
 import {
   createProgram,
   removeProgram,
@@ -45,11 +49,18 @@ export default function FollowUpsPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Nueva arquitectura (flag): mentores vía /api por mentor, admins vía /api all.
-  const isAdminProfile = profile?.roles?.includes('admin');
-  const mentorProgramsApi = useMentorPrograms(isAdminProfile ? null : profile?.uid);
-  const allProgramsApi = useAllPrograms(!!isAdminProfile);
-  const programsApi = isAdminProfile ? allProgramsApi : mentorProgramsApi;
+  // Nueva arquitectura (flag): mentores vía /api por mentor, admins vía /api all, alumnos vía /api student.
+  const isAdminProfile = !!profile?.roles?.includes('admin');
+  const isMentorProfile = !!profile?.roles?.includes('mentor');
+  const isStudentOnlyProfile = !!profile && !isAdminProfile && !isMentorProfile;
+  const mentorProgramsApi = useMentorPrograms(!isAdminProfile && isMentorProfile ? profile?.uid : null);
+  const allProgramsApi = useAllPrograms(isAdminProfile);
+  const studentProgramsApi = useStudentPrograms(isStudentOnlyProfile);
+  const programsApi = isAdminProfile
+    ? allProgramsApi
+    : isMentorProfile
+      ? mentorProgramsApi
+      : studentProgramsApi;
 
   const getToken = useCallback(async () => {
     if (!user) throw new Error('Sin sesión');

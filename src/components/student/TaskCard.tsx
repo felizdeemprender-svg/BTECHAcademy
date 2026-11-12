@@ -22,6 +22,7 @@ export function StudentTaskCard({
   score
 }: TaskCardProps) {
   const isCompleted = status === 'completed';
+  const taskHref = `/mentoria/tasks?taskId=${encodeURIComponent(id)}&tab=${isCompleted ? 'history' : 'pending'}`;
 
   return (
     <Card className="border-none shadow-lg rounded-3xl bg-white overflow-hidden group transition-all">
@@ -65,7 +66,7 @@ export function StudentTaskCard({
             )}
           </div>
           
-          <Link href="/tasks" className="flex-1 sm:flex-none">
+          <Link href={taskHref} className="flex-1 sm:flex-none">
             <Button 
               variant={isCompleted ? "outline" : "default"} 
               className="w-full sm:w-auto rounded-xl font-bold h-10 md:h-11 px-6 shadow-md"

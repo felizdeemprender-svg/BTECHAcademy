@@ -299,6 +299,8 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
     }
   }, [db, profile, isMentor]);
 
+  const [linkedCourseMeta, setLinkedCourseMeta] = useState<Record<string, { modulesCount: number }>>({});
+
   useEffect(() => {
     const cleanStudentId = followUp?.studentId?.trim();
     if (cleanStudentId) {
@@ -331,28 +333,49 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         })
         .catch(err => console.warn('[FollowUpDetail] Error fetching invite enrollments:', err));
     } else if (followUp?.type === 'group' && followUp?.id) {
-      // Load group enrollments
-      const fetchGroupEnrollments = async () => {
-        try {
-          if (detailApi.enabled && user) {
-            const list = await fetchProgramEnrollments(followUp.id, await getToken());
-            setGroupEnrollments(list);
-            return;
+      if (isStudent && profile?.uid) {
+        const emailLower = profile.email?.toLowerCase().trim();
+        Promise.all([
+          getDocs(query(collection(db, 'enrollments'), where('studentId', '==', profile.uid))),
+          emailLower
+            ? getDocs(query(collection(db, 'enrollments'), where('inviteEmail', '==', emailLower)))
+            : Promise.resolve({ docs: [] as any[] }),
+        ])
+          .then(([uidSnap, emailSnap]) => {
+            const mapping: Record<string, any> = {};
+            [...emailSnap.docs, ...uidSnap.docs].forEach(d => {
+              const data = d.data();
+              if (data?.courseId) mapping[data.courseId] = data;
+            });
+            setStudentEnrollments(mapping);
+          })
+          .catch(err => console.warn('[FollowUpDetail] Error fetching student group enrollments:', err));
+      }
+
+      if (isMentor) {
+        // Load group enrollments (solo mentores/admin)
+        const fetchGroupEnrollments = async () => {
+          try {
+            if (detailApi.enabled && user) {
+              const list = await fetchProgramEnrollments(followUp.id, await getToken());
+              setGroupEnrollments(list);
+              return;
+            }
+            const q1 = query(collection(db, 'enrollments'), where('productId', '==', followUp.id));
+            const q2 = query(collection(db, 'enrollments'), where('courseId', '==', followUp.id));
+            const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+            
+            const enrollmentsMap = new Map();
+            snap1.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
+            snap2.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
+            
+            setGroupEnrollments(Array.from(enrollmentsMap.values()));
+          } catch (e) {
+            console.warn("Error fetching group enrollments:", e);
           }
-          const q1 = query(collection(db, 'enrollments'), where('productId', '==', followUp.id));
-          const q2 = query(collection(db, 'enrollments'), where('courseId', '==', followUp.id));
-          const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-          
-          const enrollmentsMap = new Map();
-          snap1.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
-          snap2.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
-          
-          setGroupEnrollments(Array.from(enrollmentsMap.values()));
-        } catch (e) {
-          console.warn("Error fetching group enrollments:", e);
-        }
-      };
-      fetchGroupEnrollments();
+        };
+        fetchGroupEnrollments();
+      }
     }
     
     const cleanMentorId = followUp?.mentorId?.trim();
@@ -363,7 +386,39 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         })
         .catch(err => console.warn('[FollowUpDetail] Error fetching mentor user:', err));
     }
-  }, [db, followUp, isMentor, profile?.uid, detailApi.enabled, user, getToken]);
+  }, [db, followUp, isMentor, isStudent, profile?.uid, profile?.email, detailApi.enabled, user, getToken]);
+
+  useEffect(() => {
+    if (!tasks || tasks.length === 0) return;
+    const missingCourseIds = Array.from(
+      new Set(
+        tasks
+          .filter((t: any) => (t.type === 'course' || t.type === 'module') && t.courseId)
+          .map((t: any) => t.courseId as string)
+          .filter((cid) => !mentorCourses.some((c) => c.id === cid) && !linkedCourseMeta[cid])
+      )
+    );
+    if (missingCourseIds.length === 0) return;
+
+    Promise.all(
+      missingCourseIds.map(async (cid) => {
+        try {
+          const courseSnap = await getDoc(doc(db, 'courses', cid));
+          const data = courseSnap.exists() ? courseSnap.data() : null;
+          let modulesCount = data?.modulesCount || 0;
+          if (!modulesCount) {
+            const modsSnap = await getDocs(collection(db, 'courses', cid, 'modules'));
+            modulesCount = modsSnap.size;
+          }
+          return [cid, { modulesCount: modulesCount || 1 }] as const;
+        } catch {
+          return [cid, { modulesCount: 1 }] as const;
+        }
+      })
+    ).then((entries) => {
+      setLinkedCourseMeta((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+    });
+  }, [db, tasks, mentorCourses, linkedCourseMeta]);
 
   useEffect(() => {
     if (isMentor) {
@@ -969,7 +1024,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       <div className={cn("space-y-8 pb-20", isSuspended && "opacity-80")}>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-8">
           <div className="flex items-center gap-6">
-            <Button variant="ghost" size="icon" onClick={() => router.push('/seguimientos')} className="rounded-full h-12 w-12 hover:bg-secondary"><ArrowLeft className="h-6 w-6" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => router.push('/mentoria/seguimientos')} className="rounded-full h-12 w-12 hover:bg-secondary"><ArrowLeft className="h-6 w-6" /></Button>
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">{followUp?.title}</h1>
@@ -1112,7 +1167,9 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                     const isLinkedCourse = task.type === 'course' || task.type === 'module';
                     const isLinkedModule = task.type === 'module';
                     const enrollment = isLinkedCourse ? studentEnrollments[task.courseId] : null;
-                    const courseInfo = isLinkedCourse ? mentorCourses.find(c => c.id === task.courseId) : null;
+                    const courseInfo = isLinkedCourse
+                      ? (mentorCourses.find(c => c.id === task.courseId) || linkedCourseMeta[task.courseId])
+                      : null;
                     
                     let displayProgress = task.progress || 0;
                     let displayStatus = task.status || 'pending';
@@ -1177,9 +1234,14 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                                 <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 text-success hover:bg-success/10" onClick={() => handleUpdateTaskProgress(task.id, 100, 'completed')}>Listo</Button>
                               </div>
                             )}
-                            {isStudent && isLinkedModule && task.status !== 'completed' && !isSuspended && (
+                            {isStudent && isLinkedModule && task.courseId && !isSuspended && (
                               <Button size="sm" onClick={() => window.open(`/courses/${task.courseId}?isolated=${task.moduleId}`, '_blank')} className="h-8 rounded-lg font-bold text-[10px] gap-2 shadow-md bg-primary">
-                                <Play className="h-3 w-3" /> Comenzar Módulo
+                                <Play className="h-3 w-3" /> {displayStatus === 'completed' ? 'Repasar Módulo' : 'Comenzar Módulo'}
+                              </Button>
+                            )}
+                            {isStudent && isLinkedCourse && !isLinkedModule && task.courseId && !isSuspended && (
+                              <Button size="sm" onClick={() => router.push(`/courses/${task.courseId}`)} className="h-8 rounded-lg font-bold text-[10px] gap-2 shadow-md bg-primary">
+                                <Play className="h-3 w-3" /> {displayStatus === 'completed' ? 'Repasar Curso' : 'Ir al Curso'}
                               </Button>
                             )}
                             {isStudent && !isLinkedCourse && task.status !== 'completed' && !isSuspended && (

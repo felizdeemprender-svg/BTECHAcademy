@@ -38,6 +38,10 @@ export function fetchAllPrograms(token: string): Promise<ApiProgramSummary[]> {
   return apiGet<ApiProgramSummary[]>('/api/mentoring/programs?all=1', token);
 }
 
+export function fetchStudentPrograms(token: string): Promise<ApiProgramSummary[]> {
+  return apiGet<ApiProgramSummary[]>('/api/mentoring/programs?student=1', token);
+}
+
 export interface CreateProgramRequest {
   readonly mentorId: string;
   readonly type?: 'individual' | 'group';

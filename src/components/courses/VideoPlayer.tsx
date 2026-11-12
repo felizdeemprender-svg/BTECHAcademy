@@ -4,7 +4,8 @@
 import { useRef, useState, useEffect } from 'react';
 import { Play, ShieldCheck, Loader2, Maximize, Minimize, RotateCcw, FastForward, Rewind, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { generateSecureYouTubeUrl, extractVideoId } from '@/lib/video-security';
+import { extractVideoId } from '@/lib/video-security';
+import { useAuth } from '@/components/auth-context';
 
 declare global {
   interface Window {
@@ -21,6 +22,7 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: VideoPlayerProps) {
+  const { user } = useAuth();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -43,61 +45,48 @@ export function VideoPlayer({ url, title, primaryColor = '#3B2D86', courseId }: 
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Obtener token de video desde el backend
+  // Obtener token de video desde el backend (solo YouTube con sesión activa)
   useEffect(() => {
     const fetchVideoToken = async () => {
-      if (!url) return;
-      
+      if (!url || !user) return;
+      const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+      if (!isYouTube) return;
+
       try {
+        const idToken = await user.getIdToken();
         const response = await fetch('/api/video/token', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
           body: JSON.stringify({ videoUrl: url, courseId })
         });
-        
+
         if (response.ok) {
           const data = await response.json();
-          setVideoToken(data.token);
+          if (data?.token) {
+            setVideoToken(data.token);
+          }
         } else {
-          console.error('Error obteniendo token de video');
+          console.warn('No se pudo emitir token firmado de video; usando reproductor estándar.');
         }
       } catch (error) {
-        console.error('Error fetching video token:', error);
+        console.warn('No se pudo obtener token de video:', error);
       }
     };
-    
+
     fetchVideoToken();
-  }, [url, courseId]);
+  }, [url, courseId, user]);
 
-  const getSecureUrl = (rawUrl?: string) => {
+  const getSecureUrl = (rawUrl?: string): string | undefined => {
     if (!rawUrl) return undefined;
-    
-    // Si no hay token, usar fallback normal (sin máxima seguridad pero funcional)
-    if (!videoToken) {
-      let videoId = '';
-      if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
-        if (rawUrl.includes('v=')) videoId = rawUrl.split('v=')[1].split('&')[0];
-        else if (rawUrl.includes('youtu.be/')) videoId = rawUrl.split('youtu.be/')[1].split('?')[0];
-        else if (rawUrl.includes('embed/')) videoId = rawUrl.split('embed/')[1].split('?')[0];
-        else if (rawUrl.includes('/shorts/')) videoId = rawUrl.split('/shorts/')[1].split('?')[0];
-        const origin = typeof window !== 'undefined' ? window.location.origin : '';
-        return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&iv_load_policy=3&controls=1&hl=es&enablejsapi=1&origin=${origin}`;
-      }
 
-      if (rawUrl.includes('vimeo.com')) {
-        const vimeoId = rawUrl.split('/').pop()?.split('?')[0];
-        return `https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&title=0&byline=0&portrait=0`;
-      }
-
-      return rawUrl;
-    }
-
-    // Sistema de seguridad con token
-    const videoId = extractVideoId(rawUrl);
-    if (!videoId) return undefined;
-    
     if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
-      return generateSecureYouTubeUrl(videoId, videoToken);
+      const videoId = extractVideoId(rawUrl);
+      if (!videoId) return undefined;
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      return `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&iv_load_policy=3&controls=1&hl=es&enablejsapi=1&origin=${origin}`;
     }
 
     if (rawUrl.includes('vimeo.com')) {

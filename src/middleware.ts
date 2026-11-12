@@ -6,9 +6,27 @@ const RESERVED_PATHS = [
   'my-courses', 'settings', 'v', 
   'about', 'services', 'privacy', 'terms', 'privacidad', 'terminos', 'favicon.ico', 
   'globals.css', 'tutor-access-denied', 'upgrade-required', 'ai-assistant', 'alumnos',
+  'tasks', 'seguimientos', 'desafios',
   'tutor', 'planes', 'evo', 'styles-demo', 'preview-style', 'marketing', 'automations', 'referidos',
   'company', 'empresa' // Rutas reservadas corporativas / multi-tenant
 ];
+
+const LEGACY_MENTORIA_ROOTS = ['/tasks', '/seguimientos', '/desafios'];
+const LEGACY_EXACT_REDIRECTS: Record<string, string> = {
+  '/privacy': '/privacidad',
+  '/terms': '/terminos',
+};
+
+function resolveLegacyRedirectPath(pathname: string): string | null {
+  const lower = pathname.toLowerCase();
+  if (LEGACY_EXACT_REDIRECTS[lower]) {
+    return LEGACY_EXACT_REDIRECTS[lower];
+  }
+  const matched = LEGACY_MENTORIA_ROOTS.some(
+    (root) => lower === root || lower.startsWith(`${root}/`)
+  );
+  return matched ? `/mentoria${pathname}` : null;
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -41,9 +59,20 @@ export async function middleware(request: NextRequest) {
   if (subdomain && RESERVED_PATHS.includes(subdomain.toLowerCase())) {
     const url = request.nextUrl.clone();
     const mainHost = getRootDomain(hostname);
+    const recoveredPath = `/${subdomain.toLowerCase()}${pathname === '/' ? '' : pathname}`;
     url.host = mainHost;
-    url.pathname = `/${subdomain.toLowerCase()}${pathname === '/' ? '' : pathname}`;
+    url.pathname = resolveLegacyRedirectPath(recoveredPath) ?? recoveredPath;
     return NextResponse.redirect(url);
+  }
+
+  // 1b. Redirección de rutas heredadas sin prefijo /mentoria (/tasks, /seguimientos, /desafios) o alias legales (/privacy, /terms)
+  if (!subdomain) {
+    const legacyTarget = resolveLegacyRedirectPath(pathname);
+    if (legacyTarget) {
+      const url = request.nextUrl.clone();
+      url.pathname = legacyTarget;
+      return NextResponse.redirect(url);
+    }
   }
 
   // 2. Redirección de Rutas Internas: /tutor/[username] en localhost -> subdominio

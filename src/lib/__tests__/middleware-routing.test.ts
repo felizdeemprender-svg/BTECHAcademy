@@ -47,4 +47,28 @@ describe('Middleware Routing and Subdomain Isolation', () => {
     const location = res.headers.get('location');
     expect(location).toBe('http://juan.localhost:9002/oferta');
   });
+
+  it('redirects legacy /tasks to /mentoria/tasks instead of tasks.localhost', async () => {
+    const req = new NextRequest('http://localhost:9002/tasks', {
+      headers: { host: 'localhost:9002' }
+    });
+    const res = await middleware(req);
+    expect(res.headers.get('location')).toBe('http://localhost:9002/mentoria/tasks');
+  });
+
+  it('recovers accidental tasks.localhost:9002/ to localhost:9002/mentoria/tasks', async () => {
+    const req = new NextRequest('http://tasks.localhost:9002/', {
+      headers: { host: 'tasks.localhost:9002' }
+    });
+    const res = await middleware(req);
+    expect(res.headers.get('location')).toBe('http://localhost:9002/mentoria/tasks');
+  });
+
+  it('redirects legacy /seguimientos to /mentoria/seguimientos', async () => {
+    const req = new NextRequest('http://localhost:9002/seguimientos', {
+      headers: { host: 'localhost:9002' }
+    });
+    const res = await middleware(req);
+    expect(res.headers.get('location')).toBe('http://localhost:9002/mentoria/seguimientos');
+  });
 });
