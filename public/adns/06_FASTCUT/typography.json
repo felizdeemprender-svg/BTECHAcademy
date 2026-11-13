@@ -17,13 +17,13 @@
         "outline": {
           "width": 3,
           "color": "#4ECDC4",
-          "alpha": 0.9,
+          "alpha": 1.0,
           "blur": 1.2
         },
         "shadow": {
           "depth": 8,
           "color": "#FF6B6B",
-          "alpha": 0.6,
+          "alpha": 0.75,
           "blur": 3
         },
         "overlay": null,
@@ -59,7 +59,7 @@
         "shadow": {
           "depth": 4,
           "color": "#FF6B6B",
-          "alpha": 0.4,
+          "alpha": 0.7,
           "blur": 1.5
         },
         "overlay": null,
@@ -95,15 +95,15 @@
         "animation": "instagram_zoom",
         "marginV": 220,
         "outline": {
-          "width": 2.5,
+          "width": 3,
           "color": "#FF6B6B",
-          "alpha": 0.8,
+          "alpha": 1.0,
           "blur": 1
         },
         "shadow": {
           "depth": 6,
           "color": "#4ECDC4",
-          "alpha": 0.5,
+          "alpha": 0.75,
           "blur": 2
         },
         "overlay": null,
@@ -139,7 +139,7 @@
         "shadow": {
           "depth": 3,
           "color": "#4ECDC4",
-          "alpha": 0.3,
+          "alpha": 0.7,
           "blur": 1
         },
         "overlay": null,
@@ -177,13 +177,13 @@
         "outline": {
           "width": 4,
           "color": "#FF6B6B",
-          "alpha": 1,
+          "alpha": 1.0,
           "blur": 1.5
         },
         "shadow": {
           "depth": 12,
           "color": "#FF6B6B",
-          "alpha": 0.7,
+          "alpha": 0.75,
           "blur": 4
         },
         "overlay": null,
@@ -219,7 +219,7 @@
         "shadow": {
           "depth": 6,
           "color": "#FF6B6B",
-          "alpha": 0.5,
+          "alpha": 0.7,
           "blur": 2
         },
         "overlay": null,
@@ -255,16 +255,16 @@
         "animation": "viral_fade",
         "marginV": 480,
         "outline": {
-          "width": 2,
+          "width": 3,
           "color": "#4ECDC4",
-          "alpha": 0.7,
+          "alpha": 1.0,
           "blur": 0.8
         },
         "shadow": {
           "depth": 5,
           "color": "#4ECDC4",
-          "alpha": 0.4,
-          "blur": 1.5
+          "alpha": 0.75,
+          "blur": 2.0
         },
         "overlay": null,
         "marginH": 0,
@@ -297,9 +297,9 @@
           "blur": 0.4
         },
         "shadow": {
-          "depth": 2,
+          "depth": 3,
           "color": "#FFE66D",
-          "alpha": 0.3,
+          "alpha": 0.7,
           "blur": 0.8
         },
         "overlay": null,

@@ -1,12 +1,15 @@
 {
   "global_fx": {
-    "curves_preset": "vibrant",
-    "vignette_intensity": 0.4,
+    "contrast": 1.25,
+    "brightness": -0.02,
+    "saturation": 1.35,
+    "curves_preset": "none",
+    "vignette_intensity": 0.35,
     "sharpen": true,
     "sharpen_intensity": 0.8,
-    "grain_intensity": 0.3,
-    "zoom_intensity": 1.5,
-    "zoom_speed": 0.8,
+    "grain_intensity": 0.06,
+    "zoom_intensity": 1.35,
+    "zoom_speed": 0.7,
     "zoom_direction": "center"
   }
 }

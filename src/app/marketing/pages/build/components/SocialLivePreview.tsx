@@ -27,6 +27,12 @@ export function resolveCssFont(fontFile?: string): { fontFamily: string; fontWei
   if (font.includes('impact')) {
     return { fontFamily: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif', fontWeight: '900', letterSpacing: '0.04em' };
   }
+  if (font.includes('bebas')) {
+    return { fontFamily: '"Bebas Neue", Impact, sans-serif', fontWeight: '400', letterSpacing: '0.05em' };
+  }
+  if (font.includes('montserrat')) {
+    return { fontFamily: '"Montserrat", sans-serif', fontWeight: '900', letterSpacing: '-0.02em' };
+  }
   if (font.includes('trebuc')) {
     return { fontFamily: '"Trebuchet MS", "Lucida Sans Unicode", sans-serif', fontWeight: '800' };
   }
@@ -116,15 +122,24 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         return (
           <span
             key={idx}
-            className="font-black drop-shadow-md"
-            style={{ color: brandAccentColor }}
+            className="inline-block transform scale-105 font-black text-amber-300"
+            style={{ 
+              color: brandAccentColor || '#FACC15',
+              textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+            }}
           >
             {part}
           </span>
         );
       }
       return (
-        <span key={idx} style={{ color: defaultColor }}>
+        <span 
+          key={idx} 
+          style={{ 
+            color: defaultColor || '#FFFFFF',
+            textShadow: '0 2px 4px rgba(0,0,0,0.9), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+          }}
+        >
           {part}
         </span>
       );
@@ -159,6 +174,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@800;900&display=swap');
         .animate-typewriter {
           overflow: hidden;
           white-space: pre-wrap;
@@ -212,12 +228,22 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
                 )}
                 style={{
                     transform: adn?.fx?.cameraMovement === 'zoom_in' ? 'scale(1.2)' : 'scale(1.0)',
-                    filter: 
-                      adn?.fx?.colorGrade === 'cold' ? 'contrast(1.1) saturate(0.8) hue-rotate(5deg)' :
-                      adn?.fx?.colorGrade === 'vibrant' ? 'contrast(1.1) saturate(1.4)' :
-                      adn?.fx?.colorGrade === 'vintage' ? 'contrast(0.9) saturate(0.8) sepia(0.2)' :
-                      adn?.fx?.colorGrade === 'noir' ? 'grayscale(1) contrast(1.3)' :
-                      adn?.fx?.colorGrade === 'modern' ? 'contrast(1.05) saturate(1.15)' : 'none'
+                    filter: (() => {
+                      const gfx = adn?.global_fx?.global_fx || adn?.global_fx || adn?.fx || {};
+                      if (gfx.contrast || gfx.saturation || gfx.brightness) {
+                        const c = gfx.contrast ?? 1;
+                        const s = gfx.saturation ?? 1;
+                        const b = 1 + (gfx.brightness ?? 0);
+                        const sep = gfx.curves_preset === 'vintage' ? ' sepia(0.25)' : '';
+                        const hue = gfx.curves_preset === 'cool' ? ' hue-rotate(10deg)' : '';
+                        return `contrast(${c}) saturate(${s}) brightness(${b})${sep}${hue}`;
+                      }
+                      return adn?.fx?.colorGrade === 'cold' ? 'contrast(1.1) saturate(0.8) hue-rotate(5deg)' :
+                        adn?.fx?.colorGrade === 'vibrant' ? 'contrast(1.1) saturate(1.4)' :
+                        adn?.fx?.colorGrade === 'vintage' ? 'contrast(0.9) saturate(0.8) sepia(0.2)' :
+                        adn?.fx?.colorGrade === 'noir' ? 'grayscale(1) contrast(1.3)' :
+                        adn?.fx?.colorGrade === 'modern' ? 'contrast(1.05) saturate(1.15)' : 'none';
+                    })()
                 }}
               />
             </div>

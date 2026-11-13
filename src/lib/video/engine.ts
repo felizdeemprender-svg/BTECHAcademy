@@ -117,7 +117,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
         // We use speed as a direct multiplier to the time progress.
         const effectiveZoom = (intensity - 1) * speed;
         const zoomStep = `(${effectiveZoom})*on/(${duration}*30)`;
-        
+
         if (cameraMode === 'pan') {
           // For pan, we zoom in slightly and move the x/y coordinates over time.
           // We use intensity to determine how much we zoom in to allow panning room.
@@ -125,7 +125,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
           const maxPanX = `(iw-iw/zoom)`;
           const maxPanY = `(ih-ih/zoom)`;
           const progress = `(on/(${duration}*30))`;
-          
+
           if (direction === 'left') {
             zoomFilter = `zoompan=z='${staticZ}':x='${maxPanX} - ${maxPanX}*${progress}':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}:fps=30`;
           } else if (direction === 'right') {
@@ -180,6 +180,28 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
         'cool': 'color_negative',
         'warm': 'vintage'
       };
+
+      // Color grading avanzado: eq y colorbalance
+      const eqParts: string[] = [];
+      if (gFx.contrast !== undefined && gFx.contrast !== 1.0) eqParts.push(`contrast=${gFx.contrast}`);
+      if (gFx.brightness !== undefined && gFx.brightness !== 0.0) eqParts.push(`brightness=${gFx.brightness}`);
+      if (gFx.saturation !== undefined && gFx.saturation !== 1.0) eqParts.push(`saturation=${gFx.saturation}`);
+      if (eqParts.length > 0) {
+        autoFilters.push({ name: 'eq', params: eqParts.join(':') });
+      }
+
+      if (gFx.colorbalance) {
+        const cbParts: string[] = [];
+        if (gFx.colorbalance.rs !== undefined) cbParts.push(`rs=${gFx.colorbalance.rs}`);
+        if (gFx.colorbalance.gs !== undefined) cbParts.push(`gs=${gFx.colorbalance.gs}`);
+        if (gFx.colorbalance.bs !== undefined) cbParts.push(`bs=${gFx.colorbalance.bs}`);
+        if (gFx.colorbalance.rm !== undefined) cbParts.push(`rm=${gFx.colorbalance.rm}`);
+        if (gFx.colorbalance.gm !== undefined) cbParts.push(`gm=${gFx.colorbalance.gm}`);
+        if (gFx.colorbalance.bm !== undefined) cbParts.push(`bm=${gFx.colorbalance.bm}`);
+        if (cbParts.length > 0) {
+          autoFilters.push({ name: 'colorbalance', params: cbParts.join(':') });
+        }
+      }
 
       if (gFx.curves_preset && gFx.curves_preset !== 'none') {
         const ffmpegPreset = curvesPresetMap[gFx.curves_preset] || 'linear_contrast';
@@ -339,7 +361,7 @@ ${winFontsDir}
 
   // 2. Concatenate Video Clips with XFADE Transitions and Retention Progress Bar
   if (req.onStageProgress) {
-    try { await req.onStageProgress(74, 'Uniendo escenas y transiciones con FFmpeg...'); } catch {}
+    try { await req.onStageProgress(74, 'Uniendo escenas y transiciones con FFmpeg...'); } catch { }
   }
   const videoOnlyPath = path.join(workDir, 'video_only.mp4');
   let cumulativeOffset = 0;
@@ -450,12 +472,12 @@ ${winFontsDir}
 
   // Liberar RAM en Cloud Run (/tmp es tmpfs en memoria): borrar plates intermedios ya concatenados
   for (const clipPath of sceneClips) {
-    try { if (fs.existsSync(clipPath)) fs.unlinkSync(clipPath); } catch {}
+    try { if (fs.existsSync(clipPath)) fs.unlinkSync(clipPath); } catch { }
   }
 
   // 3. Concatenate Audio Clips sequentially with natural pacing (no acrossfade voice attenuation)
   if (req.onStageProgress) {
-    try { await req.onStageProgress(77, 'Sincronizando locución y música...'); } catch {}
+    try { await req.onStageProgress(77, 'Sincronizando locución y música...'); } catch { }
   }
   const voiceOnlyPath = path.join(workDir, 'voice_only.mp3');
 
@@ -494,7 +516,7 @@ ${winFontsDir}
 
   // 4. Final Mix with Soundtrack and Ducking
   if (req.onStageProgress) {
-    try { await req.onStageProgress(79, 'Masterizando audio y empaquetando MP4...'); } catch {}
+    try { await req.onStageProgress(79, 'Masterizando audio y empaquetando MP4...'); } catch { }
   }
   const finalPath = path.join(workDir, 'final_render.mp4');
 
@@ -693,6 +715,19 @@ export function resolveAssFontDescriptor(
     case 'impact':
       family = 'Impact';
       break;
+    case 'bebasneue-regular.ttf':
+    case 'bebasneue.ttf':
+    case 'bebas neue':
+    case 'bebas':
+      family = 'Bebas Neue';
+      break;
+    case 'montserrat.ttf':
+    case 'montserrat':
+    case 'montserrat-black.ttf':
+    case 'montserrat-bold.ttf':
+      family = 'Montserrat';
+      isBold = 1;
+      break;
     case 'trebucbd.ttf':
     case 'trebuchet':
     case 'trebuchet ms':
@@ -778,7 +813,7 @@ export function splitKineticPhrase(text: string, duration: number): { text: stri
   let midWord = Math.ceil(words.length / 2);
   const minIdx = Math.max(1, Math.floor(words.length * 0.25));
   const maxIdx = Math.min(words.length - 1, Math.ceil(words.length * 0.75));
-  
+
   for (let i = minIdx; i <= maxIdx; i++) {
     const w = words[i - 1];
     if (/[.,!?:;]$/.test(w)) {
@@ -806,7 +841,7 @@ export function splitKineticPhrase(text: string, duration: number): { text: stri
 
   const part1 = words.slice(0, midWord).join(' ').trim();
   const part2 = words.slice(midWord).join(' ').trim();
-  
+
   const wordRatio = midWord / words.length;
   const splitTime = Math.round(duration * Math.max(0.35, Math.min(0.65, wordRatio)) * 100) / 100;
 
@@ -855,11 +890,19 @@ export function generateAssFile(
       markStyle.primaryColor = `${brandColors.accent}@0.85`;
     }
     if (brandColors.outline) {
+      const outlineCandidate = brandColors.outline.toLowerCase().replace('#', '') === brandColors.primary.toLowerCase().replace('#', '')
+        ? '#000000'
+        : brandColors.outline;
       if (titleStyle.outline) {
-        titleStyle.outline = { ...titleStyle.outline, color: brandColors.outline };
+        titleStyle.outline = { ...titleStyle.outline, color: outlineCandidate };
       }
       if (subStyle.outline) {
-        subStyle.outline = { ...subStyle.outline, color: brandColors.outline };
+        subStyle.outline = { ...subStyle.outline, color: outlineCandidate };
+      }
+    } else {
+      // Si no hay outline explícito, garantizar contraste absoluto con negro puro
+      if (titleStyle.outline) {
+        titleStyle.outline = { ...titleStyle.outline, color: '#000000' };
       }
     }
   }
@@ -906,16 +949,22 @@ export function generateAssFile(
     rawText: string,
     basePrimaryHex: string | null | undefined,
     accentHex: string | null | undefined,
-    outlineHex?: string | null | undefined
+    baseOutlineHex?: string | null | undefined,
+    emphasisOutlineHex?: string | null | undefined
   ): string => {
     if (!rawText) return '';
     const inlineBase = resolveInlineAssColor(basePrimaryHex || '#FFFFFF');
     const inlineAccent = resolveInlineAssColor(accentHex || '#FFD700');
-    const inlineOutl = outlineHex ? resolveInlineAssColor(outlineHex) : null;
-    const outlTag = inlineOutl ? `\\3c${inlineOutl}` : '';
+    
+    // Inversión cromática: el texto base usa baseOutlineHex; el énfasis usa emphasisOutlineHex (o negro de contraste)
+    const inlineBaseOutl = baseOutlineHex ? resolveInlineAssColor(baseOutlineHex) : null;
+    const baseOutlTag = inlineBaseOutl ? `\\3c${inlineBaseOutl}` : '';
+
+    const inlineEmphasisOutl = emphasisOutlineHex ? resolveInlineAssColor(emphasisOutlineHex) : null;
+    const emphasisOutlTag = inlineEmphasisOutl ? `\\3c${inlineEmphasisOutl}` : '';
 
     return rawText.replace(/\*([^*]+)\*/g, (_, word) => {
-      return `{\\1c${inlineAccent}${outlTag}}${word}{\\1c${inlineBase}${outlTag}}`;
+      return `{\\1c${inlineAccent}${emphasisOutlTag}\\fscx110\\fscy110}${word}{\\1c${inlineBase}${baseOutlTag}\\fscx100\\fscy100}`;
     });
   };
 
@@ -925,11 +974,15 @@ export function generateAssFile(
     let shadowDepth = 0;
     let shadowBlur = 0;
     if (s.shadow) {
-      shadowDepth = s.shadow.depth || 0;
+      shadowDepth = s.shadow.depth !== undefined ? s.shadow.depth : (type === 'title' ? 4 : 2);
       shadowBlur = s.shadow.blur || (shadowDepth > 0 ? 1.2 : 0);
       const baseShadowCol = s.shadow.color || '#000000';
       const shadowAlpha = s.shadow.alpha !== undefined ? s.shadow.alpha : 0.8;
       shadowColor = resolveAssColor(`${baseShadowCol}@${shadowAlpha}`);
+    } else if (type === 'title') {
+      // Default de alto impacto para Reels si el ADN no especifica shadow
+      shadowDepth = 4;
+      shadowColor = resolveAssColor('#000000@0.75');
     }
 
     const fontSize = s.fontSize || (type === 'sub' ? 45 : type === 'mark' ? 30 : 80);
@@ -989,14 +1042,14 @@ export function generateAssFile(
   // --- SEGURIDAD: LÍMITES VERTICALES Y ESCALADO DINÁMICO ---
   const safeAreaHeight = height - (height * 0.15) * 2; // 15% top, 15% bottom limit
   const availableWidth = width - (t.marginL + t.marginR);
-  
+
   // Calcular líneas de título estimadas
   const titleCharWidth = t.fontSize * 0.55;
   const titleCharsPerLine = Math.max(1, Math.floor(availableWidth / titleCharWidth));
   let titleLines = 0;
   const cleanTitle = text.replace(/\*/g, '').replace(/\\N/g, '\n').replace(/\\n/g, '\n');
   for (const line of cleanTitle.split('\n')) {
-     titleLines += Math.max(1, Math.ceil(line.length / titleCharsPerLine));
+    titleLines += Math.max(1, Math.ceil(line.length / titleCharsPerLine));
   }
   let estimatedTitleHeight = titleLines * t.fontSize * 1.2;
 
@@ -1009,10 +1062,10 @@ export function generateAssFile(
     let subLines = 0;
     const cleanSub = subtitle.replace(/\*/g, '').replace(/\\N/g, '\n').replace(/\\n/g, '\n');
     for (const line of cleanSub.split('\n')) {
-       subLines += Math.max(1, Math.ceil(line.length / subCharsPerLine));
+      subLines += Math.max(1, Math.ceil(line.length / subCharsPerLine));
     }
     estimatedSubHeight = subLines * sub.fontSize * 1.2;
-    
+
     // Prevención de Overlap (Subtitle empuja al Title hacia arriba en formatos horizontales/cuadrados)
     if (t.assAlignment === 1 || t.assAlignment === 2 || t.assAlignment === 3) {
       const subTopEdge = sub.marginV + estimatedSubHeight;
@@ -1056,7 +1109,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
   const getAssAnimationTags = (animationName: string, durationSec: number): string => {
     if (!animationName) return '';
     const durMs = Math.round(durationSec * 1000);
-    
+
     switch (animationName.toLowerCase()) {
       case 'cinema_fade':
       case 'fade':
@@ -1091,9 +1144,21 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
       : getAssAnimationTags(titleStyle.animation, blockDur);
 
     let titleColorTags = '';
+    // Regla de Alto Contraste: Si no hay brandColors, usamos el color primario del estilo (o blanco)
+    // Para el outline del texto base, usamos negro (#000000) o el outline configurado si es distinto al relleno
+    const baseFillHex = brandColors?.primary || titleStyle.primaryColor || '#FFFFFF';
+    const rawOutlineHex = brandColors?.outline || titleStyle.outline?.color || '#000000';
+    // Si el outline y el fill son iguales o muy similares, forzamos contraste con negro puro
+    const baseOutlineHex = rawOutlineHex.toLowerCase().replace('#', '') === baseFillHex.toLowerCase().replace('#', '')
+      ? '#000000'
+      : rawOutlineHex;
+    // Para el énfasis (*palabra*): Relleno = accent, Borde = invertido (si el base tiene borde de color, énfasis usa negro; si base usa negro, énfasis usa el borde invertido o negro de alto contraste)
+    const emphasisFillHex = brandColors?.accent || titleStyle.accentColor || '#FFD700';
+    const emphasisOutlineHex = '#000000';
+
     if (brandColors?.primary) {
       const inlinePrim = resolveInlineAssColor(brandColors.primary);
-      const inlineOutl = resolveInlineAssColor(brandColors.outline || brandColors.accent || brandColors.primary);
+      const inlineOutl = resolveInlineAssColor(baseOutlineHex);
       if (inlinePrim) titleColorTags += `\\1c${inlinePrim}`;
       if (inlineOutl && t.borderStyle !== 3) titleColorTags += `\\3c${inlineOutl}`;
     }
@@ -1103,9 +1168,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
     const finalBlockText = applyKineticEmphasisToAss(
       block.text,
-      brandColors?.primary || titleStyle.primaryColor || '#FFFFFF',
-      brandColors?.accent || titleStyle.accentColor || '#FFD700',
-      t.borderStyle !== 3 ? (brandColors?.outline || brandColors?.accent || brandColors?.primary) : undefined
+      baseFillHex,
+      emphasisFillHex,
+      t.borderStyle !== 3 ? baseOutlineHex : undefined,
+      t.borderStyle !== 3 ? emphasisOutlineHex : undefined
     );
     ass += `Dialogue: 0,${formatDuration(block.start)},${formatDuration(block.end)},Title,,0,0,0,,${titleOverrides}${finalBlockText}\n`;
   }

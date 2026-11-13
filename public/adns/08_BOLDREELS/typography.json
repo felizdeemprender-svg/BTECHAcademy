@@ -1,0 +1,145 @@
+{
+  "renderer": "libass",
+  "segment_styles": {
+    "GANCHO": {
+      "text": {
+        "fontName": "Montserrat.ttf",
+        "fontSize": 95,
+        "primaryColor": "#FFFFFF@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "letterSpacing": -1,
+        "animation": "kinetic_pop",
+        "marginV": 260,
+        "outline": {
+          "width": 4,
+          "color": "#000000",
+          "alpha": 1.0,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 5,
+          "color": "#000000",
+          "alpha": 0.85,
+          "blur": 2.0
+        }
+      },
+      "subtitle": {
+        "fontName": "Montserrat.ttf",
+        "fontSize": 45,
+        "primaryColor": "#E5E5E5@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "marginV": 360,
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.75
+        }
+      }
+    },
+    "VALOR": {
+      "text": {
+        "fontName": "Montserrat.ttf",
+        "fontSize": 88,
+        "primaryColor": "#FFFFFF@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "letterSpacing": -1,
+        "animation": "cinema_fade",
+        "marginV": 260,
+        "outline": {
+          "width": 4,
+          "color": "#000000",
+          "alpha": 1.0,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 5,
+          "color": "#000000",
+          "alpha": 0.85,
+          "blur": 2.0
+        }
+      },
+      "subtitle": {
+        "fontName": "Montserrat.ttf",
+        "fontSize": 42,
+        "primaryColor": "#E5E5E5@1.0",
+        "alignment": "center",
+        "uppercase": false,
+        "bold": false,
+        "marginV": 360,
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.75
+        }
+      }
+    },
+    "CTA": {
+      "text": {
+        "fontName": "Montserrat.ttf",
+        "fontSize": 92,
+        "primaryColor": "#FFFFFF@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "animation": "kinetic_pop",
+        "marginV": 270,
+        "outline": {
+          "width": 4,
+          "color": "#000000",
+          "alpha": 1.0,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 5,
+          "color": "#000000",
+          "alpha": 0.85,
+          "blur": 2.0
+        }
+      },
+      "subtitle": {
+        "fontName": "Montserrat.ttf",
+        "fontSize": 42,
+        "primaryColor": "#FFD700@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "marginV": 370,
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.75
+        }
+      }
+    },
+    "CIERRE": {
+      "text": {
+        "fontName": "Montserrat.ttf",
+        "fontSize": 86,
+        "primaryColor": "#FFFFFF@1.0",
+        "alignment": "center",
+        "uppercase": true,
+        "bold": true,
+        "animation": "cinema_fade",
+        "marginV": 260,
+        "outline": {
+          "width": 4,
+          "color": "#000000",
+          "alpha": 1.0,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 5,
+          "color": "#000000",
+          "alpha": 0.85,
+          "blur": 2.0
+        }
+      }
+    }
+  }
+}

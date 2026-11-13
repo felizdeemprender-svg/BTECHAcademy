@@ -22,10 +22,10 @@
     {
       "id": "slice_3",
       "segment_label": "VALOR",
-      "text": "Maestría artesanal\nque perdura en el *TIEMPO*",
+      "text": "Maestría *artesanal*\nque perdura en el *TIEMPO*",
       "voiceover": "Relato del nuevo slice...",
       "duration": 5,
-      "title": "Maestría artesanal\nque perdura en el *TIEMPO*"
+      "title": "Maestría *artesanal*\nque perdura en el *TIEMPO*"
     },
     {
       "id": "slice_5",

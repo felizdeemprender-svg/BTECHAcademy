@@ -8,45 +8,45 @@
     {
       "id": "slice_1",
       "segment_label": "GANCHO",
-      "text": "¿Y si no estás cansado…\nsino *DESCONECTADO* de vos?",
+      "text": "¿Y si no estás *cansado…*\nsino *DESCONECTADO* de vos?",
       "subtitle": "",
       "voiceover": "Hay personas que no necesitan cambiar de trabajo.\nNecesitan volver a sentir algo por lo que hacen.",
       "imageUrl": "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1080&q=80",
       "watermark": "@felizdeemprender",
       "duration": 5,
-      "title": "¿Y si no estás cansado…\nsino *DESCONECTADO* de vos?"
+      "title": "¿Y si no estás *cansado…*\nsino *DESCONECTADO* de vos?"
     },
     {
       "id": "slice_2",
       "segment_label": "VALOR",
-      "text": "El problema no es la edad,\nes seguir *POSTERGÁNDOTE*",
+      "text": "El problema no es la *edad,*\nes seguir *POSTERGÁNDOTE*",
       "subtitle": "",
       "voiceover": "No estás grande para empezar de nuevo.\nEstás en el momento exacto para dejar de vivir en automático.",
       "imageUrl": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1080&q=80",
       "watermark": "@felizdeemprender",
       "duration": 6,
-      "title": "El problema no es la edad,\nes seguir *POSTERGÁNDOTE*"
+      "title": "El problema no es la *edad,*\nes seguir *POSTERGÁNDOTE*"
     },
     {
       "id": "slice_4",
       "segment_label": "CIERRE",
-      "text": "Tu momento de *BRILLAR*\nempieza hoy mismo",
+      "text": "Tu momento de *BRILLAR*\nempieza hoy *mismo*",
       "voiceover": "Un proceso corto y profundo para descubrir qué querés de verdad\ny cómo transformarlo en un proyecto posible.",
       "duration": 5,
       "imageUrl": "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1080&q=80",
       "watermark": "@felizdeemprender",
-      "title": "Tu momento de *BRILLAR*\nempieza hoy mismo"
+      "title": "Tu momento de *BRILLAR*\nempieza hoy *mismo*"
     },
     {
       "id": "slice_5",
       "segment_label": "CTA",
-      "text": "Tu pasión no es magia:\n¡se *DEVELA* ahora!",
+      "text": "Tu pasión no es *magia:*\n¡se *DEVELA* ahora!",
       "voiceover": "Con ejercicios, preguntas correctas y claridad.\nPorque cuando entendés quién sos, cambia lo que construís.",
       "duration": 5,
       "subtitle": "",
       "imageUrl": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1080&q=80",
       "watermark": "@felizdeemprender",
-      "title": "Tu pasión no es magia:\n¡se *DEVELA* ahora!"
+      "title": "Tu pasión no es *magia:*\n¡se *DEVELA* ahora!"
     }
   ]
 }

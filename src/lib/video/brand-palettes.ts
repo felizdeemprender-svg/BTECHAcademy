@@ -63,7 +63,7 @@ export function getSystemVideoPalettes(profile?: any, course?: any): VideoBrandP
         primary: b.palette.primary,
         secondary: b.palette.secondary || '#FFFFFF',
         accent: b.palette.accent || b.palette.primary,
-        outline: b.palette.primary
+        outline: '#000000'
       });
     }
   });
@@ -78,7 +78,7 @@ export function getSystemVideoPalettes(profile?: any, course?: any): VideoBrandP
       primary: course.branding.primaryColor,
       secondary: '#FFFFFF',
       accent: course.branding.primaryColor,
-      outline: course.branding.primaryColor
+      outline: '#000000'
     });
   }
 
@@ -98,7 +98,7 @@ export function resolveVideoBrandPalette(
       primary: customBrandColors.primary,
       secondary: customBrandColors.secondary || '#FFFFFF',
       accent: customBrandColors.accent || customBrandColors.primary,
-      outline: customBrandColors.outline || customBrandColors.primary
+      outline: customBrandColors.outline || '#000000'
     };
   }
 

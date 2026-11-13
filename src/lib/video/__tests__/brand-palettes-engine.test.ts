@@ -334,6 +334,27 @@ describe('System Brand Palettes & FFmpeg ASS Colors', () => {
 
     const cinemaCss = resolveCssFont('Inter-Black.ttf');
     expect(cinemaCss.fontWeight).toBe('900');
+
+    const bebasCss = resolveCssFont('BebasNeue-Regular.ttf');
+    expect(bebasCss.fontFamily).toContain('Bebas Neue');
+
+    const montserratCss = resolveCssFont('Montserrat.ttf');
+    expect(montserratCss.fontFamily).toContain('Montserrat');
+    expect(montserratCss.fontWeight).toBe('900');
+  });
+
+  it('todos los 9 ADNs oficiales deben existir y tener typography.json con profundidad 3D', () => {
+    const adnsDir = path.join(process.cwd(), 'public', 'adns');
+    const adnDirs = ['01_CINEMA', '02_LUXURYGO', '03_CORPORAT', '04_GAMINGGL', '05_MINIMALD', '06_FASTCUT', '07_VINTAGEV', '08_BOLDREELS', '09_TITANPRO'];
+
+    for (const adnId of adnDirs) {
+      const typPath = path.join(adnsDir, adnId, 'typography.json');
+      expect(fs.existsSync(typPath)).toBe(true);
+      const typData = JSON.parse(fs.readFileSync(typPath, 'utf-8'));
+      const ganchoText = typData.segment_styles?.GANCHO?.text;
+      expect(ganchoText).toBeDefined();
+      expect(ganchoText.shadow.depth).toBeGreaterThanOrEqual(4);
+    }
   });
 
   it('debe existir el archivo SFX de transicion whoosh.mp3 para xfade', () => {

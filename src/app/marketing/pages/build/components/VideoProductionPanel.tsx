@@ -195,7 +195,7 @@ export function VideoProductionPanel({
                         style={{ backgroundColor: palette.primary }}
                       />
                     ) : (
-                      <span className="text-[10px]">🎬</span>
+                      <Clapperboard className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
                     )}
                     <span>{palette.name}</span>
                   </div>

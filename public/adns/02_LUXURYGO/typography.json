@@ -15,15 +15,15 @@
         "animation": "luxury_elegant",
         "marginV": 240,
         "outline": {
-          "width": 2,
-          "color": "#B8860B",
-          "alpha": 0.9,
+          "width": 3,
+          "color": "#000000",
+          "alpha": 1.0,
           "blur": 0.8
         },
         "shadow": {
           "depth": 6,
           "color": "#B8860B",
-          "alpha": 0.7,
+          "alpha": 0.75,
           "blur": 2.5
         },
         "overlay": null,
@@ -52,7 +52,7 @@
         "shadow": {
           "depth": 3,
           "color": "#B8860B",
-          "alpha": 0.5,
+          "alpha": 0.7,
           "blur": 1.2
         },
         "overlay": null,
@@ -88,15 +88,15 @@
         "animation": "prestige_slide",
         "marginV": 260,
         "outline": {
-          "width": 1.5,
-          "color": "#FF8C00",
-          "alpha": 0.8,
+          "width": 3,
+          "color": "#000000",
+          "alpha": 1.0,
           "blur": 0.6
         },
         "shadow": {
           "depth": 5,
           "color": "#FF8C00",
-          "alpha": 0.6,
+          "alpha": 0.75,
           "blur": 2
         },
         "overlay": null,
@@ -123,9 +123,9 @@
           "blur": 0.3
         },
         "shadow": {
-          "depth": 2,
+          "depth": 3,
           "color": "#FFA500",
-          "alpha": 0.4,
+          "alpha": 0.7,
           "blur": 1
         },
         "overlay": null,
@@ -163,7 +163,7 @@
         "outline": {
           "width": 3,
           "color": "#FFD700",
-          "alpha": 1,
+          "alpha": 1.0,
           "blur": 1.2
         },
         "shadow": {
@@ -198,7 +198,7 @@
         "shadow": {
           "depth": 5,
           "color": "#FFA500",
-          "alpha": 0.6,
+          "alpha": 0.7,
           "blur": 2
         },
         "overlay": null,
@@ -234,16 +234,16 @@
         "animation": "golden_finale",
         "marginV": 500,
         "outline": {
-          "width": 1.5,
+          "width": 3,
           "color": "#DAA520",
-          "alpha": 0.7,
+          "alpha": 1.0,
           "blur": 0.7
         },
         "shadow": {
           "depth": 4,
           "color": "#DAA520",
-          "alpha": 0.5,
-          "blur": 1.8
+          "alpha": 0.75,
+          "blur": 2.0
         },
         "overlay": null,
         "marginH": 0,
@@ -269,9 +269,9 @@
           "blur": 0.3
         },
         "shadow": {
-          "depth": 2,
+          "depth": 3,
           "color": "#F0E68C",
-          "alpha": 0.3,
+          "alpha": 0.7,
           "blur": 0.8
         },
         "overlay": null,

@@ -14,11 +14,16 @@
         "letterSpacing": 2.5,
         "animation": "static",
         "marginV": 280,
-        "outline": null,
+        "outline": {
+          "width": 3,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
         "shadow": {
           "depth": 4,
           "color": "#0000FF",
-          "alpha": 0.5,
+          "alpha": 0.75,
           "blur": 3
         },
         "marginH": 0,
@@ -39,7 +44,12 @@
         "animation": "static",
         "marginV": 380,
         "outline": null,
-        "shadow": null,
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.7,
+          "blur": 1.5
+        },
         "marginH": 0,
         "overlay": null
       },
@@ -72,11 +82,16 @@
         "letterSpacing": 2,
         "animation": "static",
         "marginV": 300,
-        "outline": null,
+        "outline": {
+          "width": 3,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
         "shadow": {
           "depth": 4,
           "color": "#FF0000",
-          "alpha": 0.5,
+          "alpha": 0.75,
           "blur": 2
         },
         "marginH": 0,
@@ -97,7 +112,12 @@
         "animation": "static",
         "marginV": 400,
         "outline": null,
-        "shadow": null,
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.7,
+          "blur": 1.5
+        },
         "marginH": 0,
         "overlay": null
       },
@@ -130,8 +150,18 @@
         "letterSpacing": 3.5,
         "animation": "static",
         "marginV": 260,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 3,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 4,
+          "color": "#000000",
+          "alpha": 0.75,
+          "blur": 2.0
+        },
         "marginH": 0,
         "overlay": null,
         "badge": {
@@ -150,7 +180,12 @@
         "animation": "static",
         "marginV": 360,
         "outline": null,
-        "shadow": null,
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.7,
+          "blur": 1.5
+        },
         "marginH": 0,
         "overlay": null
       },
@@ -183,8 +218,18 @@
         "letterSpacing": 1.5,
         "animation": "static",
         "marginV": 540,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 3,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 4,
+          "color": "#000000",
+          "alpha": 0.75,
+          "blur": 2.0
+        },
         "marginH": 0,
         "overlay": null,
         "badge": {
@@ -203,7 +248,12 @@
         "animation": "static",
         "marginV": 640,
         "outline": null,
-        "shadow": null,
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.7,
+          "blur": 1.5
+        },
         "marginH": 0,
         "overlay": null
       },

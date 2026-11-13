@@ -14,18 +14,18 @@
     {
       "id": "slice_2",
       "segment_label": "VALOR",
-      "text": "No compitas por precio:\ndiseña tu *EXCLUSIVIDAD*",
+      "text": "No compitas por *precio:*\ndiseña tu *EXCLUSIVIDAD*",
       "voiceover": "Relato del nuevo slice...",
       "duration": 5,
-      "title": "No compitas por precio:\ndiseña tu *EXCLUSIVIDAD*"
+      "title": "No compitas por *precio:*\ndiseña tu *EXCLUSIVIDAD*"
     },
     {
       "id": "slice_3",
       "segment_label": "VALOR",
-      "text": "Eleva tus estándares\nhasta ser un *REFERENTE*",
+      "text": "Eleva tus *estándares*\nhasta ser un *REFERENTE*",
       "voiceover": "Relato del nuevo slice...",
       "duration": 5,
-      "title": "Eleva tus estándares\nhasta ser un *REFERENTE*"
+      "title": "Eleva tus *estándares*\nhasta ser un *REFERENTE*"
     },
     {
       "id": "slice_5",
