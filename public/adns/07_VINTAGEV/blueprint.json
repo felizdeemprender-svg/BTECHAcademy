@@ -6,37 +6,42 @@
     {
       "id": "slice_1",
       "segment_label": "GANCHO",
-      "text": "BIENVENIDO AL MASTER",
+      "text": "Principios *CLÁSICOS*\nque nunca pasan de *MODA*",
       "duration": 5,
-      "imageUrl": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b"
+      "imageUrl": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b",
+      "title": "Principios *CLÁSICOS*\nque nunca pasan de *MODA*"
     },
     {
       "id": "slice_2",
       "segment_label": "VALOR",
-      "text": "NUEVO IMPACTO",
+      "text": "El arte de construir *VALOR*\ncon fundamentos *SÓLIDOS*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "El arte de construir *VALOR*\ncon fundamentos *SÓLIDOS*"
     },
     {
       "id": "slice_3",
       "segment_label": "VALOR",
-      "text": "NUEVO IMPACTO",
+      "text": "Maestría artesanal\nque perdura en el *TIEMPO*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "Maestría artesanal\nque perdura en el *TIEMPO*"
     },
     {
       "id": "slice_5",
       "segment_label": "CIERRE",
-      "text": "NUEVO IMPACTO",
+      "text": "Autenticidad *PURA*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "Autenticidad *PURA*"
     },
     {
       "id": "slice_4",
       "segment_label": "CTA",
-      "text": "NUEVO IMPACTO",
+      "text": "Descubre la *TRADICIÓN*\ny crea tu *HISTORIA*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "Descubre la *TRADICIÓN*\ny crea tu *HISTORIA*"
     }
   ]
 }

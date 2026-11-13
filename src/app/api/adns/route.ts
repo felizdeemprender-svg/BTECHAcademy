@@ -30,20 +30,39 @@ export async function GET() {
           const manifestContent = await fs.readFile(manifestPath, 'utf-8');
           const manifest = JSON.parse(manifestContent);
           
-          // Cargar blueprint para inicialización automática
-          const blueprintPath = path.join(adnsDir, dirent.name, 'blueprint.json');
-          let blueprint = null;
-          try { 
-            const blueprintContent = await fs.readFile(blueprintPath, 'utf-8');
-            blueprint = JSON.parse(blueprintContent);
-          } catch {}
+          const loadJsonModule = async (filename: string) => {
+            try {
+              const p = path.join(adnsDir, dirent.name, filename);
+              const raw = await fs.readFile(p, 'utf-8');
+              return JSON.parse(raw);
+            } catch {
+              return null;
+            }
+          };
+
+          const [blueprint, typography, motion, composition, globalFx, engine] = await Promise.all([
+            loadJsonModule('blueprint.json'),
+            loadJsonModule('typography.json'),
+            loadJsonModule('motion.json'),
+            loadJsonModule('composition.json'),
+            loadJsonModule('global-fx.json'),
+            loadJsonModule('engine.json')
+          ]);
 
           return {
             ...manifest,
             id: dirent.name,
             isModular: true,
             defaultSlices: blueprint?.slices || [],
-            hasBlueprint: !!blueprint
+            hasBlueprint: !!blueprint,
+            typography_engine: typography,
+            typography: typography,
+            motion_engine: motion,
+            motion: motion,
+            composition: composition,
+            global_fx: globalFx,
+            fx: globalFx,
+            engine: engine
           };
         } else if (dirent.name.endsWith('.json')) {
           // ADN Legado 1.0

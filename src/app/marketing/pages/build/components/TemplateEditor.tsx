@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,8 @@ import {
   Trash2,
   FileEdit,
   Download,
-  Lock
+  Lock,
+  Palette
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageEditor } from '@/components/courses/ImageEditor';
@@ -55,6 +56,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  getSystemVideoPalettes,
+  resolveVideoBrandPalette
+} from '@/lib/video/brand-palettes';
 import {
   Dialog,
   DialogContent,
@@ -174,6 +185,38 @@ export function TemplateEditor({
 }: TemplateEditorProps) {
   // ADNs cargados desde el componente padre (page.tsx) para evitar ReferenceError
   const dynamicAdns = adns;
+
+  const normalizedLandingsList: { id: string; title: string; url: string }[] = useMemo(() => {
+    const list: { id: string; title: string; url: string }[] = [];
+    if (Array.isArray(availableLandings)) {
+      availableLandings.forEach((pack: any) => {
+        if (pack.aiContent?.landings?.length) {
+          pack.aiContent.landings.forEach((l: any, vIdx: number) => {
+            list.push({
+              id: `${pack.id}-${vIdx}`,
+              title: l.marketingName || `${pack.title || 'Landing'} (Variante ${vIdx + 1})`,
+              url: `/v/${pack.id}?v=${vIdx}`
+            });
+          });
+        } else if (pack.id) {
+          list.push({
+            id: pack.id,
+            title: pack.title || pack.slug || `Landing ${pack.id.substring(0, 8)}`,
+            url: `/v/${pack.id}`
+          });
+        }
+      });
+    }
+    if (list.length === 0 && selectedCourseId) {
+      const courseMatch = courses?.find(c => c.id === selectedCourseId);
+      list.push({
+        id: selectedCourseId,
+        title: courseMatch?.title || 'Landing del Asistente',
+        url: `/v/${selectedCourseId}`
+      });
+    }
+    return list;
+  }, [availableLandings, selectedCourseId, courses]);
 
   const [isGeneratingBreakdown, setIsGeneratingBreakdown] = useState<string | null>(null);
 
@@ -400,7 +443,22 @@ export function TemplateEditor({
       const { initializeFirebase } = await import('@/firebase');
       const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
       const { storage } = initializeFirebase();
-      const pNotes = s.production_notes || {};
+      const currentSocial = generatedAssets?.socials?.[sIdx] || s;
+      const pNotes = currentSocial.production_notes || s.production_notes || {};
+      const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+      const effectivePalette = resolveVideoBrandPalette(
+        pNotes.brandPaletteId,
+        pNotes.brandColors,
+        profile,
+        selectedCourse
+      );
+      const resolvedBrandColors = effectivePalette ? {
+        name: effectivePalette.name,
+        primary: effectivePalette.primary,
+        secondary: effectivePalette.secondary,
+        accent: effectivePalette.accent,
+        outline: effectivePalette.outline
+      } : (pNotes.brandColors || null);
       
       const resolvedScenes = await Promise.all(slides.map(async (sl: any, i: number) => {
         let imageUrl = sl.imageUrl || '';
@@ -438,6 +496,8 @@ export function TemplateEditor({
           voiceover: (s.slides?.some((sl: any) => sl.voiceover)) ? '' : (pNotes.voiceover || s.voiceover || ''),
           audioEffect: pNotes.audio_effect || 'auto',
           adnId: pNotes.adnId || '01_CINEMA',
+          brandPaletteId: pNotes.brandPaletteId || 'adn',
+          brandColors: resolvedBrandColors,
           isCarousel: s.type === 'carousel',
           marketingName: s.marketingName
         })
@@ -526,7 +586,22 @@ export function TemplateEditor({
         carousel: '4:5'
       };
       const formato = typeToFormat[s.type] || '9:16';
-      const pNotes = s.production_notes || {};
+      const currentSocial = generatedAssets?.socials?.[sIdx] || s;
+      const pNotes = currentSocial.production_notes || s.production_notes || {};
+      const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+      const effectivePalette = resolveVideoBrandPalette(
+        pNotes.brandPaletteId,
+        pNotes.brandColors,
+        profile,
+        selectedCourse
+      );
+      const resolvedBrandColors = effectivePalette ? {
+        name: effectivePalette.name,
+        primary: effectivePalette.primary,
+        secondary: effectivePalette.secondary,
+        accent: effectivePalette.accent,
+        outline: effectivePalette.outline
+      } : (pNotes.brandColors || null);
 
       const res = await fetch('/api/video/generate', {
         method: 'POST',
@@ -626,7 +701,22 @@ export function TemplateEditor({
       if (!accessToken) throw new Error('Se requiere acceso a Drive para guardar el video.');
 
       const formato = mapAssetTypeToFormato(s.type);
-      const pNotes = s.production_notes || {};
+      const currentSocial = generatedAssets?.socials?.[sIdx] || s;
+      const pNotes = currentSocial.production_notes || s.production_notes || {};
+      const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+      const effectivePalette = resolveVideoBrandPalette(
+        pNotes.brandPaletteId,
+        pNotes.brandColors,
+        profile,
+        selectedCourse
+      );
+      const resolvedBrandColors = effectivePalette ? {
+        name: effectivePalette.name,
+        primary: effectivePalette.primary,
+        secondary: effectivePalette.secondary,
+        accent: effectivePalette.accent,
+        outline: effectivePalette.outline
+      } : (pNotes.brandColors || null);
       const slides = s.slides || s.scenes || [];
 
       // Escenas reales tal como las editó el usuario (multi-escena)
@@ -734,7 +824,22 @@ export function TemplateEditor({
 
     try {
       const formato = mapAssetTypeToFormato(s.type);
-      const pNotes = s.production_notes || {};
+      const currentSocial = generatedAssets?.socials?.[sIdx] || s;
+      const pNotes = currentSocial.production_notes || s.production_notes || {};
+      const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+      const effectivePalette = resolveVideoBrandPalette(
+        pNotes.brandPaletteId,
+        pNotes.brandColors,
+        profile,
+        selectedCourse
+      );
+      const resolvedBrandColors = effectivePalette ? {
+        name: effectivePalette.name,
+        primary: effectivePalette.primary,
+        secondary: effectivePalette.secondary,
+        accent: effectivePalette.accent,
+        outline: effectivePalette.outline
+      } : (pNotes.brandColors || null);
       const exportEngine = pNotes.export_engine || 'seedance';
       const slides = s.slides || s.scenes || [];
 
@@ -1160,12 +1265,10 @@ export function TemplateEditor({
                       </SelectTrigger>
                       <SelectContent className="bg-white border-border text-foreground">
                         <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-muted/40">URL del Mentor</SelectItem>
-                        {Array.isArray(availableLandings) && availableLandings.map((pack: any) => (
-                          pack.aiContent?.landings?.map((l: any, vIdx: number) => (
-                            <SelectItem key={`${pack.id}-${vIdx}`} value={`${pack.id}-${vIdx}`} className="text-[10px] uppercase font-bold hover:bg-muted/40">
-                              🎯 {pack.title || 'Pack'}: {l.marketingName || `Variante ${vIdx + 1}`}
-                            </SelectItem>
-                          ))
+                        {normalizedLandingsList.map((landing) => (
+                          <SelectItem key={landing.id} value={landing.id} className="text-[10px] uppercase font-bold hover:bg-muted/40">
+                            Landing: {landing.title} ({landing.url})
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1540,28 +1643,184 @@ export function TemplateEditor({
                                                         </Select>
                                                       </div>
 
-                                                      <div className="flex-1 max-w-[120px]">
+                                                      <div className="flex-1 max-w-[170px]">
                                                         <Select
-                                                          value={s.landingId || 'mentor'}
-                                                          onValueChange={(val) => updateAsset('socials', globalIdx, 'landingId', val)}
+                                                          value={s.production_notes?.brandPaletteId || 'adn'}
+                                                          onValueChange={(val) => {
+                                                            const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+                                                            const palette = resolveVideoBrandPalette(val, null, profile, selectedCourse);
+                                                            const newColors = palette ? {
+                                                              name: palette.name,
+                                                              primary: palette.primary,
+                                                              secondary: palette.secondary,
+                                                              accent: palette.accent,
+                                                              outline: palette.outline
+                                                            } : null;
+
+                                                            updateAsset('socials', globalIdx, 'production_notes', {
+                                                              ...(s.production_notes || {}),
+                                                              brandPaletteId: val,
+                                                              brandColors: newColors
+                                                            });
+
+                                                            if (generatedAssets?.socials) {
+                                                              const updatedSocials = [...generatedAssets.socials];
+                                                              updatedSocials[globalIdx] = {
+                                                                ...updatedSocials[globalIdx],
+                                                                production_notes: {
+                                                                  ...(updatedSocials[globalIdx]?.production_notes || {}),
+                                                                  brandPaletteId: val,
+                                                                  brandColors: newColors
+                                                                }
+                                                              };
+                                                              onSave({ ...generatedAssets, socials: updatedSocials }, true);
+                                                            }
+
+                                                            toast({
+                                                              title: "Paleta de Color Actualizada",
+                                                              description: `Subtítulos configurados con: ${palette?.name || 'ADN Original'}`
+                                                            });
+                                                          }}
                                                         >
                                                           <SelectTrigger className="h-11 bg-white border-border text-[9px] font-black uppercase text-foreground tracking-widest">
-                                                            <div className="flex items-center gap-2">
-                                                              <Link2 className="h-3.5 w-3.5" />
-                                                              <span>URL <SelectValue placeholder="Destino" /></span>
+                                                            <div className="flex items-center gap-2 truncate">
+                                                              <Palette className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                              <span className="truncate">COLOR: <SelectValue placeholder="Paleta" /></span>
                                                             </div>
                                                           </SelectTrigger>
-                                                          <SelectContent className="bg-white border-border text-foreground">
-                                                            <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-muted/40">URL del Mentor</SelectItem>
-                                                            {Array.isArray(availableLandings) && availableLandings.map((pack: any) => (
-                                                              pack.aiContent?.landings?.map((l: any, vIdx: number) => (
-                                                                <SelectItem key={`${pack.id}-${vIdx}`} value={`${pack.id}-${vIdx}`} className="text-[10px] uppercase font-bold hover:bg-muted/40">
-                                                                  🎯 {pack.title || 'Pack'}: {l.marketingName || `Variante ${vIdx + 1}`}
-                                                                </SelectItem>
-                                                              ))
+                                                          <SelectContent className="bg-white border-border text-foreground max-h-72">
+                                                            {getSystemVideoPalettes(profile, courses?.find((c: any) => c.id === selectedCourseId)).map((palette) => (
+                                                              <SelectItem key={palette.id} value={palette.id} className="text-[10px] uppercase font-bold">
+                                                                <div className="flex items-center gap-2">
+                                                                  {palette.primary ? (
+                                                                    <span
+                                                                      className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
+                                                                      style={{ backgroundColor: palette.primary }}
+                                                                    />
+                                                                  ) : (
+                                                                    <span className="text-[10px]">🎬</span>
+                                                                  )}
+                                                                  <span>{palette.name}</span>
+                                                                </div>
+                                                              </SelectItem>
                                                             ))}
                                                           </SelectContent>
                                                         </Select>
+                                                      </div>
+
+                                                      <div className="flex-1 max-w-[170px]">
+                                                        <Popover>
+                                                          <PopoverTrigger asChild>
+                                                            <Button
+                                                              variant="outline"
+                                                              className="h-11 w-full bg-white border-border text-[9px] font-black uppercase text-foreground tracking-widest px-3 flex items-center justify-between gap-1 hover:bg-muted/40"
+                                                            >
+                                                              <div className="flex items-center gap-1.5 truncate">
+                                                                <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                                <span className="truncate">
+                                                                  URL: {
+                                                                    ((s.includeMentorUrl ?? (s.landingId === 'mentor')) && (s.includeLandingUrl ?? (s.landingId !== 'mentor')))
+                                                                      ? 'MENTOR + LANDING'
+                                                                      : (s.includeMentorUrl ?? (s.landingId === 'mentor'))
+                                                                      ? 'SOLO MENTOR'
+                                                                      : (s.includeLandingUrl ?? (s.landingId !== 'mentor'))
+                                                                      ? 'SOLO LANDING'
+                                                                      : 'SIN URL'
+                                                                  }
+                                                                </span>
+                                                              </div>
+                                                            </Button>
+                                                          </PopoverTrigger>
+                                                          <PopoverContent className="w-80 p-4 bg-white border-border shadow-xl space-y-3" align="start">
+                                                            <div className="border-b border-border pb-2">
+                                                              <p className="text-[10px] font-black uppercase tracking-wider text-foreground">Destinos en la Publicación</p>
+                                                              <p className="text-[9px] text-muted-foreground">Tilda las URLs que deseas incorporar al contenido.</p>
+                                                            </div>
+
+                                                            {/* Checkbox 1: URL del Mentor */}
+                                                            <label className="flex items-start gap-3 p-2.5 rounded-xl border border-border/60 hover:bg-muted/30 cursor-pointer transition-colors">
+                                                              <Checkbox
+                                                                checked={s.includeMentorUrl ?? (s.landingId === 'mentor')}
+                                                                onCheckedChange={(checked) => {
+                                                                  updateAsset('socials', globalIdx, 'includeMentorUrl', !!checked);
+                                                                }}
+                                                                className="mt-0.5"
+                                                              />
+                                                              <div className="flex-1 space-y-0.5">
+                                                                <span className="text-[10px] font-bold uppercase text-foreground tracking-wide">URL del Mentor</span>
+                                                                <p className="text-[9px] text-muted-foreground">Enlace a biografía o perfil del mentor.</p>
+                                                              </div>
+                                                            </label>
+
+                                                            {/* Checkbox 2: URL de la Landing */}
+                                                            {(() => {
+                                                              const defaultInheritedLanding = normalizedLandingsList.find(l => l.id === s.landingId)
+                                                                || normalizedLandingsList[0]
+                                                                || (selectedCourseId ? { id: selectedCourseId, title: 'Landing del Asistente', url: `/v/${selectedCourseId}` } : null);
+
+                                                              return (
+                                                                <div className="p-2.5 rounded-xl border border-border/60 bg-muted/20 space-y-2">
+                                                                  <label className="flex items-start gap-3 cursor-pointer">
+                                                                    <Checkbox
+                                                                      checked={s.includeLandingUrl ?? (s.landingId !== 'mentor')}
+                                                                      onCheckedChange={(checked) => {
+                                                                        const isChecked = !!checked;
+                                                                        updateAsset('socials', globalIdx, 'includeLandingUrl', isChecked);
+                                                                        if (isChecked && (!s.landingId || s.landingId === 'mentor') && defaultInheritedLanding) {
+                                                                          updateAsset('socials', globalIdx, 'landingId', defaultInheritedLanding.id);
+                                                                        }
+                                                                      }}
+                                                                      className="mt-0.5"
+                                                                    />
+                                                                    <div className="flex-1 space-y-0.5">
+                                                                      <span className="text-[10px] font-bold uppercase text-foreground tracking-wide">URL de la Landing</span>
+                                                                      <p className="text-[9px] text-muted-foreground">Página de venta / oferta activa.</p>
+                                                                    </div>
+                                                                  </label>
+
+                                                                  {(s.includeLandingUrl ?? (s.landingId !== 'mentor')) && (
+                                                                    <div className="pt-1.5 pl-6">
+                                                                      {normalizedLandingsList.length <= 1 ? (
+                                                                        <div className="flex items-center justify-between text-[10px] bg-white p-2 rounded-lg border border-border">
+                                                                          <div className="flex items-center gap-1.5 truncate mr-2">
+                                                                            <span className="text-muted-foreground font-medium">Heredada:</span>
+                                                                            <span className="font-bold text-foreground truncate">
+                                                                              {defaultInheritedLanding?.title || 'Landing del Asistente'}
+                                                                            </span>
+                                                                          </div>
+                                                                          {defaultInheritedLanding && (
+                                                                            <span className="font-mono text-[9px] text-primary shrink-0 font-bold">
+                                                                              {defaultInheritedLanding.url}
+                                                                            </span>
+                                                                          )}
+                                                                        </div>
+                                                                      ) : (
+                                                                        <Select
+                                                                          value={s.landingId && s.landingId !== 'mentor' ? s.landingId : (defaultInheritedLanding?.id || '')}
+                                                                          onValueChange={(val) => {
+                                                                            updateAsset('socials', globalIdx, 'landingId', val);
+                                                                            updateAsset('socials', globalIdx, 'includeLandingUrl', true);
+                                                                          }}
+                                                                        >
+                                                                          <SelectTrigger className="h-8 bg-white border-border text-[9px] font-bold">
+                                                                            <SelectValue placeholder="Seleccionar Landing" />
+                                                                          </SelectTrigger>
+                                                                          <SelectContent className="bg-white border-border text-foreground">
+                                                                            {normalizedLandingsList.map((landing) => (
+                                                                              <SelectItem key={landing.id} value={landing.id} className="text-[10px] uppercase font-bold">
+                                                                                {landing.title} ({landing.url})
+                                                                              </SelectItem>
+                                                                            ))}
+                                                                          </SelectContent>
+                                                                        </Select>
+                                                                      )}
+                                                                    </div>
+                                                                  )}
+                                                                </div>
+                                                              );
+                                                            })()}
+                                                          </PopoverContent>
+                                                        </Popover>
                                                       </div>
 
                                                       </div>
@@ -1622,6 +1881,7 @@ export function TemplateEditor({
                                                       onRefreshGoogleToken={ensureGoogleToken}
                                                       adns={dynamicAdns}
                                                       jobProgress={jobProgress[globalIdx]}
+                                                      profile={profile}
                                                     />
                                                   )}
                                                 </div>
@@ -1786,12 +2046,10 @@ export function TemplateEditor({
                         </SelectTrigger>
                         <SelectContent className="bg-white border-border text-foreground">
                           <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-muted/40">URL del Mentor</SelectItem>
-                          {Array.isArray(availableLandings) && availableLandings.map((pack: any) => (
-                            pack.aiContent?.landings?.map((l: any, vIdx: number) => (
-                              <SelectItem key={`${pack.id}-${vIdx}`} value={`${pack.id}-${vIdx}`} className="text-[10px] uppercase font-bold hover:bg-muted/40">
-                                🎯 {pack.title || 'Pack'}: {l.marketingName || `Variante ${vIdx + 1}`}
-                              </SelectItem>
-                            ))
+                          {normalizedLandingsList.map((landing) => (
+                            <SelectItem key={landing.id} value={landing.id} className="text-[10px] uppercase font-bold hover:bg-muted/40">
+                              Landing: {landing.title} ({landing.url})
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

@@ -196,9 +196,14 @@ export function SceneNarrativeEditor({
                     ) : (
                       <>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
-                            <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
-                          </Label>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
+                              <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
+                            </Label>
+                            <span className="text-[9px] text-muted-foreground font-medium hidden sm:inline-block">
+                              Usa <strong>*palabra*</strong> para resaltar
+                            </span>
+                          </div>
                           <Textarea 
                             value={sl.text || ''}
                             onChange={(e) => {
@@ -206,7 +211,7 @@ export function SceneNarrativeEditor({
                               newItems[i] = { ...newItems[i], text: e.target.value };
                               updateAsset('socials', sIdx, 'slides', newItems);
                             }}
-                            placeholder="Frase corta para resaltar en pantalla..."
+                            placeholder="Frase corta para resaltar en pantalla... Ej: Aprende a *VENDER*"
                             className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[60px] text-sm font-black focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
                           />
                         </div>

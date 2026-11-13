@@ -4,7 +4,7 @@
   "segment_styles": {
     "GANCHO": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "impact.ttf",
         "fontSize": 98,
         "primaryColor": "#FF6B6B@1.0",
         "alignment": "center",
@@ -27,7 +27,17 @@
           "blur": 3
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": true,
+          "style": "pill",
+          "color": "#000000",
+          "alpha": 0.7,
+          "padding": 10
+        },
+        "box": true,
+        "boxcolor_alpha": "#000000@0.7",
+        "boxborderw": 10
       },
       "subtitle": {
         "fontName": "Inter-Bold.ttf",
@@ -74,7 +84,7 @@
     },
     "VALOR": {
       "text": {
-        "fontName": "Inter-ExtraBold.ttf",
+        "fontName": "impact.ttf",
         "fontSize": 92,
         "primaryColor": "#4ECDC4@1.0",
         "alignment": "center",
@@ -97,10 +107,20 @@
           "blur": 2
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": true,
+          "style": "pill",
+          "color": "#000000",
+          "alpha": 0.7,
+          "padding": 10
+        },
+        "box": true,
+        "boxcolor_alpha": "#000000@0.7",
+        "boxborderw": 10
       },
       "subtitle": {
-        "fontName": "Inter-Medium.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 44,
         "primaryColor": "#FFE66D@1.0",
         "alignment": "center",
@@ -144,7 +164,7 @@
     },
     "CTA": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "impact.ttf",
         "fontSize": 110,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -167,7 +187,17 @@
           "blur": 4
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": true,
+          "style": "pill",
+          "color": "#000000",
+          "alpha": 0.7,
+          "padding": 10
+        },
+        "box": true,
+        "boxcolor_alpha": "#000000@0.7",
+        "boxborderw": 10
       },
       "subtitle": {
         "fontName": "Inter-Bold.ttf",
@@ -214,7 +244,7 @@
     },
     "CIERRE": {
       "text": {
-        "fontName": "Inter-Bold.ttf",
+        "fontName": "impact.ttf",
         "fontSize": 88,
         "primaryColor": "#FFE66D@1.0",
         "alignment": "center",
@@ -237,10 +267,20 @@
           "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": true,
+          "style": "pill",
+          "color": "#000000",
+          "alpha": 0.7,
+          "padding": 10
+        },
+        "box": true,
+        "boxcolor_alpha": "#000000@0.7",
+        "boxborderw": 10
       },
       "subtitle": {
-        "fontName": "Inter-Regular.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 40,
         "primaryColor": "#FF6B6B@1.0",
         "alignment": "center",

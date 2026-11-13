@@ -4,7 +4,7 @@
   "segment_styles": {
     "GANCHO": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 75,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -17,10 +17,13 @@
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "Inter-Light.ttf",
         "fontSize": 40,
         "primaryColor": "#CCCCCC@0.8",
         "alignment": "center",
@@ -54,7 +57,7 @@
     },
     "VALOR": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 70,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -67,10 +70,13 @@
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "Inter-Light.ttf",
         "fontSize": 35,
         "primaryColor": "#AAAAAA@0.8",
         "alignment": "center",
@@ -104,7 +110,7 @@
     },
     "CTA": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 85,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -117,10 +123,13 @@
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "Inter-Light.ttf",
         "fontSize": 45,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -154,7 +163,7 @@
     },
     "CIERRE": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 75,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -167,10 +176,13 @@
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "Inter-Light.ttf",
         "fontSize": 35,
         "primaryColor": "#888888@1.0",
         "alignment": "center",

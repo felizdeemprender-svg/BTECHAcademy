@@ -26,6 +26,8 @@ export interface RenderRequest {
   audioDuration?: number;
   resolution?: string;
   brandColor?: string;
+  brandColors?: { primary?: string; secondary?: string; accent?: string; outline?: string } | null;
+  brandPaletteId?: string;
   adnId?: string;
   enable_tts?: boolean;
   voice_id?: string;
@@ -201,7 +203,10 @@ export async function runRenderJob(jobId: string, body: RenderRequest) {
           const localVoicePath = path.join(workDir, `voice_${i}.mp3`);
           await fsPromises.copyFile(cachedVoicePath, localVoicePath);
           voicePath = localVoicePath;
-          sceneDuration = (await getAudioDuration(voicePath)) + 0.3;
+          const voiceDur = await getAudioDuration(voicePath);
+          const transDur = adnConfig.motion_engine?.transitions?.duration ?? 0.5;
+          const isLast = i === scenes.length - 1;
+          sceneDuration = voiceDur + (isLast ? 0.4 : transDur + 0.3);
         } catch (err: any) {
           console.error(`❌ [TTS Error] Escena ${i}:`, err);
         }
@@ -241,6 +246,7 @@ export async function runRenderJob(jobId: string, body: RenderRequest) {
       workDir,
       slices: engineSlices,
       backgroundMusicUrl,
+      brandColors: body.brandColors || (adnConfig as any)?.brandColors || (body.brandColor ? { primary: body.brandColor } : null),
       onSliceProgress: async (sliceIdx: number, total: number) => {
         const p = 55 + Math.round((sliceIdx / Math.max(total, 1)) * 18); // 55% -> 73%
         await updateJob(jobId, {

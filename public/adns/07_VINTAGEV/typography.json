@@ -22,10 +22,13 @@
           "blur": 3
         },
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "calibri.ttf",
         "fontSize": 40,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -77,10 +80,13 @@
           "blur": 2
         },
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "calibri.ttf",
         "fontSize": 35,
         "primaryColor": "#EEEEEE@1.0",
         "alignment": "center",
@@ -127,10 +133,13 @@
         "outline": null,
         "shadow": null,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "calibri.ttf",
         "fontSize": 45,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -177,10 +186,13 @@
         "outline": null,
         "shadow": null,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "calibri.ttf",
         "fontSize": 35,
         "primaryColor": "#CCCCCC@1.0",
         "alignment": "center",

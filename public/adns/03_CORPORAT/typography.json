@@ -4,7 +4,7 @@
   "segment_styles": {
     "GANCHO": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 85,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -27,7 +27,17 @@
           "blur": 2
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": true,
+          "style": "pill",
+          "color": "#000000",
+          "alpha": 0.6,
+          "padding": 8
+        },
+        "box": true,
+        "boxcolor_alpha": "#000000@0.6",
+        "boxborderw": 8
       },
       "subtitle": {
         "fontName": "Inter-Regular.ttf",
@@ -69,7 +79,7 @@
     },
     "VALOR": {
       "text": {
-        "fontName": "Inter-SemiBold.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 78,
         "primaryColor": "#F8FAFC@1.0",
         "alignment": "center",
@@ -92,7 +102,17 @@
           "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": true,
+          "style": "pill",
+          "color": "#000000",
+          "alpha": 0.6,
+          "padding": 8
+        },
+        "box": true,
+        "boxcolor_alpha": "#000000@0.6",
+        "boxborderw": 8
       },
       "subtitle": {
         "fontName": "Inter-Regular.ttf",
@@ -134,7 +154,7 @@
     },
     "CTA": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 92,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -157,10 +177,20 @@
           "blur": 3
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": true,
+          "style": "pill",
+          "color": "#000000",
+          "alpha": 0.6,
+          "padding": 8
+        },
+        "box": true,
+        "boxcolor_alpha": "#000000@0.6",
+        "boxborderw": 8
       },
       "subtitle": {
-        "fontName": "Inter-SemiBold.ttf",
+        "fontName": "Inter-Regular.ttf",
         "fontSize": 46,
         "primaryColor": "#F1F5F9@1.0",
         "alignment": "center",
@@ -204,7 +234,7 @@
     },
     "CIERRE": {
       "text": {
-        "fontName": "Inter-Medium.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 82,
         "primaryColor": "#E2E8F0@1.0",
         "alignment": "center",
@@ -227,10 +257,20 @@
           "blur": 1
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": true,
+          "style": "pill",
+          "color": "#000000",
+          "alpha": 0.6,
+          "padding": 8
+        },
+        "box": true,
+        "boxcolor_alpha": "#000000@0.6",
+        "boxborderw": 8
       },
       "subtitle": {
-        "fontName": "Inter-Light.ttf",
+        "fontName": "Inter-Regular.ttf",
         "fontSize": 36,
         "primaryColor": "#94A3B8@1.0",
         "alignment": "center",

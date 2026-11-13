@@ -8,6 +8,11 @@ runConfig:
   memoryMiB: 4096
 
 env:
+  # App Base URL (Testing)
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://btechacademy-test--feliz-de-emprender.us-central1.hosted.app
+    availability: [BUILD, RUNTIME]
+
   # Firebase Config (Testing - feliz-de-emprender)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyC8Is74Io__gsvpCbrbDxo7EpY61cj1ruI

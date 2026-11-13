@@ -8,6 +8,7 @@ import { ai, validateApiKey } from '../genkit';
 import { z } from 'genkit';
 import path from 'path';
 import fs from 'fs/promises';
+import { getAppBaseUrl } from '@/lib/app-url';
 
 const SceneContentSchema = z.object({
   segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: ES OBLIGATORIO RESPETAR EL ORDEN EXACTO DE LOS SEGMENTOS INDICADO EN EL PROMPT (ej: si dice 1. GANCHO, 2. VALOR, 3. CIERRE, DEBES devolver esos segment_label exactamente). ¡NUNCA repitas VALOR para todas las escenas!'),
@@ -183,9 +184,10 @@ ${missionTones[mission]}
 Debes generar exactamente ${expectedCount} escenas con los siguientes segment_label EXACTOS en este orden:
 ${sequenceList}
 
-2. PANTALLA (text y subtitle): LÍMITES ESTRICTOS PARA VIDEO
-    - TEXTO IMPACTO ('text'): MÁXIMO 30 CARACTERES. Punchy.
-    - SUBTÍTULO ('subtitle'): MÁXIMO 40 CARACTERES. De apoyo. ¡OBLIGATORIO!.
+2. PANTALLA (text y subtitle): RITMO CINÉTICO EN 2 FASES (REELS / TIKTOK)
+    - TEXTO EN PANTALLA ('text'): Estructurado en 2 MICRO-FRASES secuenciales separadas por salto de línea '\n' (ej: "¿Quieres *VENDER* más?\nAplica este *MÉTODO*" o "Aprende a *FACTURAR*\nel *DOBLE* cada mes"). Cada micro-frase debe tener entre 2 y 5 palabras.
+    - ÉNFASIS CINÉTICO DOBLE (*palabra*): Marca exactamente 1 palabra clave de impacto en la primera micro-frase y 1 palabra clave de impacto en la segunda micro-frase, envolviéndolas en asteriscos (ej: "*DESCUBRE* el secreto\ny empieza a *CRECER*"). El motor FFmpeg mostrará automáticamente la frase 1 en los primeros segundos y luego, a mitad de escena, hará irrumpir la frase 2 con animación cinética y resaltado en el color de acento de la marca. NUNCA envuelvas oraciones completas, solo palabras individuales de alto poder persuasivo.
+    - SUBTÍTULO ('subtitle'): Contexto breve de apoyo (máximo 40 caracteres, ej: "Método Exclusivo Paso a Paso"). ¡OBLIGATORIO!.
     - MARCA DE AGUA (watermark): Inserta el handle exacto "${variant.handle ? (variant.handle.startsWith('@') ? variant.handle : '@'+variant.handle) : '@usuario'}" en cada escena.
 3. BACKGROUNDS (media_hint): Escribe keywords descriptivas para la generación visual. IMPORTANTE: Usa términos de género neutro (ej: "person", "speaker", "professional") y NUNCA asumas género masculino ("businessman", "hombre", "tutor"). Esto evita corromper las imágenes de referencia si el usuario sube a una mujer.
 4. VOZ (voiceover): Relato fluido, persuasivo y experto. ¡LÍMITE ESTRICTO DE TIEMPO!: El texto generado no debe requerir más segundos al ser hablado que la duración máxima asignada a la escena. Sé muy conciso.
@@ -313,7 +315,7 @@ Devuelve un objeto JSON que siga el ContentBreakdown Schema.`;
 
     // --- REEMPLAZO DINÁMICO DE VARIABLES ---
     let username = variant.handle || '@tutor';
-    let baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.fastoria.com';
+    let baseUrl = getAppBaseUrl();
     let targetUrl = `${baseUrl}/`;
 
     if (uid) {
@@ -333,11 +335,32 @@ Devuelve un objeto JSON que siga el ContentBreakdown Schema.`;
         targetUrl = `${baseUrl}/v/${variant.salesPageId || variant.campaignId || variant.cursoId}`;
     }
 
+    const includeMentor = variant.includeMentorUrl ?? (variant.landingId === 'mentor');
+    const includeLanding = variant.includeLandingUrl ?? (variant.landingId !== 'mentor');
+
+    let landingTargetUrl = targetUrl;
+    if (variant.landingId && variant.landingId !== 'mentor') {
+        const [packId] = variant.landingId.split('-');
+        landingTargetUrl = `${baseUrl}/v/${packId}`;
+    }
+    const mentorTargetUrl = `${baseUrl}/`;
+
     if (result.caption) {
         result.caption = result.caption
-            .replace(/{URL_PRODUCTO}/g, targetUrl)
-            .replace(/{URL_MENTOR}/g, targetUrl)
+            .replace(/{URL_PRODUCTO}/g, includeLanding ? landingTargetUrl : '')
+            .replace(/{URL_MENTOR}/g, includeMentor ? mentorTargetUrl : '')
             .replace(/@usuario/gi, username);
+
+        const linksToAdd: string[] = [];
+        if (includeLanding && !result.caption.includes(landingTargetUrl)) {
+            linksToAdd.push(`🔗 Accedé al programa: ${landingTargetUrl}`);
+        }
+        if (includeMentor && !result.caption.includes(mentorTargetUrl)) {
+            linksToAdd.push(`👤 Mentor: ${mentorTargetUrl}`);
+        }
+        if (linksToAdd.length > 0) {
+            result.caption = `${result.caption.trim()}\n\n${linksToAdd.join('\n')}`;
+        }
     }
     
     const replaceWatermark = (item: any) => {

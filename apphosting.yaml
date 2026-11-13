@@ -8,6 +8,9 @@ runConfig:
   memoryMiB: 4096
 
 env:
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://fastoria.com.ar
+    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyD7srVAfI5ZtES_-5Syblh1z9_lHIj_gVk
     availability: [BUILD, RUNTIME]

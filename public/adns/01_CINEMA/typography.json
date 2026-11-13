@@ -26,7 +26,10 @@
           "blur": 2.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
         "fontName": "Inter-SemiBold.ttf",
@@ -73,7 +76,7 @@
     },
     "VALOR": {
       "text": {
-        "fontName": "Inter-Bold.ttf",
+        "fontName": "Inter-Black.ttf",
         "fontSize": 82,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -96,10 +99,13 @@
           "blur": 2
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "Inter-Medium.ttf",
+        "fontName": "Inter-SemiBold.ttf",
         "fontSize": 40,
         "primaryColor": "#D4D4D4@1.0",
         "alignment": "center",
@@ -166,7 +172,10 @@
           "blur": 3
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
         "fontName": "Inter-SemiBold.ttf",
@@ -213,7 +222,7 @@
     },
     "CIERRE": {
       "text": {
-        "fontName": "Inter-Medium.ttf",
+        "fontName": "Inter-Black.ttf",
         "fontSize": 88,
         "primaryColor": "#E5E5E5@1.0",
         "alignment": "center",
@@ -236,10 +245,13 @@
           "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "Inter-Light.ttf",
+        "fontName": "Inter-SemiBold.ttf",
         "fontSize": 38,
         "primaryColor": "#B8860B@1.0",
         "alignment": "center",

@@ -19,6 +19,38 @@ const PlatformIcon = ({ platform, className }: { platform: string, className?: s
   return <Circle className={className} />;
 };
 
+export function resolveCssFont(fontFile?: string): { fontFamily: string; fontWeight: string; letterSpacing?: string } {
+  const font = (fontFile || '').toLowerCase();
+  if (font.includes('georgia')) {
+    return { fontFamily: 'Georgia, serif', fontWeight: '700' };
+  }
+  if (font.includes('impact')) {
+    return { fontFamily: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif', fontWeight: '900', letterSpacing: '0.04em' };
+  }
+  if (font.includes('trebuc')) {
+    return { fontFamily: '"Trebuchet MS", "Lucida Sans Unicode", sans-serif', fontWeight: '800' };
+  }
+  if (font.includes('black')) {
+    return { fontFamily: '"Inter", sans-serif', fontWeight: '900' };
+  }
+  if (font.includes('extrabold')) {
+    return { fontFamily: '"Inter", sans-serif', fontWeight: '800' };
+  }
+  if (font.includes('bold') || font.includes('arialbd')) {
+    return { fontFamily: '"Inter", Arial, sans-serif', fontWeight: '700' };
+  }
+  if (font.includes('semibold')) {
+    return { fontFamily: '"Inter", sans-serif', fontWeight: '600' };
+  }
+  if (font.includes('light')) {
+    return { fontFamily: '"Inter", sans-serif', fontWeight: '300' };
+  }
+  if (font.includes('calibri')) {
+    return { fontFamily: 'Calibri, Candara, Segoe, sans-serif', fontWeight: '600' };
+  }
+  return { fontFamily: '"Inter", system-ui, sans-serif', fontWeight: '700' };
+}
+
 interface SocialLivePreviewProps {
   social: any;
   tokens?: any;
@@ -34,11 +66,20 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
   const slides = sourceItems.length > 0 ? sourceItems : [{ text: social.hook || '', imageUrl: '', segment_label: 'GANCHO' }];
   const slide = slides[currentSlideIdx] || slides[0] || { text: social.hook || '', segment_label: 'GANCHO' };
   
-  // Determinar reglas del ADN para el segmento actual
+  // Determinar reglas del ADN para el segmento actual (Modular 2.0 y Legado 1.0)
   const segmentKey = slide.segment_label || (currentSlideIdx === 0 ? 'GANCHO' : currentSlideIdx === slides.length - 1 ? 'CTA' : 'VALOR');
+  const typoEngine = adn?.typography_engine || adn?.typography;
+  const segmentTypo = typoEngine?.segment_styles?.[segmentKey] || typoEngine?.segment_styles?.GANCHO || {};
+  const typoText = segmentTypo.text || {};
+  const typoSub = segmentTypo.subtitle || {};
+
   const adnBase = adn?.ffmpeg_rules?.default || {};
   const adnOverride = adn?.ffmpeg_rules?.[segmentKey] || {};
   const activeRules = { ...adnBase, ...adnOverride };
+
+  const rawFontName = typoText.fontName || activeRules.fontFamily || 'Inter-Bold.ttf';
+  const titleFontCss = resolveCssFont(rawFontName);
+  const subFontCss = resolveCssFont(typoSub.fontName || rawFontName);
 
   // Utilidad para convertir FFmpeg color (black@0.5) a CSS rgba
   const ffColorToCss = (ffCol: string, brandColor?: string) => {
@@ -61,8 +102,41 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
   const boxBg = ffColorToCss(activeRules.boxcolor_alpha, tokens?.primary);
   const shadow = activeRules.shadowcolor ? `${activeRules.shadowx || 2}px ${activeRules.shadowy || 2}px 8px ${ffColorToCss(activeRules.shadowcolor)}` : 'none';
 
+  const hasMentor = social.includeMentorUrl ?? (social.landingId === 'mentor');
+  const hasLanding = social.includeLandingUrl ?? (social.landingId !== 'mentor');
+  const brandTitleColor = social.production_notes?.brandColors?.primary;
+  const brandAccentColor = social.production_notes?.brandColors?.accent || tokens?.accent || '#FACC15';
+  const brandSubtitleColor = social.production_notes?.brandColors?.secondary || '#E5E5E5';
+
+  const renderEmphasizedText = (rawText: string, defaultColor?: string) => {
+    if (!rawText) return null;
+    const parts = rawText.split(/\*([^*]+)\*/g);
+    return parts.map((part, idx) => {
+      if (idx % 2 === 1) {
+        return (
+          <span
+            key={idx}
+            className="font-black drop-shadow-md"
+            style={{ color: brandAccentColor }}
+          >
+            {part}
+          </span>
+        );
+      }
+      return (
+        <span key={idx} style={{ color: defaultColor }}>
+          {part}
+        </span>
+      );
+    });
+  };
+
   // Construct the preview URL for the linked landing
-  const landingUrl = social.landingUrl ? social.landingUrl : (social.landingIdx !== undefined ? `landing-${social.landingIdx + 1}.html` : 'link_en_bio');
+  const landingUrl = social.landingUrl
+    ? social.landingUrl
+    : (social.landingId && social.landingId !== 'mentor'
+        ? `/v/${social.landingId.split('-')[0]}`
+        : (social.landingIdx !== undefined ? `landing-${social.landingIdx + 1}.html` : 'link_en_bio'));
 
   useEffect(() => {
     if (currentSlideIdx >= slides.length) setCurrentSlideIdx(0);
@@ -244,18 +318,36 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
             >
               <h4 
                 className={cn(
-                  "font-bold leading-[1.2] text-white",
-                  activeRules.uppercase ? "uppercase" : ""
+                  "leading-[1.15] text-white",
+                  (typoText.uppercase ?? activeRules.uppercase) ? "uppercase" : ""
                 )} 
                 style={{ 
-                  fontFamily: fontName,
-                  fontSize: `${activeRules.fontsize / 4.4}px`,
+                  fontFamily: titleFontCss.fontFamily,
+                  fontWeight: titleFontCss.fontWeight,
+                  letterSpacing: titleFontCss.letterSpacing,
+                  fontSize: `${(typoText.fontSize || activeRules.fontsize || 90) / 4.4}px`,
                   textShadow: shadow,
-                  color: activeRules.fontcolor === 'black' ? '#000' : '#fff'
+                  color: brandTitleColor || typoText.primaryColor || (activeRules.fontcolor === 'black' ? '#000' : '#fff')
                 }}
               >
-                {slide.title || slide.text || social.hook || 'Escribe el texto aquí...'}
+                {renderEmphasizedText(
+                  slide.title || slide.text || social.hook || 'Escribe el texto aquí...',
+                  brandTitleColor || typoText.primaryColor || (activeRules.fontcolor === 'black' ? '#000' : '#fff')
+                )}
               </h4>
+              {slide.subtitle && (
+                <p 
+                  className="mt-2 text-xs leading-relaxed tracking-wide opacity-90"
+                  style={{ 
+                    fontFamily: subFontCss.fontFamily,
+                    fontWeight: subFontCss.fontWeight,
+                    textShadow: shadow,
+                    color: brandSubtitleColor || typoSub.primaryColor || '#E5E5E5'
+                  }}
+                >
+                  {renderEmphasizedText(slide.subtitle, brandSubtitleColor || typoSub.primaryColor || '#E5E5E5')}
+                </p>
+              )}
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -265,11 +357,11 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
               <button 
                 className="h-9 px-5 rounded-2xl text-[10px] font-black uppercase truncate max-w-[150px] transition-transform hover:scale-105 active:scale-95" 
                 style={{ 
-                    backgroundColor: tokens?.accent || '#760464',
+                    backgroundColor: brandTitleColor || tokens?.accent || '#760464',
                     color: '#fff'
                 }}
               >
-                {landingUrl}
+                {hasLanding ? landingUrl : (hasMentor ? 'link_en_bio' : 'ver_más')}
               </button>
             </div>
           </div>
@@ -280,8 +372,9 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         <div className="absolute left-0 top-0 w-1.5 h-full bg-muted" />
         <span className="font-bold text-foreground mr-2">@{social.handle || 'tu_cuenta'}</span>
         {social.caption || 'Aquí irá el cuerpo de la publicación...'}
-        <div className="mt-4 text-primary font-bold text-xs flex flex-wrap gap-3">
-          {social.landingIdx !== undefined && <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[10px] border border-primary/15">🔗 {landingUrl}</span>}
+        <div className="mt-4 text-primary font-bold text-xs flex flex-wrap gap-2">
+          {hasLanding && <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[10px] border border-primary/15">🔗 Landing: {landingUrl}</span>}
+          {hasMentor && <span className="bg-muted text-foreground px-3 py-1.5 rounded-xl text-[10px] border border-border">👤 Mentor: Link en Bio</span>}
           <div className="flex gap-1.5">
             {social.hashtags?.map((h: string) => h.startsWith('#') ? h : `#${h}`).map((h: string, i: number) => (
                 <span key={i} className="text-primary font-black tracking-tight">{h}</span>
