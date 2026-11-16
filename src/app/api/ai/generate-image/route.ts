@@ -1,9 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateImagePromptFlow } from '@/ai/flows/generate-image-prompt';
+import fs from 'fs';
+import path from 'path';
+
+function getAdnVisualDirective(adnId?: string): string {
+  if (!adnId) return '';
+  try {
+    const mPath = path.join(process.cwd(), 'public', 'adns', adnId, 'manifest.json');
+    if (fs.existsSync(mPath)) {
+      const manifest = JSON.parse(fs.readFileSync(mPath, 'utf8'));
+      return manifest.visual_directive || '';
+    }
+  } catch {}
+  return '';
+}
+
+async function getLandingStyleDirective(styleId?: string): Promise<string> {
+  if (!styleId) return '';
+  try {
+    const { adminDb } = await import('@/firebase/admin');
+    const doc = await adminDb.collection('landingStyles').doc(styleId).get();
+    if (doc.exists) {
+      return (doc.data() as any)?.visualDirective || '';
+    }
+  } catch {}
+  return '';
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, keywords, courseTitle, contextHint, engine, channel, uid, role, mode } = await req.json();
+    const { prompt, keywords, courseTitle, contextHint, engine, channel, uid, role, mode, adnId, styleId } = await req.json();
 
     const finalKeywords = keywords || courseTitle || 'education, learning';
     const hasCustomPrompt = typeof prompt === 'string' && prompt.trim().length > 0;
@@ -47,7 +73,11 @@ export async function POST(req: NextRequest) {
     if (!apiKey) throw new Error('No se ha configurado la API Key de Google para Imagen.');
 
     const aspectRatio = channel === 'landing' || channel === 'thumbnails' ? '16:9' : '9:16';
-    const promptPremium = `${finalPrompt.trim()}. High-end photography, cinematic lighting, no text, no words, no letters. Aspect Ratio: ${aspectRatio}.`;
+    const adnDirective = getAdnVisualDirective(adnId);
+    const landingDirective = await getLandingStyleDirective(styleId);
+    const resolvedDirective = adnDirective || landingDirective;
+    const directiveSuffix = resolvedDirective ? `. Visual Style: ${resolvedDirective}` : '';
+    const promptPremium = `${finalPrompt.trim()}${directiveSuffix}. High-end photography, cinematic lighting, no text, no words, no letters. Aspect Ratio: ${aspectRatio}.`;
 
     // Endpoint para Imagen en Google AI Studio (Beta)
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;

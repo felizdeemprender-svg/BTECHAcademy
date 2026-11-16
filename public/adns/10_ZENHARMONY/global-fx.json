@@ -1,0 +1,16 @@
+{
+  "global_fx": {
+    "contrast": 1.05,
+    "brightness": 0.02,
+    "saturation": 0.98,
+    "curves_preset": "none",
+    "vignette_intensity": 0.15,
+    "sharpen": true,
+    "sharpen_intensity": 0.35,
+    "grain_intensity": 0.03,
+    "zoom_intensity": 1.06,
+    "zoom_speed": 0.15,
+    "zoom_direction": "center"
+  }
+}
+

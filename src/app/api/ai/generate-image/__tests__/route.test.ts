@@ -114,4 +114,33 @@ describe('API Route /api/ai/generate-image', () => {
     expect(json.generatedPrompt.toLowerCase()).not.toContain('business');
     expect(json.generatedPrompt.toLowerCase()).not.toContain('office');
   });
+
+  it('inyecta visual_directive del ADN (adnId) en el prompt de Google Imagen', async () => {
+    let capturedBody: any = null;
+    vi.spyOn(global, 'fetch').mockImplementationOnce(async (_url, init) => {
+      capturedBody = JSON.parse(init?.body as string);
+      return {
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ inlineData: { data: 'emVuLWltYWdl' } }] } }],
+        }),
+      } as any;
+    });
+
+    const req = new NextRequest('http://localhost:9002/api/ai/generate-image', {
+      method: 'POST',
+      body: JSON.stringify({
+        prompt: 'Therapy room with warm light',
+        adnId: '10_ZENHARMONY',
+        channel: 'video',
+      }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const sentText = capturedBody?.contents?.[0]?.parts?.[0]?.text;
+    expect(sentText).toContain('Visual Style:');
+    expect(sentText).toContain('Warm natural sunlight');
+    expect(sentText).toContain('organic tones');
+  });
 });

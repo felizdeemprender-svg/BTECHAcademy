@@ -12,12 +12,12 @@ import { getAppBaseUrl } from '@/lib/app-url';
 
 const SceneContentSchema = z.object({
   segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: ES OBLIGATORIO RESPETAR EL ORDEN EXACTO DE LOS SEGMENTOS INDICADO EN EL PROMPT (ej: si dice 1. GANCHO, 2. VALOR, 3. CIERRE, DEBES devolver esos segment_label exactamente). ¡NUNCA repitas VALOR para todas las escenas!'),
-  text: z.string().describe('Texto de impacto visual ultra-corto (2-4 palabras).'),
-  subtitle: z.string().describe('Texto secundario o de apoyo (6-8 palabras). Obligatorio generar.'),
+  text: z.string().describe('Texto de impacto visual según duración: para escenas de 3s a 5.5s, estructurado en exactamente 2 micro-frases con salto de línea y 2 palabras en asteriscos (ej: "Aprende a *VENDER*\\nel *DOBLE* cada mes"). Para escenas ≤ 3s, 1 sola frase con 1 palabra en asteriscos. Para > 5.5s, 3 frases con 3 palabras en asteriscos.'),
+  subtitle: z.string().describe('Subtítulo dinámico sincronizado según duración: para escenas de 3s a 5.5s, DEBES dividirlo con "\\n" en 2 frases de apoyo (ej: "Estrategia probada\\nResultados comprobados") que rotarán exactamente con las 2 fases del título. Para escenas ≤ 3s, 1 sola frase corta (3-4 palabras).'),
   watermark: z.string().describe('El @usuario (handle) de la red social.'),
-  voiceover: z.string().describe('Guion narrativo. ¡CRÍTICO!: Escribe un guion fluido y continuo que dure por lo menos 10 SEGUNDOS de lectura hablada (aprox 25-35 palabras).'),
+  voiceover: z.string().describe('Guion hablado exacto para la escena. ¡CRÍTICO!: Cadencia natural de 2 a 2.5 palabras por segundo de duración (ej: para 4s genera 8-10 palabras habladas fluidas).'),
   media_hint: z.string().describe('Keywords precisas para buscar el fondo visual (ej: "minimalist dark luxury office"). AÑADE SIEMPRE directivas de contraste (ej: "dark background", "dim lighting", "dark gradient") para asegurar que el texto superpuesto sea legible y no se funda con el fondo.'),
-  duration: z.number().describe('Duración exacta en segundos (MÍNIMO 10s, ej: 10-15s).'),
+  duration: z.number().describe('Duración exacta en segundos para la escena (Reels/Shorts: 3 a 5 segundos; Stories: 5 a 7 segundos). El Reel completo debe durar entre 16s y 24s.'),
   production_notes: z.string().optional().describe('Notas sobre el estilo de animación o tono específico para esta escena.'),
   subject_action: z.string().optional().describe('Para IA: Acción detallada del sujeto. Ej: "Mentor sonriendo", "Usuario escribiendo".'),
   camera_movement: z.string().optional().describe('Para IA: Movimiento de cámara. Ej: "slow push-in", "steady pan", "static".'),
@@ -26,17 +26,17 @@ const SceneContentSchema = z.object({
 });
 
 const SocialSlideSchema = z.object({
-  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: ES OBLIGATORIO RESPETAR EL ORDEN EXACTO DE LOS SEGMENTOS INDICADO EN EL PROMPT (ej: si dice 1. GANCHO, 2. VALOR, 3. CIERRE, DEBES devolver esos segment_label exactamente). ¡NUNCA repitas VALOR para todas las escenas!'),
-  text: z.string().describe('Texto visual para la placa.'),
-  subtitle: z.string().describe('Subtítulo de apoyo. Obligatorio generar.'),
+  segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('Segmento de la lámina del carrusel.'),
+  text: z.string().describe('Título principal de la lámina visual (4-7 palabras de alto impacto).'),
+  subtitle: z.string().describe('Subtítulo o desarrollo editorial legible para swipe (8-16 palabras).'),
   watermark: z.string().describe('El @usuario (handle) de la red social.'),
-  voiceover: z.string().describe('Guion de voz. ¡CRÍTICO!: Escribe un texto lo suficientemente largo para cubrir 10 SEGUNDOS mínimos de lectura.'),
-  media_hint: z.string().describe('Keywords para el fondo de la placa. AÑADE SIEMPRE directivas de contraste (ej: "dark background", "dim lighting", "dark gradient") para asegurar que el texto superpuesto sea legible.'),
-  duration: z.number().describe('Duración en segundos (MÍNIMO 10s).'),
-  subject_action: z.string().optional().describe('Para IA: Acción detallada del sujeto. Ej: "Mentor sonriendo", "Usuario escribiendo".'),
-  camera_movement: z.string().optional().describe('Para IA: Movimiento de cámara. Ej: "slow push-in", "steady pan", "static".'),
-  framing: z.string().optional().describe('Para IA: Encuadre. Ej: "close-up", "medium shot", "wide shot".'),
-  lighting: z.string().optional().describe('Para IA: Iluminación/Entorno. Ej: "luz cálida", "estudio cinemático".'),
+  voiceover: z.string().optional().describe('Locución o notas conceptuales opcionales para la lámina.'),
+  media_hint: z.string().describe('Keywords para el fondo de la placa con directivas de contraste.'),
+  duration: z.number().optional().describe('Duración referencial en segundos (5s por defecto).'),
+  subject_action: z.string().optional().describe('Para IA: Acción detallada del sujeto.'),
+  camera_movement: z.string().optional().describe('Para IA: Movimiento de cámara.'),
+  framing: z.string().optional().describe('Para IA: Encuadre.'),
+  lighting: z.string().optional().describe('Para IA: Iluminación/Entorno.'),
 });
 
 const VariantContentSchema = z.object({
@@ -144,26 +144,26 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
 
   let dualNarrativeInstruction = '';
   if (isLinkedinDoc || requestedFormat === 'carousel') {
-    dualNarrativeInstruction = `== REGLA ESPECIAL PARA CARRUSEL / PDF ==
-- EL TEXTO EN PANTALLA ('text') DEBE SER CORTO Y DE ALTO IMPACTO: Frases cortas, potentes y legibles (Máximo 15 palabras por placa). El texto en la placa visual NUNCA debe ser un guión largo.
-- EL GUION NARRATIVO O TEXTO EXTENSO va exclusivamente en el campo 'voiceover' (usado como locución o contexto de la placa) y en el 'caption' de la publicación.
-- Recuerda: 'text' es lo que el usuario lee rápido al deslizar la imagen, debe atrapar la atención de inmediato.`;
+    dualNarrativeInstruction = `== REGLA ESPECIAL PARA CARRUSEL / PDF (SWIPE MANUAL) ==
+- EL TEXTO PRINCIPAL ('text'): Título magnético de la lámina (4 a 7 palabras de alto impacto).
+- EL SUBTÍTULO ('subtitle'): Desarrollo sintético del concepto (10 a 18 palabras). Fácil de digerir al deslizar.
+- PLACAS CLAVE: Lámina 1 = Gancho / Portada irresistible; Láminas intermedias = 1 concepto claro por lámina; Lámina final = Cierre y llamada a la acción ("Guarda este post", "Comenta para acceder").
+- NO es un video: No forces locuciones largas ni duraciones artificiales.`;
   } else if (requestedFormat === 'story') {
-    dualNarrativeInstruction = `== REGLA DE NARRATIVA PARA STORIES (15s) ==
-- Las Stories son efímeras y altamente interactivas.
-- El 'text' en pantalla debe ser ENORME pero ultra corto (máximo 20 caracteres).
-- Sugiere la ubicación de un STICKER interactivo (Encuesta, Link, Pregunta) en el campo 'production_notes'.
-- La 'voiceover' debe ser muy cercana, estilo "hablando a la cámara selfie", máximo 15 segundos hablados.
-- LÍMITE DE TIEMPO (CRÍTICO): La suma de la propiedad 'duration' de todas las escenas generadas NO DEBE EXCEDER LOS 60 SEGUNDOS en total. Ajusta la duración de cada escena para cumplir esto.`;
+    dualNarrativeInstruction = `== REGLA DE NARRATIVA PARA STORIES (10s - 15s) ==
+- Las Stories son efímeras, directas y altamente interactivas.
+- El 'text' en pantalla debe ser ENORME y conciso (máximo 25 caracteres).
+- Sugiere explícitamente un STICKER interactivo (Encuesta, Link o Pregunta) en el campo 'production_notes'.
+- La 'voiceover' debe ser muy cercana, estilo selfie a cámara (máximo 12 a 18 palabras habladas).
+- LÍMITE DE TIEMPO (CRÍTICO): La duración total de la Story debe ser de 10 a 15 segundos en total (o 2-3 láminas de 5s a 7s cada una).`;
   } else {
-    dualNarrativeInstruction = `REGLA DE NARRATIVA DUAL (VIDEO VERTICAL/CUADRADO - REELS):
-- La VOZ (voiceover) lleva la carga emocional y técnica detallada. Es un guion hablado (lo que dice el presentador).
-- LA PANTALLA (text y subtitle) reafirma con frases de PODER.
-
-🚨 CRÍTICO PARA RENDERING FFmpeg: LÍMITE ESTRICTO DE CARACTERES EN PANTALLA 🚨
-- El campo 'text' NUNCA debe superar los 30 caracteres (aprox 2-4 palabras).
-- El campo 'subtitle' NUNCA debe superar los 40 caracteres (aprox 5-7 palabras).
-- Si ignoras esto, los textos se saldrán de la pantalla del video y arruinarás la exportación. Sé ultra conciso.`;
+    dualNarrativeInstruction = `REGLA DE NARRATIVA DUAL (REELS / TIKTOK / SHORTS - RETENCIÓN ALTA):
+- DURACIÓN TOTAL DEL REEL: Debe durar entre 16 y 24 SEGUNDOS en total (${expectedCount} escenas de 3 a 5 segundos cada una). ¡PROHIBIDO generar videos de 40-50 segundos!
+- CADENCIA DE VOZ (voiceover): Exactamente entre 7 y 12 palabras de habla fluida por escena (aprox 2 a 2.5 palabras por segundo de duración). El guion debe sonar natural y sin pausas eternas.
+- LA PANTALLA (text y subtitle) SINCRONIZADOS POR SEGUNDOS:
+  * Para escenas de 3.1s a 5.5s (estándar Reels): TANTO 'text' COMO 'subtitle' deben dividirse en exactamente 2 micro-frases con salto de línea ('frase 1 \\n frase 2' y 'sub 1 \\n sub 2'). En 'text' marca 2 palabras clave entre asteriscos ('*palabra 1* \\n *palabra 2*').
+  * Para escenas ≤ 3s: 1 sola frase en 'text' (1 palabra entre asteriscos) y 1 frase corta en 'subtitle' (3-4 palabras).
+  * Para escenas > 5.5s: 3 micro-frases con '\\n' tanto en 'text' como en 'subtitle'.`;
   }
 
   const generatePrompt = `Actúa como un Director Creativo y Guionista Senior especializado en Marketing Cinético.
@@ -184,10 +184,12 @@ ${missionTones[mission]}
 Debes generar exactamente ${expectedCount} escenas con los siguientes segment_label EXACTOS en este orden:
 ${sequenceList}
 
-2. PANTALLA (text y subtitle): RITMO CINÉTICO EN 2 FASES (REELS / TIKTOK)
-    - TEXTO EN PANTALLA ('text'): Estructurado en 2 MICRO-FRASES secuenciales separadas por salto de línea '\n' (ej: "¿Quieres *VENDER* más?\nAplica este *MÉTODO*" o "Aprende a *FACTURAR*\nel *DOBLE* cada mes"). Cada micro-frase debe tener entre 2 y 5 palabras.
-    - ÉNFASIS CINÉTICO DOBLE (*palabra*): Marca exactamente 1 palabra clave de impacto en la primera micro-frase y 1 palabra clave de impacto en la segunda micro-frase, envolviéndolas en asteriscos (ej: "*DESCUBRE* el secreto\ny empieza a *CRECER*"). El motor FFmpeg mostrará automáticamente la frase 1 en los primeros segundos y luego, a mitad de escena, hará irrumpir la frase 2 con animación cinética y resaltado en el color de acento de la marca. NUNCA envuelvas oraciones completas, solo palabras individuales de alto poder persuasivo.
-    - SUBTÍTULO ('subtitle'): Contexto breve de apoyo (máximo 40 caracteres, ej: "Método Exclusivo Paso a Paso"). ¡OBLIGATORIO!.
+2. PANTALLA (text y subtitle) DINÁMICOS SEGÚN SEGUNDOS DE DURACIÓN:
+    - REGLA DE RONDAS POR DURACIÓN:
+      * Escena ≤ 3.0s: 1 sola frase en 'text' con 1 palabra en asteriscos, y 1 frase corta en 'subtitle' (3-4 palabras).
+      * Escena de 3.1s a 5.5s (estándar Reels): DEBES dividir TANTO 'text' COMO 'subtitle' en exactamente 2 MICRO-FRASES separadas por salto de línea '\n' (ej: 'text': "Aprende a *FACTURAR*\nel *DOBLE* cada mes", 'subtitle': "Estrategia probada paso a paso\nResultados comprobados garantizados"). La ronda 1 se mostrará en la primera mitad del tiempo y la ronda 2 irrumpirá en la segunda mitad con animación y color.
+      * Escena > 5.5s: Divide 'text' y 'subtitle' en 3 micro-frases con salto de línea '\n' (3 rondas sincronizadas).
+    - ÉNFASIS CINÉTICO (*palabra*): Marca exactamente 1 palabra clave por micro-frase envolviéndola en asteriscos (ej: "*DESCUBRE* el secreto\ny empieza a *CRECER*"). El motor FFmpeg mostrará automáticamente la frase 1 en los primeros segundos y luego hará irrumpir la frase 2 con animación cinética y resaltado en el color de acento de la marca. NUNCA envuelvas oraciones completas, solo palabras individuales de alto poder persuasivo.
     - MARCA DE AGUA (watermark): Inserta el handle exacto "${variant.handle ? (variant.handle.startsWith('@') ? variant.handle : '@'+variant.handle) : '@usuario'}" en cada escena.
 3. BACKGROUNDS (media_hint): Escribe keywords descriptivas para la generación visual. IMPORTANTE: Usa términos de género neutro (ej: "person", "speaker", "professional") y NUNCA asumas género masculino ("businessman", "hombre", "tutor"). Esto evita corromper las imágenes de referencia si el usuario sube a una mujer.
 4. VOZ (voiceover): Relato fluido, persuasivo y experto. ¡LÍMITE ESTRICTO DE TIEMPO!: El texto generado no debe requerir más segundos al ser hablado que la duración máxima asignada a la escena. Sé muy conciso.

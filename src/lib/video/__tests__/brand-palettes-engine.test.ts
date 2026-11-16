@@ -363,4 +363,40 @@ describe('System Brand Palettes & FFmpeg ASS Colors', () => {
     const stat = fs.statSync(sfxPath);
     expect(stat.size).toBeGreaterThan(1000);
   });
+
+  it('splitKineticPhrase debe adaptar las rondas segun la duracion (<2.8s: 1 ronda, 2.8s-6s: 2 rondas, >6s con saltos: 3 rondas)', () => {
+    // 1 ronda corta
+    const blocksShort = splitKineticPhrase('Texto rapido de prueba', 2.0);
+    expect(blocksShort.length).toBe(1);
+    expect(blocksShort[0].start).toBe(0);
+    expect(blocksShort[0].end).toBe(2.0);
+
+    // 2 rondas con \n
+    const blocksMedium = splitKineticPhrase('Primera micro-frase\nSegunda micro-frase', 4.5);
+    expect(blocksMedium.length).toBe(2);
+    expect(blocksMedium[0].text).toBe('Primera micro-frase');
+    expect(blocksMedium[1].text).toBe('Segunda micro-frase');
+    expect(blocksMedium[0].end).toBeCloseTo(blocksMedium[1].start, 2);
+
+    // 3 rondas en escena larga >6s
+    const blocksLong = splitKineticPhrase('Paso 1 importante\nPaso 2 decisivo\nPaso 3 final', 7.5);
+    expect(blocksLong.length).toBe(3);
+    expect(blocksLong[0].text).toBe('Paso 1 importante');
+    expect(blocksLong[2].end).toBe(7.5);
+  });
+
+  it('todos los 9 ADNs deben tener subtitulos con primaryColor y outline de alto contraste definidos', () => {
+    const adnsDir = path.join(process.cwd(), 'public', 'adns');
+    const adnDirs = ['01_CINEMA', '02_LUXURYGO', '03_CORPORAT', '04_GAMINGGL', '05_MINIMALD', '06_FASTCUT', '07_VINTAGEV', '08_BOLDREELS', '09_TITANPRO'];
+
+    for (const adnId of adnDirs) {
+      const typPath = path.join(adnsDir, adnId, 'typography.json');
+      const typData = JSON.parse(fs.readFileSync(typPath, 'utf-8'));
+      const ganchoSub = typData.segment_styles?.GANCHO?.subtitle;
+      expect(ganchoSub).toBeDefined();
+      expect(ganchoSub.primaryColor).toBeDefined();
+      expect(ganchoSub.outline).toBeDefined();
+      expect(ganchoSub.outline.color).toBe('#000000');
+    }
+  });
 });

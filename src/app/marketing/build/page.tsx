@@ -267,8 +267,8 @@ function OrchestratorContent() {
             const aspectFramingFinal = aspectFraming;
             const nameSuffix = posts.length > 1 ? ` #${postIndex + 1}` : '';
             
-            // Variar el ADN automáticamente para que no todos los videos usen 01_CINEMA
-            const availableAdns = ['01_CINEMA', '02_LUXURYGO', '03_CORPORAT', '05_MINIMALD', '06_FASTCUT'];
+            // Variar el ADN automáticamente según el nicho y diversidad estética
+            const availableAdns = ['10_ZENHARMONY', '01_CINEMA', '05_MINIMALD', '02_LUXURYGO', '03_CORPORAT', '06_FASTCUT'];
             const selectedAdn = availableAdns[postIndex % availableAdns.length];
 
             return {

@@ -1,4 +1,18 @@
 import { generateImagePromptFlow } from '@/ai/flows/generate-image-prompt';
+import fs from 'fs';
+import path from 'path';
+
+function getAdnVisualDirective(adnId?: string): string {
+  if (!adnId) return '';
+  try {
+    const mPath = path.join(process.cwd(), 'public', 'adns', adnId, 'manifest.json');
+    if (fs.existsSync(mPath)) {
+      const manifest = JSON.parse(fs.readFileSync(mPath, 'utf8'));
+      return manifest.visual_directive || '';
+    }
+  } catch {}
+  return '';
+}
 
 export async function generateImage(params: {
   prompt?: string;
@@ -10,8 +24,9 @@ export async function generateImage(params: {
   uid?: string;
   role?: string;
   aspectRatio?: '1:1' | '9:16' | '16:9';
+  adnId?: string;
 }): Promise<string> {
-  const { prompt, keywords, courseTitle, contextHint, engine, channel, uid, role, aspectRatio } = params;
+  const { prompt, keywords, courseTitle, contextHint, engine, channel, uid, role, aspectRatio, adnId } = params;
   const finalKeywords = keywords || courseTitle || 'education, learning';
   const hasCustomPrompt = typeof prompt === 'string' && prompt.trim().length > 0;
   let finalPrompt = hasCustomPrompt
@@ -36,7 +51,10 @@ export async function generateImage(params: {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
   if (!apiKey) throw new Error('No GOOGLE_GENAI_API_KEY');
 
-  const promptPremium = `${finalPrompt.trim()}. Professional photography, cinematic lighting, no text, no words. Aspect Ratio: ${aspectRatio || '1:1'}.`;
+  const adnDirective = getAdnVisualDirective(adnId);
+  const directiveSuffix = adnDirective ? `. Visual Style: ${adnDirective}` : '';
+
+  const promptPremium = `${finalPrompt.trim()}${directiveSuffix}. Professional photography, cinematic lighting, no text, no words. Aspect Ratio: ${aspectRatio || '1:1'}.`;
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;
 
   const reqBody = {

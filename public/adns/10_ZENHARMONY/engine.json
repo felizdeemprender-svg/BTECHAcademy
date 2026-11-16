@@ -1,0 +1,25 @@
+{
+  "audio_engine": {
+    "voice_id": "elena",
+    "mastering": "warm_studio",
+    "sidechain": {
+      "threshold": 0.08,
+      "ratio": 1.35,
+      "attack": 25,
+      "release": 450
+    }
+  },
+  "engine_requirements": {
+    "ffmpeg_build": "BtbN-GPL-Master-v6.1",
+    "features": [
+      "libass",
+      "xfade",
+      "acrossfade",
+      "sidechaincompress",
+      "curves",
+      "vignette",
+      "unsharp"
+    ]
+  }
+}
+

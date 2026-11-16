@@ -1,0 +1,21 @@
+{
+  "id": "10_ZENHARMONY",
+  "version": "2.0",
+  "name": "Zen Harmony",
+  "description": "Estilo sereno y orgánico para bienestar, terapias, yoga y proyectos conscientes con ritmo pausado y calidez visual",
+  "target_format": "vertical",
+  "isModular": true,
+  "engine_requirements": {
+    "ffmpeg_build": "BtbN-GPL-Master-v6.1",
+    "features": [
+      "libass",
+      "xfade",
+      "acrossfade",
+      "sidechaincompress",
+      "curves",
+      "vignette",
+      "unsharp"
+    ]
+  },
+  "visual_directive": "Warm natural sunlight filtering in, earthy serene organic tones, peaceful contemplative atmosphere, mindful holistic textures, soft daylight, cinematic 35mm film"
+}

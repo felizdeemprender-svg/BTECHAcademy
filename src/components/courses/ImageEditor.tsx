@@ -35,6 +35,8 @@ interface ImageEditorProps {
   allowPromptEdit?: boolean;
   promptValue?: string;
   onPromptChange?: (prompt: string) => void;
+  adnId?: string;
+  styleId?: string;
 }
 
 export function ImageEditor({ 
@@ -49,7 +51,9 @@ export function ImageEditor({
   courseTitle,
   allowPromptEdit = false,
   promptValue,
-  onPromptChange
+  onPromptChange,
+  adnId,
+  styleId
 }: ImageEditorProps) {
   const { profile } = useAuth();
   const { storage } = useFirebase();
@@ -135,7 +139,9 @@ export function ImageEditor({
           engine,
           channel,
           uid: profile?.uid,
-          role: profile?.role
+          role: profile?.role,
+          adnId,
+          styleId
         }),
       });
 

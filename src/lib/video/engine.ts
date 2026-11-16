@@ -760,96 +760,9 @@ export function resolveAssFontDescriptor(
   return { fontName: family, bold: isBold, italic: isItalic };
 }
 
-export function splitKineticPhrase(text: string, duration: number): { text: string; start: number; end: number; isSecondBlock?: boolean }[] {
-  const clean = text.trim();
-  if (duration < 2.5) {
-    return [{ text: clean, start: 0, end: duration }];
-  }
-
-  // 1. Check if newline exists (literal \n or escaped string \n)
-  if (clean.includes('\n') || clean.includes('\\n')) {
-    const parts = clean.split(/\r?\n|\\n/).map(p => p.trim()).filter(Boolean);
-    if (parts.length >= 2) {
-      const splitTime = Math.round(Math.max(1.0, Math.min(duration - 1.0, duration * 0.5)) * 100) / 100;
-      return [
-        { text: parts[0], start: 0, end: splitTime },
-        { text: parts.slice(1).join(' '), start: splitTime, end: duration, isSecondBlock: true }
-      ];
-    }
-  }
-
-  // 2. Check if two emphasis pairs exist (*word1* ... *word2*)
-  const asteriskMatches = [...clean.matchAll(/\*([^*]+)\*/g)];
-  if (asteriskMatches.length >= 2) {
-    const firstEnd = asteriskMatches[0].index! + asteriskMatches[0][0].length;
-    const secondStart = asteriskMatches[1].index!;
-    const inBetween = clean.substring(firstEnd, secondStart);
-    const punctMatch = inBetween.search(/[.,!?:;\-\–]/);
-    let splitCharIdx: number;
-    if (punctMatch !== -1) {
-      splitCharIdx = firstEnd + punctMatch + 1;
-    } else {
-      const spaceMatch = inBetween.search(/\s+/);
-      splitCharIdx = spaceMatch !== -1 ? firstEnd + spaceMatch + 1 : Math.round((firstEnd + secondStart) / 2);
-    }
-    const part1 = clean.substring(0, splitCharIdx).trim();
-    const part2 = clean.substring(splitCharIdx).trim();
-    if (part1 && part2) {
-      const ratio = part1.length / (part1.length + part2.length);
-      const splitTime = Math.round(duration * Math.max(0.35, Math.min(0.65, ratio)) * 100) / 100;
-      return [
-        { text: part1, start: 0, end: splitTime },
-        { text: part2, start: splitTime, end: duration, isSecondBlock: true }
-      ];
-    }
-  }
-
-  const words = clean.split(/\s+/);
-  if (words.length < 2) {
-    return [{ text: clean, start: 0, end: duration }];
-  }
-
-  // 3. Check punctuation near middle (between 25% and 75% of words)
-  let midWord = Math.ceil(words.length / 2);
-  const minIdx = Math.max(1, Math.floor(words.length * 0.25));
-  const maxIdx = Math.min(words.length - 1, Math.ceil(words.length * 0.75));
-
-  for (let i = minIdx; i <= maxIdx; i++) {
-    const w = words[i - 1];
-    if (/[.,!?:;]$/.test(w)) {
-      midWord = i;
-      break;
-    }
-  }
-
-  // Ensure midWord does not break an ongoing *emphasis*
-  const textBefore = words.slice(0, midWord).join(' ');
-  const asteriskCount = (textBefore.match(/\*/g) || []).length;
-  if (asteriskCount % 2 !== 0) {
-    const nextClose = words.findIndex((w, idx) => idx >= midWord && w.includes('*'));
-    if (nextClose !== -1 && nextClose < words.length) {
-      midWord = nextClose + 1;
-    } else {
-      const prevOpen = words.slice(0, midWord).map(w => w.includes('*')).lastIndexOf(true);
-      if (prevOpen > 0) midWord = prevOpen;
-    }
-  }
-
-  if (midWord <= 0 || midWord >= words.length) {
-    return [{ text: clean, start: 0, end: duration }];
-  }
-
-  const part1 = words.slice(0, midWord).join(' ').trim();
-  const part2 = words.slice(midWord).join(' ').trim();
-
-  const wordRatio = midWord / words.length;
-  const splitTime = Math.round(duration * Math.max(0.35, Math.min(0.65, wordRatio)) * 100) / 100;
-
-  return [
-    { text: part1, start: 0, end: splitTime },
-    { text: part2, start: splitTime, end: duration, isSecondBlock: true }
-  ];
-}
+import { splitKineticPhrase, splitSubtitlePhases } from './text-splitter';
+export { splitKineticPhrase, splitSubtitlePhases };
+export type { TextBlockPhase } from './text-splitter';
 
 export function generateAssFile(
   adn: any,
@@ -1177,23 +1090,39 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
   }
 
   const rawSub = sub.uppercase ? subtitle.toUpperCase() : subtitle;
-  const subAnim = getAssAnimationTags(subStyle.animation, duration);
-  let subColorTags = '';
-  if (brandColors?.secondary || brandColors?.primary) {
-    const inlineSub = resolveInlineAssColor(brandColors.secondary || brandColors.primary);
-    if (inlineSub) subColorTags += `\\1c${inlineSub}`;
-  }
-  const subOverrides = (subAnim || subColorTags)
-    ? `{${subColorTags}${subAnim}}`
-    : '';
-  if (rawSub) {
-    const finalSub = applyKineticEmphasisToAss(
-      rawSub,
-      brandColors?.secondary || brandColors?.primary || subStyle.primaryColor || '#E5E5E5',
-      brandColors?.accent || '#FFD700',
-      undefined
-    );
-    ass += `Dialogue: 1,0:00:00.00,${formatDuration(duration)},Subtitle,,0,0,0,,${subOverrides}${finalSub}\n`;
+  const subBlocks = splitSubtitlePhases(rawSub, duration, blocks);
+
+  for (const sBlock of subBlocks) {
+    const sBlockDur = sBlock.end - sBlock.start;
+    const subAnim = sBlock.isSecondBlock
+      ? '\\fad(150,150)'
+      : getAssAnimationTags(subStyle.animation, sBlockDur);
+
+    let subColorTags = '';
+    const baseSubFillHex = brandColors?.secondary || subStyle.primaryColor || '#E5E5E5';
+    const baseSubOutlHex = subStyle.outline?.color || '#000000';
+    const subEmphasisFillHex = brandColors?.accent || subStyle.accentColor || '#FFD700';
+
+    if (brandColors?.secondary || brandColors?.primary) {
+      const inlineSub = resolveInlineAssColor(brandColors.secondary || brandColors.primary);
+      const inlineSubOutl = resolveInlineAssColor(baseSubOutlHex);
+      if (inlineSub) subColorTags += `\\1c${inlineSub}`;
+      if (inlineSubOutl && sub.borderStyle !== 3) subColorTags += `\\3c${inlineSubOutl}`;
+    }
+    const subOverrides = (subAnim || subColorTags)
+      ? `{${subColorTags}${subAnim}}`
+      : '';
+
+    if (sBlock.text) {
+      const finalSub = applyKineticEmphasisToAss(
+        sBlock.text,
+        baseSubFillHex,
+        subEmphasisFillHex,
+        sub.borderStyle !== 3 ? baseSubOutlHex : undefined,
+        sub.borderStyle !== 3 ? '#000000' : undefined
+      );
+      ass += `Dialogue: 1,${formatDuration(sBlock.start)},${formatDuration(sBlock.end)},Subtitle,,0,0,0,,${subOverrides}${finalSub}\n`;
+    }
   }
 
   const finalMark = mark.uppercase ? watermarkText.toUpperCase() : watermarkText;

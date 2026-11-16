@@ -474,7 +474,7 @@ export function TemplateEditor({
           watermark: sl.watermark || pNotes.watermark_text || '@felizdeemprender',
           voiceover: sl.voiceover || '',
           segment_label: sl.segment || 'VALOR',
-          duration: Math.max(Number(sl.duration) || 10, 10)
+          duration: Math.max(Number(sl.duration) || 4.5, 2.5)
         };
       }));
       const jobId = `job_${selectedCourseId}_${sIdx}_${Date.now()}`;
@@ -727,7 +727,7 @@ export function TemplateEditor({
         voiceover: sl.voiceover || '',
         watermark: sl.watermark || '',
         imageUrl: sl.imageUrl || '',
-        duration: Math.max(Number(sl.duration) || 10, 10)
+        duration: Math.max(Number(sl.duration) || 4.5, 2.5)
       }));
 
       const totalSceneSeconds = scenes.reduce((acc: number, sl: any) => acc + sl.duration, 0);
@@ -851,7 +851,7 @@ export function TemplateEditor({
         voiceover: sl.voiceover || '',
         watermark: sl.watermark || '',
         imageUrl: sl.imageUrl || '',
-        duration: Math.max(Number(sl.duration) || 10, 10)
+        duration: Math.max(Number(sl.duration) || 4.5, 2.5)
       }));
 
       const res = await fetch('/api/video/generate', {
@@ -1103,7 +1103,7 @@ export function TemplateEditor({
           watermark: resolveWatermarkHandle(currentPlatform, variant.handle, s.watermark),
           voiceover: s.voiceover || '',
           description: s.description || s.imageUrl || '',
-          duration: Math.max(Number(s.duration) || 10, 10),
+          duration: Math.max(Number(s.duration) || 4.5, 2.5),
           imageUrl: variant.slides?.[i]?.imageUrl || (s.imageUrl?.startsWith('http') ? s.imageUrl : ''),
           subject_action: s.subject_action || '',
           camera_movement: s.camera_movement || '',
@@ -1423,7 +1423,7 @@ export function TemplateEditor({
                               subtitle: s.subtitle || '',
                               watermark: s.watermark || '',
                               voiceover: s.voiceover || '',
-                              duration: Math.max(Number(s.duration) || 10, 10),
+                              duration: Math.max(Number(s.duration) || 4.5, 2.5),
                               imageUrl: s.imageUrl || ''
                             }));
 
@@ -1543,14 +1543,46 @@ export function TemplateEditor({
                               ) : (
                                 <Card className="p-6 md:p-8 rounded-lg bg-white border border-border space-y-6">
                                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                                    <div className="flex items-center gap-4 md:gap-6">
-                                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-muted/40 text-muted-foreground flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
-                                      <div>
-                                        <h3 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-widest">{s.marketingName || `${getPlatformLabels(s.type).badge} ${globalIdx + 1}`}</h3>
-                                        <Badge variant="secondary" className="mt-1 md:mt-2 text-muted-foreground bg-muted/40 hover:bg-muted/60 border-none text-[10px] md:text-xs">Borrador / Producción</Badge>
+                                    <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
+                                      {(() => {
+                                        const firstThumb = s.slides?.[0]?.imageUrl || s.scenes?.[0]?.imageUrl;
+                                        return firstThumb ? (
+                                          <div className="relative w-16 h-20 md:w-20 md:h-24 rounded-xl overflow-hidden border border-border bg-muted/40 shrink-0 shadow-sm">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={firstThumb} alt="Miniatura" className="w-full h-full object-cover" />
+                                            <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                                              #{globalIdx + 1}
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-muted/40 text-muted-foreground flex items-center justify-center text-xl md:text-2xl font-black shrink-0">
+                                            {globalIdx + 1}
+                                          </div>
+                                        );
+                                      })()}
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <h3 className="text-lg md:text-xl font-black text-foreground uppercase tracking-wide truncate">
+                                            {s.marketingName || `${getPlatformLabels(s.type).badge} ${globalIdx + 1}`}
+                                          </h3>
+                                          {s.isGenerated ? (
+                                            <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200 text-[10px] font-bold">
+                                              {s.slides?.length || s.scenes?.length || 0} escenas listas
+                                            </Badge>
+                                          ) : (
+                                            <Badge variant="secondary" className="text-amber-800 bg-amber-50 border-amber-200 text-[10px] animate-pulse">
+                                              <Loader2 className="h-3 w-3 mr-1 animate-spin inline" /> Generando con IA...
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        {s.hook && (
+                                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1 italic font-medium">
+                                            "{s.hook}"
+                                          </p>
+                                        )}
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 shrink-0">
                                       <Button
                                         variant="outline"
                                         size="icon"
@@ -1563,8 +1595,9 @@ export function TemplateEditor({
 
                                       <Dialog>
                                         <DialogTrigger asChild>
-                                          <Button variant="secondary" size="icon" title="Abrir Editor" className="bg-card text-foreground hover:bg-success/10 h-10 w-10 md:h-12 md:w-12 rounded-xl border border-border">
-                                            <FileEdit className="h-5 w-5" />
+                                          <Button variant="secondary" className="bg-card text-foreground hover:bg-success/10 h-10 md:h-12 px-4 rounded-xl border border-border font-bold text-xs gap-2">
+                                            <FileEdit className="h-4 w-4" />
+                                            <span>Editar Guion y Escenas</span>
                                           </Button>
                                         </DialogTrigger>
                                         <DialogContent className="max-w-[95vw] w-full max-h-[95vh] grid grid-rows-[auto_1fr_auto] gap-0 overflow-hidden p-0">
@@ -1583,7 +1616,7 @@ export function TemplateEditor({
                                                     <div className="flex flex-wrap md:flex-nowrap items-center gap-4 flex-1">
                                                       <div className="flex-1 max-w-[180px]">
                                                         <Select
-                                                          value={s.production_notes?.adnId || '01'}
+                                                          value={s.production_notes?.adnId || '01_CINEMA'}
                                                           onValueChange={(val) => {
                                                             const selectedAdn = dynamicAdns[val];
                                                             updateAsset('socials', globalIdx, 'production_notes', {
@@ -1887,7 +1920,7 @@ export function TemplateEditor({
                                                 </div>
                                                 <div className="lg:col-span-5 p-6 md:p-8 bg-muted/20 border-t lg:border-t-0 lg:border-l border-border">
                                                   <div className="sticky top-0">
-                                                    <SocialLivePreview social={s} tokens={blueprintData?.assets?.socials?.[globalIdx]?.designTokens || s.designTokens} adn={dynamicAdns[s.production_notes?.adn || '01'] || dynamicAdns['01']} />
+                                                    <SocialLivePreview social={s} tokens={blueprintData?.assets?.socials?.[globalIdx]?.designTokens || s.designTokens} adn={dynamicAdns[s.production_notes?.adnId || s.production_notes?.adn || '01_CINEMA'] || dynamicAdns['01_CINEMA'] || Object.values(dynamicAdns)[0]} />
                                                   </div>
                                                 </div>
                                               </div>

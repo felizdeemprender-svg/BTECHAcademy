@@ -346,6 +346,7 @@ export default function V2LandingEditorPage() {
             channel: 'landing',
             uid: profile?.uid,
             role: profile?.role,
+            styleId: landingData?.styleId || styleData?.id,
           }),
         });
 
@@ -1219,6 +1220,7 @@ export default function V2LandingEditorPage() {
                               keywords={activeSection.title || ''}
                               description={activeSection.content || activeSection.body || ''}
                               aiPromptHint={`Estilo visual de la landing: ${styleData?.name || 'Moderno'} (${styleData?.description || 'Diseño corporativo'}). Tipo de sección: ${activeSectionStyle?.name || 'Sección'}. Objetivo de la sección: ${activeSectionStyle?.description || 'Mostrar contenido'}. Instrucción: Crea una imagen altamente profesional que conceptualice este texto, usando este estilo. NO copies el texto literalmente en la imagen.`}
+                              styleId={landingData?.styleId || styleData?.id}
                             />
                           </div>
                         )}

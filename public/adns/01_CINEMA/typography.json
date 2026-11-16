@@ -34,7 +34,7 @@
       "subtitle": {
         "fontName": "Inter-SemiBold.ttf",
         "fontSize": 45,
-        "primaryColor": "#E5E5E5@1.0",
+        "primaryColor": "#F3F4F6@1.0",
         "alignment": "center",
         "uppercase": false,
         "bold": false,
@@ -43,19 +43,20 @@
         "animation": "cinema_fade",
         "marginV": 350,
         "outline": {
-          "width": 1,
-          "color": "#FFD700",
-          "alpha": 0.5,
-          "blur": 0.5
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
         },
         "shadow": {
           "depth": 3,
           "color": "#000000",
-          "alpha": 0.7,
+          "alpha": 0.8,
           "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "accentColor": "#FFD700"
       },
       "watermark": {
         "fontName": "Inter-Light.ttf",
@@ -107,7 +108,7 @@
       "subtitle": {
         "fontName": "Inter-SemiBold.ttf",
         "fontSize": 40,
-        "primaryColor": "#D4D4D4@1.0",
+        "primaryColor": "#F3F4F6@1.0",
         "alignment": "center",
         "uppercase": false,
         "bold": false,
@@ -116,19 +117,20 @@
         "animation": "cinema_slide",
         "marginV": 380,
         "outline": {
-          "width": 0.8,
-          "color": "#FFD700",
-          "alpha": 0.4,
-          "blur": 0.4
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
         },
         "shadow": {
           "depth": 3,
           "color": "#000000",
-          "alpha": 0.7,
-          "blur": 1.2
+          "alpha": 0.8,
+          "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "accentColor": "#FFD700"
       },
       "watermark": {
         "fontName": "Inter-Light.ttf",
@@ -180,7 +182,7 @@
       "subtitle": {
         "fontName": "Inter-SemiBold.ttf",
         "fontSize": 50,
-        "primaryColor": "#FFFFFF@1.0",
+        "primaryColor": "#F3F4F6@1.0",
         "alignment": "center",
         "uppercase": true,
         "bold": false,
@@ -189,19 +191,20 @@
         "animation": "cinema_bounce",
         "marginV": 340,
         "outline": {
-          "width": 1.8,
-          "color": "#FFD700",
-          "alpha": 0.6,
-          "blur": 0.8
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
         },
         "shadow": {
-          "depth": 4,
+          "depth": 3,
           "color": "#000000",
-          "alpha": 0.7,
-          "blur": 2
+          "alpha": 0.8,
+          "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "accentColor": "#FFD700"
       },
       "watermark": {
         "fontName": "Inter-Light.ttf",
@@ -253,7 +256,7 @@
       "subtitle": {
         "fontName": "Inter-SemiBold.ttf",
         "fontSize": 38,
-        "primaryColor": "#B8860B@1.0",
+        "primaryColor": "#F3F4F6@1.0",
         "alignment": "center",
         "uppercase": false,
         "bold": false,
@@ -262,19 +265,20 @@
         "animation": "cinema_end",
         "marginV": 620,
         "outline": {
-          "width": 0.5,
-          "color": "#FFD700",
-          "alpha": 0.3,
-          "blur": 0.3
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
         },
         "shadow": {
           "depth": 3,
           "color": "#000000",
-          "alpha": 0.7,
-          "blur": 0.8
+          "alpha": 0.8,
+          "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "accentColor": "#FFD700"
       },
       "watermark": {
         "fontName": "Inter-Light.ttf",

@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Orquestador Unificado de Campañas
     if (action === 'generate-full-campaign' || action === 'draft-full-campaign' || action === 'process-campaign') {
-      const { campaignId, targetAudience, campaignMission } = payload;
+      let { campaignId, targetAudience, campaignMission } = payload;
       // Parámetro unificado: por defecto genera imágenes, salvo que explícitamente se indique false
       const autoGenerateImages = payload.autoGenerateImages !== false && data?.autoGenerateImages !== false;
       console.log(`[VideoWorker] Procesando campana: ${campaignId} (Imagenes automaticas: ${autoGenerateImages ? 'SI' : 'NO'})`);
@@ -46,22 +46,71 @@ export async function POST(req: NextRequest) {
       let courseTitle = 'Curso/Producto';
       let productData = { price: 0, productType: 'course' };
       let courseId = '';
+      let courseDescription = '';
+      let landingContext = '';
 
       if (spDoc.exists) {
         const spData = spDoc.data() || {};
         courseTitle = spData.title || courseTitle;
         productData.price = spData.price || 0;
         productData.productType = spData.productType || 'course';
-        courseId = spData.courseId || spData.productId || campaignId;
+        courseId = spData.courseId || spData.productId || spData.salesPageId || campaignId;
         
-        if (!productData.price && spData.courseId) {
+        // 1. Cargar contexto real de la Landing Page desde salesPages
+        const targetSpId = spData.salesPageId || spData.courseId || courseId;
+        if (targetSpId) {
+          try {
+            const spRef = await adminDb.collection('salesPages').doc(targetSpId).get();
+            if (spRef.exists) {
+              const sp = spRef.data() || {};
+              const landing = sp.aiContent?.landings?.[0] || {};
+              const headline = landing.headline || sp.title || '';
+              const subheadline = landing.subheadline || '';
+              const benefits = Array.isArray(landing.benefits) ? landing.benefits.join('; ') : '';
+              const targetAud = sp.targetAudience || landing.targetAudience || '';
+              
+              let sectionsText = '';
+              if (Array.isArray(landing.sections)) {
+                sectionsText = landing.sections.map((sec: any) => {
+                  const bullets = Array.isArray(sec.microBullets || sec.bullets) ? (sec.microBullets || sec.bullets).join(' | ') : '';
+                  return `[${sec.title || 'Sección'}]: ${sec.paragraph || sec.content || ''} ${bullets ? `(Claves: ${bullets})` : ''}`;
+                }).join('\n');
+              }
+
+              courseTitle = headline || sp.title || courseTitle;
+              courseDescription = `${headline}. ${subheadline}. ${sectionsText}`.trim();
+              if (targetAud && (!targetAudience || targetAudience.includes('Público interesado en'))) {
+                targetAudience = targetAud;
+              }
+
+              landingContext = `
+TITULAR DE LA LANDING: "${headline}"
+SUBTÍTULO / PROMESA: "${subheadline}"
+PÚBLICO OBJETIVO: "${targetAud || targetAudience}"
+DOLORES, BLOQUEOS Y PROBLEMAS QUE RESUELVE:
+${sectionsText}
+BENEFICIOS PRINCIPALES: ${benefits}
+ENFOQUE / MENTOR: ${landing.aboutMentor || 'Feliz de Emprender: Expertos en guiar a profesionales holísticos'}
+              `.trim();
+              
+              if (sp.price) productData.price = sp.price;
+            }
+          } catch (spErr) {
+            console.warn('[VideoWorker] Error cargando salesPage para contexto de landing:', spErr);
+          }
+        }
+
+        // 2. Fallback a courses / followups si no se extrajo de salesPages
+        if (!courseDescription && spData.courseId) {
           const courseDoc = await adminDb.collection('courses').doc(spData.courseId).get();
           if (courseDoc.exists) {
-            productData.price = courseDoc.data()?.price || 0;
+            productData.price = productData.price || courseDoc.data()?.price || 0;
+            courseDescription = courseDoc.data()?.description || '';
           } else {
             const followupDoc = await adminDb.collection('followups').doc(spData.courseId).get();
             if (followupDoc.exists) {
-              productData.price = followupDoc.data()?.price || 0;
+              productData.price = productData.price || followupDoc.data()?.price || 0;
+              courseDescription = followupDoc.data()?.goal || '';
             }
           }
         }
@@ -143,10 +192,10 @@ export async function POST(req: NextRequest) {
                 social,
                 directives,
                 courseTitle,
-                '',
+                courseDescription,
                 targetAudience,
                 (campaignMission as any) || 'venta',
-                '',
+                landingContext,
                 undefined,
                 uid,
                 role
@@ -158,6 +207,7 @@ export async function POST(req: NextRequest) {
                 const bucket = adminStorage.bucket();
 
                 // 1. Escenas de video
+                const pieceAdnId = social.adnId || social.production_notes?.adnId;
                 if (aiContent.scenes) {
                   for (let scene of aiContent.scenes) {
                     if (scene.media_hint && !scene.imageUrl) {
@@ -171,7 +221,8 @@ export async function POST(req: NextRequest) {
                           channel: 'video',
                           uid,
                           role,
-                          aspectRatio
+                          aspectRatio,
+                          adnId: pieceAdnId
                         });
                         
                         const base64Data = base64Str.split(',')[1] || base64Str;
@@ -199,7 +250,8 @@ export async function POST(req: NextRequest) {
                           channel: 'carousel',
                           uid,
                           role,
-                          aspectRatio
+                          aspectRatio,
+                          adnId: pieceAdnId
                         });
                         
                         const base64Data = base64Str.split(',')[1] || base64Str;
@@ -223,7 +275,7 @@ export async function POST(req: NextRequest) {
                 subtitle: sc.subtitle || '',
                 watermark: sc.watermark || '',
                 voiceover: sc.voiceover || '',
-                duration: Math.max(Number(sc.duration) || 10, 10),
+                duration: Math.max(Number(sc.duration) || 4, 2.5),
                 imageUrl: sc.imageUrl || '',
                 media_hint: sc.media_hint || '',
                 production_notes: sc.production_notes || '',

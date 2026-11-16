@@ -192,6 +192,43 @@ function BuilderContent() {
     }
   }, [editId, db]);
 
+  // Polling silencioso en segundo plano mientras haya piezas generándose con IA
+  useEffect(() => {
+    if (!editId || !user) return;
+    const hasPendingPieces = generatedAssets?.socials?.some((s: any) => !s.isGenerated || (!s.slides?.length && !s.scenes?.length));
+    if (!hasPendingPieces) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(`/api/sales-pages/${editId}`, {
+          cache: 'no-store',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const content = data.aiContent || {};
+          const latestSocials = content.socials || content.social || [];
+          if (latestSocials.length > 0) {
+            setGeneratedAssets((prev: any) => ({
+              ...(prev || {}),
+              socials: latestSocials
+            }));
+            const allDone = latestSocials.every((s: any) => s.isGenerated && (s.slides?.length > 0 || s.scenes?.length > 0));
+            if (allDone) {
+              clearInterval(intervalId);
+              toast({ title: 'Campaña Sincronizada', description: 'Todas las piezas e imágenes fueron generadas exitosamente.' });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[AutoPoll Error]', e);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [editId, user, generatedAssets, toast]);
+
   // Load blueprint data when collection is selected or loaded
   useEffect(() => {
     if (selectedCollectionId && db) {

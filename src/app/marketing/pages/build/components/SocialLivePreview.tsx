@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Instagram, Twitter, Linkedin, Circle } from 'lucide-react';
+import { splitKineticPhrase, splitSubtitlePhases } from '@/lib/video/text-splitter';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -71,6 +72,26 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
   const sourceItems = (social.slides && social.slides.length > 0) ? social.slides : ((social.scenes && social.scenes.length > 0) ? social.scenes : []);
   const slides = sourceItems.length > 0 ? sourceItems : [{ text: social.hook || '', imageUrl: '', segment_label: 'GANCHO' }];
   const slide = slides[currentSlideIdx] || slides[0] || { text: social.hook || '', segment_label: 'GANCHO' };
+
+  const [activePhaseIdx, setActivePhaseIdx] = useState(0);
+
+  // Reiniciar fase al cambiar de escena/lámina
+  useEffect(() => {
+    setActivePhaseIdx(0);
+  }, [currentSlideIdx, slide.text, slide.subtitle]);
+
+  const slideDuration = parseFloat(slide.duration) || 4.5;
+  const rawTitle = slide.title || slide.text || social.hook || 'Escribe el texto aquí...';
+  const rawSub = slide.subtitle || '';
+
+  const titleBlocks = useMemo(() => splitKineticPhrase(rawTitle, slideDuration), [rawTitle, slideDuration]);
+  const subBlocks = useMemo(() => splitSubtitlePhases(rawSub, slideDuration, titleBlocks), [rawSub, slideDuration, titleBlocks]);
+
+  const maxPhases = Math.max(titleBlocks.length, subBlocks.length, 1);
+  const currentPhase = Math.min(activePhaseIdx, maxPhases - 1);
+
+  const currentTitleBlock = titleBlocks[currentPhase] || titleBlocks[0] || { text: rawTitle };
+  const currentSubBlock = subBlocks[currentPhase] || subBlocks[0] || { text: rawSub };
   
   // Determinar reglas del ADN para el segmento actual (Modular 2.0 y Legado 1.0)
   const segmentKey = slide.segment_label || (currentSlideIdx === 0 ? 'GANCHO' : currentSlideIdx === slides.length - 1 ? 'CTA' : 'VALOR');
@@ -342,6 +363,32 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
                 })()
               }}
             >
+              {maxPhases > 1 && (
+                <div className="flex items-center justify-center gap-1.5 mb-2.5 z-20">
+                  {Array.from({ length: maxPhases }).map((_, pIdx) => {
+                    const tb = titleBlocks[pIdx];
+                    const isCurrent = currentPhase === pIdx;
+                    return (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActivePhaseIdx(pIdx);
+                        }}
+                        className={cn(
+                          "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer",
+                          isCurrent 
+                            ? "bg-white text-black shadow-lg scale-105" 
+                            : "bg-black/50 text-white/70 hover:bg-black/70 hover:text-white"
+                        )}
+                      >
+                        Ronda {pIdx + 1} {tb ? `(${tb.start.toFixed(1)}s - ${tb.end.toFixed(1)}s)` : ''}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <h4 
                 className={cn(
                   "leading-[1.15] text-white",
@@ -357,11 +404,11 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
                 }}
               >
                 {renderEmphasizedText(
-                  slide.title || slide.text || social.hook || 'Escribe el texto aquí...',
+                  currentTitleBlock.text,
                   brandTitleColor || typoText.primaryColor || (activeRules.fontcolor === 'black' ? '#000' : '#fff')
                 )}
               </h4>
-              {slide.subtitle && (
+              {currentSubBlock?.text && (
                 <p 
                   className="mt-2 text-xs leading-relaxed tracking-wide opacity-90"
                   style={{ 
@@ -371,7 +418,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
                     color: brandSubtitleColor || typoSub.primaryColor || '#E5E5E5'
                   }}
                 >
-                  {renderEmphasizedText(slide.subtitle, brandSubtitleColor || typoSub.primaryColor || '#E5E5E5')}
+                  {renderEmphasizedText(currentSubBlock.text, brandSubtitleColor || typoSub.primaryColor || '#E5E5E5')}
                 </p>
               )}
             </div>
