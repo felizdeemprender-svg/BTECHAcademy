@@ -1083,14 +1083,30 @@ export function TemplateEditor({
         ? `\n\n== CONTEXTO DE LA LANDING PAGE DE VENTA ==\nTítulo de la Landing: "${primaryLanding.headline}"\nSubtítulo: "${primaryLanding.subheadline}"\nLlamado a la acción (CTA) de la Landing: "${primaryLanding.ctaText}"\nBeneficios / FAQs: ${primaryLanding.faqs?.map((f:any) => f.question).join(', ') || 'N/A'}`
         : '\n\n== NOTA PARA LA IA ==\nATENCIÓN: No hay una Landing Page asociada. Se tomará como referencia la descripción del curso. Ten en cuenta que las landings tienen mejor definición para la generación de este contenido, por lo que debes inferir agresivamente un ángulo de ventas directo basándote en la información general del curso.';
         
+      const effectiveAdnId = variant.production_notes?.adnId || variant.adnId || '01_CINEMA';
+      const variantWithAdn = {
+        ...variant,
+        adnId: effectiveAdnId,
+        production_notes: {
+          ...(variant.production_notes || {}),
+          adnId: effectiveAdnId
+        }
+      };
+
+      const mentorUid = profile?.uid || (courses?.find((c: any) => c.id === selectedCourseId) as any)?.mentorId || '';
+      const mentorRole = profile?.role || (profile?.isMentor ? 'mentor' : (profile?.isAdmin ? 'admin' : 'mentor'));
+
       const breakdown = await generateVariantContent(
-        variant, 
+        variantWithAdn, 
         realDirectives, 
         selectedCourse?.title || '', 
         selectedCourse?.description || '', 
         selectedCourse?.targetAudience || '', 
         (campaignMission as any) || 'venta',
-        landingContext
+        landingContext,
+        undefined,
+        mentorUid,
+        mentorRole
       );
       if (channel === 'socials') {
         const sourceArray = (breakdown.scenes && breakdown.scenes.length > 0) ? breakdown.scenes : (breakdown.slides || []);
@@ -1104,14 +1120,25 @@ export function TemplateEditor({
           voiceover: s.voiceover || '',
           description: s.description || s.imageUrl || '',
           duration: Math.max(Number(s.duration) || 4.5, 2.5),
-          imageUrl: variant.slides?.[i]?.imageUrl || (s.imageUrl?.startsWith('http') ? s.imageUrl : ''),
+          imageUrl: (s.imageUrl?.startsWith('http') ? s.imageUrl : '') || variant.slides?.[i]?.imageUrl || '',
           subject_action: s.subject_action || '',
           camera_movement: s.camera_movement || '',
           framing: s.framing || '',
           lighting: s.lighting || ''
         }));
         const newSocials = [...generatedAssets.socials];
-        newSocials[index] = { ...newSocials[index], slides: mappedScenes, hook: breakdown.hook, caption: breakdown.caption };
+        newSocials[index] = { 
+          ...newSocials[index], 
+          adnId: effectiveAdnId,
+          production_notes: {
+            ...(newSocials[index]?.production_notes || {}),
+            adnId: effectiveAdnId
+          },
+          slides: mappedScenes, 
+          scenes: mappedScenes,
+          hook: breakdown.hook, 
+          caption: breakdown.caption 
+        };
         const newAssets = { ...generatedAssets, socials: newSocials };
         onSave(newAssets, true);
       }
@@ -1129,6 +1156,9 @@ export function TemplateEditor({
     try {
       const selectedCourse = courses?.find(c => c.id === selectedCourseId);
       const realDirectives = templateDirectives || `Campaña para "${selectedCourse?.title}".`;
+      const mentorUid = profile?.uid || (courses?.find((c: any) => c.id === selectedCourseId) as any)?.mentorId || '';
+      const mentorRole = profile?.role || (profile?.isMentor ? 'mentor' : (profile?.isAdmin ? 'admin' : 'mentor'));
+
       const emailBreakdown = await generateEmailContent({
         variant: email,
         directives: realDirectives,
@@ -1138,7 +1168,9 @@ export function TemplateEditor({
         mentorName: profile?.profile?.fullName || profile?.profile?.firstName || profile?.displayName || 'Mentor Experto',
         mentorBio: profile?.profile?.bio,
         mentorSocials: profile?.profile?.socials,
-        mission: (campaignMission as any) || 'venta'
+        mission: (campaignMission as any) || 'venta',
+        uid: mentorUid,
+        role: mentorRole
       });
       const newEmails = [...(generatedAssets?.emails || [])];
       newEmails[eIdx] = {
@@ -1165,6 +1197,9 @@ export function TemplateEditor({
     try {
       const selectedCourse = courses?.find(c => c.id === selectedCourseId);
       const realDirectives = templateDirectives || `Campaña para "${selectedCourse?.title}".`;
+      const mentorUid = profile?.uid || (courses?.find((c: any) => c.id === selectedCourseId) as any)?.mentorId || '';
+      const mentorRole = profile?.role || (profile?.isMentor ? 'mentor' : (profile?.isAdmin ? 'admin' : 'mentor'));
+
       const adBreakdown = await generateAdsContent({
         variant: ad,
         directives: realDirectives,
@@ -1172,7 +1207,9 @@ export function TemplateEditor({
         courseDescription: selectedCourse?.description || '',
         targetAudience: selectedCourse?.targetAudience || '',
         mentorName: profile?.profile?.fullName || profile?.profile?.firstName || profile?.displayName || 'Mentor Experto',
-        mission: (campaignMission as any) || 'venta'
+        mission: (campaignMission as any) || 'venta',
+        uid: mentorUid,
+        role: mentorRole
       });
       const newAds = [...(generatedAssets?.ads || [])];
       newAds[aIdx] = {
@@ -1616,13 +1653,26 @@ export function TemplateEditor({
                                                     <div className="flex flex-wrap md:flex-nowrap items-center gap-4 flex-1">
                                                       <div className="flex-1 max-w-[180px]">
                                                         <Select
-                                                          value={s.production_notes?.adnId || '01_CINEMA'}
+                                                          value={s.production_notes?.adnId || s.adnId || '01_CINEMA'}
                                                           onValueChange={(val) => {
                                                             const selectedAdn = dynamicAdns[val];
+                                                            updateAsset('socials', globalIdx, 'adnId', val);
                                                             updateAsset('socials', globalIdx, 'production_notes', {
                                                               ...(s.production_notes || {}),
                                                               adnId: val
                                                             });
+                                                            if (generatedAssets?.socials) {
+                                                              const updatedSocials = [...generatedAssets.socials];
+                                                              updatedSocials[globalIdx] = {
+                                                                ...updatedSocials[globalIdx],
+                                                                adnId: val,
+                                                                production_notes: {
+                                                                  ...(updatedSocials[globalIdx]?.production_notes || {}),
+                                                                  adnId: val
+                                                                }
+                                                              };
+                                                              onSave({ ...generatedAssets, socials: updatedSocials }, true);
+                                                            }
                                                             toast({ title: `ADN ${selectedAdn?.name || val} Seleccionado`, description: "Pulsa 'Re-generar' para ajustar el guion a este estilo." });
                                                           }}
                                                         >
@@ -1652,6 +1702,18 @@ export function TemplateEditor({
                                                               ...(s.production_notes || {}),
                                                               concatenate_slices: !isCarousel
                                                             });
+                                                            if (generatedAssets?.socials) {
+                                                              const updatedSocials = [...generatedAssets.socials];
+                                                              updatedSocials[globalIdx] = {
+                                                                ...updatedSocials[globalIdx],
+                                                                type: val,
+                                                                production_notes: {
+                                                                  ...(updatedSocials[globalIdx]?.production_notes || {}),
+                                                                  concatenate_slices: !isCarousel
+                                                                }
+                                                              };
+                                                              onSave({ ...generatedAssets, socials: updatedSocials }, true);
+                                                            }
                                                             toast({
                                                               title: "Formato Actualizado",
                                                               description: isCarousel
@@ -1915,12 +1977,14 @@ export function TemplateEditor({
                                                       adns={dynamicAdns}
                                                       jobProgress={jobProgress[globalIdx]}
                                                       profile={profile}
+                                                      onSave={onSave}
+                                                      allAssets={generatedAssets}
                                                     />
                                                   )}
                                                 </div>
                                                 <div className="lg:col-span-5 p-6 md:p-8 bg-muted/20 border-t lg:border-t-0 lg:border-l border-border">
                                                   <div className="sticky top-0">
-                                                    <SocialLivePreview social={s} tokens={blueprintData?.assets?.socials?.[globalIdx]?.designTokens || s.designTokens} adn={dynamicAdns[s.production_notes?.adnId || s.production_notes?.adn || '01_CINEMA'] || dynamicAdns['01_CINEMA'] || Object.values(dynamicAdns)[0]} />
+                                                    <SocialLivePreview social={s} tokens={blueprintData?.assets?.socials?.[globalIdx]?.designTokens || s.designTokens} adn={dynamicAdns[s.production_notes?.adnId || s.adnId || s.production_notes?.adn || '01_CINEMA'] || dynamicAdns['01_CINEMA'] || Object.values(dynamicAdns)[0]} />
                                                   </div>
                                                 </div>
                                               </div>

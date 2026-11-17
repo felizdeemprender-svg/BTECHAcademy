@@ -210,10 +210,32 @@ function BuilderContent() {
           const content = data.aiContent || {};
           const latestSocials = content.socials || content.social || [];
           if (latestSocials.length > 0) {
-            setGeneratedAssets((prev: any) => ({
-              ...(prev || {}),
-              socials: latestSocials
-            }));
+            setGeneratedAssets((prev: any) => {
+              if (!prev || !prev.socials) return { ...(prev || {}), socials: latestSocials };
+              // Merge inteligente: actualizar slides generadas e isGenerated sin pisar ADN ni ajustes locales del usuario
+              const mergedSocials = latestSocials.map((ls: any, idx: number) => {
+                const current = prev.socials[idx];
+                if (!current) return ls;
+                const preservedAdnId = current.production_notes?.adnId || current.adnId || ls.production_notes?.adnId || ls.adnId;
+                return {
+                  ...ls,
+                  adnId: preservedAdnId,
+                  type: current.type || ls.type,
+                  marketingName: current.marketingName || ls.marketingName,
+                  hook: current.hook || ls.hook,
+                  caption: current.caption || ls.caption,
+                  production_notes: {
+                    ...(ls.production_notes || {}),
+                    ...(current.production_notes || {}),
+                    adnId: preservedAdnId
+                  }
+                };
+              });
+              return {
+                ...prev,
+                socials: mergedSocials
+              };
+            });
             const allDone = latestSocials.every((s: any) => s.isGenerated && (s.slides?.length > 0 || s.scenes?.length > 0));
             if (allDone) {
               clearInterval(intervalId);

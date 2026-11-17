@@ -16,12 +16,13 @@ import {
 import { cn } from '@/lib/utils';
 
 interface CountryCurrencySelectorProps {
-  selectedCountryCode: string;
+  selectedCountryCode?: string;
+  selectedCountry?: CountryInfo;
   onSelectCountry: (country: CountryInfo) => void;
   usdAmount?: number;
   baseAmount?: number;
   baseCurrency?: SupportedCurrency;
-  rates: Record<SupportedCurrency, number>;
+  rates?: Record<SupportedCurrency, number>;
   className?: string;
   showDisclaimer?: boolean;
   showConvertedAmount?: boolean;
@@ -30,18 +31,20 @@ interface CountryCurrencySelectorProps {
 
 export function CountryCurrencySelector({
   selectedCountryCode,
+  selectedCountry,
   onSelectCountry,
   usdAmount = 0,
   baseAmount,
   baseCurrency = 'USD',
-  rates,
+  rates = FALLBACK_RATES,
   className,
   showDisclaimer = true,
   showConvertedAmount = true,
   compact = false,
 }: CountryCurrencySelectorProps) {
+  const code = selectedCountryCode || selectedCountry?.code || 'AR';
   const currentCountry =
-    SUPPORTED_COUNTRIES.find((c) => c.code === selectedCountryCode) ||
+    SUPPORTED_COUNTRIES.find((c) => c.code === code) ||
     SUPPORTED_COUNTRIES[0];
 
   const rawBaseAmount = typeof baseAmount === 'number' ? baseAmount : usdAmount;

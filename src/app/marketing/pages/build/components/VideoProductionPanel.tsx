@@ -37,6 +37,8 @@ interface VideoProductionPanelProps {
   adns?: Record<string, any>;
   jobProgress?: { progress: number; stage: string } | null;
   profile?: any;
+  onSave?: (newAssets?: any, silent?: boolean) => void;
+  allAssets?: any;
 }
 
 /**
@@ -59,7 +61,9 @@ export function VideoProductionPanel({
   onRefreshGoogleToken,
   adns = {},
   jobProgress,
-  profile
+  profile,
+  onSave,
+  allAssets
 }: VideoProductionPanelProps) {
   
   const [showConfirm, setShowConfirm] = useState(false);
@@ -133,6 +137,17 @@ export function VideoProductionPanel({
                 ...(s.production_notes || {}),
                 video_engine: val
               });
+              if (onSave && allAssets?.socials) {
+                const updatedSocials = [...allAssets.socials];
+                updatedSocials[sIdx] = {
+                  ...updatedSocials[sIdx],
+                  production_notes: {
+                    ...(updatedSocials[sIdx]?.production_notes || {}),
+                    video_engine: val
+                  }
+                };
+                onSave({ ...allAssets, socials: updatedSocials }, true);
+              }
             }}
           >
             <SelectTrigger className="h-9 bg-white border-2 border-primary text-[9px] font-black uppercase text-primary px-3 shadow-lg">
@@ -145,12 +160,25 @@ export function VideoProductionPanel({
             </SelectContent>
           </Select>
           <Select
-            value={s.production_notes?.adnId || '01_CINEMA'}
+            value={s.production_notes?.adnId || s.adnId || '01_CINEMA'}
             onValueChange={(val) => {
+              updateAsset('socials', sIdx, 'adnId', val);
               updateAsset('socials', sIdx, 'production_notes', {
                 ...(s.production_notes || {}),
                 adnId: val
               });
+              if (onSave && allAssets?.socials) {
+                const updatedSocials = [...allAssets.socials];
+                updatedSocials[sIdx] = {
+                  ...updatedSocials[sIdx],
+                  adnId: val,
+                  production_notes: {
+                    ...(updatedSocials[sIdx]?.production_notes || {}),
+                    adnId: val
+                  }
+                };
+                onSave({ ...allAssets, socials: updatedSocials }, true);
+              }
             }}
           >
             <SelectTrigger className="h-9 bg-primary border-2 border-primary text-[9px] font-black uppercase text-white px-4 shadow-lg">
@@ -169,17 +197,30 @@ export function VideoProductionPanel({
             value={s.production_notes?.brandPaletteId || 'adn'}
             onValueChange={(val) => {
               const palette = resolveVideoBrandPalette(val, null, profile);
+              const brandColors = palette ? {
+                name: palette.name,
+                primary: palette.primary,
+                secondary: palette.secondary,
+                accent: palette.accent,
+                outline: palette.outline
+              } : null;
               updateAsset('socials', sIdx, 'production_notes', {
                 ...(s.production_notes || {}),
                 brandPaletteId: val,
-                brandColors: palette ? {
-                  name: palette.name,
-                  primary: palette.primary,
-                  secondary: palette.secondary,
-                  accent: palette.accent,
-                  outline: palette.outline
-                } : null
+                brandColors
               });
+              if (onSave && allAssets?.socials) {
+                const updatedSocials = [...allAssets.socials];
+                updatedSocials[sIdx] = {
+                  ...updatedSocials[sIdx],
+                  production_notes: {
+                    ...(updatedSocials[sIdx]?.production_notes || {}),
+                    brandPaletteId: val,
+                    brandColors
+                  }
+                };
+                onSave({ ...allAssets, socials: updatedSocials }, true);
+              }
             }}
           >
             <SelectTrigger className="h-9 bg-white border-2 border-border text-[9px] font-black uppercase text-foreground px-3 shadow-sm">

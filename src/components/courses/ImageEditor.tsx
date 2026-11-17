@@ -107,6 +107,8 @@ export function ImageEditor({
           channel,
           uid: profile?.uid,
           role: profile?.role,
+          adnId,
+          styleId
         }),
       });
       const data = await res.json();
@@ -275,7 +277,7 @@ export function ImageEditor({
         <div className="p-4 rounded-xl border border-border bg-secondary/20 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-xs font-bold text-foreground">Dirección Visual (Prompt de Portada)</p>
+              <p className="text-xs font-bold text-foreground">Dirección Visual ({channel === 'landing' ? 'Prompt de la Sección' : (channel === 'social' ? 'Prompt de la Escena' : 'Prompt de Portada')})</p>
               <p className="text-[11px] text-muted-foreground">
                 Pedile a la IA una propuesta basada en tu curso o escribí tu propia escena antes de renderizar.
               </p>
@@ -310,7 +312,7 @@ export function ImageEditor({
               disabled={isBusy || !customPrompt.trim()}
             >
               {generatingAi ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-              Generar Portada con este Prompt
+              Generar Imagen con este Prompt
             </Button>
           </div>
         </div>

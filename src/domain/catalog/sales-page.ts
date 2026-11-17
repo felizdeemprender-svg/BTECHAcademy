@@ -42,6 +42,7 @@ export const SalesPageSchema = z.object({
   templateCollectionId: z.string().nullish(),
   aiContent: AiContentSchema.default({ landings: [], socials: [], emails: [], ads: [] }),
   content: z.unknown().optional(), // Used by V2 atomic renderer
+  styleId: z.string().optional(),
   exportUrls: z.record(z.string()).optional(),
   slug: z.string().optional(),
   branding: SalesPageBrandingSchema.optional(),

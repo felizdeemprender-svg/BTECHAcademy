@@ -107,18 +107,28 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
       const { cookies } = await import('next/headers');
       const cookieStore = await cookies();
       uid = uid || cookieStore.get('btech_uid')?.value || '';
-      role = role || cookieStore.get('btech_role')?.value || 'alumno';
+      const cookieRole = cookieStore.get('btech_role')?.value;
+
+      // Las acciones de campaña y marketing son exclusivas de mentores/tutores
+      const isMarketingAction = finalActionName.includes('variant') || 
+                               finalActionName.includes('campaign') || 
+                               finalActionName.includes('email') || 
+                               finalActionName.includes('ads') || 
+                               finalActionName.includes('social');
+
+      role = role || cookieRole || (isMarketingAction ? 'mentor' : (uid ? 'alumno' : 'mentor'));
       
       console.log(`>>> [AUDIT] Identidad detectada (Cookies): UID=${uid}, ROLE=${role}, ACCION=${finalActionName}`);
     } catch (e: any) {
       console.warn("[Sensor IA] Aviso: Ejecución sin contexto de identidad desde cookies.");
-      if (!role) role = 'alumno';
+      if (!role) role = 'mentor';
     }
   } else {
     console.log(`>>> [AUDIT] Identidad provista en Contexto: UID=${uid}, ROLE=${role}, ACCION=${finalActionName}`);
   }
 
-  if (role === 'alumno' && !ownerUid) {
+  // Los alumnos legítimos (con UID verificado) no pueden ejecutar IA sin tutor asignado (ownerUid)
+  if (role === 'alumno' && uid && !ownerUid) {
     throw new Error('ACCESO_DENEGADO: Las acciones de IA de los alumnos requieren un tutor asociado (ownerUid) para facturación.');
   }
 

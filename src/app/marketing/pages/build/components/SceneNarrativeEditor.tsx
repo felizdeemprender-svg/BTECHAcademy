@@ -124,6 +124,13 @@ export function SceneNarrativeEditor({
                       description={sl.text}
                       aiPromptHint={`Imagen para un video del curso "${courseTitle || ''}". La escena trata sobre: ${sl.voiceover || sl.text || 'contenido educativo'}`}
                       adnId={s.adnId || s.production_notes?.adnId}
+                      allowPromptEdit={true}
+                      promptValue={sl.imagePrompt || ''}
+                      onPromptChange={(p) => {
+                        const newItems = [...items];
+                        newItems[i] = { ...newItems[i], imagePrompt: p };
+                        updateAsset('socials', sIdx, 'slides', newItems);
+                      }}
                     />
                   </div>
                 </div>

@@ -26,6 +26,8 @@ export interface GenerateEmailContentInput {
   mentorBio?: string;
   mentorSocials?: Record<string, string>;
   mission?: 'venta' | 'autoridad' | 'lanzamiento' | 'leads';
+  uid?: string;
+  role?: string;
 }
 
 const missionTones: Record<string, string> = {
@@ -52,9 +54,14 @@ export async function generateEmailContent(input: GenerateEmailContentInput): Pr
     mentorBio,
     mentorSocials,
     mission = 'venta',
+    uid,
+    role,
   } = input;
 
-  console.log(`[AI:Flow] Generando correo individual: ${variant?.marketingName} | Tipo: ${variant?.type || 'direct'}`);
+  const effectiveUid = uid || variant?.mentorId || variant?.ownerUid || '';
+  const effectiveRole = role || 'mentor';
+
+  console.log(`[AI:Flow] Generando correo individual: ${variant?.marketingName} | Tipo: ${variant?.type || 'direct'} | Mentor UID: ${effectiveUid}`);
 
   validateApiKey();
 
@@ -94,8 +101,9 @@ REGLAS FINALES:
 - Cuerpo: 3 a 6 párrafos, orientado a acción, con UN solo CTA claro al final.
 - No inventar datos falsos.`,
     output: { schema: EmailContentSchema },
-    config: { temperature: 0.7 }
-  });
+    config: { temperature: 0.7 },
+    context: { uid: effectiveUid, role: effectiveRole }
+  } as any, 'generate_email_content', effectiveUid);
 
   if (!output) {
     throw new Error('La IA no devolvió un correo válido.');

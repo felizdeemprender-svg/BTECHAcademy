@@ -68,12 +68,15 @@ export async function generateVariantContent(
   uid?: string,
   role?: string
 ): Promise<any> {
-  console.log(`[AI:Flow] Generando contenido para: ${variant.platform} - ${variant.type} | Misión: ${mission}`);
+  const effectiveUid = uid || variant?.mentorId || variant?.ownerUid || '';
+  const effectiveRole = role || 'mentor';
+
+  console.log(`[AI:Flow] Generando contenido para: ${variant.platform} - ${variant.type} | Misión: ${mission} | Mentor UID: ${effectiveUid}`);
   
   validateApiKey();
   
-  // CARGA DINÁMICA DE ADN
-  const adnId = variant.blueprintConfig?.presetId || variant.blueprintConfig?.adn || variant.production_notes?.adnId || '01';
+  // CARGA DINÁMICA DE ADN (Prioridad: ADN elegido por el usuario > preset de blueprint > fallback)
+  const adnId = variant.production_notes?.adnId || variant.adnId || variant.blueprintConfig?.presetId || variant.blueprintConfig?.adn || '01_CINEMA';
   console.log(`[AI:Flow] Buscando ADN con ID: ${adnId}`);
   
   const { loadAdnConfig } = await import('@/lib/adn-utils');
@@ -257,10 +260,10 @@ Devuelve un objeto JSON que siga el ContentBreakdown Schema.`;
               { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
             ]
           },
-          context: { uid, role }
+          context: { uid: effectiveUid, role: effectiveRole }
         } as any,
         'generate_variant_content',
-        uid
+        effectiveUid
       );
       parsed = output;
       break; // Success
