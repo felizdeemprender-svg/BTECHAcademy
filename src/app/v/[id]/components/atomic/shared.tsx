@@ -110,7 +110,7 @@ export function hexToRgba(hex?: string, alpha = 0.06): string {
 }
 
 export function parseStat(item: string): { num: string; label: string } {
-  const m = item.match(/^(\$?\s*[\d.,]+\s*[%+kKmM]*)\s*(.*)$/);
+  const m = item.match(/^([+$~]?\s*[\d.,]+\s*[%+kKmM]*)\s*(.*)$/);
   if (m && m[1]) {
     return { num: m[1].trim(), label: (m[2] || '').replace(/^[-—–:]+\s*/, '').trim() };
   }
