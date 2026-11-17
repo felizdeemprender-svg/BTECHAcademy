@@ -682,7 +682,10 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-8 pb-20">
-        <header><h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Configuración</h1></header>
+        <header>
+          <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Configuración</h1>
+          <p className="text-sm text-muted-foreground mt-1">Gestiona tu perfil, presencia digital y personalización de marca.</p>
+        </header>
 
         <Card className="border-none rounded-lg bg-white overflow-hidden">
           <div className="p-10 bg-primary/5 flex flex-col md:flex-row items-center gap-10 border-b">
