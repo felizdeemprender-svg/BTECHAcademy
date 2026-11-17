@@ -1,100 +1,75 @@
-'use client';
+import type { Metadata } from 'next';
+import { resolveGateway } from '@/lib/api/gateway';
+import { FirestoreTutorRepository } from '@/data/firestore/tutor-repo';
+import { FirestoreMarketplaceRepository } from '@/data/firestore/marketplace-repo';
+import { resolveSalesPage } from '@/domain/catalog/use-cases/resolve-sales-page';
+import PublicSalesPage, { generateMetadata as generateLandingMetadata } from '../[id]/page';
 
-import { useState, useEffect, use } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
-import PublicSalesPage from '../[id]/page';
+export const dynamic = 'force-dynamic';
 
-import { Suspense } from 'react';
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}): Promise<Metadata> {
+  const sParams = searchParams ? await searchParams : {};
+  const username = typeof sParams.u === 'string' ? sParams.u : null;
+  const slug = typeof sParams.s === 'string' ? sParams.s : null;
 
-function ResolverContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const db = useFirestore();
+  if (!username || !slug) return { title: 'Página no disponible | Fastoria' };
 
-  const username = searchParams.get('u');
-  const slug = searchParams.get('s');
+  try {
+    const gateway = await resolveGateway();
+    const tutors = new FirestoreTutorRepository(gateway);
+    const pages = new FirestoreMarketplaceRepository(gateway);
+    const result = await resolveSalesPage(tutors, pages, { username, slug });
 
-  const [landingId, setLandingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+    if (!result.ok) return { title: 'Página no encontrada | Fastoria' };
 
-  useEffect(() => {
-    async function resolve() {
-      if (!username || !slug) {
-        setError('URL mal formada');
-        setLoading(false);
-        return;
-      }
+    return generateLandingMetadata({ params: Promise.resolve({ id: result.value.id }) });
+  } catch {
+    return { title: 'Fastoria' };
+  }
+}
 
-      try {
-        const response = await fetch(`/api/v/resolve?u=${username}&s=${slug}`);
-        const data = await response.json();
+export default async function ResolverPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const sParams = searchParams ? await searchParams : {};
+  const username = typeof sParams.u === 'string' ? sParams.u : null;
+  const slug = typeof sParams.s === 'string' ? sParams.s : null;
 
-        if (!response.ok) {
-          setError(data.error === 'Tutor not found' ? 'Tutor no encontrado' : 'Página de ventas no encontrada');
-          setLoading(false);
-          return;
-        }
-
-        setLandingId(data.id);
-      } catch (err) {
-        console.error('Resolution error:', err);
-        setError('Error al resolver la página');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    resolve();
-  }, [db, username, slug]);
-
-  if (loading) {
+  if (!username || !slug) {
     return (
-      <div className="flex h-screen items-center justify-center bg-white">
-        <div className="text-center space-y-4">
-          <Loader2 className="animate-spin h-10 w-10 text-primary mx-auto" />
-          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
-            Preparando tu Experiencia...
-          </p>
+      <div className="flex h-screen items-center justify-center bg-muted">
+        <div className="text-center space-y-6 p-8 max-w-md">
+          <h1 className="text-2xl font-bold text-foreground">URL mal formada</h1>
+          <p className="text-muted-foreground">Faltan parámetros requeridos.</p>
         </div>
       </div>
     );
   }
 
-  if (error || !landingId) {
+  const gateway = await resolveGateway();
+  const tutors = new FirestoreTutorRepository(gateway);
+  const pages = new FirestoreMarketplaceRepository(gateway);
+  const result = await resolveSalesPage(tutors, pages, { username, slug });
+
+  if (!result.ok) {
     return (
       <div className="flex h-screen items-center justify-center bg-muted">
         <div className="text-center space-y-6 p-8 max-w-md">
           <div className="w-20 h-20 bg-danger/15 rounded-3xl flex items-center justify-center mx-auto text-danger">
             <span className="text-3xl font-bold">!</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">{error || 'No disponible'}</h1>
+          <h1 className="text-2xl font-bold text-foreground">Página no encontrada</h1>
           <p className="text-muted-foreground">Parece que la página que buscas ya no existe o el enlace es incorrecto.</p>
-          <button 
-            onClick={() => router.push('/')}
-            className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
-          >
-            Volver al Inicio
-          </button>
         </div>
       </div>
     );
   }
 
-  return <PublicSalesPage params={Promise.resolve({ id: landingId })} />;
-}
-
-export default function ResolverPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex h-screen items-center justify-center bg-white">
-        <Loader2 className="animate-spin h-10 w-10 text-primary" />
-      </div>
-    }>
-      <ResolverContent />
-    </Suspense>
-  );
+  return <PublicSalesPage params={Promise.resolve({ id: result.value.id })} searchParams={searchParams} />;
 }
