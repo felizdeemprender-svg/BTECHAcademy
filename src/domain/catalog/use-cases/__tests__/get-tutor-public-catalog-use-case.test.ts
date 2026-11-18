@@ -163,6 +163,14 @@ describe('GetTutorPublicCatalogUseCase', () => {
         title: 'Curso de Ana',
         isActive: true,
       },
+      // Oferta 8: Mentoría grupal con productType followup
+      'sp-followup-1': {
+        mentorId: 'tutor-1',
+        title: 'Recalculando Profesión',
+        price: 49900,
+        productType: 'followup',
+        isActive: true,
+      },
     },
   };
 
@@ -187,7 +195,7 @@ describe('GetTutorPublicCatalogUseCase', () => {
     expect(offerIds).not.toContain('sp-embajador');
     expect(offerIds).not.toContain('sp-desactivada');
     expect(offerIds).not.toContain('sp-otro-tutor');
-    expect(result?.total).toBe(3);
+    expect(result?.total).toBe(4);
 
     const cursoOffer = result?.offers.find((o) => o.id === 'sp-curso-1');
     expect(cursoOffer?.paymentMethods).toHaveLength(3);
@@ -208,11 +216,13 @@ describe('GetTutorPublicCatalogUseCase', () => {
     expect(soloProgramas?.offers[0].type).toBe('programa');
 
     const soloMentorias = await useCase.execute('tutor-1', { types: ['mentoria'] });
-    expect(soloMentorias?.offers.length).toBe(1);
-    expect(soloMentorias?.offers[0].id).toBe('sp-mentoria-1');
-    expect(soloMentorias?.offers[0].type).toBe('mentoria');
-    expect(soloMentorias?.offers[0].price.isFree).toBe(true);
-    expect(soloMentorias?.offers[0].price.formatted).toBe('Gratis');
+    expect(soloMentorias?.offers.length).toBe(2);
+    const mentoriaIds = soloMentorias?.offers.map(o => o.id);
+    expect(mentoriaIds).toContain('sp-mentoria-1');
+    expect(mentoriaIds).toContain('sp-followup-1');
+    const followupOffer = soloMentorias?.offers.find(o => o.id === 'sp-followup-1');
+    expect(followupOffer?.type).toBe('mentoria');
+    expect(followupOffer?.price.amount).toBe(49900);
   });
 
   it('debe filtrar por identificadores específicos combinados con tipos', async () => {
