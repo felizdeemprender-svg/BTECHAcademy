@@ -389,29 +389,6 @@ describe('listTutorCatalog', () => {
     expect(free?.price).toBe(7);
   });
 
-  it('incluye mentorias (followup o mentoria_individual) aun sin documento en courses', async () => {
-    const store = marketplaceStore();
-    store.salesPages.spMentoria = {
-      id: 'spMentoria',
-      mentorId: 'm1',
-      courseId: 'cphdwuv4ayv',
-      productType: 'followup',
-      title: 'Recalculando Profesion',
-      description: 'Mentoria grupal intensiva',
-      price: 49900,
-      isActive: true,
-      createdAt: new Date('2026-11-01'),
-    };
-    const repo = new FakeMarketplaceRepo(store);
-    const r = await listTutorCatalog(repo, { tutorId: 'm1' });
-    expect(r.ok).toBe(true);
-    if (!r.ok) return;
-    const mentoria = r.value.courses.find((c) => c.salesPageId === 'spMentoria');
-    expect(mentoria).toBeDefined();
-    expect(mentoria?.title).toBe('Recalculando Profesion');
-    expect(mentoria?.price).toBe(49900);
-  });
-
   it('VALIDATION con tutorId vacío', async () => {
     const repo = new FakeMarketplaceRepo(marketplaceStore());
     const r = await listTutorCatalog(repo, { tutorId: '  ' });

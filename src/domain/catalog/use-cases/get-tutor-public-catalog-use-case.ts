@@ -92,7 +92,7 @@ export class GetTutorPublicCatalogUseCase {
         }
       }
 
-      // 4. Si tiene courseId asociado y faltan datos (ej: imagen, descripción), intentamos enriquecer con el curso o mentoría
+      // 4. Si tiene courseId asociado y faltan datos (ej: imagen, descripción), intentamos enriquecer con el curso
       let courseData: Record<string, unknown> | null = null;
       if (data.courseId && typeof data.courseId === 'string') {
         if (courseCache.has(data.courseId)) {
@@ -100,18 +100,7 @@ export class GetTutorPublicCatalogUseCase {
         } else {
           try {
             const courseDoc = await this.gateway.getDoc('courses', data.courseId);
-            if (courseDoc && courseDoc.exists) {
-              courseData = courseDoc.data() || null;
-            } else if (resolvedType === 'mentoria') {
-              const followupDoc = await this.gateway.getDoc('followups', data.courseId);
-              if (followupDoc && followupDoc.exists) {
-                const fData = followupDoc.data() || {};
-                courseData = {
-                  ...fData,
-                  description: fData.goal || fData.description || null,
-                };
-              }
-            }
+            courseData = courseDoc && courseDoc.exists ? courseDoc.data() || null : null;
             courseCache.set(data.courseId, courseData);
           } catch {
             courseCache.set(data.courseId, null);
@@ -184,11 +173,7 @@ export class GetTutorPublicCatalogUseCase {
     if (rawType.includes('programa') || rawType.includes('program')) {
       return 'programa';
     }
-    if (
-      rawType.includes('mentoria') || 
-      rawType.includes('mentoring') ||
-      rawType.includes('followup')
-    ) {
+    if (rawType.includes('mentoria') || rawType.includes('mentoring')) {
       return 'mentoria';
     }
     return 'curso';
