@@ -81,32 +81,21 @@ export async function listTutorCatalog(
     }
     const enriched = salesPages
       .map((sp) => {
-        const courseId = str(sp.data.courseId) ?? '';
-        const course = coursesMap.get(courseId);
-        const productType = str(sp.data.productType) ?? '';
-        const isMentoring = productType === 'followup' || productType === 'mentoria_individual' || productType.includes('mentoria');
-
-        // Para cursos estándar, requerimos que el curso exista, esté publicado/aprobado y sea público
-        if (course) {
-          const data = course.data;
-          const isPublished = data.status === 'published' || data.status === 'approved';
-          const isPublic = data.publicListing !== false;
-          if (!isPublished || !isPublic) return null;
-        } else if (!isMentoring) {
-          // Si no es curso ni mentoría activa, omitimos
-          return null;
-        }
-
-        const data = course?.data ?? {};
+        const course = coursesMap.get(str(sp.data.courseId) ?? '');
+        if (!course) return null;
+        const data = course.data;
+        const isPublished = data.status === 'published' || data.status === 'approved';
+        const isPublic = data.publicListing !== false;
+        if (!isPublished || !isPublic) return null;
         const tagIds = Array.isArray(data.tagIds) ? (data.tagIds as unknown[]) : [];
         const tags = tagIds
           .map((id) => (typeof id === 'string' ? tagsMap.get(id) : undefined))
           .filter((t): t is string => Boolean(t));
         const title = str(sp.data.title) ?? str(data.title) ?? 'Sin título';
         return {
-          id: str(data.id) ?? (course?.id ?? sp.id),
+          id: str(data.id) ?? course.id,
           salesPageId: sp.id,
-          slug: str(sp.data.slug) ?? str(data.slug) ?? (str(sp.data.title) ? slugify(str(sp.data.title) as string) : (str(data.title) ? slugify(str(data.title) as string) : undefined)),
+          slug: str(sp.data.slug) ?? str(data.slug) ?? (str(data.title) ? slugify(str(data.title) as string) : undefined),
           title,
           description: str(sp.data.description) ?? str(data.description) ?? 'Sin descripción',
           price: sp.data.price !== undefined ? (sp.data.price as number) : num(data.price, 0),
@@ -116,7 +105,6 @@ export async function listTutorCatalog(
           rating: num(data.rating, 4.5),
           thumbnail:
             str(sp.data.thumbnail) ??
-            str(sp.data.imageUrl) ??
             str(data.thumbnail) ??
             `https://loremflickr.com/600/400/education,course?lock=${sp.id}`,
           tags,
