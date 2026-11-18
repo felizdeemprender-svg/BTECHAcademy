@@ -69,32 +69,36 @@ const generateLandingV2Flow = ai.defineFlow(
 
     const availableColors = style.colorProposals.map(c => c.name).join(', ');
     const availableFonts = style.typography.map(t => t.name).join(', ');
-    
+
     // Si el usuario proporcionó requestedSections (Paso 2 config), usamos eso y sufijamos para repetidas.
     // Si no, caemos en el default de availableSections.
     const requiredSections = input.requestedSections && input.requestedSections.length > 0
       ? input.requestedSections.map((rs: any, idx: any) => {
-          const secDef = style.availableSections.find(s => s.id === rs.id);
-          return {
-            id: `${rs.id}_${idx}`,
-            name: rs.title,
-            description: secDef?.description || ''
-          };
-        })
+        const secDef = style.availableSections.find(s => s.id === rs.id);
+        return {
+          id: `${rs.id}_${idx}`,
+          name: rs.title,
+          description: secDef?.description || ''
+        };
+      })
       : style.availableSections.map((s, idx) => ({
-          id: `${s.id}_${idx}`,
-          name: s.name,
-          description: s.description
-        }));
+        id: `${s.id}_${idx}`,
+        name: s.name,
+        description: s.description
+      }));
 
     const productNoun = input.productType === 'mentoria_individual' ? 'Mentoría Individual 1-a-1' : input.productType === 'followup' ? 'Mentoría Grupal' : 'Curso/Producto';
+
+    const safeDescription = (input.courseDescription || '').length > 15000
+      ? (input.courseDescription || '').substring(0, 15000) + '\n\n[... Temario sintetizado ...]'
+      : (input.courseDescription || '');
 
     const promptText = `Actúa como un Copywriter Senior de Respuesta Directa experto en Venta de Infoproductos.
 Tu tarea es redactar el contenido de UNA Landing Page de altísima conversión.
 
 DATOS CLAVE DEL ${productNoun.toUpperCase()}:
 - Título: "${input.courseTitle}"
-- Descripción: "${input.courseDescription}"
+- Descripción: "${safeDescription}"
 - Creador/Mentor: ${input.mentorName}
 - Precio: $${input.price} (Úsalo para justificar la inversión)
 - Público Objetivo: ${input.targetAudience}
@@ -163,9 +167,9 @@ const regenerateSectionV2Flow = ai.defineFlow(
   },
   async (input: any) => {
     const style = getLandingStyle(input.styleId);
-    
+
     const productNoun = input.productType === 'mentoria_individual' ? 'Mentoría Individual 1-a-1' : input.productType === 'followup' ? 'Mentoría Grupal' : 'Curso/Producto';
-    
+
     const promptText = `Actúa como un Copywriter Senior experto en Venta de Infoproductos.
 Tu tarea es RE-ESCRIBIR exclusivamente el contenido de UNA sola sección de una Landing Page de altísima conversión.
 
@@ -196,10 +200,10 @@ INSTRUCCIONES:
     });
 
     if (!output) throw new Error('La IA no devolvió respuesta para la regeneración.');
-    
+
     // Forzar el ID para que coincida exactamente
     output.id = input.sectionId;
-    
+
     return output;
   }
 );
