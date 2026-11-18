@@ -96,23 +96,26 @@ const extractDocumentTextFlow = ai.defineFlow(
         if (!base64Part) throw new Error("Archivo de Word vacío.");
         const buffer = Buffer.from(base64Part, 'base64');
 
-        // Extracción de texto usando mammoth (Compatible con Firebase)
+        // Extracción de texto usando mammoth (rápida, limpia y determinista)
         const result = await mammoth.extractRawText({ buffer });
-        const fullText = result.value;
+        let fullText = (result.value || '').trim();
         
-        if (!fullText || fullText.trim().length < 10) {
+        if (!fullText || fullText.length < 10) {
           throw new Error('No se pudo extraer suficiente texto del documento Word.');
         }
 
-        // Enviamos el texto extraído a Gemini para limpieza y estructuración
-        const { text } = await ai.generate({
-          prompt: `Actúa como un transcriptor experto. Aquí tienes el contenido extraído de un documento Word. Limpia el texto, mantén la jerarquía educativa y omite cualquier ruido o metadatos:\n\n${fullText.substring(0, 50000)}`,
-          config: { temperature: 0.1 },
-        });
+        // Normalizar saltos de línea excesivos
+        fullText = fullText.replace(/\n{3,}/g, '\n\n');
 
-        return { extractedText: text || fullText.trim() };
+        // Para evitar desbordar el contexto de la IA y prevenir timeouts en Cloud Run,
+        // acotamos el texto del syllabus a un máximo óptimo de 12.000 caracteres
+        if (fullText.length > 12000) {
+          fullText = fullText.substring(0, 12000) + '\n\n[... Contenido del temario truncado para optimización ...]';
+        }
+
+        return { extractedText: fullText };
       } catch (error: any) {
-        return { error: `Error al procesar el Word (Mammoth/IA): ${error.message}` };
+        return { error: `Error al procesar el Word (Mammoth): ${error.message}` };
       }
     }
 

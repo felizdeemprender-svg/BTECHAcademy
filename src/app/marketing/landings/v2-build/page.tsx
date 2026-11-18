@@ -262,6 +262,10 @@ function V2LandingBuilderContent() {
       documentUrl,
       documentName: masterFile?.name || 'master.docx'
     });
+    if (extractRes.error) {
+      console.warn('[getMasterText] Error en extracción de documento:', extractRes.error);
+      toast({ variant: 'destructive', title: 'Aviso de Documento', description: `${extractRes.error}. Se usará la descripción principal.` });
+    }
     const text = extractRes.extractedText || '';
     setExtractedMasterText(text);
     return text;
@@ -355,9 +359,9 @@ function V2LandingBuilderContent() {
         productType: isBundle ? 'combo' : mainCourse.productType,
       });
 
-      // 2. Consultar módulos reales del curso para inyectar en el syllabus
+      // 2. Consultar módulos reales del curso para inyectar en el syllabus (exclusivo para cursos)
       let realModules: string[] = [];
-      if (!isBundle && mainCourse?.productType !== 'followup') {
+      if (!isBundle && mainCourse?.productType === 'course') {
         const modulesSnap = await getDocs(query(collection(db, 'courses', mainCourse.id, 'modules'), orderBy('order', 'asc')));
         realModules = modulesSnap.docs.map(d => {
           const data = d.data();
@@ -365,9 +369,9 @@ function V2LandingBuilderContent() {
         });
       }
 
-      // 3. Reemplazar el contenido del temario (syllabus) con los módulos reales (solo para cursos)
+      // 3. Reemplazar el contenido del temario (syllabus) con los módulos reales (solo para cursos estándar)
       const finalSections = result.sections.map((section: any) => {
-        if (section.id.startsWith('syllabus') && !isBundle && mainCourse?.productType !== 'followup') {
+        if (section.id.startsWith('syllabus') && !isBundle && mainCourse?.productType === 'course') {
           return {
             ...section,
             bullets: realModules.length > 0 ? realModules : ['(Aún no has agregado módulos a tu curso)']
