@@ -11,9 +11,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Lexend', 'sans-serif'],
-        code: ['Source Code Pro', 'monospace'],
+        body: ['var(--font-inter)', 'Inter', 'sans-serif'],
+        headline: ['var(--font-lexend)', 'Lexend', 'sans-serif'],
+        code: ['var(--font-source-code-pro)', 'Source Code Pro', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',

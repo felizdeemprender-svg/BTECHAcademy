@@ -53,6 +53,12 @@ const ALL_MENTOR_PERMISSIONS = ['academic', 'challenges', 'students', 'followups
 
 async function consolidateEnrollmentsForUser(uid: string, email: string, displayName: string) {
   if (!email) return;
+  if (typeof window !== 'undefined') {
+    const cacheKey = `enrollments_consolidated_${uid}`;
+    if (sessionStorage.getItem(cacheKey) === 'true') {
+      return;
+    }
+  }
   try {
     const q = query(
       collection(db, 'enrollments'),
@@ -68,6 +74,9 @@ async function consolidateEnrollmentsForUser(uid: string, email: string, display
           studentName: displayName || data.studentName
         }, { merge: true });
       }
+    }
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`enrollments_consolidated_${uid}`, 'true');
     }
   } catch (err) {
     console.error("[Auth-Consolidation] Error consolidando inscripciones:", err);
