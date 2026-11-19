@@ -31,12 +31,19 @@ export function useCourseProgressV3(courseId: string) {
   useEffect(() => {
     if (!courseId || !db) return;
     
+    let unsubMentor: (() => void) | null = null;
+
     const unsubCourse = onSnapshot(doc(db, 'courses', courseId), (snap) => {
       if (snap.exists()) {
         const data = { id: snap.id, ...snap.data() } as CourseDetails;
         setCourse(data);
         if (data.mentorId) {
-          onSnapshot(doc(db, 'users', data.mentorId), (mSnap) => {
+          // Si ya existía una suscripción a mentor, la cancelamos antes de crear una nueva
+          if (unsubMentor) {
+            unsubMentor();
+            unsubMentor = null;
+          }
+          unsubMentor = onSnapshot(doc(db, 'users', data.mentorId), (mSnap) => {
             if (mSnap.exists()) setMentorProfile(mSnap.data());
           }, (err) => console.warn("⚠️ [V3] Error mentor profile:", err));
         }
@@ -55,6 +62,10 @@ export function useCourseProgressV3(courseId: string) {
     return () => {
       unsubCourse();
       unsubMods();
+      if (unsubMentor) {
+        unsubMentor();
+        unsubMentor = null;
+      }
     };
   }, [courseId, db]);
 

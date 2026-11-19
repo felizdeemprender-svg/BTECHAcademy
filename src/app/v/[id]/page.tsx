@@ -5,10 +5,7 @@ import { GetPublicSalesPageUseCase } from '@/domain/sales-pages/use-cases/get-pu
 import { getEffectiveLandingStatus } from '@/domain/sales-pages/landing-lifecycle';
 import { getCurrencyRates } from '@/lib/currency/rates-service';
 import { resolveGateway } from '@/lib/api/gateway';
-import { FirestoreTutorRepository } from '@/data/firestore/tutor-repo';
-import { getTutorById } from '@/domain/identity/use-cases/get-tutor-by-id';
-import { FirestorePaymentMethodRepository } from '@/data/firestore/payment-method-repo';
-import { listPaymentOptions } from '@/domain/commerce/use-cases/list-payment-options';
+import { getCachedTutorAndPayments } from '@/lib/cache/public-landing-cache';
 import { FALLBACK_RATES } from '@/lib/currency/types';
 import { PublicSalesPageView } from './components/public-sales-page-view';
 
@@ -128,24 +125,18 @@ export default async function PublicSalesPage({
   const gateway = await resolveGateway();
   const mentorId = result.page.mentorId;
 
-  const [ratesData, tutorResult, paymentResult] = await Promise.all([
+  const [ratesData, mentorData] = await Promise.all([
     getCurrencyRates().catch((err) => {
       console.warn('[SSR Landing] Error loading rates:', err);
       return null;
     }),
     mentorId
-      ? getTutorById(new FirestoreTutorRepository(gateway), { id: mentorId }).catch((err) => {
-          console.warn('[SSR Landing] Error loading tutor:', err);
-          return null;
-        })
-      : null,
-    mentorId
-      ? listPaymentOptions(new FirestorePaymentMethodRepository(gateway), { mentorId }).catch((err) => {
-          console.warn('[SSR Landing] Error loading payment methods:', err);
-          return null;
-        })
-      : null,
+      ? getCachedTutorAndPayments(gateway, mentorId, isPreview)
+      : Promise.resolve({ tutorResult: null, paymentResult: null, fromCache: false }),
   ]);
+
+  const tutorResult = mentorData.tutorResult;
+  const paymentResult = mentorData.paymentResult;
 
   const tutor = tutorResult && tutorResult.ok ? (tutorResult.value.tutor.data as any) : null;
   const mentorProfile = tutor

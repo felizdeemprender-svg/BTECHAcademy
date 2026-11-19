@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       'framer-motion',
       'recharts',
       '@radix-ui/react-icons',
+      'react-icons',
     ],
   },
   output: 'standalone',
