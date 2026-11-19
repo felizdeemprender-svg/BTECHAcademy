@@ -6,37 +6,42 @@
     {
       "id": "slice_1",
       "segment_label": "GANCHO",
-      "text": "BIENVENIDO AL MASTER",
+      "text": "Menos *RUIDO*,\nmás *RESULTADOS*",
       "duration": 5,
-      "imageUrl": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b"
+      "imageUrl": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b",
+      "title": "Menos *RUIDO*,\nmás *RESULTADOS*"
     },
     {
       "id": "slice_2",
       "segment_label": "VALOR",
-      "text": "NUEVO IMPACTO",
+      "text": "La claridad es tu mayor *PODER*\npara tomar *ACCIÓN*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "La claridad es tu mayor *PODER*\npara tomar *ACCIÓN*"
     },
     {
       "id": "slice_3",
       "segment_label": "VALOR",
-      "text": "NUEVO IMPACTO",
+      "text": "Enfócate en lo *esencial*\ny elimina la *FRICCIÓN*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "Enfócate en lo *esencial*\ny elimina la *FRICCIÓN*"
     },
     {
       "id": "slice_5",
       "segment_label": "CIERRE",
-      "text": "NUEVO IMPACTO",
+      "text": "Diseño con *PROPÓSITO*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "Diseño con *PROPÓSITO*"
     },
     {
       "id": "slice_4",
       "segment_label": "CTA",
-      "text": "NUEVO IMPACTO",
+      "text": "Empieza *SIMPLE*\ny avanza con *CERTEZA*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "Empieza *SIMPLE*\ny avanza con *CERTEZA*"
     }
   ]
 }

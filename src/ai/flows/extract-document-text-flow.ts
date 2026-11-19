@@ -96,56 +96,29 @@ const extractDocumentTextFlow = ai.defineFlow(
         if (!base64Part) throw new Error("Archivo de Word vacío.");
         const buffer = Buffer.from(base64Part, 'base64');
 
-        // Extracción de texto usando mammoth (Compatible con Firebase)
+        // Extracción de texto usando mammoth (rápida, limpia y determinista)
         const result = await mammoth.extractRawText({ buffer });
-        const fullText = result.value;
+        let fullText = (result.value || '').trim();
         
-        if (!fullText || fullText.trim().length < 10) {
+        if (!fullText || fullText.length < 10) {
           throw new Error('No se pudo extraer suficiente texto del documento Word.');
         }
 
-        // Enviamos el texto extraído a Gemini para limpieza y estructuración
-        const { text } = await ai.generate({
-          prompt: `Actúa como un transcriptor experto. Aquí tienes el contenido extraído de un documento Word. Limpia el texto, mantén la jerarquía educativa y omite cualquier ruido o metadatos:\n\n${fullText.substring(0, 50000)}`,
-          config: { temperature: 0.1 },
-        });
+        // Normalizar saltos de línea excesivos
+        fullText = fullText.replace(/\n{3,}/g, '\n\n');
 
-        return { extractedText: text || fullText.trim() };
-      } catch (error: any) {
-        return { error: `Error al procesar el Word (Mammoth/IA): ${error.message}` };
-      }
-    }
-
-    // 3. Manejo de PDF (.pdf)
-    if (currentDataUri.includes('application/pdf') || input.documentName.toLowerCase().endsWith('.pdf')) {
-      try {
-        const base64Part = currentDataUri.split(',')[1];
-        if (!base64Part) throw new Error("Archivo PDF vacío.");
-        const buffer = Buffer.from(base64Part, 'base64');
-        
-        // Extraemos texto localmente con pdf-parse
-        const { PDFParse } = await import('pdf-parse');
-        const parser = new PDFParse({ data: buffer });
-        const pdfData = await parser.getText();
-        await parser.destroy();
-        const fullText = pdfData.text;
-
-        if (!fullText || fullText.trim().length < 10) {
-          throw new Error('No se pudo extraer texto seleccionable del PDF. ¿Es una imagen escaneada?');
+        // Para evitar desbordar el contexto de la IA y prevenir timeouts en Cloud Run,
+        // acotamos el texto del syllabus a un máximo óptimo de 12.000 caracteres
+        if (fullText.length > 12000) {
+          fullText = fullText.substring(0, 12000) + '\n\n[... Contenido del temario truncado para optimización ...]';
         }
 
-        // Enviamos el texto a Gemini para limpieza (igual que hacemos con Word)
-        const { text } = await ai.generate({
-          prompt: `Actúa como un transcriptor experto. Limpia este texto extraído de un PDF, corrige saltos de línea rotos, mantén la jerarquía educativa y omite elementos de encabezado/pie de página repetitivos o ruido:\n\n${fullText.substring(0, 50000)}`,
-          config: { temperature: 0.1 },
-        });
-
-        return { extractedText: text || fullText.trim() };
+        return { extractedText: fullText };
       } catch (error: any) {
-        return { error: `Gemini falló al procesar el PDF: ${error.message}` };
+        return { error: `Error al procesar el Word (Mammoth): ${error.message}` };
       }
     }
 
-    return { error: 'Formato no soportado. Usa PDF (.pdf), Word (.docx) o Texto (.txt).' };
+    return { error: 'Formato no soportado para Archivo Maestro. Usa únicamente Word (.docx) o Texto (.txt).' };
   }
 );

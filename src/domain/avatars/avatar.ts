@@ -300,9 +300,62 @@ export const AvatarSchema = z.object({
   imageUrl: z.string().min(1, 'Debes proporcionar una imagen de rostro'),
   imageSource: AvatarImageSourceSchema.default('upload'),
   isDefault: z.boolean().default(false),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
+  createdAt: z.union([z.date(), z.string()]).optional(),
+  updatedAt: z.union([z.date(), z.string()]).optional(),
 });
 
 export type Avatar = z.infer<typeof AvatarSchema>;
 export type NewAvatar = z.input<typeof AvatarSchema>;
+
+/** Avatares oficiales maestros con fondo croma listos para render */
+export const INITIAL_DEFAULT_AVATARS: Avatar[] = [
+  {
+    id: 'avatar-tomas-ar',
+    name: 'Tomás — Presentador Tech',
+    role: 'Instructor y Anuncios de Marketing',
+    gender: 'male',
+    language: 'es',
+    accent: 'AR',
+    voiceProvider: 'edge-tts',
+    voiceId: 'es-AR-TomasNeural',
+    imageUrl: '/avatars/avatar_chroma_male.jpg',
+    imageSource: 'ai-generated',
+    isDefault: true,
+  },
+  {
+    id: 'avatar-elena-ar',
+    name: 'Elena — Educadora',
+    role: 'Clases Teóricas y Bienvenidas',
+    gender: 'female',
+    language: 'es',
+    accent: 'AR',
+    voiceProvider: 'edge-tts',
+    voiceId: 'es-AR-ElenaNeural',
+    imageUrl: '/avatars/avatar_chroma_female.jpg',
+    imageSource: 'ai-generated',
+    isDefault: false,
+  },
+  {
+    id: 'avatar-jorge-mx',
+    name: 'Jorge — Comercial',
+    role: 'Campañas de Prospección y Ventas',
+    gender: 'male',
+    language: 'es',
+    accent: 'MX',
+    voiceProvider: 'edge-tts',
+    voiceId: 'es-MX-JorgeNeural',
+    imageUrl: '/avatars/avatar_chroma_latin.jpg',
+    imageSource: 'ai-generated',
+    isDefault: false,
+  },
+];
+
+export interface AvatarRepository {
+  listByUser(userId: string): Promise<Avatar[]>;
+  getById(userId: string, avatarId: string): Promise<Avatar | null>;
+  getDefault(userId: string): Promise<Avatar | null>;
+  save(userId: string, avatar: Avatar): Promise<Avatar>;
+  delete(userId: string, avatarId: string): Promise<{ deleted: boolean; newDefaultId?: string }>;
+  seedDefaults(userId: string): Promise<Avatar[]>;
+}
+

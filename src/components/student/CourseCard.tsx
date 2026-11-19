@@ -35,7 +35,7 @@ export function StudentCourseCard({
 }: CourseCardProps) {
   const isFinished = progressPercent >= 100;
   const isActive = status === 'active' && isApproved;
-  const defaultImage = `https://loremflickr.com/600/400/education,course?lock=${courseId}`;
+  const defaultImage = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop';
 
   if (variant === 'list') {
     return (
@@ -48,7 +48,7 @@ export function StudentCourseCard({
                 alt={title} 
                 fill 
                 className="object-cover" 
-                unoptimized={!!thumbnail} 
+                unoptimized 
               />
             </div>
             <div className="min-w-0 flex-1">
@@ -95,7 +95,7 @@ export function StudentCourseCard({
           fill 
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover group-hover:scale-110 transition-transform duration-700"
-          unoptimized={!!thumbnail}
+          unoptimized
         />
         <div className="absolute top-4 left-4">
           <Badge className={cn(

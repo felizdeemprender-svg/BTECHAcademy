@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { askEvo } from '@/ai/flows/evo-assistant';
-import { getAdminAuth } from '@/firebase/admin';
+import { getAdminAuth, adminDb } from '@/firebase/admin';
 import { rateLimitConfigs } from '@/lib/rate-limit';
 import { sanitizeError } from '@/lib/error-sanitizer';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPER: Verificar Firebase ID Token (Authorization: Bearer <token>)
 // ─────────────────────────────────────────────────────────────────────────────
-async function verifyAuth(req: NextRequest): Promise<{ uid: string; role: string } | null> {
+async function verifyAuth(req: NextRequest): Promise<{ uid: string; role: 'alumno' | 'mentor' | 'admin' | 'marketing'; displayName?: string; email?: string } | null> {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -21,9 +21,37 @@ async function verifyAuth(req: NextRequest): Promise<{ uid: string; role: string
     }
 
     const decoded = await getAdminAuth().verifyIdToken(token);
+    
+    let role = (decoded.role as string) || '';
+    let displayName = decoded.name || '';
+    let email = decoded.email || '';
+
+    try {
+      const userDoc = await adminDb.collection('users').doc(decoded.uid).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data() || {};
+        displayName = displayName || userData.displayName || userData.name || '';
+        email = email || userData.email || '';
+        const roles: string[] = userData.roles || (userData.role ? [userData.role] : []);
+        if (roles.includes('admin') || userData.role === 'admin') {
+          role = 'admin';
+        } else if (roles.includes('mentor') || userData.role === 'mentor') {
+          role = 'mentor';
+        } else if (roles.includes('marketing') || userData.role === 'marketing') {
+          role = 'marketing';
+        } else if (!role) {
+          role = 'alumno';
+        }
+      }
+    } catch (e) {
+      console.warn('[Evo Chat Auth] Aviso al consultar Firestore userDoc:', e);
+    }
+
     return {
       uid: decoded.uid,
-      role: decoded.role || 'alumno'
+      role: (role as 'alumno' | 'mentor' | 'admin' | 'marketing') || 'alumno',
+      displayName,
+      email
     };
   } catch {
     return null;
@@ -48,7 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     const uid = auth.uid;
-    const role = (auth.role as 'alumno' | 'mentor' | 'admin' | 'marketing') || 'alumno';
+    const role = auth.role;
 
     // Convert history into a string to pass as context
     const chatHistory = history
@@ -62,7 +90,10 @@ export async function POST(req: NextRequest) {
     const result = await askEvo({
       message: enrichedMessage,
       role,
-      currentPath: '/dashboard', // Can be enhanced later to receive from widget
+      uid,
+      userDisplayName: auth.displayName,
+      userEmail: auth.email,
+      currentPath: '/dashboard',
     });
 
     return NextResponse.json({

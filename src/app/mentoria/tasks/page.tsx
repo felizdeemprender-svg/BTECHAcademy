@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useFirebase } from '@/firebase';
@@ -20,25 +21,71 @@ import { StudentPageHeader } from '@/components/student/PageHeader';
 import { useStudentTasks } from '@/hooks/student/useStudentTasks';
 
 // Local Components
+import { isNewMentoringApiEnabled } from '@/lib/feature-flags';
+import { submitProgramTask } from '@/lib/api/mentoring-client';
 import { TaskTable } from '@/components/tasks/TaskTable';
 import { TaskModals } from '@/components/tasks/TaskModals';
 
 export default function StudentTasksPage() {
-  const { profile } = useAuth();
+  return (
+    <Suspense fallback={<DashboardLayout><div className="p-20 text-center text-muted-foreground">Cargando desafíos...</div></DashboardLayout>}>
+      <StudentTasksContent />
+    </Suspense>
+  );
+}
+
+function StudentTasksContent() {
+  const { profile, user } = useAuth();
   const db = useFirestore();
   const { storage } = useFirebase();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   
   // Data State
-  const { pendingTasks, completedTasks, isLoading } = useStudentTasks();
+  const { pendingTasks, completedTasks, isLoading, refetch } = useStudentTasks();
 
   // UI State
+  const tabParam = searchParams.get('tab');
+  const taskIdParam = searchParams.get('taskId');
+  const [activeTab, setActiveTab] = useState<'pending' | 'history'>(
+    tabParam === 'history' ? 'history' : 'pending'
+  );
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const handledTaskIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (tabParam === 'history' || tabParam === 'pending') {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  useEffect(() => {
+    if (isLoading || !taskIdParam || handledTaskIdRef.current === taskIdParam) return;
+
+    const completedMatch = completedTasks.find((t: any) => t.id === taskIdParam);
+    if (completedMatch) {
+      handledTaskIdRef.current = taskIdParam;
+      setActiveTab('history');
+      setSelectedTask(completedMatch);
+      setIsDetailOpen(true);
+      return;
+    }
+
+    const pendingMatch = pendingTasks.find((t: any) => t.id === taskIdParam);
+    if (pendingMatch) {
+      handledTaskIdRef.current = taskIdParam;
+      setActiveTab('pending');
+      setSelectedTask(pendingMatch);
+      setAnswer('');
+      setFile(null);
+      setIsResponseOpen(true);
+    }
+  }, [isLoading, taskIdParam, completedTasks, pendingTasks]);
 
   const handleSubmitTask = async (task: any) => {
     if (!answer.trim()) return toast({ variant: 'destructive', title: 'Respuesta vacía' });
@@ -78,8 +125,24 @@ export default function StudentTasksPage() {
 
       try {
         if (task.followUpId) {
-          const taskRef = doc(db, 'followups', task.followUpId, 'tasks', task.id);
-          await updateDoc(taskRef, updateData);
+          if (isNewMentoringApiEnabled() && user) {
+            const token = await user.getIdToken();
+            await submitProgramTask(
+              task.followUpId,
+              task.id,
+              token,
+              {
+                answer,
+                fileUrl,
+                aiFeedback: aiResult.feedback,
+                score: aiResult.score,
+              }
+            );
+            refetch();
+          } else {
+            const taskRef = doc(db, 'followups', task.followUpId, 'tasks', task.id);
+            await updateDoc(taskRef, updateData);
+          }
         } else {
           let taskRef = doc(db, 'users', profile!.uid, 'individualTasks', task.id);
           try {
@@ -115,7 +178,7 @@ export default function StudentTasksPage() {
           description="Tareas individuales asignadas por tus mentores y evaluadas por IA."
         />
 
-        <Tabs defaultValue="pending" className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v === 'history' ? 'history' : 'pending')} className="w-full">
           <TabsList className="bg-secondary/20 p-1 rounded-2xl h-14 w-full justify-start gap-2 mb-8 overflow-x-auto overflow-y-hidden">
             <TabsTrigger value="pending" className="rounded-xl px-4 md:px-8 font-bold gap-2 text-xs md:text-sm whitespace-nowrap">
               <Clock className="h-4 w-4" /> Pendientes ({pendingTasks.length})

@@ -18,16 +18,20 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { campaignId, assets, targetAudience, campaignMission, googleToken, coordinationPlan } = body;
+    const { campaignId, assets, targetAudience, campaignMission, googleToken, coordinationPlan, autoGenerateImages } = body;
 
     if (!campaignId || !assets) {
       return NextResponse.json({ success: false, error: 'Faltan parámetros' }, { status: 400 });
     }
 
-    console.log(`[DraftCampaign] Orquestando redacción de borradores para campaña: ${campaignId}`);
-    
+    console.log(`[DraftCampaign] Orquestando campaña: ${campaignId} (Auto-imágenes: ${autoGenerateImages !== false})`);
+    const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
+    const forwardedProto = req.headers.get('x-forwarded-proto') || (forwardedHost.includes('localhost') ? 'http' : 'https');
+    const requestOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : req.nextUrl.origin;
+
     await enqueueVideoTask({
       action: 'draft-full-campaign',
+      origin: requestOrigin,
       campaignId,
       courseId: campaignId,
       assets,
@@ -35,11 +39,13 @@ export async function POST(req: NextRequest) {
       role: decoded.role || 'mentor',
       data: {
         ...assets,
-        googleToken
+        googleToken,
+        autoGenerateImages: autoGenerateImages !== false
       },
       targetAudience,
       campaignMission,
-      coordinationPlan
+      coordinationPlan,
+      autoGenerateImages: autoGenerateImages !== false
     });
 
     return NextResponse.json({ success: true, message: 'Borradores encolados en Cloud Tasks' });

@@ -85,9 +85,15 @@ function checkCreateValidations(planData: Record<string, unknown>): string | nul
   if (!planData.durationMonths || (planData.durationMonths as number) <= 0) {
     return 'La duración en meses es requerida';
   }
-  const limits = planData.limits as { maxCourses?: unknown; maxStudents?: unknown } | undefined;
+  const limits = planData.limits as { maxCourses?: unknown; maxStudents?: unknown; maxTutors?: unknown } | undefined;
   if (!limits || limits.maxCourses === undefined || limits.maxStudents === undefined) {
     return 'Los límites de cursos y estudiantes son requeridos';
+  }
+  if (
+    (planData.targetAudience === 'enterprise' || planData.isEnterprise === true) &&
+    (limits.maxTutors === undefined || (limits.maxTutors as number) <= 0)
+  ) {
+    return 'El límite de tutores es requerido para planes de empresa';
   }
   const permissions = planData.permissions as Record<string, boolean> | undefined;
   if (!permissions || Object.values(permissions).every((p) => p === false)) {
@@ -183,15 +189,26 @@ function normalizePublicPlan(
   source: 'camelCase' | 'kebab-case',
 ): PublicPlanView {
   const data = plan.data;
+  const pricing = data.pricing as Record<string, unknown> | undefined;
+  const entitlements = data.entitlements as Record<string, unknown> | undefined;
+
+  const price = Number((data.price as number) ?? pricing?.amount ?? 0);
+  const limits = data.limits || entitlements?.limits || { maxCourses: 5, maxStudents: 100 };
+  const aiQuotas = data.aiQuotas || entitlements?.aiQuotas || { totalCredits: 0 };
+  const targetAudience = data.targetAudience || (data.isEnterprise ? 'enterprise' : 'tutor');
+  const durationMonths = Number((data.durationMonths as number) ?? pricing?.minimumCommitmentMonths ?? 12);
+
   return {
     ...data,
     id: plan.id,
     _source: source,
     name: (data.name as string) || 'Plan sin nombre',
-    price: Number((data.price as number) || 0),
+    price,
     isActive: (data.isActive as boolean) ?? true,
-    aiQuotas: data.aiQuotas || { totalCredits: 0 },
-    limits: data.limits || { maxCourses: 5, maxStudents: 100 },
+    aiQuotas,
+    limits,
+    targetAudience,
+    durationMonths,
   };
 }
 

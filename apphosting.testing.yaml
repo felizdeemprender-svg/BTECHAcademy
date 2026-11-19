@@ -1,0 +1,59 @@
+# Settings to manage and configure Firebase App Hosting for Testing environment.
+# https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  minInstances: 0
+  maxInstances: 5
+  cpu: 2
+  memoryMiB: 4096
+
+env:
+  # App Base URL (Testing)
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://btechacademy-test--feliz-de-emprender.us-central1.hosted.app
+    availability: [BUILD, RUNTIME]
+
+  # Firebase Config (Testing - feliz-de-emprender)
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyC8Is74Io__gsvpCbrbDxo7EpY61cj1ruI
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: feliz-de-emprender.firebaseapp.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: feliz-de-emprender
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: feliz-de-emprender.firebasestorage.app
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "612058284616"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:612058284616:web:09e476dd0ce38580334e7d"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-8ZV72M87ZC
+    availability: [BUILD, RUNTIME]
+
+  # Google GenAI / Gemini (Cloud Secret Manager)
+  - variable: GOOGLE_GENAI_API_KEY
+    secret: GEMINI_API_KEY
+    availability: [RUNTIME]
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+    availability: [RUNTIME]
+  - variable: GOOGLE_API_KEY
+    secret: GEMINI_API_KEY
+    availability: [RUNTIME]
+
+  # Evolution API & Cron
+  - variable: EVOLUTION_API_URL
+    value: https://evolution-api-kt4s-production.up.railway.app
+    availability: [BUILD, RUNTIME]
+  - variable: EVOLUTION_API_KEY
+    value: 031005042af8783e3159862144b4610036b5a1cba07f8398323e4d19a9942b3c
+    availability: [BUILD, RUNTIME]
+  - variable: CRON_SECRET
+    value: fastoriasecret2026
+    availability: [BUILD, RUNTIME]

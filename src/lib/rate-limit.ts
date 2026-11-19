@@ -7,22 +7,31 @@ interface RateLimitOptions {
   keyGenerator?: (req: NextRequest) => string;
 }
 
-// 1. Configuramos Redis usando la variable de entorno, si no existe usamos un fallback local.
-// En producción, REDIS_URL debería apuntar a `fastoria-redis`.
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-// Lazy initialization para no romper el build si no hay Redis disponible en el server component
+// 1. Configuramos Redis únicamente si la variable de entorno REDIS_URL está definida.
+// Si no existe, usamos de forma limpia y directa el fallback en memoria (memoryStore).
+const redisUrl = process.env.REDIS_URL;
 let redisClient: Redis | null = null;
 
-try {
-  redisClient = new Redis(redisUrl, {
-    maxRetriesPerRequest: 1,
-    retryStrategy(times) {
-      if (times > 3) return null; // No reintentar indefinidamente
-      return Math.min(times * 50, 2000);
-    }
-  });
-} catch (e) {
-  console.warn('⚠️ Error initializing Redis for Rate Limiting. Falling back to memory.', e);
+if (redisUrl) {
+  try {
+    redisClient = new Redis(redisUrl, {
+      maxRetriesPerRequest: 1,
+      enableOfflineQueue: false,
+      retryStrategy(times) {
+        if (times > 3) return null; // No reintentar indefinidamente
+        return Math.min(times * 50, 2000);
+      }
+    });
+
+    // Registrar manejador de error para evitar que ioredis lance 'Unhandled error event' no capturado
+    redisClient.on('error', (err) => {
+      // Registrar advertencia sin detener el servidor; rate limiter recurrirá a memoryStore
+      console.warn('[RateLimit] Advertencia de conexión Redis (usando fallback en memoria):', err?.message || err);
+    });
+  } catch (e) {
+    console.warn('[RateLimit] Error al inicializar cliente Redis. Usando memoria.', e);
+    redisClient = null;
+  }
 }
 
 // Fallback en memoria si Redis falla

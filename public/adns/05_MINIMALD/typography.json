@@ -4,7 +4,7 @@
   "segment_styles": {
     "GANCHO": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 75,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -12,28 +12,52 @@
         "bold": true,
         "animation": "fade",
         "marginV": 300,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 3,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 4,
+          "color": "#000000",
+          "alpha": 0.75,
+          "blur": 2.0
+        },
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "Inter-Light.ttf",
         "fontSize": 40,
-        "primaryColor": "#CCCCCC@0.8",
+        "primaryColor": "#F5F5F5@1.0",
         "alignment": "center",
         "uppercase": false,
         "animation": "fade",
         "marginV": 400,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.8,
+          "blur": 1.5
+        },
         "bold": false,
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "accentColor": "#38BDF8"
       },
       "watermark": {
         "fontName": "arialbd.ttf",
@@ -54,7 +78,7 @@
     },
     "VALOR": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 70,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -62,28 +86,52 @@
         "bold": true,
         "animation": "fade",
         "marginV": 320,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 3,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 4,
+          "color": "#000000",
+          "alpha": 0.75,
+          "blur": 2.0
+        },
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "Inter-Light.ttf",
         "fontSize": 35,
-        "primaryColor": "#AAAAAA@0.8",
+        "primaryColor": "#F5F5F5@1.0",
         "alignment": "center",
         "uppercase": false,
         "animation": "fade",
         "marginV": 420,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.8,
+          "blur": 1.5
+        },
         "bold": false,
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "accentColor": "#38BDF8"
       },
       "watermark": {
         "fontName": "arialbd.ttf",
@@ -104,7 +152,7 @@
     },
     "CTA": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 85,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -112,28 +160,52 @@
         "bold": true,
         "animation": "fade",
         "marginV": 280,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 3,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 4,
+          "color": "#000000",
+          "alpha": 0.75,
+          "blur": 2.0
+        },
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "Inter-Light.ttf",
         "fontSize": 45,
-        "primaryColor": "#FFFFFF@1.0",
+        "primaryColor": "#F5F5F5@1.0",
         "alignment": "center",
         "uppercase": false,
         "animation": "fade",
         "marginV": 380,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.8,
+          "blur": 1.5
+        },
         "bold": false,
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "accentColor": "#38BDF8"
       },
       "watermark": {
         "fontName": "arialbd.ttf",
@@ -154,7 +226,7 @@
     },
     "CIERRE": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "Inter-Bold.ttf",
         "fontSize": 75,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -162,28 +234,52 @@
         "bold": true,
         "animation": "fade",
         "marginV": 540,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 3,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 4,
+          "color": "#000000",
+          "alpha": 0.75,
+          "blur": 2.0
+        },
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "Inter-Light.ttf",
         "fontSize": 35,
-        "primaryColor": "#888888@1.0",
+        "primaryColor": "#F5F5F5@1.0",
         "alignment": "center",
         "uppercase": false,
         "animation": "fade",
         "marginV": 640,
-        "outline": null,
-        "shadow": null,
+        "outline": {
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
+        },
+        "shadow": {
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.8,
+          "blur": 1.5
+        },
         "bold": false,
         "italic": false,
         "letterSpacing": 0,
         "marginH": 0,
-        "overlay": null
+        "overlay": null,
+        "accentColor": "#38BDF8"
       },
       "watermark": {
         "fontName": "arialbd.ttf",

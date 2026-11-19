@@ -21,7 +21,7 @@
         "speed": 0.15,
         "direction": "center",
         "transition": "xfade:dissolve",
-        "transition_duration": 1.2
+        "transition_duration": 0.8
       },
       "VALOR": {
         "mode": "pan",
@@ -29,7 +29,7 @@
         "speed": 0.1,
         "direction": "left",
         "transition": "xfade:fade",
-        "transition_duration": 1
+        "transition_duration": 0.7
       },
       "CTA": {
         "mode": "zoom",
@@ -37,7 +37,7 @@
         "speed": 0.2,
         "direction": "center",
         "transition": "xfade:dissolve",
-        "transition_duration": 1.5
+        "transition_duration": 0.8
       },
       "CIERRE": {
         "mode": "static",
@@ -45,12 +45,12 @@
         "speed": 0,
         "direction": "center",
         "transition": "xfade:fade",
-        "transition_duration": 2
+        "transition_duration": 1.0
       }
     }
   },
   "transitions": {
-    "default": "xfade:fade",
-    "duration": 1.2
+    "default": "xfade:dissolve",
+    "duration": 0.8
   }
 }

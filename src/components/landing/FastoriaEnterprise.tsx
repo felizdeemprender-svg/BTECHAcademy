@@ -36,16 +36,17 @@ export function FastoriaEnterprise() {
             className="bg-slate-800/90 border border-slate-700 p-6 rounded-2xl text-center w-full lg:w-72 shrink-0"
           >
             <div className="text-xs font-bold text-slate-400 uppercase">Inversión Empresas</div>
-            <div className="text-2xl font-black text-white mt-1 mb-4">Desde ARS 100.000 <span className="text-xs font-normal text-slate-400">/ mes</span></div>
-            <a href="https://wa.me/5491176411666?text=Hola%20quiero%20conocer%20Fastoria%20Empresas" target="_blank" rel="noopener noreferrer">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full py-3 rounded-xl bg-[#1CB899] hover:bg-[#18a287] text-[#0F172A] font-black text-xs shadow-md transition-colors"
-              >
-                Quiero conocer Fastoria Empresas
-              </motion.button>
-            </a>
+            <div className="text-2xl font-black text-white mt-1 mb-4">Desde USD $500 <span className="text-xs font-normal text-slate-400">/ mes</span></div>
+            <motion.a
+              href="https://wa.me/5491176411666?text=Hola%20quiero%20conocer%20Fastoria%20Empresas"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="w-full py-3 rounded-xl bg-[#1CB899] hover:bg-[#18a287] text-[#0F172A] font-black text-xs shadow-md transition-colors block text-center"
+            >
+              Quiero conocer Fastoria Empresas
+            </motion.a>
           </motion.div>
         </Reveal>
       </section>

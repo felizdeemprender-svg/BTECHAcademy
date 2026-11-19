@@ -79,6 +79,15 @@ class FakeMarketplaceRepo implements MarketplaceRepository {
       .filter((d): d is CatalogDoc => d !== null);
   }
 
+  async listFollowupsByIds(ids: readonly string[]): Promise<CatalogDoc[]> {
+    return ids
+      .map((id) => {
+        const raw = this.store.followups?.[id];
+        return raw === undefined ? null : doc(id, raw);
+      })
+      .filter((d): d is CatalogDoc => d !== null);
+  }
+
   async listTagsByIds(ids: readonly string[]): Promise<CatalogDoc[]> {
     return ids
       .map((id) => {
@@ -226,13 +235,21 @@ function marketplaceStore(): Store {
 
 describe('createCourse', () => {
   function deps(overrides: {
-    author?: { isAdmin: boolean; subscription?: { endDate?: unknown; maxSimultaneousCourses?: number } } | null;
+    author?: (Partial<import('../../course-repository').CourseAuthor> & { isAdmin?: boolean }) | null;
     activeCount?: number;
   } = {}) {
     const written: { id: string; doc: Record<string, unknown> }[] = [];
     return {
       written,
-      authorSource: { findAuthor: async () => overrides.author ?? null },
+      authorSource: {
+        findAuthor: async (): Promise<import('../../course-repository').CourseAuthor | null> => {
+          if (!overrides.author) return null;
+          return {
+            isAdmin: overrides.author.isAdmin ?? false,
+            ...overrides.author,
+          };
+        },
+      },
       counter: { countActiveCoursesByMentor: async () => overrides.activeCount ?? 0 },
       writer: {
         createCourse: async (doc: { id: string; mentorId: string; data: Record<string, unknown> }) => {
@@ -308,6 +325,26 @@ describe('createCourse', () => {
     expect(r.ok).toBe(true);
     expect(d.written).toHaveLength(1);
   });
+
+  it('tutor de empresa omite suscripción individual, asigna companyId/ownerId y fuerza draft', async () => {
+    const d = deps({
+      author: { isAdmin: false, companyId: 'company-xyz', companyRole: 'tutor' },
+      activeCount: 0,
+    });
+    const r = await createCourse(d, {
+      mentorId: 'tutor-emp',
+      id: 'c-emp',
+      courseData: { title: 'Curso Empresa', status: 'published' },
+    });
+    expect(r.ok).toBe(true);
+    expect(d.written).toHaveLength(1);
+    expect(d.written[0].doc).toMatchObject({
+      title: 'Curso Empresa',
+      companyId: 'company-xyz',
+      ownerId: 'company-xyz',
+      status: 'draft',
+    });
+  });
 });
 
 describe('listTutorCatalog', () => {
@@ -318,14 +355,15 @@ describe('listTutorCatalog', () => {
     if (r.ok) expect(r.value).toEqual({ courses: [], total: 0 });
   });
 
-  it('enriquece landings con curso, tags y orden desc', async () => {
+  it('enriquece landings con curso, tags y orden desc (excluyendo landings de embajadores)', async () => {
     const repo = new FakeMarketplaceRepo(marketplaceStore());
     const r = await listTutorCatalog(repo, { tutorId: 'm1' });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    // m1: spFree(cFree), spExpired(cExpired), spFuture(cFuture), spReferral(cReferral)
+    // m1: spFree(cFree), spExpired(cExpired), spFuture(cFuture) — spReferral(cReferral) queda excluida por embajador.
     // Nota: esta ruta NO filtra ventana promocional (igual que el legacy).
-    expect(r.value.total).toBe(4);
+    expect(r.value.total).toBe(3);
+    expect(r.value.courses.find(c => c.salesPageId === 'spReferral')).toBeUndefined();
     expect(r.value.courses[0].id).toBe('cFree');
     expect(r.value.courses[0]).toMatchObject({
       salesPageId: 'spFree',
@@ -440,6 +478,25 @@ describe('getMarketplace (courses/marketplace)', () => {
     expect(free?.pricing).toEqual({ type: 'free', amount: 0, currency: 'USD' });
     expect(free?.tags).toEqual(['Yoga']);
   });
+
+  it('excluye cursos con companyId y tutores con companyId', async () => {
+    const store = marketplaceStore();
+    store.courses.cCompany = {
+      mentorId: 'm1', title: 'Curso Empresa', price: 50,
+      status: 'published', isActive: true, publicListing: true,
+      companyId: 'comp-1', createdAt: ts(new Date('2026-06-10T00:00:00.000Z')),
+    };
+    store.salesPages.spCompany = { mentorId: 'm1', courseId: 'cCompany', isActive: true, landingType: 'general' };
+    store.users.m2.companyId = 'comp-2';
+
+    const repo = new FakeMarketplaceRepo(store);
+    const r = await getMarketplace(repo, { limit: 12, now: NOW });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const ids = r.value.courses.map((c) => c.id);
+    expect(ids).not.toContain('cCompany');
+    expect(ids).not.toContain('cPaid');
+  });
 });
 
 describe('getMarketplaceCatalog (api/marketplace)', () => {
@@ -499,5 +556,20 @@ describe('getMarketplaceCatalog (api/marketplace)', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.value.marketplace.length).toBeGreaterThan(0);
+  });
+
+  it('excluye cursos con companyId y mentores asociados a empresa', async () => {
+    const store = catalogStore();
+    store.courses.cCompany = {
+      title: 'Curso Empresa', status: 'published', isActive: true, price: 50, companyId: 'comp-1'
+    };
+    store.salesPages.spCompany = { courseId: 'cCompany', mentorId: 'm1', isActive: true, landingType: 'general' };
+
+    const repo = new FakeMarketplaceRepo(store);
+    const r = await getMarketplaceCatalog(repo, { now: NOW });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const items = r.value.marketplace as { id: string }[];
+    expect(items.map((i) => i.id)).not.toContain('cCompany');
   });
 });

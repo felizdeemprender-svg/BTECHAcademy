@@ -42,7 +42,8 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { resolveProfileBrand } from '@/lib/landing-styles';
+import { CourseBrandTabContent } from '@/components/brands/course-brand-tab-content';
+import { resolveProfileBrand, resolveCourseBrand } from '@/lib/landing-styles';
 import type { StyleBrand } from '@/lib/landing-styles';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -77,23 +78,39 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
 
   const ownBrands: StyleBrand[] = Array.isArray(mentorProfile?.profile?.brands) ? mentorProfile.profile.brands : [];
   const activeBrand = resolveProfileBrand(mentorProfile?.profile);
-  const selectedBrand = formData.brandName
-    ? ownBrands.find(b => b.name === formData.brandName) || null
-    : activeBrand;
-  const primaryColor = selectedBrand?.palette?.primary || formData.primaryColor;
+
+  // Preponderancia del brand elegido para el curso
+  const resolvedBrand = resolveCourseBrand(
+    {
+      brandName: formData.brandName,
+      primaryColor: formData.primaryColor,
+    },
+    mentorProfile?.profile
+  );
+
+  const primaryColor = resolvedBrand.primary;
+  const secondaryColor = resolvedBrand.secondary;
+  const accentColor = resolvedBrand.accent;
+  const headingFont = resolvedBrand.headingFont;
+  const bodyFont = resolvedBrand.bodyFont;
+  const selectedBrand = resolvedBrand.brand;
+
+  const isCompanyTutor = Boolean(
+    mentorProfile?.companyRole === 'tutor' ||
+    (mentorProfile?.companyId && mentorProfile?.companyRole !== 'owner' && !mentorProfile?.roles?.includes('empresa') && !mentorProfile?.isEnterprise) ||
+    (course?.companyId && mentorProfile?.companyRole === 'tutor')
+  );
 
   useEffect(() => {
     if (course && mentorProfile) {
       const override = course.brandingOverride || {};
       const mentorSocials = mentorProfile.profile?.socials || {};
-      const overrideBrandName = override.brandName || '';
-      const brandPrimary = overrideBrandName
-        ? (ownBrands.find(b => b.name === overrideBrandName)?.palette?.primary)
-        : activeBrand?.palette?.primary;
+      const courseBrandInitial = resolveCourseBrand(override, mentorProfile.profile);
+
       setFormData({
         bio: override.bio || mentorProfile.profile?.bio || '',
-        brandName: overrideBrandName,
-        primaryColor: override.primaryColor || brandPrimary || mentorProfile.profile?.branding?.primaryColor || '#3B2D86',
+        brandName: override.brandName || courseBrandInitial.name || '',
+        primaryColor: courseBrandInitial.primary,
         logoUrl: override.logoUrl || mentorProfile.profile?.branding?.logoUrl || '',
         socials: {
           linkedin: override.socials?.linkedin || mentorSocials.linkedin || '',
@@ -114,8 +131,26 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
     if (!id) return;
     setLoading(true);
     const ref = doc(db, 'courses', id);
-    const updateData = { brandingOverride: { ...formData, primaryColor }, updatedAt: serverTimestamp() };
-    updateDoc(ref, updateData).then(() => toast({ title: 'Identidad Visual Actualizada' }))
+    const updateData = isCompanyTutor
+      ? {
+          'brandingOverride.bio': formData.bio,
+          'brandingOverride.socials': formData.socials,
+          updatedAt: serverTimestamp(),
+        }
+      : {
+          brandingOverride: {
+            ...formData,
+            brandName: resolvedBrand.name,
+            primaryColor: resolvedBrand.primary,
+            secondaryColor: resolvedBrand.secondary,
+            accentColor: resolvedBrand.accent,
+            headingFont: resolvedBrand.headingFont,
+            bodyFont: resolvedBrand.bodyFont,
+            brand: resolvedBrand.brand || null,
+          },
+          updatedAt: serverTimestamp(),
+        };
+    updateDoc(ref, updateData).then(() => toast({ title: isCompanyTutor ? 'Perfil en el Curso Actualizado' : 'Identidad Visual Actualizada' }))
       .catch(e => errorEmitter.emit('permission-error', new FirestorePermissionError({ path: ref.path, operation: 'update', requestResourceData: updateData })))
       .finally(() => setLoading(false));
   };
@@ -149,7 +184,12 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
       <div className="max-w-6xl mx-auto space-y-8 pb-24">
         <header className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.push('/courses/manage')} className="rounded-full h-12 w-12 hover:bg-secondary"><ArrowLeft className="h-6 w-6" /></Button>
-          <div><h1 className="text-4xl font-headline font-bold text-primary tracking-tight">Diseñador de Marca del Curso</h1><p className="text-muted-foreground text-lg font-medium">{course?.title}</p></div>
+          <div>
+            <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">
+              {isCompanyTutor ? 'Perfil y Redes del Tutor en el Curso' : 'Diseñador de Marca del Curso'}
+            </h1>
+            <p className="text-muted-foreground text-lg font-medium">{course?.title}</p>
+          </div>
         </header>
 
         <div className="space-y-10">
@@ -157,7 +197,9 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
             <TabsList className="bg-white/50 p-1.5 rounded-[1.5rem] mb-10 shadow-sm border w-full justify-start h-16 gap-2">
               <TabsTrigger value="perfil" className="rounded-xl font-bold px-8 h-13 text-base"><User className="h-4 w-4 mr-2" /> Perfil</TabsTrigger>
               <TabsTrigger value="contacto" className="rounded-xl font-bold px-8 h-13 text-base"><Globe className="h-4 w-4 mr-2" /> Contacto</TabsTrigger>
-              <TabsTrigger value="marca" className="rounded-xl font-bold px-8 h-13 text-base"><Palette className="h-4 w-4 mr-2" /> Marca</TabsTrigger>
+              {!isCompanyTutor && (
+                <TabsTrigger value="marca" className="rounded-xl font-bold px-8 h-13 text-base"><Palette className="h-4 w-4 mr-2" /> Marca</TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="perfil">
@@ -193,127 +235,40 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
               </Card>
             </TabsContent>
 
-            <TabsContent value="marca">
-              <Card>
-                <CardHeader className="bg-primary/5 p-10"><CardTitle className="text-2xl font-bold text-primary">Identidad Visual del Curso</CardTitle></CardHeader>
-                <CardContent className="p-10 space-y-12">
-                  <div className="space-y-4">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Logo del Programa</Label>
-                    <div className="flex items-center gap-8">
-                      <div className="w-32 h-32 rounded-3xl bg-secondary/20 flex items-center justify-center relative overflow-hidden border-4 border-white">
-                        {(formData.logoUrl && typeof formData.logoUrl === 'string') ? (
-                          <Image 
-                            src={formData.logoUrl} 
-                            alt="Logo" 
-                            fill 
-                            sizes="128px"
-                            className="object-contain p-4" 
-                            unoptimized 
-                            data-ai-hint="course logo"
-                          />
-                        ) : <ImageIcon className="h-10 w-10 text-muted-foreground/20" />}
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        <Button variant="outline" className="rounded-2xl font-bold h-14 px-8 border-2" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}>
-                          {uploadingLogo ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2 h-5 w-5" />} Cambiar Logo
-                        </Button>
-                        {formData.logoUrl && (
-                          <Button variant="ghost" className="rounded-2xl font-bold h-12 px-8 text-destructive hover:bg-destructive/10" onClick={handleDeleteLogo}>
-                            <Trash2 className="mr-2 h-5 w-5" /> Eliminar Logo
-                          </Button>
-                        )}
-                      </div>
-                      <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={handleUploadLogo} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Brand visual del curso (hereda el DTCG de tu marca)</Label>
-                    <div className="bg-secondary/10 p-6 rounded-3xl space-y-4">
-                      {ownBrands.length === 0 ? (
-                        <div className="flex flex-col gap-4">
-                          <div className="space-y-1">
-                            <p className="font-bold text-primary">Usa tu brand activo</p>
-                            <p className="text-sm text-muted-foreground">
-                              El curso hereda automáticamente el color de tu marca activa ({activeBrand?.palette?.primary || mentorProfile?.profile?.branding?.primaryColor || '#3B2D86'}).
-                              Sube tus brands DTCG en <span className="font-bold">Ajustes → Mis brands</span> para personalizar este curso.
-                            </p>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3">
-                            {(activeBrand?.palette?.primary || mentorProfile?.profile?.branding?.primaryColor) && (
-                              <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow" style={{ backgroundColor: activeBrand?.palette?.primary || mentorProfile?.profile?.branding?.primaryColor }} />
-                            )}
-                            <span className="text-xs text-muted-foreground font-bold">{activeBrand?.name || 'Brand activo'}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex flex-col gap-1">
-                            <p className="font-bold text-primary">Selecciona un brand DTCG</p>
-                            <p className="text-sm text-muted-foreground">El color, tipografía y tokens se heredan automáticamente de tu marca. El brand activo se marca en verde.</p>
-                          </div>
-                          <div className="grid sm:grid-cols-2 gap-4">
-                            <button
-                              type="button"
-                              onClick={() => setFormData({ ...formData, brandName: '', primaryColor: activeBrand?.palette?.primary || formData.primaryColor })}
-                              className={cn(
-                                'flex items-center gap-4 rounded-2xl border-2 bg-white p-4 text-left transition-colors',
-                                formData.brandName === '' ? 'border-success ring-2 ring-success/20' : 'border-transparent hover:border-primary/40'
-                              )}
-                            >
-                              <div className="h-10 w-10 rounded-xl ring-4 ring-white shadow shrink-0" style={{ backgroundColor: activeBrand?.palette?.primary || '#3B2D86' }} />
-                              <div className="min-w-0">
-                                <p className="font-bold truncate">{activeBrand?.name || 'Brand activo'}</p>
-                                <p className="text-xs text-muted-foreground">{formData.brandName === '' ? 'Usando este brand' : 'Heredar brand activo'}</p>
-                              </div>
-                              {formData.brandName === '' && <Check className="h-5 w-5 text-success ml-auto shrink-0" />}
-                            </button>
-                            {ownBrands.map((brand) => {
-                              const isSelected = formData.brandName === brand.name;
-                              const isActive = activeBrand?.name === brand.name;
-                              return (
-                                <button
-                                  key={brand.name}
-                                  type="button"
-                                  onClick={() => setFormData({ ...formData, brandName: brand.name, primaryColor: brand.palette?.primary || formData.primaryColor })}
-                                  className={cn(
-                                    'flex items-center gap-4 rounded-2xl border-2 bg-white p-4 text-left transition-colors',
-                                    isSelected ? 'border-success ring-2 ring-success/20' : 'border-transparent hover:border-primary/40'
-                                  )}
-                                >
-                                  <div className="flex flex-col gap-1 shrink-0">
-                                    <div className="h-6 w-6 rounded-lg ring-2 ring-white shadow" style={{ backgroundColor: brand.palette?.primary || '#3B2D86' }} />
-                                    <div className="h-6 w-6 rounded-lg ring-2 ring-white shadow" style={{ backgroundColor: brand.palette?.secondary || brand.palette?.primary || '#3B2D86' }} />
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="font-bold truncate">{brand.name}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {isActive ? 'Brand activo en tu web' : brand.tokens?.themeMode || 'light'}
-                                    </p>
-                                  </div>
-                                  {isSelected && <Check className="h-5 w-5 text-success ml-auto shrink-0" />}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Color primario resultante</Label>
-                      <div className="flex items-center gap-4 bg-white rounded-2xl border p-4">
-                        <div className="h-12 w-12 rounded-xl ring-4 ring-white shadow" style={{ backgroundColor: primaryColor }} />
-                        <div className="flex-1 space-y-1">
-                          <p className="text-lg font-mono font-bold">{primaryColor}</p>
-                          <p className="text-xs text-muted-foreground">Se aplicará al curso automáticamente. Para elegir un color libre, cambia el brand en Ajustes.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {!isCompanyTutor && (
+              <TabsContent value="marca">
+                <Card>
+                  <CardHeader className="bg-primary/5 p-10">
+                    <CardTitle className="text-2xl font-bold text-primary">Identidad Visual del Curso</CardTitle>
+                    <CardDescription>Personaliza el logo, la marca y la paleta de colores para este programa.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-10">
+                    <CourseBrandTabContent
+                      logoUrl={formData.logoUrl}
+                      onLogoChange={(newUrl) => setFormData(prev => ({ ...prev, logoUrl: newUrl }))}
+                      onLogoUpload={handleUploadLogo}
+                      uploadingLogo={uploadingLogo}
+                      selectedBrandName={formData.brandName}
+                      onSelectBrand={(brand) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          brandName: brand.name,
+                          primaryColor: brand.palette?.primary || prev.primaryColor
+                        }));
+                      }}
+                      primaryColor={primaryColor}
+                      onPrimaryColorChange={(newColor) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          brandName: '',
+                          primaryColor: newColor
+                        }));
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
           </Tabs>
 
           <Button onClick={handleSaveStyle} className="w-full h-20 rounded-lg text-2xl font-bold bg-primary" disabled={loading}>
@@ -321,9 +276,11 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
           </Button>
 
           <div className="pt-10 space-y-6">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Simulador de Experiencia del Alumno</h2>
-            <Card className="rounded-lg overflow-hidden border-none bg-muted p-12">
-              <header className="flex items-end justify-between bg-white p-8 rounded-lg border-4 border-white mb-10">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Sparkles className="h-5 w-5" style={{ color: primaryColor }} /> Simulador de Experiencia del Alumno
+            </h2>
+            <Card className="rounded-lg overflow-hidden border-none bg-muted p-12" style={{ fontFamily: bodyFont }}>
+              <header className="flex items-end justify-between bg-white p-8 rounded-lg border-4 border-white mb-10 shadow-sm">
                 <div className="flex items-end gap-4">
                   {Object.entries(formData.socials).map(([key, val]) => val && (
                     <div key={key} className="w-10 h-10 rounded-xl bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors cursor-pointer">
@@ -340,7 +297,10 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
                 <div className="flex items-end gap-6 text-right">
-                  <div><h3 className="font-bold text-2xl" style={{ color: primaryColor }}>{course?.title}</h3><p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.3em]">Módulo Actual: Introducción</p></div>
+                  <div>
+                    <h3 className="font-bold text-2xl" style={{ color: primaryColor, fontFamily: headingFont }}>{course?.title}</h3>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-[0.3em]">Módulo Actual: Introducción</p>
+                  </div>
                   <div className="w-16 h-16 relative bg-secondary/10 rounded-2xl overflow-hidden flex items-center justify-center">
                     {(formData.logoUrl && typeof formData.logoUrl === 'string') ? (
                       <Image 
@@ -360,7 +320,7 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                 <div className="lg:col-span-2 space-y-8">
                   <div className="aspect-video rounded-lg bg-black flex items-center justify-center border-8 border-white"><Play className="h-20 w-20 text-white/20" /></div>
                   <div className="space-y-4">
-                    <h1 className="text-4xl font-bold" style={{ color: primaryColor }}>1. Bienvenido al Programa</h1>
+                    <h1 className="text-4xl font-bold" style={{ color: primaryColor, fontFamily: headingFont }}>1. Bienvenido al Programa</h1>
                     <p className="text-muted-foreground leading-relaxed text-lg">{formData.bio || 'Tu biografía aparecerá aquí...'}</p>
                   </div>
 
@@ -369,33 +329,52 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                     
                     <Card className="p-8 rounded-lg border-none shadow-md bg-white">
                       <div className="flex items-center gap-3 mb-6">
-                        <Badge variant="secondary" className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest">Opción Múltiple</Badge>
+                        <Badge 
+                          variant="secondary" 
+                          className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest"
+                          style={{ backgroundColor: `${accentColor}25`, color: primaryColor, borderColor: `${accentColor}40` }}
+                        >
+                          Opción Múltiple
+                        </Badge>
                       </div>
-                      <p className="font-bold text-lg mb-8 leading-tight">¿Cuál es el objetivo principal de este primer módulo introductorio?</p>
+                      <p className="font-bold text-lg mb-8 leading-tight" style={{ fontFamily: headingFont }}>¿Cuál es el objetivo principal de este primer módulo introductorio?</p>
                       <div className="grid gap-4">
                         <Button 
                           className="justify-start h-auto py-4 px-6 rounded-xl text-left border-2 whitespace-normal font-bold shadow-lg" 
-                          style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
+                          style={{ backgroundColor: primaryColor, borderColor: primaryColor, fontFamily: headingFont }}
                         >
                           Definir las bases teóricas del programa
                         </Button>
-                        <Button variant="outline" className="justify-start h-auto py-4 px-6 rounded-xl text-left border-2 whitespace-normal">
+                        <Button 
+                          variant="outline" 
+                          className="justify-start h-auto py-4 px-6 rounded-xl text-left border-2 whitespace-normal font-medium"
+                          style={{ borderColor: `${secondaryColor}60`, color: primaryColor }}
+                        >
                           Explorar herramientas avanzadas de diseño
                         </Button>
                       </div>
                     </Card>
 
-                    <div className="bg-success/10 border-2 border-success/20 p-6 rounded-lg flex items-center gap-4 animate-pulse">
-                      <Zap className="h-8 w-8 text-success" />
+                    <div 
+                      className="border-2 p-6 rounded-lg flex items-center gap-4 animate-pulse"
+                      style={{ backgroundColor: `${secondaryColor}15`, borderColor: `${secondaryColor}40` }}
+                    >
+                      <Zap className="h-8 w-8" style={{ color: secondaryColor }} />
                       <div>
-                        <p className="font-bold text-success text-lg">Modo Refuerzo Activado</p>
-                        <p className="text-sm text-success">Se han habilitado preguntas adicionales para validar tu conocimiento.</p>
+                        <p className="font-bold text-lg" style={{ color: secondaryColor, fontFamily: headingFont }}>Modo Refuerzo Activado</p>
+                        <p className="text-sm text-foreground/80">Se han habilitado preguntas adicionales para validar tu conocimiento.</p>
                       </div>
                     </div>
 
                     <Card className="p-8 rounded-lg border-none shadow-md bg-white opacity-80 grayscale-[0.5]">
                       <div className="flex items-center gap-3 mb-6">
-                        <Badge variant="secondary" className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest bg-success/15 text-success border-none">Pregunta de Soporte</Badge>
+                        <Badge 
+                          variant="secondary" 
+                          className="px-3 py-1 text-[10px] uppercase font-bold tracking-widest border-none"
+                          style={{ backgroundColor: `${accentColor}25`, color: primaryColor }}
+                        >
+                          Pregunta de Soporte
+                        </Badge>
                       </div>
                       <p className="font-bold text-lg mb-8 leading-tight">Redacta una breve síntesis de lo aprendido hasta el momento:</p>
                       <div className="h-32 bg-secondary/10 rounded-2xl border-2 border-dashed border-muted-foreground/20" />
@@ -403,10 +382,10 @@ export default function CourseStylePage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
                 <div className="space-y-8">
-                  <Card className="p-10 rounded-lg text-white border-none" style={{ backgroundColor: primaryColor }}>
+                  <Card className="p-10 rounded-lg text-white border-none shadow-md" style={{ backgroundColor: primaryColor }}>
                     <Trophy className="h-12 w-12 mb-6 opacity-50" />
                     <p className="text-[10px] uppercase font-bold tracking-widest opacity-70 mb-2">Tu Progreso</p>
-                    <p className="text-5xl font-bold">0%</p>
+                    <p className="text-5xl font-bold" style={{ fontFamily: headingFont }}>0%</p>
                     <Progress value={10} className="mt-6 bg-white/20 h-2" />
                   </Card>
                   <Card className="p-10 rounded-lg bg-white border-none space-y-6">

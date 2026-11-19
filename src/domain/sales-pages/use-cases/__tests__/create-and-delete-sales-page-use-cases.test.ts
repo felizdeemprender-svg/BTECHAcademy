@@ -62,7 +62,12 @@ describe('Create & Delete SalesPage Use Cases', () => {
         data: { mentorId: 'mentor_A', title: 'Mi Landing' },
       });
 
-      expect(mockRepo.create).toHaveBeenCalledWith('page_2', { mentorId: 'mentor_A', title: 'Mi Landing' });
+      expect(mockRepo.create).toHaveBeenCalledWith('page_2', expect.objectContaining({
+        mentorId: 'mentor_A',
+        title: 'Mi Landing',
+        status: 'pendiente',
+        isActive: false,
+      }));
     });
 
     it('debe pasar si un ADMIN crea una página para cualquier mentor', async () => {
@@ -76,7 +81,12 @@ describe('Create & Delete SalesPage Use Cases', () => {
         data: { mentorId: 'mentor_X', title: 'Landing Admin' },
       });
 
-      expect(mockRepo.create).toHaveBeenCalledWith('page_3', { mentorId: 'mentor_X', title: 'Landing Admin' });
+      expect(mockRepo.create).toHaveBeenCalledWith('page_3', expect.objectContaining({
+        mentorId: 'mentor_X',
+        title: 'Landing Admin',
+        status: 'pendiente',
+        isActive: false,
+      }));
     });
   });
 
@@ -121,6 +131,56 @@ describe('Create & Delete SalesPage Use Cases', () => {
       });
 
       expect(mockRepo.delete).toHaveBeenCalledWith('page_1');
+    });
+
+    it('debe pasar si un ADMIN borra cualquier landing', async () => {
+      vi.mocked(mockRepo.getById).mockResolvedValue({ id: 'page_1', mentorId: 'mentor_A' } as any);
+      
+      await useCase.execute({
+        uid: 'admin_user',
+        isAdmin: true,
+        pageId: 'page_1'
+      });
+
+      expect(mockRepo.delete).toHaveBeenCalledWith('page_1');
+    });
+
+    it('debe pasar si una EMPRESA titular borra la landing creada por su tutor', async () => {
+      vi.mocked(mockRepo.getById).mockResolvedValue({
+        id: 'page_tutor',
+        mentorId: 'tutor_subordinate',
+        companyId: 'company_fastoria'
+      } as any);
+      
+      await useCase.execute({
+        uid: 'supervisor_uid',
+        isAdmin: false,
+        pageId: 'page_tutor',
+        callerRole: 'empresa',
+        companyId: 'company_fastoria'
+      });
+
+      expect(mockRepo.delete).toHaveBeenCalledWith('page_tutor');
+    });
+
+    it('debe fallar si una empresa intenta borrar una landing que no le pertenece', async () => {
+      vi.mocked(mockRepo.getById).mockResolvedValue({
+        id: 'page_other',
+        mentorId: 'tutor_other',
+        companyId: 'company_other'
+      } as any);
+      
+      await expect(
+        useCase.execute({
+          uid: 'supervisor_uid',
+          isAdmin: false,
+          pageId: 'page_other',
+          callerRole: 'empresa',
+          companyId: 'company_fastoria'
+        })
+      ).rejects.toThrow('Unauthorized: You do not own this SalesPage and cannot delete it');
+
+      expect(mockRepo.delete).not.toHaveBeenCalled();
     });
   });
 });

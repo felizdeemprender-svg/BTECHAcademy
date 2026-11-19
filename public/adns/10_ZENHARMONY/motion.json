@@ -1,0 +1,59 @@
+{
+  "camera": {
+    "modes": {
+      "zoom": {
+        "description": "Acercamiento lento y sutil",
+        "default_intensity": 1.06,
+        "default_speed": 0.15,
+        "direction": "center"
+      },
+      "pan": {
+        "description": "Paneo suave de respiración",
+        "default_intensity": 1.04,
+        "default_speed": 0.12,
+        "direction": "left"
+      },
+      "static": {
+        "description": "Contemplativo estático",
+        "default_intensity": 1,
+        "default_speed": 0,
+        "direction": "center"
+      }
+    },
+    "segment_rules": {
+      "GANCHO": {
+        "mode": "zoom",
+        "intensity": 1.06,
+        "speed": 0.18,
+        "direction": "center",
+        "transition": "xfade:fade",
+        "transition_duration": 0.5
+      },
+      "VALOR": {
+        "mode": "pan",
+        "intensity": 1.04,
+        "speed": 0.12,
+        "direction": "left",
+        "transition": "xfade:dissolve",
+        "transition_duration": 0.55
+      },
+      "CTA": {
+        "mode": "zoom",
+        "intensity": 1.08,
+        "speed": 0.2,
+        "direction": "center",
+        "transition": "xfade:fade",
+        "transition_duration": 0.5
+      },
+      "CIERRE": {
+        "mode": "static",
+        "intensity": 1,
+        "speed": 0,
+        "direction": "center",
+        "transition": "xfade:fade",
+        "transition_duration": 0.6
+      }
+    }
+  }
+}
+

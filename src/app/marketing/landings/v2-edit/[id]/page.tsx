@@ -4,8 +4,8 @@ import { cleanUndefined } from '@/lib/clean-undefined';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useFirestore, useFirebase } from '@/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { useFirestore, useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, getDoc, updateDoc, collection, query } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Save, Loader2, Video, ImageIcon, FileText, Settings, Eye, ArrowLeft, Sparkles } from 'lucide-react';
+import { Save, Loader2, Video, ImageIcon, FileText, Settings, Eye, ArrowLeft, Sparkles, DollarSign, AlertTriangle, CreditCard, Landmark } from 'lucide-react';
 import { ImageEditor } from '@/components/courses/ImageEditor';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -63,6 +63,23 @@ export default function V2LandingEditorPage() {
     fetchDefaults();
   }, [landingData?.bundleItems, db]);
    const [activeUntilStr, setActiveUntilStr] = useState('');
+   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState<string[]>(['mercadopago', 'transfer']);
+   const [priceMercadoPago, setPriceMercadoPago] = useState<number>(0);
+   const [priceTransfer, setPriceTransfer] = useState<number>(0);
+   const [priceGetnet, setPriceGetnet] = useState<number>(0);
+   const [priceStripe, setPriceStripe] = useState<number>(0);
+
+   const mentorId = landingData?.mentorId || profile?.uid || user?.uid;
+   const paymentMethodsQuery = useMemoFirebase(() => {
+     if (!mentorId) return null;
+     return query(collection(db, 'users', mentorId, 'paymentMethods'));
+   }, [db, mentorId]);
+   const { data: rawPaymentMethods } = useCollection(paymentMethodsQuery);
+
+   const isMercadoPagoActive = !!profile?.profile?.mercadopago?.accessToken || !!profile?.mercadopago?.accessToken || (rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'mercadopago' && pm.isActive !== false));
+   const isTransferActive = !!profile?.profile?.bankDetails?.cbu || !!profile?.profile?.bankDetails?.alias || !!profile?.bankDetails?.cbu || !!profile?.bankDetails?.alias || (rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'transfer' && pm.isActive !== false));
+   const isGetnetActive = !!(rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'getnet' && pm.isActive !== false));
+   const isStripeActive = !!(rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'stripe' && pm.isActive !== false));
    const [mobileView, setMobileView] = useState<'list' | 'editor'>('list');
 
   const cleanUndefined = (obj: any): any => {
@@ -104,6 +121,14 @@ export default function V2LandingEditorPage() {
           const data = await res.json();
           setLandingData(data);
           setActiveUntilStr(formatDateTimeLocal(data.activeUntil));
+
+          const baseP = typeof data.price === 'number' ? data.price : 0;
+          const pConfig = data.pricing?.pricesByGateway || {};
+          setAllowedPaymentMethods(Array.isArray(data.allowedPaymentMethods) && data.allowedPaymentMethods.length > 0 ? data.allowedPaymentMethods : ['mercadopago', 'transfer']);
+          setPriceMercadoPago(data.priceMercadoPago ?? pConfig.mercadopago?.amount ?? baseP);
+          setPriceTransfer(data.priceTransfer ?? pConfig.transfer?.amount ?? baseP);
+          setPriceGetnet(data.priceGetnet ?? pConfig.getnet?.amount ?? baseP);
+          setPriceStripe(data.priceStripe ?? pConfig.stripe?.amount ?? data.pricing?.basePriceUSD ?? 30);
           
           const currentStyleId = data.styleId || 'classic'; // Fallback a classic
           let loadedStyle: any = null;
@@ -148,8 +173,8 @@ export default function V2LandingEditorPage() {
                 const fData = courseSnap.data();
                 setCourseData({
                   ...fData,
-                  title: fData.goal || 'Mentoría',
-                  description: fData.goal || ''
+                  title: fData.title || fData.goal || 'Mentoría',
+                  description: fData.goal || fData.description || ''
                 });
               }
             }
@@ -175,12 +200,36 @@ export default function V2LandingEditorPage() {
     if (!id || !landingData) return;
     setSaving(true);
     try {
+      const pricesByGateway: Record<string, any> = {};
+      if (isMercadoPagoActive && allowedPaymentMethods.includes('mercadopago') && priceMercadoPago > 0) {
+        pricesByGateway['mercadopago'] = { gatewayId: 'mercadopago', amount: priceMercadoPago, currency: 'ARS', isActive: true };
+      }
+      if (isTransferActive && allowedPaymentMethods.includes('transfer') && priceTransfer > 0) {
+        pricesByGateway['transfer'] = { gatewayId: 'transfer', amount: priceTransfer, currency: 'ARS', isActive: true };
+      }
+      if (isGetnetActive && allowedPaymentMethods.includes('getnet') && priceGetnet > 0) {
+        pricesByGateway['getnet'] = { gatewayId: 'getnet', amount: priceGetnet, currency: 'ARS', isActive: true };
+      }
+      if (isStripeActive && allowedPaymentMethods.includes('stripe') && priceStripe > 0) {
+        pricesByGateway['stripe'] = { gatewayId: 'stripe', amount: priceStripe, currency: 'USD', isActive: true };
+      }
+
       const updateData = cleanUndefined({
         content: landingData.content,
         price: landingData.price,
         oldPrice: landingData.oldPrice,
+        priceMercadoPago: isMercadoPagoActive ? priceMercadoPago : null,
+        priceTransfer: isTransferActive ? priceTransfer : null,
+        priceGetnet: isGetnetActive ? priceGetnet : null,
+        priceStripe: isStripeActive ? priceStripe : null,
+        allowedPaymentMethods,
+        pricing: {
+          basePriceUSD: priceStripe > 0 ? priceStripe : undefined,
+          pricesByGateway,
+        },
         activeUntil: landingData.activeUntil || null,
-        isActive: true,
+        isActive: landingData.isActive ?? false,
+        status: landingData.status || 'pendiente',
         bundleItems: landingData.bundleItems || undefined,
       });
 
@@ -298,6 +347,7 @@ export default function V2LandingEditorPage() {
             channel: 'landing',
             uid: profile?.uid,
             role: profile?.role,
+            styleId: landingData?.styleId || styleData?.id,
           }),
         });
 
@@ -312,7 +362,8 @@ export default function V2LandingEditorPage() {
           continue;
         }
 
-        const storagePath = `campaigns/${landingData.courseId}/landing/ai_${sec.id}_${Date.now()}.jpg`;
+        const landingId = id || landingData.id || landingData.courseId;
+        const storagePath = `landings/${landingId}/assets/ai_${sec.id}_${Date.now()}.jpg`;
         const sRef = ref(storage, storagePath);
         await uploadString(sRef, data.imageDataUrl, 'data_url');
         const downloadUrl = await getDownloadURL(sRef);
@@ -656,10 +707,192 @@ export default function V2LandingEditorPage() {
                               setActiveUntilStr(e.target.value);
                               updatePageField('activeUntil', e.target.value ? new Date(e.target.value) : null);
                             }}
-                            />
+                          />
+                        </div>
+
+                        {/* MEDIOS DE PAGO Y PRECIOS POR PASARELA */}
+                        <div className="pt-6 border-t border-border space-y-4">
+                          <div>
+                            <Label className="text-base font-bold text-foreground">Medios de Pago y Precios por Pasarela</Label>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Configura el valor específico que se cobrará al alumno según la pasarela que utilice. Las pasarelas locales operan en ARS y las globales en USD.
+                            </p>
                           </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Mercado Pago */}
+                            <div className={cn("p-4 rounded-xl border transition-all", allowedPaymentMethods.includes('mercadopago') ? 'bg-primary/5 border-primary/40 shadow-sm' : 'bg-muted/30 border-border opacity-70')}>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                    MP
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-1.5">
+                                      <p className="font-bold text-xs text-foreground">Mercado Pago</p>
+                                      {!isMercadoPagoActive && (
+                                        <span className="text-[9px] px-1.5 py-0.2 bg-warn/15 text-warn rounded font-semibold">Configurar</span>
+                                      )}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground">Tarjetas y saldo (ARS)</p>
+                                  </div>
+                                </div>
+                                <Switch
+                                  checked={allowedPaymentMethods.includes('mercadopago')}
+                                  onCheckedChange={(checked) => {
+                                    setAllowedPaymentMethods(prev => checked ? [...prev, 'mercadopago'] : prev.filter(m => m !== 'mercadopago'));
+                                  }}
+                                />
+                              </div>
+                              {allowedPaymentMethods.includes('mercadopago') && (
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-primary uppercase">Precio Cobro MP ($ ARS)</Label>
+                                  <div className="relative">
+                                    <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary" />
+                                    <Input
+                                      type="number"
+                                      value={priceMercadoPago || ''}
+                                      onChange={e => setPriceMercadoPago(Number(e.target.value))}
+                                      placeholder={String(landingData?.price || 0)}
+                                      className="h-9 rounded-lg bg-white pl-8 font-bold text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Transferencia Bancaria */}
+                            <div className={cn("p-4 rounded-xl border transition-all", allowedPaymentMethods.includes('transfer') ? 'bg-primary/5 border-primary/40 shadow-sm' : 'bg-muted/30 border-border opacity-70')}>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                    TB
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-1.5">
+                                      <p className="font-bold text-xs text-foreground">Transferencia CBU/CVU</p>
+                                      {!isTransferActive && (
+                                        <span className="text-[9px] px-1.5 py-0.2 bg-warn/15 text-warn rounded font-semibold">Configurar</span>
+                                      )}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground">Aprobación directa (ARS)</p>
+                                  </div>
+                                </div>
+                                <Switch
+                                  checked={allowedPaymentMethods.includes('transfer')}
+                                  onCheckedChange={(checked) => {
+                                    setAllowedPaymentMethods(prev => checked ? [...prev, 'transfer'] : prev.filter(m => m !== 'transfer'));
+                                  }}
+                                />
+                              </div>
+                              {allowedPaymentMethods.includes('transfer') && (
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-primary uppercase">Precio Transferencia ($ ARS)</Label>
+                                  <div className="relative">
+                                    <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary" />
+                                    <Input
+                                      type="number"
+                                      value={priceTransfer || ''}
+                                      onChange={e => setPriceTransfer(Number(e.target.value))}
+                                      placeholder={String(landingData?.price || 0)}
+                                      className="h-9 rounded-lg bg-white pl-8 font-bold text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Getnet Santander */}
+                            <div className={cn("p-4 rounded-xl border transition-all", allowedPaymentMethods.includes('getnet') ? 'bg-primary/5 border-primary/40 shadow-sm' : 'bg-muted/30 border-border opacity-70')}>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                    GN
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-1.5">
+                                      <p className="font-bold text-xs text-foreground">Getnet Santander</p>
+                                      {!isGetnetActive && (
+                                        <span className="text-[9px] px-1.5 py-0.2 bg-warn/15 text-warn rounded font-semibold">Configurar</span>
+                                      )}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground">Tarjetas bancarias (ARS)</p>
+                                  </div>
+                                </div>
+                                <Switch
+                                  checked={allowedPaymentMethods.includes('getnet')}
+                                  onCheckedChange={(checked) => {
+                                    setAllowedPaymentMethods(prev => checked ? [...prev, 'getnet'] : prev.filter(m => m !== 'getnet'));
+                                  }}
+                                />
+                              </div>
+                              {allowedPaymentMethods.includes('getnet') && (
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-primary uppercase">Precio Getnet ($ ARS)</Label>
+                                  <div className="relative">
+                                    <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary" />
+                                    <Input
+                                      type="number"
+                                      value={priceGetnet || ''}
+                                      onChange={e => setPriceGetnet(Number(e.target.value))}
+                                      placeholder={String(landingData?.price || 0)}
+                                      className="h-9 rounded-lg bg-white pl-8 font-bold text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Stripe Internacional */}
+                            <div className={cn("p-4 rounded-xl border transition-all", allowedPaymentMethods.includes('stripe') ? 'bg-primary/5 border-primary/40 shadow-sm' : 'bg-muted/30 border-border opacity-70')}>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                    ST
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-1.5">
+                                      <p className="font-bold text-xs text-foreground">Stripe (Internacional)</p>
+                                      {!isStripeActive && (
+                                        <span className="text-[9px] px-1.5 py-0.2 bg-warn/15 text-warn rounded font-semibold">Configurar</span>
+                                      )}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground">Tarjetas globales (USD)</p>
+                                  </div>
+                                </div>
+                                <Switch
+                                  checked={allowedPaymentMethods.includes('stripe')}
+                                  onCheckedChange={(checked) => {
+                                    setAllowedPaymentMethods(prev => checked ? [...prev, 'stripe'] : prev.filter(m => m !== 'stripe'));
+                                  }}
+                                />
+                              </div>
+                              {allowedPaymentMethods.includes('stripe') && (
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-primary uppercase">Precio Internacional (USD $)</Label>
+                                  <div className="relative">
+                                    <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary" />
+                                    <Input
+                                      type="number"
+                                      value={priceStripe || ''}
+                                      onChange={e => setPriceStripe(Number(e.target.value))}
+                                      placeholder="35"
+                                      className="h-9 rounded-lg bg-white pl-8 font-bold text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {!isMercadoPagoActive && !isTransferActive && !isGetnetActive && !isStripeActive && (
+                            <p className="text-xs text-danger font-medium flex items-center gap-1.5">
+                              <AlertTriangle className="h-4 w-4 shrink-0" /> No tienes métodos de cobro activos en tu cuenta. Configúralos en Métodos de Cobro.
+                            </p>
+                          )}
                         </div>
                       </div>
+                    </div>
                   ) : activeSectionId === 'global_settings' ? (
                     <div className="space-y-8">
                       {/* BRANDS */}
@@ -954,8 +1187,9 @@ export default function V2LandingEditorPage() {
     { id: 'subheadline', label: 'Subtítulo', type: 'text' }
   ]
 } : styleData?.availableSections?.find((s: any) => s.id === baseId);
-                    const acceptsVideo = activeSectionStyle?.contentType === 'video' || activeSectionStyle?.contentType === 'mixed';
-                    const acceptsImage = activeSectionStyle?.contentType === 'mixed' || activeSectionStyle?.contentType === 'image';
+                    const isHero = baseId === 'heroVideo';
+                    const acceptsVideo = isHero || activeSectionStyle?.contentType === 'video' || activeSectionStyle?.contentType === 'mixed';
+                    const acceptsImage = isHero || activeSectionStyle?.contentType === 'mixed' || activeSectionStyle?.contentType === 'image';
 
                     return (
                       <>
@@ -988,6 +1222,10 @@ export default function V2LandingEditorPage() {
                               keywords={activeSection.title || ''}
                               description={activeSection.content || activeSection.body || ''}
                               aiPromptHint={`Estilo visual de la landing: ${styleData?.name || 'Moderno'} (${styleData?.description || 'Diseño corporativo'}). Tipo de sección: ${activeSectionStyle?.name || 'Sección'}. Objetivo de la sección: ${activeSectionStyle?.description || 'Mostrar contenido'}. Instrucción: Crea una imagen altamente profesional que conceptualice este texto, usando este estilo. NO copies el texto literalmente en la imagen.`}
+                              styleId={landingData?.styleId || styleData?.id}
+                              allowPromptEdit={true}
+                              promptValue={activeSection.imagePrompt || ''}
+                              onPromptChange={(p) => updateActiveSection({ imagePrompt: p })}
                             />
                           </div>
                         )}

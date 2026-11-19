@@ -4,7 +4,7 @@
   "segment_styles": {
     "GANCHO": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "georgia.ttf",
         "fontSize": 88,
         "primaryColor": "#FFD700@1.0",
         "alignment": "center",
@@ -15,24 +15,27 @@
         "animation": "luxury_elegant",
         "marginV": 240,
         "outline": {
-          "width": 2,
-          "color": "#B8860B",
-          "alpha": 0.9,
+          "width": 3,
+          "color": "#000000",
+          "alpha": 1.0,
           "blur": 0.8
         },
         "shadow": {
           "depth": 6,
           "color": "#B8860B",
-          "alpha": 0.7,
+          "alpha": 0.75,
           "blur": 2.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "calibri.ttf",
         "fontSize": 44,
-        "primaryColor": "#FFF8DC@1.0",
+        "primaryColor": "#FEF08A@1.0",
         "alignment": "center",
         "uppercase": false,
         "bold": false,
@@ -41,19 +44,20 @@
         "animation": "golden_fade",
         "marginV": 340,
         "outline": {
-          "width": 0.5,
-          "color": "#DAA520",
-          "alpha": 0.6,
-          "blur": 0.4
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
         },
         "shadow": {
           "depth": 3,
-          "color": "#B8860B",
-          "alpha": 0.5,
-          "blur": 1.2
+          "color": "#000000",
+          "alpha": 0.8,
+          "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "accentColor": "#F59E0B"
       },
       "watermark": {
         "fontName": "arialbd.ttf",
@@ -74,7 +78,7 @@
     },
     "VALOR": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "georgia.ttf",
         "fontSize": 82,
         "primaryColor": "#FFA500@1.0",
         "alignment": "center",
@@ -85,24 +89,27 @@
         "animation": "prestige_slide",
         "marginV": 260,
         "outline": {
-          "width": 1.5,
-          "color": "#FF8C00",
-          "alpha": 0.8,
+          "width": 3,
+          "color": "#000000",
+          "alpha": 1.0,
           "blur": 0.6
         },
         "shadow": {
           "depth": 5,
           "color": "#FF8C00",
-          "alpha": 0.6,
+          "alpha": 0.75,
           "blur": 2
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "calibri.ttf",
         "fontSize": 40,
-        "primaryColor": "#FFEFD5@1.0",
+        "primaryColor": "#FEF08A@1.0",
         "alignment": "center",
         "uppercase": false,
         "bold": false,
@@ -111,19 +118,20 @@
         "animation": "elegant_rise",
         "marginV": 360,
         "outline": {
-          "width": 0.3,
-          "color": "#FFA500",
-          "alpha": 0.5,
-          "blur": 0.3
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
         },
         "shadow": {
-          "depth": 2,
-          "color": "#FFA500",
-          "alpha": 0.4,
-          "blur": 1
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.8,
+          "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "accentColor": "#F59E0B"
       },
       "watermark": {
         "fontName": "arialbd.ttf",
@@ -144,7 +152,7 @@
     },
     "CTA": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "georgia.ttf",
         "fontSize": 96,
         "primaryColor": "#FFFFFF@1.0",
         "alignment": "center",
@@ -157,7 +165,7 @@
         "outline": {
           "width": 3,
           "color": "#FFD700",
-          "alpha": 1,
+          "alpha": 1.0,
           "blur": 1.2
         },
         "shadow": {
@@ -167,12 +175,15 @@
           "blur": 3.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "calibri.ttf",
         "fontSize": 48,
-        "primaryColor": "#FFD700@1.0",
+        "primaryColor": "#FEF08A@1.0",
         "alignment": "center",
         "uppercase": true,
         "bold": true,
@@ -181,19 +192,20 @@
         "animation": "luxury_bounce",
         "marginV": 310,
         "outline": {
-          "width": 1.5,
-          "color": "#FFA500",
-          "alpha": 0.8,
-          "blur": 0.8
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
         },
         "shadow": {
-          "depth": 5,
-          "color": "#FFA500",
-          "alpha": 0.6,
-          "blur": 2
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.8,
+          "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "accentColor": "#F59E0B"
       },
       "watermark": {
         "fontName": "arialbd.ttf",
@@ -214,7 +226,7 @@
     },
     "CIERRE": {
       "text": {
-        "fontName": "Inter-Black.ttf",
+        "fontName": "georgia.ttf",
         "fontSize": 86,
         "primaryColor": "#F0E68C@1.0",
         "alignment": "center",
@@ -225,24 +237,27 @@
         "animation": "golden_finale",
         "marginV": 500,
         "outline": {
-          "width": 1.5,
+          "width": 3,
           "color": "#DAA520",
-          "alpha": 0.7,
+          "alpha": 1.0,
           "blur": 0.7
         },
         "shadow": {
           "depth": 4,
           "color": "#DAA520",
-          "alpha": 0.5,
-          "blur": 1.8
+          "alpha": 0.75,
+          "blur": 2.0
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "badge": {
+          "enabled": false
+        }
       },
       "subtitle": {
-        "fontName": "arialbd.ttf",
+        "fontName": "calibri.ttf",
         "fontSize": 38,
-        "primaryColor": "#FFDEAD@1.0",
+        "primaryColor": "#FEF08A@1.0",
         "alignment": "center",
         "uppercase": false,
         "bold": false,
@@ -251,19 +266,20 @@
         "animation": "elegant_dissolve",
         "marginV": 600,
         "outline": {
-          "width": 0.5,
-          "color": "#F0E68C",
-          "alpha": 0.4,
-          "blur": 0.3
+          "width": 2.5,
+          "color": "#000000",
+          "alpha": 0.9,
+          "blur": 0
         },
         "shadow": {
-          "depth": 2,
-          "color": "#F0E68C",
-          "alpha": 0.3,
-          "blur": 0.8
+          "depth": 3,
+          "color": "#000000",
+          "alpha": 0.8,
+          "blur": 1.5
         },
         "overlay": null,
-        "marginH": 0
+        "marginH": 0,
+        "accentColor": "#F59E0B"
       },
       "watermark": {
         "fontName": "arialbd.ttf",

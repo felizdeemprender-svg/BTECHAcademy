@@ -82,11 +82,17 @@ export async function handlePublishCourse(
   body: unknown,
 ): Promise<NextResponse> {
   const payload = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
-  const { mentorId, status } = payload;
+  const { mentorId, status, callerRole, companyId } = payload;
   const repo = new FirestoreCourseRepository(gateway);
   const result = await publishCourse(
     { reader: repo, updater: repo },
-    { mentorId: mentorId as string, id, status: status as 'public' | 'draft' },
+    {
+      mentorId: mentorId as string,
+      id,
+      status: status as 'public' | 'draft',
+      callerRole: callerRole as string | undefined,
+      companyId: companyId as string | undefined,
+    },
   );
   if (result.ok) {
     return NextResponse.json({ success: true, id: result.value.id });
@@ -98,20 +104,34 @@ export async function handlePublishCourse(
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
-/** DELETE /api/courses/[id]. Body legacy: { mentorId }. */
+/** DELETE /api/courses/[id]. Body legacy: { mentorId, callerRole?, companyId? }. */
 export async function handleDeleteCourse(
   gateway: FirestoreGateway,
   id: string,
   body: unknown,
 ): Promise<NextResponse> {
   const payload = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
-  const { mentorId } = payload;
+  const { mentorId, callerRole, companyId } = payload;
   const repo = new FirestoreCourseRepository(gateway);
   const result = await deleteCourse(
     { reader: repo, deleter: repo },
-    { mentorId: mentorId as string, id },
+    {
+      mentorId: mentorId as string,
+      id,
+      callerRole: callerRole as string | undefined,
+      companyId: companyId as string | undefined,
+    },
   );
   if (result.ok) {
+    // Cascade delete de assets en Storage para el curso (no bloqueante ante fallas)
+    try {
+      const { adminStorage } = await import('@/firebase/admin');
+      const bucket = adminStorage.bucket();
+      await bucket.deleteFiles({ prefix: `courses/${id}/` });
+    } catch (storageErr: any) {
+      console.warn(`[CascadeDelete:Storage] Error al limpiar Storage para curso ${id}:`, storageErr?.message);
+    }
+
     return NextResponse.json({ success: true, id: result.value.id });
   }
   const { code, message } = result.error;
@@ -203,6 +223,9 @@ export async function handleFreeEnrollment(
       return NextResponse.json({ error: 'Página no encontrada' }, { status: 404 });
     }
     const pageData = page.data;
+    if (pageData.status === 'pendiente' || pageData.isActive === false || pageData.status === 'archivada' || pageData.status === 'expirada') {
+      return NextResponse.json({ error: 'La inscripción no está disponible para landings en estado pendiente o inactivas' }, { status: 403 });
+    }
     // Igual que el legacy: `price !== 0` (incluso undefined) rechaza.
     if (pageData.price !== 0) {
       return NextResponse.json({ error: 'Este curso no es gratuito' }, { status: 403 });

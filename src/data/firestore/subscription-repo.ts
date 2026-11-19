@@ -49,26 +49,29 @@ const COURSES = 'courses';
 const INVOICES = 'invoices';
 
 export class FirestoreSubscriptionRepository implements SubscriptionRepository {
-  constructor(private readonly gateway: FirestoreGateway) {}
+  constructor(private readonly gateway: FirestoreGateway) { }
   async getPlan(planId: string): Promise<PlanSnapshot | null> {
     const snap = await this.gateway.getDoc(PLANS, planId);
     if (!snap) return null;
     const raw = snap.data() ?? {};
+    const pricing = raw.pricing as Record<string, unknown> | undefined;
+    const entitlements = raw.entitlements as Record<string, unknown> | undefined;
+
     return {
       id: snap.id,
       name: raw.name,
-      price: raw.price,
+      price: raw.price !== undefined ? raw.price : pricing?.amount,
       type: raw.type,
       requiresPaymentMethod: raw.requiresPaymentMethod,
       trialDays: raw.trialDays,
       trialReminderDays: raw.trialReminderDays,
       gracePeriodDays: raw.gracePeriodDays,
-      billingCycleMonths: raw.billingCycleMonths,
-      limits: raw.limits,
-      permissions: raw.permissions,
-      invitationsPerCourse: raw.invitationsPerCourse,
-      aiQuotas: raw.aiQuotas,
-      hasPremiumAI: raw.hasPremiumAI,
+      billingCycleMonths: raw.billingCycleMonths ?? pricing?.billingCycleMonths,
+      limits: raw.limits ?? entitlements?.limits,
+      permissions: raw.permissions ?? entitlements?.permissions,
+      invitationsPerCourse: raw.invitationsPerCourse ?? entitlements?.invitationsPerCourse,
+      aiQuotas: raw.aiQuotas ?? entitlements?.aiQuotas,
+      hasPremiumAI: raw.hasPremiumAI ?? (entitlements?.aiQuotas as Record<string, unknown> | undefined)?.hasPremiumAI,
     };
   }
 
@@ -345,6 +348,7 @@ export class FirestoreSubscriptionRepository implements SubscriptionRepository {
  * `lastLogin` → `null`, `subscription` → `null`).
  */
 function mapMentorRow(id: string, raw: Record<string, unknown>): MentorDirectoryRow {
+  const profile = (raw.profile as Record<string, unknown> | undefined) ?? {};
   return {
     id,
     displayName: (raw.displayName as string | undefined) ?? '',
@@ -354,5 +358,7 @@ function mapMentorRow(id: string, raw: Record<string, unknown>): MentorDirectory
     subscription: (raw.subscription as Record<string, unknown> | undefined) ?? null,
     createdAt: toDomainDate(raw.createdAt as never) ?? new Date(),
     lastLogin: toDomainDate(raw.lastLogin as never) ?? null,
+    homeCountry: (raw.homeCountry as string | undefined) ?? (profile.homeCountry as string | undefined) ?? 'AR',
+    homeCurrency: (raw.homeCurrency as string | undefined) ?? (profile.homeCurrency as string | undefined) ?? 'ARS',
   };
 }

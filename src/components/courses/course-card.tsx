@@ -66,12 +66,12 @@ export function CourseCard({ course, showTutor = true, onAction }: CourseCardPro
     <Card className="group border-none shadow-lg transition-all duration-500 overflow-hidden flex flex-col rounded-2xl bg-white">
       <div className="relative aspect-video overflow-hidden">
         <Image 
-          src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'} 
+          src={course.thumbnail || '/assets/presets/01-academy-auth.png'} 
           alt={course.title} 
           fill 
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover group-hover:scale-110 transition-transform duration-700" 
-          unoptimized={!!course.thumbnail} 
+          unoptimized 
         />
         <div className="absolute top-4 left-4 flex flex-wrap gap-1 max-w-[80%]">
           {course.tags?.slice(0, 2).map((tag, idx) => (

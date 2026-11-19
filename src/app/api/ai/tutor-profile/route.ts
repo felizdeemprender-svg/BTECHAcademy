@@ -3,7 +3,7 @@ import { generateTutorProfile } from '@/ai/flows/generate-tutor-profile';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, bio, socials } = await req.json();
+    const { name, bio, socials, isEnterprise } = await req.json();
 
     let extendedBio = bio;
 
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const config = await generateTutorProfile(name, extendedBio, socials);
+    const config = await generateTutorProfile(name, extendedBio, socials, Boolean(isEnterprise));
     
     return NextResponse.json(config);
   } catch (error: any) {

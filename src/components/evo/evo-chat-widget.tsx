@@ -6,6 +6,8 @@ import { MessageSquare, X, Send, Bot, User, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 
+import { useAuth } from '@/components/auth-context';
+
 interface ChatMessage {
   role: 'user' | 'model' | 'system';
   content: string;
@@ -13,6 +15,7 @@ interface ChatMessage {
 
 export function EvoChatWidget() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', content: '¡Hola! Soy Evo, tu agente personal. Conozco a todos tus alumnos y sus cursos. ¿En qué puedo ayudarte hoy?' }
@@ -28,7 +31,7 @@ export function EvoChatWidget() {
     }
   }, [messages, isOpen]);
 
-  if (pathname === '/') return null;
+  if (pathname === '/' || !user) return null;
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -39,9 +42,19 @@ export function EvoChatWidget() {
     setIsLoading(true);
 
     try {
+      const token = await user.getIdToken();
+      if (!token) {
+        setMessages(prev => [...prev, { role: 'system', content: 'Debes iniciar sesión para consultar a Evo.' }]);
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/ai/evo-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ message: userMsg, history: messages })
       });
 
@@ -50,7 +63,7 @@ export function EvoChatWidget() {
       if (data.success) {
         setMessages(prev => [...prev, { role: 'model', content: data.reply }]);
       } else {
-        setMessages(prev => [...prev, { role: 'system', content: 'Lo siento, hubo un error de conexión.' }]);
+        setMessages(prev => [...prev, { role: 'system', content: data.error || 'Lo siento, hubo un error de conexión.' }]);
       }
     } catch (error) {
       console.error(error);

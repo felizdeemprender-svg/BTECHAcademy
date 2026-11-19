@@ -137,6 +137,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     title: '',
     description: '',
     thumbnail: '',
+    thumbnailPrompt: '',
     skipAllowed: true,
     categoryId: '',
     level: '',
@@ -188,6 +189,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         title: course.title || '',
         description: course.description || '',
         thumbnail: course.thumbnail || '',
+        thumbnailPrompt: course.thumbnailPrompt || '',
         skipAllowed: course.settings?.skipAllowed !== false,
         categoryId: course.categoryId || '',
         level: course.level || '',
@@ -269,10 +271,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
     if (file) {
       const isText = file.type === 'text/plain' || name.endsWith('.txt');
       const isWord = file.type.includes('wordprocessingml.document') || file.type.includes('msword') || name.endsWith('.docx') || name.endsWith('.doc');
-      const isPdf = file.type === 'application/pdf' || name.endsWith('.pdf');
-      return isText || isWord || isPdf;
+      return isText || isWord;
     }
-    return name.endsWith('.txt') || name.endsWith('.docx') || name.endsWith('.doc') || name.endsWith('.pdf');
+    return name.endsWith('.txt') || name.endsWith('.docx') || name.endsWith('.doc');
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -712,8 +713,17 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                       onUpdate={url => setFormData({...formData, thumbnail: url})} 
                       courseId={id!} 
                       channel="thumbnails" 
+                      courseTitle={formData.title}
                       keywords={formData.title}
                       description={formData.description}
+                      aiPromptHint={[
+                        formData.description ? `Descripción: ${formData.description}` : '',
+                        formData.tags?.length ? `Tags: ${formData.tags.join(', ')}` : '',
+                        modules?.length ? `Módulos del curso: ${modules.map((m: any) => m.title).filter(Boolean).join(' | ')}` : '',
+                      ].filter(Boolean).join('. ')}
+                      allowPromptEdit={true}
+                      promptValue={formData.thumbnailPrompt}
+                      onPromptChange={p => setFormData(prev => ({ ...prev, thumbnailPrompt: p }))}
                     />
                   </div>
                   
@@ -863,9 +873,19 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         onChange={handleFileUpload}
                         isProcessing={isProcessingFile}
                         title="Añadir Bibliografía o Material"
-                        description="Admite cualquier formato para el alumno."
+                        description="Para alumnos: cualquier formato (PDF, Word, etc.). Para Archivo Maestro IA: solo Word (.docx) o Texto (.txt)."
                         className="rounded-3xl p-6"
                       />
+                      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-1.5 text-xs text-muted-foreground">
+                        <p className="font-bold text-foreground uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                          <BrainCircuit className="h-3.5 w-3.5 text-primary shrink-0" /> Condiciones para ser Archivo Maestro (Entrenamiento IA)
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 text-[11px] leading-relaxed">
+                          <li><strong>Formatos admitidos:</strong> Únicamente documentos <strong>Word (.docx)</strong> o <strong>Texto plano (.txt)</strong>. Los archivos PDF no pueden ser Archivo Maestro (solo material descargable para el alumno).</li>
+                          <li><strong>Contenido requerido:</strong> Texto estructurado y legible (hasta 50.000 caracteres por clase) para que la IA genere evaluaciones y valide el contenido.</li>
+                          <li><strong>Visibilidad:</strong> El archivo marcado como <strong>Maestro</strong> es privado para la IA y permanece oculto a los alumnos.</li>
+                        </ul>
+                      </div>
                       
                       <div className="space-y-2 mt-4">
                         {currentModule.supportMaterials.map((mat) => {
@@ -881,8 +901,10 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                                   {mat.isMaster ? (
                                     <Badge className="bg-primary text-[10px] h-5 px-2">Maestro</Badge>
                                   ) : compatible ? (
-                                    <p className="text-[10px] text-muted-foreground hidden sm:block">Compatible AI</p>
-                                  ) : null}
+                                    <p className="text-[10px] text-muted-foreground hidden sm:block">Apto Maestro (.docx / .txt)</p>
+                                  ) : (
+                                    <p className="text-[10px] text-muted-foreground hidden sm:block">Solo alumno (No apto Maestro)</p>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex gap-2 shrink-0">
@@ -1042,7 +1064,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
                         <span className="text-sm font-bold truncate max-w-[200px]">{currentModule?.supportMaterials.find(m => m.isMaster)?.name}</span>
                       </div>
                     ) : (
-                      <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.pdf/.docx/.txt)</Badge>
+                      <Badge variant="destructive" className="mt-2">Sin Maestro compatible (.docx / .txt)</Badge>
                     )}
                   </div>
 

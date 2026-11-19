@@ -6,7 +6,7 @@
 
 import { z } from 'zod';
 
-export const RoleTypeSchema = z.enum(['alumno', 'mentor', 'marketing', 'admin']);
+export const RoleTypeSchema = z.enum(['alumno', 'mentor', 'marketing', 'admin', 'empresa']);
 export type RoleType = z.infer<typeof RoleTypeSchema>;
 
 export const RolesSchema = z.array(RoleTypeSchema).min(1, 'roles vacío');
@@ -26,4 +26,8 @@ export function isAdminRole(roles: readonly RoleType[]): boolean {
 
 export function isAlumnoRole(roles: readonly RoleType[]): boolean {
   return hasRole(roles, 'alumno');
+}
+
+export function isEmpresaRole(roles: readonly RoleType[]): boolean {
+  return hasRole(roles, 'empresa');
 }

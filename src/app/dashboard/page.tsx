@@ -23,10 +23,11 @@ import {
   ArrowRight,
   MousePointer2,
   CheckCircle2,
-  ClipboardList
+  ClipboardList,
+  Building2
 } from 'lucide-react';
 import Link from 'next/link';
-import { collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { collection, collectionGroup, query, where, limit, getDocs, or } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { TermsUsageModal } from '@/components/terms-usage-modal';
 import { cn } from '@/lib/utils';
@@ -65,7 +66,7 @@ export default function DashboardPage() {
 }
 
 function DashboardInner() {
-  const { profile, isLoading: isAuthLoading, refreshProfile } = useAuth();
+  const { user, profile, isLoading: isAuthLoading, refreshProfile } = useAuth();
   const db = useFirestore();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -91,38 +92,55 @@ function DashboardInner() {
   // Roles y flags
   const roles = profile?.roles || [];
   const isAdmin = roles.includes('admin');
+  const isEmpresa = roles.includes('empresa') || profile?.companyRole === 'owner' || Boolean(profile?.isEnterprise);
   const isMentor = roles.includes('mentor');
   const isStudent = roles.includes('alumno');
 
-  // --- QUERIES PARA MENTOR / ADMIN ---
+  // --- QUERIES PARA MENTOR / ADMIN / EMPRESA ---
   const mentorCoursesQuery = useMemoFirebase(() => {
-    if (!profile?.uid || isAuthLoading || (!isMentor && !isAdmin)) return null;
+    if (!profile?.uid || isAuthLoading || (!isMentor && !isAdmin && !isEmpresa)) return null;
     const coursesRef = collection(db, 'courses');
-    if (isMentor) return query(coursesRef, where('mentorId', '==', profile.uid), limit(10));
-    if (isAdmin) return query(coursesRef, limit(10));
+    if (isAdmin) return coursesRef;
+    if (isEmpresa) {
+      const companyId = profile.companyId || profile.uid;
+      return query(
+        coursesRef,
+        or(
+          where('mentorId', '==', profile.uid),
+          where('companyId', '==', companyId)
+        )
+      );
+    }
+    if (isMentor) return query(coursesRef, where('mentorId', '==', profile.uid));
     return null;
-  }, [profile?.uid, db, isMentor, isAdmin, isAuthLoading]);
+  }, [profile?.uid, profile?.companyId, db, isMentor, isAdmin, isEmpresa, isAuthLoading]);
   const { data: mentorCoursesRaw } = useCollection(mentorCoursesQuery);
 
   const mentorCourses = useMemoFirebase(() => {
     if (!mentorCoursesRaw) return [];
+    const toMillis = (val: any): number => {
+      if (!val) return 0;
+      if (typeof val.toDate === 'function') return val.toDate().getTime();
+      if (typeof val._seconds === 'number') return val._seconds * 1000;
+      if (typeof val.seconds === 'number') return val.seconds * 1000;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? 0 : d.getTime();
+    };
     return [...mentorCoursesRaw].sort((a: any, b: any) => {
-      const dateA = a.createdAt?.toDate?.()?.getTime() || 0;
-      const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
-      return dateB - dateA;
-    }).slice(0, 5);
+      return toMillis(b.createdAt) - toMillis(a.createdAt);
+    });
   }, [mentorCoursesRaw]);
 
   // Query de Automatizaciones Activas (Para Resumen Dashboard)
   const activeCampaignsQuery = useMemoFirebase(() => {
-    if (!profile?.uid || isAuthLoading || (!isMentor && !isAdmin)) return null;
+    if (!profile?.uid || isAuthLoading || (!isMentor && !isAdmin && !isEmpresa)) return null;
     return query(
       collection(db, 'campaigns'), 
       where('mentorId', '==', profile.uid),
       where('isActive', '==', true),
       where('autoPilot', '==', true)
     );
-  }, [db, profile?.uid, isMentor, isAdmin, isAuthLoading]);
+  }, [db, profile?.uid, isMentor, isAdmin, isEmpresa, isAuthLoading]);
   const { data: activeCampaigns } = useCollection(activeCampaignsQuery);
 
   const todayAutomationActions = useMemoFirebase(() => {
@@ -140,7 +158,7 @@ function DashboardInner() {
   }, [activeCampaigns]);
 
   // --- NUEVA QUERY: RESUMEN DE MARKETING ---
-  const skipMarketing = !profile?.uid || isAuthLoading || (!isMentor && !isAdmin);
+  const skipMarketing = !profile?.uid || isAuthLoading || (!isMentor && !isAdmin && !isEmpresa);
   const { data: rawMarketingPages } = useApiSalesPages({
     type: 'all',
     mentorId: profile?.uid,
@@ -180,8 +198,10 @@ function DashboardInner() {
     <DashboardLayout>
       <TermsUsageModal />
       <DashboardContent 
+        user={user}
         profile={profile}
         isAdmin={isAdmin}
+        isEmpresa={isEmpresa}
         isMentor={isMentor}
         isStudent={isStudent}
         allUsers={allUsers}
@@ -196,8 +216,10 @@ function DashboardInner() {
 }
 
 const DashboardContent = ({ 
+  user,
   profile, 
   isAdmin, 
+  isEmpresa,
   isMentor, 
   isStudent,
   allUsers,
@@ -214,12 +236,19 @@ const DashboardContent = ({
   const { tasks: sortedTasks, pendingTasks, completedTasks, isLoading: loadingTasks } = useStudentTasks(20);
   const { followUps: recentFollowUps, sessionStats: followUpSessionStats, isLoading: loadingFollowUps } = useStudentFollowUps();
 
-  // 2. Query de Inscripciones de Mentor
+  // 2. Query de Inscripciones de Mentor / Empresa / Admin
   const [mentorInscriptions, setMentorInscriptions] = useState<any[]>([]);
   useEffect(() => {
     const fetchInscriptions = async () => {
-      if (isMentor && mentorCourses && mentorCourses.length > 0) {
+      if ((isMentor || isEmpresa || isAdmin) && mentorCourses && mentorCourses.length > 0) {
         try {
+          if (isAdmin) {
+            const snap = await getDocs(collection(db, 'enrollments'));
+            const allEnrollments: any[] = [];
+            snap.forEach(doc => allEnrollments.push({ ...doc.data(), id: doc.id }));
+            setMentorInscriptions(allEnrollments);
+            return;
+          }
           const courseIds = mentorCourses.map((c: any) => c.id);
           const allEnrollments: any[] = [];
           for (let i = 0; i < courseIds.length; i += 30) {
@@ -235,14 +264,101 @@ const DashboardContent = ({
       }
     };
     fetchInscriptions();
-  }, [isMentor, mentorCourses, db]);
+  }, [isMentor, isEmpresa, isAdmin, mentorCourses, db]);
 
-  // 3. Procesamiento de datos (Challenges agrupados)
+  // Cursos destacados (top 5): prioriza programas con matrícula activa y publicados
+  const displayedCourses = useMemo(() => {
+    if (!mentorCourses || mentorCourses.length === 0) return [];
+    const countsByCourse: Record<string, number> = {};
+    mentorInscriptions.forEach((e: any) => {
+      if (e.courseId) countsByCourse[e.courseId] = (countsByCourse[e.courseId] || 0) + 1;
+    });
+    const toMillis = (val: any): number => {
+      if (!val) return 0;
+      if (typeof val.toDate === 'function') return val.toDate().getTime();
+      if (typeof val._seconds === 'number') return val._seconds * 1000;
+      if (typeof val.seconds === 'number') return val.seconds * 1000;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? 0 : d.getTime();
+    };
+    return [...mentorCourses]
+      .sort((a: any, b: any) => {
+        const enrDiff = (countsByCourse[b.id] || 0) - (countsByCourse[a.id] || 0);
+        if (enrDiff !== 0) return enrDiff;
+        const activeDiff = (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0);
+        if (activeDiff !== 0) return activeDiff;
+        return toMillis(b.createdAt) - toMillis(a.createdAt);
+      })
+      .slice(0, 5);
+  }, [mentorCourses, mentorInscriptions]);
+
+  // Carga de datos corporativos si es Empresa
+  const [companyInfo, setCompanyInfo] = useState<any>(null);
+  const [companyTutors, setCompanyTutors] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!isEmpresa || !user) return;
+    let isMounted = true;
+    user.getIdToken().then((token: string) => {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      fetch('/api/company', { headers })
+        .then(res => res.json())
+        .then(res => {
+          if (isMounted && res.success && (res.data || res.company)) {
+            setCompanyInfo(res.data || res.company);
+          }
+        })
+        .catch(err => {
+          console.warn('[Dashboard] Error fetching company info:', err);
+        });
+
+      fetch('/api/company/tutors', { headers })
+        .then(res => res.json())
+        .then(res => {
+          if (isMounted && res.success && Array.isArray(res.data)) {
+            setCompanyTutors(res.data);
+          }
+        })
+        .catch((err: any) => {
+          console.warn('[Dashboard] Error fetching company tutors:', err);
+        });
+    }).catch((err: any) => {
+      console.warn('[Dashboard] Error getting token:', err);
+    });
+
+    return () => { isMounted = false; };
+  }, [isEmpresa, user]);
+
+  // 3. Procesamiento de datos (Challenges agrupados para Mentor / Admin / Empresa)
+  const [mentorAssignedTasks, setMentorAssignedTasks] = useState<any[]>([]);
+  useEffect(() => {
+    if (!profile?.uid || (!isMentor && !isAdmin && !isEmpresa)) return;
+    let isMounted = true;
+    const fetchAssignedTasks = async () => {
+      try {
+        const q = isAdmin
+          ? query(collectionGroup(db, 'individualTasks'))
+          : query(collectionGroup(db, 'individualTasks'), where('mentorId', '==', profile.uid));
+        const snap = await getDocs(q);
+        if (!isMounted) return;
+        const list = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        setMentorAssignedTasks(list);
+      } catch (e) {
+        console.warn('[Dashboard] Error fetching assigned tasks:', e);
+      }
+    };
+    fetchAssignedTasks();
+    return () => { isMounted = false; };
+  }, [db, profile?.uid, isAdmin, isMentor, isEmpresa]);
+
   const groupedDashboardChallenges = useMemo(() => {
-    if (!sortedTasks || (!isMentor && !isAdmin)) return [];
+    const sourceTasks = (isAdmin || isMentor || isEmpresa) && mentorAssignedTasks.length > 0
+      ? mentorAssignedTasks
+      : sortedTasks;
+    if (!sourceTasks || (!isMentor && !isAdmin && !isEmpresa)) return [];
     const groups: Record<string, any> = {};
-    sortedTasks.forEach(task => {
-      const key = task.title + task.description;
+    sourceTasks.forEach(task => {
+      const key = (task.title || '') + (task.description || '');
       if (!groups[key]) {
         groups[key] = { id: task.id, title: task.title, description: task.description, createdAt: task.createdAt, total: 0, completed: 0, tasks: [] as any[] };
       }
@@ -251,25 +367,61 @@ const DashboardContent = ({
       groups[key].tasks.push(task);
     });
     return Object.values(groups).slice(0, 5);
-  }, [sortedTasks, isMentor, isAdmin]);
+  }, [mentorAssignedTasks, sortedTasks, isMentor, isAdmin, isEmpresa]);
 
   const isLoading = loadingEnrollments || loadingTasks || loadingFollowUps;
   return (
     <div className="space-y-10 md:space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
       <StudentPageHeader 
-        icon={Activity}
-        category={isAdmin ? "Infraestructura" : isMentor ? "Gestión Docente" : "Trayectoria Académica"}
-        title={isAdmin ? "Panel Global" : isMentor ? "Mi Panel de Mentor" : "Mi Evolución"}
-        description={isAdmin ? "Control total del ecosistema." : `Bienvenido de nuevo, ${profile.displayName}.`}
+        icon={isAdmin ? ShieldCheck : isEmpresa ? Building2 : Activity}
+        category={isAdmin ? "Infraestructura" : isEmpresa ? "Gestión Empresarial" : isMentor ? "Gestión Docente" : "Trayectoria Académica"}
+        title={isAdmin ? "Panel Global" : isEmpresa ? (companyInfo?.name ? `Panel de Empresa • ${companyInfo.name}` : "Panel de Empresa") : isMentor ? "Mi Panel de Mentor" : "Mi Evolución"}
+        description={isAdmin ? "Control total del ecosistema." : isEmpresa ? `Bienvenido de nuevo, ${profile.displayName}. Centro de control corporativo y gestión multi-tenant.` : `Bienvenido de nuevo, ${profile.displayName}.`}
         version="v1.0.1-prod"
         badges={[
           ...(isAdmin ? [{ icon: ShieldCheck, label: "Admin Global", iconClassName: "text-success" }] : []),
-          ...(isMentor ? [{ icon: GraduationCap, label: "Mentor Autorizado", variant: 'outline' as const, className: "bg-white text-primary border-primary/20", iconClassName: "text-accent" }] : [])
+          ...(isEmpresa ? [{ icon: Building2, label: "Organización Empresa", variant: 'outline' as const, className: "bg-white text-primary border-primary/20", iconClassName: "text-accent" }] : []),
+          ...(!isEmpresa && isMentor ? [{ icon: GraduationCap, label: "Mentor Autorizado", variant: 'outline' as const, className: "bg-white text-primary border-primary/20", iconClassName: "text-accent" }] : [])
         ]}
       />
 
         <div className="space-y-8 md:space-y-10">
-          {(isMentor || isAdmin) && todayAutomationActions.length > 0 && (
+          {isEmpresa && (
+            <Card className="rounded-lg bg-white border border-border overflow-hidden relative group shadow-sm">
+              <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Building2 className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base md:text-lg">Centro de Gestión Empresa</CardTitle>
+                      <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider bg-accent/10 text-accent border-accent/20">
+                        Multi-Tenant
+                      </Badge>
+                    </div>
+                    <CardDescription className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                      Supervisa tutores asociados, asigna permisos pedagógicos y administra los programas corporativos.
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                  <Link href="/company/tutors" className="w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto h-10 md:h-11 px-5 rounded-lg font-bold bg-primary hover:bg-primary/90 text-white gap-2 text-xs">
+                      <Users className="h-4 w-4" /> Tutores de Empresa
+                    </Button>
+                  </Link>
+                  <Link href="/settings/plan" className="w-full sm:w-auto">
+                    <Button variant="outline" className="w-full sm:w-auto h-10 md:h-11 px-5 rounded-lg font-bold border gap-2 text-xs">
+                      Abono & Capacidad <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {(isMentor || isAdmin || isEmpresa) && todayAutomationActions.length > 0 && (
             <Card className="rounded-lg bg-foreground text-white overflow-hidden relative group">
               <Cpu className="absolute -right-4 -top-4 h-24 md:h-32 w-24 md:w-32 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700" />
               <CardHeader className="p-6 md:p-8 pb-4">
@@ -293,7 +445,7 @@ const DashboardContent = ({
                     </div>
                   ))}
                 </div>
-                <Link href="/marketing/execution" className="w-full md:w-auto">
+                <Link href="/marketing/campaigns" className="w-full md:w-auto">
                   <Button className="w-full h-12 md:h-14 px-8 rounded-xl md:rounded-2xl font-bold bg-accent hover:bg-accent/90 gap-2">
                     Ir al Centro de Mando <ArrowRight className="h-5 w-5" />
                   </Button>
@@ -320,7 +472,52 @@ const DashboardContent = ({
             </div>
           )}
 
-          {isMentor && !isAdmin && (
+          {isEmpresa && !isAdmin && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] md:tracking-[0.3em]">
+                  Métricas Corporativas y Equipo Docente
+                </h2>
+                <Link href="/company/tutors" className="text-[10px] font-bold text-accent hover:underline uppercase tracking-wider">
+                  Gestionar Equipo &rarr;
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <StudentStatCard 
+                  icon={Users} 
+                  label="Tutores Activos" 
+                  value={`${companyTutors?.length || companyInfo?.subscription?.currentUsage?.tutorsCount || 0} / ${companyInfo?.subscription?.limits?.maxTutors === -1 ? '∞' : (companyInfo?.subscription?.limits?.maxTutors ?? profile?.subscription?.limits?.maxTutors ?? 10)}`} 
+                  color="blue" 
+                />
+                <StudentStatCard 
+                  icon={BookOpen} 
+                  label="Cursos Organización" 
+                  value={mentorCourses?.length || 0} 
+                  color="slate" 
+                />
+                <StudentStatCard 
+                  icon={UserCheck} 
+                  label="Alumnos Totales" 
+                  value={new Set(mentorInscriptions.map((e: any) => e.inviteEmail)).size} 
+                  color="emerald" 
+                />
+                <StudentStatCard 
+                  icon={MousePointer2} 
+                  label="Clicks Totales" 
+                  value={aggregateMarketingStats.clicks} 
+                  color="purple" 
+                />
+                <StudentStatCard 
+                  icon={Sparkles} 
+                  label="Créditos IA" 
+                  value={(((profile?.subscription?.aiQuotas?.totalCredits || 0) - (profile?.subscription?.aiQuotas?.usedCredits || 0)) + (profile?.credits?.balance || 0)).toFixed(5)} 
+                  color="amber" 
+                />
+              </div>
+            </div>
+          )}
+
+          {!isEmpresa && isMentor && !isAdmin && (
             <div className="space-y-4">
               <h2 className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] px-1">Métricas de Enseñanza y Alcance</h2>
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -338,7 +535,7 @@ const DashboardContent = ({
             </div>
           )}
 
-          {isStudent && !isMentor && !isAdmin && (
+          {isStudent && !isMentor && !isAdmin && !isEmpresa && (
             <div className="space-y-4">
               <h2 className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] px-1">Mi Desempeño Académico</h2>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -355,13 +552,13 @@ const DashboardContent = ({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 px-1">
               <div>
                 <h2 className="text-xl md:text-2xl font-bold text-foreground">
-                  {isMentor || isAdmin ? "Programas Recientes" : "Mis Programas en Marcha"}
+                  {isAdmin ? "Programas Globales" : isEmpresa ? "Programas de la Organización" : isMentor ? "Programas Recientes" : "Mis Programas en Marcha"}
                 </h2>
                 <p className="text-xs md:text-sm text-muted-foreground font-medium">
-                  {isMentor || isAdmin ? "Estado de matrícula y publicación." : "Tu progreso y acceso a contenidos."}
+                  {isEmpresa ? "Cursos corporativos y de tutores asociados." : isMentor || isAdmin ? "Estado de matrícula y publicación." : "Tu progreso y acceso a contenidos."}
                 </p>
               </div>
-              <Link href={isMentor || isAdmin ? "/courses/manage" : "/my-courses"} className="w-full sm:w-auto">
+              <Link href={isMentor || isAdmin || isEmpresa ? "/courses/manage" : "/my-courses"} className="w-full sm:w-auto">
                 <Button variant="outline" className="w-full sm:w-auto rounded-xl font-bold border-2 h-10 md:h-11 px-6 shadow-sm">
                   Ver todo <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -369,17 +566,17 @@ const DashboardContent = ({
             </div>
             
             <div className="grid gap-4 md:gap-6">
-              {(isMentor || isAdmin) ? (
-                mentorCourses?.length === 0 ? (
+              {(isMentor || isAdmin || isEmpresa) ? (
+                displayedCourses?.length === 0 ? (
                   <p className="text-center py-10 text-muted-foreground italic">No se han registrado programas recientemente.</p>
-                ) : mentorCourses?.map((course: any) => {
+                ) : displayedCourses?.map((course: any) => {
                   const courseInscriptions = mentorInscriptions.filter((e: any) => e.courseId === course.id);
                   return (
                     <Card key={course.id} className="border-none shadow-lg overflow-hidden rounded-2xl md:rounded-3xl bg-white group transition-all duration-500">
                       <div className="flex flex-col lg:flex-row items-stretch">
                         <div className="relative w-full lg:w-32 h-24 lg:h-auto bg-muted overflow-hidden shrink-0">
                           <Image 
-                            src={course.thumbnail || `https://loremflickr.com/600/400/education,course?lock=${course.id}`} 
+                            src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop'} 
                             alt={course.title} 
                             fill 
                             className="object-cover transition-transform duration-700 group-hover:scale-110" 
@@ -435,13 +632,13 @@ const DashboardContent = ({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 px-1">
               <div>
                 <h2 className="text-xl md:text-2xl font-bold text-foreground">
-                  {isMentor || isAdmin ? "Desafíos Globales" : "Mis Desafíos de Evolución"}
+                  {isAdmin ? "Desafíos Globales" : isEmpresa ? "Desafíos de la Organización" : isMentor ? "Desafíos Globales" : "Mis Desafíos de Evolución"}
                 </h2>
                 <p className="text-xs md:text-sm text-muted-foreground font-medium">
-                  {isMentor || isAdmin ? "Cumplimiento de consignas por grupo." : "Tareas individuales y proyectos evaluados por IA."}
+                  {isEmpresa ? "Supervisión de consignas y entregas en cursos de la organización." : isMentor || isAdmin ? "Cumplimiento de consignas por grupo." : "Tareas individuales y proyectos evaluados por IA."}
                 </p>
               </div>
-              <Link href={isMentor || isAdmin ? "/mentoria/desafios" : "/tasks"} className="w-full sm:w-auto">
+              <Link href={isMentor || isAdmin || isEmpresa ? "/mentoria/desafios" : "/mentoria/tasks"} className="w-full sm:w-auto">
                 <Button variant="outline" className="w-full sm:w-auto rounded-xl font-bold border-2 h-10 md:h-11 px-6 shadow-sm">
                   Ver Tablero <Zap className="ml-2 h-4 w-4" />
                 </Button>
@@ -449,7 +646,7 @@ const DashboardContent = ({
             </div>
 
             <div className="grid gap-4 md:gap-6">
-              {(isMentor || isAdmin) ? (
+              {(isMentor || isAdmin || isEmpresa) ? (
                 groupedDashboardChallenges.length === 0 ? (
                   <p className="text-center py-10 text-muted-foreground italic">No hay desafíos asignados recientemente.</p>
                 ) : groupedDashboardChallenges.map((group: any, gIdx: number) => {
@@ -481,7 +678,7 @@ const DashboardContent = ({
                               <p className="text-[7px] font-bold uppercase text-muted-foreground mt-1">Cumplimiento</p>
                             </div>
                           </div>
-                          <Link href={isMassive ? "/mentoria/desafios" : `/alumnos/${group.tasks[0]?.studentId}`}>
+                          <Link href={isMassive ? "/mentoria/desafios" : `/mentoria/alumnos/${group.tasks[0]?.studentId}`}>
                             <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10"><ChevronRight className="h-5 w-5" /></Button>
                           </Link>
                         </div>
@@ -510,11 +707,13 @@ const DashboardContent = ({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 px-1">
               <div>
                 <h2 className="text-xl md:text-2xl font-bold text-foreground">
-                  {isMentor || isAdmin ? "Mentorías Estratégicas" : "Mis Programas de Acompañamiento"}
+                  {isAdmin ? "Mentorías Globales" : isEmpresa ? "Acompañamiento Corporativo" : isMentor ? "Mentorías Estratégicas" : "Mis Programas de Acompañamiento"}
                 </h2>
-                <p className="text-xs md:text-sm text-muted-foreground font-medium">Acompañamiento personalizado y sesiones de mentoría.</p>
+                <p className="text-xs md:text-sm text-muted-foreground font-medium">
+                  {isEmpresa ? "Supervisión de sesiones de mentoría y seguimiento corporativo." : "Acompañamiento personalizado y sesiones de mentoría."}
+                </p>
               </div>
-              <Link href="/seguimientos" className="w-full sm:w-auto">
+              <Link href="/mentoria/seguimientos" className="w-full sm:w-auto">
                 <Button variant="outline" className="w-full sm:w-auto rounded-xl font-bold border-2 h-10 md:h-11 px-6 shadow-sm">
                   Calendario <Calendar className="ml-2 h-4 w-4" />
                 </Button>

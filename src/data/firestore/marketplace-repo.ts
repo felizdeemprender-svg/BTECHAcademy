@@ -77,6 +77,17 @@ export class FirestoreMarketplaceRepository implements MarketplaceRepository {
     return { id: snap.id, data: (snap.data() ?? {}) as Record<string, unknown> };
   }
 
+  async listFollowupsByIds(ids: readonly string[]): Promise<CatalogDoc[]> {
+    if (ids.length === 0) return [];
+    const docs = await Promise.all(ids.map((id) => this.gateway.getDoc('followups', id)));
+    return docs
+      .filter((d): d is NonNullable<typeof d> => Boolean(d && d.exists))
+      .map((d) => ({
+        id: d.id,
+        data: (d.data() ?? {}) as Record<string, unknown>,
+      }));
+  }
+
   /**
    * F1.3 (aditivo) — `salesPages` con mentorId== + slug== (`api/v/resolve`).
    * Sin `queryByTwoFields`, fallback a mentorId== + filtro en memoria

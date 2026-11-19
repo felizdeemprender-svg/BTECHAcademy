@@ -121,7 +121,14 @@ export async function getMarketplace(
         })
         .filter((t) => {
           const sub = t.data.subscription as { isEnterprise?: unknown } | undefined;
-          return sub?.isEnterprise !== true;
+          const isCompany = Boolean(
+            sub?.isEnterprise === true ||
+            t.data.companyId ||
+            (t.data as any).companyRole ||
+            (t.data as any).role === 'empresa' ||
+            (t.data as any).roles?.includes('empresa')
+          );
+          return !isCompany;
         })
         .map((t) => t.id);
     }
@@ -129,6 +136,7 @@ export async function getMarketplace(
     const enriched: MarketplaceEntry[] = [];
     for (const courseDoc of coursesSnapshot) {
       const course = courseDoc.data;
+      if (course.companyId) continue;
       const hasActiveSalesPage = activeCourseIds.has(courseDoc.id);
       const mentorId = str(course.mentorId);
       const isAllowedTutor = !mentorId || allowedTutorIds.includes(mentorId);

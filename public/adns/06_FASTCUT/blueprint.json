@@ -6,37 +6,42 @@
     {
       "id": "slice_1",
       "segment_label": "GANCHO",
-      "text": "BIENVENIDO AL MASTER",
+      "text": "Deja de *ESPERAR*:\n¡el momento es *AHORA*!",
       "duration": 5,
-      "imageUrl": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b"
+      "imageUrl": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b",
+      "title": "Deja de *ESPERAR*:\n¡el momento es *AHORA*!"
     },
     {
       "id": "slice_2",
       "segment_label": "VALOR",
-      "text": "NUEVO IMPACTO",
+      "text": "El atajo comprobado para *MONETIZAR*\nsin perder *TIEMPO*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "El atajo comprobado para *MONETIZAR*\nsin perder *TIEMPO*"
     },
     {
       "id": "slice_3",
       "segment_label": "VALOR",
-      "text": "NUEVO IMPACTO",
+      "text": "Resultados *directos*\nque pagan tus *CUENTAS*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "Resultados *directos*\nque pagan tus *CUENTAS*"
     },
     {
       "id": "slice_5",
       "segment_label": "CIERRE",
-      "text": "NUEVO IMPACTO",
+      "text": "Acción *INMEDIATA*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "Acción *INMEDIATA*"
     },
     {
       "id": "slice_4",
       "segment_label": "CTA",
-      "text": "NUEVO IMPACTO",
+      "text": "Toca el *LINK*\ny arranca *HOY*",
       "voiceover": "Relato del nuevo slice...",
-      "duration": 5
+      "duration": 5,
+      "title": "Toca el *LINK*\ny arranca *HOY*"
     }
   ]
 }

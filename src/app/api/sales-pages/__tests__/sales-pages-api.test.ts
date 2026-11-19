@@ -1,7 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST, PUT, DELETE } from '../route';
+import { POST as TRACK_POST } from '../[id]/track/route';
 import { NextRequest } from 'next/server';
 import { authenticateCaller } from '@/lib/api/mentor-auth';
+
+const { mockTrackExecute } = vi.hoisted(() => ({
+  mockTrackExecute: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/domain/sales-pages/use-cases/track-sales-page-view-use-case', () => ({
+  TrackSalesPageViewUseCase: class {
+    execute = mockTrackExecute;
+  },
+}));
 
 // Mock dependencias
 vi.mock('@/lib/api/mentor-auth');
@@ -19,10 +30,15 @@ vi.mock('@/domain/sales-pages/use-cases/update-sales-page-use-case', () => {
     }
   };
 });
+const { mockExecuteDelete, mockDeleteFiles } = vi.hoisted(() => ({
+  mockExecuteDelete: vi.fn().mockResolvedValue(undefined),
+  mockDeleteFiles: vi.fn().mockResolvedValue([{}]),
+}));
+
 vi.mock('@/domain/sales-pages/use-cases/delete-sales-page-use-case', () => {
   return {
     DeleteSalesPageUseCase: class {
-      execute = vi.fn().mockResolvedValue(undefined);
+      execute = mockExecuteDelete;
     }
   };
 });
@@ -45,6 +61,15 @@ vi.mock('@/data/firestore/admin-sales-page-repo', () => {
   };
 });
 
+// Mock Admin Storage para pruebas de Cascade Delete
+vi.mock('@/firebase/admin', () => ({
+  adminStorage: {
+    bucket: () => ({
+      deleteFiles: mockDeleteFiles
+    })
+  }
+}));
+
 describe('Sales Pages API Handlers', () => {
   const mockAuthenticateCaller = authenticateCaller as import('vitest').Mock;
 
@@ -56,16 +81,16 @@ describe('Sales Pages API Handlers', () => {
     it('debe devolver 401 si no hay usuario autenticado', async () => {
       mockAuthenticateCaller.mockResolvedValue(null);
       const req = new NextRequest('http://localhost/api/sales-pages');
-      
+
       const resGet = await GET(req);
       expect(resGet.status).toBe(401);
-      
+
       const resPost = await POST(req);
       expect(resPost.status).toBe(401);
-      
+
       const resPut = await PUT(req);
       expect(resPut.status).toBe(401);
-      
+
       const resDelete = await DELETE(req);
       expect(resDelete.status).toBe(401);
     });
@@ -75,7 +100,7 @@ describe('Sales Pages API Handlers', () => {
     it('debe devolver landings del mentor (type=all)', async () => {
       mockAuthenticateCaller.mockResolvedValue({ uid: 'mentor-1', isAdmin: false });
       const req = new NextRequest('http://localhost/api/sales-pages?type=all');
-      
+
       const res = await GET(req);
       expect(res.status).toBe(200);
       const data = await res.json();
@@ -85,7 +110,7 @@ describe('Sales Pages API Handlers', () => {
     it('debe filtrar landings por referidoId', async () => {
       mockAuthenticateCaller.mockResolvedValue({ uid: 'mentor-1', isAdmin: false });
       const req = new NextRequest('http://localhost/api/sales-pages?type=all&referidoId=ref-2');
-      
+
       const res = await GET(req);
       expect(res.status).toBe(200);
       const data = await res.json();
@@ -100,7 +125,7 @@ describe('Sales Pages API Handlers', () => {
         method: 'POST',
         body: JSON.stringify({ data: { title: 'No ID' } })
       });
-      
+
       const res = await POST(req);
       expect(res.status).toBe(400);
     });
@@ -111,7 +136,7 @@ describe('Sales Pages API Handlers', () => {
         method: 'POST',
         body: JSON.stringify({ pageId: 'new-1', data: { title: 'Nueva' } })
       });
-      
+
       const res = await POST(req);
       expect(res.status).toBe(200);
       const data = await res.json();
@@ -127,7 +152,7 @@ describe('Sales Pages API Handlers', () => {
         method: 'PUT',
         body: JSON.stringify({ pageId: 'upd-1', data: { activeUntil: '2027-01-01' } })
       });
-      
+
       const res = await PUT(req);
       expect(res.status).toBe(200);
       const data = await res.json();
@@ -140,20 +165,68 @@ describe('Sales Pages API Handlers', () => {
     it('debe devolver 400 si falta pageId', async () => {
       mockAuthenticateCaller.mockResolvedValue({ uid: 'mentor-1', isAdmin: false });
       const req = new NextRequest('http://localhost/api/sales-pages'); // No searchParams
-      
+
       const res = await DELETE(req);
       expect(res.status).toBe(400);
     });
 
-    it('debe borrar una landing correctamente', async () => {
+    it('debe borrar una landing correctamente y disparar cascade delete en Storage', async () => {
       mockAuthenticateCaller.mockResolvedValue({ uid: 'mentor-1', isAdmin: false });
       const req = new NextRequest('http://localhost/api/sales-pages?pageId=del-1');
-      
+
       const res = await DELETE(req);
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.pageId).toBe('del-1');
+
+      expect(mockExecuteDelete).toHaveBeenCalledWith(
+        expect.objectContaining({
+          uid: 'mentor-1',
+          isAdmin: false,
+          pageId: 'del-1'
+        })
+      );
+      expect(mockDeleteFiles).toHaveBeenCalledWith({ prefix: 'landings/del-1/' });
+      expect(mockDeleteFiles).toHaveBeenCalledWith({ prefix: 'campaigns/del-1/' });
+    });
+
+    it('debe propagar callerRole y companyId al caso de uso para soporte B2B', async () => {
+      mockAuthenticateCaller.mockResolvedValue({ uid: 'supervisor-1', isAdmin: false });
+      const req = new NextRequest('http://localhost/api/sales-pages?pageId=del-corp&companyId=comp-123&callerRole=empresa');
+
+      const res = await DELETE(req);
+      expect(res.status).toBe(200);
+      expect(mockExecuteDelete).toHaveBeenCalledWith({
+        uid: 'supervisor-1',
+        isAdmin: false,
+        pageId: 'del-corp',
+        companyId: 'comp-123',
+        callerRole: 'empresa'
+      });
+    });
+
+    it('debe responder 200 aunque la limpieza física en Storage falle (resiliencia no bloqueante)', async () => {
+      mockAuthenticateCaller.mockResolvedValue({ uid: 'mentor-1', isAdmin: false });
+      mockDeleteFiles.mockRejectedValueOnce(new Error('Storage bucket unreachable'));
+      const req = new NextRequest('http://localhost/api/sales-pages?pageId=del-resilient');
+
+      const res = await DELETE(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.pageId).toBe('del-resilient');
+    });
+  });
+
+  describe('Track Handler (/api/sales-pages/[id]/track)', () => {
+    it('soporta body vacío sin lanzar SyntaxError (Unexpected end of JSON input)', async () => {
+      const req = new Request('http://localhost/api/sales-pages/page-123/track', {
+        method: 'POST',
+      });
+      const res = await TRACK_POST(req, { params: Promise.resolve({ id: 'page-123' }) });
+      expect(res.status).toBe(200);
+      expect(mockTrackExecute).toHaveBeenCalledWith('page-123', 'direct', 'direct');
     });
   });
 });

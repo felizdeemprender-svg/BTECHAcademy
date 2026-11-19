@@ -40,6 +40,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
+import { isCompanyTutorProfile } from '@/domain/company';
+import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
+import { TutorCatalogPublishingSection } from '@/components/catalog/tutor-catalog-publishing-section';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -542,6 +545,17 @@ export default function PublishingEnginesPage() {
     );
   };
 
+  if (isCompanyTutorProfile(profile)) {
+    return (
+      <DashboardLayout>
+        <CorporateRestrictionNotice
+          feature="Motores de Publicación"
+          description="Los motores de email, redes sociales y campañas publicitarias son administrados de forma centralizada por la empresa titular a la que perteneces."
+        />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-10 pb-20">
@@ -570,10 +584,11 @@ export default function PublishingEnginesPage() {
           </div>
 
           <Tabs defaultValue="Social" className="w-full pt-4">
-            <TabsList className="bg-secondary/20 p-1.5 h-14 w-full justify-start gap-2 mb-8 rounded-2xl border">
-              <TabsTrigger value="Social" className="rounded-xl px-8 font-bold gap-2"><Instagram className="h-4 w-4" /> Redes Sociales</TabsTrigger>
-              <TabsTrigger value="Email" className="rounded-xl px-8 font-bold gap-2"><Mail className="h-4 w-4" /> Motores Email</TabsTrigger>
-              <TabsTrigger value="Ads" className="rounded-xl px-8 font-bold gap-2"><Megaphone className="h-4 w-4" /> Tráfico Pago</TabsTrigger>
+            <TabsList className="bg-secondary/20 p-1.5 h-14 w-full justify-start gap-2 mb-8 rounded-2xl border overflow-x-auto">
+              <TabsTrigger value="Social" className="rounded-xl px-8 font-bold gap-2 shrink-0"><Instagram className="h-4 w-4" /> Redes Sociales</TabsTrigger>
+              <TabsTrigger value="Email" className="rounded-xl px-8 font-bold gap-2 shrink-0"><Mail className="h-4 w-4" /> Motores Email</TabsTrigger>
+              <TabsTrigger value="Ads" className="rounded-xl px-8 font-bold gap-2 shrink-0"><Megaphone className="h-4 w-4" /> Tráfico Pago</TabsTrigger>
+              <TabsTrigger value="Catalog" className="rounded-xl px-8 font-bold gap-2 shrink-0"><BookOpen className="h-4 w-4" /> Catálogo</TabsTrigger>
             </TabsList>
 
             {['Email', 'Social', 'Ads'].map(group => (
@@ -607,6 +622,10 @@ export default function PublishingEnginesPage() {
                 </div>
               </TabsContent>
             ))}
+
+            <TabsContent value="Catalog" className="m-0">
+              <TutorCatalogPublishingSection />
+            </TabsContent>
           </Tabs>
         </div>
 

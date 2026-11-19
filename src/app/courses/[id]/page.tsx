@@ -3,21 +3,18 @@
 
 import { useState, useEffect, use, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
-import { useFirestore } from '@/firebase';
-import { doc, updateDoc, setDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { evaluateQuizPerformance } from '@/ai/flows/evaluate-quiz-performance';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { EvaluationData, StudentAchievement } from '@/types/student';
+import { EvaluationData } from '@/types/student';
 
 // Hooks
 import { useCourseProgressV3 } from '@/hooks/student/useCourseProgressV3';
-import { resolveCoursePrimaryColor } from '@/lib/landing-styles';
+import { resolveCoursePrimaryColor, resolveCourseBrand } from '@/lib/landing-styles';
 
 // Components
 import { VideoPlayer } from '@/components/courses/VideoPlayer';
@@ -29,8 +26,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
   const { id: courseId } = use(params);
   const searchParams = useSearchParams();
   const isolatedModuleId = searchParams.get('isolated');
-  const { profile: authProfile } = useAuth();
-  const db = useFirestore();
+  const { profile: authProfile, user } = useAuth();
   const { toast } = useToast();
 
   // Data & Logic from Hook
@@ -48,7 +44,29 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
     progressPercent
   } = useCourseProgressV3(courseId);
 
-  const isCompleted = enrollment?.progress?.completedModules?.includes(activeModule?.id);
+  // Local UI State
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evaluationResult, setEvaluationResult] = useState<EvaluationData | null>(null);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [serverSyncState, setServerSyncState] = useState<{
+    completedModules: string[];
+    progressPercent: number;
+  } | null>(null);
+
+  const effectiveCompletedModules = useMemo(() => {
+    const base = Array.isArray(enrollment?.progress?.completedModules)
+      ? enrollment.progress.completedModules
+      : [];
+    const extra = serverSyncState?.completedModules ?? [];
+    return Array.from(new Set([...base, ...extra]));
+  }, [enrollment?.progress?.completedModules, serverSyncState]);
+
+  const isCompleted = !!(activeModule?.id && effectiveCompletedModules.includes(activeModule.id));
+  const effectiveProgressPercent = Math.max(
+    progressPercent,
+    serverSyncState?.progressPercent ?? 0
+  );
 
   // Sync isolated module if present
   useEffect(() => {
@@ -59,20 +77,6 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
       }
     }
   }, [isolatedModuleId, modules, activeModuleIndex, setActiveModuleIndex]);
-
-  // Sync evaluation result from enrollment when module changes
-  useEffect(() => {
-    if (enrollment?.progress?.evaluations?.[activeModule?.id]) {
-      setEvaluationResult(enrollment.progress.evaluations[activeModule.id]);
-    } else {
-      setEvaluationResult(null);
-    }
-  }, [activeModule?.id, enrollment]);
-
-  // Local UI State
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [evaluationResult, setEvaluationResult] = useState<EvaluationData | null>(null);
-  const [showQuiz, setShowQuiz] = useState(false);
 
   // Determine questions to show (Main vs Support/Reinforcement)
   const currentQuestions = useMemo(() => {
@@ -110,191 +114,94 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
   }, [activeModule?.id, enrollment?.progress?.evaluations]);
 
   const handleQuizSubmit = async () => {
-    if (!activeModule || !authProfile) return;
-    
+    console.log('[Quiz] handleQuizSubmit disparado', {
+      courseId,
+      moduleId: activeModule?.id,
+      hasProfile: !!authProfile,
+      hasUser: !!user,
+      answers: userAnswers,
+    });
+    if (!activeModule) {
+      setSubmitError('No se pudo identificar el módulo activo.');
+      return;
+    }
+    if (!authProfile || !user) {
+      const msg = 'Tu sesión expiró. Recarga la página e inicia sesión nuevamente.';
+      setSubmitError(msg);
+      toast({ variant: 'destructive', title: 'Sesión expirada', description: msg });
+      return;
+    }
+
     const targetQuestions = currentQuestions;
-    const answeredCount = Object.keys(userAnswers).length;
-    
-    if (answeredCount < targetQuestions.length) {
+    const allAnswered = targetQuestions.every((_, idx) => {
+      const val = userAnswers[idx.toString()];
+      return val !== undefined && val !== null && String(val).trim() !== '';
+    });
+
+    if (!allAnswered) {
+      const msg = 'Debes responder todas las preguntas antes de finalizar.';
+      setSubmitError(msg);
       toast({
         variant: 'destructive',
         title: 'Evaluación Incompleta',
-        description: `Debes responder todas las preguntas antes de finalizar.`
+        description: msg
       });
       return;
     }
 
+    setSubmitError(null);
     setIsEvaluating(true);
     try {
-      const result = await evaluateQuizPerformance({
-        questions: targetQuestions,
-        answers: userAnswers,
-        tutorUid: course?.mentorId || authProfile?.uid || '',
-        studentName: authProfile?.displayName
-      });
-
       const supportQuestions = activeModule?.supportQuestions || [];
       const currentIsSupport = supportQuestions.length > 0 &&
         targetQuestions.length === supportQuestions.length &&
         targetQuestions[0]?.question === supportQuestions[0]?.question;
 
-      const fullResult: EvaluationData = {
-        score: result.score,
-        feedback: result.feedback,
-        submittedAt: new Date().toISOString(),
-        isSupport: currentIsSupport,
-        answers: userAnswers,
-        questions: targetQuestions
-      };
-      
-      setEvaluationResult(fullResult);
-      
-      if (enrollment) {
-        const completedModules = enrollment.progress?.completedModules || [];
-        const minPassing = activeModule.minPassingScore ?? 70;
-        const isPassing = result.score >= minPassing;
-        
-        // Normalizar evaluations: si es array, convertir a objeto vacío
-        const currentEvaluations = enrollment.progress?.evaluations || {};
-        const normalizedEvaluations = Array.isArray(currentEvaluations) 
-          ? {} 
-          : (typeof currentEvaluations === 'object' ? currentEvaluations : {});
-        
-        console.log('[Quiz] Evaluando módulo:', activeModule.id, 'Score:', result.score, 'MinPassing:', minPassing, 'IsPassing:', isPassing);
-        console.log('[Quiz] Evaluations normalizadas:', Object.keys(normalizedEvaluations));
-        
-        // Log attempt
-        const attemptRef = doc(collection(db, 'quiz_attempts'));
-        await setDoc(attemptRef, {
-          id: attemptRef.id,
-          courseEnrollmentId: enrollment.id,
-          courseId,
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/courses/${courseId}/submit-quiz`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
           moduleId: activeModule.id,
-          studentId: authProfile.uid,
-          score: result.score,
-          feedback: result.feedback,
           answers: userAnswers,
-          questions: targetQuestions,
-          completedAt: new Date().toISOString()
-        });
-        console.log('[Quiz] Intento guardado:', attemptRef.id);
+          isSupport: currentIsSupport,
+        }),
+      });
 
-        const nextCompletedModules = isPassing && !completedModules.includes(activeModule.id) 
-          ? [...completedModules, activeModule.id] 
-          : completedModules;
+      const payload = await res.json().catch(() => ({}));
+      console.log('[Quiz] submit-quiz response:', res.status, payload);
+      if (!res.ok) {
+        throw new Error(payload?.error || 'No se pudo completar la evaluación. Intenta de nuevo.');
+      }
 
-        // Calcular el progreso global consolidado
-        let processedCount = 0;
+      const data = payload?.data;
+      if (!data?.evaluation) {
+        throw new Error('Respuesta inválida del servidor al evaluar el desafío.');
+      }
 
-        modules.forEach(mod => {
-          const isCompletedMod = nextCompletedModules.includes(mod.id);
-          const isCurrentMod = mod.id === activeModule.id;
-          const modEval = isCurrentMod ? { isSupport: currentIsSupport } : normalizedEvaluations?.[mod.id];
-          const hasEval = !!modEval;
-          const allowsRetries = mod.allowRetries !== false;
+      setEvaluationResult(data.evaluation);
+      setServerSyncState({
+        completedModules: Array.isArray(data.completedModules) ? data.completedModules : [],
+        progressPercent: typeof data.progressPercent === 'number' ? data.progressPercent : 0,
+      });
 
-          if (isCompletedMod) {
-            processedCount++;
-          } else if (hasEval && !allowsRetries) {
-            const needsSupport = !!mod.enableSupportQuestions && (mod.supportQuestions?.length || 0) > 0;
-            if (!needsSupport || modEval?.isSupport) {
-              processedCount++;
-            }
-          }
-        });
-
-        const newProgressPercent = Math.round((processedCount / modules.length) * 100);
-
-        // Reconstruir el objeto de progreso para asegurar que se guarde todo
-        const currentProgress = (enrollment.progress || {
-          completedModules: [],
-          evaluations: {} as Record<string, EvaluationData>
-        });
-        const updatedEvaluations = {
-          ...normalizedEvaluations,
-          [activeModule.id]: {
-            score: result.score,
-            feedback: result.feedback,
-            submittedAt: new Date().toISOString(),
-            answers: userAnswers,
-            questions: targetQuestions,
-            isSupport: currentIsSupport
-          }
-        };
-
-        const updatePayload = {
-          progress: {
-            ...currentProgress,
-            evaluations: updatedEvaluations,
-            completedModules: nextCompletedModules
-          },
-          progressPercent: newProgressPercent
-        };
-
-        console.log('[Quiz] Actualizando enrollment:', enrollment.id, 'Payload:', updatePayload);
-        await updateDoc(doc(db, 'enrollments', enrollment.id), updatePayload);
-        console.log('[Quiz] Enrollment actualizado exitosamente');
-
-        // ── HISTORIAL ACADÉMICO PERMANENTE ─────────────────────────────────
-        // Si el alumno acaba de llegar al 100%, creamos / sobreescribimos
-        // un documento en /student_achievements que sobrevive a la eliminación
-        // del curso. ID determinista para idempotencia.
-        if (newProgressPercent === 100 && authProfile?.email && course) {
-          try {
-            const allEvals = updatedEvaluations as Record<string, EvaluationData>;
-            const evalEntries = Object.entries(allEvals);
-
-            // Promedio de scores (solo evaluaciones con score numérico)
-            const scores = evalEntries.map(([, e]) => e.score).filter(s => typeof s === 'number');
-            const finalScore = scores.length > 0
-              ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-              : 0;
-
-            // Resumen liviano por módulo (sin answers/questions completas)
-            const moduleSummary = nextCompletedModules.map(modId => {
-              const modMeta = modules.find(m => m.id === modId);
-              const evalData = allEvals[modId];
-              return {
-                moduleId: modId,
-                moduleTitle: modMeta?.title || modId,
-                score: evalData?.score ?? 100,
-                completedAt: evalData?.submittedAt || new Date().toISOString()
-              };
-            });
-
-            const achievementId = `${authProfile.uid}_${courseId}`;
-            const achievement: StudentAchievement = {
-              id: achievementId,
-              studentId: authProfile.uid,
-              studentEmail: authProfile.email.toLowerCase().trim(),
-              courseId,
-              courseTitle: course.title,          // snapshot — inmune al borrado del curso
-              mentorId: course.mentorId || '',
-              completedAt: new Date().toISOString(),
-              finalScore,
-              moduleSummary
-            };
-
-            await setDoc(doc(db, 'student_achievements', achievementId), achievement);
-            console.log('[Achievement] Historial académico guardado:', achievementId);
-          } catch (achErr) {
-            // No crítico — la inscripción ya fue actualizada correctamente
-            console.error('[Achievement] Error al guardar historial (no crítico):', achErr);
-          }
-        }
-        // ──────────────────────────────────────────────────────────────────
-
-        if (isPassing) {
-            toast({ title: '¡Felicitaciones!', description: 'Has aprobado este módulo y desbloqueado el siguiente.' });
-        } else {
-            toast({ variant: 'destructive', title: 'Desafío no superado', description: 'Revisa el feedback e inténtalo de nuevo.' });
-        }
+      if (data.isPassing) {
+        try {
+          localStorage.removeItem(`btech_draft_${authProfile.uid}_${courseId}_${activeModule.id}`);
+        } catch {}
+        toast({ title: '¡Felicitaciones!', description: 'Has aprobado este módulo y desbloqueado el siguiente.' });
+      } else {
+        toast({ variant: 'destructive', title: 'Desafío no superado', description: 'Revisa el feedback e inténtalo de nuevo.' });
       }
       setShowQuiz(false);
     } catch (e: any) {
       const msg = e?.message || 'No se pudo completar la evaluación. Intenta de nuevo.';
       console.error('[Quiz] Error al evaluar:', e);
       console.error('[Quiz] Error details:', e?.code, e?.stack);
+      setSubmitError(msg);
       toast({ variant: 'destructive', title: 'Error en evaluación', description: msg });
     } finally {
       setIsEvaluating(false);
@@ -313,11 +220,12 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
   if (isLoading) return <DashboardLayout><div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin text-primary h-12 w-12" /></div></DashboardLayout>;
   if (!course || !enrollment) return <DashboardLayout><div className="p-20 text-center"><p className="text-muted-foreground font-bold">No tienes acceso a este curso.</p></div></DashboardLayout>;
 
-  const primaryColor = resolveCoursePrimaryColor(course?.brandingOverride, mentorProfile?.profile);
+  const courseBrand = resolveCourseBrand(course?.brandingOverride, mentorProfile?.profile);
+  const primaryColor = courseBrand.primary;
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-8 pb-20">
+      <div className="max-w-7xl mx-auto space-y-8 pb-20" style={{ fontFamily: courseBrand.bodyFont }}>
         {/* Top Navigation Bar */}
         <div className="flex items-center justify-between gap-4">
             <Link href="/my-courses" className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-primary transition-colors">
@@ -341,7 +249,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                     courseId={course.id}
                 />
                 <div className="flex justify-between items-center px-4">
-                    <h1 className="text-2xl md:text-3xl font-black text-primary leading-tight">{activeModule?.title}</h1>
+                    <h1 className="text-2xl md:text-3xl font-black leading-tight" style={{ fontFamily: courseBrand.headingFont, color: primaryColor }}>{activeModule?.title}</h1>
                     <Badge className="bg-secondary/20 text-muted-foreground border-none font-bold">Módulo {activeModuleIndex + 1}</Badge>
                 </div>
             </div>
@@ -358,6 +266,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                     }}
                     onSubmit={handleQuizSubmit}
                     isEvaluating={isEvaluating}
+                    submitError={submitError}
                     primaryColor={primaryColor}
                  />
                ) : (
@@ -366,6 +275,7 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                     evaluationResult={evaluationResult}
                     onContinue={handleNextModule}
                     onStartQuiz={() => {
+                      setSubmitError(null);
                       setUserAnswers({}); // Limpiar respuestas anteriores para el reintento
                       setShowQuiz(true);
                     }}
@@ -389,9 +299,9 @@ export default function CourseViewerPage({ params }: { params: Promise<{ id: str
                       setActiveModuleIndex(idx);
                       setEvaluationResult(null);
                   }}
-                  completedModuleIds={enrollment?.progress?.completedModules || []}
+                  completedModuleIds={effectiveCompletedModules}
                   courseTitle={course.title}
-                  progressPercent={progressPercent}
+                  progressPercent={effectiveProgressPercent}
                   primaryColor={primaryColor}
               />
             </div>

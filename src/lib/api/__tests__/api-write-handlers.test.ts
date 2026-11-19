@@ -36,9 +36,11 @@ class MutableFakeGateway implements FirestoreGateway {
     this.store.campaigns[id] = { ...this.store.campaigns[id], ...patch };
   }
 
-  async deleteDoc(_collectionPath: string, id: string) {
+  async deleteDoc(collectionPath: string, id: string) {
     this.deletes.push(id);
-    delete this.store.campaigns[id];
+    if (this.store[collectionPath]) {
+      delete this.store[collectionPath][id];
+    }
   }
 
   serverTimestamp(): unknown {
@@ -78,7 +80,7 @@ class MutableFakeGateway implements FirestoreGateway {
   }
 }
 
-function setup() {
+function setup(extraCampaign?: Record<string, unknown>) {
   const gateway = new MutableFakeGateway({
     campaigns: {
       c1: {
@@ -90,6 +92,14 @@ function setup() {
         status: 'active',
         isActive: true,
         executionLogs: [],
+        ...extraCampaign,
+      },
+    },
+    salesPages: {
+      pack_1: {
+        mentorId: 'm1',
+        title: 'Pack 1',
+        type: 'campaign_pack',
       },
     },
   });
@@ -98,6 +108,7 @@ function setup() {
 
 const mentor: Caller = { uid: 'm1', isAdmin: false };
 const other: Caller = { uid: 'm2', isAdmin: false };
+const adminUser: Caller = { uid: 'admin-1', isAdmin: true };
 
 describe('handlePatchCampaign', () => {
   it('401 sin llamante, 403 ajeno, 400 sin campos, 404 inexistente', async () => {
@@ -136,6 +147,21 @@ describe('handleDeleteCampaign', () => {
     const res = await handleDeleteCampaign(gateway, mentor, 'c1');
     expect(res.status).toBe(200);
     expect(gateway.deletes).toEqual(['c1']);
+  });
+
+  it('200 si un ADMIN borra la campaña de cualquier mentor', async () => {
+    const gateway = setup();
+    const res = await handleDeleteCampaign(gateway, adminUser, 'c1');
+    expect(res.status).toBe(200);
+    expect(gateway.deletes).toContain('c1');
+  });
+
+  it('borra en cascada el salesPageId asociado al eliminar la campaña', async () => {
+    const gateway = setup({ salesPageId: 'pack_1' });
+    const res = await handleDeleteCampaign(gateway, mentor, 'c1');
+    expect(res.status).toBe(200);
+    expect(gateway.deletes).toEqual(['c1', 'pack_1']);
+    expect(gateway['store'].salesPages?.pack_1).toBeUndefined();
   });
 });
 

@@ -130,6 +130,83 @@ describe('handleListPrograms', () => {
     const res = await handleListPrograms(gateway, mentor, 'm1');
     expect(res.status).toBe(200);
   });
+
+  it('student=1 incluye individuales (uid/email) y grupales asignadas vía enrollments', async () => {
+    const gateway = new FakeGateway({
+      users: {
+        s1: { email: 'Alumno@Test.com' },
+      },
+      followups: {
+        fUid: {
+          mentorId: 'm1',
+          title: 'Directa UID',
+          type: 'individual',
+          studentId: 's1',
+          totalSessions: 4,
+          status: 'active',
+        },
+        fEmail: {
+          mentorId: 'm1',
+          title: 'Manual Email',
+          type: 'individual',
+          studentId: '',
+          studentEmail: 'alumno@test.com',
+          totalSessions: 2,
+          status: 'active',
+        },
+        fGroup: {
+          mentorId: 'm2',
+          title: 'Grupal Ari',
+          type: 'group',
+          studentId: '',
+          studentEmail: '',
+          totalSessions: 6,
+          status: 'active',
+        },
+        fSuspendedGroup: {
+          mentorId: 'm2',
+          title: 'Grupal Suspendida',
+          type: 'group',
+          studentId: '',
+          totalSessions: 4,
+          status: 'active',
+        },
+        fOtherStudent: {
+          mentorId: 'm1',
+          title: 'Otro alumno',
+          type: 'individual',
+          studentId: 's999',
+          totalSessions: 2,
+          status: 'active',
+        },
+      },
+      enrollments: {
+        e1: {
+          courseId: 'fGroup',
+          productId: 'fGroup',
+          productType: 'followup',
+          studentId: 's1',
+          inviteEmail: 'alumno@test.com',
+          status: 'active',
+        },
+        e2: {
+          courseId: 'fSuspendedGroup',
+          productId: 'fSuspendedGroup',
+          productType: 'followup',
+          studentId: 's1',
+          status: 'suspended',
+        },
+      },
+    });
+
+    const studentCaller: Caller = { uid: 's1', email: 'Alumno@Test.com', isAdmin: false };
+    expect((await handleListPrograms(gateway, null, '', false, true)).status).toBe(401);
+
+    const res = await handleListPrograms(gateway, studentCaller, '', false, true);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { data: { program: { id: string } }[] };
+    expect(body.data.map((s) => s.program.id).sort()).toEqual(['fEmail', 'fGroup', 'fUid']);
+  });
 });
 
 describe('handleListPrograms all=1', () => {

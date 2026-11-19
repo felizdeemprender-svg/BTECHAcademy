@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,8 @@ import {
   Trash2,
   FileEdit,
   Download,
-  Lock
+  Lock,
+  Palette
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageEditor } from '@/components/courses/ImageEditor';
@@ -55,6 +56,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  getSystemVideoPalettes,
+  resolveVideoBrandPalette
+} from '@/lib/video/brand-palettes';
 import {
   Dialog,
   DialogContent,
@@ -174,6 +185,38 @@ export function TemplateEditor({
 }: TemplateEditorProps) {
   // ADNs cargados desde el componente padre (page.tsx) para evitar ReferenceError
   const dynamicAdns = adns;
+
+  const normalizedLandingsList: { id: string; title: string; url: string }[] = useMemo(() => {
+    const list: { id: string; title: string; url: string }[] = [];
+    if (Array.isArray(availableLandings)) {
+      availableLandings.forEach((pack: any) => {
+        if (pack.aiContent?.landings?.length) {
+          pack.aiContent.landings.forEach((l: any, vIdx: number) => {
+            list.push({
+              id: `${pack.id}-${vIdx}`,
+              title: l.marketingName || `${pack.title || 'Landing'} (Variante ${vIdx + 1})`,
+              url: `/v/${pack.id}?v=${vIdx}`
+            });
+          });
+        } else if (pack.id) {
+          list.push({
+            id: pack.id,
+            title: pack.title || pack.slug || `Landing ${pack.id.substring(0, 8)}`,
+            url: `/v/${pack.id}`
+          });
+        }
+      });
+    }
+    if (list.length === 0 && selectedCourseId) {
+      const courseMatch = courses?.find(c => c.id === selectedCourseId);
+      list.push({
+        id: selectedCourseId,
+        title: courseMatch?.title || 'Landing del Asistente',
+        url: `/v/${selectedCourseId}`
+      });
+    }
+    return list;
+  }, [availableLandings, selectedCourseId, courses]);
 
   const [isGeneratingBreakdown, setIsGeneratingBreakdown] = useState<string | null>(null);
 
@@ -400,13 +443,28 @@ export function TemplateEditor({
       const { initializeFirebase } = await import('@/firebase');
       const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
       const { storage } = initializeFirebase();
-      const pNotes = s.production_notes || {};
+      const currentSocial = generatedAssets?.socials?.[sIdx] || s;
+      const pNotes = currentSocial.production_notes || s.production_notes || {};
+      const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+      const effectivePalette = resolveVideoBrandPalette(
+        pNotes.brandPaletteId,
+        pNotes.brandColors,
+        profile,
+        selectedCourse
+      );
+      const resolvedBrandColors = effectivePalette ? {
+        name: effectivePalette.name,
+        primary: effectivePalette.primary,
+        secondary: effectivePalette.secondary,
+        accent: effectivePalette.accent,
+        outline: effectivePalette.outline
+      } : (pNotes.brandColors || null);
       
       const resolvedScenes = await Promise.all(slides.map(async (sl: any, i: number) => {
         let imageUrl = sl.imageUrl || '';
         if (imageUrl.startsWith('data:')) {
           const blob = await fetch(imageUrl).then(r => r.blob());
-          const snap = await uploadBytes(ref(storage, `campaigns/${selectedCourseId}/assets/slide_${sIdx}_${i}_${Date.now()}.jpg`), blob);
+          const snap = await uploadBytes(ref(storage, `courses/${selectedCourseId}/assets/slide_${sIdx}_${i}_${Date.now()}.jpg`), blob);
           imageUrl = await getDownloadURL(snap.ref);
         }
         return {
@@ -416,7 +474,7 @@ export function TemplateEditor({
           watermark: sl.watermark || pNotes.watermark_text || '@felizdeemprender',
           voiceover: sl.voiceover || '',
           segment_label: sl.segment || 'VALOR',
-          duration: Math.max(Number(sl.duration) || 10, 10)
+          duration: Math.max(Number(sl.duration) || 4.5, 2.5)
         };
       }));
       const jobId = `job_${selectedCourseId}_${sIdx}_${Date.now()}`;
@@ -438,6 +496,8 @@ export function TemplateEditor({
           voiceover: (s.slides?.some((sl: any) => sl.voiceover)) ? '' : (pNotes.voiceover || s.voiceover || ''),
           audioEffect: pNotes.audio_effect || 'auto',
           adnId: pNotes.adnId || '01_CINEMA',
+          brandPaletteId: pNotes.brandPaletteId || 'adn',
+          brandColors: resolvedBrandColors,
           isCarousel: s.type === 'carousel',
           marketingName: s.marketingName
         })
@@ -526,7 +586,22 @@ export function TemplateEditor({
         carousel: '4:5'
       };
       const formato = typeToFormat[s.type] || '9:16';
-      const pNotes = s.production_notes || {};
+      const currentSocial = generatedAssets?.socials?.[sIdx] || s;
+      const pNotes = currentSocial.production_notes || s.production_notes || {};
+      const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+      const effectivePalette = resolveVideoBrandPalette(
+        pNotes.brandPaletteId,
+        pNotes.brandColors,
+        profile,
+        selectedCourse
+      );
+      const resolvedBrandColors = effectivePalette ? {
+        name: effectivePalette.name,
+        primary: effectivePalette.primary,
+        secondary: effectivePalette.secondary,
+        accent: effectivePalette.accent,
+        outline: effectivePalette.outline
+      } : (pNotes.brandColors || null);
 
       const res = await fetch('/api/video/generate', {
         method: 'POST',
@@ -626,7 +701,22 @@ export function TemplateEditor({
       if (!accessToken) throw new Error('Se requiere acceso a Drive para guardar el video.');
 
       const formato = mapAssetTypeToFormato(s.type);
-      const pNotes = s.production_notes || {};
+      const currentSocial = generatedAssets?.socials?.[sIdx] || s;
+      const pNotes = currentSocial.production_notes || s.production_notes || {};
+      const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+      const effectivePalette = resolveVideoBrandPalette(
+        pNotes.brandPaletteId,
+        pNotes.brandColors,
+        profile,
+        selectedCourse
+      );
+      const resolvedBrandColors = effectivePalette ? {
+        name: effectivePalette.name,
+        primary: effectivePalette.primary,
+        secondary: effectivePalette.secondary,
+        accent: effectivePalette.accent,
+        outline: effectivePalette.outline
+      } : (pNotes.brandColors || null);
       const slides = s.slides || s.scenes || [];
 
       // Escenas reales tal como las editó el usuario (multi-escena)
@@ -637,7 +727,7 @@ export function TemplateEditor({
         voiceover: sl.voiceover || '',
         watermark: sl.watermark || '',
         imageUrl: sl.imageUrl || '',
-        duration: Math.max(Number(sl.duration) || 10, 10)
+        duration: Math.max(Number(sl.duration) || 4.5, 2.5)
       }));
 
       const totalSceneSeconds = scenes.reduce((acc: number, sl: any) => acc + sl.duration, 0);
@@ -734,7 +824,22 @@ export function TemplateEditor({
 
     try {
       const formato = mapAssetTypeToFormato(s.type);
-      const pNotes = s.production_notes || {};
+      const currentSocial = generatedAssets?.socials?.[sIdx] || s;
+      const pNotes = currentSocial.production_notes || s.production_notes || {};
+      const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+      const effectivePalette = resolveVideoBrandPalette(
+        pNotes.brandPaletteId,
+        pNotes.brandColors,
+        profile,
+        selectedCourse
+      );
+      const resolvedBrandColors = effectivePalette ? {
+        name: effectivePalette.name,
+        primary: effectivePalette.primary,
+        secondary: effectivePalette.secondary,
+        accent: effectivePalette.accent,
+        outline: effectivePalette.outline
+      } : (pNotes.brandColors || null);
       const exportEngine = pNotes.export_engine || 'seedance';
       const slides = s.slides || s.scenes || [];
 
@@ -746,7 +851,7 @@ export function TemplateEditor({
         voiceover: sl.voiceover || '',
         watermark: sl.watermark || '',
         imageUrl: sl.imageUrl || '',
-        duration: Math.max(Number(sl.duration) || 10, 10)
+        duration: Math.max(Number(sl.duration) || 4.5, 2.5)
       }));
 
       const res = await fetch('/api/video/generate', {
@@ -978,14 +1083,30 @@ export function TemplateEditor({
         ? `\n\n== CONTEXTO DE LA LANDING PAGE DE VENTA ==\nTítulo de la Landing: "${primaryLanding.headline}"\nSubtítulo: "${primaryLanding.subheadline}"\nLlamado a la acción (CTA) de la Landing: "${primaryLanding.ctaText}"\nBeneficios / FAQs: ${primaryLanding.faqs?.map((f:any) => f.question).join(', ') || 'N/A'}`
         : '\n\n== NOTA PARA LA IA ==\nATENCIÓN: No hay una Landing Page asociada. Se tomará como referencia la descripción del curso. Ten en cuenta que las landings tienen mejor definición para la generación de este contenido, por lo que debes inferir agresivamente un ángulo de ventas directo basándote en la información general del curso.';
         
+      const effectiveAdnId = variant.production_notes?.adnId || variant.adnId || '01_CINEMA';
+      const variantWithAdn = {
+        ...variant,
+        adnId: effectiveAdnId,
+        production_notes: {
+          ...(variant.production_notes || {}),
+          adnId: effectiveAdnId
+        }
+      };
+
+      const mentorUid = profile?.uid || (courses?.find((c: any) => c.id === selectedCourseId) as any)?.mentorId || '';
+      const mentorRole = profile?.role || (profile?.isMentor ? 'mentor' : (profile?.isAdmin ? 'admin' : 'mentor'));
+
       const breakdown = await generateVariantContent(
-        variant, 
+        variantWithAdn, 
         realDirectives, 
         selectedCourse?.title || '', 
         selectedCourse?.description || '', 
         selectedCourse?.targetAudience || '', 
         (campaignMission as any) || 'venta',
-        landingContext
+        landingContext,
+        undefined,
+        mentorUid,
+        mentorRole
       );
       if (channel === 'socials') {
         const sourceArray = (breakdown.scenes && breakdown.scenes.length > 0) ? breakdown.scenes : (breakdown.slides || []);
@@ -998,15 +1119,26 @@ export function TemplateEditor({
           watermark: resolveWatermarkHandle(currentPlatform, variant.handle, s.watermark),
           voiceover: s.voiceover || '',
           description: s.description || s.imageUrl || '',
-          duration: Math.max(Number(s.duration) || 10, 10),
-          imageUrl: variant.slides?.[i]?.imageUrl || (s.imageUrl?.startsWith('http') ? s.imageUrl : ''),
+          duration: Math.max(Number(s.duration) || 4.5, 2.5),
+          imageUrl: (s.imageUrl?.startsWith('http') ? s.imageUrl : '') || variant.slides?.[i]?.imageUrl || '',
           subject_action: s.subject_action || '',
           camera_movement: s.camera_movement || '',
           framing: s.framing || '',
           lighting: s.lighting || ''
         }));
         const newSocials = [...generatedAssets.socials];
-        newSocials[index] = { ...newSocials[index], slides: mappedScenes, hook: breakdown.hook, caption: breakdown.caption };
+        newSocials[index] = { 
+          ...newSocials[index], 
+          adnId: effectiveAdnId,
+          production_notes: {
+            ...(newSocials[index]?.production_notes || {}),
+            adnId: effectiveAdnId
+          },
+          slides: mappedScenes, 
+          scenes: mappedScenes,
+          hook: breakdown.hook, 
+          caption: breakdown.caption 
+        };
         const newAssets = { ...generatedAssets, socials: newSocials };
         onSave(newAssets, true);
       }
@@ -1024,6 +1156,9 @@ export function TemplateEditor({
     try {
       const selectedCourse = courses?.find(c => c.id === selectedCourseId);
       const realDirectives = templateDirectives || `Campaña para "${selectedCourse?.title}".`;
+      const mentorUid = profile?.uid || (courses?.find((c: any) => c.id === selectedCourseId) as any)?.mentorId || '';
+      const mentorRole = profile?.role || (profile?.isMentor ? 'mentor' : (profile?.isAdmin ? 'admin' : 'mentor'));
+
       const emailBreakdown = await generateEmailContent({
         variant: email,
         directives: realDirectives,
@@ -1033,7 +1168,9 @@ export function TemplateEditor({
         mentorName: profile?.profile?.fullName || profile?.profile?.firstName || profile?.displayName || 'Mentor Experto',
         mentorBio: profile?.profile?.bio,
         mentorSocials: profile?.profile?.socials,
-        mission: (campaignMission as any) || 'venta'
+        mission: (campaignMission as any) || 'venta',
+        uid: mentorUid,
+        role: mentorRole
       });
       const newEmails = [...(generatedAssets?.emails || [])];
       newEmails[eIdx] = {
@@ -1060,6 +1197,9 @@ export function TemplateEditor({
     try {
       const selectedCourse = courses?.find(c => c.id === selectedCourseId);
       const realDirectives = templateDirectives || `Campaña para "${selectedCourse?.title}".`;
+      const mentorUid = profile?.uid || (courses?.find((c: any) => c.id === selectedCourseId) as any)?.mentorId || '';
+      const mentorRole = profile?.role || (profile?.isMentor ? 'mentor' : (profile?.isAdmin ? 'admin' : 'mentor'));
+
       const adBreakdown = await generateAdsContent({
         variant: ad,
         directives: realDirectives,
@@ -1067,7 +1207,9 @@ export function TemplateEditor({
         courseDescription: selectedCourse?.description || '',
         targetAudience: selectedCourse?.targetAudience || '',
         mentorName: profile?.profile?.fullName || profile?.profile?.firstName || profile?.displayName || 'Mentor Experto',
-        mission: (campaignMission as any) || 'venta'
+        mission: (campaignMission as any) || 'venta',
+        uid: mentorUid,
+        role: mentorRole
       });
       const newAds = [...(generatedAssets?.ads || [])];
       newAds[aIdx] = {
@@ -1160,12 +1302,10 @@ export function TemplateEditor({
                       </SelectTrigger>
                       <SelectContent className="bg-white border-border text-foreground">
                         <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-muted/40">URL del Mentor</SelectItem>
-                        {Array.isArray(availableLandings) && availableLandings.map((pack: any) => (
-                          pack.aiContent?.landings?.map((l: any, vIdx: number) => (
-                            <SelectItem key={`${pack.id}-${vIdx}`} value={`${pack.id}-${vIdx}`} className="text-[10px] uppercase font-bold hover:bg-muted/40">
-                              🎯 {pack.title || 'Pack'}: {l.marketingName || `Variante ${vIdx + 1}`}
-                            </SelectItem>
-                          ))
+                        {normalizedLandingsList.map((landing) => (
+                          <SelectItem key={landing.id} value={landing.id} className="text-[10px] uppercase font-bold hover:bg-muted/40">
+                            Landing: {landing.title} ({landing.url})
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1320,7 +1460,7 @@ export function TemplateEditor({
                               subtitle: s.subtitle || '',
                               watermark: s.watermark || '',
                               voiceover: s.voiceover || '',
-                              duration: Math.max(Number(s.duration) || 10, 10),
+                              duration: Math.max(Number(s.duration) || 4.5, 2.5),
                               imageUrl: s.imageUrl || ''
                             }));
 
@@ -1440,14 +1580,46 @@ export function TemplateEditor({
                               ) : (
                                 <Card className="p-6 md:p-8 rounded-lg bg-white border border-border space-y-6">
                                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                                    <div className="flex items-center gap-4 md:gap-6">
-                                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-muted/40 text-muted-foreground flex items-center justify-center text-xl md:text-2xl font-black">{globalIdx + 1}</div>
-                                      <div>
-                                        <h3 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-widest">{s.marketingName || `${getPlatformLabels(s.type).badge} ${globalIdx + 1}`}</h3>
-                                        <Badge variant="secondary" className="mt-1 md:mt-2 text-muted-foreground bg-muted/40 hover:bg-muted/60 border-none text-[10px] md:text-xs">Borrador / Producción</Badge>
+                                    <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
+                                      {(() => {
+                                        const firstThumb = s.slides?.[0]?.imageUrl || s.scenes?.[0]?.imageUrl;
+                                        return firstThumb ? (
+                                          <div className="relative w-16 h-20 md:w-20 md:h-24 rounded-xl overflow-hidden border border-border bg-muted/40 shrink-0 shadow-sm">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={firstThumb} alt="Miniatura" className="w-full h-full object-cover" />
+                                            <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-xs text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                                              #{globalIdx + 1}
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-muted/40 text-muted-foreground flex items-center justify-center text-xl md:text-2xl font-black shrink-0">
+                                            {globalIdx + 1}
+                                          </div>
+                                        );
+                                      })()}
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <h3 className="text-lg md:text-xl font-black text-foreground uppercase tracking-wide truncate">
+                                            {s.marketingName || `${getPlatformLabels(s.type).badge} ${globalIdx + 1}`}
+                                          </h3>
+                                          {s.isGenerated ? (
+                                            <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200 text-[10px] font-bold">
+                                              {s.slides?.length || s.scenes?.length || 0} escenas listas
+                                            </Badge>
+                                          ) : (
+                                            <Badge variant="secondary" className="text-amber-800 bg-amber-50 border-amber-200 text-[10px] animate-pulse">
+                                              <Loader2 className="h-3 w-3 mr-1 animate-spin inline" /> Generando con IA...
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        {s.hook && (
+                                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1 italic font-medium">
+                                            "{s.hook}"
+                                          </p>
+                                        )}
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 shrink-0">
                                       <Button
                                         variant="outline"
                                         size="icon"
@@ -1460,8 +1632,9 @@ export function TemplateEditor({
 
                                       <Dialog>
                                         <DialogTrigger asChild>
-                                          <Button variant="secondary" size="icon" title="Abrir Editor" className="bg-card text-foreground hover:bg-success/10 h-10 w-10 md:h-12 md:w-12 rounded-xl border border-border">
-                                            <FileEdit className="h-5 w-5" />
+                                          <Button variant="secondary" className="bg-card text-foreground hover:bg-success/10 h-10 md:h-12 px-4 rounded-xl border border-border font-bold text-xs gap-2">
+                                            <FileEdit className="h-4 w-4" />
+                                            <span>Editar Guion y Escenas</span>
                                           </Button>
                                         </DialogTrigger>
                                         <DialogContent className="max-w-[95vw] w-full max-h-[95vh] grid grid-rows-[auto_1fr_auto] gap-0 overflow-hidden p-0">
@@ -1480,13 +1653,26 @@ export function TemplateEditor({
                                                     <div className="flex flex-wrap md:flex-nowrap items-center gap-4 flex-1">
                                                       <div className="flex-1 max-w-[180px]">
                                                         <Select
-                                                          value={s.production_notes?.adnId || '01'}
+                                                          value={s.production_notes?.adnId || s.adnId || '01_CINEMA'}
                                                           onValueChange={(val) => {
                                                             const selectedAdn = dynamicAdns[val];
+                                                            updateAsset('socials', globalIdx, 'adnId', val);
                                                             updateAsset('socials', globalIdx, 'production_notes', {
                                                               ...(s.production_notes || {}),
                                                               adnId: val
                                                             });
+                                                            if (generatedAssets?.socials) {
+                                                              const updatedSocials = [...generatedAssets.socials];
+                                                              updatedSocials[globalIdx] = {
+                                                                ...updatedSocials[globalIdx],
+                                                                adnId: val,
+                                                                production_notes: {
+                                                                  ...(updatedSocials[globalIdx]?.production_notes || {}),
+                                                                  adnId: val
+                                                                }
+                                                              };
+                                                              onSave({ ...generatedAssets, socials: updatedSocials }, true);
+                                                            }
                                                             toast({ title: `ADN ${selectedAdn?.name || val} Seleccionado`, description: "Pulsa 'Re-generar' para ajustar el guion a este estilo." });
                                                           }}
                                                         >
@@ -1516,6 +1702,18 @@ export function TemplateEditor({
                                                               ...(s.production_notes || {}),
                                                               concatenate_slices: !isCarousel
                                                             });
+                                                            if (generatedAssets?.socials) {
+                                                              const updatedSocials = [...generatedAssets.socials];
+                                                              updatedSocials[globalIdx] = {
+                                                                ...updatedSocials[globalIdx],
+                                                                type: val,
+                                                                production_notes: {
+                                                                  ...(updatedSocials[globalIdx]?.production_notes || {}),
+                                                                  concatenate_slices: !isCarousel
+                                                                }
+                                                              };
+                                                              onSave({ ...generatedAssets, socials: updatedSocials }, true);
+                                                            }
                                                             toast({
                                                               title: "Formato Actualizado",
                                                               description: isCarousel
@@ -1540,28 +1738,184 @@ export function TemplateEditor({
                                                         </Select>
                                                       </div>
 
-                                                      <div className="flex-1 max-w-[120px]">
+                                                      <div className="flex-1 max-w-[170px]">
                                                         <Select
-                                                          value={s.landingId || 'mentor'}
-                                                          onValueChange={(val) => updateAsset('socials', globalIdx, 'landingId', val)}
+                                                          value={s.production_notes?.brandPaletteId || 'adn'}
+                                                          onValueChange={(val) => {
+                                                            const selectedCourse = courses?.find((c: any) => c.id === selectedCourseId);
+                                                            const palette = resolveVideoBrandPalette(val, null, profile, selectedCourse);
+                                                            const newColors = palette ? {
+                                                              name: palette.name,
+                                                              primary: palette.primary,
+                                                              secondary: palette.secondary,
+                                                              accent: palette.accent,
+                                                              outline: palette.outline
+                                                            } : null;
+
+                                                            updateAsset('socials', globalIdx, 'production_notes', {
+                                                              ...(s.production_notes || {}),
+                                                              brandPaletteId: val,
+                                                              brandColors: newColors
+                                                            });
+
+                                                            if (generatedAssets?.socials) {
+                                                              const updatedSocials = [...generatedAssets.socials];
+                                                              updatedSocials[globalIdx] = {
+                                                                ...updatedSocials[globalIdx],
+                                                                production_notes: {
+                                                                  ...(updatedSocials[globalIdx]?.production_notes || {}),
+                                                                  brandPaletteId: val,
+                                                                  brandColors: newColors
+                                                                }
+                                                              };
+                                                              onSave({ ...generatedAssets, socials: updatedSocials }, true);
+                                                            }
+
+                                                            toast({
+                                                              title: "Paleta de Color Actualizada",
+                                                              description: `Subtítulos configurados con: ${palette?.name || 'ADN Original'}`
+                                                            });
+                                                          }}
                                                         >
                                                           <SelectTrigger className="h-11 bg-white border-border text-[9px] font-black uppercase text-foreground tracking-widest">
-                                                            <div className="flex items-center gap-2">
-                                                              <Link2 className="h-3.5 w-3.5" />
-                                                              <span>URL <SelectValue placeholder="Destino" /></span>
+                                                            <div className="flex items-center gap-2 truncate">
+                                                              <Palette className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                              <span className="truncate">COLOR: <SelectValue placeholder="Paleta" /></span>
                                                             </div>
                                                           </SelectTrigger>
-                                                          <SelectContent className="bg-white border-border text-foreground">
-                                                            <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-muted/40">URL del Mentor</SelectItem>
-                                                            {Array.isArray(availableLandings) && availableLandings.map((pack: any) => (
-                                                              pack.aiContent?.landings?.map((l: any, vIdx: number) => (
-                                                                <SelectItem key={`${pack.id}-${vIdx}`} value={`${pack.id}-${vIdx}`} className="text-[10px] uppercase font-bold hover:bg-muted/40">
-                                                                  🎯 {pack.title || 'Pack'}: {l.marketingName || `Variante ${vIdx + 1}`}
-                                                                </SelectItem>
-                                                              ))
+                                                          <SelectContent className="bg-white border-border text-foreground max-h-72">
+                                                            {getSystemVideoPalettes(profile, courses?.find((c: any) => c.id === selectedCourseId)).map((palette) => (
+                                                              <SelectItem key={palette.id} value={palette.id} className="text-[10px] uppercase font-bold">
+                                                                <div className="flex items-center gap-2">
+                                                                  {palette.primary ? (
+                                                                    <span
+                                                                      className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
+                                                                      style={{ backgroundColor: palette.primary }}
+                                                                    />
+                                                                  ) : (
+                                                                    <span className="text-[10px]">🎬</span>
+                                                                  )}
+                                                                  <span>{palette.name}</span>
+                                                                </div>
+                                                              </SelectItem>
                                                             ))}
                                                           </SelectContent>
                                                         </Select>
+                                                      </div>
+
+                                                      <div className="flex-1 max-w-[170px]">
+                                                        <Popover>
+                                                          <PopoverTrigger asChild>
+                                                            <Button
+                                                              variant="outline"
+                                                              className="h-11 w-full bg-white border-border text-[9px] font-black uppercase text-foreground tracking-widest px-3 flex items-center justify-between gap-1 hover:bg-muted/40"
+                                                            >
+                                                              <div className="flex items-center gap-1.5 truncate">
+                                                                <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                                <span className="truncate">
+                                                                  URL: {
+                                                                    ((s.includeMentorUrl ?? (s.landingId === 'mentor')) && (s.includeLandingUrl ?? (s.landingId !== 'mentor')))
+                                                                      ? 'MENTOR + LANDING'
+                                                                      : (s.includeMentorUrl ?? (s.landingId === 'mentor'))
+                                                                      ? 'SOLO MENTOR'
+                                                                      : (s.includeLandingUrl ?? (s.landingId !== 'mentor'))
+                                                                      ? 'SOLO LANDING'
+                                                                      : 'SIN URL'
+                                                                  }
+                                                                </span>
+                                                              </div>
+                                                            </Button>
+                                                          </PopoverTrigger>
+                                                          <PopoverContent className="w-80 p-4 bg-white border-border shadow-xl space-y-3" align="start">
+                                                            <div className="border-b border-border pb-2">
+                                                              <p className="text-[10px] font-black uppercase tracking-wider text-foreground">Destinos en la Publicación</p>
+                                                              <p className="text-[9px] text-muted-foreground">Tilda las URLs que deseas incorporar al contenido.</p>
+                                                            </div>
+
+                                                            {/* Checkbox 1: URL del Mentor */}
+                                                            <label className="flex items-start gap-3 p-2.5 rounded-xl border border-border/60 hover:bg-muted/30 cursor-pointer transition-colors">
+                                                              <Checkbox
+                                                                checked={s.includeMentorUrl ?? (s.landingId === 'mentor')}
+                                                                onCheckedChange={(checked) => {
+                                                                  updateAsset('socials', globalIdx, 'includeMentorUrl', !!checked);
+                                                                }}
+                                                                className="mt-0.5"
+                                                              />
+                                                              <div className="flex-1 space-y-0.5">
+                                                                <span className="text-[10px] font-bold uppercase text-foreground tracking-wide">URL del Mentor</span>
+                                                                <p className="text-[9px] text-muted-foreground">Enlace a biografía o perfil del mentor.</p>
+                                                              </div>
+                                                            </label>
+
+                                                            {/* Checkbox 2: URL de la Landing */}
+                                                            {(() => {
+                                                              const defaultInheritedLanding = normalizedLandingsList.find(l => l.id === s.landingId)
+                                                                || normalizedLandingsList[0]
+                                                                || (selectedCourseId ? { id: selectedCourseId, title: 'Landing del Asistente', url: `/v/${selectedCourseId}` } : null);
+
+                                                              return (
+                                                                <div className="p-2.5 rounded-xl border border-border/60 bg-muted/20 space-y-2">
+                                                                  <label className="flex items-start gap-3 cursor-pointer">
+                                                                    <Checkbox
+                                                                      checked={s.includeLandingUrl ?? (s.landingId !== 'mentor')}
+                                                                      onCheckedChange={(checked) => {
+                                                                        const isChecked = !!checked;
+                                                                        updateAsset('socials', globalIdx, 'includeLandingUrl', isChecked);
+                                                                        if (isChecked && (!s.landingId || s.landingId === 'mentor') && defaultInheritedLanding) {
+                                                                          updateAsset('socials', globalIdx, 'landingId', defaultInheritedLanding.id);
+                                                                        }
+                                                                      }}
+                                                                      className="mt-0.5"
+                                                                    />
+                                                                    <div className="flex-1 space-y-0.5">
+                                                                      <span className="text-[10px] font-bold uppercase text-foreground tracking-wide">URL de la Landing</span>
+                                                                      <p className="text-[9px] text-muted-foreground">Página de venta / oferta activa.</p>
+                                                                    </div>
+                                                                  </label>
+
+                                                                  {(s.includeLandingUrl ?? (s.landingId !== 'mentor')) && (
+                                                                    <div className="pt-1.5 pl-6">
+                                                                      {normalizedLandingsList.length <= 1 ? (
+                                                                        <div className="flex items-center justify-between text-[10px] bg-white p-2 rounded-lg border border-border">
+                                                                          <div className="flex items-center gap-1.5 truncate mr-2">
+                                                                            <span className="text-muted-foreground font-medium">Heredada:</span>
+                                                                            <span className="font-bold text-foreground truncate">
+                                                                              {defaultInheritedLanding?.title || 'Landing del Asistente'}
+                                                                            </span>
+                                                                          </div>
+                                                                          {defaultInheritedLanding && (
+                                                                            <span className="font-mono text-[9px] text-primary shrink-0 font-bold">
+                                                                              {defaultInheritedLanding.url}
+                                                                            </span>
+                                                                          )}
+                                                                        </div>
+                                                                      ) : (
+                                                                        <Select
+                                                                          value={s.landingId && s.landingId !== 'mentor' ? s.landingId : (defaultInheritedLanding?.id || '')}
+                                                                          onValueChange={(val) => {
+                                                                            updateAsset('socials', globalIdx, 'landingId', val);
+                                                                            updateAsset('socials', globalIdx, 'includeLandingUrl', true);
+                                                                          }}
+                                                                        >
+                                                                          <SelectTrigger className="h-8 bg-white border-border text-[9px] font-bold">
+                                                                            <SelectValue placeholder="Seleccionar Landing" />
+                                                                          </SelectTrigger>
+                                                                          <SelectContent className="bg-white border-border text-foreground">
+                                                                            {normalizedLandingsList.map((landing) => (
+                                                                              <SelectItem key={landing.id} value={landing.id} className="text-[10px] uppercase font-bold">
+                                                                                {landing.title} ({landing.url})
+                                                                              </SelectItem>
+                                                                            ))}
+                                                                          </SelectContent>
+                                                                        </Select>
+                                                                      )}
+                                                                    </div>
+                                                                  )}
+                                                                </div>
+                                                              );
+                                                            })()}
+                                                          </PopoverContent>
+                                                        </Popover>
                                                       </div>
 
                                                       </div>
@@ -1622,12 +1976,15 @@ export function TemplateEditor({
                                                       onRefreshGoogleToken={ensureGoogleToken}
                                                       adns={dynamicAdns}
                                                       jobProgress={jobProgress[globalIdx]}
+                                                      profile={profile}
+                                                      onSave={onSave}
+                                                      allAssets={generatedAssets}
                                                     />
                                                   )}
                                                 </div>
                                                 <div className="lg:col-span-5 p-6 md:p-8 bg-muted/20 border-t lg:border-t-0 lg:border-l border-border">
                                                   <div className="sticky top-0">
-                                                    <SocialLivePreview social={s} tokens={blueprintData?.assets?.socials?.[globalIdx]?.designTokens || s.designTokens} adn={dynamicAdns[s.production_notes?.adn || '01'] || dynamicAdns['01']} />
+                                                    <SocialLivePreview social={s} tokens={blueprintData?.assets?.socials?.[globalIdx]?.designTokens || s.designTokens} adn={dynamicAdns[s.production_notes?.adnId || s.adnId || s.production_notes?.adn || '01_CINEMA'] || dynamicAdns['01_CINEMA'] || Object.values(dynamicAdns)[0]} />
                                                   </div>
                                                 </div>
                                               </div>
@@ -1786,12 +2143,10 @@ export function TemplateEditor({
                         </SelectTrigger>
                         <SelectContent className="bg-white border-border text-foreground">
                           <SelectItem value="mentor" className="text-[10px] uppercase font-bold hover:bg-muted/40">URL del Mentor</SelectItem>
-                          {Array.isArray(availableLandings) && availableLandings.map((pack: any) => (
-                            pack.aiContent?.landings?.map((l: any, vIdx: number) => (
-                              <SelectItem key={`${pack.id}-${vIdx}`} value={`${pack.id}-${vIdx}`} className="text-[10px] uppercase font-bold hover:bg-muted/40">
-                                🎯 {pack.title || 'Pack'}: {l.marketingName || `Variante ${vIdx + 1}`}
-                              </SelectItem>
-                            ))
+                          {normalizedLandingsList.map((landing) => (
+                            <SelectItem key={landing.id} value={landing.id} className="text-[10px] uppercase font-bold hover:bg-muted/40">
+                              Landing: {landing.title} ({landing.url})
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

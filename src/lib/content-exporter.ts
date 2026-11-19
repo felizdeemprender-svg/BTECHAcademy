@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Content Exporter - Formateo y Exportación de Templates
  * 
  * Responsable de generar packs de exportación con metadatos de protocolos
@@ -6,6 +6,7 @@
  */
 
 import { TemplateMetadata } from './template-validator';
+import { getAppBaseUrl } from './app-url';
 
 export interface ExportPack {
   name: string;
@@ -30,8 +31,11 @@ export function formatEmailContent(emails: TemplateMetadata[], options: ExportOp
     let link = customUrl || `https://tu-dominio.com/api/track?pageId=PAGE_ID&v=${target}&source=email&channel=email`;
     
     if (email.landingId && email.landingId !== 'mentor') {
-      const [packId, vIdx] = email.landingId.split('-');
-      link = `${options.baseUrl || 'https://FastoriaAcademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
+      const parts = email.landingId.split('-');
+      const packId = parts[0];
+      const vIdx = parts[1];
+      const base = options.baseUrl || getAppBaseUrl();
+      link = (vIdx !== undefined && vIdx !== '') ? `${base}/v/${packId}?v=${vIdx}` : `${base}/v/${packId}`;
     } else if (email.landingId === 'mentor') {
       link = 'URL_DEL_MENTOR_AQUÍ';
     }
@@ -63,14 +67,25 @@ export function formatEmailContent(emails: TemplateMetadata[], options: ExportOp
  */
 export function formatSocialContent(socials: TemplateMetadata[], options: ExportOptions = {}): string {
   return socials.map((social, index) => {
-    let landingLink = social.finalLandingUrl || 'https://tu-dominio.com/v/PAGE_ID';
-    
+    const baseUrl = options.baseUrl || getAppBaseUrl();
+    const includeMentor = (social as any).includeMentorUrl ?? (social.landingId === 'mentor');
+    const includeLanding = (social as any).includeLandingUrl ?? (social.landingId !== 'mentor');
+
+    let landingLink = social.finalLandingUrl || `${baseUrl}/v/PAGE_ID`;
     if (social.landingId && social.landingId !== 'mentor') {
-      const [packId, vIdx] = social.landingId.split('-');
-      landingLink = `${options.baseUrl || 'https://FastoriaAcademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
-    } else if (social.landingId === 'mentor') {
-      landingLink = 'URL_DEL_MENTOR_AQUÍ';
+      const parts = social.landingId.split('-');
+      const packId = parts[0];
+      const vIdx = parts[1];
+      landingLink = (vIdx !== undefined && vIdx !== '') ? `${baseUrl}/v/${packId}?v=${vIdx}` : `${baseUrl}/v/${packId}`;
     }
+
+    const mentorLink = (social as any).mentorUrl || `${baseUrl}/`;
+
+    const destParts: string[] = [];
+    if (includeLanding) destParts.push(`Landing: ${landingLink}`);
+    if (includeMentor) destParts.push(`Mentor: ${mentorLink}`);
+    const destDisplay = destParts.length > 0 ? destParts.join('\n') : (landingLink || mentorLink);
+
     const slidesText = social.slides?.map((slide: any, si: number) => 
       `PLACA ${si + 1}:\n[TEXTO EN IMAGEN]: ${slide.text}\n[LINK IMAGEN]: ${slide.imageUrl}`
     ).join('\n\n') || '';
@@ -83,10 +98,10 @@ SINCRONIZACIÓN: Al inicio del video (0s)\n\n` : '';
     let content = `${social.marketingName?.toUpperCase() || `PACK SOCIAL ${index + 1}`}`;
     content += ` (${social.type?.toUpperCase()})${social.preconformed ? ' - PRE-CONFORMADO' : ''})\n\n`;
     content += `GANCHO: ${social.hook || 'Sin gancho'}\n\n`;
-    content += `LINK DE DESTINO (PARA BOTÓN/BIO): ${landingLink}\n\n`;
+    content += `LINK DE DESTINO (PARA BOTÓN/BIO):\n${destDisplay}\n\n`;
     content += `CAPTION (PARA COPIAR EN REDES):\n`;
     content += `${social.caption || 'Sin caption'}\n\n`;
-    content += `🔗 ${landingLink}\n\n`;
+    content += destParts.map(d => `🔗 ${d}`).join('\n') + `\n\n`;
     content += `--------------------------------------------------\n\n`;
     content += `CONTENIDO PARA DISEÑO DE PLACAS:\n${slidesText}\n\n`;
     content += audioConfig;
@@ -114,8 +129,11 @@ export function formatAdsContent(ads: TemplateMetadata[], options: ExportOptions
     let landingLink = 'https://tu-dominio.com/v/PAGE_ID';
     
     if (ad.landingId && ad.landingId !== 'mentor') {
-      const [packId, vIdx] = ad.landingId.split('-');
-      landingLink = `${options.baseUrl || 'https://FastoriaAcademy-8b329.web.app'}/v/${packId}?v=${vIdx}`;
+      const parts = ad.landingId.split('-');
+      const packId = parts[0];
+      const vIdx = parts[1];
+      const base = options.baseUrl || getAppBaseUrl();
+      landingLink = (vIdx !== undefined && vIdx !== '') ? `${base}/v/${packId}?v=${vIdx}` : `${base}/v/${packId}`;
     } else if (ad.landingId === 'mentor') {
       landingLink = 'URL_DEL_MENTOR_AQUÍ';
     }

@@ -5,9 +5,11 @@
  */
 import { NextResponse } from 'next/server';
 
+import { ok } from '@/domain/shared/result';
 import {
   getMentorPrograms,
   listAllPrograms,
+  toProgramSummaries,
 } from '@/domain/mentoring/use-cases/get-mentor-programs';
 import {
   createMentoringProgram,
@@ -28,12 +30,22 @@ export async function handleListPrograms(
   caller: Caller | null,
   mentorId: string,
   all = false,
+  student = false,
 ): Promise<NextResponse> {
   if (!caller) return unauthorized();
   const repo = new FirestoreMentoringProgramRepository(gateway);
   if (all) {
     if (!caller.isAdmin) return forbidden();
     return toApiResponse(await listAllPrograms(repo));
+  }
+  if (student) {
+    let email = (caller.email ?? '').toLowerCase().trim();
+    if (!email) {
+      const userSnap = await gateway.getDoc('users', caller.uid);
+      email = ((userSnap?.data()?.email as string | undefined) ?? '').toLowerCase().trim();
+    }
+    const programs = await repo.listByStudent(caller.uid, email);
+    return toApiResponse(ok(toProgramSummaries(programs)));
   }
   if (!mentorId || !canAccessMentorData(caller, mentorId)) return forbidden();
   return toApiResponse(await getMentorPrograms(repo, { mentorId }));

@@ -7,6 +7,11 @@
   "isModular": true,
   "engine_requirements": {
     "ffmpeg_build": "6.1",
-    "features": ["sidechain", "xfade", "loudnorm"]
-  }
+    "features": [
+      "sidechain",
+      "xfade",
+      "loudnorm"
+    ]
+  },
+  "visual_directive": "Cinematic 35mm film look, dramatic golden hour lighting, shallow depth of field, anamorphic lens flare, movie still photography, rich natural contrast"
 }

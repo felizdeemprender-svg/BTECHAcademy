@@ -109,8 +109,28 @@ describe('createMentoringProgram', () => {
       type: 'group',
       studentId: '',
       status: 'active',
+      planGuideUrl: null,
+      masterFileUrl: null,
     });
+    expect(Object.values(programs.created[0])).not.toContain(undefined);
     expect(sessions.created[0].sessions.map((s) => s.orderIndex)).toEqual([1, 2, 3]);
+  });
+
+  it('individual sin planGuideUrl persiste null (nunca undefined para Firestore)', async () => {
+    const programs = new FakePrograms([]);
+    const result = await createMentoringProgram(programs, new FakeSessions(), {
+      id: 'f10b',
+      mentorId: 'm1',
+      type: 'individual',
+      title: 'I',
+      studentId: 's1',
+      planGuideUrl: null,
+      masterFileUrl: null,
+    });
+    expect(isOk(result)).toBe(true);
+    expect(programs.created[0].planGuideUrl).toBeNull();
+    expect(programs.created[0].masterFileUrl).toBeNull();
+    expect(Object.values(programs.created[0])).not.toContain(undefined);
   });
 
   it('individual con invitación manual (studentId vacío) se permite', async () => {
@@ -143,8 +163,9 @@ describe('updateMentoringProgram / setProgramStatus', () => {
       masterFileUrl: 'https://x',
     });
     expect(isOk(result)).toBe(true);
-    expect(programs.updates[0].patch).toMatchObject({ title: 'Nuevo' });
+    expect(programs.updates[0].patch).toEqual({ title: 'Nuevo' });
     expect('masterFileUrl' in programs.updates[0].patch).toBe(false);
+    expect(Object.values(programs.updates[0].patch)).not.toContain(undefined);
   });
 
   it('inexistente → NOT_FOUND', async () => {

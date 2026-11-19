@@ -146,6 +146,18 @@ describe('course', () => {
     expect(canEnrollInCourse({ status: 'draft' })).toBe(false);
     expect(canEnrollInCourse({ status: 'creating' })).toBe(false);
   });
+
+  it('persiste thumbnailPrompt opcional en CourseSchema', () => {
+    const withPrompt = CourseSchema.parse(
+      baseCourse({
+        thumbnail: 'https://cdn/cover.jpg',
+        thumbnailPrompt: 'Editorial photography of an artisanal bakery kitchen, warm morning light',
+      }),
+    );
+    expect(withPrompt.thumbnailPrompt).toBe(
+      'Editorial photography of an artisanal bakery kitchen, warm morning light',
+    );
+  });
 });
 
 describe('sales-page', () => {

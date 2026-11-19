@@ -69,6 +69,7 @@ import {
   addProgramSession,
   assignProgramTask,
   deleteProgramTask,
+  fetchProgramEnrollments,
   saveProgramSession,
   submitProgramTask,
   updateProgram,
@@ -284,55 +285,140 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
   }, [editingSession, answeringTaskId, clearUILocks]);
 
   useEffect(() => {
-    if (isMentor) {
-      getDocs(query(collection(db, 'courses'), where('mentorId', '==', profile?.uid))).then(snap => {
-        setMentorCourses(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-      });
-      getDocs(query(collection(db, 'followups'), where('mentorId', '==', profile?.uid))).then(snap => {
-        setMentorFollowUps(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-      });
+    if (isMentor && profile?.uid) {
+      getDocs(query(collection(db, 'courses'), where('mentorId', '==', profile.uid)))
+        .then(snap => {
+          setMentorCourses(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        })
+        .catch(err => console.warn('[FollowUpDetail] Error fetching mentor courses:', err));
+      getDocs(query(collection(db, 'followups'), where('mentorId', '==', profile.uid)))
+        .then(snap => {
+          setMentorFollowUps(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        })
+        .catch(err => console.warn('[FollowUpDetail] Error fetching mentor followups:', err));
     }
   }, [db, profile, isMentor]);
 
-  useEffect(() => {
-    if (followUp?.studentId) {
-      getDoc(doc(db, 'users', followUp.studentId)).then(snap => {
-        if (snap.exists()) setStudentEmail(snap.data().email || '');
-      });
+  const [linkedCourseMeta, setLinkedCourseMeta] = useState<Record<string, { modulesCount: number }>>({});
 
-      getDocs(query(collection(db, 'enrollments'), where('studentId', '==', followUp.studentId))).then(snap => {
-        const mapping: Record<string, any> = {};
-        snap.docs.forEach(d => {
-          mapping[d.data().courseId] = d.data();
-        });
-        setStudentEnrollments(mapping);
-      });
+  useEffect(() => {
+    const cleanStudentId = followUp?.studentId?.trim();
+    if (cleanStudentId) {
+      getDoc(doc(db, 'users', cleanStudentId))
+        .then(snap => {
+          if (snap.exists()) setStudentEmail(snap.data().email || followUp?.studentEmail || '');
+          else if (followUp?.studentEmail) setStudentEmail(followUp.studentEmail);
+        })
+        .catch(err => console.warn('[FollowUpDetail] Error fetching student user:', err));
+
+      getDocs(query(collection(db, 'enrollments'), where('studentId', '==', cleanStudentId)))
+        .then(snap => {
+          const mapping: Record<string, any> = {};
+          snap.docs.forEach(d => {
+            mapping[d.data().courseId] = d.data();
+          });
+          setStudentEnrollments(mapping);
+        })
+        .catch(err => console.warn('[FollowUpDetail] Error fetching student enrollments:', err));
+    } else if (followUp?.studentEmail?.trim()) {
+      const normalizedEmail = followUp.studentEmail.toLowerCase().trim();
+      setStudentEmail(normalizedEmail);
+      getDocs(query(collection(db, 'enrollments'), where('inviteEmail', '==', normalizedEmail)))
+        .then(snap => {
+          const mapping: Record<string, any> = {};
+          snap.docs.forEach(d => {
+            mapping[d.data().courseId] = d.data();
+          });
+          setStudentEnrollments(mapping);
+        })
+        .catch(err => console.warn('[FollowUpDetail] Error fetching invite enrollments:', err));
     } else if (followUp?.type === 'group' && followUp?.id) {
-      // Load group enrollments
-      const fetchGroupEnrollments = async () => {
-        try {
-          const q1 = query(collection(db, 'enrollments'), where('productId', '==', followUp.id));
-          const q2 = query(collection(db, 'enrollments'), where('courseId', '==', followUp.id));
-          const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-          
-          const enrollmentsMap = new Map();
-          snap1.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
-          snap2.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
-          
-          setGroupEnrollments(Array.from(enrollmentsMap.values()));
-        } catch (e) {
-          console.error("Error fetching group enrollments:", e);
-        }
-      };
-      fetchGroupEnrollments();
+      if (isStudent && profile?.uid) {
+        const emailLower = profile.email?.toLowerCase().trim();
+        Promise.all([
+          getDocs(query(collection(db, 'enrollments'), where('studentId', '==', profile.uid))),
+          emailLower
+            ? getDocs(query(collection(db, 'enrollments'), where('inviteEmail', '==', emailLower)))
+            : Promise.resolve({ docs: [] as any[] }),
+        ])
+          .then(([uidSnap, emailSnap]) => {
+            const mapping: Record<string, any> = {};
+            [...emailSnap.docs, ...uidSnap.docs].forEach(d => {
+              const data = d.data();
+              if (data?.courseId) mapping[data.courseId] = data;
+            });
+            setStudentEnrollments(mapping);
+          })
+          .catch(err => console.warn('[FollowUpDetail] Error fetching student group enrollments:', err));
+      }
+
+      if (isMentor) {
+        // Load group enrollments (solo mentores/admin)
+        const fetchGroupEnrollments = async () => {
+          try {
+            if (detailApi.enabled && user) {
+              const list = await fetchProgramEnrollments(followUp.id, await getToken());
+              setGroupEnrollments(list);
+              return;
+            }
+            const q1 = query(collection(db, 'enrollments'), where('productId', '==', followUp.id));
+            const q2 = query(collection(db, 'enrollments'), where('courseId', '==', followUp.id));
+            const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+            
+            const enrollmentsMap = new Map();
+            snap1.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
+            snap2.docs.forEach(d => enrollmentsMap.set(d.id, { id: d.id, ...d.data() }));
+            
+            setGroupEnrollments(Array.from(enrollmentsMap.values()));
+          } catch (e) {
+            console.warn("Error fetching group enrollments:", e);
+          }
+        };
+        fetchGroupEnrollments();
+      }
     }
     
-    if (followUp?.mentorId) {
-      getDoc(doc(db, 'users', followUp.mentorId)).then(snap => {
-        if (snap.exists()) setMentorEmail(snap.data().email || '');
-      });
+    const cleanMentorId = followUp?.mentorId?.trim();
+    if (cleanMentorId) {
+      getDoc(doc(db, 'users', cleanMentorId))
+        .then(snap => {
+          if (snap.exists()) setMentorEmail(snap.data().email || '');
+        })
+        .catch(err => console.warn('[FollowUpDetail] Error fetching mentor user:', err));
     }
-  }, [db, followUp, isMentor, profile?.uid]);
+  }, [db, followUp, isMentor, isStudent, profile?.uid, profile?.email, detailApi.enabled, user, getToken]);
+
+  useEffect(() => {
+    if (!tasks || tasks.length === 0) return;
+    const missingCourseIds = Array.from(
+      new Set(
+        tasks
+          .filter((t: any) => (t.type === 'course' || t.type === 'module') && t.courseId)
+          .map((t: any) => t.courseId as string)
+          .filter((cid) => !mentorCourses.some((c) => c.id === cid) && !linkedCourseMeta[cid])
+      )
+    );
+    if (missingCourseIds.length === 0) return;
+
+    Promise.all(
+      missingCourseIds.map(async (cid) => {
+        try {
+          const courseSnap = await getDoc(doc(db, 'courses', cid));
+          const data = courseSnap.exists() ? courseSnap.data() : null;
+          let modulesCount = data?.modulesCount || 0;
+          if (!modulesCount) {
+            const modsSnap = await getDocs(collection(db, 'courses', cid, 'modules'));
+            modulesCount = modsSnap.size;
+          }
+          return [cid, { modulesCount: modulesCount || 1 }] as const;
+        } catch {
+          return [cid, { modulesCount: 1 }] as const;
+        }
+      })
+    ).then((entries) => {
+      setLinkedCourseMeta((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+    });
+  }, [db, tasks, mentorCourses, linkedCourseMeta]);
 
   useEffect(() => {
     if (isMentor) {
@@ -381,7 +467,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
             enrolledProducts: Array.from(s.enrolledProducts)
           })));
         } catch (error) {
-          console.error("Error fetching students:", error);
+          console.warn("Error fetching students:", error);
         }
       };
       fetchStudents();
@@ -596,10 +682,17 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
     
     const course = mentorCourses.find(c => c.id === taskForm.courseId);
     
-    if ((taskForm.type === 'course' || taskForm.type === 'module') && taskForm.courseId) {
-      const studentSnap = await getDoc(doc(db, 'users', followUp.studentId));
-      const studentData = studentSnap.data();
-      const targetEmail = studentData?.email?.toLowerCase().trim() || '';
+    if ((taskForm.type === 'course' || taskForm.type === 'module') && taskForm.courseId && followUp.type !== 'group') {
+      const cleanStudentId = followUp.studentId?.trim() || '';
+      let targetEmail = (followUp.studentEmail || studentEmail || '').toLowerCase().trim();
+
+      if (cleanStudentId) {
+        const studentSnap = await getDoc(doc(db, 'users', cleanStudentId));
+        const studentData = studentSnap.data();
+        if (studentData?.email) {
+          targetEmail = studentData.email.toLowerCase().trim();
+        }
+      }
 
       let existingEnrollment = false;
 
@@ -617,11 +710,11 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       }
 
       // 2. Verificar por studentId si no se encontró por email
-      if (!existingEnrollment) {
+      if (!existingEnrollment && cleanStudentId) {
         const qById = query(
           collection(db, 'enrollments'),
           where('courseId', '==', taskForm.courseId),
-          where('studentId', '==', followUp.studentId)
+          where('studentId', '==', cleanStudentId)
         );
         const snapById = await getDocs(qById);
         if (!snapById.empty) {
@@ -629,13 +722,13 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         }
       }
 
-      if (!existingEnrollment) {
+      if (!existingEnrollment && (cleanStudentId || targetEmail)) {
         const newEnrollRef = doc(collection(db, 'enrollments'));
         await setDoc(newEnrollRef, {
           id: newEnrollRef.id,
           courseId: taskForm.courseId,
-          studentId: followUp.studentId,
-          studentName: followUp.studentName,
+          studentId: cleanStudentId,
+          studentName: followUp.studentName || 'Alumno',
           inviteEmail: targetEmail,
           status: 'active',
           enrolledAt: serverTimestamp(),
@@ -644,15 +737,15 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
         });
 
         // Enviar correo de felicitación via Server Action (Admin SDK en servidor)
-          if (targetEmail) {
-            await sendWelcomeEmailAction(
-              targetEmail,
-              followUp.studentName,
-              course?.title || 'tu curso',
-              profile?.displayName || 'Tutor',
-              profile?.email || undefined
-            );
-          }
+        if (targetEmail) {
+          await sendWelcomeEmailAction(
+            targetEmail,
+            followUp.studentName || 'Alumno',
+            course?.title || 'tu curso',
+            profile?.displayName || 'Tutor',
+            profile?.email || undefined
+          );
+        }
       }
     }
 
@@ -931,7 +1024,7 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
       <div className={cn("space-y-8 pb-20", isSuspended && "opacity-80")}>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b pb-8">
           <div className="flex items-center gap-6">
-            <Button variant="ghost" size="icon" onClick={() => router.push('/seguimientos')} className="rounded-full h-12 w-12 hover:bg-secondary"><ArrowLeft className="h-6 w-6" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => router.push('/mentoria/seguimientos')} className="rounded-full h-12 w-12 hover:bg-secondary"><ArrowLeft className="h-6 w-6" /></Button>
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="text-4xl font-headline font-bold text-primary tracking-tight">{followUp?.title}</h1>
@@ -1074,7 +1167,9 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                     const isLinkedCourse = task.type === 'course' || task.type === 'module';
                     const isLinkedModule = task.type === 'module';
                     const enrollment = isLinkedCourse ? studentEnrollments[task.courseId] : null;
-                    const courseInfo = isLinkedCourse ? mentorCourses.find(c => c.id === task.courseId) : null;
+                    const courseInfo = isLinkedCourse
+                      ? (mentorCourses.find(c => c.id === task.courseId) || linkedCourseMeta[task.courseId])
+                      : null;
                     
                     let displayProgress = task.progress || 0;
                     let displayStatus = task.status || 'pending';
@@ -1139,9 +1234,14 @@ export default function FollowUpDetailPage({ params }: { params: Promise<{ id: s
                                 <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase px-2 text-success hover:bg-success/10" onClick={() => handleUpdateTaskProgress(task.id, 100, 'completed')}>Listo</Button>
                               </div>
                             )}
-                            {isStudent && isLinkedModule && task.status !== 'completed' && !isSuspended && (
+                            {isStudent && isLinkedModule && task.courseId && !isSuspended && (
                               <Button size="sm" onClick={() => window.open(`/courses/${task.courseId}?isolated=${task.moduleId}`, '_blank')} className="h-8 rounded-lg font-bold text-[10px] gap-2 shadow-md bg-primary">
-                                <Play className="h-3 w-3" /> Comenzar Módulo
+                                <Play className="h-3 w-3" /> {displayStatus === 'completed' ? 'Repasar Módulo' : 'Comenzar Módulo'}
+                              </Button>
+                            )}
+                            {isStudent && isLinkedCourse && !isLinkedModule && task.courseId && !isSuspended && (
+                              <Button size="sm" onClick={() => router.push(`/courses/${task.courseId}`)} className="h-8 rounded-lg font-bold text-[10px] gap-2 shadow-md bg-primary">
+                                <Play className="h-3 w-3" /> {displayStatus === 'completed' ? 'Repasar Curso' : 'Ir al Curso'}
                               </Button>
                             )}
                             {isStudent && !isLinkedCourse && task.status !== 'completed' && !isSuspended && (

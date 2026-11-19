@@ -1,0 +1,17 @@
+{
+  "id": "09_TITANPRO",
+  "version": "2.0",
+  "name": "Titan Display Pro",
+  "description": "Estilo editorial masivo con tipografia condensada Bebas Neue, escala vertical potente y sombra 3D cinematografica",
+  "target_format": "vertical",
+  "isModular": true,
+  "engine_requirements": {
+    "ffmpeg_build": "6.1",
+    "features": [
+      "sidechain",
+      "xfade",
+      "loudnorm"
+    ]
+  },
+  "visual_directive": "Monumental high-end commercial advertising, bold architectural scale, dramatic low-angle power lighting, crisp premium finish"
+}

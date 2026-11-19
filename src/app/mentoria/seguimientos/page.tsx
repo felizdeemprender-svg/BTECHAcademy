@@ -29,7 +29,11 @@ import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
 
 // Hooks & Components
 import { useFollowUps } from '@/hooks/useFollowUps';
-import { useAllPrograms, useMentorPrograms } from '@/hooks/mentoring/use-mentor-programs';
+import {
+  useAllPrograms,
+  useMentorPrograms,
+  useStudentPrograms,
+} from '@/hooks/mentoring/use-mentor-programs';
 import {
   createProgram,
   removeProgram,
@@ -45,11 +49,18 @@ export default function FollowUpsPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Nueva arquitectura (flag): mentores vía /api por mentor, admins vía /api all.
-  const isAdminProfile = profile?.roles?.includes('admin');
-  const mentorProgramsApi = useMentorPrograms(isAdminProfile ? null : profile?.uid);
-  const allProgramsApi = useAllPrograms(!!isAdminProfile);
-  const programsApi = isAdminProfile ? allProgramsApi : mentorProgramsApi;
+  // Nueva arquitectura (flag): mentores vía /api por mentor, admins vía /api all, alumnos vía /api student.
+  const isAdminProfile = !!profile?.roles?.includes('admin');
+  const isMentorProfile = !!profile?.roles?.includes('mentor');
+  const isStudentOnlyProfile = !!profile && !isAdminProfile && !isMentorProfile;
+  const mentorProgramsApi = useMentorPrograms(!isAdminProfile && isMentorProfile ? profile?.uid : null);
+  const allProgramsApi = useAllPrograms(isAdminProfile);
+  const studentProgramsApi = useStudentPrograms(isStudentOnlyProfile);
+  const programsApi = isAdminProfile
+    ? allProgramsApi
+    : isMentorProfile
+      ? mentorProgramsApi
+      : studentProgramsApi;
 
   const getToken = useCallback(async () => {
     if (!user) throw new Error('Sin sesión');
@@ -173,7 +184,7 @@ export default function FollowUpsPage() {
         });
         setStudents(Array.from(studentMap.values()));
       } catch (e) {
-        console.error("Error fetching students:", e);
+        console.warn("Error fetching students:", e);
       }
     };
     fetchStudents();
@@ -245,7 +256,7 @@ export default function FollowUpsPage() {
         // Opcional: Crear registro de usuario fantasma si no existe
       } else {
         const student = students.find(s => s.id === formData.studentId);
-        finalStudentId = student?.id;
+        finalStudentId = student?.id || '';
         finalStudentName = student?.displayName || 'Alumno';
         finalStudentEmail = student?.email || '';
       }
@@ -310,9 +321,9 @@ export default function FollowUpsPage() {
           goal: formData.goal,
           startDate: formData.startDate,
           endDate: formData.endDate,
-          planGuideUrl: guideFile ? uploaded.planGuideUrl : selectedFollowUp.planGuideUrl,
+          planGuideUrl: guideFile ? uploaded.planGuideUrl : (selectedFollowUp.planGuideUrl ?? null),
           ...(formData.type === 'group'
-            ? { masterFileUrl: masterFile ? uploaded.masterFileUrl : selectedFollowUp.masterFileUrl }
+            ? { masterFileUrl: masterFile ? uploaded.masterFileUrl : (selectedFollowUp.masterFileUrl ?? null) }
             : {}),
         });
         toast({ title: 'Mentoría Actualizada' });
@@ -327,10 +338,10 @@ export default function FollowUpsPage() {
     }
     try {
       const uploaded = await uploadGuideFiles();
-      const planGuideUrl = guideFile ? uploaded.planGuideUrl : selectedFollowUp.planGuideUrl;
+      const planGuideUrl = guideFile ? uploaded.planGuideUrl : (selectedFollowUp.planGuideUrl ?? null);
       const masterFileUrl = (masterFile && formData.type === 'group')
         ? uploaded.masterFileUrl
-        : selectedFollowUp.masterFileUrl;
+        : (selectedFollowUp.masterFileUrl ?? null);
 
       const updateData: any = {
         title: formData.title,

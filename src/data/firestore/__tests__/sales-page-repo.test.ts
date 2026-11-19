@@ -99,10 +99,19 @@ describe('FirestoreSalesPageRepository', () => {
 });
 
 describe('mapSalesPageDoc', () => {
-  it('throw con type desconocido o sin título', () => {
+  it('throw con type desconocido o sin título explícito vacío', () => {
     expect(() =>
       mapSalesPageDoc('x', { mentorId: 'm', title: 'T', type: 'desconocido' }),
     ).toThrow();
     expect(() => mapSalesPageDoc('x', { mentorId: 'm', title: '', type: 'campaign_pack' })).toThrow();
+  });
+
+  it('usa el id del documento como fallback cuando el campo title es undefined (legacy demo-classic-style)', () => {
+    const mapped = mapSalesPageDoc('demo-classic-style', {
+      mentorId: 'm1',
+      type: 'landing_only',
+    });
+    expect(mapped.id).toBe('demo-classic-style');
+    expect(mapped.title).toBe('demo-classic-style');
   });
 });

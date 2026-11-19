@@ -38,6 +38,10 @@ export function fetchAllPrograms(token: string): Promise<ApiProgramSummary[]> {
   return apiGet<ApiProgramSummary[]>('/api/mentoring/programs?all=1', token);
 }
 
+export function fetchStudentPrograms(token: string): Promise<ApiProgramSummary[]> {
+  return apiGet<ApiProgramSummary[]>('/api/mentoring/programs?student=1', token);
+}
+
 export interface CreateProgramRequest {
   readonly mentorId: string;
   readonly type?: 'individual' | 'group';
@@ -127,6 +131,13 @@ export function fetchProgramSessions(programId: string, token: string): Promise<
 
 export function fetchProgramTasks(programId: string, token: string): Promise<ApiTask[]> {
   return apiGet<ApiTask[]>(`${detailBase(programId)}?action=tasks`, token);
+}
+
+export function fetchProgramEnrollments(
+  programId: string,
+  token: string,
+): Promise<Record<string, unknown>[]> {
+  return apiGet<Record<string, unknown>[]>(`${detailBase(programId)}?action=enrollments`, token);
 }
 
 export function addProgramSession(

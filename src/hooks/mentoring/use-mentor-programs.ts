@@ -10,7 +10,11 @@ import { useCallback } from 'react';
 import { useAuth } from '@/components/auth-context';
 import { isNewMentoringApiEnabled } from '@/lib/feature-flags';
 import type { ApiProgramSummary } from '@/lib/api/dto';
-import { fetchAllPrograms, fetchMentorPrograms } from '@/lib/api/mentoring-client';
+import {
+  fetchAllPrograms,
+  fetchMentorPrograms,
+  fetchStudentPrograms,
+} from '@/lib/api/mentoring-client';
 import { useApiQuery, type ApiQueryState } from './use-api-query';
 
 export function useMentorPrograms(
@@ -37,6 +41,20 @@ export function useAllPrograms(enabledFlag = true): ApiQueryState<ApiProgramSumm
     if (!user) return [];
     const token = await user.getIdToken();
     return fetchAllPrograms(token);
+  }, [user]);
+
+  return useApiQuery<ApiProgramSummary[]>(enabled, load);
+}
+
+/** Programas asignados al alumno autenticado (individuales y grupales). */
+export function useStudentPrograms(enabledFlag = true): ApiQueryState<ApiProgramSummary[]> {
+  const { user, isLoading: authLoading } = useAuth();
+  const enabled = enabledFlag && isNewMentoringApiEnabled() && !authLoading && !!user;
+
+  const load = useCallback(async () => {
+    if (!user) return [];
+    const token = await user.getIdToken();
+    return fetchStudentPrograms(token);
   }, [user]);
 
   return useApiQuery<ApiProgramSummary[]>(enabled, load);

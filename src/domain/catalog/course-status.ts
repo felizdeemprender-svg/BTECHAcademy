@@ -7,13 +7,16 @@
 
 import { z } from 'zod';
 
-export const CourseStatusSchema = z.enum([
-  'creating',
-  'draft',
-  'pending_terms',
-  'published',
-  'approved',
-]);
+export const CourseStatusSchema = z.preprocess(
+  (v) => (v === 'public' ? 'published' : v),
+  z.enum([
+    'creating',
+    'draft',
+    'pending_terms',
+    'published',
+    'approved',
+  ]),
+);
 export type CourseStatus = z.infer<typeof CourseStatusSchema>;
 
 /** Publicado o aprobado: visible para alumnos y marketplace. */

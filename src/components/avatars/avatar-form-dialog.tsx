@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/components/auth-context";
 import {
   Select,
   SelectContent,
@@ -84,12 +85,14 @@ export function AvatarFormDialog({
   onSave,
   onPreviewVoice,
 }: AvatarFormDialogProps) {
+  const { user } = useAuth();
   // Estado de Identidad
   const [name, setName] = React.useState(avatar?.name || "");
   const [role, setRole] = React.useState(avatar?.role || "Mentor / Presentador");
   const [isDefault, setIsDefault] = React.useState(avatar?.isDefault ?? false);
 
   // Estado de Imagen / Rostro
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
   const [imageSource, setImageSource] = React.useState<AvatarImageSource>(
     avatar?.imageSource || 'upload'
   );
@@ -287,10 +290,11 @@ export function AvatarFormDialog({
   };
 
   // Manejo de carga de archivo de imagen
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Vista previa inmediata con base64 local
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
@@ -298,6 +302,36 @@ export function AvatarFormDialog({
       setImageUrl(base64);
     };
     reader.readAsDataURL(file);
+
+    // Subida asíncrona a Firebase Storage si hay usuario autenticado
+    if (user) {
+      try {
+        setIsUploadingImage(true);
+        const token = await user.getIdToken();
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/avatars/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.imageUrl) {
+            setImageUrl(json.imageUrl);
+            setImagePreview(json.imageUrl);
+          }
+        }
+      } catch (err) {
+        console.warn('[AvatarFormDialog] Error en subida a storage, usando fallback local:', err);
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
   };
 
   // Manejo de carga de archivo de audio para clonación
@@ -503,18 +537,33 @@ export function AvatarFormDialog({
                   onChange={handleFileChange}
                 />
                 <div
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => !isUploadingImage && fileInputRef.current?.click()}
                   className="cursor-pointer border border-dashed border-border hover:border-primary/50 rounded-lg p-4 text-center transition-colors bg-muted/20 hover:bg-muted/30"
                 >
-                  <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-                  <p className="text-xs font-medium text-foreground">
-                    Hacé clic para seleccionar una foto de tu rostro
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    JPG, PNG o WEBP (máx. 5MB)
-                  </p>
+                  {isUploadingImage ? (
+                    <>
+                      <Loader2 className="h-6 w-6 mx-auto text-primary mb-1 animate-spin" />
+                      <p className="text-xs font-medium text-foreground">
+                        Subiendo imagen a Firebase Storage...
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Optimizando resolución y CDN
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
+                      <p className="text-xs font-medium text-foreground">
+                        Hacé clic para seleccionar una foto de tu rostro
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        JPG, PNG o WEBP (máx. 5MB)
+                      </p>
+                    </>
+                  )}
                 </div>
               </TabsContent>
+
 
               {/* Presets IA o URL */}
               <TabsContent value="ai-generated" className="mt-3 space-y-3">

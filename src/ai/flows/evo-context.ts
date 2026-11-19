@@ -10,17 +10,34 @@ import { z } from 'genkit';
 import fs from 'fs/promises';
 import path from 'path';
 
+async function resolveUserUidAndRole(inputUid?: string, ctx?: any): Promise<{ uid: string; role: string }> {
+  let uid = inputUid || ctx?.context?.uid || ai.currentContext()?.uid;
+  let role = ctx?.context?.role || ai.currentContext()?.role || '';
+  if (!uid) {
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      uid = cookieStore.get('btech_uid')?.value || '';
+      if (!role) {
+        role = cookieStore.get('btech_role')?.value || '';
+      }
+    } catch {}
+  }
+  return { uid: uid || '', role: role || 'alumno' };
+}
+
 export const getMentorDataTool = ai.defineTool(
   {
     name: 'getMentorData',
     description: 'Consulta los cursos creados por el mentor actual y los alumnos inscritos en ellos. Úsalo cuando el usuario pregunte por sus cursos, alumnos o métricas como tutor.',
-    inputSchema: z.object({}),
+    inputSchema: z.object({
+      mentorId: z.string().optional().describe('ID opcional del mentor. Si se omite, se obtiene automáticamente del contexto.')
+    }),
     outputSchema: z.any(),
   },
-  async () => {
-    const context = ai.currentContext();
-    const uid = context?.uid;
-    if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit.');
+  async ({ mentorId }: { mentorId?: string } = {}, ctx?: any) => {
+    const { uid } = await resolveUserUidAndRole(mentorId, ctx);
+    if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit ni cookies.');
 
     const coursesSnap = await adminDb
       .collection('courses')
@@ -43,41 +60,53 @@ export const getMentorDataTool = ai.defineTool(
       };
     });
 
-    if (coursesSnap.empty && landingsSnap.empty) {
-      return { message: 'El mentor no tiene cursos ni landings creados aún.' };
-    }
-
     const courses = coursesSnap.docs.map((doc) => ({ id: doc.id, ...(doc.data() as any) }));
     const courseIds = courses.map((c) => c.id);
 
-    const allEnrollments: any[] = [];
+    // Consolidar inscripciones de los cursos del mentor y las asociadas directamente por mentorId
+    const enrollmentDocsMap = new Map<string, any>();
+
     if (courseIds.length > 0) {
       for (let i = 0; i < courseIds.length; i += 30) {
         const chunk = courseIds.slice(i, i + 30);
         const snap = await adminDb.collection('enrollments').where('courseId', 'in', chunk).get();
-        snap.docs.forEach((doc) => allEnrollments.push(doc.data()));
+        snap.docs.forEach((doc) => enrollmentDocsMap.set(doc.id, doc.data()));
       }
     }
+
+    // También buscar enrollments directas con mentorId == uid
+    const directEnrollSnap = await adminDb
+      .collection('enrollments')
+      .where('mentorId', '==', uid)
+      .get();
+    directEnrollSnap.docs.forEach((doc) => enrollmentDocsMap.set(doc.id, doc.data()));
 
     const studentsByCourse: Record<string, Set<string>> = {};
     const allStudentIds = new Set<string>();
 
-    for (const enroll of allEnrollments) {
-      if (!studentsByCourse[enroll.courseId]) studentsByCourse[enroll.courseId] = new Set();
-      if (enroll.studentId) {
-        studentsByCourse[enroll.courseId].add(enroll.studentId);
-        allStudentIds.add(enroll.studentId);
+    for (const enroll of enrollmentDocsMap.values()) {
+      const cId = enroll.courseId || enroll.productId;
+      const studentIdentifier = enroll.studentId || enroll.inviteEmail || enroll.studentEmail || enroll.email;
+
+      if (studentIdentifier) {
+        allStudentIds.add(studentIdentifier);
+        if (cId) {
+          if (!studentsByCourse[cId]) studentsByCourse[cId] = new Set();
+          studentsByCourse[cId].add(studentIdentifier);
+        }
       }
     }
 
     return {
       totalCourses: courses.length,
+      totalUniqueStudentsAcrossAllCourses: allStudentIds.size,
       totalUniqueStudents: allStudentIds.size,
       totalLandings: landings.length,
       courses: courses.map((course) => ({
         id: course.id,
         title: course.title || 'Sin título',
         status: course.status || 'desconocido',
+        uniqueStudentsCount: studentsByCourse[course.id]?.size ?? 0,
         studentsCount: studentsByCourse[course.id]?.size ?? 0,
       })),
       landings: landings
@@ -89,13 +118,14 @@ export const getStudentDataTool = ai.defineTool(
   {
     name: 'getStudentData',
     description: 'Consulta los cursos en los que el alumno actual está inscrito y su progreso. Úsalo cuando el usuario pregunte por sus inscripciones o avance de estudio.',
-    inputSchema: z.object({}),
+    inputSchema: z.object({
+      studentId: z.string().optional().describe('ID opcional del alumno. Si se omite, se infiere del contexto.')
+    }),
     outputSchema: z.any(),
   },
-  async () => {
-    const context = ai.currentContext();
-    const uid = context?.uid;
-    if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit.');
+  async ({ studentId }: { studentId?: string } = {}, ctx?: any) => {
+    const { uid } = await resolveUserUidAndRole(studentId, ctx);
+    if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit ni cookies.');
 
     const enrollSnap = await adminDb
       .collection('enrollments')
@@ -145,10 +175,11 @@ export const queryPlatformDataTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ collectionName, role, limit }: any) => {
-    const context = ai.currentContext();
-    const uid = context?.uid;
-    if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit.');
+  async ({ collectionName, role: inputRole, limit }: any, ctx?: any) => {
+    const resolved = await resolveUserUidAndRole(undefined, ctx);
+    const uid = resolved.uid;
+    const role = inputRole || resolved.role;
+    if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit ni cookies.');
 
     let queryRef: any;
 
@@ -223,71 +254,180 @@ export const readDocumentationTool = ai.defineTool(
 export const getStudentsProgressTool = ai.defineTool(
   {
     name: 'getStudentsProgress',
-    description: 'Consulta los alumnos inscritos en los cursos del tutor y su porcentaje de avance. Úsalo para identificar qué alumno está más retrasado o ver promedios.',
+    description: 'Consulta los alumnos inscritos en los cursos del tutor y su porcentaje exacto de avance (% de progreso). Permite filtrar por nombre de curso (ej: "LANZAR", "ESCALAR") o rango de avance.',
     inputSchema: z.object({
-      limit: z.number().optional().describe('Cantidad máxima de alumnos a retornar (útil para top N retrasados)'),
-      sortBy: z.enum(['progress_asc', 'progress_desc']).optional().describe('Ordenar por progreso')
+      courseName: z.string().optional().describe('Nombre o título del curso a filtrar (ej: "LANZAR", "ESCALAR"). Si se omite, analiza todos los cursos del tutor.'),
+      courseId: z.string().optional().describe('ID exacto del curso si se conoce.'),
+      minProgress: z.number().optional().describe('Filtrar alumnos con progreso mayor o igual a este porcentaje (ej: 1 para los que tienen más del 0%).'),
+      maxProgress: z.number().optional().describe('Filtrar alumnos con progreso menor o igual a este porcentaje.'),
+      sortBy: z.enum(['progress_asc', 'progress_desc', 'name_asc']).optional().describe('Ordenar por progreso ascendente/descendente o por nombre.'),
+      limit: z.number().optional().describe('Cantidad máxima de alumnos a retornar (defecto: 50)')
     }),
     outputSchema: z.any(),
   },
-  async ({ limit, sortBy }: any) => {
-    const context = ai.currentContext();
-    const uid = context?.uid;
-    if (!uid) throw new Error('No autorizado.');
+  async ({ courseName, courseId, minProgress, maxProgress, sortBy, limit }: any, ctx?: any) => {
+    const { uid } = await resolveUserUidAndRole(undefined, ctx);
+    if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit ni cookies.');
 
     // 1. Obtener cursos del tutor
     const coursesSnap = await adminDb.collection('courses').where('mentorId', '==', uid).get();
-    if (coursesSnap.empty) return { message: 'No tienes cursos creados.' };
+    if (coursesSnap.empty) return { message: 'No tienes cursos creados.', students: [] };
     
-    const courseIds = coursesSnap.docs.map(doc => doc.id);
-    const coursesMap: Record<string, string> = {};
-    coursesSnap.docs.forEach(doc => coursesMap[doc.id] = doc.data().title || 'Sin título');
+    let courses = coursesSnap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) }));
 
-    // 2. Obtener inscripciones
-    const allEnrollments: any[] = [];
+    // Filtrar por courseId o courseName si fue especificado
+    if (courseId) {
+      courses = courses.filter(c => c.id === courseId);
+    } else if (courseName) {
+      const search = courseName.trim().toLowerCase();
+      const matched = courses.filter(c => (c.title || '').toLowerCase().includes(search));
+      if (matched.length > 0) {
+        courses = matched;
+      }
+    }
+
+    if (courses.length === 0) {
+      return { 
+        message: `No se encontraron cursos que coincidan con "${courseName || courseId}".`,
+        availableCourses: coursesSnap.docs.map(d => d.data().title || d.id),
+        students: [] 
+      };
+    }
+
+    const courseIds = courses.map(c => c.id);
+    const coursesMap: Record<string, string> = {};
+    const courseModulesMap: Record<string, number> = {};
+    courses.forEach(c => {
+      coursesMap[c.id] = c.title || 'Sin título';
+      courseModulesMap[c.id] = c.modulesCount ?? c.modules?.length ?? 0;
+    });
+
+    // 2. Obtener inscripciones de estos cursos y directas por mentorId
+    const enrollmentDocsMap = new Map<string, any>();
+
     for (let i = 0; i < courseIds.length; i += 30) {
       const chunk = courseIds.slice(i, i + 30);
       const snap = await adminDb.collection('enrollments').where('courseId', 'in', chunk).get();
-      snap.docs.forEach(doc => allEnrollments.push({ id: doc.id, ...doc.data() }));
+      snap.docs.forEach(doc => enrollmentDocsMap.set(doc.id, { id: doc.id, ...doc.data() }));
     }
 
-    if (allEnrollments.length === 0) return { message: 'No hay alumnos inscritos en tus cursos.' };
+    // Incluir inscripciones donde mentorId == uid
+    const directEnrollSnap = await adminDb
+      .collection('enrollments')
+      .where('mentorId', '==', uid)
+      .get();
+    directEnrollSnap.docs.forEach(doc => {
+      const data = doc.data();
+      const cId = data.courseId || data.productId;
+      if (cId && courseIds.includes(cId)) {
+        enrollmentDocsMap.set(doc.id, { id: doc.id, ...data });
+      }
+    });
 
-    // 3. Obtener nombres de estudiantes
+    const allEnrollments = Array.from(enrollmentDocsMap.values());
+    if (allEnrollments.length === 0) {
+      return { 
+        message: `No hay alumnos inscritos en los cursos seleccionados (${courses.map(c => c.title).join(', ')}).`,
+        students: [] 
+      };
+    }
+
+    // 3. Obtener datos de usuarios registrados en Auth/Users
     const studentIds = [...new Set(allEnrollments.map(e => e.studentId).filter(Boolean))];
     const usersMap: Record<string, any> = {};
     for (let i = 0; i < studentIds.length; i += 30) {
       const chunk = studentIds.slice(i, i + 30);
       const snap = await adminDb.collection('users').where('__name__', 'in', chunk).get();
-      snap.docs.forEach(doc => usersMap[doc.id] = doc.data());
+      snap.docs.forEach(doc => { usersMap[doc.id] = doc.data(); });
     }
 
-    // 4. Mapear datos completos
-    let results = allEnrollments.map(enroll => ({
-      enrollmentId: enroll.id,
-      studentId: enroll.studentId,
-      studentName: usersMap[enroll.studentId]?.displayName || usersMap[enroll.studentId]?.email || 'Usuario Desconocido',
-      courseId: enroll.courseId,
-      courseTitle: coursesMap[enroll.courseId],
-      progress: enroll.progress ?? 0,
-      status: enroll.status || 'activo'
-    }));
+    // 4. Mapear datos completos calculando el progreso real
+    let results = allEnrollments.map(enroll => {
+      const cId = enroll.courseId || enroll.productId;
+      const totalModules = courseModulesMap[cId] || 0;
 
-    // 5. Ordenar
+      // Cálculo del progreso respetando progressPercent de Firestore
+      let progressPercent = 0;
+      if (enroll.status === 'completed') {
+        progressPercent = 100;
+      } else if (enroll.progressPercent !== undefined && typeof enroll.progressPercent === 'number') {
+        progressPercent = Math.round(enroll.progressPercent);
+      } else if (typeof enroll.progress === 'number') {
+        progressPercent = Math.round(enroll.progress);
+      } else {
+        const completedList = enroll.progress?.completedModules || enroll.completedModules || [];
+        const completedCount = Array.isArray(completedList) ? completedList.length : 0;
+        progressPercent = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
+      }
+
+      // Resolución exhaustiva de nombre
+      const userDoc = usersMap[enroll.studentId] || {};
+      const studentName = (
+        enroll.studentName ||
+        userDoc.displayName ||
+        userDoc.name ||
+        enroll.inviteEmail?.split('@')[0] ||
+        enroll.studentEmail?.split('@')[0] ||
+        userDoc.email?.split('@')[0] ||
+        'Alumno'
+      ).trim();
+
+      const studentEmail = (
+        enroll.inviteEmail ||
+        enroll.studentEmail ||
+        enroll.email ||
+        userDoc.email ||
+        'Sin correo'
+      ).trim();
+
+      const isTutorTest = 
+        (enroll.studentId && enroll.studentId === uid) || 
+        studentEmail.toLowerCase().includes('tutor.') ||
+        studentName.toLowerCase().includes('tutor.');
+
+      return {
+        enrollmentId: enroll.id,
+        studentId: enroll.studentId || null,
+        studentName,
+        studentEmail,
+        courseId: cId,
+        courseTitle: coursesMap[cId] || 'Curso sin título',
+        progressPercent,
+        status: enroll.status || 'activo',
+        isTutorTest
+      };
+    });
+
+    // 5. Filtros de progreso
+    if (minProgress !== undefined) {
+      results = results.filter(r => r.progressPercent >= minProgress);
+    }
+    if (maxProgress !== undefined) {
+      results = results.filter(r => r.progressPercent <= maxProgress);
+    }
+
+    // 6. Ordenar
     if (sortBy === 'progress_asc') {
-      results.sort((a, b) => a.progress - b.progress);
+      results.sort((a, b) => a.progressPercent - b.progressPercent);
     } else if (sortBy === 'progress_desc') {
-      results.sort((a, b) => b.progress - a.progress);
+      results.sort((a, b) => b.progressPercent - a.progressPercent);
+    } else if (sortBy === 'name_asc') {
+      results.sort((a, b) => a.studentName.localeCompare(b.studentName));
     }
 
-    // 6. Limitar
-    if (limit) {
+    // 7. Limitar
+    const totalMatching = results.length;
+    if (limit && limit > 0) {
       results = results.slice(0, limit);
     }
 
     return {
       totalAnalyzed: allEnrollments.length,
-      data: results
+      totalMatching,
+      returnedCount: results.length,
+      filteredByCourse: courseName || courseId || 'Todos los cursos',
+      courses: courses.map(c => ({ id: c.id, title: c.title })),
+      students: results
     };
   }
 );
@@ -302,10 +442,9 @@ export const getMentorAgendaTool = ai.defineTool(
     }),
     outputSchema: z.any(),
   },
-  async ({ startDate, endDate }: any) => {
-    const context = ai.currentContext();
-    const uid = context?.uid;
-    if (!uid) throw new Error('No autorizado.');
+  async ({ startDate, endDate }: any, ctx?: any) => {
+    const { uid } = await resolveUserUidAndRole(undefined, ctx);
+    if (!uid) throw new Error('No autorizado. UID no encontrado en el contexto de Genkit ni cookies.');
 
     try {
       // 1. Obtener todos los seguimientos del mentor

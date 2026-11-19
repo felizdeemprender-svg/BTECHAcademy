@@ -4,6 +4,8 @@ interface DeleteSalesPageRequest {
   uid: string;
   isAdmin: boolean;
   pageId: string;
+  companyId?: string;
+  callerRole?: string;
 }
 
 export class DeleteSalesPageUseCase {
@@ -16,8 +18,13 @@ export class DeleteSalesPageUseCase {
       throw new Error('SalesPage not found');
     }
 
-    // Validación de seguridad (ownership)
-    if (!request.isAdmin && page.mentorId !== request.uid) {
+    // Validación de seguridad (ownership: Admin, mentor dueño o empresa titular)
+    const isDirectOwner = page.mentorId === request.uid;
+    const isCompanyOwner =
+      (request.callerRole === 'empresa' || request.callerRole === 'supervisor') &&
+      Boolean(page.companyId && (page.companyId === request.companyId || page.companyId === request.uid));
+
+    if (!request.isAdmin && !isDirectOwner && !isCompanyOwner) {
       throw new Error('Unauthorized: You do not own this SalesPage and cannot delete it');
     }
 

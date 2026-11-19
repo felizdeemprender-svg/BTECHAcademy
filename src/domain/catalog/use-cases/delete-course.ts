@@ -6,6 +6,8 @@ import type { Course } from '../course';
 const DeleteCourseInputSchema = z.object({
   id: z.string().min(1),
   mentorId: z.string().min(1),
+  callerRole: z.string().optional(),
+  companyId: z.string().optional(),
 });
 
 export type DeleteCourseInput = z.infer<typeof DeleteCourseInputSchema>;
@@ -31,7 +33,7 @@ export async function deleteCourse(
   if (!parsed.success) {
     return err(validationError('Missing required fields'));
   }
-  const { id, mentorId } = parsed.data;
+  const { id, mentorId, callerRole, companyId } = parsed.data;
   
   try {
     const course = await deps.reader.findById(id);
@@ -39,8 +41,14 @@ export async function deleteCourse(
       return err(notFound('Course not found'));
     }
     
-    // Autorización
-    if (course.mentorId !== mentorId) {
+    // Autorización: Admin, mentor dueño directo o empresa titular del curso
+    const isAdmin = callerRole === 'admin';
+    const isDirectOwner = course.mentorId === mentorId;
+    const isCompanyOwner =
+      (callerRole === 'empresa' || callerRole === 'supervisor') &&
+      Boolean(course.companyId && (course.companyId === companyId || course.companyId === mentorId));
+
+    if (!isAdmin && !isDirectOwner && !isCompanyOwner) {
       return err(forbidden('You do not have permission to delete this course'));
     }
 

@@ -41,8 +41,7 @@ export function LandingFooter() {
             <h4 className="text-white font-black uppercase tracking-widest text-xs">Académico</h4>
             <ul className="space-y-4 text-primary-foreground/60 font-medium text-sm">
               <li><Link href="/courses" className="hover:text-accent transition-colors">Explorar Cursos</Link></li>
-              <li><Link href="/mentors" className="hover:text-accent transition-colors">Nuestros Mentores</Link></li>
-              <li><Link href="/certifications" className="hover:text-accent transition-colors">Verificar Título</Link></li>
+              <li><Link href="/planes" className="hover:text-accent transition-colors">Planes para Mentores</Link></li>
               <li><Link href="/auth" className="hover:text-accent transition-colors">Portal Tutor</Link></li>
             </ul>
           </div>
@@ -51,9 +50,8 @@ export function LandingFooter() {
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-sm text-primary-foreground/40 font-medium">© 2024 FastoriaAcademy. Todos los derechos reservados.</p>
           <div className="flex gap-8 text-xs font-bold text-primary-foreground/40 uppercase tracking-widest">
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacidad</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Términos</Link>
-            <Link href="/cookies" className="hover:text-white transition-colors">Cookies</Link>
+            <Link href="/privacidad" className="hover:text-white transition-colors">Privacidad</Link>
+            <Link href="/terminos" className="hover:text-white transition-colors">Términos</Link>
           </div>
         </div>
       </div>

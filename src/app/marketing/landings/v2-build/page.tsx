@@ -83,6 +83,8 @@ function V2LandingBuilderContent() {
   const [anchorPrice, setAnchorPrice] = useState<number>(0);
   const [priceMercadoPago, setPriceMercadoPago] = useState<number>(49900);
   const [priceTransfer, setPriceTransfer] = useState<number>(49900);
+  const [priceGetnet, setPriceGetnet] = useState<number>(49900);
+  const [priceStripeUSD, setPriceStripeUSD] = useState<number>(35);
   const [title, setTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [templateDirectives, setTemplateDirectives] = useState('');
@@ -109,6 +111,8 @@ function V2LandingBuilderContent() {
 
   const isMercadoPagoActive = !!profile?.profile?.mercadopago?.accessToken || !!profile?.mercadopago?.accessToken || (rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'mercadopago' && pm.isActive !== false));
   const isTransferActive = !!profile?.profile?.bankDetails?.cbu || !!profile?.profile?.bankDetails?.alias || !!profile?.bankDetails?.cbu || !!profile?.bankDetails?.alias || (rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'transfer' && pm.isActive !== false));
+  const isGetnetActive = !!(rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'getnet' && pm.isActive !== false));
+  const isStripeActive = !!(rawPaymentMethods && rawPaymentMethods.some(pm => pm.type === 'stripe' && pm.isActive !== false));
 
   const cleanUndefined = (obj: any): any => {
     if (Array.isArray(obj)) return obj.map(v => v === undefined ? null : cleanUndefined(v));
@@ -184,7 +188,8 @@ function V2LandingBuilderContent() {
       combined.push(...rawFollowups.map(f => ({ 
         ...f, 
         productType: 'followup',
-        description: f.goal || 'Mentoría grupal',
+        title: f.title || f.goal || 'Mentoría grupal',
+        description: f.goal || f.description || 'Mentoría grupal',
         tagIds: []
       })));
     }
@@ -256,8 +261,12 @@ function V2LandingBuilderContent() {
     toast({ title: 'Analizando Documento Maestro...', description: 'Extrayendo contenido del syllabus.' });
     const extractRes = await extractDocumentText({
       documentUrl,
-      documentName: 'master.pdf'
+      documentName: masterFile?.name || 'master.docx'
     });
+    if (extractRes.error) {
+      console.warn('[getMasterText] Error en extracción de documento:', extractRes.error);
+      toast({ variant: 'destructive', title: 'Aviso de Documento', description: `${extractRes.error}. Se usará la descripción principal.` });
+    }
     const text = extractRes.extractedText || '';
     setExtractedMasterText(text);
     return text;
@@ -351,9 +360,9 @@ function V2LandingBuilderContent() {
         productType: isBundle ? 'combo' : mainCourse.productType,
       });
 
-      // 2. Consultar módulos reales del curso para inyectar en el syllabus
+      // 2. Consultar módulos reales del curso para inyectar en el syllabus (exclusivo para cursos)
       let realModules: string[] = [];
-      if (!isBundle && mainCourse?.productType !== 'followup') {
+      if (!isBundle && mainCourse?.productType === 'course') {
         const modulesSnap = await getDocs(query(collection(db, 'courses', mainCourse.id, 'modules'), orderBy('order', 'asc')));
         realModules = modulesSnap.docs.map(d => {
           const data = d.data();
@@ -361,9 +370,9 @@ function V2LandingBuilderContent() {
         });
       }
 
-      // 3. Reemplazar el contenido del temario (syllabus) con los módulos reales (solo para cursos)
+      // 3. Reemplazar el contenido del temario (syllabus) con los módulos reales (solo para cursos estándar)
       const finalSections = result.sections.map((section: any) => {
-        if (section.id.startsWith('syllabus') && !isBundle && mainCourse?.productType !== 'followup') {
+        if (section.id.startsWith('syllabus') && !isBundle && mainCourse?.productType === 'course') {
           return {
             ...section,
             bullets: realModules.length > 0 ? realModules : ['(Aún no has agregado módulos a tu curso)']
@@ -408,6 +417,17 @@ function V2LandingBuilderContent() {
         oldPrice: anchorPrice > 0 ? anchorPrice : null,
         priceMercadoPago: isMercadoPagoActive ? priceMercadoPago : null,
         priceTransfer: isTransferActive ? priceTransfer : null,
+        priceGetnet: isGetnetActive ? priceGetnet : null,
+        priceStripe: isStripeActive ? priceStripeUSD : null,
+        pricing: {
+          basePriceUSD: priceStripeUSD > 0 ? priceStripeUSD : undefined,
+          pricesByGateway: {
+            ...(isMercadoPagoActive && allowedPaymentMethods.includes('mercadopago') && priceMercadoPago > 0 ? { mercadopago: { gatewayId: 'mercadopago', amount: priceMercadoPago, currency: 'ARS', isActive: true } } : {}),
+            ...(isTransferActive && allowedPaymentMethods.includes('transfer') && priceTransfer > 0 ? { transfer: { gatewayId: 'transfer', amount: priceTransfer, currency: 'ARS', isActive: true } } : {}),
+            ...(isGetnetActive && allowedPaymentMethods.includes('getnet') && priceGetnet > 0 ? { getnet: { gatewayId: 'getnet', amount: priceGetnet, currency: 'ARS', isActive: true } } : {}),
+            ...(isStripeActive && allowedPaymentMethods.includes('stripe') && priceStripeUSD > 0 ? { stripe: { gatewayId: 'stripe', amount: priceStripeUSD, currency: 'USD', isActive: true } } : {}),
+          }
+        },
         allowedPaymentMethods,
         targetAudience,
         activeFrom: activeFrom || null,
@@ -416,8 +436,9 @@ function V2LandingBuilderContent() {
         content: finalData, // Estructura atómica inyectada
         createdAt: new Date(),
         updatedAt: new Date(),
-        status: 'published',
-        isActive: true
+        status: 'pendiente',
+        isActive: false,
+        fallbackLandingId: null
       };
 
       if (isBundle) {
@@ -426,14 +447,42 @@ function V2LandingBuilderContent() {
 
       // 5. Guardar y redirigir
       const safePayload = cleanUndefined(payload);
+      const token = await user?.getIdToken();
+
       if (editId) {
-        await updateDoc(doc(db, 'salesPages', editId), safePayload);
+        const res = await fetch('/api/sales-pages', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ pageId: editId, data: safePayload })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Error al actualizar landing page');
+        }
         toast({ title: 'Éxito', description: 'Landing page actualizada correctamente.' });
         router.push(`/marketing/landings/v2-edit/${editId}`);
       } else {
-        const docRef = await addDoc(collection(db, 'salesPages'), safePayload);
-        toast({ title: 'Éxito', description: 'Landing page creada correctamente.' });
-        router.push(`/marketing/landings/v2-edit/${docRef.id}`);
+        const newPageId = crypto.randomUUID();
+        const res = await fetch('/api/sales-pages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ pageId: newPageId, data: safePayload })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          if (res.status === 400 && errData.code === 'LIMIT_PENDING_REACHED') {
+            throw new Error('No es posible crear la landing: se alcanzó el límite máximo de 5 landings pendientes para este curso/producto. Archiva alguna pendiente desde el panel de landings antes de crear una nueva.');
+          }
+          throw new Error(errData.error || 'Error al crear landing page');
+        }
+        toast({ title: 'Éxito', description: 'Landing page creada en estado pendiente correctamente.' });
+        router.push(`/marketing/landings/v2-edit/${newPageId}`);
       }
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Error', description: e.message });
@@ -525,8 +574,8 @@ function V2LandingBuilderContent() {
                 {selectedCourse?.productType === 'mentoria_individual' && (
                   <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
                     <Label className="text-xs font-bold text-muted-foreground mb-1 block">Documento Maestro (Opcional)</Label>
-                    <Input type="file" onChange={(e) => setMasterFile(e.target.files?.[0] || null)} className="text-xs h-9 bg-white" />
-                    <p className="text-[10px] text-muted-foreground mt-1">Sube el PDF de tu mentoría para extraer el syllabus y usarlo de base en la landing.</p>
+                    <Input type="file" accept=".docx,.doc,.txt" onChange={(e) => setMasterFile(e.target.files?.[0] || null)} className="text-xs h-9 bg-white" />
+                    <p className="text-[10px] text-muted-foreground mt-1">Condiciones: solo Word (.docx) o Texto (.txt) con texto estructurado (no se admiten archivos PDF como Documento Maestro).</p>
                   </div>
                 )}
               </div>
@@ -799,9 +848,73 @@ function V2LandingBuilderContent() {
                       )}
                     </div>
                   )}
+
+                  {isGetnetActive && (
+                    <div className={cn("p-4 rounded-2xl border-2 transition-all", allowedPaymentMethods.includes('getnet') ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white border-border')}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => setAllowedPaymentMethods(prev => prev.includes('getnet') ? prev.filter(m => m !== 'getnet') : [...prev, 'getnet'])}
+                          className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors", allowedPaymentMethods.includes('getnet') ? 'bg-primary text-white hover:bg-primary' : 'bg-muted text-muted-foreground hover:bg-border')}
+                        >
+                          🏦
+                        </button>
+                        <div>
+                          <p className={cn("font-black text-sm", allowedPaymentMethods.includes('getnet') ? 'text-foreground' : 'text-muted-foreground')}>Getnet Santander</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">Tarjetas bancarias (ARS)</p>
+                        </div>
+                      </div>
+
+                      {allowedPaymentMethods.includes('getnet') && (
+                        <div className="space-y-1">
+                          <Label className="text-[9px] font-bold text-primary uppercase">Precio Getnet</Label>
+                          <div className="relative">
+                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                            <Input 
+                              type="number" 
+                              value={priceGetnet} 
+                              onChange={e => setPriceGetnet(Number(e.target.value))} 
+                              className="h-10 rounded-xl bg-white border-primary/20 pl-9 font-bold text-foreground focus-visible:ring-primary" 
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {isStripeActive && (
+                    <div className={cn("p-4 rounded-2xl border-2 transition-all", allowedPaymentMethods.includes('stripe') ? 'bg-primary/10 border-primary shadow-sm' : 'bg-white border-border')}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => setAllowedPaymentMethods(prev => prev.includes('stripe') ? prev.filter(m => m !== 'stripe') : [...prev, 'stripe'])}
+                          className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors", allowedPaymentMethods.includes('stripe') ? 'bg-primary text-white hover:bg-primary' : 'bg-muted text-muted-foreground hover:bg-border')}
+                        >
+                          🌐
+                        </button>
+                        <div>
+                          <p className={cn("font-black text-sm", allowedPaymentMethods.includes('stripe') ? 'text-foreground' : 'text-muted-foreground')}>Stripe Internacional</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">Alumnos en el exterior (USD)</p>
+                        </div>
+                      </div>
+
+                      {allowedPaymentMethods.includes('stripe') && (
+                        <div className="space-y-1">
+                          <Label className="text-[9px] font-bold text-primary uppercase">Precio Internacional (USD $)</Label>
+                          <div className="relative">
+                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                            <Input 
+                              type="number" 
+                              value={priceStripeUSD} 
+                              onChange={e => setPriceStripeUSD(Number(e.target.value))} 
+                              className="h-10 rounded-xl bg-white border-primary/20 pl-9 font-bold text-foreground focus-visible:ring-primary" 
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-                {(!isMercadoPagoActive && !isTransferActive) && (
+                {(!isMercadoPagoActive && !isTransferActive && !isGetnetActive && !isStripeActive) && (
                   <p className="text-xs text-danger font-bold mt-2 flex items-center gap-1">
                     <AlertTriangle className="h-4 w-4" /> No tienes métodos de cobro configurados. Configúralos en tu Perfil de Mentor.
                   </p>

@@ -4,10 +4,13 @@
 runConfig:
   minInstances: 0
   maxInstances: 5
-  cpu: 1
-  memoryMiB: 1024
+  cpu: 2
+  memoryMiB: 4096
 
 env:
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://fastoria.com.ar
+    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyD7srVAfI5ZtES_-5Syblh1z9_lHIj_gVk
     availability: [BUILD, RUNTIME]
@@ -29,3 +32,14 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: G-FE870RV1MM
     availability: [BUILD, RUNTIME]
+
+  # Google GenAI / Gemini (Cloud Secret Manager)
+  - variable: GOOGLE_GENAI_API_KEY
+    secret: GEMINI_API_KEY
+    availability: [RUNTIME]
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+    availability: [RUNTIME]
+  - variable: GOOGLE_API_KEY
+    secret: GEMINI_API_KEY
+    availability: [RUNTIME]

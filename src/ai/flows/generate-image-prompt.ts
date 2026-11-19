@@ -17,36 +17,38 @@ export const generateImagePromptFlow = ai.defineFlow({
 }, async (input: any) => {
   const { keywords = '', contextHint = '', courseTitle = '', channel = 'video' } = input;
 
-  const isLanding = channel === 'landing';
-  const formatContext = isLanding 
-    ? "This image is for a professional Web Sales Landing Page section (aspect ratio 16:9 or 4:3). It should be a beautiful, high-converting banner or supportive image." 
-    : "This image is for a Social Media Video (TikTok/Reel) background (aspect ratio 9:16).";
+  const isHorizontal = channel === 'landing' || channel === 'thumbnails';
+  const formatContext = channel === 'thumbnails'
+    ? "This image is the main Hero Cover Thumbnail for a Course in a catalog (aspect ratio 16:9). It must be visually magnetic, evocative, and tailored to the exact niche of the course."
+    : isHorizontal
+      ? "This image is for a Web Sales Landing Page section (aspect ratio 16:9 or 4:3). It should be an evocative, high-converting visual."
+      : "This image is for a Social Media Video (TikTok/Reel) background (aspect ratio 9:16).";
 
   const prompt = `
-    You are an expert art director for digital marketing.
+    You are an expert art director and visual storyteller.
     Your task is to create a HIGH-QUALITY image generation prompt in ENGLISH.
 
     ${formatContext}
 
     PRIORITY ORDER FOR THE IMAGE CONCEPT:
-    1. FIRST PRIORITY — The core theme must be the dominant visual:
-       - Course Title: "${courseTitle || 'Professional online course'}"
-       - The image MUST visually represent this subject matter in an inspiring way.
+    1. FIRST PRIORITY — Subject matter & authentic aesthetic:
+       - Course Title: "${courseTitle || keywords || 'Online course'}"
+       - Match the visual aesthetic, atmosphere, lighting, and environment to the TRUE nature of the subject:
+         * If holistic, spiritual, wellness, psychology, or personal growth: warm, organic, sensory, natural textures, serene or soulful mood, golden hour or soft natural light. NEVER use sterile corporate offices or suits.
+         * If technology, engineering, coding, or electronics: authentic hardware, glowing circuits, modern lab or maker setup, crisp cinematic lighting.
+         * If arts, crafts, gastronomy, or practical trades: hands-on action, rich tactile materials, artisan workshop, close-up detail.
+         * If business, marketing, or leadership: editorial contemporary portrait or dynamic creative studio, avoiding generic stock-photo clichés.
     
-    2. SECOND PRIORITY — The script or text provides emotional context:
-       - ${isLanding ? 'Section Text' : 'Voiceover Script'}: "${keywords || 'N/A'}"
-       - Use this to set the mood, tone, and emotional direction of the image.
-    
-    3. ADDITIONAL CONTEXT: ${contextHint || 'Marketing visual for digital product'}
+    2. SECOND PRIORITY — Description, script, or emotional context:
+       - Context / Script: "${keywords || 'N/A'}"
+       - Additional Hint: "${contextHint || 'N/A'}"
 
     STRICT RULES:
     1. Write ONLY the final English prompt. No greetings, no explanations, no quotation marks.
-    2. The image must clearly relate to the COURSE TOPIC and the SECTION TEXT above all else.
-    3. Photorealistic, professional, modern aesthetic. Think premium stock photography or high-end digital art.
-    4. Show real people, workspaces, tools, or tangible objects that represent the theme.
-    5. Include: cinematic lighting, shallow depth of field, professional composition.
-    6. ABSOLUTELY NO text, no words, no letters, no watermarks in the image.
-    7. Keep it under 50 words.
+    2. DO NOT default to corporate office scenes, business suits, or generic boardrooms unless the topic is strictly corporate finance.
+    3. Include specific details on subject, environment, lighting, color palette, and camera framing (e.g. shallow depth of field, editorial photography).
+    4. ABSOLUTELY NO text, no words, no letters, no typography, no watermarks in the image.
+    5. Keep it under 55 words.
 
     Generate the prompt now:
   `;

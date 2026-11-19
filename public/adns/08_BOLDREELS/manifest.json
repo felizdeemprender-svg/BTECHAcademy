@@ -1,0 +1,17 @@
+{
+  "id": "08_BOLDREELS",
+  "version": "2.0",
+  "name": "Viral Bold Reels",
+  "description": "Estilo viral de alto impacto con tipografia Montserrat Black, profundidad 3D y badges de contraste para retencion extrema",
+  "target_format": "vertical",
+  "isModular": true,
+  "engine_requirements": {
+    "ffmpeg_build": "6.1",
+    "features": [
+      "sidechain",
+      "xfade",
+      "loudnorm"
+    ]
+  },
+  "visual_directive": "Viral high-impact social media aesthetic, clean bright modern contrast, ultra-sharp subject isolation, vibrant lifestyle pop"
+}

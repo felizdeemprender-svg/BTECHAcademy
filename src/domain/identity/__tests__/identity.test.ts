@@ -10,6 +10,7 @@ import {
   isAdminRole,
   isAlumnoRole,
   isMentorRole,
+  isEmpresaRole,
 } from '../roles';
 import { UserProfileSchema } from '../profile';
 import {
@@ -58,8 +59,8 @@ function baseUser(overrides: Record<string, unknown> = {}) {
 }
 
 describe('roles', () => {
-  it('acepta los 4 roles válidos', () => {
-    for (const role of ['alumno', 'mentor', 'marketing', 'admin'] as const) {
+  it('acepta los 5 roles válidos', () => {
+    for (const role of ['alumno', 'mentor', 'marketing', 'admin', 'empresa'] as const) {
       expect(RoleTypeSchema.parse(role)).toBe(role);
     }
   });
@@ -74,6 +75,8 @@ describe('roles', () => {
     expect(isMentorRole(['mentor'])).toBe(true);
     expect(isAdminRole(['mentor'])).toBe(false);
     expect(isAlumnoRole(['alumno'])).toBe(true);
+    expect(isEmpresaRole(['empresa'])).toBe(true);
+    expect(isEmpresaRole(['mentor'])).toBe(false);
   });
 });
 

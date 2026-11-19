@@ -18,7 +18,7 @@ import { validateAndPreconformTemplates, TemplateMetadata } from '@/lib/template
 import { validateAndAdjustDesignForAPIs } from '@/lib/platform-protocols';
 import { generateExportPacks, ExportOptions } from '@/lib/content-exporter';
 import { uploadPendingImagesInObject } from '@/lib/upload-base64';
-import { resolveProfileBrand } from '@/lib/landing-styles';
+import { resolveProfileBrand, resolveCoursePrimaryColor } from '@/lib/landing-styles';
 import {
   Sparkles,
   ArrowRight,
@@ -192,6 +192,65 @@ function BuilderContent() {
     }
   }, [editId, db]);
 
+  // Polling silencioso en segundo plano mientras haya piezas generándose con IA
+  useEffect(() => {
+    if (!editId || !user) return;
+    const hasPendingPieces = generatedAssets?.socials?.some((s: any) => !s.isGenerated || (!s.slides?.length && !s.scenes?.length));
+    if (!hasPendingPieces) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(`/api/sales-pages/${editId}`, {
+          cache: 'no-store',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : undefined
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const content = data.aiContent || {};
+          const latestSocials = content.socials || content.social || [];
+          if (latestSocials.length > 0) {
+            setGeneratedAssets((prev: any) => {
+              if (!prev || !prev.socials) return { ...(prev || {}), socials: latestSocials };
+              // Merge inteligente: actualizar slides generadas e isGenerated sin pisar ADN ni ajustes locales del usuario
+              const mergedSocials = latestSocials.map((ls: any, idx: number) => {
+                const current = prev.socials[idx];
+                if (!current) return ls;
+                const preservedAdnId = current.production_notes?.adnId || current.adnId || ls.production_notes?.adnId || ls.adnId;
+                return {
+                  ...ls,
+                  adnId: preservedAdnId,
+                  type: current.type || ls.type,
+                  marketingName: current.marketingName || ls.marketingName,
+                  hook: current.hook || ls.hook,
+                  caption: current.caption || ls.caption,
+                  production_notes: {
+                    ...(ls.production_notes || {}),
+                    ...(current.production_notes || {}),
+                    adnId: preservedAdnId
+                  }
+                };
+              });
+              return {
+                ...prev,
+                socials: mergedSocials
+              };
+            });
+            const allDone = latestSocials.every((s: any) => s.isGenerated && (s.slides?.length > 0 || s.scenes?.length > 0));
+            if (allDone) {
+              clearInterval(intervalId);
+              toast({ title: 'Campaña Sincronizada', description: 'Todas las piezas e imágenes fueron generadas exitosamente.' });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[AutoPoll Error]', e);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [editId, user, generatedAssets, toast]);
+
   // Load blueprint data when collection is selected or loaded
   useEffect(() => {
     if (selectedCollectionId && db) {
@@ -230,7 +289,8 @@ function BuilderContent() {
       combined.push(...rawFollowups.map(f => ({ 
         ...f, 
         productType: 'followup',
-        description: f.goal || 'Mentoría grupal',
+        title: f.title || f.goal || 'Mentoría grupal',
+        description: f.goal || f.description || 'Mentoría grupal',
         // Inyectar tag dummy para UI
         tagIds: []
       })));
@@ -797,7 +857,7 @@ function BuilderContent() {
       if (storage) {
         try {
           for (const pack of packs) {
-            const sRef = ref(storage, `campaigns/${pageId}/exports/${pack.name}_pack.txt`);
+            const sRef = ref(storage, `landings/${pageId}/exports/${pack.name}_pack.txt`);
             await uploadBytes(sRef, new Blob([pack.content], { type: 'text/plain' }));
             exportUrls[`${pack.name}ExportUrl`] = await getDownloadURL(sRef);
           }
@@ -836,7 +896,7 @@ function BuilderContent() {
         exportUrls: exportUrls,
         slug: (pageTitle || course?.title || 'pack-manual').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''),
         branding: {
-          primaryColor: resolveProfileBrand(profile.profile)?.palette?.primary || course?.brandingOverride?.primaryColor || profile.profile?.branding?.primaryColor || '#8B5CF6',
+          primaryColor: resolveCoursePrimaryColor(course?.brandingOverride, profile.profile, '#8B5CF6'),
           logoUrl: course?.brandingOverride?.logoUrl || profile.profile?.branding?.logoUrl || '',
         },
         isActive: true,
@@ -847,7 +907,7 @@ function BuilderContent() {
       console.log('☁️ Ejecutando Lazy Upload de imágenes seleccionadas en pack multimedia...');
       let finalData = pageData;
       if (storage) {
-        finalData = await uploadPendingImagesInObject(pageData, storage, `campaigns/${pageId}/assets`);
+        finalData = await uploadPendingImagesInObject(pageData, storage, `landings/${pageId}/assets`);
       } else {
         console.warn("Storage no disponible. Las imágenes base64 no se subirán.");
       }

@@ -27,7 +27,7 @@
         "speed": 5,
         "direction": "center",
         "transition": "xfade:circleopen",
-        "transition_duration": 0.4
+        "transition_duration": 0.35
       },
       "VALOR": {
         "mode": "pan",
@@ -43,7 +43,7 @@
         "speed": 5,
         "direction": "center",
         "transition": "xfade:circleopen",
-        "transition_duration": 0.5
+        "transition_duration": 0.35
       },
       "CIERRE": {
         "mode": "static",
@@ -51,12 +51,12 @@
         "speed": 0,
         "direction": "center",
         "transition": "xfade:fade",
-        "transition_duration": 1
+        "transition_duration": 0.5
       }
     }
   },
   "transitions": {
     "default": "xfade:circleopen",
-    "duration": 0.4
+    "duration": 0.35
   }
 }

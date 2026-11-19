@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { AudioUploader } from './AudioUploader';
 import { VideoPromptModal, EDITOR_NAMES } from './VideoPromptModal';
+import { getSystemVideoPalettes, resolveVideoBrandPalette } from '@/lib/video/brand-palettes';
 
 interface VideoProductionPanelProps {
   asset: any;
@@ -35,6 +36,9 @@ interface VideoProductionPanelProps {
   onRefreshGoogleToken?: () => Promise<string | null>;
   adns?: Record<string, any>;
   jobProgress?: { progress: number; stage: string } | null;
+  profile?: any;
+  onSave?: (newAssets?: any, silent?: boolean) => void;
+  allAssets?: any;
 }
 
 /**
@@ -56,7 +60,10 @@ export function VideoProductionPanel({
   googleToken,
   onRefreshGoogleToken,
   adns = {},
-  jobProgress
+  jobProgress,
+  profile,
+  onSave,
+  allAssets
 }: VideoProductionPanelProps) {
   
   const [showConfirm, setShowConfirm] = useState(false);
@@ -130,6 +137,17 @@ export function VideoProductionPanel({
                 ...(s.production_notes || {}),
                 video_engine: val
               });
+              if (onSave && allAssets?.socials) {
+                const updatedSocials = [...allAssets.socials];
+                updatedSocials[sIdx] = {
+                  ...updatedSocials[sIdx],
+                  production_notes: {
+                    ...(updatedSocials[sIdx]?.production_notes || {}),
+                    video_engine: val
+                  }
+                };
+                onSave({ ...allAssets, socials: updatedSocials }, true);
+              }
             }}
           >
             <SelectTrigger className="h-9 bg-white border-2 border-primary text-[9px] font-black uppercase text-primary px-3 shadow-lg">
@@ -142,12 +160,25 @@ export function VideoProductionPanel({
             </SelectContent>
           </Select>
           <Select
-            value={s.production_notes?.adnId || '01_CINEMA'}
+            value={s.production_notes?.adnId || s.adnId || '01_CINEMA'}
             onValueChange={(val) => {
+              updateAsset('socials', sIdx, 'adnId', val);
               updateAsset('socials', sIdx, 'production_notes', {
                 ...(s.production_notes || {}),
                 adnId: val
               });
+              if (onSave && allAssets?.socials) {
+                const updatedSocials = [...allAssets.socials];
+                updatedSocials[sIdx] = {
+                  ...updatedSocials[sIdx],
+                  adnId: val,
+                  production_notes: {
+                    ...(updatedSocials[sIdx]?.production_notes || {}),
+                    adnId: val
+                  }
+                };
+                onSave({ ...allAssets, socials: updatedSocials }, true);
+              }
             }}
           >
             <SelectTrigger className="h-9 bg-primary border-2 border-primary text-[9px] font-black uppercase text-white px-4 shadow-lg">
@@ -157,6 +188,58 @@ export function VideoProductionPanel({
               {Object.values(adns).map((adn: any) => (
                 <SelectItem key={adn.id} value={adn.id} className="text-[10px] uppercase font-bold">
                   🎬 {adn.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={s.production_notes?.brandPaletteId || 'adn'}
+            onValueChange={(val) => {
+              const palette = resolveVideoBrandPalette(val, null, profile);
+              const brandColors = palette ? {
+                name: palette.name,
+                primary: palette.primary,
+                secondary: palette.secondary,
+                accent: palette.accent,
+                outline: palette.outline
+              } : null;
+              updateAsset('socials', sIdx, 'production_notes', {
+                ...(s.production_notes || {}),
+                brandPaletteId: val,
+                brandColors
+              });
+              if (onSave && allAssets?.socials) {
+                const updatedSocials = [...allAssets.socials];
+                updatedSocials[sIdx] = {
+                  ...updatedSocials[sIdx],
+                  production_notes: {
+                    ...(updatedSocials[sIdx]?.production_notes || {}),
+                    brandPaletteId: val,
+                    brandColors
+                  }
+                };
+                onSave({ ...allAssets, socials: updatedSocials }, true);
+              }
+            }}
+          >
+            <SelectTrigger className="h-9 bg-white border-2 border-border text-[9px] font-black uppercase text-foreground px-3 shadow-sm">
+              <SelectValue placeholder="Paleta" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-border text-foreground max-h-72">
+              {getSystemVideoPalettes(profile).map((palette) => (
+                <SelectItem key={palette.id} value={palette.id} className="text-[10px] uppercase font-bold">
+                  <div className="flex items-center gap-2">
+                    {palette.primary ? (
+                      <span
+                        className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
+                        style={{ backgroundColor: palette.primary }}
+                      />
+                    ) : (
+                      <Clapperboard className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
+                    )}
+                    <span>{palette.name}</span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>

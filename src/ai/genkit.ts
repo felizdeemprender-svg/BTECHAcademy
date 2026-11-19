@@ -1,21 +1,28 @@
 import { genkit } from 'genkit';
+import { runWithContext } from '@genkit-ai/core';
+import { initNodeFeatures } from '@genkit-ai/core/node';
 import { googleAI } from '@genkit-ai/google-genai';
 import { checkSufficientCredits, calculateGeminiCost, calculateEmbeddingCost, deductCredits } from '@/lib/payments/credits';
 
-/**
- * Motor Genkit Original con Sensor de Identidad BTECH
- */
+try {
+  initNodeFeatures();
+} catch {}
+
 /**
  * Motor Genkit Original (Instancia interna)
+ * Se inicializa perezosamente para capturar variables de entorno en runtime.
  */
 let _genkitInstance: any = null;
+let _cachedApiKey: string | undefined = undefined;
 
 function getGenkitInstance() {
-  if (!_genkitInstance) {
+  const currentKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || 'DUMMY_KEY_FOR_BUILD';
+  if (!_genkitInstance || _cachedApiKey !== currentKey) {
+    _cachedApiKey = currentKey;
     _genkitInstance = genkit({
       plugins: [
         googleAI({
-          apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY || 'DUMMY_KEY_FOR_BUILD'
+          apiKey: currentKey
         }),
       ],
       model: 'googleai/gemini-2.5-flash',
@@ -100,18 +107,28 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
       const { cookies } = await import('next/headers');
       const cookieStore = await cookies();
       uid = uid || cookieStore.get('btech_uid')?.value || '';
-      role = role || cookieStore.get('btech_role')?.value || 'alumno';
+      const cookieRole = cookieStore.get('btech_role')?.value;
+
+      // Las acciones de campaña y marketing son exclusivas de mentores/tutores
+      const isMarketingAction = finalActionName.includes('variant') || 
+                               finalActionName.includes('campaign') || 
+                               finalActionName.includes('email') || 
+                               finalActionName.includes('ads') || 
+                               finalActionName.includes('social');
+
+      role = role || cookieRole || (isMarketingAction ? 'mentor' : (uid ? 'alumno' : 'mentor'));
       
       console.log(`>>> [AUDIT] Identidad detectada (Cookies): UID=${uid}, ROLE=${role}, ACCION=${finalActionName}`);
     } catch (e: any) {
       console.warn("[Sensor IA] Aviso: Ejecución sin contexto de identidad desde cookies.");
-      if (!role) role = 'alumno';
+      if (!role) role = 'mentor';
     }
   } else {
     console.log(`>>> [AUDIT] Identidad provista en Contexto: UID=${uid}, ROLE=${role}, ACCION=${finalActionName}`);
   }
 
-  if (role === 'alumno' && !ownerUid) {
+  // Los alumnos legítimos (con UID verificado) no pueden ejecutar IA sin tutor asignado (ownerUid)
+  if (role === 'alumno' && uid && !ownerUid) {
     throw new Error('ACCESO_DENEGADO: Las acciones de IA de los alumnos requieren un tutor asociado (ownerUid) para facturación.');
   }
 
@@ -127,7 +144,8 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
     }
   }
 
-  // 2. Ejecutar la IA (Usando la instancia interna para evitar recursión infinita)
+  // 2. Ejecutar la IA (Instanciamos fuera del contexto asíncrono para evitar "Cannot define new actions at runtime")
+  const instance = getGenkitInstance();
   const generateOptions = { ...options };
   generateOptions.context = {
     ...(generateOptions.context || {}),
@@ -135,7 +153,18 @@ export async function generateWithAuditing(options: any, actionName: string = 'i
     role
   };
 
-  const response = await getGenkitInstance().generate(generateOptions);
+  let response: any;
+  try {
+    response = await runWithContext(generateOptions.context, () =>
+      instance.generate(generateOptions)
+    );
+  } catch (err: any) {
+    if (err?.message?.includes('Async context is not initialized')) {
+      response = await instance.generate(generateOptions);
+    } else {
+      throw err;
+    }
+  }
 
   // 3. Auditoría Silenciosa (No bloquea la IA si falla)
   if (targetUidToCheck && response.usage) {
@@ -196,7 +225,26 @@ export async function embedWithAuditing(options: any, actionName: string = 'ia_e
     }
   }
 
-  const response = await getGenkitInstance().embed(options);
+  const instance = getGenkitInstance();
+  const embedOptions = { ...options };
+  embedOptions.context = {
+    ...(embedOptions.context || {}),
+    uid,
+    role
+  };
+
+  let response: any;
+  try {
+    response = await runWithContext(embedOptions.context, () =>
+      instance.embed(embedOptions)
+    );
+  } catch (err: any) {
+    if (err?.message?.includes('Async context is not initialized')) {
+      response = await instance.embed(embedOptions);
+    } else {
+      throw err;
+    }
+  }
 
   if (targetUidToCheck) {
     try {

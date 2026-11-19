@@ -6,13 +6,14 @@ import {
   handleAddSession,
   handleAssignTask,
   handleGetProgram,
+  handleListProgramEnrollments,
   handleListSessions,
   handleListTasks,
 } from '@/lib/api/program-detail-handlers';
 
 /**
- * GET /api/mentoring/programs/[id]/detail?action=program|sessions|tasks
- * Lecturas del detalle (programa, sesiones ordenadas, tareas).
+ * GET /api/mentoring/programs/[id]/detail?action=program|sessions|tasks|enrollments
+ * Lecturas del detalle (programa, sesiones ordenadas, tareas, inscripciones grupales).
  */
 export async function GET(
   request: NextRequest,
@@ -25,6 +26,7 @@ export async function GET(
     const gateway = await resolveGateway();
     if (action === 'sessions') return handleListSessions(gateway, caller, id);
     if (action === 'tasks') return handleListTasks(gateway, caller, id);
+    if (action === 'enrollments') return handleListProgramEnrollments(gateway, caller, id);
     return handleGetProgram(gateway, caller, id);
   } catch (error) {
     console.error('[API mentoring detail]', error);

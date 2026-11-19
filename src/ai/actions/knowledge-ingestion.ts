@@ -28,7 +28,7 @@ export async function ingestFaqsFromText(rawText: string) {
 
         if (question && answer) {
           const embedResult = await ai.embed({
-            embedder: 'googleai/text-embedding-004',
+            embedder: 'googleai/gemini-embedding-001',
             content: question + "\n" + answer
           });
           const embeddingVector = embedResult[0].embedding;

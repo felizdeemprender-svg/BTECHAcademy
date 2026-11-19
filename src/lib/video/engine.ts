@@ -29,22 +29,25 @@ export interface EngineRequest {
   workDir: string;
   slices: EngineSlice[];
   backgroundMusicUrl?: string;
+  brandColors?: { primary?: string; secondary?: string; accent?: string; outline?: string } | null;
+  onSliceProgress?: (sliceIndex: number, totalSlices: number) => Promise<void>;
+  onStageProgress?: (progress: number, stage: string) => Promise<void>;
 }
 
 function getFormatDimensions(adn: any, format: string, isV2: boolean): { width: number, height: number } {
   const resMap: Record<string, [number, number]> = {
-    vertical: [720, 1280],
-    portrait: [720, 900],
-    square: [720, 720],
-    horizontal: [1280, 720]
+    vertical: [1080, 1920],
+    portrait: [1080, 1350],
+    square: [1080, 1080],
+    horizontal: [1920, 1080]
   };
 
   if (!isV2 && adn.formats && adn.formats[format]) {
     const resolution = adn.formats[format].resolution || '9:16';
-    if (resolution === '9:16') return { width: 720, height: 1280 };
-    if (resolution === '4:5') return { width: 720, height: 900 };
-    if (resolution === '1:1') return { width: 720, height: 720 };
-    if (resolution === '16:9') return { width: 1280, height: 720 };
+    if (resolution === '9:16') return { width: 1080, height: 1920 };
+    if (resolution === '4:5') return { width: 1080, height: 1350 };
+    if (resolution === '1:1') return { width: 1080, height: 1080 };
+    if (resolution === '16:9') return { width: 1920, height: 1080 };
   }
 
   const [w, h] = resMap[format] || resMap.vertical;
@@ -91,7 +94,8 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     const segment = slice.segment_label || 'default';
     const assPath = path.join(workDir, `subs_${i}.ass`);
 
-    const assContent = generateAssFile(adn, segment, slice.text || '', slice.subtitle || '', slice.watermark || '', duration, width, height);
+    const effectiveBrandColors = req.brandColors || req.blueprint?.brandColors || adn?.brandColors;
+    const assContent = generateAssFile(adn, segment, slice.text || '', slice.subtitle || '', slice.watermark || '', duration, width, height, effectiveBrandColors);
     fs.writeFileSync(assPath, assContent, 'utf-8');
 
     let zoomFilter = '';
@@ -113,7 +117,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
         // We use speed as a direct multiplier to the time progress.
         const effectiveZoom = (intensity - 1) * speed;
         const zoomStep = `(${effectiveZoom})*on/(${duration}*30)`;
-        
+
         if (cameraMode === 'pan') {
           // For pan, we zoom in slightly and move the x/y coordinates over time.
           // We use intensity to determine how much we zoom in to allow panning room.
@@ -121,7 +125,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
           const maxPanX = `(iw-iw/zoom)`;
           const maxPanY = `(ih-ih/zoom)`;
           const progress = `(on/(${duration}*30))`;
-          
+
           if (direction === 'left') {
             zoomFilter = `zoompan=z='${staticZ}':x='${maxPanX} - ${maxPanX}*${progress}':y='ih/2-(ih/zoom)/2':d=1:s=${width}x${height}:fps=30`;
           } else if (direction === 'right') {
@@ -177,6 +181,28 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
         'warm': 'vintage'
       };
 
+      // Color grading avanzado: eq y colorbalance
+      const eqParts: string[] = [];
+      if (gFx.contrast !== undefined && gFx.contrast !== 1.0) eqParts.push(`contrast=${gFx.contrast}`);
+      if (gFx.brightness !== undefined && gFx.brightness !== 0.0) eqParts.push(`brightness=${gFx.brightness}`);
+      if (gFx.saturation !== undefined && gFx.saturation !== 1.0) eqParts.push(`saturation=${gFx.saturation}`);
+      if (eqParts.length > 0) {
+        autoFilters.push({ name: 'eq', params: eqParts.join(':') });
+      }
+
+      if (gFx.colorbalance) {
+        const cbParts: string[] = [];
+        if (gFx.colorbalance.rs !== undefined) cbParts.push(`rs=${gFx.colorbalance.rs}`);
+        if (gFx.colorbalance.gs !== undefined) cbParts.push(`gs=${gFx.colorbalance.gs}`);
+        if (gFx.colorbalance.bs !== undefined) cbParts.push(`bs=${gFx.colorbalance.bs}`);
+        if (gFx.colorbalance.rm !== undefined) cbParts.push(`rm=${gFx.colorbalance.rm}`);
+        if (gFx.colorbalance.gm !== undefined) cbParts.push(`gm=${gFx.colorbalance.gm}`);
+        if (gFx.colorbalance.bm !== undefined) cbParts.push(`bm=${gFx.colorbalance.bm}`);
+        if (cbParts.length > 0) {
+          autoFilters.push({ name: 'colorbalance', params: cbParts.join(':') });
+        }
+      }
+
       if (gFx.curves_preset && gFx.curves_preset !== 'none') {
         const ffmpegPreset = curvesPresetMap[gFx.curves_preset] || 'linear_contrast';
         autoFilters.push({ name: 'curves', params: `preset=${ffmpegPreset}` });
@@ -204,6 +230,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     // We generate a dynamic fonts.conf that points to our absolute fonts directory.
     const fontsDir = path.join(process.cwd(), 'public', 'fonts').replace(/\\/g, '/');
     const fontsConfPath = path.join(workDir, 'fonts.conf');
+    const winFontsDir = process.platform === 'win32' ? '  <dir>C:/Windows/Fonts</dir>' : '';
     const fontsConfContent = `<?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
 <fontconfig>
@@ -211,17 +238,19 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
   <cachedir>${path.join(workDir, 'fontscache').replace(/\\/g, '/')}</cachedir>
   <config></config>
   <dir>/usr/share/fonts</dir>
-  <dir>C:/Windows/Fonts</dir>
+  <dir>/usr/local/share/fonts</dir>
+${winFontsDir}
 </fontconfig>`;
     fs.writeFileSync(fontsConfPath, fontsConfContent);
 
     const absImgPath = path.resolve(slice.imagePath).replace(/\\/g, '/');
     const absAss = path.resolve(assPath).replace(/\\/g, '/');
 
-    // Construct the subtitles filter string. 
-    // We pass fontsdir as an extra safety measure, though FONTCONFIG_FILE is more robust.
+    // Construct the subtitles filter string with fontsdir for high-fidelity TTF font discovery
+    const relAss = path.relative(process.cwd(), assPath).replace(/\\/g, '/');
+    const relFontsDir = path.relative(process.cwd(), fontsDir).replace(/\\/g, '/');
     const subtitlesFilter = process.platform === 'win32'
-      ? `subtitles='${path.relative(process.cwd(), assPath).replace(/\\/g, '/')}'`
+      ? `subtitles=filename='${relAss}':fontsdir='${relFontsDir}'`
       : `subtitles=filename='${absAss}':fontsdir='${fontsDir}'`;
 
     const filters = [
@@ -234,12 +263,23 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
 
     const totalFrames = Math.max(Math.round(duration * 30), 1);
     const ffmpegArgs = [
+      '-nostdin',
       '-loop', '1',
       '-framerate', '30',
       '-i', absImgPath,
       '-vf', filters,
       '-c:v', 'libx264',
-      '-preset', 'ultrafast',
+      '-preset', 'veryfast',
+      '-crf', '16',
+      '-profile:v', 'high',
+      '-level', '4.1',
+      '-tune', 'stillimage',
+      '-g', '60',
+      '-keyint_min', '30',
+      '-sc_threshold', '0',
+      '-color_primaries', 'bt709',
+      '-color_trc', 'bt709',
+      '-colorspace', 'bt709',
       '-threads', '0',
       '-pix_fmt', 'yuv420p',
       '-r', '30',
@@ -257,6 +297,14 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     // Borrar archivo previo si existe para asegurar que se genera uno nuevo
     if (fs.existsSync(platePath)) {
       try { fs.unlinkSync(platePath); } catch (e) { }
+    }
+
+    if (req.onSliceProgress) {
+      try {
+        await req.onSliceProgress(i, slices.length);
+      } catch (pErr) {
+        console.warn(`[Engine V2] Error reporting slice progress:`, pErr);
+      }
     }
 
     console.log(`🎬 [Engine V2] Rendering Slice ${i} (${totalFrames} frames) | FX: ${postFX.substring(0, 30)}... | Zoom: ${zoomFilter}`);
@@ -288,7 +336,7 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
         '-filter_complex',
         `[1:a]volume=${musicVol},afade=t=in:st=0:d=0.5[music]; [2:a]volume=${voiceVol},adelay=200|200,aresample=44100,asplit=2[v_trigger][v_final]; [music][v_trigger]sidechaincompress=threshold=${sChain.threshold}:ratio=${sChain.ratio}:attack=${sChain.attack}:release=${sChain.release}[bg_ducked]; [bg_ducked][v_final]amix=inputs=2:duration=first[aout]`,
         '-map', '0:v:0', '-map', '[aout]',
-        '-c:v', 'copy', '-c:a', 'aac', '-shortest', '-y', sliceWithAudioPath
+        '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-ac', '2', '-shortest', '-y', sliceWithAudioPath
       ]);
       sceneClips.push(sliceWithAudioPath);
     } else {
@@ -311,11 +359,63 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     };
   }
 
-  // 2. Concatenate Video Clips with XFADE Transitions
+  // 2. Concatenate Video Clips with XFADE Transitions and Retention Progress Bar
+  if (req.onStageProgress) {
+    try { await req.onStageProgress(74, 'Uniendo escenas y transiciones con FFmpeg...'); } catch { }
+  }
   const videoOnlyPath = path.join(workDir, 'video_only.mp4');
+  let cumulativeOffset = 0;
+  const transitionOffsets: number[] = [];
+
+  const VALID_XFADES = new Set([
+    'fade', 'wipeleft', 'wiperight', 'wipeup', 'wipedown',
+    'slideleft', 'slideright', 'slideup', 'slidedown',
+    'circlecrop', 'rectcrop', 'distance', 'fadeblack', 'fadewhite',
+    'radial', 'smoothleft', 'smoothright', 'smoothup', 'smoothdown',
+    'circleopen', 'circleclose', 'vertopen', 'vertclose',
+    'horzopen', 'horzclose', 'dissolve', 'pixelize',
+    'diagtl', 'diagtr', 'diagbl', 'diagbr', 'hlslice', 'hrslice', 'vuslice', 'vdslice'
+  ]);
+
+  // Pre-calcular duracion total del video final
+  let totalVideoDur = sceneDurations[0] || slices.reduce((acc, s) => acc + s.duration, 0);
+  if (sceneClips.length > 1) {
+    let tempOff = 0;
+    for (let i = 1; i < sceneClips.length; i++) {
+      const prevSegment = sceneLabels[i - 1];
+      const prevRule = ((adn as any).motion_engine?.camera?.segment_rules?.[prevSegment] || {}) as any;
+      const rawTransDuration = prevRule.transition_duration !== undefined ? prevRule.transition_duration : (adn.motion_engine?.transitions?.duration || 0.5);
+      const prevDuration = sceneDurations[i - 1];
+      const nextDuration = sceneDurations[i];
+      const maxAllowed = Math.min(prevDuration * 0.4, nextDuration * 0.4);
+      const currentTransDuration = Math.max(0.15, Math.min(rawTransDuration, maxAllowed));
+      tempOff += prevDuration - currentTransDuration;
+    }
+    totalVideoDur = tempOff + sceneDurations[sceneClips.length - 1];
+  }
+
+  // Barra de Retencion Dinamica (Progress Bar): 6px en borde inferior
+  const isVerticalFormat = (req.format || 'vertical') === 'vertical';
+  const effectiveBrandColors = req.brandColors || req.blueprint?.brandColors || adn?.brandColors;
+  const accentHex = (effectiveBrandColors?.accent || adn?.brandColors?.accent || '#FFD700').replace('#', '');
+  const barColor = '0x' + accentHex.toUpperCase();
+  const progressBarFilter = isVerticalFormat
+    ? `drawbox=x=0:y=ih-6:w=iw:h=6:color=0x000000@0.35:t=fill,drawbox=x=0:y=ih-6:w='iw*t/${totalVideoDur.toFixed(3)}':h=6:color=${barColor}:t=fill`
+    : '';
 
   if (sceneClips.length === 1) {
-    await runFfmpeg(['-i', sceneClips[0], '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-y', videoOnlyPath]);
+    const singleArgs = ['-i', sceneClips[0]];
+    if (progressBarFilter) {
+      singleArgs.push('-vf', progressBarFilter);
+    }
+    await runFfmpeg([
+      ...singleArgs,
+      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18',
+      '-profile:v', 'high', '-level', '4.1',
+      '-g', '60', '-keyint_min', '30', '-sc_threshold', '0',
+      '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
+      '-pix_fmt', 'yuv420p', '-threads', '0', '-y', videoOnlyPath
+    ]);
   } else {
     console.log(`[Engine V2] Orchestrating ${sceneClips.length} clips with xfade transitions...`);
     // Prepare inputs with consistent timebase and PTS for xfade
@@ -325,20 +425,25 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
     }
 
     let lastLabel = 'v_pts0';
-    let cumulativeOffset = 0;
 
     for (let i = 1; i < sceneClips.length; i++) {
       const prevSegment = sceneLabels[i - 1];
       const prevRule = ((adn as any).motion_engine?.camera?.segment_rules?.[prevSegment] || {}) as any;
       const transTypeFull = prevRule.transition || (adn as any).motion_engine?.transitions?.default || 'xfade:fade';
-      const transType = transTypeFull.replace('xfade:', '');
-      const currentTransDuration = prevRule.transition_duration !== undefined ? prevRule.transition_duration : (adn.motion_engine?.transitions?.duration || 0.5);
+      const cleanTrans = transTypeFull.replace('xfade:', '');
+      const transType = VALID_XFADES.has(cleanTrans) ? cleanTrans : 'fade';
+      const rawTransDuration = prevRule.transition_duration !== undefined ? prevRule.transition_duration : (adn.motion_engine?.transitions?.duration || 0.5);
 
       const prevDuration = sceneDurations[i - 1];
+      const nextDuration = sceneDurations[i];
+      const maxAllowed = Math.min(prevDuration * 0.4, nextDuration * 0.4);
+      const currentTransDuration = Math.max(0.15, Math.min(rawTransDuration, maxAllowed));
+
       cumulativeOffset += prevDuration - currentTransDuration;
+      transitionOffsets.push(cumulativeOffset);
 
       const outLabel = `v_xfade${i}`;
-      filterComplex += `[${lastLabel}][v_pts${i}]xfade=transition=${transType}:duration=${currentTransDuration}:offset=${cumulativeOffset.toFixed(3)}[${outLabel}]`;
+      filterComplex += `[${lastLabel}][v_pts${i}]xfade=transition=${transType}:duration=${currentTransDuration.toFixed(3)}:offset=${cumulativeOffset.toFixed(3)}[${outLabel}]`;
 
       if (i < sceneClips.length - 1) {
         filterComplex += '; ';
@@ -346,45 +451,73 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
       lastLabel = outLabel;
     }
 
+    // Inyectar Barra de Retencion sobre el output de xfade
+    if (progressBarFilter) {
+      filterComplex += `; [${lastLabel}]${progressBarFilter}[v_bar_out]`;
+      lastLabel = 'v_bar_out';
+    }
+
     const inputArgs = sceneClips.flatMap(p => ['-i', p]);
     await runFfmpeg([
       ...inputArgs,
       '-filter_complex', filterComplex,
       '-map', `[${lastLabel}]`,
-      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-y', videoOnlyPath
+      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18',
+      '-profile:v', 'high', '-level', '4.1',
+      '-g', '60', '-keyint_min', '30', '-sc_threshold', '0',
+      '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
+      '-pix_fmt', 'yuv420p', '-threads', '0', '-y', videoOnlyPath
     ]);
   }
 
-  // 3. Concatenate Audio Clips with ACROSSFADE
+  // Liberar RAM en Cloud Run (/tmp es tmpfs en memoria): borrar plates intermedios ya concatenados
+  for (const clipPath of sceneClips) {
+    try { if (fs.existsSync(clipPath)) fs.unlinkSync(clipPath); } catch { }
+  }
+
+  // 3. Concatenate Audio Clips sequentially with natural pacing (no acrossfade voice attenuation)
+  if (req.onStageProgress) {
+    try { await req.onStageProgress(77, 'Sincronizando locución y música...'); } catch { }
+  }
   const voiceOnlyPath = path.join(workDir, 'voice_only.mp3');
 
   if (voiceClips.length === 1) {
     fs.copyFileSync(voiceClips[0], voiceOnlyPath);
   } else {
-    let audioFilter = '';
-    let lastAudioLabel = '0:a';
-    for (let i = 1; i < voiceClips.length; i++) {
-      const prevSegment = sceneLabels[i - 1];
-      const prevRule = ((adn as any).motion_engine?.camera?.segment_rules?.[prevSegment] || {}) as any;
-      const currentTransDuration = prevRule.transition_duration !== undefined ? prevRule.transition_duration : (adn.motion_engine?.transitions?.duration || 0.5);
-
-      const outLabel = `a${i}`;
-      audioFilter += `[${lastAudioLabel}][${i}:a]acrossfade=d=${currentTransDuration}:curve1=exp:curve2=exp[${outLabel}]`;
-
-      if (i < voiceClips.length - 1) audioFilter += '; ';
-      lastAudioLabel = outLabel;
+    let filterComplex = '';
+    for (let i = 0; i < voiceClips.length; i++) {
+      let targetDuration: number;
+      if (i < voiceClips.length - 1) {
+        const prevSegment = sceneLabels[i];
+        const prevRule = ((adn as any).motion_engine?.camera?.segment_rules?.[prevSegment] || {}) as any;
+        const rawTransDuration = prevRule.transition_duration !== undefined ? prevRule.transition_duration : (adn.motion_engine?.transitions?.duration || 0.5);
+        const prevDuration = sceneDurations[i];
+        const nextDuration = sceneDurations[i + 1] || prevDuration;
+        const maxAllowed = Math.min(prevDuration * 0.4, nextDuration * 0.4);
+        const currentTransDuration = Math.max(0.15, Math.min(rawTransDuration, maxAllowed));
+        targetDuration = Math.max(0.1, sceneDurations[i] - currentTransDuration);
+      } else {
+        targetDuration = Math.max(0.1, sceneDurations[i]);
+      }
+      filterComplex += `[${i}:a]aresample=44100,apad,atrim=0:${targetDuration.toFixed(3)}[a_pad${i}]; `;
     }
+
+    const padLabels = voiceClips.map((_, i) => `[a_pad${i}]`).join('');
+    filterComplex += `${padLabels}concat=n=${voiceClips.length}:v=0:a=1[voice_concat]`;
 
     const audioInputArgs = voiceClips.flatMap(p => ['-i', p]);
     await runFfmpeg([
       ...audioInputArgs,
-      '-filter_complex', audioFilter,
-      '-map', `[${lastAudioLabel}]`,
+      '-filter_complex', filterComplex,
+      '-map', '[voice_concat]',
       '-c:a', 'libmp3lame', '-y', voiceOnlyPath
     ]);
   }
 
   // 4. Final Mix with Soundtrack and Ducking
+  if (req.onStageProgress) {
+    try { await req.onStageProgress(79, 'Masterizando audio y empaquetando MP4...'); } catch { }
+  }
   const finalPath = path.join(workDir, 'final_render.mp4');
 
   if (fs.existsSync(finalPath)) {
@@ -410,15 +543,63 @@ export async function renderFullVideo(req: EngineRequest): Promise<string | { su
   const voiceFx = aEngine.voice_fx || `volume=${voiceVol}`;
   const musicFx = aEngine.music_fx || `volume=${musicVol}`;
 
-  console.log(`🎵 [Engine V2] Starting final audio/video mix...`);
+  // Pista de Micro-Efectos Auditivos (SFX Whooshes) en Transiciones
+  let sfxTrackPath: string | null = null;
+  const whooshFile = path.join(process.cwd(), 'public', 'audio', 'sfx', 'whoosh.mp3');
+
+  if (transitionOffsets.length > 0 && fs.existsSync(whooshFile)) {
+    try {
+      const generatedSfxPath = path.join(workDir, 'sfx_track.mp3');
+      const sfxInputs: string[] = [];
+      const sfxFilterParts: string[] = [];
+      const sfxMixLabels: string[] = [];
+
+      for (let sIdx = 0; sIdx < transitionOffsets.length; sIdx++) {
+        sfxInputs.push('-i', whooshFile);
+        const delayMs = Math.max(0, Math.round(transitionOffsets[sIdx] * 1000));
+        sfxFilterParts.push(`[${sIdx}:a]adelay=${delayMs}|${delayMs}[sfx_del_${sIdx}]`);
+        sfxMixLabels.push(`[sfx_del_${sIdx}]`);
+      }
+
+      const sfxFilter = sfxFilterParts.join('; ') + '; ' + sfxMixLabels.join('') +
+        `amix=inputs=${transitionOffsets.length}:duration=first:dropout_transition=0,volume=0.25,apad,atrim=0:${totalVideoDur.toFixed(3)}[sfx_out]`;
+
+      await runFfmpeg([
+        ...sfxInputs,
+        '-filter_complex', sfxFilter,
+        '-map', '[sfx_out]',
+        '-c:a', 'libmp3lame',
+        '-y', generatedSfxPath
+      ]);
+
+      if (fs.existsSync(generatedSfxPath)) {
+        sfxTrackPath = generatedSfxPath;
+      }
+    } catch (e) {
+      console.warn('[Engine V2] No se pudo generar la pista de SFX whooshes:', e);
+    }
+  }
+
+  const fadeOutDuration = 0.8;
+  const fadeOutStart = Math.max(0, totalVideoDur - fadeOutDuration);
+
+  console.log(`🎵 [Engine V2] Starting final audio/video mix (totalDur: ${totalVideoDur.toFixed(3)}s, fadeOutStart: ${fadeOutStart.toFixed(3)}s, sfx: ${!!sfxTrackPath})...`);
+
+  const mixInputs = ['-i', videoOnlyPath, '-i', bgMusic, '-i', voiceOnlyPath];
+  let filterComplexMix = '';
+
+  if (sfxTrackPath) {
+    mixInputs.push('-i', sfxTrackPath);
+    filterComplexMix = `[1:a]${musicFx},afade=t=in:st=0:d=0.5[music]; [2:a]${voiceFx},adelay=200|200,aresample=44100,asplit=2[v_trigger][v_final]; [music][v_trigger]sidechaincompress=threshold=${sChain.threshold}:ratio=${sChain.ratio}:attack=${sChain.attack}:release=${sChain.release}[bg_ducked]; [bg_ducked][3:a]amix=inputs=2:duration=first[bg_sfx]; [bg_sfx][v_final]amix=inputs=2:duration=first,loudnorm=I=-14:TP=-1.0:LRA=7,afade=t=out:st=${fadeOutStart.toFixed(3)}:d=${fadeOutDuration}[aout]`;
+  } else {
+    filterComplexMix = `[1:a]${musicFx},afade=t=in:st=0:d=0.5[music]; [2:a]${voiceFx},adelay=200|200,aresample=44100,asplit=2[v_trigger][v_final]; [music][v_trigger]sidechaincompress=threshold=${sChain.threshold}:ratio=${sChain.ratio}:attack=${sChain.attack}:release=${sChain.release}[bg_ducked]; [bg_ducked][v_final]amix=inputs=2:duration=first,loudnorm=I=-14:TP=-1.0:LRA=7,afade=t=out:st=${fadeOutStart.toFixed(3)}:d=${fadeOutDuration}[aout]`;
+  }
+
   const finalMixArgs = [
-    '-i', videoOnlyPath,
-    '-i', bgMusic,
-    '-i', voiceOnlyPath,
-    '-filter_complex',
-    `[1:a]${musicFx},afade=t=in:st=0:d=0.5[music]; [2:a]${voiceFx},adelay=200|200,aresample=44100,asplit=2[v_trigger][v_final]; [music][v_trigger]sidechaincompress=threshold=${sChain.threshold}:ratio=${sChain.ratio}:attack=${sChain.attack}:release=${sChain.release}[bg_ducked]; [bg_ducked][v_final]amix=inputs=2:duration=first,loudnorm=I=-16:TP=-1.5:LRA=11[aout]`,
+    ...mixInputs,
+    '-filter_complex', filterComplexMix,
     '-map', '0:v:0', '-map', '[aout]',
-    '-c:v', 'libx264', '-preset', 'fast', '-profile:v', 'high', '-movflags', 'faststart', '-threads', '0', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-ar', '44100', '-y', finalPath
+    '-c:v', 'copy', '-movflags', '+faststart', '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-ac', '2', '-shortest', '-y', finalPath
   ];
   console.log(`[FFmpeg:FinalCommand] ${finalMixArgs.join(' ')}`);
   await runFfmpeg(finalMixArgs);
@@ -441,7 +622,17 @@ function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
       resolvedFfmpeg = staticBin;
     }
 
-    const proc = spawn(resolvedFfmpeg!, args, { env: { ...process.env, ...envOverrides } });
+    const safeArgs = args.includes('-nostdin') ? args : ['-nostdin', ...args];
+    const proc = spawn(resolvedFfmpeg!, safeArgs, {
+      env: { ...process.env, ...envOverrides },
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+
+    proc.on('error', (err) => {
+      console.error('[FFmpeg Process Error]', err);
+      reject(err);
+    });
+
     let lastLog = Date.now();
 
     proc.stderr.on('data', (data: any) => {
@@ -454,10 +645,11 @@ function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
           lastLog = Date.now();
         }
       } else {
-        if (line.toLowerCase().includes('error')) {
+        const isBenign = line.includes('Error opening memory font') || line.includes('Fontconfig warning');
+        if (line.toLowerCase().includes('error') && !isBenign) {
           console.log(`\n❌ [FFmpeg Error] ${line.trim()}`);
         }
-        if (line.includes('fontselect') || line.toLowerCase().includes('subtitle')) {
+        if (line.includes('fontselect') || line.toLowerCase().includes('subtitle') || isBenign) {
           console.log(`\n🔍 [FFmpeg FontLog] ${line.trim()}`);
         }
       }
@@ -471,7 +663,118 @@ function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
   });
 }
 
-export function generateAssFile(adn: any, segment: string, text: string, subtitle: string, watermarkText: string, duration: number, width: number, height: number): string {
+export function resolveAssFontDescriptor(
+  rawFont: string,
+  styleBold?: boolean | number,
+  styleItalic?: boolean | number
+): { fontName: string; bold: number; italic: number } {
+  const fontFile = (rawFont || '').trim();
+  const lower = fontFile.toLowerCase();
+
+  let family = 'Inter';
+  let isBold = styleBold ? 1 : 0;
+  let isItalic = styleItalic ? 1 : 0;
+
+  switch (lower) {
+    case 'inter-black.ttf':
+    case 'inter-black':
+      family = 'Inter Black';
+      isBold = 0;
+      break;
+    case 'inter-extrabold.ttf':
+    case 'inter-extrabold':
+      family = 'Inter ExtraBold';
+      isBold = 0;
+      break;
+    case 'inter-bold.ttf':
+    case 'inter-bold':
+      family = 'Inter';
+      isBold = 1;
+      break;
+    case 'inter-semibold.ttf':
+    case 'inter-semibold':
+      family = 'Inter SemiBold';
+      isBold = 0;
+      break;
+    case 'inter-medium.ttf':
+    case 'inter-medium':
+      family = 'Inter Medium';
+      isBold = 0;
+      break;
+    case 'inter-light.ttf':
+    case 'inter-light':
+      family = 'Inter Light';
+      isBold = 0;
+      break;
+    case 'inter-regular.ttf':
+    case 'inter-regular':
+    case 'inter':
+      family = 'Inter';
+      break;
+    case 'impact.ttf':
+    case 'impact':
+      family = 'Impact';
+      break;
+    case 'bebasneue-regular.ttf':
+    case 'bebasneue.ttf':
+    case 'bebas neue':
+    case 'bebas':
+      family = 'Bebas Neue';
+      break;
+    case 'montserrat.ttf':
+    case 'montserrat':
+    case 'montserrat-black.ttf':
+    case 'montserrat-bold.ttf':
+      family = 'Montserrat';
+      isBold = 1;
+      break;
+    case 'trebucbd.ttf':
+    case 'trebuchet':
+    case 'trebuchet ms':
+      family = 'Trebuchet MS';
+      isBold = 1;
+      break;
+    case 'georgia.ttf':
+    case 'georgia':
+      family = 'Georgia';
+      break;
+    case 'calibri.ttf':
+    case 'calibri':
+      family = 'Calibri';
+      break;
+    case 'arialbd.ttf':
+    case 'arial-bold':
+      family = 'Arial';
+      isBold = 1;
+      break;
+    case 'arial.ttf':
+    case 'arial':
+      family = 'Arial';
+      break;
+    default: {
+      const clean = fontFile.replace(/\.ttf$/i, '').replace(/[-_]/g, ' ');
+      family = clean.charAt(0).toUpperCase() + clean.slice(1);
+    }
+  }
+
+  return { fontName: family, bold: isBold, italic: isItalic };
+}
+
+import { splitKineticPhrase, splitSubtitlePhases } from './text-splitter';
+export { splitKineticPhrase, splitSubtitlePhases };
+export type { TextBlockPhase } from './text-splitter';
+
+export function generateAssFile(
+  adn: any,
+  segment: string,
+  text: string,
+  subtitle: string,
+  watermarkText: string,
+  duration: number,
+  width: number,
+  height: number,
+  brandColors?: { primary?: string; secondary?: string; accent?: string; outline?: string } | null
+): string {
   const isV2 = adn.version === '2.0' || Number(adn.version) === 2.0;
   let titleStyle: any = {};
   let subStyle: any = {};
@@ -480,14 +783,41 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
   if (isV2) {
     const tEngine = (adn.typography_engine || {}) as any;
     const styles = tEngine.segment_styles?.[segment] || tEngine.segment_styles?.VALOR || {};
-    titleStyle = styles.text || {};
-    subStyle = styles.subtitle || {};
-    markStyle = styles.watermark || {};
+    titleStyle = { ...(styles.text || {}) };
+    subStyle = { ...(styles.subtitle || {}) };
+    markStyle = { ...(styles.watermark || {}) };
   } else {
     const rules = (adn as any).scenes_rules || {};
     titleStyle = { ...(rules.default?.text_styling || {}), ...(rules[segment]?.text_styling || {}) };
     subStyle = { fontSize: (titleStyle.fontSize || 80) * 0.6 };
     markStyle = { fontSize: 55, primaryColor: '#FFFFFF@0.7', alignment: 'bottom-right' };
+  }
+
+  // Aplicar paleta de brand a los colores si está configurada (sin alterar fuentes para FFmpeg)
+  if (brandColors?.primary) {
+    titleStyle.primaryColor = brandColors.primary;
+    if (brandColors.secondary) {
+      subStyle.primaryColor = brandColors.secondary;
+    }
+    if (brandColors.accent) {
+      markStyle.primaryColor = `${brandColors.accent}@0.85`;
+    }
+    if (brandColors.outline) {
+      const outlineCandidate = brandColors.outline.toLowerCase().replace('#', '') === brandColors.primary.toLowerCase().replace('#', '')
+        ? '#000000'
+        : brandColors.outline;
+      if (titleStyle.outline) {
+        titleStyle.outline = { ...titleStyle.outline, color: outlineCandidate };
+      }
+      if (subStyle.outline) {
+        subStyle.outline = { ...subStyle.outline, color: outlineCandidate };
+      }
+    } else {
+      // Si no hay outline explícito, garantizar contraste absoluto con negro puro
+      if (titleStyle.outline) {
+        titleStyle.outline = { ...titleStyle.outline, color: '#000000' };
+      }
+    }
   }
 
   const resolveAssColor = (col: string) => {
@@ -512,35 +842,66 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
     return '&H00FFFFFF';
   };
 
+  const resolveInlineAssColor = (col?: string | null): string => {
+    if (!col) return '';
+    let cleanHex = col;
+    if (col.includes('@')) {
+      cleanHex = col.split('@')[0];
+    }
+    const hex = cleanHex.replace('#', '');
+    if (hex.length === 6) {
+      const r = hex.substring(0, 2);
+      const g = hex.substring(2, 4);
+      const b = hex.substring(4, 6);
+      return `&H${b}${g}${r}&`;
+    }
+    return '';
+  };
+
+  const applyKineticEmphasisToAss = (
+    rawText: string,
+    basePrimaryHex: string | null | undefined,
+    accentHex: string | null | undefined,
+    baseOutlineHex?: string | null | undefined,
+    emphasisOutlineHex?: string | null | undefined
+  ): string => {
+    if (!rawText) return '';
+    const inlineBase = resolveInlineAssColor(basePrimaryHex || '#FFFFFF');
+    const inlineAccent = resolveInlineAssColor(accentHex || '#FFD700');
+    
+    // Inversión cromática: el texto base usa baseOutlineHex; el énfasis usa emphasisOutlineHex (o negro de contraste)
+    const inlineBaseOutl = baseOutlineHex ? resolveInlineAssColor(baseOutlineHex) : null;
+    const baseOutlTag = inlineBaseOutl ? `\\3c${inlineBaseOutl}` : '';
+
+    const inlineEmphasisOutl = emphasisOutlineHex ? resolveInlineAssColor(emphasisOutlineHex) : null;
+    const emphasisOutlTag = inlineEmphasisOutl ? `\\3c${inlineEmphasisOutl}` : '';
+
+    return rawText.replace(/\*([^*]+)\*/g, (_, word) => {
+      return `{\\1c${inlineAccent}${emphasisOutlTag}\\fscx110\\fscy110}${word}{\\1c${inlineBase}${baseOutlTag}\\fscx100\\fscy100}`;
+    });
+  };
+
   const resolveStyle = (s: any, type: 'title' | 'sub' | 'mark') => {
     const primaryColor = resolveAssColor(s.primaryColor || '#FFFFFF');
     let shadowColor = '&H00000000';
     let shadowDepth = 0;
     let shadowBlur = 0;
     if (s.shadow) {
-      shadowDepth = s.shadow.depth || 0;
-      shadowBlur = s.shadow.blur || 0;
+      shadowDepth = s.shadow.depth !== undefined ? s.shadow.depth : (type === 'title' ? 4 : 2);
+      shadowBlur = s.shadow.blur || (shadowDepth > 0 ? 1.2 : 0);
       const baseShadowCol = s.shadow.color || '#000000';
       const shadowAlpha = s.shadow.alpha !== undefined ? s.shadow.alpha : 0.8;
       shadowColor = resolveAssColor(`${baseShadowCol}@${shadowAlpha}`);
+    } else if (type === 'title') {
+      // Default de alto impacto para Reels si el ADN no especifica shadow
+      shadowDepth = 4;
+      shadowColor = resolveAssColor('#000000@0.75');
     }
 
     const fontSize = s.fontSize || (type === 'sub' ? 45 : type === 'mark' ? 30 : 80);
-    const rawFont = s.fontName || 'Arial';
-    let targetFont = rawFont;
-    
-    const fontPath = path.join(process.cwd(), 'public', 'fonts', rawFont);
-    if (!fs.existsSync(fontPath)) {
-      const interBlackPath = path.join(process.cwd(), 'public', 'fonts', 'Inter-Black.ttf');
-      if (rawFont.startsWith('Inter-') && fs.existsSync(interBlackPath)) {
-        targetFont = 'Inter-Black.ttf';
-        console.warn(`⚠️ [Engine] Font file "${rawFont}" not found at "${fontPath}". Falling back to high-fidelity "Inter-Black.ttf".`);
-      }
-    }
-    let fontName = targetFont.replace('.ttf', '').replace(/-/g, ' ');
-    if (targetFont.startsWith('Inter-')) {
-      fontName = 'Inter';
-    }
+    const rawFont = s.fontName || (type === 'title' ? 'Inter-Black.ttf' : 'Inter-Bold.ttf');
+    const fontDesc = resolveAssFontDescriptor(rawFont, s.bold, s.italic);
+    const fontName = fontDesc.fontName;
 
     let assAlignment = 2;
     const align = (s.alignment || (type === 'mark' ? 'right' : 'center')).toLowerCase();
@@ -564,11 +925,12 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
     let outlineColor = '&H00000000';
     let outlineBlur = 0;
 
-    if (s.overlay && (s.overlay.type === 'box' || s.overlay.type === 'solid' || s.overlay.type === 'pill')) {
+    if (s.badge?.enabled || s.box || (s.overlay && (s.overlay.type === 'box' || s.overlay.type === 'solid' || s.overlay.type === 'pill'))) {
       borderStyle = 3;
-      const boxColor = s.overlay.color || '#000000';
-      const boxAlpha = s.overlay.intensity !== undefined ? s.overlay.intensity : 0.5;
+      const boxColor = s.badge?.color || s.overlay?.color || '#000000';
+      const boxAlpha = s.badge?.alpha !== undefined ? s.badge.alpha : (s.overlay?.intensity !== undefined ? s.overlay.intensity : 0.65);
       outlineColor = resolveAssColor(`${boxColor}@${boxAlpha}`);
+      outlineWidth = s.badge?.padding || s.boxborderw || 8;
     } else if (s.outline) {
       outlineWidth = s.outline.width || 2;
       outlineBlur = s.outline.blur || 0;
@@ -580,7 +942,7 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
     return {
       fontName, fontSize, primaryColor, outlineColor, shadowColor, assAlignment, marginV, marginL, marginR,
       outlineWidth, borderStyle, shadowDepth, shadowBlur, outlineBlur,
-      bold: s.bold ? 1 : 0, italic: s.italic ? 1 : 0,
+      bold: fontDesc.bold, italic: fontDesc.italic,
       letterSpacing: s.letterSpacing || 0, scaleX: s.scaleX || 100, scaleY: s.scaleY || 100,
       uppercase: s.uppercase === true
     };
@@ -593,14 +955,14 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
   // --- SEGURIDAD: LÍMITES VERTICALES Y ESCALADO DINÁMICO ---
   const safeAreaHeight = height - (height * 0.15) * 2; // 15% top, 15% bottom limit
   const availableWidth = width - (t.marginL + t.marginR);
-  
+
   // Calcular líneas de título estimadas
   const titleCharWidth = t.fontSize * 0.55;
   const titleCharsPerLine = Math.max(1, Math.floor(availableWidth / titleCharWidth));
   let titleLines = 0;
-  const cleanTitle = text.replace(/\\N/g, '\n').replace(/\\n/g, '\n');
+  const cleanTitle = text.replace(/\*/g, '').replace(/\\N/g, '\n').replace(/\\n/g, '\n');
   for (const line of cleanTitle.split('\n')) {
-     titleLines += Math.max(1, Math.ceil(line.length / titleCharsPerLine));
+    titleLines += Math.max(1, Math.ceil(line.length / titleCharsPerLine));
   }
   let estimatedTitleHeight = titleLines * t.fontSize * 1.2;
 
@@ -611,12 +973,12 @@ export function generateAssFile(adn: any, segment: string, text: string, subtitl
     const subCharWidth = sub.fontSize * 0.55;
     const subCharsPerLine = Math.max(1, Math.floor(subAvailableWidth / subCharWidth));
     let subLines = 0;
-    const cleanSub = subtitle.replace(/\\N/g, '\n').replace(/\\n/g, '\n');
+    const cleanSub = subtitle.replace(/\*/g, '').replace(/\\N/g, '\n').replace(/\\n/g, '\n');
     for (const line of cleanSub.split('\n')) {
-       subLines += Math.max(1, Math.ceil(line.length / subCharsPerLine));
+      subLines += Math.max(1, Math.ceil(line.length / subCharsPerLine));
     }
     estimatedSubHeight = subLines * sub.fontSize * 1.2;
-    
+
     // Prevención de Overlap (Subtitle empuja al Title hacia arriba en formatos horizontales/cuadrados)
     if (t.assAlignment === 1 || t.assAlignment === 2 || t.assAlignment === 3) {
       const subTopEdge = sub.marginV + estimatedSubHeight;
@@ -660,7 +1022,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
   const getAssAnimationTags = (animationName: string, durationSec: number): string => {
     if (!animationName) return '';
     const durMs = Math.round(durationSec * 1000);
-    
+
     switch (animationName.toLowerCase()) {
       case 'cinema_fade':
       case 'fade':
@@ -685,25 +1047,92 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     }
   };
 
-  const finalTitle = t.uppercase ? text.toUpperCase() : text;
-  const titleAnim = getAssAnimationTags(titleStyle.animation, duration);
-  const titleOverrides = (t.shadowBlur > 0 || titleAnim)
-    ? `{${t.shadowBlur > 0 ? `\\blur${t.shadowBlur}` : ''}${titleAnim}}`
-    : '';
-  ass += `Dialogue: 0,0:00:00.00,${formatDuration(duration)},Title,,0,0,0,,${titleOverrides}${finalTitle}\n`;
+  const rawTitle = t.uppercase ? text.toUpperCase() : text;
+  const blocks = splitKineticPhrase(rawTitle, duration);
 
-  const finalSub = sub.uppercase ? subtitle.toUpperCase() : subtitle;
-  const subAnim = getAssAnimationTags(subStyle.animation, duration);
-  const subOverrides = (sub.shadowBlur > 0 || sub.outlineBlur > 0 || subAnim)
-    ? `{${sub.shadowBlur > 0 ? `\\blur${sub.shadowBlur}` : ''}${sub.outlineBlur > 0 ? `\\be${sub.outlineBlur}` : ''}${subAnim}}`
-    : '';
-  if (finalSub) {
-    ass += `Dialogue: 1,0:00:00.00,${formatDuration(duration)},Subtitle,,0,0,0,,${subOverrides}${finalSub}\n`;
+  for (const block of blocks) {
+    const blockDur = block.end - block.start;
+    const blockAnim = block.isSecondBlock
+      ? '\\fscx92\\fscy92\\t(0,180,\\fscx100\\fscy100)\\fad(80,150)'
+      : getAssAnimationTags(titleStyle.animation, blockDur);
+
+    let titleColorTags = '';
+    // Regla de Alto Contraste: Si no hay brandColors, usamos el color primario del estilo (o blanco)
+    // Para el outline del texto base, usamos negro (#000000) o el outline configurado si es distinto al relleno
+    const baseFillHex = brandColors?.primary || titleStyle.primaryColor || '#FFFFFF';
+    const rawOutlineHex = brandColors?.outline || titleStyle.outline?.color || '#000000';
+    // Si el outline y el fill son iguales o muy similares, forzamos contraste con negro puro
+    const baseOutlineHex = rawOutlineHex.toLowerCase().replace('#', '') === baseFillHex.toLowerCase().replace('#', '')
+      ? '#000000'
+      : rawOutlineHex;
+    // Para el énfasis (*palabra*): Relleno = accent, Borde = invertido (si el base tiene borde de color, énfasis usa negro; si base usa negro, énfasis usa el borde invertido o negro de alto contraste)
+    const emphasisFillHex = brandColors?.accent || titleStyle.accentColor || '#FFD700';
+    const emphasisOutlineHex = '#000000';
+
+    if (brandColors?.primary) {
+      const inlinePrim = resolveInlineAssColor(brandColors.primary);
+      const inlineOutl = resolveInlineAssColor(baseOutlineHex);
+      if (inlinePrim) titleColorTags += `\\1c${inlinePrim}`;
+      if (inlineOutl && t.borderStyle !== 3) titleColorTags += `\\3c${inlineOutl}`;
+    }
+    const titleOverrides = (blockAnim || titleColorTags)
+      ? `{${titleColorTags}${blockAnim}}`
+      : '';
+
+    const finalBlockText = applyKineticEmphasisToAss(
+      block.text,
+      baseFillHex,
+      emphasisFillHex,
+      t.borderStyle !== 3 ? baseOutlineHex : undefined,
+      t.borderStyle !== 3 ? emphasisOutlineHex : undefined
+    );
+    ass += `Dialogue: 0,${formatDuration(block.start)},${formatDuration(block.end)},Title,,0,0,0,,${titleOverrides}${finalBlockText}\n`;
+  }
+
+  const rawSub = sub.uppercase ? subtitle.toUpperCase() : subtitle;
+  const subBlocks = splitSubtitlePhases(rawSub, duration, blocks);
+
+  for (const sBlock of subBlocks) {
+    const sBlockDur = sBlock.end - sBlock.start;
+    const subAnim = sBlock.isSecondBlock
+      ? '\\fad(150,150)'
+      : getAssAnimationTags(subStyle.animation, sBlockDur);
+
+    let subColorTags = '';
+    const baseSubFillHex = brandColors?.secondary || subStyle.primaryColor || '#E5E5E5';
+    const baseSubOutlHex = subStyle.outline?.color || '#000000';
+    const subEmphasisFillHex = brandColors?.accent || subStyle.accentColor || '#FFD700';
+
+    if (brandColors?.secondary || brandColors?.primary) {
+      const inlineSub = resolveInlineAssColor(brandColors.secondary || brandColors.primary);
+      const inlineSubOutl = resolveInlineAssColor(baseSubOutlHex);
+      if (inlineSub) subColorTags += `\\1c${inlineSub}`;
+      if (inlineSubOutl && sub.borderStyle !== 3) subColorTags += `\\3c${inlineSubOutl}`;
+    }
+    const subOverrides = (subAnim || subColorTags)
+      ? `{${subColorTags}${subAnim}}`
+      : '';
+
+    if (sBlock.text) {
+      const finalSub = applyKineticEmphasisToAss(
+        sBlock.text,
+        baseSubFillHex,
+        subEmphasisFillHex,
+        sub.borderStyle !== 3 ? baseSubOutlHex : undefined,
+        sub.borderStyle !== 3 ? '#000000' : undefined
+      );
+      ass += `Dialogue: 1,${formatDuration(sBlock.start)},${formatDuration(sBlock.end)},Subtitle,,0,0,0,,${subOverrides}${finalSub}\n`;
+    }
   }
 
   const finalMark = mark.uppercase ? watermarkText.toUpperCase() : watermarkText;
   const markAnim = getAssAnimationTags(markStyle.animation, duration);
-  const markOverrides = markAnim ? `{${markAnim}}` : '';
+  let markColorTags = '';
+  if (brandColors?.accent || brandColors?.primary) {
+    const inlineMark = resolveInlineAssColor(brandColors.accent || brandColors.primary);
+    if (inlineMark) markColorTags += `\\1c${inlineMark}`;
+  }
+  const markOverrides = (markAnim || markColorTags) ? `{${markColorTags}${markAnim}}` : '';
   if (finalMark) {
     ass += `Dialogue: 0,0:00:00.00,${formatDuration(duration)},Watermark,,0,0,0,,${markOverrides}${finalMark}\n`;
   }

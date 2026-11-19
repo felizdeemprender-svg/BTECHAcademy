@@ -59,6 +59,81 @@ export function resolveProfileBrand(profile: any): StyleBrand | null {
   return active || ownBrands[0] || null;
 }
 
+export interface CourseResolvedBrand {
+  name: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  headingFont: string;
+  bodyFont: string;
+  brand: StyleBrand | null;
+}
+
+/**
+ * Resuelve el brand completo de un curso con preponderancia absoluta sobre el tutor.
+ * 
+ * Regla de preponderancia:
+ * 1. Brand elegido explícitamente en el curso (`override.brandName`), buscando en las marcas del tutor.
+ * 2. Si el curso guardó el snapshot del brand (`override.brand`), se usa directamente.
+ * 3. Si no hay marca elegida en el curso, fallback a la marca activa del perfil del tutor.
+ * 4. Fallback a colores/fuentes por defecto (#3B2D86, #8B5CF6, #D8B4FE, Inter).
+ */
+export function resolveCourseBrand(
+  override: any,
+  profile: any,
+  fallbackPrimary = '#3B2D86'
+): CourseResolvedBrand {
+  const ownBrands: StyleBrand[] = Array.isArray(profile?.brands) ? profile.brands : [];
+  const activeProfileBrand = resolveProfileBrand(profile);
+
+  let chosenBrand: StyleBrand | null = null;
+  if (override?.brandName) {
+    chosenBrand = ownBrands.find(b => b?.name === override.brandName) || null;
+  }
+
+  if (!chosenBrand && override?.brand && typeof override.brand === 'object') {
+    chosenBrand = override.brand as StyleBrand;
+  }
+
+  const effectiveBrand = chosenBrand || activeProfileBrand;
+
+  const primary = chosenBrand?.palette?.primary ||
+    override?.primaryColor ||
+    activeProfileBrand?.palette?.primary ||
+    profile?.branding?.primaryColor ||
+    fallbackPrimary;
+
+  const secondary = chosenBrand?.palette?.secondary ||
+    override?.secondaryColor ||
+    activeProfileBrand?.palette?.secondary ||
+    '#8B5CF6';
+
+  const accent = chosenBrand?.palette?.accent ||
+    override?.accentColor ||
+    activeProfileBrand?.palette?.accent ||
+    '#D8B4FE';
+
+  const headingFont = chosenBrand?.typography?.headingFont ||
+    override?.headingFont ||
+    activeProfileBrand?.typography?.headingFont ||
+    'Inter';
+
+  const bodyFont = chosenBrand?.typography?.bodyFont ||
+    override?.bodyFont ||
+    activeProfileBrand?.typography?.bodyFont ||
+    'Inter';
+
+  return {
+    name: chosenBrand?.name || override?.brandName || effectiveBrand?.name || 'Default',
+    primary,
+    secondary,
+    accent,
+    headingFont,
+    bodyFont,
+    brand: effectiveBrand,
+  };
+}
+
 /**
  * Resuelve el color primario de un curso.
  * Prioridad: brand elegido explícitamente (brandingOverride.brandName) → override legacy
@@ -66,16 +141,10 @@ export function resolveProfileBrand(profile: any): StyleBrand | null {
  * `profile` es el objeto `profile` del tutor guardado en Firestore.
  */
 export function resolveCoursePrimaryColor(
-  override: { brandName?: string | null; primaryColor?: string | null } | undefined | null,
+  override: { brandName?: string | null; primaryColor?: string | null; brand?: any } | undefined | null,
   profile: any,
   fallback = '#3B2D86'
 ): string {
-  const ownBrands: StyleBrand[] = Array.isArray(profile?.brands) ? profile.brands : [];
-  const activeBrand = resolveProfileBrand(profile);
-  if (override?.brandName) {
-    const chosen = ownBrands.find(b => b?.name === override.brandName);
-    return chosen?.palette?.primary || activeBrand?.palette?.primary || override?.primaryColor || fallback;
-  }
-  if (override?.primaryColor) return override.primaryColor;
-  return activeBrand?.palette?.primary || profile?.branding?.primaryColor || fallback;
+  const resolved = resolveCourseBrand(override, profile, fallback);
+  return resolved.primary;
 }

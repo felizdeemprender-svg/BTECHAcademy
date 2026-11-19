@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ResponsiveTable, ResponsiveColumn } from '@/components/ui/responsive-table';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, query, setDoc, serverTimestamp, deleteDoc, where, getDocs, getDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, query, setDoc, serverTimestamp, deleteDoc, where, getDocs, getDoc, or } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { getAuth } from 'firebase/auth';
 import { 
@@ -38,10 +38,19 @@ import {
   Tags,
   Link2,
   Sparkles,
+  X,
+  Filter,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -155,6 +164,9 @@ export default function ManageCoursesClient() {
   const router = useRouter();
   
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [tutorFilter, setTutorFilter] = useState<string>('all');
+  const [tutorsMap, setTutorsMap] = useState<Record<string, { id: string; name: string; email?: string }>>({});
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [associatedLandings, setAssociatedLandings] = useState<{id: string, title: string}[]>([]);
@@ -198,17 +210,34 @@ export default function ManageCoursesClient() {
   const termsConfigRef = useMemoFirebase(() => doc(db, 'config', 'terms_courses'), [db]);
   const { data: termsConfig } = useDoc(termsConfigRef);
 
-  // Calcular isAdmin y isMentor antes del return
-  const isAdmin = profile?.roles.includes('admin');
-  const isMentor = profile?.roles.includes('mentor');
-  const hasPermission = isAdmin || isMentor;
+  // Calcular roles
+  const isAdmin = Boolean(profile?.roles?.includes('admin'));
+  const isMentor = Boolean(profile?.roles?.includes('mentor') || profile?.isMentor);
+  const isEmpresa = Boolean(
+    profile?.roles?.includes('empresa') || 
+    profile?.companyRole === 'owner' || 
+    profile?.role === 'supervisor' || 
+    profile?.isEnterprise
+  );
+  const isCompanyTutor = Boolean(profile?.companyId && profile?.companyRole === 'tutor');
+  const hasPermission = isAdmin || isMentor || isEmpresa;
 
   const coursesQuery = useMemoFirebase(() => {
     if (!profile?.uid) return null;
     const coursesRef = collection(db, 'courses');
     if (isAdmin) return query(coursesRef);
+    if (isEmpresa) {
+      const companyId = profile.companyId || profile.uid;
+      return query(
+        coursesRef,
+        or(
+          where('mentorId', '==', profile.uid),
+          where('companyId', '==', companyId)
+        )
+      );
+    }
     return query(coursesRef, where('mentorId', '==', profile.uid));
-  }, [db, profile?.uid, isAdmin]);
+  }, [db, profile?.uid, isAdmin, isEmpresa, profile?.companyId]);
 
   // Consulta a Firestore restaurada para mostrar cursos
   const { data: courses, isLoading } = useCollection(coursesQuery);
@@ -249,6 +278,48 @@ export default function ManageCoursesClient() {
     return () => { active = false; };
   }, [db, courses]);
 
+  // Cargar información de tutores para el filtro de administradores
+  useEffect(() => {
+    if (!isAdmin || !db || !courses || courses.length === 0) return;
+    const uniqueMentorIds = Array.from(new Set((courses as any[]).map((c: any) => c.mentorId).filter(Boolean))) as string[];
+    const missingIds = uniqueMentorIds.filter(id => !tutorsMap[id]);
+    if (missingIds.length === 0) return;
+
+    let isMounted = true;
+    Promise.all(
+      missingIds.map(async (id) => {
+        try {
+          const userSnap = await getDoc(doc(db, 'users', id));
+          if (userSnap.exists()) {
+            const data = userSnap.data();
+            const name = data.displayName || data.profile?.displayName || data.name || data.email || id;
+            return { id, name, email: data.email || '' };
+          }
+        } catch (e) {
+          console.error('Error al obtener perfil de tutor:', e);
+        }
+        return { id, name: `Tutor (${id.slice(0, 6)})`, email: '' };
+      })
+    ).then((results) => {
+      if (!isMounted) return;
+      setTutorsMap(prev => {
+        const next = { ...prev };
+        results.forEach(r => {
+          if (r) next[r.id] = r;
+        });
+        return next;
+      });
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAdmin, db, courses, tutorsMap]);
+
+  const tutorOptions = useMemo(() => {
+    return Object.values(tutorsMap).sort((a, b) => a.name.localeCompare(b.name));
+  }, [tutorsMap]);
+
   const clearUILocks = useCallback(() => {
     document.body.style.pointerEvents = 'auto';
     document.body.style.overflow = 'auto';
@@ -265,6 +336,49 @@ export default function ManageCoursesClient() {
       return () => clearTimeout(timer);
     }
   }, [isDeleteDialogOpen, isEnrollmentsDialogOpen, isHistoryDialogOpen, isPublishDialogOpen, isAssociatedDialogOpen, isAiTagDialogOpen, isTermsDialogOpen, clearUILocks]);
+
+  const filteredCourses = useMemo(() => {
+    if (!courses) return [];
+    return (courses as any[]).filter((c: any) => {
+      // 1. Búsqueda por término (título o etiquetas)
+      const term = searchTerm.trim().toLowerCase();
+      const matchesSearch = !term ||
+        c.title?.toLowerCase().includes(term) ||
+        (Array.isArray(c.tags) && c.tags.some((t: string) => t.toLowerCase().includes(term)));
+
+      // 2. Filtro por estado del curso
+      let matchesStatus = true;
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'published') {
+          matchesStatus = c.status === 'published' || c.status === 'approved';
+        } else if (statusFilter === 'pending') {
+          matchesStatus = c.status === 'pending';
+        } else if (statusFilter === 'pending_terms') {
+          matchesStatus = c.status === 'pending_terms';
+        } else if (statusFilter === 'draft') {
+          matchesStatus = c.status === 'draft' || c.status === 'creating' || !c.status;
+        } else if (statusFilter === 'rejected') {
+          matchesStatus = c.status === 'rejected';
+        }
+      }
+
+      // 3. Filtro por tutor (solo aplica si es administrador y seleccionó un tutor)
+      let matchesTutor = true;
+      if (isAdmin && tutorFilter !== 'all') {
+        matchesTutor = c.mentorId === tutorFilter;
+      }
+
+      return matchesSearch && matchesStatus && matchesTutor;
+    });
+  }, [courses, searchTerm, statusFilter, tutorFilter, isAdmin]);
+  
+  const canManageCourse = useCallback((course: any) => {
+    if (!profile) return false;
+    if (isAdmin) return true;
+    if (course.mentorId === profile.uid) return true;
+    if (isEmpresa && course.companyId && (course.companyId === profile.companyId || course.companyId === profile.uid)) return true;
+    return false;
+  }, [profile, isAdmin, isEmpresa]);
 
   // Si el perfil está cargando, mostrar loading (después de todos los hooks)
   if (!profile) {
@@ -290,7 +404,7 @@ export default function ManageCoursesClient() {
   const activeCount = courses?.filter((c: any) => c.isActive === true).length || 0;
 
   const handleNewCourse = () => {
-    if (isAdmin) {
+    if (isAdmin || isEmpresa || isCompanyTutor) {
       router.push('/courses/create');
       return;
     }
@@ -372,17 +486,43 @@ export default function ManageCoursesClient() {
     if (!selectedId) return;
     setIsDeleting(true);
     try {
-      // Eliminar landings asociadas primero
+      // 1. Eliminar landings asociadas primero usando el query param canónico pageId
+      const companyId = profile?.companyId || profile?.uid;
+      const callerRole = isAdmin ? 'admin' : (isEmpresa ? 'empresa' : 'mentor');
       for (const landing of associatedLandings) {
-        await fetch(`/api/sales-pages?id=${landing.id}`, { method: 'DELETE' });
+        await fetch(`/api/sales-pages?pageId=${landing.id}&companyId=${companyId || ''}&callerRole=${callerRole}`, { 
+          method: 'DELETE' 
+        });
       }
-      // Eliminar curso
+
+      // 2. Eliminar curso a través del endpoint transaccional del backend
+      const res = await fetch(`/api/courses/${selectedId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mentorId: profile?.uid,
+          callerRole,
+          companyId,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'No se pudo eliminar el curso.');
+      }
+
+      // 3. Eliminar documento local para sincronización reactiva inmediata
       const docRef = doc(db, 'courses', selectedId);
-      await deleteDoc(docRef);
+      await deleteDoc(docRef).catch(() => {});
       
       toast({ title: associatedLandings.length > 0 ? 'Curso y landings eliminados' : 'Curso eliminado' });
       setIsDeleteDialogOpen(false);
     } catch(error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al eliminar',
+        description: error.message || 'No tienes permisos suficientes para eliminar este curso.'
+      });
       const docRef = doc(db, 'courses', selectedId);
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'delete' }));
     } finally {
@@ -422,6 +562,10 @@ export default function ManageCoursesClient() {
         sensitiveTopics: modConfig?.sensitiveTopics || [],
         ownerUid: course.mentorId
       });
+
+      if (!modResult || typeof modResult.isSensitive !== 'boolean') {
+        throw new Error('La auditoría de IA no devolvió una evaluación válida.');
+      }
 
       const logRef = doc(collection(db, 'moderation-logs'));
       const logData = {
@@ -527,6 +671,14 @@ export default function ManageCoursesClient() {
 
   const confirmPublication = async () => {
     if (!selectedCourse) return;
+    if (isCompanyTutor) {
+      toast({
+        variant: 'destructive',
+        title: 'Acción no permitida',
+        description: 'Solo la empresa titular tiene potestad para publicar este curso.',
+      });
+      return;
+    }
     setIsPublishDialogOpen(false);
     toast({ title: 'Iniciando Auditoría IA', description: 'Validando contenido antes de publicar...' });
     await handleManualAudit(selectedCourse, selectedTags);
@@ -810,9 +962,7 @@ export default function ManageCoursesClient() {
     router.push(`/courses/edit/${course.id}`);
   };
 
-  const filteredCourses = courses?.filter(c => c.title?.toLowerCase().includes(searchTerm.toLowerCase()));
-  
-  const otherCourses = courses?.filter(c => c.id !== selectedId && (isAdmin || c.mentorId === profile?.uid));
+  const otherCourses = courses?.filter(c => c.id !== selectedId && canManageCourse(c));
   const filteredOtherCourses = otherCourses?.filter(c => c.title?.toLowerCase().includes(associatedSearchTerm.toLowerCase()));
 
   const renderCourseActionsMenu = (course: any, isOwner: boolean) => (
@@ -845,15 +995,22 @@ export default function ManageCoursesClient() {
             <Pencil className="h-3.5 w-3.5" /> Editar Contenido
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => router.push(`/courses/style/${course.id}`)} className="cursor-pointer gap-2 py-2">
-            <Palette className="h-3.5 w-3.5 text-primary" /> Identidad Visual (Marca)
+            <Palette className="h-3.5 w-3.5 text-primary" /> {isCompanyTutor ? 'Presentación del Tutor (Perfil y Redes)' : 'Identidad Visual (Marca)'}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => openAssociatedDialog(course)} className="cursor-pointer gap-2 py-2">
             <Link2 className="h-3.5 w-3.5 text-blue-500" /> Cursos Asociados (Ruta)
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => openPublishDialog(course)} disabled={isAuditing === course.id} className="cursor-pointer gap-2 py-2">
-            {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : course.isActive ? <PowerOff className="h-3.5 w-3.5 text-orange-500" /> : <Power className="h-3.5 w-3.5 text-success" />}
-            {course.isActive ? 'Ocultar Catálogo' : 'Publicar Catálogo'}
-          </DropdownMenuItem>
+          {isCompanyTutor ? (
+            <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed gap-2 py-2" title="Solo la empresa titular puede publicar cursos">
+              <Power className="h-3.5 w-3.5 text-muted-foreground" />
+              Publicación Reservada a Empresa
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onSelect={() => openPublishDialog(course)} disabled={isAuditing === course.id} className="cursor-pointer gap-2 py-2">
+              {isAuditing === course.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : course.isActive ? <PowerOff className="h-3.5 w-3.5 text-orange-500" /> : <Power className="h-3.5 w-3.5 text-success" />}
+              {course.isActive ? 'Ocultar Catálogo' : 'Publicar Catálogo'}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => openEnrollments(course)} className="cursor-pointer gap-2 py-2"><Users className="h-3.5 w-3.5 text-accent" /> Gestionar Alumnos</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={async (e) => { 
@@ -892,11 +1049,17 @@ export default function ManageCoursesClient() {
               unoptimized
             />
           </div>
-          <div><p className="font-bold text-sm text-foreground line-clamp-1">{course.title}</p>
-            <div className="flex flex-wrap gap-1 mt-1">
+          <div>
+            <p className="font-bold text-sm text-foreground line-clamp-1">{course.title}</p>
+            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+              {isAdmin && tutorsMap[course.mentorId] && (
+                <Badge variant="secondary" className="text-[9px] h-4 px-1.5 font-bold bg-muted text-foreground/80 border border-border">
+                  Tutor: {tutorsMap[course.mentorId]?.name}
+                </Badge>
+              )}
               {course.tags?.length > 0 ? course.tags.map((tagName: string) => (
                 <Badge key={tagName} variant="outline" className="text-[8px] h-3 px-1 border-primary/20 text-primary/70">{tagName}</Badge>
-              )) : <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
+              )) : !isAdmin && <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
             </div>
           </div>
         </div>
@@ -957,7 +1120,7 @@ export default function ManageCoursesClient() {
       align: 'right',
       className: 'px-6',
       cell: (course) => {
-        const isOwner = course.mentorId === profile?.uid;
+        const isOwner = canManageCourse(course);
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
@@ -980,11 +1143,66 @@ export default function ManageCoursesClient() {
           )}
         </header>
 
-        <SmartFilterBar 
-          placeholder="Buscar programas o alumnos..."
-          value={searchTerm}
-          onChange={setSearchTerm}
-        />
+        <div className="flex flex-row items-center gap-2.5 bg-secondary/10 p-2.5 rounded-xl border border-border overflow-x-auto">
+          {/* Búsqueda por texto */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Buscar programas por título o etiquetas..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white border-border shadow-xs h-10 font-medium"
+            />
+          </div>
+
+          {/* Filtro por estado del curso (visible para todos) */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-10 w-[170px] shrink-0 bg-white border-border text-xs font-bold shadow-xs">
+              <SelectValue placeholder="Estado del curso" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="published">Publicado / Aprobado</SelectItem>
+              <SelectItem value="pending">Pendiente Auditoría</SelectItem>
+              <SelectItem value="pending_terms">Sin Términos</SelectItem>
+              <SelectItem value="draft">Borrador</SelectItem>
+              <SelectItem value="rejected">Rechazado</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Filtro por tutor (SOLO si es administrador) */}
+          {isAdmin && (
+            <Select value={tutorFilter} onValueChange={setTutorFilter}>
+              <SelectTrigger className="h-10 w-[200px] shrink-0 bg-white border-border text-xs font-bold shadow-xs">
+                <SelectValue placeholder="Filtrar por tutor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los tutores</SelectItem>
+                {tutorOptions.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Botón limpiar filtros */}
+          {(searchTerm !== '' || statusFilter !== 'all' || (isAdmin && tutorFilter !== 'all')) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                if (isAdmin) setTutorFilter('all');
+              }}
+              className="h-10 shrink-0 text-xs font-bold text-muted-foreground hover:text-foreground gap-1 px-3"
+            >
+              <X className="h-3.5 w-3.5" /> Limpiar
+            </Button>
+          )}
+        </div>
 
         <Card className="border rounded-md overflow-hidden bg-white shadow-none">
           <CardContent className="p-0">
@@ -1009,10 +1227,15 @@ export default function ManageCoursesClient() {
                     </div>
                     <div>
                       <p className="font-bold text-sm text-foreground leading-tight line-clamp-1">{course.title}</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
+                      <div className="flex flex-wrap items-center gap-1 mt-1">
+                        {isAdmin && tutorsMap[course.mentorId] && (
+                          <Badge variant="secondary" className="text-[8px] h-3.5 px-1 font-bold bg-muted text-foreground/80 border border-border">
+                            {tutorsMap[course.mentorId]?.name}
+                          </Badge>
+                        )}
                         {course.tags?.length > 0 ? course.tags.map((tagName: string) => (
                           <Badge key={tagName} variant="outline" className="text-[8px] h-3 px-1 border-primary/20 text-primary/70">{tagName}</Badge>
-                        )) : <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
+                        )) : !isAdmin && <span className="text-[8px] text-muted-foreground italic font-bold">Sin etiquetas</span>}
                       </div>
                     </div>
                   </div>
@@ -1029,7 +1252,7 @@ export default function ManageCoursesClient() {
                 </div>
               )}
               mobileCardFooter={(course: any) => {
-                const isOwner = course.mentorId === profile?.uid;
+                const isOwner = canManageCourse(course);
                 return (
                   <div className="flex justify-end">
                     <DropdownMenu>

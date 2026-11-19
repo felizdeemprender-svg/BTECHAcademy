@@ -8,3 +8,4 @@ export * from './setup-billing';
 export * from './promote-influencer';
 export * from './list-referrals';
 export * from './list-payment-options';
+export * from './build-tutor-financial-statement';

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Instagram, Twitter, Linkedin, Circle } from 'lucide-react';
+import { splitKineticPhrase, splitSubtitlePhases } from '@/lib/video/text-splitter';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -19,6 +20,44 @@ const PlatformIcon = ({ platform, className }: { platform: string, className?: s
   return <Circle className={className} />;
 };
 
+export function resolveCssFont(fontFile?: string): { fontFamily: string; fontWeight: string; letterSpacing?: string } {
+  const font = (fontFile || '').toLowerCase();
+  if (font.includes('georgia')) {
+    return { fontFamily: 'Georgia, serif', fontWeight: '700' };
+  }
+  if (font.includes('impact')) {
+    return { fontFamily: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif', fontWeight: '900', letterSpacing: '0.04em' };
+  }
+  if (font.includes('bebas')) {
+    return { fontFamily: '"Bebas Neue", Impact, sans-serif', fontWeight: '400', letterSpacing: '0.05em' };
+  }
+  if (font.includes('montserrat')) {
+    return { fontFamily: '"Montserrat", sans-serif', fontWeight: '900', letterSpacing: '-0.02em' };
+  }
+  if (font.includes('trebuc')) {
+    return { fontFamily: '"Trebuchet MS", "Lucida Sans Unicode", sans-serif', fontWeight: '800' };
+  }
+  if (font.includes('black')) {
+    return { fontFamily: '"Inter", sans-serif', fontWeight: '900' };
+  }
+  if (font.includes('extrabold')) {
+    return { fontFamily: '"Inter", sans-serif', fontWeight: '800' };
+  }
+  if (font.includes('bold') || font.includes('arialbd')) {
+    return { fontFamily: '"Inter", Arial, sans-serif', fontWeight: '700' };
+  }
+  if (font.includes('semibold')) {
+    return { fontFamily: '"Inter", sans-serif', fontWeight: '600' };
+  }
+  if (font.includes('light')) {
+    return { fontFamily: '"Inter", sans-serif', fontWeight: '300' };
+  }
+  if (font.includes('calibri')) {
+    return { fontFamily: 'Calibri, Candara, Segoe, sans-serif', fontWeight: '600' };
+  }
+  return { fontFamily: '"Inter", system-ui, sans-serif', fontWeight: '700' };
+}
+
 interface SocialLivePreviewProps {
   social: any;
   tokens?: any;
@@ -33,12 +72,41 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
   const sourceItems = (social.slides && social.slides.length > 0) ? social.slides : ((social.scenes && social.scenes.length > 0) ? social.scenes : []);
   const slides = sourceItems.length > 0 ? sourceItems : [{ text: social.hook || '', imageUrl: '', segment_label: 'GANCHO' }];
   const slide = slides[currentSlideIdx] || slides[0] || { text: social.hook || '', segment_label: 'GANCHO' };
+
+  const [activePhaseIdx, setActivePhaseIdx] = useState(0);
+
+  // Reiniciar fase al cambiar de escena/lámina
+  useEffect(() => {
+    setActivePhaseIdx(0);
+  }, [currentSlideIdx, slide.text, slide.subtitle]);
+
+  const slideDuration = parseFloat(slide.duration) || 4.5;
+  const rawTitle = slide.title || slide.text || social.hook || 'Escribe el texto aquí...';
+  const rawSub = slide.subtitle || '';
+
+  const titleBlocks = useMemo(() => splitKineticPhrase(rawTitle, slideDuration), [rawTitle, slideDuration]);
+  const subBlocks = useMemo(() => splitSubtitlePhases(rawSub, slideDuration, titleBlocks), [rawSub, slideDuration, titleBlocks]);
+
+  const maxPhases = Math.max(titleBlocks.length, subBlocks.length, 1);
+  const currentPhase = Math.min(activePhaseIdx, maxPhases - 1);
+
+  const currentTitleBlock = titleBlocks[currentPhase] || titleBlocks[0] || { text: rawTitle };
+  const currentSubBlock = subBlocks[currentPhase] || subBlocks[0] || { text: rawSub };
   
-  // Determinar reglas del ADN para el segmento actual
+  // Determinar reglas del ADN para el segmento actual (Modular 2.0 y Legado 1.0)
   const segmentKey = slide.segment_label || (currentSlideIdx === 0 ? 'GANCHO' : currentSlideIdx === slides.length - 1 ? 'CTA' : 'VALOR');
+  const typoEngine = adn?.typography_engine || adn?.typography;
+  const segmentTypo = typoEngine?.segment_styles?.[segmentKey] || typoEngine?.segment_styles?.GANCHO || {};
+  const typoText = segmentTypo.text || {};
+  const typoSub = segmentTypo.subtitle || {};
+
   const adnBase = adn?.ffmpeg_rules?.default || {};
   const adnOverride = adn?.ffmpeg_rules?.[segmentKey] || {};
   const activeRules = { ...adnBase, ...adnOverride };
+
+  const rawFontName = typoText.fontName || activeRules.fontFamily || 'Inter-Bold.ttf';
+  const titleFontCss = resolveCssFont(rawFontName);
+  const subFontCss = resolveCssFont(typoSub.fontName || rawFontName);
 
   // Utilidad para convertir FFmpeg color (black@0.5) a CSS rgba
   const ffColorToCss = (ffCol: string, brandColor?: string) => {
@@ -61,8 +129,50 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
   const boxBg = ffColorToCss(activeRules.boxcolor_alpha, tokens?.primary);
   const shadow = activeRules.shadowcolor ? `${activeRules.shadowx || 2}px ${activeRules.shadowy || 2}px 8px ${ffColorToCss(activeRules.shadowcolor)}` : 'none';
 
+  const hasMentor = social.includeMentorUrl ?? (social.landingId === 'mentor');
+  const hasLanding = social.includeLandingUrl ?? (social.landingId !== 'mentor');
+  const brandTitleColor = social.production_notes?.brandColors?.primary;
+  const brandAccentColor = social.production_notes?.brandColors?.accent || tokens?.accent || '#FACC15';
+  const brandSubtitleColor = social.production_notes?.brandColors?.secondary || '#E5E5E5';
+
+  const renderEmphasizedText = (rawText: string, defaultColor?: string) => {
+    if (!rawText) return null;
+    const parts = rawText.split(/\*([^*]+)\*/g);
+    return parts.map((part, idx) => {
+      if (idx % 2 === 1) {
+        return (
+          <span
+            key={idx}
+            className="inline-block transform scale-105 font-black text-amber-300"
+            style={{ 
+              color: brandAccentColor || '#FACC15',
+              textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+            }}
+          >
+            {part}
+          </span>
+        );
+      }
+      return (
+        <span 
+          key={idx} 
+          style={{ 
+            color: defaultColor || '#FFFFFF',
+            textShadow: '0 2px 4px rgba(0,0,0,0.9), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+          }}
+        >
+          {part}
+        </span>
+      );
+    });
+  };
+
   // Construct the preview URL for the linked landing
-  const landingUrl = social.landingUrl ? social.landingUrl : (social.landingIdx !== undefined ? `landing-${social.landingIdx + 1}.html` : 'link_en_bio');
+  const landingUrl = social.landingUrl
+    ? social.landingUrl
+    : (social.landingId && social.landingId !== 'mentor'
+        ? `/v/${social.landingId.split('-')[0]}`
+        : (social.landingIdx !== undefined ? `landing-${social.landingIdx + 1}.html` : 'link_en_bio'));
 
   useEffect(() => {
     if (currentSlideIdx >= slides.length) setCurrentSlideIdx(0);
@@ -85,6 +195,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@800;900&display=swap');
         .animate-typewriter {
           overflow: hidden;
           white-space: pre-wrap;
@@ -138,12 +249,22 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
                 )}
                 style={{
                     transform: adn?.fx?.cameraMovement === 'zoom_in' ? 'scale(1.2)' : 'scale(1.0)',
-                    filter: 
-                      adn?.fx?.colorGrade === 'cold' ? 'contrast(1.1) saturate(0.8) hue-rotate(5deg)' :
-                      adn?.fx?.colorGrade === 'vibrant' ? 'contrast(1.1) saturate(1.4)' :
-                      adn?.fx?.colorGrade === 'vintage' ? 'contrast(0.9) saturate(0.8) sepia(0.2)' :
-                      adn?.fx?.colorGrade === 'noir' ? 'grayscale(1) contrast(1.3)' :
-                      adn?.fx?.colorGrade === 'modern' ? 'contrast(1.05) saturate(1.15)' : 'none'
+                    filter: (() => {
+                      const gfx = adn?.global_fx?.global_fx || adn?.global_fx || adn?.fx || {};
+                      if (gfx.contrast || gfx.saturation || gfx.brightness) {
+                        const c = gfx.contrast ?? 1;
+                        const s = gfx.saturation ?? 1;
+                        const b = 1 + (gfx.brightness ?? 0);
+                        const sep = gfx.curves_preset === 'vintage' ? ' sepia(0.25)' : '';
+                        const hue = gfx.curves_preset === 'cool' ? ' hue-rotate(10deg)' : '';
+                        return `contrast(${c}) saturate(${s}) brightness(${b})${sep}${hue}`;
+                      }
+                      return adn?.fx?.colorGrade === 'cold' ? 'contrast(1.1) saturate(0.8) hue-rotate(5deg)' :
+                        adn?.fx?.colorGrade === 'vibrant' ? 'contrast(1.1) saturate(1.4)' :
+                        adn?.fx?.colorGrade === 'vintage' ? 'contrast(0.9) saturate(0.8) sepia(0.2)' :
+                        adn?.fx?.colorGrade === 'noir' ? 'grayscale(1) contrast(1.3)' :
+                        adn?.fx?.colorGrade === 'modern' ? 'contrast(1.05) saturate(1.15)' : 'none';
+                    })()
                 }}
               />
             </div>
@@ -242,20 +363,64 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
                 })()
               }}
             >
+              {maxPhases > 1 && (
+                <div className="flex items-center justify-center gap-1.5 mb-2.5 z-20">
+                  {Array.from({ length: maxPhases }).map((_, pIdx) => {
+                    const tb = titleBlocks[pIdx];
+                    const isCurrent = currentPhase === pIdx;
+                    return (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActivePhaseIdx(pIdx);
+                        }}
+                        className={cn(
+                          "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer",
+                          isCurrent 
+                            ? "bg-white text-black shadow-lg scale-105" 
+                            : "bg-black/50 text-white/70 hover:bg-black/70 hover:text-white"
+                        )}
+                      >
+                        Ronda {pIdx + 1} {tb ? `(${tb.start.toFixed(1)}s - ${tb.end.toFixed(1)}s)` : ''}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <h4 
                 className={cn(
-                  "font-bold leading-[1.2] text-white",
-                  activeRules.uppercase ? "uppercase" : ""
+                  "leading-[1.15] text-white",
+                  (typoText.uppercase ?? activeRules.uppercase) ? "uppercase" : ""
                 )} 
                 style={{ 
-                  fontFamily: fontName,
-                  fontSize: `${activeRules.fontsize / 4.4}px`,
+                  fontFamily: titleFontCss.fontFamily,
+                  fontWeight: titleFontCss.fontWeight,
+                  letterSpacing: titleFontCss.letterSpacing,
+                  fontSize: `${(typoText.fontSize || activeRules.fontsize || 90) / 4.4}px`,
                   textShadow: shadow,
-                  color: activeRules.fontcolor === 'black' ? '#000' : '#fff'
+                  color: brandTitleColor || typoText.primaryColor || (activeRules.fontcolor === 'black' ? '#000' : '#fff')
                 }}
               >
-                {slide.title || slide.text || social.hook || 'Escribe el texto aquí...'}
+                {renderEmphasizedText(
+                  currentTitleBlock.text,
+                  brandTitleColor || typoText.primaryColor || (activeRules.fontcolor === 'black' ? '#000' : '#fff')
+                )}
               </h4>
+              {currentSubBlock?.text && (
+                <p 
+                  className="mt-2 text-xs leading-relaxed tracking-wide opacity-90"
+                  style={{ 
+                    fontFamily: subFontCss.fontFamily,
+                    fontWeight: subFontCss.fontWeight,
+                    textShadow: shadow,
+                    color: brandSubtitleColor || typoSub.primaryColor || '#E5E5E5'
+                  }}
+                >
+                  {renderEmphasizedText(currentSubBlock.text, brandSubtitleColor || typoSub.primaryColor || '#E5E5E5')}
+                </p>
+              )}
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -265,11 +430,11 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
               <button 
                 className="h-9 px-5 rounded-2xl text-[10px] font-black uppercase truncate max-w-[150px] transition-transform hover:scale-105 active:scale-95" 
                 style={{ 
-                    backgroundColor: tokens?.accent || '#760464',
+                    backgroundColor: brandTitleColor || tokens?.accent || '#760464',
                     color: '#fff'
                 }}
               >
-                {landingUrl}
+                {hasLanding ? landingUrl : (hasMentor ? 'link_en_bio' : 'ver_más')}
               </button>
             </div>
           </div>
@@ -280,8 +445,9 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         <div className="absolute left-0 top-0 w-1.5 h-full bg-muted" />
         <span className="font-bold text-foreground mr-2">@{social.handle || 'tu_cuenta'}</span>
         {social.caption || 'Aquí irá el cuerpo de la publicación...'}
-        <div className="mt-4 text-primary font-bold text-xs flex flex-wrap gap-3">
-          {social.landingIdx !== undefined && <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[10px] border border-primary/15">🔗 {landingUrl}</span>}
+        <div className="mt-4 text-primary font-bold text-xs flex flex-wrap gap-2">
+          {hasLanding && <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[10px] border border-primary/15">🔗 Landing: {landingUrl}</span>}
+          {hasMentor && <span className="bg-muted text-foreground px-3 py-1.5 rounded-xl text-[10px] border border-border">👤 Mentor: Link en Bio</span>}
           <div className="flex gap-1.5">
             {social.hashtags?.map((h: string) => h.startsWith('#') ? h : `#${h}`).map((h: string, i: number) => (
                 <span key={i} className="text-primary font-black tracking-tight">{h}</span>

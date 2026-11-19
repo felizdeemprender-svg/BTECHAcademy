@@ -186,10 +186,36 @@ export interface BatchUpdateOp {
   readonly patch: Record<string, unknown>;
 }
 
+/**
+ * Elimina claves con valor `undefined` de un objeto superficial/anidado
+ * antes de enviarlo a Firestore (preservando FieldValue, Timestamp, Date).
+ */
+export function stripUndefined(obj: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    if (Array.isArray(v)) {
+      out[k] = v.map((item) =>
+        item === undefined
+          ? null
+          : item && typeof item === 'object' && Object.getPrototypeOf(item) === Object.prototype
+            ? stripUndefined(item as Record<string, unknown>)
+            : item,
+      );
+    } else if (v && typeof v === 'object' && Object.getPrototypeOf(v) === Object.prototype) {
+      out[k] = stripUndefined(v as Record<string, unknown>);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 export class FirebaseGateway implements FirestoreGateway {
   constructor(private readonly db: Firestore) {}
 
   async getDoc(collectionPath: string, id: string): Promise<DocSnapshotLike | null> {
+    if (!id || !id.trim()) return null;
     const snap = await getDoc(doc(this.db, collectionPath, id));
     if (!snap.exists()) return null;
     const data = snap.data() as Record<string, unknown>;
@@ -232,7 +258,7 @@ export class FirebaseGateway implements FirestoreGateway {
     id: string,
     data: Record<string, unknown>,
   ): Promise<void> {
-    await fsSetDoc(doc(this.db, collectionPath, id), data);
+    await fsSetDoc(doc(this.db, collectionPath, id), stripUndefined(data));
   }
 
   async createDocAutoId(
@@ -240,7 +266,7 @@ export class FirebaseGateway implements FirestoreGateway {
     data: Record<string, unknown>,
   ): Promise<string> {
     const ref = doc(collection(this.db, collectionPath));
-    await fsSetDoc(ref, data);
+    await fsSetDoc(ref, stripUndefined(data));
     return ref.id;
   }
 
@@ -249,7 +275,7 @@ export class FirebaseGateway implements FirestoreGateway {
     id: string,
     patch: Record<string, unknown>,
   ): Promise<void> {
-    await fsUpdateDoc(doc(this.db, collectionPath, id), patch);
+    await fsUpdateDoc(doc(this.db, collectionPath, id), stripUndefined(patch));
   }
 
   async deleteDoc(collectionPath: string, id: string): Promise<void> {
@@ -281,7 +307,7 @@ export class FirebaseGateway implements FirestoreGateway {
   async batchWrite(ops: BatchUpdateOp[]): Promise<void> {
     const batch = fsWriteBatch(this.db);
     for (const op of ops) {
-      batch.update(doc(this.db, op.collectionPath, op.id), op.patch);
+      batch.update(doc(this.db, op.collectionPath, op.id), stripUndefined(op.patch));
     }
     await batch.commit();
   }
@@ -349,7 +375,7 @@ export class FirebaseGateway implements FirestoreGateway {
     id: string,
     data: Record<string, unknown>,
   ): Promise<void> {
-    await fsSetDoc(doc(this.db, collectionPath, id), data, { merge: true });
+    await fsSetDoc(doc(this.db, collectionPath, id), stripUndefined(data), { merge: true });
   }
 
   async mergeSubDoc(
@@ -359,7 +385,7 @@ export class FirebaseGateway implements FirestoreGateway {
     id: string,
     data: Record<string, unknown>,
   ): Promise<void> {
-    await fsSetDoc(doc(this.db, parentCollection, parentId, subCollection, id), data, { merge: true });
+    await fsSetDoc(doc(this.db, parentCollection, parentId, subCollection, id), stripUndefined(data), { merge: true });
   }
 
   increment(n: number): unknown {
@@ -406,7 +432,7 @@ export class FirebaseGateway implements FirestoreGateway {
     id: string,
     data: Record<string, unknown>,
   ): Promise<void> {
-    await fsSetDoc(doc(this.db, parentCollection, parentId, subCollection, id), data);
+    await fsSetDoc(doc(this.db, parentCollection, parentId, subCollection, id), stripUndefined(data));
   }
 
   async updateSubDoc(
@@ -416,7 +442,7 @@ export class FirebaseGateway implements FirestoreGateway {
     id: string,
     patch: Record<string, unknown>,
   ): Promise<void> {
-    await fsUpdateDoc(doc(this.db, parentCollection, parentId, subCollection, id), patch);
+    await fsUpdateDoc(doc(this.db, parentCollection, parentId, subCollection, id), stripUndefined(patch));
   }
 
   async deleteSubDoc(

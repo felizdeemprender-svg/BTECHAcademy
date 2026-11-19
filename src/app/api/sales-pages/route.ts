@@ -90,6 +90,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, pageId, updatedTitle: data.title });
   } catch (error: any) {
+    if (error.code === 'LIMIT_PENDING_REACHED') {
+      return NextResponse.json({
+        error: error.message,
+        code: error.code,
+        pendingPages: error.pendingPages || [],
+      }, { status: 400 });
+    }
     return NextResponse.json({ error: error.message }, { status: error.message.includes('Unauthorized') ? 403 : 500 });
   }
 }
@@ -116,6 +123,13 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ success: true, pageId, updatedTitle: data.title });
   } catch (error: any) {
+    if (error.code === 'LIMIT_PENDING_REACHED') {
+      return NextResponse.json({
+        error: error.message,
+        code: error.code,
+        pendingPages: error.pendingPages || [],
+      }, { status: 400 });
+    }
     return NextResponse.json({ error: error.message }, { status: error.message.includes('Unauthorized') ? 403 : 500 });
   }
 }
@@ -128,6 +142,8 @@ export async function DELETE(req: NextRequest) {
     }
     const searchParams = req.nextUrl.searchParams;
     const pageId = searchParams.get('pageId');
+    const companyId = searchParams.get('companyId') || undefined;
+    const callerRole = searchParams.get('callerRole') || (caller.isAdmin || caller.isSuperAdmin ? 'admin' : undefined);
 
     if (!pageId) {
       return NextResponse.json({ error: 'Missing pageId' }, { status: 400 });
@@ -135,9 +151,23 @@ export async function DELETE(req: NextRequest) {
 
     await deleteUseCase.execute({
       uid: caller.uid,
-      isAdmin: caller.isAdmin,
-      pageId
+      isAdmin: caller.isAdmin || caller.isSuperAdmin === true,
+      pageId,
+      companyId,
+      callerRole
     });
+
+    // Cascade delete de assets en Storage (carpeta canónica y legacy)
+    try {
+      const { adminStorage } = await import('@/firebase/admin');
+      const bucket = adminStorage.bucket();
+      await Promise.allSettled([
+        bucket.deleteFiles({ prefix: `landings/${pageId}/` }),
+        bucket.deleteFiles({ prefix: `campaigns/${pageId}/` }),
+      ]);
+    } catch (storageErr: any) {
+      console.warn(`[CascadeDelete:Storage] Error al limpiar Storage para landing ${pageId}:`, storageErr?.message);
+    }
 
     return NextResponse.json({ success: true, pageId });
   } catch (error: any) {

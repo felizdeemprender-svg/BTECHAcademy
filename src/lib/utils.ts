@@ -8,7 +8,8 @@ export function cn(...inputs: ClassValue[]) {
 export function getRootDomain(hostname: string): string {
   if (hostname.includes('localhost')) {
     const parts = hostname.split('.');
-    return parts.includes('localhost') ? 'localhost:9002' : parts.slice(-1)[0];
+    const last = parts[parts.length - 1];
+    return last.includes('localhost') ? last : 'localhost:9002';
   }
   // Handle multi-part TLDs
   if (hostname.endsWith('.com.ar') || hostname.endsWith('.co.uk') || hostname.endsWith('.com.mx')) {

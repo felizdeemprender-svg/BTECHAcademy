@@ -123,6 +123,14 @@ export function SceneNarrativeEditor({
                       keywords={sl.voiceover || sl.text}
                       description={sl.text}
                       aiPromptHint={`Imagen para un video del curso "${courseTitle || ''}". La escena trata sobre: ${sl.voiceover || sl.text || 'contenido educativo'}`}
+                      adnId={s.adnId || s.production_notes?.adnId}
+                      allowPromptEdit={true}
+                      promptValue={sl.imagePrompt || ''}
+                      onPromptChange={(p) => {
+                        const newItems = [...items];
+                        newItems[i] = { ...newItems[i], imagePrompt: p };
+                        updateAsset('socials', sIdx, 'slides', newItems);
+                      }}
                     />
                   </div>
                 </div>
@@ -196,9 +204,14 @@ export function SceneNarrativeEditor({
                     ) : (
                       <>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
-                            <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
-                          </Label>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
+                              <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
+                            </Label>
+                            <span className="text-[9px] text-muted-foreground font-medium hidden sm:inline-block">
+                              Usa <strong>*palabra*</strong> para resaltar
+                            </span>
+                          </div>
                           <Textarea 
                             value={sl.text || ''}
                             onChange={(e) => {
@@ -206,66 +219,154 @@ export function SceneNarrativeEditor({
                               newItems[i] = { ...newItems[i], text: e.target.value };
                               updateAsset('socials', sIdx, 'slides', newItems);
                             }}
-                            placeholder="Frase corta para resaltar en pantalla..."
+                            placeholder="Frase corta para resaltar en pantalla... Ej: Aprende a *VENDER*"
                             className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[60px] text-sm font-black focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2 mb-1 opacity-60">
-                            <Sparkles className="h-3 w-3" /> Subtítulo / Apoyo
-                          </Label>
-                          <Input 
+                          {(() => {
+                            const curDuration = parseFloat(sl.duration) || 4.5;
+                            const subParts = (sl.subtitle || '').split(/\r?\n|\\n/).map((p: string) => p.trim()).filter(Boolean);
+                            const subRounds = subParts.length >= 2 ? subParts.length : (curDuration >= 2.8 && (sl.subtitle || '').trim().split(/\s+/).length >= 3 ? 2 : 1);
+                            const canAutoSplit = subParts.length <= 1 && (sl.subtitle || '').trim().split(/\s+/).length >= 4 && curDuration >= 3.0;
+
+                            return (
+                              <div className="flex items-center justify-between">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2 mb-1 opacity-80">
+                                  <Sparkles className="h-3 w-3 text-primary" /> Subtítulo Dinámico
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-[9px] font-bold text-muted-foreground">
+                                    {subRounds} {subRounds === 1 ? 'ronda' : 'rondas'} ({curDuration}s)
+                                  </Badge>
+                                  {canAutoSplit && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const words = (sl.subtitle || '').trim().split(/\s+/);
+                                        const mid = Math.ceil(words.length / 2);
+                                        const newSub = `${words.slice(0, mid).join(' ')}\n${words.slice(mid).join(' ')}`;
+                                        const newItems = [...items];
+                                        newItems[i] = { ...newItems[i], subtitle: newSub };
+                                        updateAsset('socials', sIdx, 'slides', newItems);
+                                      }}
+                                      className="text-[9px] font-bold text-primary hover:underline cursor-pointer"
+                                    >
+                                      Dividir en 2 rondas
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                          <Textarea 
                             value={sl.subtitle || ''}
                             onChange={(e) => {
                               const newItems = [...items];
                               newItems[i] = { ...newItems[i], subtitle: e.target.value };
                               updateAsset('socials', sIdx, 'slides', newItems);
                             }}
-                            placeholder="Texto secundario opcional..."
-                            className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 text-xs font-medium focus-visible:ring-1 focus-visible:ring-muted-foreground/50 px-4"
-                           size="lg" />
+                            placeholder="Subtítulo dinámico... Usa salto de línea para rotar en 2 rondas (ej: Frase 1\nFrase 2)"
+                            className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[50px] text-xs font-medium focus-visible:ring-1 focus-visible:ring-muted-foreground/50 p-3 rounded-xl"
+                          />
                         </div>
                       </>
                     )}
                   </div>
               </div>
 
-              {/* Ajustes tácticos rápidos */}
-               <div className="flex items-center gap-6 px-6 py-4 bg-muted/40 rounded-[1.5rem] border border-border mt-auto">
-                 <div className="flex flex-col gap-1.5">
-                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Duración (seg)</span>
-                    <Input 
-                       type="number"
-                       step="0.1"
-                       value={sl.duration || 4.5}
-                       onChange={(e) => {
-                          const newItems = [...items];
-                          newItems[i] = { ...newItems[i], duration: e.target.value };
-                          updateAsset('socials', sIdx, 'slides', newItems);
-                       }}
-                       className="w-20 h-8 bg-white text-xs font-black border-border text-foreground rounded-xl shadow-lg"
-                    />
-                 </div>
-                 <div className="flex flex-col gap-1.5 flex-1 max-w-[200px]">
-                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Marca de Agua / Crédito</span>
-                    <Input 
-                       value={sl.watermark || ''}
-                       onChange={(e) => {
-                          const newItems = [...items];
-                          newItems[i] = { ...newItems[i], watermark: e.target.value };
-                          updateAsset('socials', sIdx, 'slides', newItems);
-                       }}
-                       placeholder="@cuenta"
-                       className="h-8 bg-white text-xs font-bold border-border text-success rounded-xl px-3 shadow-lg"
-                    />
-                 </div>
-                 <div className="flex flex-col gap-1.5">
-                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Segmento</span>
-                    <Badge variant="secondary" className="text-[9px] h-8 px-4 bg-primary/10 border border-primary/20 text-primary font-bold uppercase">
-                      {sl.segment || 'VALOR'}
-                    </Badge>
-                 </div>
-              </div>
+               {/* Ajustes tácticos rápidos con alerta de sincronía de voz */}
+               {(() => {
+                 const voiceText = (sl.voiceover || '').trim();
+                 const wordCount = voiceText ? voiceText.split(/\s+/).length : 0;
+                 const curDuration = parseFloat(sl.duration) || 4.5;
+                  // Cadencia natural: 2.2 palabras por segundo
+                  // Ventana dinámica automática: [3.5s, 5.5s]. Si la locución requiere entre 5.5s y 6.5s, se comprime en 5.5s.
+                  let optimalDuration = curDuration;
+                  if (wordCount > 0) {
+                    const rawSeconds = wordCount / 2.2;
+                    if (rawSeconds <= 3.5) {
+                      optimalDuration = 3.5;
+                    } else if (rawSeconds <= 6.5) {
+                      optimalDuration = Math.min(5.5, Math.round(rawSeconds * 10) / 10);
+                    } else {
+                      optimalDuration = Math.round(rawSeconds * 10) / 10;
+                    }
+                  }
+                  const theoreticalSeconds = wordCount > 0 ? (wordCount / 2.2) : 0;
+                  const isTooFast = theoreticalSeconds > 6.5 && curDuration < 5.5 && wordCount >= 16;
+                  const isTooSlow = curDuration > 6.0 && wordCount > 0 && (wordCount / curDuration) < 1.0;
+
+                 return (
+                   <div className="flex flex-col gap-3 px-6 py-4 bg-muted/40 rounded-[1.5rem] border border-border mt-auto">
+                     <div className="flex flex-wrap items-center justify-between gap-4">
+                       <div className="flex items-center gap-3">
+                         <div className="flex flex-col gap-1.5">
+                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Duración (seg)</span>
+                            <Input 
+                               type="number"
+                               step="0.1"
+                               value={sl.duration || 4.5}
+                               onChange={(e) => {
+                                  const newItems = [...items];
+                                  newItems[i] = { ...newItems[i], duration: e.target.value };
+                                  updateAsset('socials', sIdx, 'slides', newItems);
+                               }}
+                               className="w-20 h-8 bg-white text-xs font-black border-border text-foreground rounded-xl shadow-lg"
+                            />
+                         </div>
+                         {wordCount > 0 && Math.abs(curDuration - optimalDuration) >= 1.2 && (
+                           <button
+                             type="button"
+                             onClick={() => {
+                               const newItems = [...items];
+                               newItems[i] = { ...newItems[i], duration: optimalDuration };
+                               updateAsset('socials', sIdx, 'slides', newItems);
+                             }}
+                             className="text-[9px] font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-2.5 py-1.5 rounded-lg transition-colors mt-4 self-end"
+                             title="Ajustar duración a la cadencia natural del guion"
+                           >
+                             ⚡ Sincronizar ({optimalDuration}s)
+                           </button>
+                         )}
+                       </div>
+
+                       <div className="flex flex-col gap-1.5 flex-1 max-w-[200px]">
+                          <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Marca de Agua / Crédito</span>
+                          <Input 
+                             value={sl.watermark || ''}
+                             onChange={(e) => {
+                                const newItems = [...items];
+                                newItems[i] = { ...newItems[i], watermark: e.target.value };
+                                updateAsset('socials', sIdx, 'slides', newItems);
+                             }}
+                             placeholder="@cuenta"
+                             className="h-8 bg-white text-xs font-bold border-border text-success rounded-xl px-3 shadow-lg"
+                          />
+                       </div>
+
+                       <div className="flex flex-col gap-1.5">
+                          <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Segmento</span>
+                          <Badge variant="secondary" className="text-[9px] h-8 px-4 bg-primary/10 border border-primary/20 text-primary font-bold uppercase">
+                            {sl.segment || 'VALOR'}
+                          </Badge>
+                       </div>
+                     </div>
+
+                     {/* Alerta contextual de desfase de locución */}
+                     {isTooFast && (
+                       <div className="text-[9px] font-medium text-warn flex items-center gap-1.5 bg-warn/10 border border-warn/20 px-3 py-1.5 rounded-lg">
+                         <span>⚠️ Guion extenso ({wordCount} palabras). Para mantener el dinamismo se recomienda acotar el texto o extender la escena a {optimalDuration}s.</span>
+                       </div>
+                     )}
+                     {isTooSlow && (
+                       <div className="text-[9px] font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/60 border border-border px-3 py-1.5 rounded-lg">
+                         <span>ℹ️ Escena prolongada ({curDuration}s) para solo {wordCount} palabras. Recomendado: {optimalDuration}s para mayor dinamismo.</span>
+                       </div>
+                     )}
+                   </div>
+                 );
+               })()}
             </div>
 
             {/* Decoración lateral de línea de tiempo */}

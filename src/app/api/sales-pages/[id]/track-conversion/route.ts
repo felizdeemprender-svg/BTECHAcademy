@@ -6,8 +6,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
 
   try {
-    const body = await req.json();
-    const { channel = 'direct', source = 'direct' } = body;
+    const body = await req.json().catch(() => ({}));
+    const { channel = 'direct', source = 'direct' } = body || {};
 
     const pRef = adminDb.collection('salesPages').doc(id);
     

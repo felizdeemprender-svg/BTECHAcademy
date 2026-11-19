@@ -3,6 +3,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/dashboard-layout';
+import { isCompanyTutorProfile } from '@/domain/company';
+import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
 import { useAuth } from '@/components/auth-context';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { 
@@ -187,6 +189,17 @@ const ChallengeTable = ({ list, setSelectedGroup, handleDeleteGroup }: { list: a
 
 export default function MentorChallengesPage() {
   const { profile } = useAuth();
+
+  if (isCompanyTutorProfile(profile) && !profile?.mentorPermissions?.includes('mentor_challenges')) {
+    return (
+      <DashboardLayout>
+        <CorporateRestrictionNotice
+          feature="Desafíos de Mentoría"
+          description="Tu empresa no ha activado la potestad de creación o estructuración de programas y desafíos para tu cuenta."
+        />
+      </DashboardLayout>
+    );
+  }
   const db = useFirestore();
   const { toast } = useToast();
 
@@ -365,16 +378,20 @@ export default function MentorChallengesPage() {
 
     if (assignmentMode === 'course' && filterCourseId) {
       // Base: enrollments for this course
-      list = courseEnrollments.map(e => {
-        const user = allStudentsData.find(u => u.id === e.studentId);
-        return {
-          id: e.studentId,
-          displayName: user?.displayName || e.studentName || 'Alumno',
-          email: user?.email || e.inviteEmail || '',
-          enrollment: e,
-          user: user
-        };
-      });
+      list = courseEnrollments
+        .map(e => {
+          const user = allStudentsData.find(u => u.id === e.studentId);
+          const fallbackInviteId = (e.inviteEmail || '').toLowerCase().trim().replace(/[^a-zA-Z0-9]/g, '_');
+          const resolvedId = (e.studentId || '').trim() || fallbackInviteId || e.id;
+          return {
+            id: resolvedId,
+            displayName: user?.displayName || e.studentName || 'Alumno',
+            email: user?.email || e.inviteEmail || '',
+            enrollment: e,
+            user: user
+          };
+        })
+        .filter(item => !!item.id);
     } else if (assignmentMode === 'global') {
       // Base: all global students
       list = allStudentsData.map(u => ({
@@ -478,8 +495,9 @@ export default function MentorChallengesPage() {
       const batch = writeBatch(db);
       
       for (const studentId of selectedStudentIds) {
+        if (!studentId?.trim()) continue;
         const student = allStudentsData.find(s => s.id === studentId);
-        const taskRef = doc(collection(db, 'users', studentId, 'individualTasks'));
+        const taskRef = doc(collection(db, 'users', studentId.trim(), 'individualTasks'));
         
         const finalTask = {
           id: taskRef.id,
@@ -558,7 +576,8 @@ export default function MentorChallengesPage() {
       let count = 0;
       
       for (const task of allTasks) {
-        const taskRef = doc(db, 'users', task.studentId, 'individualTasks', task.id);
+        if (!task.studentId?.trim() || !task.id) continue;
+        const taskRef = doc(db, 'users', task.studentId.trim(), 'individualTasks', task.id);
         batch.delete(taskRef);
         count++;
         if (count >= 450) break; 
@@ -786,15 +805,15 @@ export default function MentorChallengesPage() {
 
         {/* Dialog: Create Global Challenge */}
         <Dialog open={isCreateOpen} onOpenChange={(open) => { setIsCreateOpen(open); if(!open) resetForm(); }}>
-          <DialogContent className="mw-4xl h-[90vh] flex flex-col">
-            <div className="relative shrink-0 px-8 pt-8">
+          <DialogContent className="mw-4xl h-[90vh] p-0 overflow-hidden flex flex-col">
+            <div className="relative shrink-0 px-6 md:px-8 pt-6 md:pt-8">
               <Target className="absolute -right-4 -top-4 h-32 w-32 opacity-10" />
               <DialogTitle className="text-2xl font-bold flex items-center gap-3"><Target className="h-6 w-6 text-accent" /> Asignar Desafío Global</DialogTitle>
               <DialogDescription className="text-muted-foreground mt-1">Crea una consigna y selecciona a los destinatarios por curso o perfil.</DialogDescription>
             </div>
 
-            <div className="flex-1 overflow-hidden flex flex-col">
-              <ScrollArea className="flex-1 px-8">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              <ScrollArea className="flex-1 h-full px-6 md:px-8">
                 <div className="space-y-10 pb-8">
                   {/* Step 1: Consigna */}
                   <section className="space-y-6">
@@ -1000,17 +1019,17 @@ export default function MentorChallengesPage() {
               </ScrollArea>
             </div>
 
-            <DialogFooter className="p-8 bg-muted border-t shrink-0">
-              <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
+            <DialogFooter className="p-6 bg-muted border-t shrink-0">
+              <div className="w-full flex flex-col sm:flex-row flex-wrap justify-between items-center gap-4">
                 <div className="text-sm font-medium text-muted-foreground">
                   <span className="font-bold text-primary">{selectedStudentIds.length}</span> alumnos seleccionados para envío.
                 </div>
-                <div className="flex gap-3 w-full md:w-auto">
-                  <Button variant="ghost" onClick={() => setIsCreateOpen(false)} className="rounded-xl font-bold h-12 px-8">Cancelar</Button>
+                <div className="flex flex-wrap gap-3 w-full sm:w-auto justify-end">
+                  <Button variant="ghost" onClick={() => setIsCreateOpen(false)} className="rounded-xl font-bold h-11 px-6">Cancelar</Button>
                   <Button 
                     onClick={handleCreateChallenges} 
                     disabled={loading || selectedStudentIds.length === 0 || !taskData.title}
-                    className="flex-1 md:flex-none h-12 px-10 rounded-xl font-bold bg-primary gap-2"
+                    className="flex-1 sm:flex-none h-11 px-6 rounded-xl font-bold bg-primary gap-2"
                   >
                     {loading ? <Loader2 className="animate-spin" /> : <Send className="h-4 w-4" />} Asignar Desafío Masivo
                   </Button>

@@ -5,6 +5,7 @@
  * futuro normaliza esos alias a las claves canónicas de `AiContent`.
  */
 import { z } from 'zod';
+import { UnifiedPricingSchema } from '../commerce/pricing-model';
 
 export const SalesPageTypeSchema = z.enum(['campaign_pack', 'landing_only', 'landing_page', 'funnel', 'campaign_videos']);
 export type SalesPageType = z.infer<typeof SalesPageTypeSchema>;
@@ -32,6 +33,7 @@ export const SalesPageSchema = z.object({
   mentorId: z.string().min(1, 'mentorId vacío'),
   title: z.string().min(1, 'título vacío'),
   courseId: z.string().nullish(),
+  companyId: z.string().nullish(),
   productId: z.string().nullish(),
   productType: z.string().nullish(),
   type: SalesPageTypeSchema.default('campaign_pack'),
@@ -40,13 +42,17 @@ export const SalesPageSchema = z.object({
   templateCollectionId: z.string().nullish(),
   aiContent: AiContentSchema.default({ landings: [], socials: [], emails: [], ads: [] }),
   content: z.unknown().optional(), // Used by V2 atomic renderer
+  styleId: z.string().optional(),
   exportUrls: z.record(z.string()).optional(),
   slug: z.string().optional(),
   branding: SalesPageBrandingSchema.optional(),
   price: z.number().min(0).optional(),
+  pricing: UnifiedPricingSchema.optional(),
   campaignStatus: z.string().optional(),
   landingType: z.string().optional(),
   isActive: z.boolean().optional(),
+  status: z.string().optional(),
+  fallbackLandingId: z.string().nullable().optional(),
   engineMeta: z.unknown().optional(),
   referidoId: z.string().nullable().optional(),
   referidoName: z.string().nullable().optional(),

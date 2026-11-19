@@ -24,6 +24,8 @@ export interface GenerateAdsContentInput {
   targetAudience?: string;
   mentorName?: string;
   mission?: 'venta' | 'autoridad' | 'lanzamiento' | 'leads';
+  uid?: string;
+  role?: string;
 }
 
 const missionTones: Record<string, string> = {
@@ -48,9 +50,14 @@ export async function generateAdsContent(input: GenerateAdsContentInput): Promis
     targetAudience,
     mentorName,
     mission = 'venta',
+    uid,
+    role,
   } = input;
 
-  console.log(`[AI:Flow] Generando ads individual: ${variant?.marketingName} | Tipo: ${variant?.type || 'search'}`);
+  const effectiveUid = uid || variant?.mentorId || variant?.ownerUid || '';
+  const effectiveRole = role || 'mentor';
+
+  console.log(`[AI:Flow] Generando ads individual: ${variant?.marketingName} | Tipo: ${variant?.type || 'search'} | Mentor UID: ${effectiveUid}`);
 
   validateApiKey();
 
@@ -88,8 +95,9 @@ REGLAS FINALES:
 - Keywords: específicas del nicho del curso, listas para segmentación.
 - No inventar datos falsos.`,
     output: { schema: AdsContentSchema },
-    config: { temperature: 0.7 }
-  });
+    config: { temperature: 0.7 },
+    context: { uid: effectiveUid, role: effectiveRole }
+  } as any, 'generate_ads_content', effectiveUid);
 
   if (!output) {
     throw new Error('La IA no devolvió un set de anuncios válido.');

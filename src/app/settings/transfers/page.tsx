@@ -32,6 +32,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { isCompanyTutorProfile } from '@/domain/company';
+import { CorporateRestrictionNotice } from '@/components/company/corporate-restriction-notice';
 
 type TransferStatus = 'pending' | 'approved' | 'rejected';
 
@@ -127,7 +129,7 @@ export default function TransfersPage() {
       }
 
       toast({
-        title: action === 'approve' ? '✅ Inscripción activada' : '❌ Transferencia rechazada',
+        title: action === 'approve' ? 'Inscripción activada' : 'Transferencia rechazada',
         description:
           action === 'approve'
             ? `${order.studentName} ya tiene acceso a ${order.pageTitle}.`
@@ -147,6 +149,17 @@ export default function TransfersPage() {
   const openConfirm = (order: any, action: 'approve' | 'reject') => {
     setConfirmDialog({ open: true, order, action });
   };
+
+  if (isCompanyTutorProfile(profile)) {
+    return (
+      <DashboardLayout>
+        <CorporateRestrictionNotice
+          feature="Transferencias"
+          description="Las transferencias bancarias y liquidaciones de pagos son gestionadas directamente por la empresa titular a la que estás vinculado."
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

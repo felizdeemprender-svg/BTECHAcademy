@@ -26,6 +26,8 @@ export interface MentorDirectoryRow {
   readonly subscription: Record<string, unknown> | null;
   readonly createdAt: Date;
   readonly lastLogin: Date | null;
+  readonly homeCountry?: string;
+  readonly homeCurrency?: string;
 }
 
 /** Fila cruda de `salesPages` para el reporte. */
@@ -82,6 +84,8 @@ export interface TutorBillingRow {
   readonly totalSalesRevenue: number;
   readonly billedAmount: number;
   readonly planName: string;
+  readonly homeCountry?: string;
+  readonly homeCurrency?: string;
 }
 
 /** Mismo shape que la interfaz legacy `BillingReport` del route. */
@@ -222,6 +226,8 @@ export async function buildBillingReport(
       totalSalesRevenue: salesData.revenue,
       billedAmount,
       planName: ((sub.planName as string | undefined) || (sub.name as string | undefined) || 'Sin plan'),
+      homeCountry: mentor.homeCountry || 'AR',
+      homeCurrency: mentor.homeCurrency || 'ARS',
     });
   }
 

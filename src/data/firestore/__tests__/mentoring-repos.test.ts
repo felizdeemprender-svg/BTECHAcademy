@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { FirestoreGateway } from '../gateway';
+import { stripUndefined, type FirestoreGateway } from '../gateway';
 import type { RawDoc } from '../mappers';
 import { FirestoreMentoringProgramRepository } from '../program-repo';
 import { FirestoreSessionRepository } from '../session-repo';
@@ -162,5 +162,28 @@ describe('program/session/task repos', () => {
     const sessions = new FirestoreSessionRepository(gateway);
     expect(await sessions.removeAllByProgram('f1')).toBe(2);
     expect(await sessions.listByProgram('f1')).toHaveLength(0);
+  });
+
+  it('stripUndefined elimina propiedades undefined y preserva centinelas/fechas', () => {
+    const sentinel = Object.create({ _isSentinel: true });
+    const now = new Date();
+    const cleaned = stripUndefined({
+      id: 'f1',
+      planGuideUrl: undefined,
+      masterFileUrl: null,
+      nested: { keep: 1, drop: undefined },
+      arr: [1, undefined, { a: 'x', b: undefined }],
+      createdAt: sentinel,
+      date: now,
+    });
+    expect(cleaned).toEqual({
+      id: 'f1',
+      masterFileUrl: null,
+      nested: { keep: 1 },
+      arr: [1, null, { a: 'x' }],
+      createdAt: sentinel,
+      date: now,
+    });
+    expect('planGuideUrl' in cleaned).toBe(false);
   });
 });
