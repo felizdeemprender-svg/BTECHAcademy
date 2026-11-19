@@ -360,10 +360,11 @@ describe('listTutorCatalog', () => {
     const r = await listTutorCatalog(repo, { tutorId: 'm1' });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    // m1: spFree(cFree), spExpired(cExpired), spFuture(cFuture) — spReferral(cReferral) queda excluida por embajador.
-    // Nota: esta ruta NO filtra ventana promocional (igual que el legacy).
-    expect(r.value.total).toBe(3);
+    // m1: spFree(cFree) activa y vigente. spExpired, spFuture y spReferral quedan excluidas por vigencia o embajador.
+    expect(r.value.total).toBe(1);
     expect(r.value.courses.find(c => c.salesPageId === 'spReferral')).toBeUndefined();
+    expect(r.value.courses.find(c => c.salesPageId === 'spExpired')).toBeUndefined();
+    expect(r.value.courses.find(c => c.salesPageId === 'spFuture')).toBeUndefined();
     expect(r.value.courses[0].id).toBe('cFree');
     expect(r.value.courses[0]).toMatchObject({
       salesPageId: 'spFree',
