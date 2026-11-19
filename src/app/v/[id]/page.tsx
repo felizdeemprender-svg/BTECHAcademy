@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import { headers } from 'next/headers';
 import { GetPublicSalesPageUseCase } from '@/domain/sales-pages/use-cases/get-public-sales-page-use-case';
 import { getEffectiveLandingStatus } from '@/domain/sales-pages/landing-lifecycle';
@@ -13,6 +14,15 @@ import { PublicSalesPageView } from './components/public-sales-page-view';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Deduplicación en el ciclo de vida del request HTTP:
+ * Evita consultar Firestore dos veces (una en generateMetadata y otra en el componente Page).
+ */
+export const getCachedPublicSalesPage = cache(async (id: string, isPreview: boolean) => {
+  const useCase = new GetPublicSalesPageUseCase();
+  return useCase.execute(id, isPreview);
+});
+
 export async function generateMetadata({
   params,
 }: {
@@ -20,8 +30,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   try {
-    const useCase = new GetPublicSalesPageUseCase();
-    const result = await useCase.execute(id, false);
+    const result = await getCachedPublicSalesPage(id, false);
     if (!result || !result.page) {
       return { title: 'Página no disponible | Fastoria' };
     }
@@ -82,9 +91,8 @@ export default async function PublicSalesPage({
   );
   const isInternalDomainCall = isInternalReferer;
 
-  // 1. Obtener la página de ventas y entidades relacionadas en el servidor
-  const useCase = new GetPublicSalesPageUseCase();
-  const result = await useCase.execute(id, isPreview);
+  // 1. Obtener la página de ventas y entidades relacionadas en el servidor (deduplicado con generateMetadata)
+  const result = await getCachedPublicSalesPage(id, isPreview);
 
   if (!result || !result.page) {
     return (

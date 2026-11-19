@@ -149,7 +149,14 @@ export async function handleListTutorCatalog(
   const repo = new FirestoreMarketplaceRepository(gateway);
   const result = await listTutorCatalog(repo, { tutorId });
   if (result.ok) {
-    return NextResponse.json({ courses: result.value.courses, total: result.value.total });
+    return NextResponse.json(
+      { courses: result.value.courses, total: result.value.total },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      },
+    );
   }
   return NextResponse.json(
     { error: 'Failed to fetch tutor landings', details: result.error.message },
@@ -176,7 +183,14 @@ export async function handleGetMarketplace(
   const repo = new FirestoreMarketplaceRepository(gateway);
   const result = await getMarketplace(repo, { ...params, now });
   if (result.ok) {
-    return NextResponse.json({ courses: result.value.courses, pagination: result.value.pagination });
+    return NextResponse.json(
+      { courses: result.value.courses, pagination: result.value.pagination },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      },
+    );
   }
   return NextResponse.json({ error: 'Failed to fetch courses' }, { status: 500 });
 }
@@ -189,12 +203,19 @@ export async function handleGetMarketplaceCatalog(
   const repo = new FirestoreMarketplaceRepository(gateway);
   const result = await getMarketplaceCatalog(repo, { now });
   if (result.ok) {
-    return NextResponse.json({
-      marketplace: result.value.marketplace,
-      categories: result.value.categories,
-      levels: result.value.levels,
-      timestamp: result.value.timestamp,
-    });
+    return NextResponse.json(
+      {
+        marketplace: result.value.marketplace,
+        categories: result.value.categories,
+        levels: result.value.levels,
+        timestamp: result.value.timestamp,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      },
+    );
   }
   return NextResponse.json({ error: 'Error al cargar el catálogo' }, { status: 500 });
 }

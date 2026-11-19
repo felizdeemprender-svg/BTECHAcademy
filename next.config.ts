@@ -5,6 +5,13 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'framer-motion',
+      'recharts',
+      '@radix-ui/react-icons',
+    ],
   },
   output: 'standalone',
   typescript: {

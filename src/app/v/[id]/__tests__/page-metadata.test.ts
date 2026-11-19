@@ -1,7 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateMetadata } from '../page';
 
 const mockExecute = vi.fn();
+
+vi.mock('react', async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return {
+    ...actual,
+    cache: (fn: any) => {
+      const cacheMap = new Map();
+      return (...args: any[]) => {
+        const key = JSON.stringify(args);
+        if (cacheMap.has(key)) return cacheMap.get(key);
+        const res = fn(...args);
+        cacheMap.set(key, res);
+        return res;
+      };
+    },
+  };
+});
+
+import { generateMetadata, getCachedPublicSalesPage } from '../page';
 
 vi.mock('@/domain/sales-pages/use-cases/get-public-sales-page-use-case', () => {
   return {
@@ -90,5 +108,18 @@ describe('Landing Page generateMetadata', () => {
     const meta = await generateMetadata({ params: Promise.resolve({ id: 'error-id' }) });
 
     expect(meta.title).toBe('Fastoria');
+  });
+
+  it('debe deduplicar llamadas identicas mediante React cache', async () => {
+    mockExecute.mockResolvedValue({
+      page: { id: 'cache-test', title: 'Test Cache' },
+      course: null,
+    });
+
+    const res1 = await getCachedPublicSalesPage('cache-test', false);
+    const res2 = await getCachedPublicSalesPage('cache-test', false);
+
+    expect(res1).toEqual(res2);
+    expect(mockExecute).toHaveBeenCalledTimes(1);
   });
 });
