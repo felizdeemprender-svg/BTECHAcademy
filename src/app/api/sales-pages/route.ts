@@ -90,6 +90,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, pageId, updatedTitle: data.title });
   } catch (error: any) {
+    if (error.code === 'LIMIT_PENDING_REACHED') {
+      return NextResponse.json({
+        error: error.message,
+        code: error.code,
+        pendingPages: error.pendingPages || [],
+      }, { status: 400 });
+    }
     return NextResponse.json({ error: error.message }, { status: error.message.includes('Unauthorized') ? 403 : 500 });
   }
 }
@@ -116,6 +123,13 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ success: true, pageId, updatedTitle: data.title });
   } catch (error: any) {
+    if (error.code === 'LIMIT_PENDING_REACHED') {
+      return NextResponse.json({
+        error: error.message,
+        code: error.code,
+        pendingPages: error.pendingPages || [],
+      }, { status: 400 });
+    }
     return NextResponse.json({ error: error.message }, { status: error.message.includes('Unauthorized') ? 403 : 500 });
   }
 }

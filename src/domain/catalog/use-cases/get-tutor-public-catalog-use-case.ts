@@ -42,8 +42,22 @@ export class GetTutorPublicCatalogUseCase {
 
     // Para evitar consultas N+1 repetidas de cursos, cacheamos
     const courseCache = new Map<string, Record<string, unknown> | null>();
+    const seenCourseIds = new Set<string>();
 
-    for (const doc of docs) {
+    // Ordenar ofertas para dar precedencia a promociones vigentes sobre generales, y a más recientes sobre antiguas
+    const sortedDocs = [...docs].sort((a, b) => {
+      const dataA = (a.data() || {}) as any;
+      const dataB = (b.data() || {}) as any;
+      const isPromoA = dataA.landingType === 'promocion';
+      const isPromoB = dataB.landingType === 'promocion';
+      if (isPromoA && !isPromoB) return -1;
+      if (!isPromoA && isPromoB) return 1;
+      const tA = dataA.createdAt?.seconds ? dataA.createdAt.seconds * 1000 : new Date(dataA.createdAt || 0).getTime();
+      const tB = dataB.createdAt?.seconds ? dataB.createdAt.seconds * 1000 : new Date(dataB.createdAt || 0).getTime();
+      return tB - tA;
+    });
+
+    for (const doc of sortedDocs) {
       const data = doc.data() || {};
 
       // FILTRO 1: No mostrar ofertas de embajadores / afiliados
@@ -82,6 +96,15 @@ export class GetTutorPublicCatalogUseCase {
         }
       }
 
+      // FILTRO 5: Unicidad de oferta por curso/producto (exactamente 1 landing activa por curso)
+      const targetCourseId = (data.courseId as string) || (data.productId as string) || null;
+      if (targetCourseId) {
+        if (seenCourseIds.has(targetCourseId)) {
+          continue;
+        }
+        seenCourseIds.add(targetCourseId);
+      }
+
       // 3. Resolver tipo de oferta (curso, programa, mentoria)
       const resolvedType = this.resolveOfferType(data);
 
@@ -101,6 +124,10 @@ export class GetTutorPublicCatalogUseCase {
           try {
             const courseDoc = await this.gateway.getDoc('courses', data.courseId);
             courseData = courseDoc && courseDoc.exists ? courseDoc.data() || null : null;
+            if (!courseData) {
+              const followupDoc = await this.gateway.getDoc('followups', data.courseId);
+              courseData = followupDoc && followupDoc.exists ? followupDoc.data() || null : null;
+            }
             courseCache.set(data.courseId, courseData);
           } catch {
             courseCache.set(data.courseId, null);

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { GetPublicSalesPageUseCase } from '@/domain/sales-pages/use-cases/get-public-sales-page-use-case';
+import { getEffectiveLandingStatus } from '@/domain/sales-pages/landing-lifecycle';
 import { getCurrencyRates } from '@/lib/currency/rates-service';
 import { resolveGateway } from '@/lib/api/gateway';
 import { FirestoreTutorRepository } from '@/data/firestore/tutor-repo';
@@ -62,11 +64,51 @@ export default async function PublicSalesPage({
   const isPreview = sParams.preview === 'true';
   const variantIdx = parseInt((typeof sParams.v === 'string' ? sParams.v : '0') || '0');
 
+  const headersList = await headers();
+  const referer = headersList.get('referer') || '';
+  const host = headersList.get('host') || '';
+
+  // Determinar si la invocación proviene estrictamente de una navegación interna desde nuestro dominio
+  // Si se pega la URL directamente en la barra de direcciones o viene de un enlace externo, el referer es vacío o ajeno.
+  const isInternalReferer = Boolean(
+    referer && (
+      (host && referer.includes(host)) ||
+      referer.includes('localhost:') ||
+      referer.includes('127.0.0.1') ||
+      referer.includes('fastoria.com.ar') ||
+      referer.includes('bilon.pagarqr.ar') ||
+      referer.includes('feliz-de-emprender')
+    )
+  );
+  const isInternalDomainCall = isInternalReferer;
+
   // 1. Obtener la página de ventas y entidades relacionadas en el servidor
   const useCase = new GetPublicSalesPageUseCase();
   const result = await useCase.execute(id, isPreview);
 
-  if (!result || !result.page || result.page.isActive === false) {
+  if (!result || !result.page) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="font-bold text-muted-foreground uppercase tracking-widest">Página no disponible.</p>
+      </div>
+    );
+  }
+
+  const effectiveStatus = getEffectiveLandingStatus(result.page);
+  const isPending = effectiveStatus === 'pendiente' || result.page.isActive === false;
+  const isArchived = effectiveStatus === 'archivada';
+
+  // Si está archivada, no está disponible
+  if (isArchived) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="font-bold text-muted-foreground uppercase tracking-widest">Página no disponible.</p>
+      </div>
+    );
+  }
+
+  // Si está pendiente: SOLO se permite previsualizar si es invocada desde el dominio de la plataforma
+  if (isPending && !isInternalDomainCall) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="font-bold text-muted-foreground uppercase tracking-widest">Página no disponible.</p>
@@ -111,8 +153,10 @@ export default async function PublicSalesPage({
       }
     : null;
 
-  let paymentMethods = paymentResult && paymentResult.ok ? paymentResult.value.methods : [];
+  // Si la landing se encuentra en estado pendiente, NO se habilitan pasarelas de pago
+  let paymentMethods = (paymentResult && paymentResult.ok && !isPending) ? paymentResult.value.methods : [];
   if (
+    !isPending &&
     result.page.allowedPaymentMethods &&
     Array.isArray(result.page.allowedPaymentMethods) &&
     result.page.allowedPaymentMethods.length > 0
@@ -156,6 +200,7 @@ export default async function PublicSalesPage({
         initialRates={rates}
         variantIdx={variantIdx}
         isPreview={isPreview}
+        isPendingPreview={isPending}
       />
     </>
   );

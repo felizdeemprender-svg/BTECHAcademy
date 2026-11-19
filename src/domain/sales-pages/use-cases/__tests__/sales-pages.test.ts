@@ -38,7 +38,12 @@ describe('Sales Pages Use Cases', () => {
         data: { mentorId: 'mentor-123', title: 'Mi Promo' }
       });
 
-      expect(mockRepo.create).toHaveBeenCalledWith('page-1', { mentorId: 'mentor-123', title: 'Mi Promo' });
+      expect(mockRepo.create).toHaveBeenCalledWith('page-1', expect.objectContaining({
+        mentorId: 'mentor-123',
+        title: 'Mi Promo',
+        status: 'pendiente',
+        isActive: false
+      }));
     });
 
     it('debe rechazar si un mentor intenta crear una página a nombre de otro', async () => {
@@ -81,7 +86,37 @@ describe('Sales Pages Use Cases', () => {
         data: { mentorId: 'mentor-456' }
       });
 
-      expect(mockRepo.create).toHaveBeenCalledWith('page-admin', { mentorId: 'mentor-456' });
+      expect(mockRepo.create).toHaveBeenCalledWith('page-admin', expect.objectContaining({
+        mentorId: 'mentor-456',
+        status: 'pendiente',
+        isActive: false
+      }));
+    });
+
+    it('NUNCA debe auto-activar una landing al crearla, aunque se envíe isActive: true o status: activa', async () => {
+      mockRepo.getById.mockResolvedValue(null);
+      mockRepo.create.mockResolvedValue(undefined);
+
+      await createUseCase.execute({
+        uid: 'mentor-123',
+        isAdmin: false,
+        isMarketing: false,
+        pageId: 'page-new',
+        data: {
+          mentorId: 'mentor-123',
+          title: 'Promo Directa',
+          courseId: 'c1',
+          landingType: 'promocion',
+          isActive: true,
+          status: 'activa'
+        }
+      });
+
+      expect(mockRepo.create).toHaveBeenCalledWith('page-new', expect.objectContaining({
+        mentorId: 'mentor-123',
+        status: 'pendiente',
+        isActive: false
+      }));
     });
   });
 
