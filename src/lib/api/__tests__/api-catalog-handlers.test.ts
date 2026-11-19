@@ -254,6 +254,7 @@ describe('handleListTutorCatalog (público, sin auth)', () => {
     const gateway = new FakeGateway(store());
     const res = await handleListTutorCatalog(gateway, 'm1');
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=300');
     const body = (await res.json()) as { courses: { id: string }[]; total: number };
     expect(body.total).toBe(1);
     expect(body.courses[0].id).toBe('c1');
@@ -269,6 +270,7 @@ describe('handleGetMarketplace (público, sin auth)', () => {
       category: 'Todos', level: 'Todos', price: 'all', sortBy: 'relevance', search: '', page: 1, limit: 12,
     }, NOW);
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=300');
     const body = (await res.json()) as {
       courses: { id: string; title: string }[];
       pagination: { page: number; limit: number; total: number; hasMore: boolean };
@@ -298,6 +300,7 @@ describe('handleGetMarketplaceCatalog (público, sin auth)', () => {
     const gateway = new FakeGateway(store());
     const res = await handleGetMarketplaceCatalog(gateway, NOW);
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=300');
     const body = (await res.json()) as {
       marketplace: unknown[]; categories: unknown[]; levels: unknown[]; timestamp: string;
     };

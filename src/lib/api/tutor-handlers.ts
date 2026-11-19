@@ -64,19 +64,26 @@ export async function handleGetTutorStatus(
     }
 
     const { tutorId, tutor, coursesCount } = result.value;
-    return NextResponse.json({
-      available: true,
-      tutor: await buildTutorResponse(
-        tutorId,
-        tutor.data,
-        coursesCount,
-        async (styleId) => {
-          const style = await tutors.findLandingStyleById(styleId);
-          return style ? style.data : null;
+    return NextResponse.json(
+      {
+        available: true,
+        tutor: await buildTutorResponse(
+          tutorId,
+          tutor.data,
+          coursesCount,
+          async (styleId) => {
+            const style = await tutors.findLandingStyleById(styleId);
+            return style ? style.data : null;
+          },
+          gateway,
+        ),
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
         },
-        gateway,
-      ),
-    });
+      },
+    );
   } catch (error: unknown) {
     if (!adminPath) {
       return NextResponse.json(
@@ -117,7 +124,14 @@ export async function handleGetPaymentOptions(
       if (details) return NextResponse.json(details.body, { status: details.status });
       return NextResponse.json({ error: 'Error interno', methods: [] }, { status: 500 });
     }
-    return NextResponse.json({ methods: result.value.methods });
+    return NextResponse.json(
+      { methods: result.value.methods },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      },
+    );
   } catch (error: unknown) {
     console.error('[PaymentOptions] Error:', error);
     return NextResponse.json({ error: 'Error interno', methods: [] }, { status: 500 });
@@ -132,13 +146,20 @@ export async function handleListFeaturedTutors(gateway: FirestoreGateway): Promi
     if (!result.ok) {
       return NextResponse.json({ error: 'Failed to fetch featured subscriptions' }, { status: 500 });
     }
-    return NextResponse.json({
-      subscriptions: result.value.subscriptions.map((s) => ({
-        id: s.id,
-        tutorName: s.tutorName,
-        ...s.subscription,
-      })),
-    });
+    return NextResponse.json(
+      {
+        subscriptions: result.value.subscriptions.map((s) => ({
+          id: s.id,
+          tutorName: s.tutorName,
+          ...s.subscription,
+        })),
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      },
+    );
   } catch (error: unknown) {
     console.error('Error fetching featured tutors:', error);
     return NextResponse.json({ error: 'Failed to fetch featured subscriptions' }, { status: 500 });
@@ -155,16 +176,23 @@ export async function handleGetTutorById(gateway: FirestoreGateway, id: string):
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tutor: any = result.value.tutor.data;
-    return NextResponse.json({
-      displayName: tutor.displayName || tutor.email?.split('@')[0] || 'Mentor',
-      photoURL: tutor.photoURL || '',
-      username: tutor.username || '',
-      profile: {
-        bio: tutor.profile?.bio || '',
-        socials: tutor.profile?.socials || {},
+    return NextResponse.json(
+      {
+        displayName: tutor.displayName || tutor.email?.split('@')[0] || 'Mentor',
+        photoURL: tutor.photoURL || '',
+        username: tutor.username || '',
+        profile: {
+          bio: tutor.profile?.bio || '',
+          socials: tutor.profile?.socials || {},
+        },
+        branding: tutor.profile?.branding || {},
       },
-      branding: tutor.profile?.branding || {},
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        },
+      },
+    );
   } catch (error: unknown) {
     console.error('[API Tutor By ID] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -155,6 +155,7 @@ describe('handleGetTutorStatus', () => {
   it('200 con envelope legacy completo', async () => {
     const res = await handleGetTutorStatus(new FakeGateway(baseStore()), 'ana');
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=300');
     const body = (await res.json()) as Record<string, unknown>;
     expect(body.available).toBe(true);
     const tutor = body.tutor as Record<string, unknown>;
@@ -226,6 +227,7 @@ describe('handleGetPaymentOptions', () => {
   it('200 con métodos sanitizados', async () => {
     const res = await handleGetPaymentOptions(new FakeGateway(baseStore()), 'tutor-1');
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=300');
     expect(await res.json()).toEqual({
       methods: [{ id: 'm1', name: 'MP', type: 'mercadopago', config: { publicKey: 'pk' } }],
     });
@@ -245,6 +247,7 @@ describe('handleListFeaturedTutors', () => {
   it('200 con spread de subscription', async () => {
     const res = await handleListFeaturedTutors(new FakeGateway(baseStore()));
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=300');
     expect(await res.json()).toEqual({
       subscriptions: [{ id: 'tutor-1', tutorName: 'Ana', status: 'active', plan: 'pro', isPublic: true }],
     });
@@ -261,6 +264,7 @@ describe('handleGetTutorById', () => {
   it('200 con subset público', async () => {
     const res = await handleGetTutorById(new FakeGateway(baseStore()), 'tutor-1');
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=300');
     const body = (await res.json()) as Record<string, unknown>;
     expect(body.displayName).toBe('Ana');
     expect(body.username).toBe('ana');
