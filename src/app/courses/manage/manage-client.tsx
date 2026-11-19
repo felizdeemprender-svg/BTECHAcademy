@@ -69,6 +69,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { differenceInDays, format } from 'date-fns';
 import { SmartFilterBar } from '@/components/ui/smart-filter-bar';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 
 function EnrollmentRow({ enrollment, totalModules, onApprove, onToggleStatus, onDelete }: { 
   enrollment: any, 
@@ -166,6 +167,8 @@ export default function ManageCoursesClient() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tutorFilter, setTutorFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
   const [tutorsMap, setTutorsMap] = useState<Record<string, { id: string; name: string; email?: string }>>({});
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -242,13 +245,65 @@ export default function ManageCoursesClient() {
   // Consulta a Firestore restaurada para mostrar cursos
   const { data: courses, isLoading } = useCollection(coursesQuery);
 
+  const filteredCourses = useMemo(() => {
+    if (!courses) return [];
+    return (courses as any[]).filter((c: any) => {
+      // 1. Búsqueda por término (título o etiquetas)
+      const term = searchTerm.trim().toLowerCase();
+      const matchesSearch = !term ||
+        c.title?.toLowerCase().includes(term) ||
+        (Array.isArray(c.tags) && c.tags.some((t: string) => t.toLowerCase().includes(term)));
+
+      // 2. Filtro por estado del curso
+      let matchesStatus = true;
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'published') {
+          matchesStatus = c.status === 'published' || c.status === 'approved';
+        } else if (statusFilter === 'pending') {
+          matchesStatus = c.status === 'pending';
+        } else if (statusFilter === 'pending_terms') {
+          matchesStatus = c.status === 'pending_terms';
+        } else if (statusFilter === 'draft') {
+          matchesStatus = c.status === 'draft' || c.status === 'creating' || !c.status;
+        } else if (statusFilter === 'rejected') {
+          matchesStatus = c.status === 'rejected';
+        }
+      }
+
+      // 3. Filtro por tutor (solo aplica si es administrador y seleccionó un tutor)
+      let matchesTutor = true;
+      if (isAdmin && tutorFilter !== 'all') {
+        matchesTutor = c.mentorId === tutorFilter;
+      }
+
+      return matchesSearch && matchesStatus && matchesTutor;
+    });
+  }, [courses, searchTerm, statusFilter, tutorFilter, isAdmin]);
+
+  // Reseteo de página al cambiar filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, tutorFilter]);
+
+  const totalPages = Math.ceil(filteredCourses.length / pageSize) || 1;
+  const paginatedCourses = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredCourses.slice(start, start + pageSize);
+  }, [filteredCourses, currentPage, pageSize]);
+
   const [courseStatsMap, setCourseStatsMap] = useState<Record<string, { modules: number; enrolled: number; completed: number }>>({});
 
+  // Carga optimizada de estadísticas: solo consulta los cursos visibles en la página actual
   useEffect(() => {
-    if (!db || !courses) return;
+    if (!db || !paginatedCourses || paginatedCourses.length === 0) return;
     let active = true;
-    const ids = (courses as any[]).map((c: any) => c.id);
-    Promise.all(ids.map(async (id: string) => {
+    const missingIds = (paginatedCourses as any[])
+      .map((c: any) => c.id)
+      .filter((id: string) => !courseStatsMap[id]);
+
+    if (missingIds.length === 0) return;
+
+    Promise.all(missingIds.map(async (id: string) => {
       try {
         const [modSnap, enrollSnap] = await Promise.all([
           getDocs(collection(db, 'courses', id, 'modules')),
@@ -273,10 +328,12 @@ export default function ManageCoursesClient() {
         return [id, { modules: 0, enrolled: 0, completed: 0 }] as [string, { modules: number; enrolled: number; completed: number }];
       }
     })).then(entries => {
-      if (active) setCourseStatsMap(Object.fromEntries(entries));
+      if (active && entries.length > 0) {
+        setCourseStatsMap(prev => ({ ...prev, ...Object.fromEntries(entries) }));
+      }
     });
     return () => { active = false; };
-  }, [db, courses]);
+  }, [db, paginatedCourses, courseStatsMap]);
 
   // Cargar información de tutores para el filtro de administradores
   useEffect(() => {
@@ -337,41 +394,6 @@ export default function ManageCoursesClient() {
     }
   }, [isDeleteDialogOpen, isEnrollmentsDialogOpen, isHistoryDialogOpen, isPublishDialogOpen, isAssociatedDialogOpen, isAiTagDialogOpen, isTermsDialogOpen, clearUILocks]);
 
-  const filteredCourses = useMemo(() => {
-    if (!courses) return [];
-    return (courses as any[]).filter((c: any) => {
-      // 1. Búsqueda por término (título o etiquetas)
-      const term = searchTerm.trim().toLowerCase();
-      const matchesSearch = !term ||
-        c.title?.toLowerCase().includes(term) ||
-        (Array.isArray(c.tags) && c.tags.some((t: string) => t.toLowerCase().includes(term)));
-
-      // 2. Filtro por estado del curso
-      let matchesStatus = true;
-      if (statusFilter !== 'all') {
-        if (statusFilter === 'published') {
-          matchesStatus = c.status === 'published' || c.status === 'approved';
-        } else if (statusFilter === 'pending') {
-          matchesStatus = c.status === 'pending';
-        } else if (statusFilter === 'pending_terms') {
-          matchesStatus = c.status === 'pending_terms';
-        } else if (statusFilter === 'draft') {
-          matchesStatus = c.status === 'draft' || c.status === 'creating' || !c.status;
-        } else if (statusFilter === 'rejected') {
-          matchesStatus = c.status === 'rejected';
-        }
-      }
-
-      // 3. Filtro por tutor (solo aplica si es administrador y seleccionó un tutor)
-      let matchesTutor = true;
-      if (isAdmin && tutorFilter !== 'all') {
-        matchesTutor = c.mentorId === tutorFilter;
-      }
-
-      return matchesSearch && matchesStatus && matchesTutor;
-    });
-  }, [courses, searchTerm, statusFilter, tutorFilter, isAdmin]);
-  
   const canManageCourse = useCallback((course: any) => {
     if (!profile) return false;
     if (isAdmin) return true;
@@ -1208,7 +1230,7 @@ export default function ManageCoursesClient() {
           <CardContent className="p-0">
             <ResponsiveTable
               columns={courseTableColumns}
-              data={filteredCourses || []}
+              data={paginatedCourses}
               keyExtractor={(course: any) => course.id}
               isLoading={isLoading}
               loadingState={<div className="p-20 text-center text-muted-foreground animate-pulse font-medium">Sincronizando...</div>}
@@ -1266,6 +1288,15 @@ export default function ManageCoursesClient() {
                   </div>
                 );
               }}
+            />
+            <DataTablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredCourses.length}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 15, 25, 50]}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
             />
           </CardContent>
         </Card>

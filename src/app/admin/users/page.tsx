@@ -24,6 +24,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
@@ -70,6 +71,8 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [planFilter, setPlanFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
@@ -696,6 +699,17 @@ export default function AdminUsersPage() {
     });
   }, [consolidatedUsers, searchTerm, roleFilter, statusFilter, planFilter]);
 
+  // Reseteo de página ante cambios de filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, statusFilter, planFilter]);
+
+  const totalPages = Math.ceil(filteredUsers.length / pageSize) || 1;
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
+
   return (
     <DashboardLayout>
       <div className="space-y-8 pb-10">
@@ -785,7 +799,7 @@ export default function AdminUsersPage() {
         <Card className="border border-border rounded-2xl overflow-hidden bg-white shadow-sm">
           <CardContent className="p-0">
             <ResponsiveTable
-              data={filteredUsers}
+              data={paginatedUsers}
               keyExtractor={(user) => user.id}
               isLoading={isLoading}
               loadingState={
@@ -1112,6 +1126,15 @@ export default function AdminUsersPage() {
                   </div>
                 );
               }}
+            />
+            <DataTablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredUsers.length}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 20, 50, 100]}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
             />
           </CardContent>
         </Card>

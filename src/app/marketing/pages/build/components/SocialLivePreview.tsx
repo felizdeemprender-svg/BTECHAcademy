@@ -242,7 +242,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
                 src={slide.imageUrl} 
                 alt="Mockup" 
                 className={cn(
-                    "absolute inset-0 w-full h-full object-cover opacity-80 transition-transform duration-[4000ms] ease-linear",
+                    "absolute inset-0 w-full h-full object-cover opacity-80 transition-transform [transition-duration:4000ms] ease-linear",
                     adn?.fx?.cameraMovement === 'zoom_in' ? "scale-125 translate-z-0" : 
                     adn?.fx?.cameraMovement === 'zoom_out' ? "scale-100" : "scale-110",
                     "group-hover/mockup:scale-125"
