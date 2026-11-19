@@ -223,6 +223,9 @@ export async function handleFreeEnrollment(
       return NextResponse.json({ error: 'Página no encontrada' }, { status: 404 });
     }
     const pageData = page.data;
+    if (pageData.status === 'pendiente' || pageData.isActive === false || pageData.status === 'archivada' || pageData.status === 'expirada') {
+      return NextResponse.json({ error: 'La inscripción no está disponible para landings en estado pendiente o inactivas' }, { status: 403 });
+    }
     // Igual que el legacy: `price !== 0` (incluso undefined) rechaza.
     if (pageData.price !== 0) {
       return NextResponse.json({ error: 'Este curso no es gratuito' }, { status: 403 });

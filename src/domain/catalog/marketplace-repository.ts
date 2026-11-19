@@ -30,6 +30,8 @@ export interface MarketplaceRepository {
   getSalesPageById(id: string): Promise<CatalogDoc | null>;
   /** `courses` por ids (límite 30 de Firestore lo aplica el llamante). */
   listCoursesByIds(ids: readonly string[]): Promise<CatalogDoc[]>;
+  /** `followups` (mentorías) por ids. */
+  listFollowupsByIds?(ids: readonly string[]): Promise<CatalogDoc[]>;
   /** `tags` por ids (nombres para el enriquecimiento). */
   listTagsByIds(ids: readonly string[]): Promise<CatalogDoc[]>;
   /** `users` por id (ficha de tutor). */

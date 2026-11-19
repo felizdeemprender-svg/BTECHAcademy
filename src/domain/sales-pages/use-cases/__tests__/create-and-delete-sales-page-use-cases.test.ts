@@ -62,7 +62,12 @@ describe('Create & Delete SalesPage Use Cases', () => {
         data: { mentorId: 'mentor_A', title: 'Mi Landing' },
       });
 
-      expect(mockRepo.create).toHaveBeenCalledWith('page_2', { mentorId: 'mentor_A', title: 'Mi Landing' });
+      expect(mockRepo.create).toHaveBeenCalledWith('page_2', expect.objectContaining({
+        mentorId: 'mentor_A',
+        title: 'Mi Landing',
+        status: 'pendiente',
+        isActive: false,
+      }));
     });
 
     it('debe pasar si un ADMIN crea una página para cualquier mentor', async () => {
@@ -76,7 +81,12 @@ describe('Create & Delete SalesPage Use Cases', () => {
         data: { mentorId: 'mentor_X', title: 'Landing Admin' },
       });
 
-      expect(mockRepo.create).toHaveBeenCalledWith('page_3', { mentorId: 'mentor_X', title: 'Landing Admin' });
+      expect(mockRepo.create).toHaveBeenCalledWith('page_3', expect.objectContaining({
+        mentorId: 'mentor_X',
+        title: 'Landing Admin',
+        status: 'pendiente',
+        isActive: false,
+      }));
     });
   });
 

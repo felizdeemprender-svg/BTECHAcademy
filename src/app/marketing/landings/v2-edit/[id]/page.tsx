@@ -173,8 +173,8 @@ export default function V2LandingEditorPage() {
                 const fData = courseSnap.data();
                 setCourseData({
                   ...fData,
-                  title: fData.goal || 'Mentoría',
-                  description: fData.goal || ''
+                  title: fData.title || fData.goal || 'Mentoría',
+                  description: fData.goal || fData.description || ''
                 });
               }
             }
@@ -228,7 +228,8 @@ export default function V2LandingEditorPage() {
           pricesByGateway,
         },
         activeUntil: landingData.activeUntil || null,
-        isActive: true,
+        isActive: landingData.isActive ?? false,
+        status: landingData.status || 'pendiente',
         bundleItems: landingData.bundleItems || undefined,
       });
 

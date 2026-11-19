@@ -337,6 +337,49 @@ export default function ManageCoursesClient() {
     }
   }, [isDeleteDialogOpen, isEnrollmentsDialogOpen, isHistoryDialogOpen, isPublishDialogOpen, isAssociatedDialogOpen, isAiTagDialogOpen, isTermsDialogOpen, clearUILocks]);
 
+  const filteredCourses = useMemo(() => {
+    if (!courses) return [];
+    return (courses as any[]).filter((c: any) => {
+      // 1. Búsqueda por término (título o etiquetas)
+      const term = searchTerm.trim().toLowerCase();
+      const matchesSearch = !term ||
+        c.title?.toLowerCase().includes(term) ||
+        (Array.isArray(c.tags) && c.tags.some((t: string) => t.toLowerCase().includes(term)));
+
+      // 2. Filtro por estado del curso
+      let matchesStatus = true;
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'published') {
+          matchesStatus = c.status === 'published' || c.status === 'approved';
+        } else if (statusFilter === 'pending') {
+          matchesStatus = c.status === 'pending';
+        } else if (statusFilter === 'pending_terms') {
+          matchesStatus = c.status === 'pending_terms';
+        } else if (statusFilter === 'draft') {
+          matchesStatus = c.status === 'draft' || c.status === 'creating' || !c.status;
+        } else if (statusFilter === 'rejected') {
+          matchesStatus = c.status === 'rejected';
+        }
+      }
+
+      // 3. Filtro por tutor (solo aplica si es administrador y seleccionó un tutor)
+      let matchesTutor = true;
+      if (isAdmin && tutorFilter !== 'all') {
+        matchesTutor = c.mentorId === tutorFilter;
+      }
+
+      return matchesSearch && matchesStatus && matchesTutor;
+    });
+  }, [courses, searchTerm, statusFilter, tutorFilter, isAdmin]);
+  
+  const canManageCourse = useCallback((course: any) => {
+    if (!profile) return false;
+    if (isAdmin) return true;
+    if (course.mentorId === profile.uid) return true;
+    if (isEmpresa && course.companyId && (course.companyId === profile.companyId || course.companyId === profile.uid)) return true;
+    return false;
+  }, [profile, isAdmin, isEmpresa]);
+
   // Si el perfil está cargando, mostrar loading (después de todos los hooks)
   if (!profile) {
     return (
@@ -918,49 +961,6 @@ export default function ManageCoursesClient() {
     }
     router.push(`/courses/edit/${course.id}`);
   };
-
-  const filteredCourses = useMemo(() => {
-    if (!courses) return [];
-    return (courses as any[]).filter((c: any) => {
-      // 1. Búsqueda por término (título o etiquetas)
-      const term = searchTerm.trim().toLowerCase();
-      const matchesSearch = !term ||
-        c.title?.toLowerCase().includes(term) ||
-        (Array.isArray(c.tags) && c.tags.some((t: string) => t.toLowerCase().includes(term)));
-
-      // 2. Filtro por estado del curso
-      let matchesStatus = true;
-      if (statusFilter !== 'all') {
-        if (statusFilter === 'published') {
-          matchesStatus = c.status === 'published' || c.status === 'approved';
-        } else if (statusFilter === 'pending') {
-          matchesStatus = c.status === 'pending';
-        } else if (statusFilter === 'pending_terms') {
-          matchesStatus = c.status === 'pending_terms';
-        } else if (statusFilter === 'draft') {
-          matchesStatus = c.status === 'draft' || c.status === 'creating' || !c.status;
-        } else if (statusFilter === 'rejected') {
-          matchesStatus = c.status === 'rejected';
-        }
-      }
-
-      // 3. Filtro por tutor (solo aplica si es administrador y seleccionó un tutor)
-      let matchesTutor = true;
-      if (isAdmin && tutorFilter !== 'all') {
-        matchesTutor = c.mentorId === tutorFilter;
-      }
-
-      return matchesSearch && matchesStatus && matchesTutor;
-    });
-  }, [courses, searchTerm, statusFilter, tutorFilter, isAdmin]);
-  
-  const canManageCourse = useCallback((course: any) => {
-    if (!profile) return false;
-    if (isAdmin) return true;
-    if (course.mentorId === profile.uid) return true;
-    if (isEmpresa && course.companyId && (course.companyId === profile.companyId || course.companyId === profile.uid)) return true;
-    return false;
-  }, [profile, isAdmin, isEmpresa]);
 
   const otherCourses = courses?.filter(c => c.id !== selectedId && canManageCourse(c));
   const filteredOtherCourses = otherCourses?.filter(c => c.title?.toLowerCase().includes(associatedSearchTerm.toLowerCase()));

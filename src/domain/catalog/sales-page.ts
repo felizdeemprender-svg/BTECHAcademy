@@ -51,6 +51,8 @@ export const SalesPageSchema = z.object({
   campaignStatus: z.string().optional(),
   landingType: z.string().optional(),
   isActive: z.boolean().optional(),
+  status: z.string().optional(),
+  fallbackLandingId: z.string().nullable().optional(),
   engineMeta: z.unknown().optional(),
   referidoId: z.string().nullable().optional(),
   referidoName: z.string().nullable().optional(),

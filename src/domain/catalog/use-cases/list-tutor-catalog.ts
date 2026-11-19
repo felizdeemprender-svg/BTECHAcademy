@@ -52,12 +52,39 @@ export async function listTutorCatalog(
     return err(validationError('tutorId vacío'));
   }
   try {
-    const salesPages = await repo.listSalesPagesByMentorActive(input.tutorId);
+    const rawSalesPages = await repo.listSalesPagesByMentorActive(input.tutorId);
+    // Filtrar landings de embajadores / afiliados para no mostrarlas en el catálogo oficial del tutor
+    const nonAffiliateSalesPages = rawSalesPages.filter((sp) => {
+      const data = sp.data;
+      return !data.referidoId && !data.referidoName && data.landingType !== 'referral';
+    });
+
+    // Regla: Exactamente 1 landing vigente por curso/mentoría en el catálogo oficial del tutor
+    const authoritativeByProduct = new Map<string, CatalogDoc>();
+    for (const sp of nonAffiliateSalesPages) {
+      const targetId = str(sp.data.courseId) ?? str(sp.data.productId) ?? sp.id;
+      if (!authoritativeByProduct.has(targetId)) {
+        authoritativeByProduct.set(targetId, sp);
+      } else {
+        // Si hay más de una, dar precedencia a la promoción vigente sobre la general
+        const current = authoritativeByProduct.get(targetId)!;
+        const spIsPromo = sp.data.landingType === 'promocion';
+        const currentIsPromo = current.data.landingType === 'promocion';
+        if (spIsPromo && !currentIsPromo) {
+          authoritativeByProduct.set(targetId, sp);
+        }
+      }
+    }
+    const salesPages = Array.from(authoritativeByProduct.values());
     if (salesPages.length === 0) {
       return ok({ courses: [], total: 0 });
     }
     const courseIds = Array.from(
-      new Set(salesPages.map((sp) => str(sp.data.courseId)).filter((v): v is string => Boolean(v))),
+      new Set(
+        salesPages
+          .map((sp) => str(sp.data.courseId) ?? str(sp.data.productId))
+          .filter((v): v is string => Boolean(v)),
+      ),
     );
     const coursesMap = new Map<string, CatalogDoc>();
     if (courseIds.length > 0) {
@@ -65,6 +92,15 @@ export async function listTutorCatalog(
         coursesMap.set(c.id, c);
       }
     }
+
+    const missingIds = courseIds.filter((id) => !coursesMap.has(id));
+    const followupsMap = new Map<string, CatalogDoc>();
+    if (missingIds.length > 0 && repo.listFollowupsByIds) {
+      for (const f of await repo.listFollowupsByIds(missingIds.slice(0, 30))) {
+        followupsMap.set(f.id, f);
+      }
+    }
+
     const allTagIds = Array.from(
       new Set(
         [...coursesMap.values()].flatMap((c) =>
@@ -81,38 +117,83 @@ export async function listTutorCatalog(
     }
     const enriched = salesPages
       .map((sp) => {
-        const course = coursesMap.get(str(sp.data.courseId) ?? '');
-        if (!course) return null;
-        const data = course.data;
-        const isPublished = data.status === 'published' || data.status === 'approved';
-        const isPublic = data.publicListing !== false;
-        if (!isPublished || !isPublic) return null;
-        const tagIds = Array.isArray(data.tagIds) ? (data.tagIds as unknown[]) : [];
-        const tags = tagIds
-          .map((id) => (typeof id === 'string' ? tagsMap.get(id) : undefined))
-          .filter((t): t is string => Boolean(t));
-        const title = str(sp.data.title) ?? str(data.title) ?? 'Sin título';
-        return {
-          id: str(data.id) ?? course.id,
-          salesPageId: sp.id,
-          slug: str(sp.data.slug) ?? str(data.slug) ?? (str(data.title) ? slugify(str(data.title) as string) : undefined),
-          title,
-          description: str(sp.data.description) ?? str(data.description) ?? 'Sin descripción',
-          price: sp.data.price !== undefined ? (sp.data.price as number) : num(data.price, 0),
-          duration: num(data.duration, 0),
-          level: str(data.level) ?? 'beginner',
-          students: num(data.studentsCount, 0),
-          rating: num(data.rating, 4.5),
-          thumbnail:
+        const targetId = str(sp.data.courseId) ?? str(sp.data.productId) ?? '';
+        const course = coursesMap.get(targetId);
+        const followup = followupsMap.get(targetId);
+
+        if (course) {
+          const data = course.data;
+          const isPublished = data.status === 'published' || data.status === 'approved';
+          const isPublic = data.publicListing !== false;
+          if (!isPublished || !isPublic) return null;
+          const tagIds = Array.isArray(data.tagIds) ? (data.tagIds as unknown[]) : [];
+          const tags = tagIds
+            .map((id) => (typeof id === 'string' ? tagsMap.get(id) : undefined))
+            .filter((t): t is string => Boolean(t));
+          const title = str(sp.data.title) ?? str(data.title) ?? 'Sin título';
+          return {
+            id: str(data.id) ?? course.id,
+            salesPageId: sp.id,
+            slug: str(sp.data.slug) ?? str(data.slug) ?? (str(data.title) ? slugify(str(data.title) as string) : undefined),
+            title,
+            description: str(sp.data.description) ?? str(data.description) ?? 'Sin descripción',
+            price: sp.data.price !== undefined ? (sp.data.price as number) : num(data.price, 0),
+            duration: num(data.duration, 0),
+            level: str(data.level) ?? 'beginner',
+            students: num(data.studentsCount, 0),
+            rating: num(data.rating, 4.5),
+            thumbnail:
+              str(sp.data.imageUrl) ??
+              str(sp.data.thumbnail) ??
+              str(data.thumbnail) ??
+              `https://loremflickr.com/600/400/education,course?lock=${sp.id}`,
+            tags,
+            createdAt:
+              toDomainDate(sp.data.createdAt as never) ??
+              toDomainDate(data.createdAt as never) ??
+              new Date(),
+          } satisfies TutorCatalogEntry;
+        }
+
+        // Si es una mentoría (followup) o landing de producto followup
+        const isFollowup = Boolean(followup) || sp.data.productType === 'followup';
+        if (isFollowup) {
+          const fData = followup?.data ?? {};
+          const isPublished = sp.data.status === 'published' || sp.data.isActive === true || fData.status === 'active';
+          if (!isPublished) return null;
+
+          const content = sp.data.content as Record<string, unknown> | undefined;
+          const sections = Array.isArray(content?.sections) ? (content?.sections as any[]) : [];
+          const heroSection = sections.find((s: any) => s.id?.includes('hero') || s.type?.includes('hero'));
+          const anyImgSection = sections.find((s: any) => s.imageUrl);
+
+          const title = str(sp.data.title) ?? str(content?.marketingName) ?? str(fData.title) ?? 'Mentoría';
+          const description = str(sp.data.description) ?? str(heroSection?.subtitle) ?? str(fData.goal) ?? 'Mentoría personalizada';
+          const thumbnail =
+            str(sp.data.imageUrl) ??
+            str(heroSection?.imageUrl) ??
+            str(anyImgSection?.imageUrl) ??
             str(sp.data.thumbnail) ??
-            str(data.thumbnail) ??
-            `https://loremflickr.com/600/400/education,course?lock=${sp.id}`,
-          tags,
-          createdAt:
-            toDomainDate(sp.data.createdAt as never) ??
-            toDomainDate(data.createdAt as never) ??
-            new Date(),
-        } satisfies TutorCatalogEntry;
+            '/assets/presets/02-glass-premium.png';
+
+          return {
+            id: followup ? followup.id : sp.id,
+            salesPageId: sp.id,
+            slug: str(sp.data.slug) ?? slugify(title),
+            title,
+            description,
+            price: num(sp.data.price, 0),
+            duration: num(sp.data.duration, num(fData.totalSessions, 1)),
+            level: 'Mentoría',
+            students: 0,
+            rating: 5.0,
+            thumbnail,
+            tags: ['Mentoría'],
+            createdAt: toDomainDate(sp.data.createdAt as never) ?? new Date(),
+          } satisfies TutorCatalogEntry;
+        }
+
+        return null;
       })
       .filter((e): e is TutorCatalogEntry => e !== null)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
