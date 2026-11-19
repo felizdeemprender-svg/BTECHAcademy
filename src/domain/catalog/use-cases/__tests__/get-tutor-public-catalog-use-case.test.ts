@@ -99,6 +99,12 @@ describe('GetTutorPublicCatalogUseCase', () => {
         username: 'ana',
       },
     },
+    followups: {
+      'fol-1': {
+        title: 'Recalculando Profesión',
+        totalSessions: 6,
+      },
+    },
     salesPages: {
       // Oferta 1: Curso vigente de tutor-1
       'sp-curso-1': {
@@ -163,6 +169,16 @@ describe('GetTutorPublicCatalogUseCase', () => {
         title: 'Curso de Ana',
         isActive: true,
       },
+      // Oferta 8: Mentoría followup
+      'sp-followup-1': {
+        mentorId: 'tutor-1',
+        title: 'Mentoría Recalculando',
+        price: 49900,
+        currency: 'ARS',
+        productType: 'followup',
+        courseId: 'fol-1',
+        isActive: true,
+      },
     },
   };
 
@@ -181,13 +197,14 @@ describe('GetTutorPublicCatalogUseCase', () => {
     expect(offerIds).toContain('sp-curso-1');
     expect(offerIds).toContain('sp-prog-1');
     expect(offerIds).toContain('sp-mentoria-1');
+    expect(offerIds).toContain('sp-followup-1');
 
     // Debe excluir expiradas, desactivadas, embajadores y las de otros tutores
     expect(offerIds).not.toContain('sp-expirada');
     expect(offerIds).not.toContain('sp-embajador');
     expect(offerIds).not.toContain('sp-desactivada');
     expect(offerIds).not.toContain('sp-otro-tutor');
-    expect(result?.total).toBe(3);
+    expect(result?.total).toBe(4);
 
     const cursoOffer = result?.offers.find((o) => o.id === 'sp-curso-1');
     expect(cursoOffer?.paymentMethods).toHaveLength(3);
@@ -208,10 +225,13 @@ describe('GetTutorPublicCatalogUseCase', () => {
     expect(soloProgramas?.offers[0].type).toBe('programa');
 
     const soloMentorias = await useCase.execute('tutor-1', { types: ['mentoria'] });
-    expect(soloMentorias?.offers.length).toBe(1);
-    expect(soloMentorias?.offers[0].id).toBe('sp-mentoria-1');
-    expect(soloMentorias?.offers[0].type).toBe('mentoria');
-    expect(soloMentorias?.offers[0].price.isFree).toBe(true);
+    expect(soloMentorias?.offers.length).toBe(2);
+    const mentoriaIds = soloMentorias?.offers.map((o) => o.id);
+    expect(mentoriaIds).toContain('sp-mentoria-1');
+    expect(mentoriaIds).toContain('sp-followup-1');
+    const folOffer = soloMentorias?.offers.find((o) => o.id === 'sp-followup-1');
+    expect(folOffer?.type).toBe('mentoria');
+    expect(folOffer?.price.amount).toBe(49900);
     expect(soloMentorias?.offers[0].price.formatted).toBe('Gratis');
   });
 

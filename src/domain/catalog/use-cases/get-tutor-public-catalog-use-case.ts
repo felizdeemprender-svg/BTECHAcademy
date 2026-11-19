@@ -105,33 +105,39 @@ export class GetTutorPublicCatalogUseCase {
         seenCourseIds.add(targetCourseId);
       }
 
-      // 3. Resolver tipo de oferta (curso, programa, mentoria)
-      const resolvedType = this.resolveOfferType(data);
-
-      // FILTRO 5: Filtro por tipo si fue solicitado
-      if (options.types && options.types.length > 0) {
-        if (!options.types.includes(resolvedType)) {
-          continue;
+      // 4. Si tiene courseId o productId asociado, intentamos enriquecer con el curso o mentoría
+      const targetProductId = (data.courseId as string) || (data.productId as string) || null;
+      let courseData: Record<string, unknown> | null = null;
+      let isFollowupDoc = false;
+      if (targetProductId && typeof targetProductId === 'string') {
+        if (courseCache.has(targetProductId)) {
+          courseData = courseCache.get(targetProductId) || null;
+        } else {
+          try {
+            const courseDoc = await this.gateway.getDoc('courses', targetProductId);
+            if (courseDoc && courseDoc.exists) {
+              courseData = courseDoc.data() || null;
+            } else {
+              const followupDoc = await this.gateway.getDoc('followups', targetProductId);
+              if (followupDoc && followupDoc.exists) {
+                courseData = followupDoc.data() || null;
+                isFollowupDoc = true;
+              }
+            }
+            courseCache.set(targetProductId, courseData);
+          } catch {
+            courseCache.set(targetProductId, null);
+          }
         }
       }
 
-      // 4. Si tiene courseId asociado y faltan datos (ej: imagen, descripción), intentamos enriquecer con el curso
-      let courseData: Record<string, unknown> | null = null;
-      if (data.courseId && typeof data.courseId === 'string') {
-        if (courseCache.has(data.courseId)) {
-          courseData = courseCache.get(data.courseId) || null;
-        } else {
-          try {
-            const courseDoc = await this.gateway.getDoc('courses', data.courseId);
-            courseData = courseDoc && courseDoc.exists ? courseDoc.data() || null : null;
-            if (!courseData) {
-              const followupDoc = await this.gateway.getDoc('followups', data.courseId);
-              courseData = followupDoc && followupDoc.exists ? followupDoc.data() || null : null;
-            }
-            courseCache.set(data.courseId, courseData);
-          } catch {
-            courseCache.set(data.courseId, null);
-          }
+      // 3. Resolver tipo de oferta (curso, programa, mentoria)
+      const resolvedType = this.resolveOfferType(data, courseData, isFollowupDoc);
+
+      // FILTRO: Filtro por tipo si fue solicitado
+      if (options.types && options.types.length > 0) {
+        if (!options.types.includes(resolvedType)) {
+          continue;
         }
       }
 
@@ -195,13 +201,29 @@ export class GetTutorPublicCatalogUseCase {
     };
   }
 
-  private resolveOfferType(data: Record<string, unknown>): CatalogOfferType {
-    const rawType = String(data.productType || data.type || '').toLowerCase();
+  private resolveOfferType(
+    data: Record<string, unknown>,
+    courseData?: Record<string, unknown> | null,
+    isFollowupDoc?: boolean,
+  ): CatalogOfferType {
+    const rawType = String(
+      data.productType ||
+      courseData?.productType ||
+      courseData?.type ||
+      data.type ||
+      ''
+    ).toLowerCase();
+
+    if (
+      isFollowupDoc ||
+      rawType.includes('followup') ||
+      rawType.includes('mentoria') ||
+      rawType.includes('mentoring')
+    ) {
+      return 'mentoria';
+    }
     if (rawType.includes('programa') || rawType.includes('program')) {
       return 'programa';
-    }
-    if (rawType.includes('mentoria') || rawType.includes('mentoring')) {
-      return 'mentoria';
     }
     return 'curso';
   }
