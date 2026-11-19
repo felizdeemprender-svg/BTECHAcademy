@@ -11,6 +11,7 @@ import { unavailable, validationError, type DomainError } from '@/domain/shared/
 import { toDomainDate } from '@/domain/shared/firestore-mapping';
 
 import type { CatalogDoc, MarketplaceRepository } from '../marketplace-repository';
+import { getEffectiveLandingStatus } from '@/domain/sales-pages/landing-lifecycle';
 
 export interface TutorCatalogEntry {
   readonly id: string;
@@ -53,10 +54,13 @@ export async function listTutorCatalog(
   }
   try {
     const rawSalesPages = await repo.listSalesPagesByMentorActive(input.tutorId);
-    // Filtrar landings de embajadores / afiliados para no mostrarlas en el catálogo oficial del tutor
+    // Filtrar landings de embajadores / afiliados y landings no activas (expiradas o pendientes)
     const nonAffiliateSalesPages = rawSalesPages.filter((sp) => {
       const data = sp.data;
-      return !data.referidoId && !data.referidoName && data.landingType !== 'referral';
+      if (data.referidoId || data.referidoName || data.landingType === 'referral') {
+        return false;
+      }
+      return getEffectiveLandingStatus(data as any) === 'activa';
     });
 
     // Regla: Exactamente 1 landing vigente por curso/mentoría en el catálogo oficial del tutor
