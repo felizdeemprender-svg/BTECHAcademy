@@ -144,7 +144,7 @@ export class GetTutorPublicCatalogUseCase {
       // 5. Construir objeto de oferta canónico
       const heroSection = (data.content as any)?.sections?.find((s: any) => s.id?.startsWith('heroVideo'));
       const rawTitle = (data.title as string) || (heroSection?.title as string) || (courseData?.title as string) || 'Oferta de Formacion';
-      const rawDesc = (data.description as string) || (heroSection?.subtitle as string) || (courseData?.description as string) || null;
+      const rawDesc = (data.description as string) || (heroSection?.subtitle as string) || (courseData?.description as string) || (courseData?.goal as string) || null;
       const rawImage = (data.imageUrl as string) || (heroSection?.imageUrl as string) || (courseData?.thumbnail as string) || (data.branding as any)?.logoUrl || null;
 
       const rawPrice = typeof data.price === 'number' ? data.price : (typeof courseData?.price === 'number' ? courseData.price : null);
