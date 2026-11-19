@@ -188,7 +188,8 @@ function V2LandingBuilderContent() {
       combined.push(...rawFollowups.map(f => ({ 
         ...f, 
         productType: 'followup',
-        description: f.goal || 'Mentoría grupal',
+        title: f.title || f.goal || 'Mentoría grupal',
+        description: f.goal || f.description || 'Mentoría grupal',
         tagIds: []
       })));
     }
@@ -435,8 +436,9 @@ function V2LandingBuilderContent() {
         content: finalData, // Estructura atómica inyectada
         createdAt: new Date(),
         updatedAt: new Date(),
-        status: 'published',
-        isActive: true
+        status: 'pendiente',
+        isActive: false,
+        fallbackLandingId: null
       };
 
       if (isBundle) {
@@ -445,14 +447,42 @@ function V2LandingBuilderContent() {
 
       // 5. Guardar y redirigir
       const safePayload = cleanUndefined(payload);
+      const token = await user?.getIdToken();
+
       if (editId) {
-        await updateDoc(doc(db, 'salesPages', editId), safePayload);
+        const res = await fetch('/api/sales-pages', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ pageId: editId, data: safePayload })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Error al actualizar landing page');
+        }
         toast({ title: 'Éxito', description: 'Landing page actualizada correctamente.' });
         router.push(`/marketing/landings/v2-edit/${editId}`);
       } else {
-        const docRef = await addDoc(collection(db, 'salesPages'), safePayload);
-        toast({ title: 'Éxito', description: 'Landing page creada correctamente.' });
-        router.push(`/marketing/landings/v2-edit/${docRef.id}`);
+        const newPageId = crypto.randomUUID();
+        const res = await fetch('/api/sales-pages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ pageId: newPageId, data: safePayload })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          if (res.status === 400 && errData.code === 'LIMIT_PENDING_REACHED') {
+            throw new Error('No es posible crear la landing: se alcanzó el límite máximo de 5 landings pendientes para este curso/producto. Archiva alguna pendiente desde el panel de landings antes de crear una nueva.');
+          }
+          throw new Error(errData.error || 'Error al crear landing page');
+        }
+        toast({ title: 'Éxito', description: 'Landing page creada en estado pendiente correctamente.' });
+        router.push(`/marketing/landings/v2-edit/${newPageId}`);
       }
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Error', description: e.message });

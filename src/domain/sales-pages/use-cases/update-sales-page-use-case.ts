@@ -1,5 +1,9 @@
 import { AdminSalesPageRepository } from '@/data/firestore/admin-sales-page-repo';
 import type { SalesPage } from '@/domain/catalog';
+import {
+  planLandingActivationRelay,
+  isAffiliateLanding,
+} from '../landing-lifecycle';
 
 interface UpdateSalesPageRequest {
   uid: string;
@@ -106,6 +110,38 @@ export class UpdateSalesPageUseCase {
       } else {
         request.data.campaignStatus = 'drafts_ready';
       }
+    }
+
+    const targetCourseId = request.data.courseId || page!.courseId || request.data.productId || page!.productId;
+    const isActivating = request.data.isActive === true || request.data.status === 'activa';
+    const isArchiving = request.data.status === 'archivada';
+
+    if (isArchiving) {
+      request.data.isActive = false;
+      request.data.status = 'archivada';
+    } else if (isActivating && targetCourseId && !isVirtualCampaign) {
+      request.data.isActive = true;
+      request.data.status = 'activa';
+      const existingPages = await this.repo.listByMentor(page!.mentorId);
+      const isAffiliate = isAffiliateLanding(request.data as any) || isAffiliateLanding(page! as any);
+      const affiliateId = request.data.referidoId ?? page!.referidoId;
+      const fallbackId = request.data.fallbackLandingId ?? page!.fallbackLandingId;
+
+      const relay = planLandingActivationRelay(
+        existingPages,
+        request.pageId,
+        targetCourseId,
+        isAffiliate,
+        affiliateId,
+        fallbackId
+      );
+
+      for (const demotedId of relay.demotedIds) {
+        await this.repo.update(demotedId, { status: 'pendiente', isActive: false });
+      }
+    } else if (request.data.status === 'pendiente' || (request.data.isActive === false && request.data.status !== 'expirada')) {
+      request.data.status = request.data.status || 'pendiente';
+      request.data.isActive = false;
     }
 
     if (!isVirtualCampaign) {

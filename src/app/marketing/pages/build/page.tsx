@@ -289,7 +289,8 @@ function BuilderContent() {
       combined.push(...rawFollowups.map(f => ({ 
         ...f, 
         productType: 'followup',
-        description: f.goal || 'Mentoría grupal',
+        title: f.title || f.goal || 'Mentoría grupal',
+        description: f.goal || f.description || 'Mentoría grupal',
         // Inyectar tag dummy para UI
         tagIds: []
       })));

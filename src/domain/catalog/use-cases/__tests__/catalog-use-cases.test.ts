@@ -79,6 +79,15 @@ class FakeMarketplaceRepo implements MarketplaceRepository {
       .filter((d): d is CatalogDoc => d !== null);
   }
 
+  async listFollowupsByIds(ids: readonly string[]): Promise<CatalogDoc[]> {
+    return ids
+      .map((id) => {
+        const raw = this.store.followups?.[id];
+        return raw === undefined ? null : doc(id, raw);
+      })
+      .filter((d): d is CatalogDoc => d !== null);
+  }
+
   async listTagsByIds(ids: readonly string[]): Promise<CatalogDoc[]> {
     return ids
       .map((id) => {
@@ -346,14 +355,15 @@ describe('listTutorCatalog', () => {
     if (r.ok) expect(r.value).toEqual({ courses: [], total: 0 });
   });
 
-  it('enriquece landings con curso, tags y orden desc', async () => {
+  it('enriquece landings con curso, tags y orden desc (excluyendo landings de embajadores)', async () => {
     const repo = new FakeMarketplaceRepo(marketplaceStore());
     const r = await listTutorCatalog(repo, { tutorId: 'm1' });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    // m1: spFree(cFree), spExpired(cExpired), spFuture(cFuture), spReferral(cReferral)
+    // m1: spFree(cFree), spExpired(cExpired), spFuture(cFuture) — spReferral(cReferral) queda excluida por embajador.
     // Nota: esta ruta NO filtra ventana promocional (igual que el legacy).
-    expect(r.value.total).toBe(4);
+    expect(r.value.total).toBe(3);
+    expect(r.value.courses.find(c => c.salesPageId === 'spReferral')).toBeUndefined();
     expect(r.value.courses[0].id).toBe('cFree');
     expect(r.value.courses[0]).toMatchObject({
       salesPageId: 'spFree',

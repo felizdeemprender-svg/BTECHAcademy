@@ -51,6 +51,16 @@ export async function checkoutPage(
     return err(notFound('Página de venta no encontrada'));
   }
 
+  const pStatus = (page as any).status;
+  const pIsActive = (page as any).isActive;
+  if (pStatus === 'pendiente' || pIsActive === false || pStatus === 'archivada' || pStatus === 'expirada') {
+    return err(
+      legacyHttpError(403, {
+        error: 'Las pasarelas de pago no están disponibles para landings en estado pendiente o inactivas.',
+      }),
+    );
+  }
+
   const mentorId = typeof page.mentorId === 'string' ? page.mentorId : '';
   const price = typeof page.price === 'number' ? page.price : 0;
   const title = typeof page.title === 'string' ? page.title : 'Inscripción a Programa';

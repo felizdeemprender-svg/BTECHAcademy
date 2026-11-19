@@ -105,6 +105,7 @@ export interface PublicSalesPageViewProps {
   initialRates?: Record<SupportedCurrency, number>;
   variantIdx?: number;
   isPreview?: boolean;
+  isPendingPreview?: boolean;
 }
 
 export function PublicSalesPageView({
@@ -118,6 +119,7 @@ export function PublicSalesPageView({
   initialRates = FALLBACK_RATES,
   variantIdx = 0,
   isPreview = false,
+  isPendingPreview = false,
 }: PublicSalesPageViewProps) {
   const searchParams = useSearchParams();
   const activeVariantIdx = parseInt(searchParams.get('v') || String(variantIdx));
@@ -239,7 +241,7 @@ export function PublicSalesPageView({
 
   // Registrar acceso/vista automáticamente al cargar la landing
   useEffect(() => {
-    if (page?.isActive === false || isPreview) return;
+    if (page?.isActive === false || isPreview || isPendingPreview) return;
 
     const sessionTrackKey = `tracked_view_${id}`;
     if (sessionStorage.getItem(sessionTrackKey)) return;
@@ -283,8 +285,13 @@ export function PublicSalesPageView({
   };
 
   const handlePurchase = async () => {
-    if (isPreview) {
-      toast({ title: 'Modo Vista Previa', description: 'Los pagos están desactivados en esta vista miniatura.' });
+    if (isPreview || isPendingPreview) {
+      toast({
+        title: 'Modo Vista Previa',
+        description: isPendingPreview
+          ? 'Las pasarelas de pago están deshabilitadas porque esta landing se encuentra en estado pendiente.'
+          : 'Los pagos están desactivados en esta vista miniatura.'
+      });
       return;
     }
     setIsPurchaseDialogOpen(true);
@@ -294,6 +301,15 @@ export function PublicSalesPageView({
   };
 
   const executePurchase = async () => {
+    if (isPreview || isPendingPreview) {
+      toast({
+        variant: 'destructive',
+        title: 'Operación no permitida',
+        description: 'No se pueden procesar pagos en modo vista previa o sobre landings pendientes.',
+      });
+      return;
+    }
+
     if (!studentEmail) {
       toast({ variant: 'destructive', title: 'Email requerido', description: 'Por favor ingresa tu correo de Gmail para la inscripción.' });
       return;
@@ -421,7 +437,7 @@ export function PublicSalesPageView({
     }
   };
 
-  if (!page || page.isActive === false) {
+  if (!page || (!isPendingPreview && page.isActive === false)) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="font-bold text-muted-foreground uppercase tracking-widest">Página no disponible.</p>
@@ -481,7 +497,7 @@ export function PublicSalesPageView({
   const textMuted = isDark ? 'text-muted-foreground' : isGlass ? 'text-primary/20' : 'text-muted-foreground';
   const borderSubtle = isDark ? 'border-foreground' : isGlass ? 'border-primary/40' : 'border-muted';
 
-  if (isExpired) {
+  if (isExpired && !isPendingPreview) {
     const fromDate = parseDate(page.activeFrom);
     const untilDate = parseDate(page.activeUntil);
     const now = new Date();
@@ -529,6 +545,15 @@ export function PublicSalesPageView({
         .font-headline { font-family: ${fontHeading}, sans-serif !important; }
         .font-body { font-family: ${fontBody}, sans-serif !important; }
       `}</style>
+
+      {isPendingPreview && (
+        <div className="bg-amber-600 text-white font-medium text-xs sm:text-sm py-2.5 px-4 text-center sticky top-0 z-[60] shadow-sm flex items-center justify-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-white" />
+          <span>
+            <strong>Vista Previa de Landing Pendiente:</strong> Las pasarelas de pago e inscripciones están desactivadas hasta su activación oficial.
+          </span>
+        </div>
+      )}
 
       {/* Header - Marca Blanca */}
       <nav className={cn("backdrop-blur-md sticky top-0 z-50 border-b font-body", isDark ? 'bg-foreground/80 border-foreground' : isGlass ? 'bg-foreground/80 border-foreground' : 'bg-white/80 border-muted')}>
@@ -792,7 +817,7 @@ export function PublicSalesPageView({
 
       {/* DIÁLOGO DE COMPRA Y CHECKOUT */}
       <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
-        <DialogContent className="max-w-md bg-white border-0 shadow-2xl rounded-[2.5rem] p-8 text-black">
+        <DialogContent className="max-w-md w-[95vw] sm:w-full max-h-[90dvh] overflow-y-auto custom-scrollbar bg-white border-0 shadow-2xl rounded-2xl sm:rounded-[2.5rem] p-6 sm:p-8 text-black">
           <DialogHeader className="text-left space-y-2">
             <DialogTitle className="text-2xl font-black font-headline tracking-tight text-foreground">
               {price === 0 ? 'Acceso Inmediato' : 'Inscripción Segura'}
@@ -802,7 +827,7 @@ export function PublicSalesPageView({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 py-4">
+          <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
             <div className="space-y-2">
               <Label htmlFor="studentName" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tu Nombre Completo</Label>
               <Input
@@ -957,7 +982,7 @@ export function PublicSalesPageView({
                   (price > 0 && filteredPaymentMethods.length === 0) ||
                   (price > 0 && filteredPaymentMethods.length > 1 && !selectedPaymentType)
                 }
-                className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all hover:scale-[1.02]"
+                className="w-full h-14 sm:h-16 text-lg sm:text-xl font-bold rounded-2xl shadow-xl transition-all hover:scale-[1.02]"
                 style={{ backgroundColor: primaryColor }}
               >
                 {loading ? (
