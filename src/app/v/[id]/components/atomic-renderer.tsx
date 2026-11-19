@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 import { getLandingStyle } from '@/lib/landing-styles';
 import {
@@ -18,22 +19,67 @@ import {
   SecureVideoPlayer,
 } from './atomic/shared';
 
-// Modular section components
-import { HeroVideoSection } from './atomic/sections/hero-video';
-import { NarrativeSection } from './atomic/sections/narrative';
-import { SyllabusSection } from './atomic/sections/syllabus';
-import { BundleGridSection } from './atomic/sections/bundle-grid';
-import { BenefitsSection } from './atomic/sections/benefits';
-import { FaqsSection } from './atomic/sections/faqs';
-import { MentorProfileSection } from './atomic/sections/mentor-profile';
-import { TestimonialsSection } from './atomic/sections/testimonials';
-import { BonusesSection } from './atomic/sections/bonuses';
-import { OfferBannerSection } from './atomic/sections/offer-banner';
-import { MarqueeSection } from './atomic/sections/marquee';
-import { StatsSection } from './atomic/sections/stats';
-import { GuaranteeSection } from './atomic/sections/guarantee';
-import { CountdownTimerSection } from './atomic/sections/countdown-timer';
-import { FooterSection } from './atomic/sections/footer';
+// Modular section components with next/dynamic code splitting
+export const HeroVideoSection = dynamic(
+  () => import('./atomic/sections/hero-video').then((m) => m.HeroVideoSection),
+  { ssr: true }
+);
+export const NarrativeSection = dynamic(
+  () => import('./atomic/sections/narrative').then((m) => m.NarrativeSection),
+  { ssr: true }
+);
+export const SyllabusSection = dynamic(
+  () => import('./atomic/sections/syllabus').then((m) => m.SyllabusSection),
+  { ssr: true }
+);
+export const BundleGridSection = dynamic(
+  () => import('./atomic/sections/bundle-grid').then((m) => m.BundleGridSection),
+  { ssr: true }
+);
+export const BenefitsSection = dynamic(
+  () => import('./atomic/sections/benefits').then((m) => m.BenefitsSection),
+  { ssr: true }
+);
+export const FaqsSection = dynamic(
+  () => import('./atomic/sections/faqs').then((m) => m.FaqsSection),
+  { ssr: true }
+);
+export const MentorProfileSection = dynamic(
+  () => import('./atomic/sections/mentor-profile').then((m) => m.MentorProfileSection),
+  { ssr: true }
+);
+export const TestimonialsSection = dynamic(
+  () => import('./atomic/sections/testimonials').then((m) => m.TestimonialsSection),
+  { ssr: true }
+);
+export const BonusesSection = dynamic(
+  () => import('./atomic/sections/bonuses').then((m) => m.BonusesSection),
+  { ssr: true }
+);
+export const OfferBannerSection = dynamic(
+  () => import('./atomic/sections/offer-banner').then((m) => m.OfferBannerSection),
+  { ssr: true }
+);
+export const MarqueeSection = dynamic(
+  () => import('./atomic/sections/marquee').then((m) => m.MarqueeSection),
+  { ssr: true }
+);
+export const StatsSection = dynamic(
+  () => import('./atomic/sections/stats').then((m) => m.StatsSection),
+  { ssr: true }
+);
+export const GuaranteeSection = dynamic(
+  () => import('./atomic/sections/guarantee').then((m) => m.GuaranteeSection),
+  { ssr: true }
+);
+export const CountdownTimerSection = dynamic(
+  () => import('./atomic/sections/countdown-timer').then((m) => m.CountdownTimerSection),
+  { ssr: true }
+);
+export const FooterSection = dynamic(
+  () => import('./atomic/sections/footer').then((m) => m.FooterSection),
+  { ssr: true }
+);
 
 export {
   TikTokIcon,

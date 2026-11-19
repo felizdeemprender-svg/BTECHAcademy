@@ -1,9 +1,41 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+
+const { dynamicCalls, pendingLoaders } = vi.hoisted(() => {
+  return {
+    dynamicCalls: [] as { options?: { ssr?: boolean } }[],
+    pendingLoaders: [] as Promise<any>[],
+  };
+});
+
+vi.mock('next/dynamic', () => {
+  return {
+    default: (loader: () => Promise<any>, options?: { ssr?: boolean }) => {
+      dynamicCalls.push({ options });
+      let Component: any = null;
+      const p = loader().then((mod: any) => {
+        Component = mod.default || mod;
+      }).catch((err) => {
+        console.error('Error loading dynamic section in test:', err);
+      });
+      pendingLoaders.push(p);
+
+      return function DynamicSectionWrapper(props: any) {
+        if (!Component) return null;
+        return React.createElement(Component, props);
+      };
+    },
+  };
+});
+
 import { AtomicRenderer } from '../../atomic-renderer';
 
 describe('AtomicRenderer Component Integration', () => {
+  beforeAll(async () => {
+    // Esperar a que se resuelvan todos los dynamic imports con ssr: true
+    await Promise.all(pendingLoaders);
+  });
   const basePage = {
     id: 'landing-test-1',
     styleId: 'classic',
@@ -126,6 +158,79 @@ describe('AtomicRenderer Component Integration', () => {
 
     expect(html).toContain('od-fs-btn');
     expect(html).toContain('od-fs-heading');
+  });
+
+  it('debe asegurar que todos los dynamic imports de secciones tengan configurado ssr: true para preservacion SEO', () => {
+    expect(dynamicCalls.length).toBeGreaterThanOrEqual(15);
+    for (const call of dynamicCalls) {
+      expect(call.options?.ssr).toBe(true);
+    }
+  });
+
+  it('debe excluir del DOM las secciones ausentes sin generar saltos de layout', () => {
+    const minimalPage = {
+      ...basePage,
+      content: {
+        sections: [
+          {
+            id: 'heroVideo_1',
+            title: 'Solo Hero',
+            isVisible: true,
+          },
+        ],
+      },
+    };
+
+    const html = renderToStaticMarkup(
+      <AtomicRenderer page={minimalPage} onPurchase={() => {}} mentorProfile={mentorProfile} />
+    );
+
+    expect(html).toContain('Solo Hero');
+    expect(html).not.toContain('¿Por qué unirte?');
+    expect(html).not.toContain('Preguntas Frecuentes');
+    expect(html).not.toContain('Curso Avanzado de Ventas');
+  });
+
+  it('debe renderizar limpiamente sin error 500 ante URLs de imagen corruptas, nulas o con campos malformados', () => {
+    const corruptPage = {
+      ...basePage,
+      branding: {
+        ...basePage.branding,
+        logoUrl: 'https://corrupt-url.com/space in path.png',
+      },
+      content: {
+        sections: [
+          {
+            id: 'heroVideo_1',
+            title: 'Hero con imagen rota',
+            imageUrl: '   invalid-uri://bad-path',
+            videoUrl: '',
+            isVisible: true,
+          },
+          {
+            id: 'bonuses_1',
+            title: 'Bonus con imagen null',
+            imageUrl: null,
+            isVisible: true,
+          },
+          {
+            id: 'mentorProfile_1',
+            title: 'Mentor con imagen undefined',
+            imageUrl: undefined,
+            isVisible: true,
+          },
+        ],
+      },
+    };
+
+    expect(() => {
+      const html = renderToStaticMarkup(
+        <AtomicRenderer page={corruptPage} onPurchase={() => {}} mentorProfile={null} />
+      );
+      expect(html).toContain('Hero con imagen rota');
+      expect(html).toContain('Bonus con imagen null');
+      expect(html).toContain('Mentor con imagen undefined');
+    }).not.toThrow();
   });
 });
 
