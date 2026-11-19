@@ -180,13 +180,13 @@ export function ImageEditor({
   return (
     <div className="space-y-3">
       <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">{label}</Label>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-1.5">
         <div className="flex-1 flex items-center">
           {url && (
             <Button
               variant="outline"
-              size="sm"
-              className="h-10 border-success/30 text-success hover:bg-success/10 gap-2 font-bold text-[10px] uppercase tracking-widest"
+              size="icon"
+              className="h-8 w-8 shrink-0 border-success/30 text-success hover:bg-success/10"
               onClick={() => {
                 const link = document.createElement('a');
                 link.href = url;
@@ -200,7 +200,6 @@ export function ImageEditor({
               type="button"
             >
               <Download className="h-4 w-4" />
-              Descargar
             </Button>
           )}
         </div>
@@ -208,9 +207,9 @@ export function ImageEditor({
         {allowPromptEdit && (
           <Button
             variant={showPromptEditor ? 'default' : 'outline'}
-            size="sm"
+            size="icon"
             className={cn(
-              'h-10 px-3 shrink-0 gap-1.5 font-bold text-xs',
+              'h-8 w-8 shrink-0',
               showPromptEditor
                 ? 'bg-primary text-primary-foreground'
                 : 'border-primary/30 text-primary hover:bg-primary/10'
@@ -220,15 +219,14 @@ export function ImageEditor({
             title="Configurar y editar el prompt visual de IA"
             type="button"
           >
-            <Wand2 className="h-3.5 w-3.5" />
-            Prompt IA
+            <Wand2 className="h-4 w-4" />
           </Button>
         )}
         {/* Botón Free IA — siempre visible */}
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 shrink-0 border-border text-primary hover:bg-primary/10" 
+          className="h-8 w-8 shrink-0 border-border text-primary hover:bg-primary/10" 
           onClick={() => handleGenerateAi('free', Boolean(customPrompt.trim()))}
           disabled={isBusy}
           title="Regenerar con IA Free (Gemini)"
@@ -240,7 +238,7 @@ export function ImageEditor({
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 shrink-0 border-primary/30 text-primary hover:bg-primary/15" 
+          className="h-8 w-8 shrink-0 border-primary/30 text-primary hover:bg-primary/15" 
           onClick={() => handleGenerateAi('premium', Boolean(customPrompt.trim()))}
           disabled={isBusy}
           title="Generar con IA Premium"
@@ -252,7 +250,7 @@ export function ImageEditor({
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 shrink-0 border-border" 
+          className="h-8 w-8 shrink-0 border-border" 
           onClick={() => fileRef.current?.click()}
           disabled={isBusy}
           title="Subir imagen local"
@@ -263,9 +261,10 @@ export function ImageEditor({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-10 w-10 shrink-0 text-destructive hover:bg-destructive/10" 
+          className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10" 
           onClick={() => onUpdate('')}
           disabled={isBusy}
+          title="Eliminar imagen"
           type="button"
         >
           <Trash2 className="h-4 w-4" />
