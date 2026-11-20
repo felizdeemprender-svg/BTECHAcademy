@@ -18,13 +18,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { campaignId, assets, targetAudience, campaignMission, googleToken, coordinationPlan, autoGenerateImages } = body;
+    const { campaignId, assets, targetAudience, campaignMission, googleToken, coordinationPlan, autoGenerateImages, language } = body;
 
     if (!campaignId || !assets) {
       return NextResponse.json({ success: false, error: 'Faltan parámetros' }, { status: 400 });
     }
 
-    console.log(`[DraftCampaign] Orquestando campaña: ${campaignId} (Auto-imágenes: ${autoGenerateImages !== false})`);
+    const campaignLanguage = language || assets?.language || coordinationPlan?.language || 'es-AR';
+    console.log(`[DraftCampaign] Orquestando campaña: ${campaignId} (Idioma: ${campaignLanguage}, Auto-imágenes: ${autoGenerateImages !== false})`);
     const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
     const forwardedProto = req.headers.get('x-forwarded-proto') || (forwardedHost.includes('localhost') ? 'http' : 'https');
     const requestOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : req.nextUrl.origin;
@@ -37,8 +38,10 @@ export async function POST(req: NextRequest) {
       assets,
       uid: decoded.uid,
       role: decoded.role || 'mentor',
+      language: campaignLanguage,
       data: {
         ...assets,
+        language: campaignLanguage,
         googleToken,
         autoGenerateImages: autoGenerateImages !== false
       },

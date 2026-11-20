@@ -265,6 +265,7 @@ export interface PublishCampaignRequest {
   readonly courseId?: string | null;
   readonly strategy: unknown;
   readonly startDate: string;
+  readonly language?: string;
 }
 
 export function publishCampaign(

@@ -9,6 +9,7 @@ import { z } from 'genkit';
 import path from 'path';
 import fs from 'fs/promises';
 import { getAppBaseUrl } from '@/lib/app-url';
+import { getLanguageDirectives } from '@/lib/languages';
 
 const SceneContentSchema = z.object({
   segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: ES OBLIGATORIO RESPETAR EL ORDEN EXACTO DE LOS SEGMENTOS INDICADO EN EL PROMPT (ej: si dice 1. GANCHO, 2. VALOR, 3. CIERRE, DEBES devolver esos segment_label exactamente). ¡NUNCA repitas VALOR para todas las escenas!'),
@@ -66,12 +67,14 @@ export async function generateVariantContent(
   landingContext?: string,
   productType?: string,
   uid?: string,
-  role?: string
+  role?: string,
+  language?: string
 ): Promise<any> {
   const effectiveUid = uid || variant?.mentorId || variant?.ownerUid || '';
   const effectiveRole = role || 'mentor';
+  const effectiveLanguage = language || variant?.language || 'es-AR';
 
-  console.log(`[AI:Flow] Generando contenido para: ${variant.platform} - ${variant.type} | Misión: ${mission} | Mentor UID: ${effectiveUid}`);
+  console.log(`[AI:Flow] Generando contenido para: ${variant.platform} - ${variant.type} | Misión: ${mission} | Idioma: ${effectiveLanguage} | Mentor UID: ${effectiveUid}`);
   
   validateApiKey();
   
@@ -200,6 +203,9 @@ ${sequenceList}
 === CONTEXTO DEL PÚBLICO OBJETIVO ===
 Dirígete a: ${targetAudience || 'General'} (Usa el tono y nivel de sofisticación que ellos esperan).
 
+=== DIRECTIVAS DE IDIOMA Y MODISMO (OBLIGATORIO) ===
+${getLanguageDirectives(effectiveLanguage)}
+
 === DIRECTIVAS ESTRATÉGICAS ===
 "${directives}"
 
@@ -237,7 +243,7 @@ ${injectedAdnRule}
    - Genera un array de 'hashtags'.
 
 REGLAS FINALES:
-- ALTA RETENCIÓN. Idioma: Español. No inventar datos falsos.
+- ALTA RETENCIÓN. Modismo estricto: Respeta al 100% las directivas de idioma, voseo/tuteo y modismos indicados en voz, pantalla, gancho y caption. No inventar datos falsos.
 
 Devuelve un objeto JSON que siga el ContentBreakdown Schema.`;
 

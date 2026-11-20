@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Save, Loader2, Video, ImageIcon, FileText, Settings, Eye, ArrowLeft, Sparkles, DollarSign, AlertTriangle, CreditCard, Landmark } from 'lucide-react';
+import { Save, Loader2, Video, ImageIcon, FileText, Settings, Eye, ArrowLeft, Sparkles, DollarSign, AlertTriangle, CreditCard, Landmark, Globe, CheckCircle2 } from 'lucide-react';
 import { ImageEditor } from '@/components/courses/ImageEditor';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,7 @@ import { useAuth } from '@/components/auth-context';
 import { buildSectionPrompt, buildContextHint, getSectionsNeedingImages } from '@/lib/landing-images';
 import { getLandingStyle, TOKEN_LABELS, TOKEN_DESCRIPTIONS, StyleTokens, StyleBrand } from '@/lib/landing-styles';
 import { BrandVisual } from '@/components/landing/brand-visual';
+import { SUPPORTED_LANGUAGES, SupportedLanguage } from '@/lib/languages';
 
 export default function V2LandingEditorPage() {
   const { id } = useParams() as { id: string };
@@ -228,6 +229,7 @@ export default function V2LandingEditorPage() {
           pricesByGateway,
         },
         activeUntil: landingData.activeUntil || null,
+        language: landingData.language || 'es-AR',
         isActive: landingData.isActive ?? false,
         status: landingData.status || 'pendiente',
         bundleItems: landingData.bundleItems || undefined,
@@ -277,7 +279,8 @@ export default function V2LandingEditorPage() {
         sectionId: activeSectionId,
         sectionName: styleSec?.name || 'Sección',
         sectionDescription: styleSec?.description,
-        productType: courseData.productType
+        productType: courseData.productType,
+        language: landingData.language || 'es-AR'
       });
 
       // Maintain existing image and video URLs so they are not lost
@@ -708,6 +711,56 @@ export default function V2LandingEditorPage() {
                               updatePageField('activeUntil', e.target.value ? new Date(e.target.value) : null);
                             }}
                           />
+                        </div>
+
+                        {/* IDIOMA Y MODISMO */}
+                        <div className="pt-6 border-t border-border space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Globe className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <Label className="text-sm font-bold text-foreground">Idioma y Modismo del Copy</Label>
+                                <p className="text-xs text-muted-foreground">Dialecto aplicado al regenerar textos con IA y heredado por las campañas asociadas.</p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-muted text-foreground border border-border">
+                              {landingData?.language || 'es-AR'}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+                            {SUPPORTED_LANGUAGES.map((lang) => {
+                              const isSelected = (landingData?.language || 'es-AR') === lang.code;
+                              return (
+                                <button
+                                  key={lang.code}
+                                  type="button"
+                                  onClick={() => updatePageField('language', lang.code)}
+                                  className={cn(
+                                    "p-3 rounded-xl border text-left transition-all relative overflow-hidden",
+                                    isSelected
+                                      ? "border-primary bg-primary/5 shadow-sm"
+                                      : "border-border bg-white hover:border-primary/30 hover:bg-muted/20"
+                                  )}
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-muted text-foreground border border-border">
+                                      {lang.badge}
+                                    </span>
+                                    {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                                  </div>
+                                  <p className={cn("text-xs font-bold leading-tight", isSelected ? "text-primary" : "text-foreground")}>
+                                    {lang.label}
+                                  </p>
+                                  <p className="text-[9px] text-muted-foreground mt-1 line-clamp-2">
+                                    {lang.description}
+                                  </p>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
 
                         {/* MEDIOS DE PAGO Y PRECIOS POR PASARELA */}

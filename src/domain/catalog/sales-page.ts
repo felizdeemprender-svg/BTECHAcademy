@@ -58,6 +58,7 @@ export const SalesPageSchema = z.object({
   referidoName: z.string().nullable().optional(),
   activeFrom: z.date().optional(),
   activeUntil: z.date().optional(),
+  language: z.string().optional(),
   stats: z.unknown().optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
