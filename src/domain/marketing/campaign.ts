@@ -23,6 +23,7 @@ export const CampaignSchema = z.object({
   strategy: CoordinationOutputSchema,
   /** Fecha de inicio 'yyyy-mm-dd' (Día 1). */
   startDate: z.string().min(1, 'fecha vacía'),
+  language: z.string().optional(),
   autoPilot: z.boolean().default(true),
   status: CampaignStatusSchema.default('active'),
   productionStatus: CampaignProductionStatusSchema.default('ready_to_publish'),

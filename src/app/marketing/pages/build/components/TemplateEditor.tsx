@@ -33,7 +33,8 @@ import {
   FileEdit,
   Download,
   Lock,
-  Palette
+  Palette,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageEditor } from '@/components/courses/ImageEditor';
@@ -47,6 +48,7 @@ import { getSocialResolution, cleanSocialHandle, getPlatformLabels } from '../ut
 import { generateVariantContent } from '@/ai/flows/generate-variant-content';
 import { generateEmailContent } from '@/ai/flows/generate-email-content';
 import { generateAdsContent } from '@/ai/flows/generate-ads-content';
+import { SUPPORTED_LANGUAGES } from '@/lib/languages';
 // import { adns } from '@/config/adns'; // Eliminado en favor de carga dinámica vía API
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -180,6 +182,7 @@ export function TemplateEditor({
   onSave,
   templateDirectives,
   campaignMission,
+  coordinationPlan,
   adns = {},
   availableLandings = [],
 }: TemplateEditorProps) {
@@ -1095,6 +1098,7 @@ export function TemplateEditor({
 
       const mentorUid = profile?.uid || (courses?.find((c: any) => c.id === selectedCourseId) as any)?.mentorId || '';
       const mentorRole = profile?.role || (profile?.isMentor ? 'mentor' : (profile?.isAdmin ? 'admin' : 'mentor'));
+      const pieceLanguage = variant.language || coordinationPlan?.language || courses?.find((c: any) => c.id === selectedCourseId)?.language || 'es-AR';
 
       const breakdown = await generateVariantContent(
         variantWithAdn, 
@@ -1106,7 +1110,8 @@ export function TemplateEditor({
         landingContext,
         undefined,
         mentorUid,
-        mentorRole
+        mentorRole,
+        pieceLanguage
       );
       if (channel === 'socials') {
         const sourceArray = (breakdown.scenes && breakdown.scenes.length > 0) ? breakdown.scenes : (breakdown.slides || []);
@@ -1130,6 +1135,7 @@ export function TemplateEditor({
         newSocials[index] = { 
           ...newSocials[index], 
           adnId: effectiveAdnId,
+          language: pieceLanguage,
           production_notes: {
             ...(newSocials[index]?.production_notes || {}),
             adnId: effectiveAdnId
@@ -1738,7 +1744,42 @@ export function TemplateEditor({
                                                         </Select>
                                                       </div>
 
-                                                      <div className="flex-1 max-w-[170px]">
+                                                                                                             <div className="flex-1 max-w-[150px]">
+                                                         <Select
+                                                           value={s.language || coordinationPlan?.language || courses?.find((c: any) => c.id === selectedCourseId)?.language || 'es-AR'}
+                                                           onValueChange={(val) => {
+                                                             updateAsset('socials', globalIdx, 'language', val);
+                                                             if (generatedAssets?.socials) {
+                                                               const updatedSocials = [...generatedAssets.socials];
+                                                               updatedSocials[globalIdx] = {
+                                                                 ...updatedSocials[globalIdx],
+                                                                 language: val
+                                                               };
+                                                               onSave({ ...generatedAssets, socials: updatedSocials }, true);
+                                                             }
+                                                             toast({
+                                                               title: "Idioma de la Pieza Actualizado",
+                                                               description: `Modismo configurado en: ${SUPPORTED_LANGUAGES.find(l => l.code === val)?.label || val}`
+                                                             });
+                                                           }}
+                                                         >
+                                                           <SelectTrigger className="h-11 bg-white border-border text-[9px] font-black uppercase text-foreground tracking-widest">
+                                                             <div className="flex items-center gap-1.5 truncate">
+                                                               <Globe className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                               <span className="truncate">IDIOMA: <SelectValue /></span>
+                                                             </div>
+                                                           </SelectTrigger>
+                                                           <SelectContent className="bg-white border-border text-foreground">
+                                                             {SUPPORTED_LANGUAGES.map((lang) => (
+                                                               <SelectItem key={lang.code} value={lang.code} className="text-[10px] uppercase font-bold">
+                                                                 {lang.badge} - {lang.label}
+                                                               </SelectItem>
+                                                             ))}
+                                                           </SelectContent>
+                                                         </Select>
+                                                       </div>
+
+<div className="flex-1 max-w-[170px]">
                                                         <Select
                                                           value={s.production_notes?.brandPaletteId || 'adn'}
                                                           onValueChange={(val) => {

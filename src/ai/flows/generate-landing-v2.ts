@@ -7,6 +7,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getLandingStyle } from '@/lib/landing-styles';
+import { getLanguageDirectives } from '@/lib/languages';
 
 const LandingSectionContentSchema = z.object({
   id: z.string().describe('El ID exacto de la sección (ej: "heroVideo", "narrativeSections")'),
@@ -41,6 +42,7 @@ const GenerateLandingV2InputSchema = z.object({
     required: z.boolean(),
   })).optional(),
   productType: z.string().optional(),
+  language: z.string().optional(),
 });
 export type GenerateLandingV2Input = z.infer<typeof GenerateLandingV2InputSchema>;
 
@@ -107,6 +109,9 @@ DATOS CLAVE DEL ${productNoun.toUpperCase()}:
 DIRECTIVAS DEL ESTILO (${style.name}):
 ${style.aiDirectives || 'Ninguna directiva específica del estilo.'}
 
+=== DIRECTIVAS DE IDIOMA Y MODISMO (OBLIGATORIO) ===
+${getLanguageDirectives(input.language || 'es-AR')}
+
 RESTRICCIONES ARQUITECTÓNICAS:
 El diseño ya está definido. NO debes inventar código HTML ni CSS. Tu trabajo es puramente redactar textos brillantes y elegir variables estéticas.
 
@@ -117,7 +122,7 @@ ${JSON.stringify(requiredSections, null, 2)}
 
 REGLAS DE COPYWRITING:
 1. Dirígete exclusivamente al Público Objetivo (${input.targetAudience}), usando su lenguaje y empatizando profundamente con sus dolores.
-2. Habla siempre al lector en segunda persona ("tú").
+2. Aplica estrictamente las directivas de modismo y conjugación de segunda persona según el idioma seleccionado.
 3. Sigue las directivas del estilo (${style.name}) al pie de la letra.
 4. Cada frase debe ganarse su lugar; sé conciso, elegante y persuasivo.
 `;
@@ -145,6 +150,7 @@ const RegenerateSectionInputSchema = z.object({
   sectionName: z.string().describe('El nombre de la sección (ej: "Sección Narrativa")'),
   sectionDescription: z.string().optional().describe('La descripción de lo que debe hacer la sección según el estilo'),
   productType: z.string().optional(),
+  language: z.string().optional(),
 });
 
 export type RegenerateSectionInput = z.infer<typeof RegenerateSectionInputSchema>;
@@ -181,6 +187,9 @@ DATOS CLAVE DEL ${productNoun.toUpperCase()} (Para dar contexto):
 
 ESTILO VISUAL: ${style?.name || 'Estándar'}
 ${style?.aiDirectives ? 'Directivas de estilo: ' + style.aiDirectives : ''}
+
+=== DIRECTIVAS DE IDIOMA Y MODISMO (OBLIGATORIO) ===
+${getLanguageDirectives(input.language || 'es-AR')}
 
 LA SECCIÓN A RE-ESCRIBIR:
 - ID de Sección: "${input.sectionId}"

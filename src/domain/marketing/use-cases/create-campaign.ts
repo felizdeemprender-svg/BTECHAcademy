@@ -23,6 +23,7 @@ export const CreateCampaignInputSchema = z.object({
   courseId: z.string().nullable().optional(),
   strategy: CoordinationOutputSchema,
   startDate: z.string().min(1, 'fecha vacía'),
+  language: z.string().optional(),
   /** Solo tests: id determinista. Por defecto, aleatorio como la página actual. */
   id: z.string().min(1).optional(),
 });
@@ -61,6 +62,7 @@ export async function createCampaign(
         courseId: parsed.data.courseId ?? null,
         strategy: parsed.data.strategy,
         startDate: parsed.data.startDate,
+        language: parsed.data.language || 'es-AR',
         autoPilot: true,
         status: 'draft',
         videoSkeletons: [],

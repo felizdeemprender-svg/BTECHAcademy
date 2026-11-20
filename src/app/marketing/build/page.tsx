@@ -39,10 +39,12 @@ import {
   Linkedin,
   Twitter,
   Youtube,
+  Globe,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { SUPPORTED_LANGUAGES, SupportedLanguage } from '@/lib/languages';
 import type { CoordinationOutput } from '@/ai/flows/generate-coordination-plan';
 import {
   publishCampaign,
@@ -127,6 +129,7 @@ function OrchestratorContent() {
   const [campaignTitle, setCampaignTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [campaignMission, setCampaignMission] = useState<'venta' | 'autoridad' | 'lanzamiento' | 'leads'>('lanzamiento');
+  const [language, setLanguage] = useState<SupportedLanguage>('es-AR');
   const [strategicSegments, setStrategicSegments] = useState(STRATEGIC_SEGMENTS);
   const [isGeneratingSegments, setIsGeneratingSegments] = useState(false);
 
@@ -170,6 +173,9 @@ function OrchestratorContent() {
     if (selectedCourse) {
       if (!campaignTitle) setCampaignTitle(`Lanzamiento ${selectedCourse.title}`);
       if (!targetAudience) setTargetAudience(`Público interesado en ${selectedCourse.title}. ${selectedCourse.description || ''}`);
+      if (selectedCourse.language) {
+        setLanguage(selectedCourse.language as SupportedLanguage);
+      }
       
       // Auto-generar segmentos estratégicos con IA
       setIsGeneratingSegments(true);
@@ -307,9 +313,13 @@ function OrchestratorContent() {
         mentorId: profile.uid,
         title: campaignTitle,
         salesPageId: selectedCourseId, // Ahora la campaña referencia a la Landing real directamente
-        courseId: selectedCourseId,
-        strategy: coordinationPlan,
+        courseId: selectedCourse?.courseId || selectedCourseId,
+        strategy: {
+          ...coordinationPlan,
+          language: language,
+        },
         startDate: startDate,
+        language: language,
       }, await getToken());
 
       const realCampaignId = publishRes.id;
@@ -323,12 +333,16 @@ function OrchestratorContent() {
         },
         body: JSON.stringify({
           campaignId: realCampaignId, // Enviamos el ID correcto de la campaña
-          assets: { socials: videoSkeletons },
+          assets: { socials: videoSkeletons, language: language },
           videosPerPlatform,
           targetAudience,
           campaignMission,
-          coordinationPlan: coordinationPlan,
+          coordinationPlan: {
+            ...coordinationPlan,
+            language: language,
+          },
           autoGenerateImages: autoGenerateImages,
+          language: language,
         })
       });
 
@@ -503,6 +517,55 @@ function OrchestratorContent() {
                           <Icon className={cn("h-5 w-5 mx-auto mb-1.5", isSelected ? "text-primary" : "text-muted-foreground")} />
                           <p className="text-xs font-bold">{m.label}</p>
                           <p className="text-[9px] text-muted-foreground mt-0.5">{m.desc}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Idioma y Modismo de la Campaña */}
+                <div className="space-y-3 border border-border/70 bg-white rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Globe className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <Label className="text-[10px] font-black uppercase text-foreground tracking-wider block">Idioma y Modismo de la Campaña</Label>
+                        <p className="text-[10px] text-muted-foreground">
+                          {selectedCourse?.language ? `Heredado de la landing (${selectedCourse.language}). Puedes cambiarlo si deseas otro enfoque.` : 'Se inyectará a los guiones, voz en off, hooks y captions de todas las piezas.'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-[9px] font-bold text-primary border-primary/20 h-5 px-2">Dialecto AI</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+                    {SUPPORTED_LANGUAGES.map((lang) => {
+                      const isSelected = language === lang.code;
+                      return (
+                        <div
+                          key={lang.code}
+                          onClick={() => setLanguage(lang.code)}
+                          className={cn(
+                            "p-3 rounded-xl border-2 text-left transition-all cursor-pointer relative overflow-hidden select-none",
+                            isSelected
+                              ? "border-primary bg-primary/5 shadow-sm"
+                              : "border-border/60 bg-white hover:border-primary/30 hover:bg-muted/30"
+                          )}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-muted text-foreground border border-border">
+                              {lang.badge}
+                            </span>
+                            {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                          </div>
+                          <p className={cn("text-xs font-bold leading-tight", isSelected ? "text-primary" : "text-foreground")}>
+                            {lang.label}
+                          </p>
+                          <p className="text-[9px] text-muted-foreground mt-1 line-clamp-2">
+                            {lang.description}
+                          </p>
                         </div>
                       );
                     })}

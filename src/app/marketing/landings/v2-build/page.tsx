@@ -28,7 +28,8 @@ import {
   AlertTriangle,
   Palette,
   UserCog,
-  Wand2
+  Wand2,
+  Globe
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +41,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { LandingStyle, LandingStyleSection, StyleGroup, STYLE_GROUP_LABELS, STYLE_GROUP_COLORS, StyleBrand } from '@/lib/landing-styles';
 import { uploadPendingImagesInObject } from '@/lib/upload-base64';
+import { SUPPORTED_LANGUAGES, SupportedLanguage } from '@/lib/languages';
 
 const STRATEGIC_SEGMENTS = [
   { id: 'technical', label: 'Perfiles Técnicos (Hard Skills)', desc: 'Enfoque en dominio de herramientas, código, ingeniería o implementación precisa.' },
@@ -88,6 +90,7 @@ function V2LandingBuilderContent() {
   const [title, setTitle] = useState('');
   const [targetAudience, setTargetAudience] = useState('');
   const [templateDirectives, setTemplateDirectives] = useState('');
+  const [language, setLanguage] = useState<SupportedLanguage>('es-AR');
   const [generatedData, setGeneratedData] = useState<any>(null);
   const [colorPaletteName, setColorPaletteName] = useState('');
   const [typographyVariantName, setTypographyVariantName] = useState('');
@@ -358,6 +361,7 @@ function V2LandingBuilderContent() {
         typographyVariantName,
         requestedSections: requestedSections,
         productType: isBundle ? 'combo' : mainCourse.productType,
+        language: language,
       });
 
       // 2. Consultar módulos reales del curso para inyectar en el syllabus (exclusivo para cursos)
@@ -430,6 +434,7 @@ function V2LandingBuilderContent() {
         },
         allowedPaymentMethods,
         targetAudience,
+        language: language,
         activeFrom: activeFrom || null,
         activeUntil: activeUntil || null,
         referidoId: referidoId || null,
@@ -968,6 +973,54 @@ function V2LandingBuilderContent() {
                           {isSelected && <CheckCircle2 className="h-4 w-4 text-primary absolute top-4 right-4" />}
                         </div>
                         <p className="text-[9px] text-muted-foreground line-clamp-3 pr-4">{seg.desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* IDIOMA Y MODISMO DE COPY */}
+              <div className="space-y-4 pt-4 border-t border-muted">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Globe className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] font-black uppercase text-foreground tracking-wider block">Idioma y Modismo del Contenido</Label>
+                      <p className="text-[10px] text-muted-foreground">La IA redactará los títulos, beneficios y llamados a la acción adaptados a este dialecto.</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-[9px] font-bold text-primary border-primary/20 h-5 px-2">Dialecto AI</Badge>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {SUPPORTED_LANGUAGES.map((lang) => {
+                    const isSelected = language === lang.code;
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => setLanguage(lang.code)}
+                        className={cn(
+                          "p-3.5 rounded-xl border-2 text-left transition-all relative overflow-hidden",
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border bg-white hover:border-primary/20 hover:bg-muted/30"
+                        )}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-muted text-foreground border border-border">
+                            {lang.badge}
+                          </span>
+                          {isSelected && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                        </div>
+                        <p className={cn("text-xs font-bold leading-snug", isSelected ? "text-primary" : "text-foreground")}>
+                          {lang.label}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground mt-1 line-clamp-2">
+                          {lang.description}
+                        </p>
                       </button>
                     );
                   })}
