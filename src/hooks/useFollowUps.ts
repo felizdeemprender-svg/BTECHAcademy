@@ -68,26 +68,34 @@ export function useFollowUps(enabled = true) {
     }
   }, [db, profile?.uid, profile?.email, profile?.roles, isAuthLoading, isAdmin, isMentor, enabled]);
 
-  // Fetch session stats
+  // Fetch session stats de forma agregada (getCountFromServer) sin descargar documentos JSON
   useEffect(() => {
     if (followUps.length === 0) return;
+
+    let isCancelled = false;
 
     const fetchAllStats = async () => {
       const stats: Record<string, FollowUpSessionStats> = {};
       await Promise.all(followUps.map(async (fu) => {
         try {
-          const sessionsSnap = await getDocs(
+          const countSnap = await getCountFromServer(
             query(collection(db, 'followups', fu.id, 'sessions'), or(where('isCompleted', '==', true), where('status', '==', 'completed')))
           );
-          stats[fu.id] = { consumed: sessionsSnap.size };
+          stats[fu.id] = { consumed: countSnap.data().count };
         } catch (e) {
           console.error(`Error fetching stats for ${fu.id}:`, e);
         }
       }));
-      setSessionStats(stats);
+      if (!isCancelled) {
+        setSessionStats(stats);
+      }
     };
 
     fetchAllStats();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [followUps, db]);
 
   return {

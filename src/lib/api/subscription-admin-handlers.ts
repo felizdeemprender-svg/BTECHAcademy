@@ -64,6 +64,18 @@ export async function handleListPlans(
   }
 }
 
+interface PublicPlansCacheEntry {
+  data: { plans: unknown; debug: unknown };
+  timestamp: number;
+}
+
+let publicPlansCache: PublicPlansCacheEntry | null = null;
+export const PLANS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+
+export function invalidatePublicPlansCache(): void {
+  publicPlansCache = null;
+}
+
 export async function handleCreatePlan(
   gateway: FirestoreGateway,
   caller: Caller | null,
@@ -77,6 +89,7 @@ export async function handleCreatePlan(
       body,
     );
     if (!result.ok) return domainErrorResponse(result.error, 'Failed to create subscription plan');
+    invalidatePublicPlansCache();
     const input = (body ?? {}) as Record<string, unknown>;
     return NextResponse.json(
       {
@@ -110,6 +123,7 @@ export async function handleUpdatePlan(
       body,
     );
     if (!result.ok) return domainErrorResponse(result.error, 'Failed to update subscription plan');
+    invalidatePublicPlansCache();
     return NextResponse.json({ message: 'Plan actualizado exitosamente', id: result.value.id }, { status: 200 });
   } catch (error) {
     console.error('Error updating subscription plan:', error);
@@ -127,6 +141,7 @@ export async function handleDeletePlan(
   try {
     const result = await deleteSubscriptionPlan(new FirestoreSubscriptionRepository(gateway), id);
     if (!result.ok) return domainErrorResponse(result.error, 'Failed to delete subscription plan');
+    invalidatePublicPlansCache();
     return NextResponse.json({ message: 'Plan eliminado exitosamente', id: result.value.id }, { status: 200 });
   } catch (error) {
     console.error('Error deleting subscription plan:', error);
@@ -139,13 +154,25 @@ export async function handlePublicPlans(
   _caller: Caller | null,
 ): Promise<NextResponse> {
   try {
+    const now = Date.now();
+    if (publicPlansCache && now - publicPlansCache.timestamp < PLANS_CACHE_TTL_MS) {
+      return NextResponse.json(publicPlansCache.data);
+    }
+
     const result = await listPublicPlans(new FirestoreSubscriptionRepository(gateway));
     if (!result.ok) {
       return NextResponse.json({ error: result.error.message }, { status: 500 });
     }
     console.log(`[API_PLANS_DEBUG] Found in subscriptionPlans: ${result.value.debug.camelCaseSize}`);
     console.log(`[API_PLANS_DEBUG] Found in subscription-plans: ${result.value.debug.kebabCaseSize}`);
-    return NextResponse.json({ plans: result.value.plans, debug: result.value.debug });
+
+    const responseData = { plans: result.value.plans, debug: result.value.debug };
+    publicPlansCache = {
+      data: responseData,
+      timestamp: now,
+    };
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('[API_PLANS_ERROR]:', error);
     return NextResponse.json(

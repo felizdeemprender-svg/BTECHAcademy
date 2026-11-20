@@ -1,6 +1,25 @@
-import type {Metadata} from 'next';
+import type { Metadata } from 'next';
+import { Inter, Lexend, Source_Code_Pro } from 'next/font/google';
 import './globals.css';
 import { LayoutWrapper } from './layout-wrapper';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+const lexend = Lexend({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-lexend',
+});
+
+const sourceCodePro = Source_Code_Pro({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-source-code-pro',
+});
 
 export const metadata: Metadata = {
   title: 'Fastoria & BTECHAcademy | Plataforma de Alto Impacto para Creadores y Mentores',
@@ -14,13 +33,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased selection:bg-accent/30 selection:text-accent" suppressHydrationWarning>
+    <html
+      lang="es"
+      className={`${inter.variable} ${lexend.variable} ${sourceCodePro.variable}`}
+      suppressHydrationWarning
+    >
+      <body className={`${inter.className} font-body antialiased selection:bg-accent/30 selection:text-accent`} suppressHydrationWarning>
         <LayoutWrapper>
           {children}
         </LayoutWrapper>
