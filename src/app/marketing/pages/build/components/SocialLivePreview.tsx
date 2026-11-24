@@ -446,8 +446,8 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         <span className="font-bold text-foreground mr-2">@{social.handle || 'tu_cuenta'}</span>
         {social.caption || 'Aquí irá el cuerpo de la publicación...'}
         <div className="mt-4 text-primary font-bold text-xs flex flex-wrap gap-2">
-          {hasLanding && <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[10px] border border-primary/15">🔗 Landing: {landingUrl}</span>}
-          {hasMentor && <span className="bg-muted text-foreground px-3 py-1.5 rounded-xl text-[10px] border border-border">👤 Mentor: Link en Bio</span>}
+          {hasLanding && <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[10px] border border-primary/15">Landing: {landingUrl}</span>}
+          {hasMentor && <span className="bg-muted text-foreground px-3 py-1.5 rounded-xl text-[10px] border border-border">Mentor: Link en Bio</span>}
           <div className="flex gap-1.5">
             {social.hashtags?.map((h: string) => h.startsWith('#') ? h : `#${h}`).map((h: string, i: number) => (
                 <span key={i} className="text-primary font-black tracking-tight">{h}</span>

@@ -608,7 +608,7 @@ ${winFontsDir}
   return finalPath;
 }
 
-function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
+export function runFfmpeg(args: string[], envOverrides: any = {}, timeoutMs: number = 180000): Promise<void> {
   return new Promise((resolve, reject) => {
     // Prefer the GPL binary (with libass for subtitles) downloaded at build time.
     // Falls back to ffmpeg-static if the custom binary is missing.
@@ -628,9 +628,22 @@ function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
+    let isTimedOut = false;
+    const timer = setTimeout(() => {
+      isTimedOut = true;
+      console.error(`[FFmpeg Timeout] El proceso excedio el limite de ${timeoutMs}ms. Abortando con SIGKILL.`);
+      try {
+        proc.kill('SIGKILL');
+      } catch (killErr) {
+        console.warn('[FFmpeg Timeout] Fallo al forzar cierre de proceso:', killErr);
+      }
+      reject(new Error(`FFmpeg proceso abortado por timeout (${timeoutMs}ms)`));
+    }, timeoutMs);
+
     proc.on('error', (err) => {
+      clearTimeout(timer);
       console.error('[FFmpeg Process Error]', err);
-      reject(err);
+      if (!isTimedOut) reject(err);
     });
 
     let lastLog = Date.now();
@@ -656,7 +669,9 @@ function runFfmpeg(args: string[], envOverrides: any = {}): Promise<void> {
     });
 
     proc.on('close', (code: any) => {
+      clearTimeout(timer);
       process.stdout.write('\n');
+      if (isTimedOut) return;
       if (code === 0) resolve();
       else reject(new Error(`FFmpeg failed with code ${code}`));
     });

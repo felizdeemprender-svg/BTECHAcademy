@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GenerateVideoUseCase } from '@/domain/video/use-cases/generate-video-use-case';
 import { FirestoreVideoJobRepository } from '@/data/firestore/video-job-repo';
+import { workerPayloadSchema } from './schema';
 
 export const maxDuration = 300;
 
@@ -13,27 +14,50 @@ export async function POST(req: NextRequest) {
   try {
     // 1. Autenticación M2M (Machine to Machine)
     const authHeader = req.headers.get('Authorization');
-    const secret = process.env.WORKER_SECRET || 'fastoria-video-worker-local-secret';
+    const expectedSecret = process.env.WORKER_SECRET;
+    const isProduction = process.env.NODE_ENV === 'production';
     
+    // En producción se exige estrictamente WORKER_SECRET configurado
+    if (isProduction && !expectedSecret) {
+      console.error('[VideoWorker] Error de configuracion: WORKER_SECRET no definido en produccion.');
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    }
+    
+    const secret = expectedSecret || 'fastoria-video-worker-local-secret';
     if (authHeader !== `Bearer ${secret}`) {
       console.error('[VideoWorker] Intento de acceso no autorizado.');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Extraer Payload
-    const payload = await req.json();
-    console.log('[VideoWorker] Iniciando tarea en background:', JSON.stringify(payload).substring(0, 200) + '...');
+    // 2. Extraer y Validar Payload con Zod
+    let rawPayload: any;
+    try {
+      rawPayload = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'JSON mal formado en la peticion' }, { status: 400 });
+    }
 
+    console.log('[VideoWorker] Iniciando tarea en background:', JSON.stringify(rawPayload).substring(0, 200) + '...');
+
+    const parsed = workerPayloadSchema.safeParse(rawPayload);
+    if (!parsed.success) {
+      console.warn('[VideoWorker] Payload invalido:', parsed.error.format());
+      return NextResponse.json({ 
+        error: 'Payload invalido', 
+        details: parsed.error.flatten() 
+      }, { status: 400 });
+    }
+
+    const payload = parsed.data;
     const { action, data, uid, role } = payload;
     const googleToken = payload.googleToken || data?.googleToken;
-
-    if (!action) {
-      return NextResponse.json({ error: 'Falta parametro action' }, { status: 400 });
-    }
 
     // 3. Orquestador Unificado de Campañas
     if (action === 'generate-full-campaign' || action === 'draft-full-campaign' || action === 'process-campaign') {
       let { campaignId, targetAudience, campaignMission } = payload;
+      if (!campaignId) {
+        return NextResponse.json({ error: 'Falta parametro campaignId' }, { status: 400 });
+      }
       // Parámetro unificado: por defecto genera imágenes, salvo que explícitamente se indique false
       const autoGenerateImages = payload.autoGenerateImages !== false && data?.autoGenerateImages !== false;
       console.log(`[VideoWorker] Procesando campana: ${campaignId} (Imagenes automaticas: ${autoGenerateImages ? 'SI' : 'NO'})`);
@@ -183,7 +207,7 @@ ENFOQUE / MENTOR: ${aboutMentor || 'Feliz de Emprender: Expertos en guiar a prof
         });
       } else {
         const { planCampaignSocials } = await import('@/ai/flows/plan-campaign-socials');
-        socials = await planCampaignSocials({ socials, courseTitle, targetAudience, campaignMission: campaignMission || 'venta', uid, role });
+        socials = await planCampaignSocials({ socials, courseTitle, targetAudience: targetAudience || 'General', campaignMission: campaignMission || 'venta', uid: uid || '', role: role || 'mentor' });
         
         const { generateCoordinationPlan } = await import('@/ai/flows/generate-coordination-plan');
         try {
@@ -260,10 +284,10 @@ ENFOQUE / MENTOR: ${aboutMentor || 'Feliz de Emprender: Expertos en guiar a prof
                 const { generateImage } = await import('@/lib/ai/generate-image');
                 const bucket = adminStorage.bucket();
 
-                // 1. Escenas de video
+                // 1. Escenas de video (Generación paralela por pieza para evitar timeouts)
                 const pieceAdnId = social.adnId || social.production_notes?.adnId;
-                if (aiContent.scenes) {
-                  for (let scene of aiContent.scenes) {
+                if (aiContent.scenes && Array.isArray(aiContent.scenes)) {
+                  await Promise.all(aiContent.scenes.map(async (scene: any) => {
                     if (scene.media_hint && !scene.imageUrl) {
                       try {
                         const aspectRatio = (social.platform === 'instagram' || social.platform === 'tiktok') ? '9:16' : (social.platform === 'youtube' ? '16:9' : '1:1');
@@ -287,12 +311,12 @@ ENFOQUE / MENTOR: ${aboutMentor || 'Feliz de Emprender: Expertos en guiar a prof
                         console.warn('[VideoWorker] Fallo auto-generacion de imagen en escena:', imgErr?.message || imgErr);
                       }
                     }
-                  }
+                  }));
                 }
 
-                // 2. Placas de carrusel
-                if (aiContent.slides) {
-                  for (let slide of aiContent.slides) {
+                // 2. Placas de carrusel (Generación paralela por pieza)
+                if (aiContent.slides && Array.isArray(aiContent.slides)) {
+                  await Promise.all(aiContent.slides.map(async (slide: any) => {
                     if (slide.media_hint && !slide.imageUrl) {
                       try {
                         const aspectRatio = (social.platform === 'instagram' || social.platform === 'tiktok') ? '9:16' : (social.platform === 'youtube' ? '16:9' : '1:1');
@@ -316,7 +340,7 @@ ENFOQUE / MENTOR: ${aboutMentor || 'Feliz de Emprender: Expertos en guiar a prof
                         console.warn('[VideoWorker] Fallo auto-generacion de imagen en slide:', imgErr?.message || imgErr);
                       }
                     }
-                  }
+                  }));
                 }
               }
 
@@ -382,8 +406,9 @@ ENFOQUE / MENTOR: ${aboutMentor || 'Feliz de Emprender: Expertos en guiar a prof
       const repo = new FirestoreVideoJobRepository();
       const useCase = new GenerateVideoUseCase(repo);
       
+      if (!uid) return NextResponse.json({ error: 'Falta parametro uid' }, { status: 400 });
       console.log(`[VideoWorker] Ejecutando GenerateVideoUseCase para usuario: ${uid}`);
-      const result = await useCase.execute(data, uid, role || 'mentor');
+      const result = await useCase.execute((data || payload) as any, uid, role || 'mentor');
       
       console.log(`[VideoWorker] Tarea completada con exito. Job ID: ${result.jobId}`);
       return NextResponse.json({ success: true, result });
@@ -391,6 +416,7 @@ ENFOQUE / MENTOR: ${aboutMentor || 'Feliz de Emprender: Expertos en guiar a prof
 
     if (action === 'render-v2') {
       const jobId = data?.jobId || payload?.jobId;
+      if (!jobId) return NextResponse.json({ error: 'Falta jobId para render-v2' }, { status: 400 });
       const renderRequest = data?.renderRequest || payload?.renderRequest || data;
       console.log(`[VideoWorker] Ejecutando render-v2 con FFmpeg para jobId: ${jobId}`);
       const { runRenderJob } = await import('@/lib/video/render-job');

@@ -187,7 +187,7 @@ export function VideoProductionPanel({
             <SelectContent className="bg-white border-border text-foreground">
               {Object.values(adns).map((adn: any) => (
                 <SelectItem key={adn.id} value={adn.id} className="text-[10px] uppercase font-bold">
-                  🎬 {adn.name}
+                  {adn.name}
                 </SelectItem>
               ))}
             </SelectContent>

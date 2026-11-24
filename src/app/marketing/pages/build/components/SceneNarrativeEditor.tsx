@@ -326,7 +326,7 @@ export function SceneNarrativeEditor({
                              className="text-[9px] font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-2.5 py-1.5 rounded-lg transition-colors mt-4 self-end"
                              title="Ajustar duración a la cadencia natural del guion"
                            >
-                             ⚡ Sincronizar ({optimalDuration}s)
+                             Sincronizar ({optimalDuration}s)
                            </button>
                          )}
                        </div>
@@ -356,7 +356,7 @@ export function SceneNarrativeEditor({
                      {/* Alerta contextual de desfase de locución */}
                      {isTooFast && (
                        <div className="text-[9px] font-medium text-warn flex items-center gap-1.5 bg-warn/10 border border-warn/20 px-3 py-1.5 rounded-lg">
-                         <span>⚠️ Guion extenso ({wordCount} palabras). Para mantener el dinamismo se recomienda acotar el texto o extender la escena a {optimalDuration}s.</span>
+                         <span>Atencion: Guion extenso ({wordCount} palabras). Para mantener el dinamismo se recomienda acotar el texto o extender la escena a {optimalDuration}s.</span>
                        </div>
                      )}
                      {isTooSlow && (
