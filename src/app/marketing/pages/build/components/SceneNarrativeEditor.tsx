@@ -204,14 +204,28 @@ export function SceneNarrativeEditor({
                     ) : (
                       <>
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
-                              <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
-                            </Label>
-                            <span className="text-[9px] text-muted-foreground font-medium hidden sm:inline-block">
-                              Usa <strong>*palabra*</strong> para resaltar
-                            </span>
-                          </div>
+                          {(() => {
+                            const curDuration = parseFloat(sl.duration) || 4.5;
+                            const titleParts = (sl.text || '').split(/\r?\n|\\n|\|/).map((p: string) => p.trim()).filter(Boolean);
+                            const titleWords = (sl.text || '').trim().split(/\s+/).filter(Boolean);
+                            const titleRounds = titleParts.length >= 2 ? titleParts.length : (titleWords.length > 5 && curDuration >= 2.8 ? 2 : 1);
+
+                            return (
+                              <div className="flex items-center justify-between">
+                                <Label className="text-[10px] font-black uppercase text-primary flex items-center gap-2 mb-1">
+                                  <Volume2 className="h-3 w-3" /> Texto de Impacto (Pantalla)
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-[9px] font-bold text-muted-foreground">
+                                    {titleRounds} {titleRounds === 1 ? 'ronda' : 'rondas'} ({curDuration}s)
+                                  </Badge>
+                                  <span className="text-[9px] text-muted-foreground font-medium hidden sm:inline-block">
+                                    Usa <strong>*palabra*</strong> para resaltar o <strong>|</strong> para rotar
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                           <Textarea 
                             value={sl.text || ''}
                             onChange={(e) => {
@@ -219,16 +233,19 @@ export function SceneNarrativeEditor({
                               newItems[i] = { ...newItems[i], text: e.target.value };
                               updateAsset('socials', sIdx, 'slides', newItems);
                             }}
-                            placeholder="Frase corta para resaltar en pantalla... Ej: Aprende a *VENDER*"
+                            placeholder="Frase de impacto... Ej: ¿NEGOCIO *FRENADO*? o Frase 1 | *FRASE 2*"
                             className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[60px] text-sm font-black focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl p-4"
                           />
                         </div>
                         <div className="space-y-2">
                           {(() => {
                             const curDuration = parseFloat(sl.duration) || 4.5;
-                            const subParts = (sl.subtitle || '').split(/\r?\n|\\n/).map((p: string) => p.trim()).filter(Boolean);
-                            const subRounds = subParts.length >= 2 ? subParts.length : (curDuration >= 2.8 && (sl.subtitle || '').trim().split(/\s+/).length >= 3 ? 2 : 1);
-                            const canAutoSplit = subParts.length <= 1 && (sl.subtitle || '').trim().split(/\s+/).length >= 4 && curDuration >= 3.0;
+                            const subParts = (sl.subtitle || '').split(/\r?\n|\\n|\|/).map((p: string) => p.trim()).filter(Boolean);
+                            const titleParts = (sl.text || '').split(/\r?\n|\\n|\|/).map((p: string) => p.trim()).filter(Boolean);
+                            const titleWords = (sl.text || '').trim().split(/\s+/).filter(Boolean);
+                            const titleRounds = titleParts.length >= 2 ? titleParts.length : (titleWords.length > 5 && curDuration >= 2.8 ? 2 : 1);
+                            const subRounds = subParts.length >= 2 ? subParts.length : (titleRounds > 1 && (sl.subtitle || '').trim().split(/\s+/).length >= 6 ? 2 : 1);
+                            const canAutoSplit = subParts.length <= 1 && (sl.subtitle || '').trim().split(/\s+/).length >= 6 && curDuration >= 3.0;
 
                             return (
                               <div className="flex items-center justify-between">
@@ -245,14 +262,14 @@ export function SceneNarrativeEditor({
                                       onClick={() => {
                                         const words = (sl.subtitle || '').trim().split(/\s+/);
                                         const mid = Math.ceil(words.length / 2);
-                                        const newSub = `${words.slice(0, mid).join(' ')}\n${words.slice(mid).join(' ')}`;
+                                        const newSub = `${words.slice(0, mid).join(' ')} | ${words.slice(mid).join(' ')}`;
                                         const newItems = [...items];
                                         newItems[i] = { ...newItems[i], subtitle: newSub };
                                         updateAsset('socials', sIdx, 'slides', newItems);
                                       }}
                                       className="text-[9px] font-bold text-primary hover:underline cursor-pointer"
                                     >
-                                      Dividir en 2 rondas
+                                      Dividir con | en 2 rondas
                                     </button>
                                   )}
                                 </div>
@@ -266,7 +283,7 @@ export function SceneNarrativeEditor({
                               newItems[i] = { ...newItems[i], subtitle: e.target.value };
                               updateAsset('socials', sIdx, 'slides', newItems);
                             }}
-                            placeholder="Subtítulo dinámico... Usa salto de línea para rotar en 2 rondas (ej: Frase 1\nFrase 2)"
+                            placeholder="Subtítulo dinámico... Usa '|' o salto de línea para rotar (ej: Frase 1 | Frase 2)"
                             className="bg-white border border-border text-foreground placeholder:text-muted-foreground/40 min-h-[50px] text-xs font-medium focus-visible:ring-1 focus-visible:ring-muted-foreground/50 p-3 rounded-xl"
                           />
                         </div>

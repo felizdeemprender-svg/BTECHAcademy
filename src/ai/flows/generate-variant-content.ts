@@ -13,8 +13,8 @@ import { getLanguageDirectives } from '@/lib/languages';
 
 const SceneContentSchema = z.object({
   segment_label: z.enum(['GANCHO', 'VALOR', 'VALOR_CONT', 'CIERRE', 'CTA']).describe('CRÍTICO: ES OBLIGATORIO RESPETAR EL ORDEN EXACTO DE LOS SEGMENTOS INDICADO EN EL PROMPT (ej: si dice 1. GANCHO, 2. VALOR, 3. CIERRE, DEBES devolver esos segment_label exactamente). ¡NUNCA repitas VALOR para todas las escenas!'),
-  text: z.string().describe('Texto de impacto visual según duración: para escenas de 3s a 5.5s, estructurado en exactamente 2 micro-frases con salto de línea y 2 palabras en asteriscos (ej: "Aprende a *VENDER*\\nel *DOBLE* cada mes"). Para escenas ≤ 3s, 1 sola frase con 1 palabra en asteriscos. Para > 5.5s, 3 frases con 3 palabras en asteriscos.'),
-  subtitle: z.string().describe('Subtítulo dinámico sincronizado según duración: para escenas de 3s a 5.5s, DEBES dividirlo con "\\n" en 2 frases de apoyo (ej: "Estrategia probada\\nResultados comprobados") que rotarán exactamente con las 2 fases del título. Para escenas ≤ 3s, 1 sola frase corta (3-4 palabras).'),
+  text: z.string().describe('Texto de impacto visual según duración: Puede ser de 1 sola frase potente y completa (ej: "¿NEGOCIO *FRENADO*?") o de 2 micro-frases separadas OBLIGATORIAMENTE por una barra vertical "|" o salto de línea "\\n" si la escena rota en 2 momentos cinéticos (ej: "¿Ventas estancadas? | *APRENDE EL MÉTODO*"). Enmarca 1 o 2 palabras clave entre asteriscos para resaltar en color acento. ¡NUNCA cortes una frase a medias sin sentido!'),
+  subtitle: z.string().describe('Subtítulo dinámico sincronizado: Si el texto principal tiene 1 frase, el subtítulo DEBE ser 1 frase completa y fluida (ej: "Necesitás impulsar tu red hoy mismo"). Si el texto principal tiene 2 frases separadas por "|" o "\\n", el subtítulo también debe dividirse con "|" o "\\n" en 2 apoyos sincronizados con sentido gramatical completo.'),
   watermark: z.string().describe('El @usuario (handle) de la red social.'),
   voiceover: z.string().describe('Guion hablado exacto para la escena. ¡CRÍTICO!: Cadencia natural de 2 a 2.5 palabras por segundo de duración (ej: para 4s genera 8-10 palabras habladas fluidas).'),
   media_hint: z.string().describe('Keywords precisas para buscar el fondo visual (ej: "minimalist dark luxury office"). AÑADE SIEMPRE directivas de contraste (ej: "dark background", "dim lighting", "dark gradient") para asegurar que el texto superpuesto sea legible y no se funda con el fondo.'),
@@ -166,10 +166,10 @@ Tu misión es coordinar lo que se OYE con lo que se VE:
     dualNarrativeInstruction = `REGLA DE NARRATIVA DUAL (REELS / TIKTOK / SHORTS - RETENCIÓN ALTA):
 - DURACIÓN TOTAL DEL REEL: Debe durar entre 16 y 24 SEGUNDOS en total (${expectedCount} escenas de 3 a 5 segundos cada una). ¡PROHIBIDO generar videos de 40-50 segundos!
 - CADENCIA DE VOZ (voiceover): Exactamente entre 7 y 12 palabras de habla fluida por escena (aprox 2 a 2.5 palabras por segundo de duración). El guion debe sonar natural y sin pausas eternas.
-- LA PANTALLA (text y subtitle) SINCRONIZADOS POR SEGUNDOS:
-  * Para escenas de 3.1s a 5.5s (estándar Reels): TANTO 'text' COMO 'subtitle' deben dividirse en exactamente 2 micro-frases con salto de línea ('frase 1 \\n frase 2' y 'sub 1 \\n sub 2'). En 'text' marca 2 palabras clave entre asteriscos ('*palabra 1* \\n *palabra 2*').
-  * Para escenas ≤ 3s: 1 sola frase en 'text' (1 palabra entre asteriscos) y 1 frase corta en 'subtitle' (3-4 palabras).
-  * Para escenas > 5.5s: 3 micro-frases con '\\n' tanto en 'text' como en 'subtitle'.`;
+- LA PANTALLA (text y subtitle) DE ALTO IMPACTO:
+  * Si la idea visual es un gancho directo o llamado conciso, usa 1 sola frase completa (ej: '¿NEGOCIO *FRENADO*?'). El subtítulo acompañará como 1 sola frase fluida completa.
+  * Si la escena rota en 2 momentos cinéticos (3.1s a 5.5s), separa OBLIGATORIAMENTE con '|' o '\\n' dos micro-frases con sentido gramatical completo (ej: '¿Tu negocio no avanza? | *APRENDE EL MÉTODO*'). El subtítulo también se dividirá con '|' o '\\n' en 2 apoyos sincronizados.
+  * Para escenas > 5.5s: 3 micro-frases con '|' o '\\n' tanto en 'text' como en 'subtitle'.`;
   }
 
   const generatePrompt = `Actúa como un Director Creativo y Guionista Senior especializado en Marketing Cinético.

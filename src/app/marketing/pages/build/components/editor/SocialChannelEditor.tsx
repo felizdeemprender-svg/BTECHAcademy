@@ -56,6 +56,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   getSystemVideoPalettes,
+  getAllVideoBrandPalettes,
   resolveVideoBrandPalette
 } from '@/lib/video/brand-palettes';
 import {
@@ -640,7 +641,7 @@ export function SocialChannelEditor({
                                                             </div>
                                                           </SelectTrigger>
                                                           <SelectContent className="bg-white border-border text-foreground max-h-72">
-                                                            {getSystemVideoPalettes(profile, courses?.find((c: any) => c.id === selectedCourseId)).map((palette) => (
+                                                            {getAllVideoBrandPalettes(profile, courses?.find((c: any) => c.id === selectedCourseId)).map((palette) => (
                                                               <SelectItem key={palette.id} value={palette.id} className="text-[10px] uppercase font-bold">
                                                                 <div className="flex items-center gap-2">
                                                                   {palette.primary ? (
@@ -649,7 +650,9 @@ export function SocialChannelEditor({
                                                                       style={{ backgroundColor: palette.primary }}
                                                                     />
                                                                   ) : (
-                                                                    <span className="text-[10px]"></span>
+                                                                    <span className="w-2.5 h-2.5 rounded-full border border-dashed border-muted-foreground/60 flex items-center justify-center text-[7px] font-black shrink-0">
+                                                                      A
+                                                                    </span>
                                                                   )}
                                                                   <span>{palette.name}</span>
                                                                 </div>
