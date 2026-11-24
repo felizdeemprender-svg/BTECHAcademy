@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { getSystemVideoPalettes, resolveVideoBrandPalette } from '../brand-palettes';
+import { getSystemVideoPalettes, getAllVideoBrandPalettes, resolveVideoBrandPalette, cleanCssColor, SYSTEM_SUGGESTED_BRANDS } from '../brand-palettes';
 import { generateAssFile, splitKineticPhrase, resolveAssFontDescriptor } from '../engine';
 import { resolveCssFont } from '@/app/marketing/pages/build/components/SocialLivePreview';
 
@@ -398,5 +398,125 @@ describe('System Brand Palettes & FFmpeg ASS Colors', () => {
       expect(ganchoSub.outline).toBeDefined();
       expect(ganchoSub.outline.color).toBe('#000000');
     }
+  });
+
+  it('cleanCssColor debe sanitizar correctamente colores con sintaxis @alpha para compatibilidad CSS', () => {
+    expect(cleanCssColor('#FFD700@1.0')).toBe('#FFD700');
+    expect(cleanCssColor('#FFFFFF@1.0')).toBe('#FFFFFF');
+    expect(cleanCssColor('#FEF08A@0.8')).toBe('rgba(254, 240, 138, 0.8)');
+    expect(cleanCssColor('white@0.5')).toBe('rgba(255, 255, 255, 0.5)');
+    expect(cleanCssColor('black@1.0')).toBe('#000000');
+    expect(cleanCssColor('#00F0FF')).toBe('#00F0FF');
+    expect(cleanCssColor(undefined, '#FFFFFF')).toBe('#FFFFFF');
+    expect(cleanCssColor('', '#000000')).toBe('#000000');
+  });
+
+  it('getAllVideoBrandPalettes debe unificar ADN preset, marcas de tutor, curso y las marcas sugeridas del sistema', () => {
+    const profile = {
+      brands: [
+        { name: 'Marca Tutor', palette: { primary: '#112233', secondary: '#FFFFFF', accent: '#334455' } }
+      ]
+    };
+    const course = {
+      branding: { primaryColor: '#445566' }
+    };
+
+    const all = getAllVideoBrandPalettes(profile, course);
+    expect(all.find(p => p.id === 'adn')).toBeDefined();
+    expect(all.find(p => p.id.includes('marca_tutor'))).toBeDefined();
+    expect(all.find(p => p.id === 'course-branding')).toBeDefined();
+    expect(all.find(p => p.id === 'sys-purple')).toBeDefined();
+    expect(all.find(p => p.id === 'sys-indigo')).toBeDefined();
+    expect(all.length).toBe(1 + 1 + 1 + SYSTEM_SUGGESTED_BRANDS.length);
+  });
+
+  it('todas las fuentes TrueType (.ttf) mapeadas para el emulador deben existir fisicamente en public/fonts/', () => {
+    const fontsDir = path.join(process.cwd(), 'public', 'fonts');
+    const requiredFonts = [
+      'BebasNeue-Regular.ttf',
+      'Montserrat.ttf',
+      'impact.ttf',
+      'georgia.ttf',
+      'trebucbd.ttf',
+      'calibri.ttf',
+      'arialbd.ttf',
+      'Inter-Black.ttf',
+      'Inter-ExtraBold.ttf',
+      'Inter-Bold.ttf',
+      'Inter-SemiBold.ttf',
+      'Inter-Medium.ttf',
+      'Inter-Light.ttf',
+      'Inter-Regular.ttf'
+    ];
+
+    for (const fontName of requiredFonts) {
+      const fontPath = path.join(fontsDir, fontName);
+      expect(fs.existsSync(fontPath), `La fuente fisica ${fontName} debe existir en public/fonts/`).toBe(true);
+      const stat = fs.statSync(fontPath);
+      expect(stat.size).toBeGreaterThan(1000);
+    }
+  });
+
+  it('todos los 10 ADNs deben mapear a familias CSS validas con @font-face local y pesos coherentes', () => {
+    const adnsDir = path.join(process.cwd(), 'public', 'adns');
+    const adnDirs = ['01_CINEMA', '02_LUXURYGO', '03_CORPORAT', '04_GAMINGGL', '05_MINIMALD', '06_FASTCUT', '07_VINTAGEV', '08_BOLDREELS', '09_TITANPRO', '10_ZENHARMONY'];
+
+    for (const adnId of adnDirs) {
+      const typPath = path.join(adnsDir, adnId, 'typography.json');
+      expect(fs.existsSync(typPath), `El ADN ${adnId} debe tener typography.json`).toBe(true);
+      const typData = JSON.parse(fs.readFileSync(typPath, 'utf-8'));
+      
+      const segments = ['GANCHO', 'VALOR', 'CTA'];
+      for (const seg of segments) {
+        const segText = typData.segment_styles?.[seg]?.text;
+        const segSub = typData.segment_styles?.[seg]?.subtitle;
+        if (segText?.fontName) {
+          const css = resolveCssFont(segText.fontName, segText.bold, segText.italic);
+          expect(css.fontFamily).toBeTruthy();
+          expect(css.fontWeight).toBeTruthy();
+        }
+        if (segSub?.fontName) {
+          const css = resolveCssFont(segSub.fontName, segSub.bold, segSub.italic);
+          expect(css.fontFamily).toBeTruthy();
+          expect(css.fontWeight).toBeTruthy();
+        }
+      }
+    }
+  });
+
+  it('resolveCssFont debe contemplar modificadores de estilo fontStyle italic y bold correctamente', () => {
+    const italicSub = resolveCssFont('calibri.ttf', false, true);
+    expect(italicSub.fontStyle).toBe('italic');
+
+    const regularSub = resolveCssFont('calibri.ttf', false, false);
+    expect(regularSub.fontStyle).toBe('normal');
+
+    const georgiaItalic = resolveCssFont('georgia.ttf', true, true);
+    expect(georgiaItalic.fontStyle).toBe('italic');
+    expect(georgiaItalic.fontWeight).toBe('700');
+  });
+
+  it('resolveVideoBrandPalette debe priorizar paletteId sobre colores previos y resolver marcas sugeridas del sistema', () => {
+    // 1. ADN preset retorna null
+    expect(resolveVideoBrandPalette('adn')).toBeNull();
+
+    // 2. Marcas sugeridas del sistema
+    const purple = resolveVideoBrandPalette('sys-purple');
+    expect(purple?.primary).toBe('#760464');
+    expect(purple?.accent).toBe('#A21CAF');
+
+    const emerald = resolveVideoBrandPalette('sys-emerald');
+    expect(emerald?.primary).toBe('#059669');
+    expect(emerald?.accent).toBe('#10B981');
+
+    // 3. Prevalencia de paletteId sobre customBrandColors si paletteId no es 'custom'
+    const overridden = resolveVideoBrandPalette('sys-indigo', { primary: '#000000', accent: '#FFFFFF' });
+    expect(overridden?.primary).toBe('#4F46E5');
+    expect(overridden?.accent).toBe('#6366F1');
+
+    // 4. Marca custom explicita
+    const custom = resolveVideoBrandPalette('custom', { name: 'Mi Marca Custom', primary: '#123456', accent: '#654321' });
+    expect(custom?.primary).toBe('#123456');
+    expect(custom?.accent).toBe('#654321');
   });
 });

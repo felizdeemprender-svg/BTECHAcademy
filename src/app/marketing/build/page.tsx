@@ -57,6 +57,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
+import { Palette, Eye } from 'lucide-react';
+import { SocialLivePreview } from '@/app/marketing/pages/build/components/SocialLivePreview';
+import { getSystemVideoPalettes, SYSTEM_SUGGESTED_BRANDS, VideoBrandPalette, cleanCssColor } from '@/lib/video/brand-palettes';
+import { ADN_CATALOG, ADN_FALLBACK_IMAGES } from './constants';
 
 /* ─────────────────── Constants ─────────────────── */
 
@@ -98,6 +102,7 @@ const PLATFORM_DEFS = [
   { id: 'twitter',  label: 'X / Twitter', Icon: Twitter,     color: 'from-slate-600 to-slate-900' },
 ] as const;
 
+
 /* ─────────────────── Page wrapper ─────────────────── */
 
 export default function CampaignOrchestratorPage() {
@@ -132,6 +137,14 @@ function OrchestratorContent() {
   const [language, setLanguage] = useState<SupportedLanguage>('es-AR');
   const [strategicSegments, setStrategicSegments] = useState(STRATEGIC_SEGMENTS);
   const [isGeneratingSegments, setIsGeneratingSegments] = useState(false);
+  /* ── State: Step 3 — Identidad Visual, ADN y Marcas ── */
+  const [masterAdns, setMasterAdns] = useState<Record<string, any>>({});
+  const [selectedAdnId, setSelectedAdnId] = useState<string>('01_CINEMA');
+  const [brandPrimary, setBrandPrimary] = useState<string>('#8B5CF6');
+  const [brandAccent, setBrandAccent] = useState<string>('#A78BFA');
+  const [selectedPaletteId, setSelectedPaletteId] = useState<string>('course-branding');
+  const [previewPlatform, setPreviewPlatform] = useState<'instagram' | 'tiktok' | 'linkedin' | 'youtube'>('instagram');
+
 
   /* ── State: Step 2 — Strategy ── */
   const [strategy, setStrategy] = useState<'flash_sale' | 'classic_launch' | 'evergreen_warmup'>('classic_launch');
@@ -197,6 +210,200 @@ function OrchestratorContent() {
     }
   }, [selectedCourse]);
 
+  
+  /* ── Carga de ADNs maestros dinámicos ── */
+  useEffect(() => {
+    const fetchAdns = async () => {
+      try {
+        const res = await fetch('/api/adns');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.adns)) {
+          const map: Record<string, any> = {};
+          data.adns.forEach((a: any) => { map[a.id] = a; });
+          setMasterAdns(map);
+        }
+      } catch (e) {
+        console.warn('No se pudieron cargar los ADNs maestros:', e);
+      }
+    };
+    fetchAdns();
+  }, []);
+
+  /* ── Paletas unificadas del sistema (Brands del tutor y del curso) ── */
+  const unifiedSystemPalettes = useMemo(() => {
+    return getSystemVideoPalettes(profile, selectedCourse);
+  }, [profile, selectedCourse]);
+
+  const tutorAndCoursePalettes = useMemo(() => {
+    return unifiedSystemPalettes.filter(p => p.id !== 'adn');
+  }, [unifiedSystemPalettes]);
+
+  const adnPresetPalette = useMemo(() => {
+    return unifiedSystemPalettes.find(p => p.id === 'adn') || null;
+  }, [unifiedSystemPalettes]);
+
+  /* ── Sincronizar color y acento de marca con la Landing seleccionada ── */
+  useEffect(() => {
+    if (selectedCourse) {
+      const sc = selectedCourse as any;
+      const coursePrimary = sc.branding?.primaryColor || 
+        sc.brandingOverride?.primaryColor || 
+        profile?.profile?.branding?.primaryColor || 
+        profile?.primaryColor || 
+        '#8B5CF6';
+      const courseAccent = sc.branding?.accentColor || 
+        sc.brandingOverride?.accentColor || 
+        sc.branding?.secondaryColor || 
+        '#A78BFA';
+      
+      setBrandPrimary(coursePrimary);
+      setBrandAccent(courseAccent);
+      setSelectedPaletteId(sc.branding?.primaryColor ? 'course-branding' : 'default');
+    }
+  }, [selectedCourse, profile]);
+
+  const activeAdn = useMemo(() => {
+    return masterAdns[selectedAdnId] || ADN_CATALOG.find(a => a.id === selectedAdnId) || null;
+  }, [masterAdns, selectedAdnId]);
+
+  const handleSelectPalette = (palette: VideoBrandPalette) => {
+    setSelectedPaletteId(palette.id);
+    if (palette.id === 'adn') {
+      const adnText = activeAdn?.typography_engine?.segment_styles?.GANCHO?.text;
+      const adnSub = activeAdn?.typography_engine?.segment_styles?.GANCHO?.subtitle;
+      const primaryClean = cleanCssColor(adnText?.primaryColor) || '#FFFFFF';
+      const accentClean = cleanCssColor(adnText?.accentColor) || cleanCssColor(adnSub?.accentColor) || '#FFD700';
+      setBrandPrimary(primaryClean);
+      setBrandAccent(accentClean);
+    } else {
+      setBrandPrimary(palette.primary);
+      setBrandAccent(palette.accent || palette.secondary || palette.primary);
+    }
+  };
+
+  // Mantener sincronizado el color de muestra si el usuario está en el preset nativo del ADN y cambia de ADN
+  useEffect(() => {
+    if (selectedPaletteId === 'adn' && activeAdn) {
+      const adnText = activeAdn?.typography_engine?.segment_styles?.GANCHO?.text;
+      const adnSub = activeAdn?.typography_engine?.segment_styles?.GANCHO?.subtitle;
+      const primaryClean = cleanCssColor(adnText?.primaryColor) || '#FFFFFF';
+      const accentClean = cleanCssColor(adnText?.accentColor) || cleanCssColor(adnSub?.accentColor) || '#FFD700';
+      setBrandPrimary(primaryClean);
+      setBrandAccent(accentClean);
+    }
+  }, [selectedAdnId, activeAdn, selectedPaletteId]);
+
+  /* ── Imagen de muestra y datos para el Preview en Vivo ── */
+  const sampleImageUrl = useMemo(() => {
+    if (selectedCourse) {
+      const sc = selectedCourse as any;
+      if (sc.coverImage) return sc.coverImage;
+      if (sc.heroImage) return sc.heroImage;
+      if (sc.imageUrl) return sc.imageUrl;
+      if (sc.thumbnailUrl) return sc.thumbnailUrl;
+      if (sc.thumbnail) return sc.thumbnail;
+      if (sc.ogImage) return sc.ogImage;
+
+      // Escaneo exhaustivo de secciones y subelementos de la Landing
+      if (sc.content) {
+        if (sc.content.hero?.imageUrl) return sc.content.hero.imageUrl;
+        if (sc.content.hero?.backgroundImage) return sc.content.hero.backgroundImage;
+        if (Array.isArray(sc.content.sections)) {
+          for (const sec of sc.content.sections) {
+            if (sec.imageUrl) return sec.imageUrl;
+            if (sec.backgroundImage) return sec.backgroundImage;
+            if (sec.heroImage) return sec.heroImage;
+            if (sec.image) return sec.image;
+            if (sec.avatarUrl) return sec.avatarUrl;
+            if (Array.isArray(sec.items)) {
+              for (const it of sec.items) {
+                if (it.imageUrl) return it.imageUrl;
+                if (it.iconUrl) return it.iconUrl;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback fotográfico curado de alta resolución por estilo de ADN
+    return ADN_FALLBACK_IMAGES[selectedAdnId] || ADN_FALLBACK_IMAGES['01_CINEMA'];
+  }, [selectedCourse, selectedAdnId]);
+
+  const previewSocial = useMemo(() => {
+    const sampleHookByLanguage: Record<SupportedLanguage, string> = {
+      'es-AR': `Che, ¿querés dominar ${selectedCourse?.title || 'este método'}? Mirá esto.`,
+      'es-LA': `Oye, ¿quieres dominar ${selectedCourse?.title || 'este método'}? Mira esto.`,
+      'es-ES': `¿Quieres dominar ${selectedCourse?.title || 'este método'}? Fíjate en esto.`,
+      'en-US': `Want to master ${selectedCourse?.title || 'this method'}? Watch this.`
+    };
+
+    const sampleSubByLanguage: Record<SupportedLanguage, string> = {
+      'es-AR': 'Metodología probada paso a paso para resultados reales.',
+      'es-LA': 'Metodología comprobada paso a paso para resultados reales.',
+      'es-ES': 'Metodología demostrada paso a paso para resultados reales.',
+      'en-US': 'Proven step-by-step methodology for real-world results.'
+    };
+
+    const currentHook = sampleHookByLanguage[language] || `Descubre cómo dominar ${selectedCourse?.title || 'este método'}.`;
+    const currentSub = selectedCourse?.description ? (selectedCourse.description.slice(0, 85) + '...') : sampleSubByLanguage[language];
+
+    const isLandscape = previewPlatform === 'youtube';
+    const isSquare = previewPlatform === 'linkedin';
+    const assetType = isLandscape ? 'landscape' : isSquare ? 'square' : 'story';
+    const framing = isLandscape ? '16:9' : isSquare ? '1:1' : '9:16';
+
+    return {
+      platform: previewPlatform,
+      type: assetType,
+      marketingName: `Preview ${selectedCourse?.title || 'Campaña'}`,
+      hook: currentHook,
+      caption: `Aprende con ${selectedCourse?.title || 'este programa'}. Inscríbete en el enlace del perfil.`,
+      slides: [
+        {
+          title: currentHook,
+          subtitle: currentSub,
+          text: currentHook,
+          imageUrl: sampleImageUrl,
+          segment_label: 'GANCHO',
+          duration: 4.5
+        },
+        {
+          title: 'Claves de aplicación práctica',
+          subtitle: 'Sin vueltas ni teoría innecesaria desde el primer módulo.',
+          text: 'Claves de aplicación práctica',
+          imageUrl: sampleImageUrl,
+          segment_label: 'VALOR',
+          duration: 4.5
+        },
+        {
+          title: 'Inscríbete hoy mismo',
+          subtitle: 'Cupos limitados disponibles en el enlace.',
+          text: 'Inscríbete hoy mismo',
+          imageUrl: sampleImageUrl,
+          segment_label: 'CTA',
+          duration: 4.5
+        }
+      ],
+      designTokens: {
+        primary: brandPrimary,
+        accent: brandAccent,
+        surface: '#eedaea',
+        text: '#0a0a0a'
+      },
+      production_notes: {
+        adnId: selectedAdnId,
+        framing: framing,
+        brandPaletteId: selectedPaletteId,
+        brandColors: selectedPaletteId === 'adn' ? null : {
+          primary: brandPrimary,
+          accent: brandAccent,
+          secondary: '#FFFFFF'
+        }
+      }
+    };
+  }, [previewPlatform, selectedCourse, language, sampleImageUrl, brandPrimary, brandAccent, selectedAdnId, selectedPaletteId]);
+
   const getToken = useCallback(async () => {
     if (!user) throw new Error('Sin sesión');
     return user.getIdToken();
@@ -236,7 +443,7 @@ function OrchestratorContent() {
         availableVideos
       }, await getToken());
       setCoordinationPlan(result);
-      toast({ title: '✨ Plan Estratégico Listo', description: 'La IA ha diseñado el embudo y cronograma de tu campaña.' });
+      toast({ title: 'Plan Estratégico Listo', description: 'La IA ha diseñado el embudo y cronograma de tu campaña.' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Error de Coordinación', description: e instanceof Error ? e.message : 'No se pudo generar el plan.' });
     } finally {
@@ -273,13 +480,10 @@ function OrchestratorContent() {
             const aspectFramingFinal = aspectFraming;
             const nameSuffix = posts.length > 1 ? ` #${postIndex + 1}` : '';
             
-            // Variar el ADN automáticamente según el nicho y diversidad estética
-            const availableAdns = ['10_ZENHARMONY', '01_CINEMA', '05_MINIMALD', '02_LUXURYGO', '03_CORPORAT', '06_FASTCUT'];
-            const selectedAdn = availableAdns[postIndex % availableAdns.length];
-
             return {
               platform: platform,
               type: assetType,
+              adnId: selectedAdnId,
               marketingName: `Día ${event.day}: ${event.phase} (${platform} - ${post.format || 'feed'})${nameSuffix}`,
               caption: '',
               hook: '',
@@ -291,13 +495,19 @@ function OrchestratorContent() {
               videoName: post.videoName,
               time: post.time,
               designTokens: {
-                accent: '#760464',
-                primary: '#760464',
+                accent: brandAccent,
+                primary: brandPrimary,
                 surface: '#eedaea',
                 text: '#0a0a0a'
               },
               production_notes: {
-                adnId: selectedAdn,
+                adnId: selectedAdnId,
+                paletteId: selectedPaletteId,
+                brandColors: {
+                  primary: brandPrimary,
+                  accent: brandAccent,
+                  secondary: '#FFFFFF'
+                },
                 isLocked: false,
                 enable_tts: true,
                 voice_id: 'mateo',
@@ -350,7 +560,7 @@ function OrchestratorContent() {
         console.warn('Draft-videos trigger warning:', await autoRes.text());
       }
 
-      toast({ title: '🚀 Producción Iniciada', description: 'Los guiones están en producción y podrás revisar los borradores en breve.' });
+      toast({ title: 'Producción Iniciada', description: 'Los guiones están en producción y podrás revisar los borradores en breve.' });
       router.push('/marketing/campaigns');
     } catch (e) {
       toast({ variant: 'destructive', title: 'Error al iniciar producción', description: e instanceof Error ? e.message : undefined });
@@ -360,7 +570,7 @@ function OrchestratorContent() {
   };
 
   /* ── Stepper indicator ── */
-  const stepLabels = ['Briefing', 'Estrategia IA', 'Producción', 'Activar'];
+  const stepLabels = ['Briefing', 'Estrategia IA', 'Estilo y Modismo', 'Lanzamiento'];
 
   return (
     <DashboardLayout>
@@ -517,55 +727,6 @@ function OrchestratorContent() {
                           <Icon className={cn("h-5 w-5 mx-auto mb-1.5", isSelected ? "text-primary" : "text-muted-foreground")} />
                           <p className="text-xs font-bold">{m.label}</p>
                           <p className="text-[9px] text-muted-foreground mt-0.5">{m.desc}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Idioma y Modismo de la Campaña */}
-                <div className="space-y-3 border border-border/70 bg-white rounded-2xl p-5 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Globe className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <Label className="text-[10px] font-black uppercase text-foreground tracking-wider block">Idioma y Modismo de la Campaña</Label>
-                        <p className="text-[10px] text-muted-foreground">
-                          {selectedCourse?.language ? `Heredado de la landing (${selectedCourse.language}). Puedes cambiarlo si deseas otro enfoque.` : 'Se inyectará a los guiones, voz en off, hooks y captions de todas las piezas.'}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-[9px] font-bold text-primary border-primary/20 h-5 px-2">Dialecto AI</Badge>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
-                    {SUPPORTED_LANGUAGES.map((lang) => {
-                      const isSelected = language === lang.code;
-                      return (
-                        <div
-                          key={lang.code}
-                          onClick={() => setLanguage(lang.code)}
-                          className={cn(
-                            "p-3 rounded-xl border-2 text-left transition-all cursor-pointer relative overflow-hidden select-none",
-                            isSelected
-                              ? "border-primary bg-primary/5 shadow-sm"
-                              : "border-border/60 bg-white hover:border-primary/30 hover:bg-muted/30"
-                          )}
-                        >
-                          <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-muted text-foreground border border-border">
-                              {lang.badge}
-                            </span>
-                            {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
-                          </div>
-                          <p className={cn("text-xs font-bold leading-tight", isSelected ? "text-primary" : "text-foreground")}>
-                            {lang.label}
-                          </p>
-                          <p className="text-[9px] text-muted-foreground mt-1 line-clamp-2">
-                            {lang.description}
-                          </p>
                         </div>
                       );
                     })}
@@ -791,24 +952,333 @@ function OrchestratorContent() {
           </div>
         )}
 
-        {/* ═══════════════════ STEP 3: DIRECTED PRODUCTION & TIMELINE ═══════════════════ */}
+        {/* ═══════════════════ STEP 3: IDENTIDAD, ADN, COLOR Y MODISMO (LIVE PREVIEW) ═══════════════════ */}
         {step === 3 && coordinationPlan && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+            <Card className="rounded-xl bg-white border border-border shadow-sm">
+              <CardHeader className="bg-primary/5 p-8 border-b border-border/50">
+                <CardTitle className="text-xl flex items-center gap-3">
+                  <Palette className="h-5 w-5 text-primary" /> 3. Identidad Visual, ADN y Modismo
+                </CardTitle>
+                <CardDescription>
+                  Configura el estilo cinematográfico rector, la paleta de colores y el dialecto cultural que usarán todos los guiones y videos de tu campaña.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  {/* Columna Izquierda: Configuración de ADN, Color y Dialecto (7 cols) */}
+                  <div className="lg:col-span-7 space-y-8">
+                    
+                    {/* 1. Selector de ADN Rector */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">
+                          <Palette className="h-3.5 w-3.5 text-primary" /> Estilo Visual y ADN Rector
+                        </Label>
+                        <Badge variant="outline" className="text-[9px] font-bold text-primary border-primary/20">
+                          {selectedAdnId}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[340px] overflow-y-auto pr-1">
+                        {ADN_CATALOG.map((item) => {
+                          const isSelected = selectedAdnId === item.id;
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => setSelectedAdnId(item.id)}
+                              className={cn(
+                                "p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer relative overflow-hidden select-none flex flex-col justify-between",
+                                isSelected
+                                  ? "border-primary bg-primary/5 shadow-sm"
+                                  : "border-border/60 bg-white hover:border-primary/30 hover:bg-muted/30"
+                              )}
+                            >
+                              <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+                                    {item.tag}
+                                  </span>
+                                  {isSelected ? (
+                                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                                  ) : (
+                                    <Circle className="h-4 w-4 text-muted-foreground/30 shrink-0" />
+                                  )}
+                                </div>
+                                <h4 className={cn("text-xs font-bold", isSelected ? "text-primary" : "text-foreground")}>
+                                  {item.name}
+                                </h4>
+                                <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
+                                  {item.desc}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 2. Selector Unificado de Marcas y Colores */}
+                    <div className="space-y-4 pt-4 border-t border-border/60">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">
+                          <Palette className="h-3.5 w-3.5 text-primary" /> Sistema de Marcas y Paleta de Color
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted border border-border text-[10px] font-mono">
+                            <span className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: brandPrimary }} />
+                            <span>Primario: {brandPrimary}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted border border-border text-[10px] font-mono">
+                            <span className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: brandAccent }} />
+                            <span>Acento: {brandAccent}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* A. Marcas Oficiales (Landing y Perfil del Tutor) */}
+                      <div className="space-y-2">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">
+                          Marcas Oficiales (Landing y Perfil)
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {tutorAndCoursePalettes.length === 0 ? (
+                            <p className="text-xs text-muted-foreground italic">No hay marcas configuradas en el perfil ni en la landing.</p>
+                          ) : (
+                            tutorAndCoursePalettes.map((pal) => {
+                              const isSelected = selectedPaletteId === pal.id || (brandPrimary.toLowerCase() === pal.primary.toLowerCase() && brandAccent.toLowerCase() === pal.accent.toLowerCase());
+                              return (
+                                <button
+                                  key={pal.id}
+                                  type="button"
+                                  onClick={() => handleSelectPalette(pal)}
+                                  className={cn(
+                                    "flex items-center gap-2.5 px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all select-none text-left",
+                                    isSelected
+                                      ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+                                      : "border-border/70 bg-white text-foreground hover:border-primary/40 hover:bg-muted/30"
+                                  )}
+                                >
+                                  <div className="flex items-center -space-x-1 shrink-0">
+                                    <span className="w-4 h-4 rounded-full border border-white shadow-sm" style={{ backgroundColor: pal.primary }} />
+                                    <span className="w-3.5 h-3.5 rounded-full border border-white shadow-sm" style={{ backgroundColor: pal.accent || pal.primary }} />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="truncate max-w-[160px] leading-tight">{pal.name}</span>
+                                    <span className="text-[9px] font-normal text-muted-foreground">
+                                      {pal.id === 'course-branding' ? 'Landing' : 'Tutor'}
+                                    </span>
+                                  </div>
+                                  {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary ml-1 shrink-0" />}
+                                </button>
+                              );
+                            })
+                          )}
+
+                          {/* Opción ADN Original */}
+                          {adnPresetPalette && (
+                            <button
+                              type="button"
+                              onClick={() => handleSelectPalette(adnPresetPalette)}
+                              className={cn(
+                                "flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all select-none text-left",
+                                selectedPaletteId === 'adn'
+                                  ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+                                  : "border-border/70 bg-white text-muted-foreground hover:border-primary/40"
+                              )}
+                            >
+                              <span className="w-4 h-4 rounded-full border border-dashed border-muted-foreground/60 flex items-center justify-center text-[8px]">
+                                ADN
+                              </span>
+                              <span className="leading-tight">Preset Nativo del ADN</span>
+                              {selectedPaletteId === 'adn' && <CheckCircle2 className="h-3.5 w-3.5 text-primary ml-1 shrink-0" />}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* B. Marcas Sugeridas del Sistema (Alternativas de Video) */}
+                      <div className="space-y-2 pt-2">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">
+                          Marcas Sugeridas del Sistema (Alternativas de Video)
+                        </span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                          {SYSTEM_SUGGESTED_BRANDS.map((pal) => {
+                            const isSelected = selectedPaletteId === pal.id || (
+                              brandPrimary.toLowerCase() === pal.primary.toLowerCase() && 
+                              brandAccent.toLowerCase() === (pal.accent || pal.primary).toLowerCase()
+                            );
+                            return (
+                              <button
+                                key={pal.id}
+                                type="button"
+                                onClick={() => handleSelectPalette(pal)}
+                                className={cn(
+                                  "flex items-center justify-between p-2.5 rounded-xl border-2 text-xs font-bold transition-all select-none text-left",
+                                  isSelected
+                                    ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+                                    : "border-border/60 bg-white text-foreground hover:border-primary/30 hover:bg-muted/20"
+                                )}
+                              >
+                                <div className="flex items-center gap-2 truncate">
+                                  <div className="flex items-center -space-x-1 shrink-0">
+                                    <span className="w-3.5 h-3.5 rounded-full border border-white shadow-sm" style={{ backgroundColor: pal.primary }} />
+                                    <span className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: pal.accent || pal.secondary || pal.primary }} />
+                                  </div>
+                                  <span className="truncate text-[11px]">{pal.name}</span>
+                                </div>
+                                {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 ml-1" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. Selector de Idioma y Modismo */}
+                    <div className="space-y-3 pt-4 border-t border-border/60">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">
+                          <Globe className="h-3.5 w-3.5 text-primary" /> Modismo del Idioma (Dialecto AI)
+                        </Label>
+                        <Badge variant="outline" className="text-[9px] font-bold text-primary border-primary/20">
+                          {SUPPORTED_LANGUAGES.find(l => l.code === language)?.badge || language}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {SUPPORTED_LANGUAGES.map((lang) => {
+                          const isSelected = language === lang.code;
+                          return (
+                            <div
+                              key={lang.code}
+                              onClick={() => setLanguage(lang.code)}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-left transition-all cursor-pointer relative overflow-hidden select-none",
+                                isSelected
+                                  ? "border-primary bg-primary/5 shadow-sm"
+                                  : "border-border/60 bg-white hover:border-primary/30 hover:bg-muted/30"
+                              )}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-muted text-foreground border border-border">
+                                  {lang.badge}
+                                </span>
+                                {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                              </div>
+                              <p className={cn("text-xs font-bold leading-tight", isSelected ? "text-primary" : "text-foreground")}>
+                                {lang.label}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground mt-0.5 line-clamp-2">
+                                {lang.description}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Columna Derecha: Emulador en Vivo (5 cols) */}
+                  <div className="lg:col-span-5 flex flex-col items-center sticky top-6">
+                    <div className="w-full max-w-[340px] space-y-3">
+                      {/* Selector de plataforma para el emulador */}
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5">
+                          <Eye className="h-3.5 w-3.5 text-primary" /> Vista Previa en Vivo
+                        </span>
+                        <div className="flex gap-1 bg-muted p-0.5 rounded-lg border border-border">
+                          {(['instagram', 'tiktok', 'linkedin', 'youtube'] as const).map((p) => {
+                            const isCur = previewPlatform === p;
+                            return (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => setPreviewPlatform(p)}
+                                className={cn(
+                                  "px-2 py-1 rounded text-[10px] font-bold capitalize transition-all",
+                                  isCur ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                                )}
+                              >
+                                {p === 'youtube' ? 'YT' : p === 'linkedin' ? 'In' : p === 'instagram' ? 'IG' : 'TT'}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Contenedor del Emulador con shell tipo móvil */}
+                      <div className="p-2.5 rounded-[1.5rem] bg-slate-900 border-4 border-slate-800 shadow-xl overflow-hidden flex flex-col items-center">
+                        <div className="w-16 h-1 bg-slate-700 rounded-full mb-2" />
+                        <div className="w-full">
+                          <SocialLivePreview
+                            social={previewSocial}
+                            tokens={previewSocial.designTokens}
+                            adn={activeAdn}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Resumen de configuración activa */}
+                      <div className="p-3 rounded-xl bg-muted/60 border border-border/60 text-[11px] space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground font-medium">Estilo ADN:</span>
+                          <span className="font-bold text-foreground">{activeAdn?.name || selectedAdnId}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground font-medium">Primario / Acento:</span>
+                    <div className="flex items-center gap-1.5 font-mono font-bold text-foreground">
+                      <span className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: brandPrimary }} />
+                      <span>{brandPrimary}</span>
+                      <span className="text-muted-foreground">/</span>
+                      <span className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: brandAccent }} />
+                      <span>{brandAccent}</span>
+                    </div>
+                  </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground font-medium">Dialecto:</span>
+                          <span className="font-bold text-foreground">{SUPPORTED_LANGUAGES.find(l => l.code === language)?.label}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Botón de continuación */}
+                <Button
+                  onClick={() => setStep(4)}
+                  className="w-full h-14 rounded-xl font-bold text-lg"
+                >
+                  Siguiente: Revisar Cronograma y Activar <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ═══════════════════ STEP 4: DIRECTED PRODUCTION & TIMELINE ═══════════════════ */}
+        {step === 4 && coordinationPlan && (
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-            <Card className="rounded-lg bg-white overflow-hidden">
-              <CardHeader className="bg-success p-10 text-white relative">
-                <TrendingUp className="absolute right-10 top-10 h-20 w-20 opacity-10" />
+            <Card className="rounded-lg bg-white overflow-hidden border border-border">
+              <CardHeader className="bg-primary/5 p-10 border-b border-border relative">
+                <TrendingUp className="absolute right-10 top-10 h-20 w-20 opacity-10 text-primary" />
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-3xl bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/30"><Calendar className="h-8 w-8" /></div>
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+                    <Calendar className="h-8 w-8" />
+                  </div>
                   <div>
-                    <CardTitle className="text-3xl font-bold">Cronograma Flexible</CardTitle>
-                    <CardDescription className="text-success/15 text-base">Ajusta el orden de emisión de tus piezas.</CardDescription>
+                    <CardTitle className="text-2xl font-bold">4. Cronograma y Activación</CardTitle>
+                    <CardDescription className="text-muted-foreground text-sm">
+                      Revisa el orden de emisión de tus piezas y confirma el lanzamiento a producción.
+                    </CardDescription>
                   </div>
                 </div>
               </CardHeader>
               
               <CardContent className="p-10 space-y-10">
                 <div className="bg-muted p-8 rounded-lg border border-border">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2"><Zap className="h-4 w-4 text-accent" /> Lógica de la Campaña</h4>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-accent" /> Lógica de la Campaña
+                  </h4>
                   <p className="text-muted-foreground leading-relaxed italic font-medium">"{coordinationPlan.logic}"</p>
                 </div>
 
@@ -840,7 +1310,7 @@ function OrchestratorContent() {
                   </div>
 
                   <Button onClick={handleFinalPublish} disabled={isProducing} className="w-full h-20 rounded-lg text-2xl font-bold bg-primary">
-                    {isProducing ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <Rocket className="mr-3 h-8 w-8 text-accent" />}
+                    {isProducing ? <Loader2 className="animate-spin mr-3 h-8 w-8" /> : <Rocket className="mr-3 h-8 w-8 text-white" />}
                     Confirmar y Activar Lanzamiento
                   </Button>
                 </div>

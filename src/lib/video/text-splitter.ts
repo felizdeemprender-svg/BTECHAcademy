@@ -14,7 +14,7 @@ export interface TextBlockPhase {
 }
 
 /**
- * Divide una frase principal en 1, 2 o 3 rondas cinéticas según la duración en segundos.
+ * Divide una frase principal en 1, 2 o 3 rondas cinéticas según la duración en segundos y delimitadores explícitos.
  */
 export function splitKineticPhrase(text: string, duration: number): TextBlockPhase[] {
   const clean = (text || '').trim();
@@ -25,9 +25,13 @@ export function splitKineticPhrase(text: string, duration: number): TextBlockPha
     return [{ text: clean, start: 0, end: duration, blockIndex: 0 }];
   }
 
-  // 2. Escenas moderadas a largas (> 6.0s): Particionar en hasta 3 bloques si el texto lo amerita
-  if (duration > 6.0) {
-    const rawParts = clean.split(/\r?\n|\\n/).map(p => p.trim()).filter(Boolean);
+  // Delimitador explícito: salto de línea (\n, \\n) o barra vertical (|)
+  const hasExplicitDelimiter = clean.includes('\n') || clean.includes('\\n') || clean.includes('|');
+  const delimiterRegex = /\r?\n|\\n|\|/;
+
+  // 2. Escenas moderadas a largas (> 6.0s): Particionar en hasta 3 bloques si viene delimitador explícito
+  if (duration > 6.0 && hasExplicitDelimiter) {
+    const rawParts = clean.split(delimiterRegex).map(p => p.trim()).filter(Boolean);
     if (rawParts.length >= 3) {
       const totalChars = rawParts.reduce((acc, p) => acc + p.length, 0);
       let accTime = 0;
@@ -44,10 +48,9 @@ export function splitKineticPhrase(text: string, duration: number): TextBlockPha
     }
   }
 
-  // 3. Regla estándar de 2 bloques (2.8s a 6.0s o fallback de >6.0s):
-  // 3a. Separación explícita por salto de línea (\n o \\n)
-  if (clean.includes('\n') || clean.includes('\\n')) {
-    const parts = clean.split(/\r?\n|\\n/).map(p => p.trim()).filter(Boolean);
+  // 3a. Separación explícita por delimitador (\n, \\n o |)
+  if (hasExplicitDelimiter) {
+    const parts = clean.split(delimiterRegex).map(p => p.trim()).filter(Boolean);
     if (parts.length >= 2) {
       const part1 = parts[0];
       const part2 = parts.slice(1).join(' ');
@@ -62,9 +65,10 @@ export function splitKineticPhrase(text: string, duration: number): TextBlockPha
     }
   }
 
-  // 3b. Separación por 2 pares de asteriscos (*word1* ... *word2*)
+  // 3b. Separación por 2 pares de asteriscos (*word1* ... *word2*) SOLO si hay al menos 5 palabras
+  const words = clean.split(/\s+/).filter(Boolean);
   const asteriskMatches = [...clean.matchAll(/\*([^*]+)\*/g)];
-  if (asteriskMatches.length >= 2) {
+  if (asteriskMatches.length >= 2 && words.length >= 5) {
     const firstEnd = asteriskMatches[0].index! + asteriskMatches[0][0].length;
     const secondStart = asteriskMatches[1].index!;
     const inBetween = clean.substring(firstEnd, secondStart);
@@ -78,7 +82,7 @@ export function splitKineticPhrase(text: string, duration: number): TextBlockPha
     }
     const part1 = clean.substring(0, splitCharIdx).trim();
     const part2 = clean.substring(splitCharIdx).trim();
-    if (part1 && part2) {
+    if (part1 && part2 && part1.split(/\s+/).length >= 2 && part2.split(/\s+/).length >= 2) {
       const words1 = part1.split(/\s+/).length;
       const words2 = part2.split(/\s+/).length;
       const ratio = words1 / (words1 + words2);
@@ -90,22 +94,32 @@ export function splitKineticPhrase(text: string, duration: number): TextBlockPha
     }
   }
 
-  // 3c. Ponderación silábica / de palabras habladas del TTS
-  const words = clean.split(/\s+/);
-  if (words.length < 2) {
+  // 3c. Sin delimitador explícito:
+  // Si la frase no tiene delimitador explícito y tiene pocas palabras (<= 5 palabras, ej: "¿NEGOCIO *FRENADO*?"),
+  // NUNCA debe cortarse en dos mitades porque destruye el sentido gramatical de la frase.
+  if (words.length <= 5) {
     return [{ text: clean, start: 0, end: duration, blockIndex: 0 }];
   }
 
+  // Para frases largas (> 5 palabras) sin delimitador:
+  // Solo se divide si tiene puntuación natural clara o si es suficientemente larga (>= 7 palabras)
   let midWord = Math.ceil(words.length / 2);
-  const minIdx = Math.max(1, Math.floor(words.length * 0.25));
-  const maxIdx = Math.min(words.length - 1, Math.ceil(words.length * 0.75));
+  const minIdx = Math.max(2, Math.floor(words.length * 0.3));
+  const maxIdx = Math.min(words.length - 2, Math.ceil(words.length * 0.7));
 
+  let hasPunctSplit = false;
   for (let i = minIdx; i <= maxIdx; i++) {
     const w = words[i - 1];
-    if (/[.,!?:;]$/.test(w)) {
+    if (/[.,!?:;\-\–]$/.test(w)) {
       midWord = i;
+      hasPunctSplit = true;
       break;
     }
+  }
+
+  // Si no tiene puntuación natural y no llega a 7 palabras, mantener como 1 bloque
+  if (!hasPunctSplit && words.length < 7) {
+    return [{ text: clean, start: 0, end: duration, blockIndex: 0 }];
   }
 
   // Asegurar que no se rompa un énfasis *palabra* al medio
@@ -121,7 +135,7 @@ export function splitKineticPhrase(text: string, duration: number): TextBlockPha
     }
   }
 
-  if (midWord <= 0 || midWord >= words.length) {
+  if (midWord < 2 || midWord > words.length - 2) {
     return [{ text: clean, start: 0, end: duration, blockIndex: 0 }];
   }
 
@@ -152,43 +166,26 @@ export function splitSubtitlePhases(
 
   // 1. Escenas ultra cortas (< 2.8s): 1 sola ronda fija
   if (duration < 2.8) {
-    return [{ text: clean, start: 0, end: duration }];
+    return [{ text: clean, start: 0, end: duration, blockIndex: 0 }];
   }
 
-  const hasNewline = clean.includes('\n') || clean.includes('\\n');
+  const hasDelimiter = clean.includes('\n') || clean.includes('\\n') || clean.includes('|');
+  const delimiterRegex = /\r?\n|\\n|\|/;
   const words = clean.split(/\s+/).filter(Boolean);
 
-  // 2. Escenas largas (> 6.0s) con 3 bloques de título
-  if (duration > 6.0 && titleBlocks && titleBlocks.length >= 3) {
-    if (hasNewline) {
-      const parts = clean.split(/\r?\n|\\n/).map(p => p.trim()).filter(Boolean);
-      if (parts.length >= 3) {
-        return parts.slice(0, titleBlocks.length).map((p, idx) => ({
-          text: p,
-          start: titleBlocks[idx].start,
-          end: titleBlocks[idx].end,
-          isSecondBlock: idx > 0,
-          blockIndex: idx
-        }));
-      }
-    } else if (words.length >= 6) {
-      const step = Math.ceil(words.length / 3);
-      const p1 = words.slice(0, step).join(' ').trim();
-      const p2 = words.slice(step, step * 2).join(' ').trim();
-      const p3 = words.slice(step * 2).join(' ').trim();
-      if (p1 && p2 && p3) {
-        return [
-          { text: p1, start: titleBlocks[0].start, end: titleBlocks[0].end, blockIndex: 0 },
-          { text: p2, start: titleBlocks[1].start, end: titleBlocks[1].end, isSecondBlock: true, blockIndex: 1 },
-          { text: p3, start: titleBlocks[2].start, end: titleBlocks[titleBlocks.length - 1].end, isSecondBlock: true, blockIndex: 2 }
-        ];
-      }
+  // 2. Delimitador explícito en subtítulo (\n, \\n, |):
+  // Si el autor o la IA colocó un delimitador explícito, se respeta siempre.
+  if (hasDelimiter) {
+    const parts = clean.split(delimiterRegex).map(p => p.trim()).filter(Boolean);
+    if (duration > 6.0 && titleBlocks && titleBlocks.length >= 3 && parts.length >= 3) {
+      return parts.slice(0, titleBlocks.length).map((p, idx) => ({
+        text: p,
+        start: titleBlocks[idx].start,
+        end: titleBlocks[idx].end,
+        isSecondBlock: idx > 0,
+        blockIndex: idx
+      }));
     }
-  }
-
-  // 3. Escenas estándar (2.8s a 6.0s): 2 bloques dinámicos sincronizados
-  if (hasNewline) {
-    const parts = clean.split(/\r?\n|\\n/).map(p => p.trim()).filter(Boolean);
     if (parts.length >= 2) {
       if (titleBlocks && titleBlocks.length >= 2) {
         return [
@@ -204,17 +201,23 @@ export function splitSubtitlePhases(
     }
   }
 
-  // Si no tiene salto de línea pero tiene puntuación natural (, ; . -) y duración suficiente
+  // 3. Sin delimitador explícito:
+  // Si el título es de 1 sola ronda (no rota), el subtítulo tampoco debe dividirse jamás.
+  if (!titleBlocks || titleBlocks.length <= 1) {
+    return [{ text: clean, start: 0, end: duration, blockIndex: 0 }];
+  }
+
+  // Si no tiene delimitador, solo dividir si tiene puntuación natural (, ; . -) y ambas partes tienen al menos 2 palabras
   const punctMatch = clean.search(/[,;.\-–]\s+/);
-  if (punctMatch !== -1 && words.length >= 4) {
+  if (punctMatch !== -1 && words.length >= 6) {
     const splitIdx = punctMatch + 1;
     const p1 = clean.substring(0, splitIdx).trim();
     const p2 = clean.substring(splitIdx).trim();
-    if (p1 && p2) {
+    if (p1 && p2 && p1.split(/\s+/).length >= 2 && p2.split(/\s+/).length >= 2) {
       if (titleBlocks && titleBlocks.length >= 2) {
         return [
           { text: p1, start: titleBlocks[0].start, end: titleBlocks[0].end, blockIndex: 0 },
-          { text: p2, start: titleBlocks[1].start, end: titleBlocks[titleBlocks.length - 1].end, isSecondBlock: true, blockIndex: 1 }
+          { text: p2, start: titleBlocks[1].start, end: titleBlocks[1].end, isSecondBlock: true, blockIndex: 1 }
         ];
       }
       const splitTime = Math.round(Math.max(1.2, Math.min(duration - 1.2, duration * 0.5)) * 100) / 100;
@@ -225,21 +228,8 @@ export function splitSubtitlePhases(
     }
   }
 
-  // Si no tiene salto de línea pero el título rota en 2 bloques y hay al menos 3 palabras
-  if (titleBlocks && titleBlocks.length >= 2 && words.length >= 3) {
-    let midIdx = Math.ceil(words.length * (titleBlocks[0].end / duration));
-    if (midIdx <= 0) midIdx = 1;
-    if (midIdx >= words.length) midIdx = words.length - 1;
-    const p1 = words.slice(0, midIdx).join(' ').trim();
-    const p2 = words.slice(midIdx).join(' ').trim();
-    if (p1 && p2) {
-      return [
-        { text: p1, start: titleBlocks[0].start, end: titleBlocks[0].end, blockIndex: 0 },
-        { text: p2, start: titleBlocks[1].start, end: titleBlocks[titleBlocks.length - 1].end, isSecondBlock: true, blockIndex: 1 }
-      ];
-    }
-  }
-
+  // Si no tiene delimitador y no tiene puntuación natural (ej: "Necesitás impulsar tu red"),
+  // NO cortar arbitrariamente palabras en dos mitades sin sentido.
+  // Permanecer como 1 sola frase continua para toda la escena.
   return [{ text: clean, start: 0, end: duration, blockIndex: 0 }];
 }
-

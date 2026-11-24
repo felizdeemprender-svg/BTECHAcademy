@@ -7,18 +7,12 @@ import { getCurrencyRates } from '@/lib/currency/rates-service';
 import { resolveGateway } from '@/lib/api/gateway';
 import { getCachedTutorAndPayments } from '@/lib/cache/public-landing-cache';
 import { FALLBACK_RATES } from '@/lib/currency/types';
+import { getCachedPublicSalesPage } from './data';
 import { PublicSalesPageView } from './components/public-sales-page-view';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Deduplicación en el ciclo de vida del request HTTP:
- * Evita consultar Firestore dos veces (una en generateMetadata y otra en el componente Page).
- */
-export const getCachedPublicSalesPage = cache(async (id: string, isPreview: boolean) => {
-  const useCase = new GetPublicSalesPageUseCase();
-  return useCase.execute(id, isPreview);
-});
+// getCachedPublicSalesPage extraído a ./data.ts para cumplir con las restricciones de Next.js App Router
 
 export async function generateMetadata({
   params,

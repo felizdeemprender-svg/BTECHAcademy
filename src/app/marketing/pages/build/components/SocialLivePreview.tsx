@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Instagram, Twitter, Linkedin, Circle } from 'lucide-react';
 import { splitKineticPhrase, splitSubtitlePhases } from '@/lib/video/text-splitter';
+import { ADN_FALLBACK_IMAGES } from '@/app/marketing/build/constants';
+import { cleanCssColor, resolveVideoBrandPalette } from '@/lib/video/brand-palettes';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -20,42 +22,113 @@ const PlatformIcon = ({ platform, className }: { platform: string, className?: s
   return <Circle className={className} />;
 };
 
-export function resolveCssFont(fontFile?: string): { fontFamily: string; fontWeight: string; letterSpacing?: string } {
-  const font = (fontFile || '').toLowerCase();
-  if (font.includes('georgia')) {
-    return { fontFamily: 'Georgia, serif', fontWeight: '700' };
-  }
-  if (font.includes('impact')) {
-    return { fontFamily: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif', fontWeight: '900', letterSpacing: '0.04em' };
-  }
+export function resolveCssFont(
+  fontFile?: string,
+  styleBold?: boolean | number,
+  styleItalic?: boolean | number
+): { fontFamily: string; fontWeight: string; fontStyle?: string; letterSpacing?: string } {
+  const font = (fontFile || '').trim().toLowerCase();
+
   if (font.includes('bebas')) {
-    return { fontFamily: '"Bebas Neue", Impact, sans-serif', fontWeight: '400', letterSpacing: '0.05em' };
+    return {
+      fontFamily: '"ADN-BebasNeue", "Bebas Neue", Impact, sans-serif',
+      fontWeight: '400',
+      letterSpacing: '0.05em'
+    };
   }
   if (font.includes('montserrat')) {
-    return { fontFamily: '"Montserrat", sans-serif', fontWeight: '900', letterSpacing: '-0.02em' };
+    return {
+      fontFamily: '"ADN-Montserrat", "Montserrat", sans-serif',
+      fontWeight: '900',
+      letterSpacing: '-0.02em'
+    };
+  }
+  if (font.includes('impact')) {
+    return {
+      fontFamily: '"ADN-Impact", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif',
+      fontWeight: '900',
+      letterSpacing: '0.04em'
+    };
+  }
+  if (font.includes('georgia')) {
+    return {
+      fontFamily: '"ADN-Georgia", Georgia, serif',
+      fontWeight: '700',
+      fontStyle: styleItalic ? 'italic' : 'normal'
+    };
   }
   if (font.includes('trebuc')) {
-    return { fontFamily: '"Trebuchet MS", "Lucida Sans Unicode", sans-serif', fontWeight: '800' };
-  }
-  if (font.includes('black')) {
-    return { fontFamily: '"Inter", sans-serif', fontWeight: '900' };
-  }
-  if (font.includes('extrabold')) {
-    return { fontFamily: '"Inter", sans-serif', fontWeight: '800' };
-  }
-  if (font.includes('bold') || font.includes('arialbd')) {
-    return { fontFamily: '"Inter", Arial, sans-serif', fontWeight: '700' };
-  }
-  if (font.includes('semibold')) {
-    return { fontFamily: '"Inter", sans-serif', fontWeight: '600' };
-  }
-  if (font.includes('light')) {
-    return { fontFamily: '"Inter", sans-serif', fontWeight: '300' };
+    return {
+      fontFamily: '"ADN-Trebuchet", "Trebuchet MS", "Lucida Sans Unicode", sans-serif',
+      fontWeight: '800'
+    };
   }
   if (font.includes('calibri')) {
-    return { fontFamily: 'Calibri, Candara, Segoe, sans-serif', fontWeight: '600' };
+    return {
+      fontFamily: '"ADN-Calibri", Calibri, Candara, Segoe, sans-serif',
+      fontWeight: styleBold ? '700' : '400',
+      fontStyle: styleItalic ? 'italic' : 'normal'
+    };
   }
-  return { fontFamily: '"Inter", system-ui, sans-serif', fontWeight: '700' };
+  if (font.includes('arialbd') || font.includes('arial-bold')) {
+    return {
+      fontFamily: '"ADN-Arial", Arial, sans-serif',
+      fontWeight: '700'
+    };
+  }
+  if (font.includes('arial')) {
+    return {
+      fontFamily: '"ADN-Arial", Arial, sans-serif',
+      fontWeight: styleBold ? '700' : '400'
+    };
+  }
+  if (font.includes('inter-black') || font.includes('black')) {
+    return {
+      fontFamily: '"ADN-Inter-Black", "Inter", sans-serif',
+      fontWeight: '900'
+    };
+  }
+  if (font.includes('inter-extrabold') || font.includes('extrabold')) {
+    return {
+      fontFamily: '"ADN-Inter-ExtraBold", "Inter", sans-serif',
+      fontWeight: '800'
+    };
+  }
+  if (font.includes('inter-bold') || font.includes('bold')) {
+    return {
+      fontFamily: '"ADN-Inter-Bold", "Inter", sans-serif',
+      fontWeight: '700'
+    };
+  }
+  if (font.includes('inter-semibold') || font.includes('semibold')) {
+    return {
+      fontFamily: '"ADN-Inter-SemiBold", "Inter", sans-serif',
+      fontWeight: '600'
+    };
+  }
+  if (font.includes('inter-medium') || font.includes('medium')) {
+    return {
+      fontFamily: '"ADN-Inter-Medium", "Inter", sans-serif',
+      fontWeight: '500'
+    };
+  }
+  if (font.includes('inter-light') || font.includes('light')) {
+    return {
+      fontFamily: '"ADN-Inter-Light", "Inter", sans-serif',
+      fontWeight: '300'
+    };
+  }
+  if (font.includes('inter-regular') || font.includes('regular') || font.includes('inter')) {
+    return {
+      fontFamily: '"ADN-Inter-Regular", "Inter", sans-serif',
+      fontWeight: '400'
+    };
+  }
+
+  return {
+    fontFamily: '"Inter", system-ui, sans-serif',
+    fontWeight: styleBold ? '700' : '400'
+  };
 }
 
 interface SocialLivePreviewProps {
@@ -105,24 +178,14 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
   const activeRules = { ...adnBase, ...adnOverride };
 
   const rawFontName = typoText.fontName || activeRules.fontFamily || 'Inter-Bold.ttf';
-  const titleFontCss = resolveCssFont(rawFontName);
-  const subFontCss = resolveCssFont(typoSub.fontName || rawFontName);
+  const titleFontCss = resolveCssFont(rawFontName, typoText.bold, typoText.italic);
+  const subFontCss = resolveCssFont(typoSub.fontName || rawFontName, typoSub.bold, typoSub.italic);
 
   // Utilidad para convertir FFmpeg color (black@0.5) a CSS rgba
   const ffColorToCss = (ffCol: string, brandColor?: string) => {
     if (!ffCol) return 'transparent';
-    let base = ffCol.replace('{brandColor}', brandColor || '#760464');
-    if (base.includes('@')) {
-      const [col, alpha] = base.split('@');
-      const rgb = col === 'white' ? '255,255,255' : col === 'black' ? '0,0,0' : hexToRgb(col);
-      return `rgba(${rgb}, ${alpha})`;
-    }
-    return base;
-  };
-
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '0,0,0';
+    const base = ffCol.replace('{brandColor}', brandColor || '#760464');
+    return cleanCssColor(base, 'transparent');
   };
 
   const fontName = activeRules.fontFamily?.replace('.ttf', '') || 'Inter';
@@ -131,9 +194,31 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
 
   const hasMentor = social.includeMentorUrl ?? (social.landingId === 'mentor');
   const hasLanding = social.includeLandingUrl ?? (social.landingId !== 'mentor');
-  const brandTitleColor = social.production_notes?.brandColors?.primary;
-  const brandAccentColor = social.production_notes?.brandColors?.accent || tokens?.accent || '#FACC15';
-  const brandSubtitleColor = social.production_notes?.brandColors?.secondary || '#E5E5E5';
+
+  // Resolución integral de paleta de colores para el emulador
+  const paletteId = social.production_notes?.brandPaletteId;
+  const pBrandColors = social.production_notes?.brandColors;
+  const resolvedPalette = resolveVideoBrandPalette(paletteId, pBrandColors);
+
+  // Colores nativos limpios según el segmento activo del ADN
+  const adnTitleColor = cleanCssColor(typoText.primaryColor) || (activeRules.fontcolor === 'black' ? '#000000' : '#FFFFFF');
+  const adnSubColor = cleanCssColor(typoSub.primaryColor) || '#E5E5E5';
+  const adnAccentColor = cleanCssColor(typoText.accentColor) || cleanCssColor(typoSub.accentColor) || cleanCssColor(segmentTypo.accentColor) || cleanCssColor(typoText.primaryColor) || '#FFD700';
+
+  // Si se seleccionó una paleta de marca (distinta de ADN preset)
+  const isBrandPreset = !!(paletteId && paletteId !== 'adn');
+
+  const effectiveTitleColor = isBrandPreset
+    ? (resolvedPalette?.primary || pBrandColors?.primary || tokens?.primary || adnTitleColor)
+    : (cleanCssColor(pBrandColors?.primary) || adnTitleColor);
+
+  const effectiveAccentColor = isBrandPreset
+    ? (resolvedPalette?.accent || pBrandColors?.accent || tokens?.accent || adnAccentColor)
+    : (cleanCssColor(pBrandColors?.accent) || adnAccentColor);
+
+  const effectiveSubColor = isBrandPreset
+    ? (resolvedPalette?.secondary || pBrandColors?.secondary || adnSubColor)
+    : (cleanCssColor(pBrandColors?.secondary) || adnSubColor);
 
   const renderEmphasizedText = (rawText: string, defaultColor?: string) => {
     if (!rawText) return null;
@@ -143,9 +228,9 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         return (
           <span
             key={idx}
-            className="inline-block transform scale-105 font-black text-amber-300"
+            className="inline-block transform scale-105 font-black"
             style={{ 
-              color: brandAccentColor || '#FACC15',
+              color: effectiveAccentColor,
               textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
             }}
           >
@@ -157,7 +242,7 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         <span 
           key={idx} 
           style={{ 
-            color: defaultColor || '#FFFFFF',
+            color: defaultColor || effectiveTitleColor,
             textShadow: '0 2px 4px rgba(0,0,0,0.9), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
           }}
         >
@@ -178,10 +263,89 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
     if (currentSlideIdx >= slides.length) setCurrentSlideIdx(0);
   }, [slides.length]);
   
+  const displayImageUrl = slide.imageUrl || social.imageUrl || social.sampleImageUrl || (adn?.id ? ADN_FALLBACK_IMAGES[adn.id] : undefined) || 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1080&q=80';
+
   return (
     <div className="sticky top-10 space-y-6">
-      {/* Estilos de Animación Inyectados */}
+      {/* Estilos de Tipografías de ADN y Animaciones Inyectados */}
       <style dangerouslySetInnerHTML={{ __html: `
+        @font-face {
+          font-family: 'ADN-BebasNeue';
+          src: url('/fonts/BebasNeue-Regular.ttf') format('truetype');
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Montserrat';
+          src: url('/fonts/Montserrat.ttf') format('truetype');
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Impact';
+          src: url('/fonts/impact.ttf') format('truetype');
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Georgia';
+          src: url('/fonts/georgia.ttf') format('truetype');
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Trebuchet';
+          src: url('/fonts/trebucbd.ttf') format('truetype');
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Calibri';
+          src: url('/fonts/calibri.ttf') format('truetype');
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Arial';
+          src: url('/fonts/arialbd.ttf') format('truetype');
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Inter-Black';
+          src: url('/fonts/Inter-Black.ttf') format('truetype');
+          font-weight: 900;
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Inter-ExtraBold';
+          src: url('/fonts/Inter-ExtraBold.ttf') format('truetype');
+          font-weight: 800;
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Inter-Bold';
+          src: url('/fonts/Inter-Bold.ttf') format('truetype');
+          font-weight: 700;
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Inter-SemiBold';
+          src: url('/fonts/Inter-SemiBold.ttf') format('truetype');
+          font-weight: 600;
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Inter-Medium';
+          src: url('/fonts/Inter-Medium.ttf') format('truetype');
+          font-weight: 500;
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Inter-Light';
+          src: url('/fonts/Inter-Light.ttf') format('truetype');
+          font-weight: 300;
+          font-display: swap;
+        }
+        @font-face {
+          font-family: 'ADN-Inter-Regular';
+          src: url('/fonts/Inter-Regular.ttf') format('truetype');
+          font-weight: 400;
+          font-display: swap;
+        }
         @keyframes typewriter {
           from { width: 0; }
           to { width: 100%; }
@@ -195,7 +359,6 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@800;900&display=swap');
         .animate-typewriter {
           overflow: hidden;
           white-space: pre-wrap;
@@ -236,10 +399,10 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         )}
 
         <div className="absolute inset-0 z-10 flex flex-col bg-foreground">
-          {slide.imageUrl ? (
+          {displayImageUrl ? (
             <div key={currentSlideIdx} className="absolute inset-0 block overflow-hidden">
                <img 
-                src={slide.imageUrl} 
+                src={displayImageUrl} 
                 alt="Mockup" 
                 className={cn(
                     "absolute inset-0 w-full h-full object-cover opacity-80 transition-transform [transition-duration:4000ms] ease-linear",
@@ -391,21 +554,22 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
               )}
               <h4 
                 className={cn(
-                  "leading-[1.15] text-white",
+                  "leading-[1.15]",
                   (typoText.uppercase ?? activeRules.uppercase) ? "uppercase" : ""
                 )} 
                 style={{ 
                   fontFamily: titleFontCss.fontFamily,
                   fontWeight: titleFontCss.fontWeight,
+                  fontStyle: titleFontCss.fontStyle,
                   letterSpacing: titleFontCss.letterSpacing,
                   fontSize: `${(typoText.fontSize || activeRules.fontsize || 90) / 4.4}px`,
                   textShadow: shadow,
-                  color: brandTitleColor || typoText.primaryColor || (activeRules.fontcolor === 'black' ? '#000' : '#fff')
+                  color: effectiveTitleColor
                 }}
               >
                 {renderEmphasizedText(
                   currentTitleBlock.text,
-                  brandTitleColor || typoText.primaryColor || (activeRules.fontcolor === 'black' ? '#000' : '#fff')
+                  effectiveTitleColor
                 )}
               </h4>
               {currentSubBlock?.text && (
@@ -414,11 +578,13 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
                   style={{ 
                     fontFamily: subFontCss.fontFamily,
                     fontWeight: subFontCss.fontWeight,
+                    fontStyle: subFontCss.fontStyle,
+                    letterSpacing: subFontCss.letterSpacing,
                     textShadow: shadow,
-                    color: brandSubtitleColor || typoSub.primaryColor || '#E5E5E5'
+                    color: effectiveSubColor
                   }}
                 >
-                  {renderEmphasizedText(currentSubBlock.text, brandSubtitleColor || typoSub.primaryColor || '#E5E5E5')}
+                  {renderEmphasizedText(currentSubBlock.text, effectiveSubColor)}
                 </p>
               )}
             </div>
@@ -430,8 +596,8 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
               <button 
                 className="h-9 px-5 rounded-2xl text-[10px] font-black uppercase truncate max-w-[150px] transition-transform hover:scale-105 active:scale-95" 
                 style={{ 
-                    backgroundColor: brandTitleColor || tokens?.accent || '#760464',
-                    color: '#fff'
+                    backgroundColor: effectiveAccentColor || effectiveTitleColor || '#2563EB',
+                    color: '#ffffff'
                 }}
               >
                 {hasLanding ? landingUrl : (hasMentor ? 'link_en_bio' : 'ver_más')}
@@ -446,8 +612,8 @@ export function SocialLivePreview({ social, tokens, adn }: SocialLivePreviewProp
         <span className="font-bold text-foreground mr-2">@{social.handle || 'tu_cuenta'}</span>
         {social.caption || 'Aquí irá el cuerpo de la publicación...'}
         <div className="mt-4 text-primary font-bold text-xs flex flex-wrap gap-2">
-          {hasLanding && <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[10px] border border-primary/15">🔗 Landing: {landingUrl}</span>}
-          {hasMentor && <span className="bg-muted text-foreground px-3 py-1.5 rounded-xl text-[10px] border border-border">👤 Mentor: Link en Bio</span>}
+          {hasLanding && <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[10px] border border-primary/15">Landing: {landingUrl}</span>}
+          {hasMentor && <span className="bg-muted text-foreground px-3 py-1.5 rounded-xl text-[10px] border border-border">Mentor: Link en Bio</span>}
           <div className="flex gap-1.5">
             {social.hashtags?.map((h: string) => h.startsWith('#') ? h : `#${h}`).map((h: string, i: number) => (
                 <span key={i} className="text-primary font-black tracking-tight">{h}</span>

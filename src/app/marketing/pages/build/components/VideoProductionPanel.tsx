@@ -18,7 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { AudioUploader } from './AudioUploader';
 import { VideoPromptModal, EDITOR_NAMES } from './VideoPromptModal';
-import { getSystemVideoPalettes, resolveVideoBrandPalette } from '@/lib/video/brand-palettes';
+import { getSystemVideoPalettes, getAllVideoBrandPalettes, resolveVideoBrandPalette } from '@/lib/video/brand-palettes';
 
 interface VideoProductionPanelProps {
   asset: any;
@@ -187,7 +187,7 @@ export function VideoProductionPanel({
             <SelectContent className="bg-white border-border text-foreground">
               {Object.values(adns).map((adn: any) => (
                 <SelectItem key={adn.id} value={adn.id} className="text-[10px] uppercase font-bold">
-                  🎬 {adn.name}
+                  {adn.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -227,7 +227,7 @@ export function VideoProductionPanel({
               <SelectValue placeholder="Paleta" />
             </SelectTrigger>
             <SelectContent className="bg-white border-border text-foreground max-h-72">
-              {getSystemVideoPalettes(profile).map((palette) => (
+              {getAllVideoBrandPalettes(profile).map((palette) => (
                 <SelectItem key={palette.id} value={palette.id} className="text-[10px] uppercase font-bold">
                   <div className="flex items-center gap-2">
                     {palette.primary ? (

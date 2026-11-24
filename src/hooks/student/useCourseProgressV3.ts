@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useFirestore } from '@/firebase';
 import { 
   doc, 
@@ -28,6 +27,9 @@ export function useCourseProgressV3(courseId: string) {
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<string, any>>({});
 
+  const currentMentorIdRef = useRef<string | null>(null);
+
+  // 1. Suscripción a Curso, Módulos y Mentor (con guard de cambio de ID)
   useEffect(() => {
     if (!courseId || !db) return;
     
@@ -37,18 +39,20 @@ export function useCourseProgressV3(courseId: string) {
       if (snap.exists()) {
         const data = { id: snap.id, ...snap.data() } as CourseDetails;
         setCourse(data);
-        if (data.mentorId) {
-          // Si ya existía una suscripción a mentor, la cancelamos antes de crear una nueva
+
+        // Re-suscribir al mentor solo si el mentorId cambió realmente
+        if (data.mentorId && data.mentorId !== currentMentorIdRef.current) {
+          currentMentorIdRef.current = data.mentorId;
           if (unsubMentor) {
             unsubMentor();
             unsubMentor = null;
           }
           unsubMentor = onSnapshot(doc(db, 'users', data.mentorId), (mSnap) => {
             if (mSnap.exists()) setMentorProfile(mSnap.data());
-          }, (err) => console.warn("⚠️ [V3] Error mentor profile:", err));
+          }, (err) => console.warn("[V3] Error mentor profile:", err));
         }
       }
-    }, (err) => console.error("❌ [V3] Error curso:", err));
+    }, (err) => console.error("[V3] Error curso:", err));
 
     const qMods = query(collection(db, 'courses', courseId, 'modules'), orderBy('order', 'asc'));
     const unsubMods = onSnapshot(qMods, (snap) => {
@@ -57,7 +61,7 @@ export function useCourseProgressV3(courseId: string) {
         ...(d.data() as Partial<Module>)
       })) as Module[];
       setModules(modsData);
-    }, (err) => console.error("❌ [V3] Error módulos:", err));
+    }, (err) => console.error("[V3] Error modulos:", err));
 
     return () => {
       unsubCourse();
@@ -69,67 +73,70 @@ export function useCourseProgressV3(courseId: string) {
     };
   }, [courseId, db]);
 
+  // 2. Suscripción unificada a Matrícula (elimina race conditions y flash de bloqueo)
   useEffect(() => {
     if (!courseId || !profile?.uid || !profile?.email || !db) return;
 
-    const qById = query(
+    const normalizedEmail = profile.email.toLowerCase().trim();
+    const qEnrollment = query(
       collection(db, 'enrollments'),
-      where('courseId', '==', courseId),
-      where('studentId', '==', profile.uid)
+      and(
+        where('courseId', '==', courseId),
+        or(
+          where('studentId', '==', profile.uid),
+          where('inviteEmail', '==', normalizedEmail)
+        )
+      )
     );
 
-    const qByEmail = query(
-      collection(db, 'enrollments'),
-      where('courseId', '==', courseId),
-      where('inviteEmail', '==', profile.email.toLowerCase().trim())
-    );
-
-    let enrollById: any = null;
-    let enrollByEmail: any = null;
-
-    const updateEnrollment = (byId: any, byEmail: any) => {
-      const active = byId || byEmail;
-      if (active) {
-        setEnrollment(active);
+    const unsub = onSnapshot(qEnrollment, (snap) => {
+      if (!snap.empty) {
+        setEnrollment({ id: snap.docs[0].id, ...snap.docs[0].data() } as StudentEnrollment);
+      } else {
+        setEnrollment(null);
       }
       setIsLoading(false);
-    };
-
-    const unsubById = onSnapshot(qById, (snap) => {
-      enrollById = !snap.empty ? ({ id: snap.docs[0].id, ...snap.docs[0].data() } as StudentEnrollment) : null;
-      updateEnrollment(enrollById, enrollByEmail);
     }, (err) => {
-      console.error("❌ [V3] Error inscripción por ID:", err);
-      setIsLoading(false);
-    });
-
-    const unsubByEmail = onSnapshot(qByEmail, (snap) => {
-      enrollByEmail = !snap.empty ? ({ id: snap.docs[0].id, ...snap.docs[0].data() } as StudentEnrollment) : null;
-      updateEnrollment(enrollById, enrollByEmail);
-    }, (err) => {
-      console.error("❌ [V3] Error inscripción por Email:", err);
+      console.error("[V3] Error cargando inscripcion:", err);
       setIsLoading(false);
     });
 
     return () => {
-      unsubById();
-      unsubByEmail();
+      unsub();
     };
   }, [courseId, profile?.uid, profile?.email, db]);
 
+  // 3. Persistencia de borradores de respuestas con protección ante fallos de storage
+  const activeModuleId = modules[activeModuleIndex]?.id;
+
   useEffect(() => {
-    if (!profile?.uid || !modules[activeModuleIndex]?.id) return;
-    const key = "btech_draft_" + profile.uid + "_" + courseId + "_" + modules[activeModuleIndex].id;
-    const saved = localStorage.getItem(key);
-    setUserAnswers(saved ? JSON.parse(saved) : {});
-  }, [profile?.uid, activeModuleIndex, modules, courseId]);
+    if (!profile?.uid || !activeModuleId) return;
+    const key = `btech_draft_${profile.uid}_${courseId}_${activeModuleId}`;
+    try {
+      const saved = localStorage.getItem(key);
+      setUserAnswers(saved ? JSON.parse(saved) : {});
+    } catch (e) {
+      console.warn("[V3] Fallo al recuperar borrador de quiz desde localStorage:", e);
+      setUserAnswers({});
+    }
+  }, [profile?.uid, activeModuleId, courseId]);
 
-  const saveQuizDraft = (answers: Record<string, any>) => {
-    if (!profile?.uid || !modules[activeModuleIndex]?.id) return;
-    const key = "btech_draft_" + profile.uid + "_" + courseId + "_" + modules[activeModuleIndex].id;
-    localStorage.setItem(key, JSON.stringify(answers));
-  };
+  const saveQuizDraft = useCallback((answers: Record<string, any>) => {
+    if (!profile?.uid || !activeModuleId) return;
+    const key = `btech_draft_${profile.uid}_${courseId}_${activeModuleId}`;
+    try {
+      localStorage.setItem(key, JSON.stringify(answers));
+    } catch (e) {
+      console.warn("[V3] Fallo al guardar borrador de quiz en localStorage:", e);
+    }
+  }, [profile?.uid, activeModuleId, courseId]);
 
+  const handleSetUserAnswers = useCallback((answers: Record<string, any>) => {
+    setUserAnswers(answers);
+    saveQuizDraft(answers);
+  }, [saveQuizDraft]);
+
+  // 4. Cálculo memoizado de porcentaje de progreso del estudiante
   const progressPercent = useMemo(() => {
     if (!enrollment || modules.length === 0) return 0;
     
@@ -172,10 +179,7 @@ export function useCourseProgressV3(courseId: string) {
     activeModuleIndex,
     setActiveModuleIndex,
     userAnswers,
-    setUserAnswers: function(a: Record<string, any>) {
-      setUserAnswers(a);
-      saveQuizDraft(a);
-    },
+    setUserAnswers: handleSetUserAnswers,
     saveQuizDraft,
     progressPercent
   };

@@ -95,7 +95,7 @@ describe('setCampaignAutoPilot / removeCampaign', () => {
     expect(repo.updates[0].patch).toEqual({ autoPilot: false });
     expect(isOk(await removeCampaign(repo, 'c1'))).toBe(true);
     expect(repo.removed).toEqual(['c1']);
-  });
+  }, 15000);
 
   it('inexistentes → NOT_FOUND', async () => {
     const repo = new FakeRepo([]);

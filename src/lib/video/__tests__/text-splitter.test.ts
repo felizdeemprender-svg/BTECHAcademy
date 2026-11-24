@@ -12,6 +12,25 @@ describe('text-splitter: splitKineticPhrase', () => {
     expect(result[1].end).toBe(5.0);
   });
 
+  it('respeta delimitador explícito con barra vertical |', () => {
+    const raw = '¿NEGOCIO *FRENADO*? | *IMPULSA* TU RED';
+    const result = splitKineticPhrase(raw, 3.5);
+    expect(result.length).toBe(2);
+    expect(result[0].text).toBe('¿NEGOCIO *FRENADO*?');
+    expect(result[1].text).toBe('*IMPULSA* TU RED');
+    expect(result[0].start).toBe(0);
+    expect(result[1].end).toBe(3.5);
+  });
+
+  it('mantiene en 1 solo bloque frases cortas (<= 5 palabras) sin delimitador explícito como ¿NEGOCIO *FRENADO*?', () => {
+    const raw = '¿NEGOCIO *FRENADO*?';
+    const result = splitKineticPhrase(raw, 3.5);
+    expect(result.length).toBe(1);
+    expect(result[0].text).toBe('¿NEGOCIO *FRENADO*?');
+    expect(result[0].start).toBe(0);
+    expect(result[0].end).toBe(3.5);
+  });
+
   it('divide automáticamente frases largas en 2 bloques según duración estándar (4.5s)', () => {
     const raw = 'Sanar a otros no debe agotar tu energía vital';
     const result = splitKineticPhrase(raw, 4.5);
@@ -56,6 +75,35 @@ describe('text-splitter: splitSubtitlePhases', () => {
     expect(result[1].text).toBe('pero vacía tu energía.');
   });
 
+  it('respeta delimitador explícito con barra vertical | en subtítulos', () => {
+    const titleBlocks = [{ start: 0, end: 1.75 }, { start: 1.75, end: 3.5 }];
+    const raw = 'Si tus ventas cayeron | Te enseño el paso a paso';
+    const result = splitSubtitlePhases(raw, 3.5, titleBlocks);
+    expect(result.length).toBe(2);
+    expect(result[0].text).toBe('Si tus ventas cayeron');
+    expect(result[1].text).toBe('Te enseño el paso a paso');
+  });
+
+  it('mantiene el subtítulo completo en 1 bloque si el título tiene 1 solo bloque o si es una frase corta sin delimitador', () => {
+    const titleBlocks = [{ start: 0, end: 3.5 }];
+    const raw = 'Necesitás impulsar tu red';
+    const result = splitSubtitlePhases(raw, 3.5, titleBlocks);
+    expect(result.length).toBe(1);
+    expect(result[0].text).toBe('Necesitás impulsar tu red');
+    expect(result[0].start).toBe(0);
+    expect(result[0].end).toBe(3.5);
+  });
+
+  it('no divide un subtítulo corto sin puntuación (ej: Necesitás impulsar tu red) aun si el título rota', () => {
+    const titleBlocks = [{ start: 0, end: 1.75 }, { start: 1.75, end: 3.5 }];
+    const raw = 'Necesitás impulsar tu red';
+    const result = splitSubtitlePhases(raw, 3.5, titleBlocks);
+    expect(result.length).toBe(1);
+    expect(result[0].text).toBe('Necesitás impulsar tu red');
+    expect(result[0].start).toBe(0);
+    expect(result[0].end).toBe(3.5);
+  });
+
   it('sincroniza exactamente con los tiempos de inicio y fin de los bloques de título', () => {
     const titleBlocks = [
       { start: 0, end: 2.3 },
@@ -70,9 +118,10 @@ describe('text-splitter: splitSubtitlePhases', () => {
     expect(result[1].end).toBe(5.2);
   });
 
-  it('divide por puntuación natural (coma, punto) si no hay salto de línea explícito', () => {
+  it('divide por puntuación natural (coma, punto) si no hay salto de línea explícito y hay suficientes palabras', () => {
+    const titleBlocks = [{ start: 0, end: 2.5 }, { start: 2.5, end: 5.0 }];
     const raw = 'El bloqueo que frena tu negocio, empieza en la culpa al cobrar.';
-    const result = splitSubtitlePhases(raw, 5.0);
+    const result = splitSubtitlePhases(raw, 5.0, titleBlocks);
     expect(result.length).toBe(2);
     expect(result[0].text).toBe('El bloqueo que frena tu negocio,');
     expect(result[1].text).toBe('empieza en la culpa al cobrar.');

@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
   },
   output: 'standalone',
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     formats: ['image/avif', 'image/webp'],

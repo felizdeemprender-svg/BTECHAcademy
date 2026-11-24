@@ -19,7 +19,8 @@ vi.mock('react', async (importOriginal) => {
   };
 });
 
-import { generateMetadata, getCachedPublicSalesPage } from '../page';
+import { generateMetadata } from '../page';
+import { getCachedPublicSalesPage } from '../data';
 
 vi.mock('@/domain/sales-pages/use-cases/get-public-sales-page-use-case', () => {
   return {
