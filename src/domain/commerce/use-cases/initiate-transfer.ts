@@ -75,6 +75,15 @@ export async function initiateTransfer(
     return err(notFound('Página sin mentor asignado'));
   }
 
+  // Precios por pasarela: soporte de monto específico para transferencia
+  let finalPrice = price;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pricingConfig = (page as any).pricing;
+  const transferPriceItem = pricingConfig?.pricesByGateway?.transfer;
+  if (transferPriceItem && typeof transferPriceItem.amount === 'number' && transferPriceItem.amount >= 0) {
+    finalPrice = transferPriceItem.amount;
+  }
+
   const method = await deps.payments.findTutorMethodByType(mentorId, 'transfer');
   if (!method) {
     return err(
@@ -112,7 +121,7 @@ export async function initiateTransfer(
     mentorEmail,
     studentEmail: normalizedEmail,
     studentName: resolvedStudentName,
-    amount: price,
+    amount: finalPrice,
     bankDetails,
     referenceCode,
     referidoId: referidoId || null,
@@ -124,7 +133,7 @@ export async function initiateTransfer(
       studentEmail: normalizedEmail,
       studentName: resolvedStudentName,
       courseTitle: pageTitle,
-      amount: price,
+      amount: finalPrice,
       bankDetails,
       referenceCode,
       mentorName,
@@ -136,12 +145,12 @@ export async function initiateTransfer(
       studentName: resolvedStudentName,
       studentEmail: normalizedEmail,
       courseTitle: pageTitle,
-      amount: price,
+      amount: finalPrice,
       referenceCode,
     });
   } catch (emailErr) {
     console.error('[TransferInitiate] Error al enviar emails (no crítico):', emailErr);
   }
 
-  return ok({ orderId, referenceCode, bankDetails, amount: price });
+  return ok({ orderId, referenceCode, bankDetails, amount: finalPrice });
 }

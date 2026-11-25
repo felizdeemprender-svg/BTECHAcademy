@@ -76,6 +76,7 @@ export async function approveTransfer(
     studentName: order.studentName,
     mentorId: order.mentorId,
     referidoId: (order.referidoId as string | null | undefined) || null,
+    gateway: 'transfer',
   });
 
   const result = await deps.enrollment.completeEnrollment({

@@ -3,6 +3,7 @@ import { FirestoreGateway } from '@/data/firestore/gateway';
 import { FirestoreSubscriptionRepository } from '@/data/firestore/subscription-repo';
 import { handleGatewayEvent, GatewayEventInput, GatewayEnrollmentPort, GatewaySubscriptionActivationPort } from '@/domain/identity/use-cases';
 import { ExternalBillingGateway, SubscriptionNotifier } from '@/domain/identity/subscription-ports';
+import { LegacyEnrollmentService } from '@/data/payments/legacy-payment-services';
 
 export interface StripeWebhookDeps {
   readonly notifier?: SubscriptionNotifier;
@@ -34,6 +35,7 @@ export async function processStripeWebhook(
     switch (typed.type) {
       case 'checkout.session.completed': {
         const session = typed.data.object as {
+          id?: string;
           mode?: string;
           subscription?: unknown;
           metadata?: Record<string, string>;
@@ -48,6 +50,21 @@ export async function processStripeWebhook(
             tutorId: meta.mentorId,
             subscriptionId: subId,
           };
+        } else if (session.mode === 'payment' && meta.pageId && meta.studentEmail) {
+          const externalReference = JSON.stringify({
+            pageId: meta.pageId,
+            studentEmail: meta.studentEmail,
+            studentName: meta.studentName || '',
+            mentorId: meta.mentorId,
+            referidoId: meta.referidoId || null,
+            gateway: 'stripe',
+          });
+          const enrollmentService = deps?.enrollment ?? new LegacyEnrollmentService();
+          await enrollmentService.completeEnrollment({
+            paymentId: session.id || 'stripe_payment',
+            externalReference,
+            status: 'approved',
+          });
         }
         break;
       }

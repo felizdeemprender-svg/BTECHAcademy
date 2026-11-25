@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { err, ok, type Result } from '@/domain/shared/result';
 import { notFound, validationError, type DomainError } from '@/domain/shared/errors';
+import { createOrderLedgerEntry } from '../order-ledger';
 
 export const ProcessEnrollmentInputSchema = z.object({
   paymentId: z.string().min(1),
@@ -21,6 +22,9 @@ export interface SalesPageInfo {
   courseId?: string;
   productType?: string;
   bundleItems?: BundleItem[];
+  pricing?: any;
+  price?: number;
+  currency?: string;
 }
 
 export interface StudentInfo {
@@ -48,6 +52,7 @@ export interface CommerceGateway {
   incrementMentorSales(mentorId: string, amount: number): Promise<void>;
   incrementPageConversions(pageId: string): Promise<void>;
   convertLead(email: string, productId: string, paymentId: string): Promise<void>;
+  recordOrder?(orderId: string, data: Record<string, unknown>): Promise<void>;
 }
 
 export interface EmailService {
@@ -127,6 +132,9 @@ export async function processEnrollment(
     const exists = await deps.gateway.checkEnrollmentExists(enrollmentId);
     
     if (!exists) {
+      const detectedGateway = (refData.gateway as string | undefined) ||
+        (paymentId.startsWith('txfr_') ? 'transfer' : paymentId.startsWith('cs_') || paymentId.startsWith('pi_') ? 'stripe' : paymentId.startsWith('gn_') ? 'getnet' : 'mercadopago');
+
       // 4. Create Enrollment
       const enrollmentData = {
         id: enrollmentId,
@@ -138,7 +146,7 @@ export async function processEnrollment(
         studentId: student.id,
         status: 'active',
         paymentId: paymentId,
-        source: 'mercadopago',
+        source: detectedGateway,
         progress: { completedModules: [] },
         progressPercent: 0,
         metadata: {
@@ -156,6 +164,42 @@ export async function processEnrollment(
         const productInfo = await deps.gateway.getProductInfo(pId, pType);
         const price = productInfo?.price || 0;
         totalRevenue += price;
+
+        // Registro automático en libro mayor de transacciones (orderLedger)
+        if (deps.gateway.recordOrder) {
+          try {
+            const pricingConfig = (page.pricing as any)?.pricesByGateway?.[detectedGateway];
+            const chargedAmount = typeof pricingConfig?.amount === 'number'
+              ? pricingConfig.amount
+              : (productInfo?.price || page.price || 0);
+            const chargedCurrency = pricingConfig?.currency ||
+              (detectedGateway === 'stripe' ? 'USD' : (page.currency || 'ARS'));
+
+            const feeRate = detectedGateway === 'transfer' ? 0 : detectedGateway === 'stripe' ? 0.045 : 0.06;
+            const gatewayFee = Math.round(chargedAmount * feeRate * 100) / 100;
+
+            const orderEntry = createOrderLedgerEntry({
+              id: validItems.length > 1 ? `${paymentId}_${pId}` : paymentId,
+              courseId: pId,
+              courseTitle: productInfo?.title,
+              tutorId: mentorId || 'desconocido',
+              buyerEmail: normalizedEmail,
+              buyerName: student.name,
+              gatewayId: detectedGateway,
+              chargedAmount,
+              chargedCurrency,
+              exchangeRateToUSD: chargedCurrency === 'USD' ? 1 : 1200,
+              gatewayFee,
+              landingId: pageId,
+              referidoId: referidoId || null,
+              status: 'completed',
+            });
+
+            await deps.gateway.recordOrder(orderEntry.id, orderEntry as unknown as Record<string, unknown>);
+          } catch (ledgerErr) {
+            console.error('[ProcessEnrollment] Error al registrar en orderLedger (no crítico):', ledgerErr);
+          }
+        }
         
         // Welcome email per product
         const title = productInfo?.title || (pType === 'followup' ? 'tu mentoría' : 'tu curso');

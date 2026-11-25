@@ -52,6 +52,7 @@ import {
   type SupportedCurrency,
 } from '@/lib/currency/types';
 import { convertAmount, convertUsdAmount } from '@/lib/currency/rates-service';
+import { resolveEffectivePricing } from '@/domain/commerce/pricing-model';
 
 const TikTokIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -470,6 +471,15 @@ export function PublicSalesPageView({
   const baseCurrency: SupportedCurrency = (page.currency || course?.currency || (price > 1000 ? 'ARS' : 'USD')) as SupportedCurrency;
   const baseUsdPrice = baseCurrency === 'USD' ? price : (price / (rates.ARS || FALLBACK_RATES.ARS));
 
+  // Resolución de precios unificada por pasarela
+  const effectivePricing = useMemo(() => {
+    return resolveEffectivePricing({
+      price,
+      currency: baseCurrency,
+      pricing: page?.pricing,
+    });
+  }, [price, baseCurrency, page?.pricing]);
+
   if (!content) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -877,6 +887,14 @@ export function PublicSalesPageView({
                       filteredPaymentMethods.map((m: any) => {
                         const isSelected = selectedPaymentType === m.type;
                         const isTransfer = m.type === 'transfer';
+                        const gwPricing = effectivePricing.pricesByGateway[m.type];
+                        const gwAmount = gwPricing?.amount ?? (
+                          m.type === 'stripe'
+                            ? (baseCurrency === 'USD' ? price : Math.round(baseUsdPrice * 100) / 100)
+                            : (baseCurrency === 'ARS' ? price : convertUsdAmount(price, 'ARS', rates))
+                        );
+                        const gwCurrency = gwPricing?.currency ?? (m.type === 'stripe' ? 'USD' : 'ARS');
+
                         return (
                           <div
                             key={m.type}
@@ -897,8 +915,13 @@ export function PublicSalesPageView({
                                 </p>
                               </div>
                             </div>
-                            <div className={cn("w-4 h-4 rounded-full border flex items-center justify-center", isSelected ? "border-primary bg-primary" : "border-muted-foreground/30")}>
-                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-xs font-bold px-2 py-1 rounded-md bg-muted/60 text-foreground">
+                                {gwCurrency} ${gwAmount.toLocaleString('es-AR')}
+                              </span>
+                              <div className={cn("w-4 h-4 rounded-full border flex items-center justify-center", isSelected ? "border-primary bg-primary" : "border-muted-foreground/30")}>
+                                {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                              </div>
                             </div>
                           </div>
                         );
@@ -989,9 +1012,19 @@ export function PublicSalesPageView({
                   <Loader2 className="animate-spin h-6 w-6" />
                 ) : price === 0 ? (
                   'Acceder Gratis'
-                ) : selectedPaymentType === 'transfer' ? (
-                  'Confirmar Transferencia'
-                ) : selectedCountry.isDomesticArgentina ? (
+                ) : selectedPaymentType ? (() => {
+                  const selGwPricing = effectivePricing.pricesByGateway[selectedPaymentType];
+                  const selAmount = selGwPricing?.amount ?? (
+                    selectedPaymentType === 'stripe'
+                      ? (baseCurrency === 'USD' ? price : Math.round(baseUsdPrice * 100) / 100)
+                      : (baseCurrency === 'ARS' ? price : convertUsdAmount(price, 'ARS', rates))
+                  );
+                  const selCurrency = selGwPricing?.currency ?? (selectedPaymentType === 'stripe' ? 'USD' : 'ARS');
+                  if (selectedPaymentType === 'transfer') {
+                    return `Confirmar Transferencia (${selCurrency} $${selAmount.toLocaleString('es-AR')})`;
+                  }
+                  return `Pagar ${selCurrency} $${selAmount.toLocaleString('es-AR')}`;
+                })() : selectedCountry.isDomesticArgentina ? (
                   `Pagar ARS $${(baseCurrency === 'ARS' ? price : convertUsdAmount(price, 'ARS', rates)).toLocaleString('es-AR')}`
                 ) : (
                   `Pagar USD $${(baseCurrency === 'USD' ? price : Math.round(baseUsdPrice * 100) / 100).toLocaleString('es-AR')}`

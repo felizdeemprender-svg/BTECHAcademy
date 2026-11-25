@@ -13,7 +13,10 @@ export class FirestoreCommerceGateway implements CommerceGateway {
       productId: data.productId as string | undefined,
       courseId: data.courseId as string | undefined,
       productType: data.productType as string | undefined,
-      bundleItems: data.bundleItems as any[] | undefined
+      bundleItems: data.bundleItems as any[] | undefined,
+      pricing: data.pricing,
+      price: data.price as number | undefined,
+      currency: data.currency as string | undefined,
     };
   }
   
@@ -131,6 +134,19 @@ export class FirestoreCommerceGateway implements CommerceGateway {
            updatedAt: this.gateway.serverTimestamp()
          });
       }
+    }
+  }
+
+  async recordOrder(orderId: string, data: Record<string, unknown>): Promise<void> {
+    const finalData = {
+      ...data,
+      createdAt: this.gateway.serverTimestamp ? this.gateway.serverTimestamp() : new Date(),
+      updatedAt: this.gateway.serverTimestamp ? this.gateway.serverTimestamp() : new Date(),
+    };
+    if (this.gateway.mergeDoc) {
+      await this.gateway.mergeDoc('orderLedger', orderId, finalData);
+    } else {
+      await this.gateway.createDoc('orderLedger', orderId, finalData);
     }
   }
 }
