@@ -112,4 +112,45 @@ describe('Stripe Webhook Use Case', () => {
       }
     );
   });
+
+  it('should handle checkout.session.completed for direct course purchases (payment mode)', async () => {
+    const mockEnrollment = {
+      completeEnrollment: vi.fn().mockResolvedValue({ success: true, enrollmentId: 'enroll_stripe_1' }),
+    };
+    const event = {
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_123',
+          mode: 'payment',
+          metadata: {
+            pageId: 'page_fastoria_1',
+            studentEmail: 'alumno@fastoria.com',
+            studentName: 'Alumno Test',
+            mentorId: 'mentor_99',
+            referidoId: 'ref_77',
+          },
+        },
+      },
+    };
+
+    const response = await processStripeWebhook(mockGateway as unknown as FirestoreGateway, event, {
+      ...mockDeps,
+      enrollment: mockEnrollment,
+    });
+
+    expect(response.status).toBe(200);
+    expect(mockEnrollment.completeEnrollment).toHaveBeenCalledWith({
+      paymentId: 'cs_test_123',
+      externalReference: JSON.stringify({
+        pageId: 'page_fastoria_1',
+        studentEmail: 'alumno@fastoria.com',
+        studentName: 'Alumno Test',
+        mentorId: 'mentor_99',
+        referidoId: 'ref_77',
+        gateway: 'stripe',
+      }),
+      status: 'approved',
+    });
+  });
 });

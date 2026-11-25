@@ -583,6 +583,32 @@ describe('initiateTransfer', () => {
     expect(r.ok).toBe(true);
     expect(transfers.created).toHaveLength(1);
   });
+
+  it('aplica pricesByGateway.transfer.amount como monto de la orden si está configurado', async () => {
+    const { payments, transfers, notifier } = base();
+    const pages = new FakePages({
+      page1: {
+        id: 'page1',
+        mentorId: 'mentor1',
+        price: 5000,
+        title: 'Curso X',
+        pricing: {
+          pricesByGateway: {
+            transfer: { gatewayId: 'transfer', amount: 4200, currency: 'ARS', isActive: true },
+          },
+        },
+      },
+    });
+    const r = await initiateTransfer(
+      { pages, payments, transfers, notifier, nowMs: 1726230000000 },
+      { pageId: 'page1', studentEmail: 'alu@x.com' },
+    );
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.value.amount).toBe(4200);
+      expect(transfers.created[0]?.amount).toBe(4200);
+    }
+  });
 });
 
 /* ---------------- approve-transfer ---------------- */
@@ -664,6 +690,7 @@ describe('approveTransfer', () => {
       studentName: 'Alu',
       mentorId: 'mentor1',
       referidoId: null,
+      gateway: 'transfer',
     });
     expect(transfers.approved).toEqual([{ orderId: 'tx1', enrollmentId: 'enroll_1' }]);
     if (r.ok) expect(r.value).toEqual({ status: 'approved', enrollmentId: 'enroll_1' });

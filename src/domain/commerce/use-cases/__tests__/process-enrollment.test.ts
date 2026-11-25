@@ -13,6 +13,7 @@ describe('Commerce Use Cases: processEnrollment', () => {
       incrementMentorSales: vi.fn().mockResolvedValue(undefined),
       incrementPageConversions: vi.fn().mockResolvedValue(undefined),
       convertLead: vi.fn().mockResolvedValue(undefined),
+      recordOrder: vi.fn().mockResolvedValue(undefined),
     },
     emails: {
       sendWelcomeEmail: vi.fn().mockResolvedValue(undefined),
@@ -69,5 +70,13 @@ describe('Commerce Use Cases: processEnrollment', () => {
     expect(defaultDeps.emails.sendWelcomeEmail).toHaveBeenCalled();
     expect(defaultDeps.gateway.incrementPageConversions).toHaveBeenCalledWith('page1');
     expect(defaultDeps.gateway.convertLead).toHaveBeenCalledWith('student@test.com', 'prod1', 'pay123');
+    expect(defaultDeps.gateway.recordOrder).toHaveBeenCalledWith('pay123', expect.objectContaining({
+      id: 'pay123',
+      courseId: 'prod1',
+      tutorId: 'mentor1',
+      buyerEmail: 'student@test.com',
+      chargedAmount: 100,
+      status: 'completed',
+    }));
   });
 });
