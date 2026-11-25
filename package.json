@@ -18,6 +18,7 @@
     "deploy:all": "npx firebase deploy && git add . && git commit -m \"Deploy unificado y sincronizacion de entornos\" && git push origin main",
     "postinstall": "node scripts/download-ffmpeg.js",
     "test": "vitest run",
+    "test:security": "vitest run src/lib/__tests__/security-live-matrix.test.ts src/lib/__tests__/security-audit-rules.test.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
   },

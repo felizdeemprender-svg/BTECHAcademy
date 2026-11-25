@@ -3,6 +3,9 @@ import { generateLandingContent } from '@/ai/flows/generate-landing-content';
 import { CLASSIC_STYLE_CONFIG } from '@/app/marketing/templates/styles/classic-style-config';
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
   try {
     const output = await generateLandingContent({
       courseTitle: "Fastoria Academy",
