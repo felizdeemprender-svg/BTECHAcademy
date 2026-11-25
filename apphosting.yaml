@@ -43,3 +43,8 @@ env:
   - variable: GOOGLE_API_KEY
     secret: GEMINI_API_KEY
     availability: [RUNTIME]
+
+  # Video Worker M2M Secret (Google Cloud Secret Manager)
+  - variable: WORKER_SECRET
+    secret: WORKER_SECRET
+    availability: [RUNTIME]

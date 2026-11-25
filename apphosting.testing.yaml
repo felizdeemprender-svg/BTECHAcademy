@@ -57,3 +57,8 @@ env:
   - variable: CRON_SECRET
     value: fastoriasecret2026
     availability: [BUILD, RUNTIME]
+
+  # Video Worker M2M Secret (Google Cloud Secret Manager)
+  - variable: WORKER_SECRET
+    secret: WORKER_SECRET
+    availability: [RUNTIME]
