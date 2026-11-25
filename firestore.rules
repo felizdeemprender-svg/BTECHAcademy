@@ -66,12 +66,19 @@ service cloud.firestore {
 
     match /salesPages/{pageId} {
       allow read: if true;
-      allow write: if isAdmin() || isMarketing() || isMentor();
+      allow create: if isSignedIn() && (isAdmin() || isMarketing() || isMentor());
+      allow update, delete: if isAdmin() || isMarketing() || (
+        isMentor() && resource.data.mentorId == request.auth.uid
+      );
     }
 
     match /leads/{leadId} {
-      allow read: if true; // Public for viewing conversions or mentor calculating stats
-      allow write: if true; // Public to capture leads from landing pages
+      // Captura pública de leads desde formularios de landing
+      allow create: if true;
+      // Lectura permitida a usuarios autenticados (mentores, referidos y admins para sus dashboards)
+      allow read: if isSignedIn();
+      // Modificación y borrado reservado exclusivamente a administradores
+      allow update, delete: if isAdmin();
     }
 
     match /mail/{mailId} {

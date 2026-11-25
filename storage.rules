@@ -1,10 +1,51 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    // 1. Lectura pública de assets multimedia para renderizado de cursos, avatares y landings
     match /{allPaths=**} {
-      // Permite lectura y escritura a cualquier usuario autenticado en la instancia default
-      // Es obligatorio haber activado Storage en la consola de Firebase (botón "Comenzar")
-      allow read, write: if request.auth != null;
+      allow read: if true;
+    }
+
+    // 2. Archivos y avatares personales de usuario
+    match /users/{userId}/{allPaths=**} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 3. Guías maestras de mentoría y tareas propias de mentor
+    match /followup_guides/{userId}/{allPaths=**} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /tasks/{userId}/{allPaths=**} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 4. Entregas de tareas de alumnos
+    match /followup_tasks/{studentId}/{allPaths=**} {
+      allow write: if request.auth != null && (
+        request.auth.uid == studentId ||
+        request.auth.token.email == 'felizdeemprender@gmail.com' ||
+        request.auth.token.email == 'btouchacademy@gmail.com' ||
+        request.auth.token.email == 'btechacademy.ai@gmail.com'
+      );
+    }
+
+    // 5. Sesiones de mentoría y seguimientos
+    match /followups/{followUpId}/{allPaths=**} {
+      allow write: if request.auth != null;
+    }
+
+    // 6. Contenido de cursos, landings, audio y temporales
+    match /courses/{courseId}/{allPaths=**} {
+      allow write: if request.auth != null;
+    }
+    match /landings/{pageId}/{allPaths=**} {
+      allow write: if request.auth != null;
+    }
+    match /sales_pages/{pageId}/{allPaths=**} {
+      allow write: if request.auth != null;
+    }
+    match /pdf_tmp/{courseId}/{allPaths=**} {
+      allow write: if request.auth != null;
     }
   }
 }

@@ -4,6 +4,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
   try {
     const db = getAdminFirestore();
     
