@@ -258,6 +258,26 @@ ENFOQUE / MENTOR: ${aboutMentor || 'Feliz de Emprender: Expertos en guiar a prof
               continue;
             }
 
+            // Comprobación de saldo por pieza: pausa elegante si se agotan créditos
+            if (uid && role !== 'admin') {
+              try {
+                const { checkSufficientCredits } = await import('@/lib/payments/credits');
+                const estimatedPieceCost = autoGenerateImages ? 0.15 : 0.01;
+                const creditStatus = await checkSufficientCredits(uid, estimatedPieceCost, role || 'mentor');
+                if (!creditStatus.ok) {
+                  console.warn(`[VideoWorker] Pausando campaña ${campaignId} por saldo insuficiente en pieza ${i + 1}/${socials.length}`);
+                  await adminDb.collection('campaigns').doc(campaignId).update({
+                    campaignStatus: 'paused_insufficient_credits',
+                    statusMessage: `Campaña pausada: créditos insuficientes en pieza ${i + 1} de ${socials.length}. Recarga saldo para continuar.`,
+                    updatedAt: new Date().toISOString()
+                  });
+                  break;
+                }
+              } catch (cCheckErr) {
+                console.warn('[VideoWorker] Error verificando créditos por pieza (no crítico):', cCheckErr);
+              }
+            }
+
             const funnelPhase = social.funnelPhase || funnelPhaseMap[social.id] || 'Concientizacion General';
             const campaignLanguage = payload.language || spData.language || landingDocData?.language || social.language || 'es-AR';
             console.log(`[VideoWorker] Redactando script para ${social.platform} - ${social.marketingName} (Fase: ${funnelPhase}, Idioma: ${campaignLanguage})...`);
@@ -388,11 +408,30 @@ ENFOQUE / MENTOR: ${aboutMentor || 'Feliz de Emprender: Expertos en guiar a prof
             }
           }
           
-          console.log(`[VideoWorker] Procesamiento de campana completado para ${campaignId}`);
-          await adminDb.collection('campaigns').doc(campaignId).update({
-            campaignStatus: 'drafts_ready',
-            updatedAt: new Date().toISOString()
-          });
+          // Verificación de completitud integral de la campaña
+          const finalCheckDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+          const finalSocials = finalCheckDoc.data()?.videoSkeletons || [];
+          const allCompleted = finalSocials.length > 0 && finalSocials.every((s: any) => s.isGenerated === true);
+
+          if (allCompleted) {
+            console.log(`[VideoWorker] Procesamiento de campana completado para ${campaignId}`);
+            await adminDb.collection('campaigns').doc(campaignId).update({
+              campaignStatus: 'drafts_ready',
+              statusMessage: null,
+              updatedAt: new Date().toISOString()
+            });
+          } else {
+            const completedCount = finalSocials.filter((s: any) => s.isGenerated).length;
+            console.log(`[VideoWorker] Campaña ${campaignId} parcialmente procesada (${completedCount}/${finalSocials.length})`);
+            const currentStatus = finalCheckDoc.data()?.campaignStatus;
+            if (currentStatus !== 'paused_insufficient_credits') {
+              await adminDb.collection('campaigns').doc(campaignId).update({
+                campaignStatus: 'partially_generated',
+                statusMessage: `Generación interrumpida: ${completedCount} de ${finalSocials.length} piezas listas. Puedes reanudar para completar el resto.`,
+                updatedAt: new Date().toISOString()
+              });
+            }
+          }
         } catch (e) {
           console.error('[VideoWorker] Error fatal procesando campana:', e);
         }

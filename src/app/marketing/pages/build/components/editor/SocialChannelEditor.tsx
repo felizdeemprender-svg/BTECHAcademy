@@ -1,6 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useAuth } from '@/components/auth-context';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +31,8 @@ import {
   Lock,
   Palette,
   Globe,
-  Loader2
+  Loader2,
+  Play
 } from 'lucide-react';
 import { ImageEditor } from '@/components/courses/ImageEditor';
 import { SocialLivePreview } from '../SocialLivePreview';
@@ -138,13 +141,117 @@ export function SocialChannelEditor({
   profile
 }: SocialChannelEditorProps) {
   const { toast } = useToast();
+  
+  let authUser: any = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const auth = useAuth();
+    authUser = auth?.user || null;
+  } catch {
+    authUser = null;
+  }
+
+  let searchParams: any = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    searchParams = useSearchParams();
+  } catch {
+    searchParams = null;
+  }
+
+  const [isResuming, setIsResuming] = useState(false);
 
   const rawSocials = generatedAssets?.socials || [];
+  const completedCount = rawSocials.filter((s: any) => s.isGenerated).length;
+  const pendingCount = rawSocials.length - completedCount;
+  const hasPendingPieces = rawSocials.length > 0 && pendingCount > 0;
+  const campaignId = generatedAssets?.id || generatedAssets?.campaignId || searchParams?.get('id') || '';
+
+  const handleResumeGeneration = async () => {
+    if (!campaignId) {
+      toast({
+        variant: 'destructive',
+        title: 'Error de Campaña',
+        description: 'No se encontró el identificador de la campaña para reanudar.',
+      });
+      return;
+    }
+
+    setIsResuming(true);
+    try {
+      const token = await authUser?.getIdToken();
+      const res = await fetch('/api/campaign/resume', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ campaignId, autoGenerateImages: true }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 402) {
+          toast({
+            variant: 'destructive',
+            title: 'Créditos Insuficientes',
+            description: data.message || `Faltan ${data.estimate?.missingCredits || 0} créditos para completar las piezas.`,
+          });
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Error al reanudar',
+            description: data.error || data.message || 'No se pudo encolar la reanudación.',
+          });
+        }
+        return;
+      }
+
+      toast({
+        title: 'Reanudación en Proceso',
+        description: `Procesando las ${data.pendingPieces} piezas pendientes (${data.completedPieces} ya listas). Los borradores se actualizarán automáticamente.`,
+      });
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error de comunicación',
+        description: err.message || 'No se pudo conectar con el servidor.',
+      });
+    } finally {
+      setIsResuming(false);
+    }
+  };
+
   const platforms = Array.from(new Set(rawSocials.map((s: any) => s.platform).filter(Boolean)))
     .filter(p => p !== 'linkedin') as string[];
 
   return (
-<Tabs key={platforms.join('-')} defaultValue={platforms[0]}>
+    <div className="space-y-6">
+      {hasPendingPieces && (
+        <div className="p-4 rounded-xl border border-amber-300 bg-amber-50/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-700 shrink-0" />
+            <div>
+              <p className="text-sm font-black text-amber-950 uppercase tracking-wide">
+                Generación en Pausa: {completedCount} de {rawSocials.length} piezas listas
+              </p>
+              <p className="text-xs text-amber-800 font-medium">
+                Hay {pendingCount} pieza{pendingCount === 1 ? '' : 's'} pendiente{pendingCount === 1 ? '' : 's'}. Puedes reanudar para completar el embudo sin perder lo generado.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={handleResumeGeneration}
+            disabled={isResuming}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider px-5 h-10 rounded-lg shrink-0 gap-2 transition-all hover:scale-102"
+          >
+            {isResuming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4 fill-white" />}
+            Reanudar Generación ({pendingCount} pendientes)
+          </Button>
+        </div>
+      )}
+
+      <Tabs key={platforms.join('-')} defaultValue={platforms[0]}>
                 <div className="flex items-center justify-between mb-10 w-full gap-4 flex-wrap">
                   {platforms.length > 0 ? (
                     <TabsList className="bg-muted/40 p-1.5 h-12 justify-start gap-1 rounded-xl border border-border w-fit">
@@ -946,5 +1053,6 @@ export function SocialChannelEditor({
                   );
                 })}
               </Tabs>
+    </div>
   );
 }
